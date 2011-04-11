@@ -1,0 +1,22 @@
+MelonJS Game Engine
+Copyright (C) 2011, Olivier BIOT
+http://olivierbiot.wordpress.com/
+
+melonJS is the result of my enthusiasm & my past experiments with Javascript, and currently features :
+
+- A fresh & lightweight 2D “sprite-based” engine (at least I hope to)
+- Standalone library (does not rely on anything else, except a HTML5 capable browser)
+- Compatible with most major browser (Chrome, Safari, Opera)
+- “Multiple” Audio Channel support
+- Basic physics & collision mechanisms (to ensure low cpu requirements)
+- A basic set (for now) of Object Entities (to be extended)
+- Manage basic animation (proper spritesheet format to be added later, like TexturePacker)
+- A Game state “manager” (to easily manage loading, menu, options, in-game state)
+- Tiled map format version 0.6.x integration for easy level design
+- Plain & Base64 encoded XML tilemap loading (compression not supported)
+- Horizontal tilemap (isometric not suppported)
+- multiple tileset supported (one for regular tiled map, one for the collision engine)
+- Multiple layers (multiple background/Foreground layers, collision layer, “Parallax” layer)
+- Alpha settings (through the Opacity slider in Tiled)
+- Dynamic Entity loading (basically, the engine will instantiate JS object matching the object property name defined in the tilemap, and pass corresponding settings to it)
+- Others useful stuff like system & bitmap fonts, some basic GUI elements, a customizable loader, etc…
