@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>melonJS</title>
+  <meta name="description" content="melonJS homepage" />
+  <meta name="keywords" content="melonJS, A lightweight HTML5 game engine, HTML5, javascript, canvas, game, engine, framework, tiled, tile, map, loader, parser, TMX, XML" />
+  <meta http-equiv="content-type" content="text/html; charset=windows-1252" />
+  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
+	<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-13050059-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</head>
+
+<body>
+  <div id="main">
+    <div id="header">
+      <div id="logo">
+        <div id="logo_text">
+          <!-- class="logo_colour", allows you to change the colour of the text -->
+          <h1><a href="http://www.melonjs.org">melon<span class="logo_colour">JS</span></a></h1>
+          <h2>A lightweight HTML5 game engine</h2>
+        </div>
+      </div>
+      <div id="menubar">
+        <ul id="menu">
+          <!-- put class="selected" in the li tag for the selected page - to highlight which page you're on -->
+          <li class="selected"><a href="index.html">Home</a></li>
+          <li><a href="http://olivierbiot.wordpress.com/">Blog</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="download.html">Download</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div id="site_content">
+		<div class="sidebar">
+		 <p><img src="media/HTML5_Badge_128.png"/></p>
+		 <h3>Useful Links</h3>
+        <ul>
+          <li><a href="http://www.mapeditor.org/">Tiled Homepage</a></li>
+			 <li><a href="http://www.tapjs.com/">TapJS Homepage</a></li>
+        </ul>
+		</div>
+      <div id="content">
+        <!-- insert the page content here -->
+        <h1>Welcome to the melonJS website</h1>
+		  <p>melonJS is the result of our enthusiasm and past experiments with Javascript, and came from the feeling that no simple, 
+		  free and standalone library was available to develop games. And although still a big work in progress 
+		  (and not yet bug free), melonJS already allows to easily create some nice games (see the gallery page)</p>
+		  
+		   <p>melonJS integrates the popular Tiled map format, allowing to easily design levels using the <a href="http://www.mapeditor.org/">Tiled map editor</a>, and to focus on the game features itself.</p>
+		  
+		  <p>Along necessary bug fixing, some other nice features are still to come, so please come back regulary, or even join the project if you wish !</p>
+		  <h2>Feature list :</h2>
+		  <ul>
+          <li>A fresh and lightweight 2D sprite-based engine</li>
+          <li>Standalone library (does not rely on anything else, except a HTML5 capable browser)</li>
+          <li>Compatible with most major browser (Chrome, Safari, Firefox, Opera)</li>
+          <li>Multiple Audio Channel support</li>
+			 <li>Basic physics and collision mechanisms (to ensure low cpu requirements)</li>
+			 <li>A basic set of Object Entities (to be extended)</li>
+			 <li>Tween effects</li>
+			 <li>Manage basic animation</li>
+			 <li>A state manager (to easily manage loading, menu, options or in-game screen state and switch)</li>
+			 <li>Tiled map format version 0.6.x integration for easy level design :
+				<ul>
+				<li>uncompressed Plain and Base64 encoded XML tilemap format</li>
+				<li>Orthogonal tilemap</li>
+				<li>Multiple layers (multiple background/Foreground layers, collision layer, "Parallax" layer)</li>
+				<li>Alpha settings</li>
+				<li>Tiled Object</li>
+				<li>Dynamic Layer and Object/Group ordering</li>
+				<li>Dynamic Entity loading (melonJS will instantiate JS object matching the object property name defined in the tilemap)</li>
+				<li>Solid, Platform, Slope and Breakable Tiles</li>
+				</ul>
+			 </li>
+			 <li>System and bitmap fonts</li>
+			 <li>some basic GUI elements</li>
+			 <li>a customizable loader, etc. . .</li>
+        </ul>
+		  <span class="right"><img src="media/browser_icons.png" alt="browser icons example" /></span>
+		  </p>
+		  <h2>Browser Compatibility</h2>
+        <p>See below about melonJS and compatibility with the various existing browsers.
+		  However, as of today, Google Chrome 12 (or upper) is highly recommended,
+		  as it both provides the best javascript engine, and finally got rid of all the audio
+		  issues present in the previous version.
+		   </p>
+         <table style="width:100%; border-spacing:0;">
+          <tr><th>Browser</th><th>Version</th><th>Status</th></tr>
+          <tr><td><a href="http://www.google.com/chrome/">Chrome</a></td><td>12, 13</td><td>fully working</td></tr>
+			 <tr><td><a href="http://www.google.com/chrome/">Chrome</a></td><td>11</td><td>sound issues</td></tr>
+			 <tr><td><a href="http://www.apple.com/safari/">Safari</a></td><td>5</td><td>fully working</td></tr>
+			 <tr><td><a href="http://www.mozilla.com/">Firefox</a></td><td>4</td><td>fully working</td></tr>
+			 <tr><td><a href="http://www.opera.com/">Opera</a></td><td>11</td><td>fully working</td></tr>
+			 <tr><td>IE</td><td>9</td><td>untested (I don't even have a PC!)</td></tr>
+		   </table>
+      </div>
+    </div>
+    <div id="content_footer"></div>
+    <div id="footer">
+      Copyright &copy; melonJS 2011</a>
+    </div>
+  </div>
+</body>
+</html>

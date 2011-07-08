@@ -1,0 +1,30 @@
+
+Version History 
+---------------
+0.9.0
+[ADD] API documentation using jsdoc-toolkit (finally!)
+[ADD] define getter for me.Rect coordinates (simplify code)
+[ADD] support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
+[CHANGE] correctly implemented InvisibleEntity Objects (no longer inherit from ObjectEntity)
+[CHANGE] makes SpriteObjet inherit from me.Rect (make it easier to manage sprite pos and size)
+[CHANGE] cosmetic update of the preloader screen
+[FIX] "rounding" issue fix in the viewportEntity (~~30% less CPU usage on Safari/OSX!)
+[FIX] cleaned & refactored tilemap collision detection (still not perfect though)
+
+0.8.0
+[ADD] support for "TiledObject" (as supported in Tiled 0.6.2)
+[CHANGE] re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
+[FIX] moved collision function from AnimatedSpriteObject to ObjectEntity
+
+0.7.9
+[ADD] added some effects to the camera object (shaking, fading, …)
+[CHANGE] re-factored public objects using John Resig Inheritance mechanism.
+[CHANGE] re-factored and fixed the camera/viewport code
+[FIX] fixed the "bootstrap" (unnecessary double call)
+[FIX] re-factored parallax code & corrected a bug that was causing the layers to be drawn 2x times(…)
+[FIX] partially fix crash audio in safari when audio is enabled
+[FIX] fixed gfx glitches (rounding issues)
+
+0.7.6 (May 16, 2011) 
+first public version with alex4 !
+www.melonjs.org is live :)

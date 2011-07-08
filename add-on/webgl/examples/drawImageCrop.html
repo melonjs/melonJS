@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+	body {
+		margin:0px;
+		padding:0px;
+	}
+	#myCanvas, #myCanvas2 {
+		border:1px solid #9C9898;	
+	}
+</style>
+<script src="../webgl-2d.js" type="text/javascript"></script>
+<script>
+
+function draw(context) {
+	var imageObj = new Image();
+	imageObj.onload = function() {
+		// draw reference image
+		context.drawImage(imageObj,50,50, 512, 512);
+
+		// draw cropped image
+		var sourceX = 180;
+		var sourceY = 150;
+		var sourceWidth = 150;
+		var sourceHeight = 150;
+		var destX = 400;
+		var destY = 400;
+		var destWidth = sourceWidth;
+		var destHeight = sourceHeight;
+		
+		context.drawImage(imageObj, sourceX, sourceY, sourceWidth,
+			sourceHeight, destX, destY, destWidth, destHeight);
+	}
+	imageObj.src = "images/HTML5_Badge_512.png";	
+}
+
+function init()
+{
+  var canvas=document.getElementById("myCanvas");
+	var context=canvas.getContext("2d");
+	draw(context);	
+  
+  canvas=document.getElementById("myCanvas2");  
+  WebGL2D.enable(canvas); // adds new context "webgl-2d" to cvs  
+	context=canvas.getContext("webgl-2d");	
+	draw(context);	
+}
+
+</script>
+</head>
+<body onload="init()">
+	<canvas id="myCanvas" width="600" height="600"></canvas>
+	<canvas id="myCanvas2" width="600" height="600"></canvas>
+</body>
+</html>

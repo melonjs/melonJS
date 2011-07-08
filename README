@@ -1,22 +1,35 @@
 MelonJS Game Engine
 Copyright (C) 2011, Olivier BIOT
-http://olivierbiot.wordpress.com/
+http://www.melonjs.org
 
-melonJS is the result of my enthusiasm & my past experiments with Javascript, and currently features :
+melonJS is an open-source, license free library for private / non commercial usage.
 
-- A fresh & lightweight 2D “sprite-based” engine (at least I hope to)
+melonJS is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License.
+http://creativecommons.org/licenses/by-nc-nd/3.0/
+
+------------------------------------------------------------------------------------------------------
+
+melonJS is the result of my enthusiasm & my past experiments with Javascript, 
+and currently features :
+
+- A fresh & lightweight 2D “sprite-based” engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browser (Chrome, Safari, Opera)
+- Compatible with most major browser (Chrome, Safari, Firefox, Opera)
 - “Multiple” Audio Channel support
 - Basic physics & collision mechanisms (to ensure low cpu requirements)
-- A basic set (for now) of Object Entities (to be extended)
-- Manage basic animation (proper spritesheet format to be added later, like TexturePacker)
+- Tween Effects
+- A basic set of Object Entities (to be extended)
+- Basic animation management
 - A Game state “manager” (to easily manage loading, menu, options, in-game state)
 - Tiled map format version 0.6.x integration for easy level design
-- Plain & Base64 encoded XML tilemap loading (compression not supported)
-- Horizontal tilemap (isometric not suppported)
-- multiple tileset supported (one for regular tiled map, one for the collision engine)
-- Multiple layers (multiple background/Foreground layers, collision layer, “Parallax” layer)
-- Alpha settings (through the Opacity slider in Tiled)
-- Dynamic Entity loading (basically, the engine will instantiate JS object matching the object property name defined in the tilemap, and pass corresponding settings to it)
-- Others useful stuff like system & bitmap fonts, some basic GUI elements, a customizable loader, etc…
+	- Uncompressed Plain & Base64 encoded XML tilemap loading
+	- Orthogonal tilemap
+	- Multiple layers (multiple background/Foreground, collision and "Parallax" layers)
+	- Alpha settings
+	- Tiled Object
+	- Dynamic Layer and Object/Group ordering
+	- Dynamic Entity loading
+	- Solid, Platform, Slope and Breakable Tiles
+- System & bitmap fonts
+- some basic GUI elements
+- a customizable loader, etc…

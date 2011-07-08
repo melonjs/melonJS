@@ -1,0 +1,108 @@
+/* -----
+
+	Game Main Class 
+	
+	------									*/
+
+var jsApp	=
+{
+	
+	/* ---
+	
+		Initialize the jsApp
+		
+		---										*/
+	onload: function()
+	{
+		
+		//me.debug.renderHitBox = true;
+		
+		if (!me.video.init('jsapp', 320, 240, true, 1.6))
+		{
+			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
+         return;
+		}
+					
+		// initialize the "sound engine"
+		me.audio.init("mp3,ogg");
+		
+		// set all ressources to be loaded
+		me.loader.onload = this.loaded.bind(this);
+		// set all ressources to be loaded		
+		me.loader.preload(g_ressources);
+		
+		// load everything & display a loading screen
+		me.state.change(me.state.LOADING);
+	},
+	
+	
+	/* ---
+	
+		callback when everything is loaded
+		
+		---										*/
+	loaded: function ()
+	{
+		
+		// set a fade transition effect
+		me.state.transition("fade","#000000", 15);
+		
+		// set the "Play/Ingame" Screen Object
+		me.state.set(me.state.PLAY, this);
+		
+		// add our player entity in the entity pool
+		me.entityPool.add("playerspawnpoint", PlayerEntity);
+			
+		// enable the keyboard
+		me.input.bindKey(me.input.KEY.LEFT,		"left");
+		me.input.bindKey(me.input.KEY.RIGHT,	"right");
+		me.input.bindKey(me.input.KEY.X,			"jump", true);
+		
+		// start the game
+		me.state.change(me.state.PLAY);
+		
+	},
+
+	reset: function()
+	{	
+		// load a level
+		me.levelDirector.loadLevel("zone1/1/p1");
+	},
+
+	
+	/* ---
+	
+		 rendering loop
+		
+		---										*/
+	onUpdateFrame: function()
+	{
+		// update our sprites
+		me.game.update();
+	
+		// draw the rest of the game
+		me.game.draw();
+		
+		// draw our frame !
+		me.video.blitSurface();
+		
+	},
+	
+	/* ---
+	
+		 action to perform when game is finished (state change)
+		
+		---										*/
+	destroy: function()
+	{
+
+	}
+
+}; // jsApp
+
+
+//bootstrap :)
+window.onReady(function() 
+{
+	jsApp.onload();
+});

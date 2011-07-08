@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sprite>
+    <files>
+        <file>graphics/sprites/alexkidd.png</file>
+    </files>
+    <cells>
+        <cell fileId="0" x="1" y="2" width="15" height="24"/>
+        <cell fileId="0" x="18" y="2" width="15" height="24"/>
+        <cell fileId="0" x="35" y="2" width="15" height="24"/>
+        <cell fileId="0" x="52" y="2" width="15" height="24"/>
+        <cell fileId="0" x="1" y="28" width="16" height="24"/>
+        <cell fileId="0" x="19" y="29" width="23" height="23"/>
+        <cell fileId="0" x="44" y="30" width="16" height="22"/>
+        <cell fileId="0" x="62" y="32" width="15" height="20"/>
+        <cell fileId="0" x="79" y="28" width="16" height="24"/>
+        <cell fileId="0" x="97" y="28" width="16" height="24"/>
+        <cell fileId="0" x="115" y="28" width="16" height="24"/>
+        <cell fileId="0" x="133" y="28" width="16" height="24"/>
+        <cell fileId="0" x="1" y="54" width="16" height="23"/>
+        <cell fileId="0" x="19" y="54" width="16" height="23"/>
+        <cell fileId="0" x="37" y="54" width="28" height="23"/>
+        <cell fileId="0" x="67" y="54" width="32" height="23"/>
+        <cell fileId="0" x="101" y="54" width="31" height="23"/>
+        <cell fileId="0" x="1" y="113" width="22" height="16"/>
+        <cell fileId="0" x="25" y="113" width="23" height="16"/>
+        <cell fileId="0" x="50" y="113" width="31" height="16"/>
+        <cell fileId="0" x="91" y="131" width="15" height="24"/>
+        <cell fileId="0" x="1" y="157" width="24" height="24"/>
+        <cell fileId="0" x="27" y="157" width="24" height="24"/>
+        <cell fileId="0" x="53" y="157" width="24" height="24"/>
+        <cell fileId="0" x="1" y="183" width="24" height="32"/>
+        <cell fileId="0" x="27" y="183" width="24" height="32"/>
+        <cell fileId="0" x="53" y="183" width="24" height="32"/>
+        <cell fileId="0" x="79" y="183" width="24" height="32"/>
+        <cell fileId="0" x="131" y="195" width="16" height="20"/>
+        <cell fileId="0" x="1" y="217" width="24" height="22"/>
+        <cell fileId="0" x="27" y="217" width="24" height="22"/>
+        <cell fileId="0" x="53" y="217" width="24" height="21"/>
+        <cell fileId="0" x="1" y="131" width="16" height="24"/>
+        <cell fileId="0" x="19" y="131" width="16" height="24"/>
+        <cell fileId="0" x="37" y="131" width="16" height="24"/>
+    </cells>
+    <animations>
+        <animation name="attack" mode="loop">
+            <frames>
+                <frame cellId="5" delay="100" offsetX="4" offsetY="1">
+                    <conBoxes>
+                        <conBox x="8" y="-3" width="8" height="8" bitMask="1"/>
+                        <conBox x="-7" y="-10" width="15" height="23" bitMask="0"/>
+                    </conBoxes>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="attack_swim" mode="loop">
+            <frames>
+                <frame cellId="19" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes>
+                        <conBox x="8" y="1" width="8" height="8" bitMask="1"/>
+                        <conBox x="-7" y="-6" width="15" height="13" bitMask="0"/>
+                    </conBoxes>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="bike" mode="loop">
+            <frames>
+                <frame cellId="21" delay="50" offsetX="0" offsetY="0">
+                    <conBoxes>
+                        <conBox x="-11" y="-11" width="24" height="24" bitMask="1"/>
+                    </conBoxes>
+                </frame>
+                <frame cellId="22" delay="50" offsetX="0" offsetY="0">
+                    <conBoxes>
+                        <conBox x="-11" y="-11" width="24" height="24" bitMask="1"/>
+                    </conBoxes>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="bike_jump" mode="loop">
+            <frames>
+                <frame cellId="23" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes>
+                        <conBox x="-11" y="-11" width="24" height="24" bitMask="1"/>
+                    </conBoxes>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="boat" mode="loop">
+            <frames>
+                <frame cellId="29" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="30" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="31" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="climb" mode="loop">
+            <frames>
+                <frame cellId="8" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="9" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="10" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="11" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="crouch" mode="loop">
+            <frames>
+                <frame cellId="7" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="dance" mode="loop">
+            <frames>
+                <frame cellId="4" delay="300" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="13" delay="300" offsetX="0" offsetY="1">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="death" mode="loop">
+            <frames>
+                <frame cellId="32" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="33" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="34" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="33" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="fall" mode="loop">
+            <frames>
+                <frame cellId="28" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="helicopter" mode="loop">
+            <frames>
+                <frame cellId="24" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="25" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="26" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="27" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="idle" mode="loop">
+            <frames>
+                <frame cellId="4" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="jump" mode="loop">
+            <frames>
+                <frame cellId="6" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="run" mode="loop">
+            <frames>
+                <frame cellId="0" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="1" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="2" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="3" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="stone" mode="loop">
+            <frames>
+                <frame cellId="20" delay="100" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+        <animation name="swim" mode="loop">
+            <frames>
+                <frame cellId="17" delay="200" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+                <frame cellId="18" delay="200" offsetX="0" offsetY="0">
+                    <conBoxes/>
+                </frame>
+            </frames>
+        </animation>
+    </animations>
+</sprite>

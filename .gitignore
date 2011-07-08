@@ -1,0 +1,8 @@
+# temp files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# project specific ignore
+web/
+add-on/
