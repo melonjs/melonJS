@@ -163,10 +163,10 @@
 		------								*/
 	TileSet.prototype.drawTile = function (context, x, y, tileId)
 	{
-   	//console.log(gid);
+		//console.log(gid);
 		var texturePositionX = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
 		var texturePositionY = this.margin + (this.spacing + this.tileheight) * ~~(tileId / this.hTileCount);
-	   
+		
 		context.drawImage(this.image,
 								texturePositionX, texturePositionY,
 								this.tilewidth, this.tileheight,

@@ -26,15 +26,6 @@
          this.logo1 = new me.Font('century gothic', 32, 'white');
 			this.logo2 = new me.Font('century gothic', 32, '#89b002');
          this.logo2.bold();
-         
-         // flag to know if we need to refresh the display
-         this.invalidate = false;
-         
-         // load progress in percent
-         this.loadPercent = 0;
-         
-         // setup a callback
-         me.loader.onProgress = this.onProgressUpdate.bind(this);
 
       },
       
@@ -45,26 +36,10 @@
          this.logo1 = this.logo2 = null;
       },
       
-       // make sure the screen is refreshed every frame 
-      onProgressUpdate: function(progress)
-		{
-         this.loadPercent = progress;
-         this.invalidate = true;
-      },
-
-      
       // make sure the screen is refreshed every frame 
       update: function()
 		{
-			if (this.invalidate===true)
-         {
-            // clear the flag
-            this.invalidate = false;
-            // and return true
-            return true;
-         }
-         // else return false
-         return false;
+			return true;
 		},
       
       /*---
@@ -91,7 +66,7 @@
          y += 40;
          
 			// display a progressive loading bar
-			var width = Math.floor(this.loadPercent * context.canvas.width);
+			var width = Math.floor(me.loader.getLoadProgress() * context.canvas.width);
          
    		// draw the progress bar
          context.strokeStyle = "silver";
@@ -107,7 +82,7 @@
 	/************************************************************************************/
 
 	/**
-    * a small class to manage loading of stuff and manage resources
+    * a small class to manage loading of stuff and manage ressources
 	 * There is no constructor function for me.input.
 	 * @final
 	 * @memberOf me
@@ -122,13 +97,11 @@
 		// contains all the images loaded
 		var imgList = [];
 		// contains all the xml loaded
-		var xmlList = {};
+		var xmlList = [];
 		// flag to check loading status
-		var resourceCount    =	0;
+		var ressourceCount	=	0;
 		var loadCount			=	0;
 		var timerId				=	0;
-      // keep track of how much TMX file we are loading
-      var tmxCount         =  0;
 		
 		/* ---
 		
@@ -137,11 +110,9 @@
 			---										*/
 		function checkLoadStatus() 
 		{
-         // remove tmxCount from the total resource to be loaded
-         // as we will after load each TMX into the level director
-         if (loadCount == (resourceCount - tmxCount))
+			//console.log("called");
+			if (loadCount == ressourceCount)
 			{
-           
 				// add all TMX level into the level Director
 				for( var xmlObj in xmlList )
 				{	
@@ -149,9 +120,6 @@
 				   {
 						//console.log("un TMX!", xmlObj);
 						me.levelDirector.addTMXLevel(xmlObj);
-                  
-                  //progress notification
-                  obj.onResourceLoaded();
 					}
 				}
 				
@@ -177,8 +145,8 @@
 			---										*/
 		function onImageError(e)
 		{
-			// retry mechanism with image loading ???
-			throw "melonJS: Failed loading image resource";
+			// on to retry with the loading ???
+			console.log('Failing loading image');
 		};
 
 			
@@ -202,7 +170,7 @@
 			imgList.push(img.name);
 
 			imgList[img.name]					= new Image();
-			imgList[img.name].onload		= obj.onResourceLoaded.bind(obj);
+			imgList[img.name].onload		= obj.onRessourceLoaded.bind(obj);
 			imgList[img.name].onerror		= onImageError.bind(this);
 			imgList[img.name].src			= img.src + me.nocache;
 		};
@@ -226,26 +194,24 @@
 			{
 				// code for IE6, IE5
 				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-            // I actually don't give a **** about IE5/IE6...
 			}
 			// load our XML
 			xmlhttp.open("GET",xmlData.src + me.nocache,false);
-			xmlhttp.onload = obj.onResourceLoaded.bind(obj);
+			xmlhttp.onload = obj.onRessourceLoaded.bind(obj);
+			// some small hack to keep track of what is exaclty loaded
+			/*
+			if (isTMX)
+			{
+				xmlhttp["xmlTMXid"] = xmlData.name;
+			}
+			*/
 			xmlhttp.send();
 
 			// set the xmldoc in the array
 			xmlList[xmlData.name]		 = {};
 			xmlList[xmlData.name].xml	 = xmlhttp.responseText;
 			xmlList[xmlData.name].isTMX = isTMX || false;
-         // in case we have a TMX file :
-         if (xmlList[xmlData.name].isTMX)
-         {
-            // increase the resourceCount by 1
-            // allowing to add the loading of level in the 
-            // levelDirector as part of the loading progress
-            resourceCount +=1;
-            tmxCount +=1;
-         }
+			
 		};
 		
 		/* ---
@@ -271,81 +237,74 @@
        * me.loader.onload = this.loaded.bind(this);
        */		
 		obj.onload = undefined;
-      
-      
-      /**
-       * onProgress callback<br>
-       * each time a resource is loaded, the loader will fire the specified function,
-       * giving the actual progress [0 ... 1], as argument.
-       * @public
-       * @type Function
-       * @name me.loader#onProgress
-       * @example
-       *
-       * // set a callback for progress notification
-       * me.loader.onProgress = this.updateProgress.bind(this);
-       */		
-		obj.onProgress = undefined;
-
 		
 		
 		/**
-		 *	just increment the number of already loaded resources
+		 *	just increment the number of already loaded ressources
 		 * @private
        */
       
-		obj.onResourceLoaded= function(e)
+		obj.onRessourceLoaded= function(e)
 		{
 			
-         // increment the loading counter
+			// in case we just loaded an XML file
+			/*
+			if (e.target instanceof XMLHttpRequest)
+			{
+				// check if a TMX xml file
+				console.log(e);
+				var obj = e.target;
+				
+				console.log(e.target['xmlTMXid']);
+				
+				me.levelDirector.addTMXLevel(""+e.target['xmlTMXid']);
+			
+				//console.log("1 XML file loaded");
+				// if yes add it to the level director
+			}
+			*/
+			
 			loadCount++;
-         
-         // callback ?
-         if (obj.onProgress)
-         {
-            // pass the load progress in percent, as parameter
-            obj.onProgress(obj.getLoadProgress());
-         }
-      };
+		};
 		
 		/**
-		 * set all the specified game resources to be preloaded.<br>
-       * each resource item must contain the following fields :<br>
-       * - name    : internal name of the resource<br>
+		 * set all the specified game ressources to be preloaded.<br>
+       * each ressource item must contain the following fields :<br>
+       * - name    : internal name of the ressource<br>
        * - type    : "image", "tmx", "audio"<br>
-       * - src     : path and file name of the resource<br>
+       * - src     : path and file name of the ressource<br>
        * (!) for audio :<br>
-       * - src     : path (only) where resources are located<br>
+       * - src     : path (only) where ressources are located<br>
        * - channel : number of channels to be created<br>
        * <br>
 		 * @name me.loader#preload
 		 * @public
 		 * @function
-       * @param {Array.<string>} resources
+       * @param {Array.<string>} ressources
        * @example
-       * var g_resources = [ {name: "tileset-platformer",  type:"image",  src: "data/map/tileset-platformer.png"},
-       *                     {name: "map1",                type: "tmx",   src: "data/map/map1_slopes.tmx"},
-       *                     {name: "cling",               type: "audio", src: "data/audio/",	channel : 2}
+       * var g_ressources = [ {name: "tileset-platformer",  type:"image",  src: "data/map/tileset-platformer.png"},
+       *                      {name: "map1",                type: "tmx",   src: "data/map/map1_slopes.tmx"},
+       *                      {name: "cling",               type: "audio", src: "data/audio/",	channel : 2}
 		 *                    ]; 
        * ...
        *
-       * // set all resources to be loaded
-       * me.loader.preload(g_resources);
+       * // set all ressources to be loaded
+       * me.loader.preload(g_ressources);
 		 */
 
 		obj.preload= function (res)
 		{	
 			// set the callback for audio stuff
-			me.audio.setLoadCallback(obj.onResourceLoaded.bind(obj));
+			me.audio.setLoadCallback(obj.onRessourceLoaded.bind(obj));
 			
-			// parse the resources
+			// parse the ressources
 			for ( var i = 0; i < res.length; i++ )
 			{
 				switch (res[i].type)
 				{
 					case "image" :
 						preloadImage(res[i]);
-						resourceCount +=1;
+						ressourceCount +=1;
 						break;
 				
 					case "audio":
@@ -353,17 +312,16 @@
 						if (me.audio.isAudioEnable())
 						{
 							me.audio.load(res[i]);
-							resourceCount +=1;
+							ressourceCount +=1;
 						}
 						break;
 				
 					case "tmx":
 						preloadXML(res[i], true);
-						resourceCount +=1;
+						ressourceCount +=1;
 						break;
 				
-					default : 
-                  throw "melonJS: loader : unknow resource type : %s" + res[i].type;
+					default : alert("error : unknow ressource type : %s", res[i].type);
 						break;
 				}
 			};
@@ -386,7 +344,7 @@
 				return xmlList[elt].xml;
 			else
 			{
-				//console.log ("warning %s resource not yet loaded!",name);
+				//console.log ("warning %s ressource not yet loaded!",name);
 				return null;
 			}
 
@@ -404,26 +362,11 @@
 
 		obj.getImage= function(elt)
 		{	
-			if (imgList[elt] != null)
-         {
-            if (me.sys.cacheImage === true)
-            {
-               // build a new canvas
-               var tempCanvas = me.video.createCanvasSurface(imgList[elt].width, imgList[elt].height);
-               // draw the image into the canvas context
-               tempCanvas.drawImage(imgList[elt], 0, 0);
-               // return our canvas
-               return tempCanvas.canvas;
-				}
-            else
-            {  
-               // return the corresponding Image object
-               return imgList[elt];
-            }
-         }
-         else
+			if (imgList != null)
+				return imgList[elt];
+			else
 			{
-				//console.log ("warning %s resource not yet loaded!",name);
+				//console.log ("warning %s ressource not yet loaded!",name);
 				return null;
 			}
 
@@ -434,13 +377,12 @@
        * @name me.loader#getLoadProgress
        * @public
        * @function
-       * @deprecated use callback instead
        * @return {Number} 
        */
 
-		obj.getLoadProgress = function()
+		obj.getLoadProgress= function()
 		{	
-			return loadCount / resourceCount;
+			return loadCount / ressourceCount;
 		};
 		
 		// return our object

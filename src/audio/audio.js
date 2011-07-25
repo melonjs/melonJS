@@ -49,11 +49,7 @@
 		// enable/disable flag
 		var sound_enable = true;
 		
-      // defaut reset value
 		var reset_val = 0;//.01;
-      
-      // a retry counter
-      var retry_counter = 0;
 		
 			
 		/* ---------------------------------------------
@@ -140,18 +136,9 @@
 		
 		function soundLoadError (sound_id) 
 		{
-         //check the retry counter
-         if (retry_counter++>3)
-			{
-            // what the hell ...?
-            throw "melonJS: failed loading audio: " + sound_id+"."+activeAudioExt;
-         }
-         else
-         {
-           	// reload !
-            audio_channels[sound_id][0].load();
-         }
-      };
+			// reload !
+			audio_channels[sound_id][0].load();
+		};
 		
 		/* ---
 		
@@ -161,10 +148,7 @@
 		
 		function soundLoaded (sound_id, sound_channel)
 		{
-			// reset the retry counter
-         retry_counter = 0;
-         
-         //console.log("sound loaded");
+			//console.log("sound loaded");
 			// create other "copy" channels if necessary
 			if (sound_channel > 1)
 			{

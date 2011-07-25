@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebGL-2D Example</title>
+  
+    <script src="../webgl-2d.js" type="text/javascript"></script>
+  
+    <script type="text/javascript">
+      document.addEventListener("DOMContentLoaded", init, false);
+
+      var cvs2D, cvsGL, ctx2D, ctxGL, width, height;
+      var frameCount = 0;
+
+      function init() {
+        cvs2D = document.getElementById("canvas2D");
+        cvsGL = document.getElementById("canvasGL");
+
+        width = cvs2D.width, height = cvs2D.height;
+
+        WebGL2D.enable(cvsGL); // adds new context "webgl-2d" to cvs
+
+        // Easily switch between regular canvas 2d context and webgl-2d
+        ctx2D = cvs2D.getContext("2d");
+        ctxGL = cvsGL.getContext("webgl-2d");
+
+        draw(ctx2D);
+        draw(ctxGL);
+      }
+
+      function draw(ctx) {
+        ctx.fillStyle = "rgb(0, 0, 0)";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "rgb(255, 200, 255)";
+
+        ctx.strokeStyle = "rgba(50, 255, 255, 0.5)";
+        
+        ctx.beginPath();
+        ctx.lineTo(100, 100);
+        ctx.lineTo(200, 200);
+        ctx.lineTo(200, 100);
+        ctx.lineTo(100, 100);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(50, 0, 255, 0.5)";
+        ctx.moveTo(width - 10, height - 10);
+        ctx.lineTo(width - 120, height - 120);
+        ctx.lineTo(width - 120, height -20);
+        ctx.closePath();
+
+        ctx.lineWidth = 4;
+        ctx.moveTo(240, 100);
+        ctx.lineTo(340, 100);
+        ctx.lineTo(340, 200);
+        ctx.lineTo(240, 200);
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.translate(100, 100);
+        ctx.rotate(Math.PI/4);
+        ctx.rect(0, 0, 140, 100);
+        ctx.stroke();
+      }
+    </script>
+
+    <style type="text/css">
+      body, * {
+        font-family: sans-serif;
+      }
+    </style>
+  
+  </head>
+  
+  <body>
+    <h1>Example: WebGL-2D Comparison</h1>
+    <h2>beginPath, closePath, moveTo, lineTo, fill, stroke</h2>
+    <div style="float: left; margin-right: 10px;">
+      <h2>WebGL-2D</h2> 
+      <canvas id="canvasGL" width="350" height="350" style="border: 1px solid black;"></canvas>
+    </div>
+    <div style="float: left;">
+      <h2>Canvas2D</h2>
+      <canvas id="canvas2D" width="350" height="350" style="border: 1px solid black;"></canvas>
+    </div>
+  </body>
+</html>

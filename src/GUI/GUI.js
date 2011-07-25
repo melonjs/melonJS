@@ -20,7 +20,7 @@
 		a Simple GUI object
 			
 		------									*/
-	var GUI_Object = me.SpriteObject.extend(
+	var GUI_Object = me.AnimatedSpriteObject.extend(
 	{	
 		// object can be clicked or not
 		isClickable : true,

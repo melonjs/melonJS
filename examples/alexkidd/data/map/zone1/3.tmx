@@ -33,12 +33,10 @@
   <object name="me.LevelEntity" type="Portal" x="0" y="176" width="16" height="48">
    <properties>
     <property name="direction" value="left"/>
-    <property name="duration" value="8"/>
-    <property name="fade" value="#000000"/>
     <property name="to" value="zone1/2/p1"/>
    </properties>
   </object>
-  <object name="playerspawnpoint" x="16" y="208" width="16" height="16"/>
+  <object name="playerspawnpoint" x="32" y="208"/>
  </objectgroup>
  <layer name="Collision" width="100" height="75" visible="0">
   <data encoding="base64">

@@ -3,6 +3,7 @@ Copyright (C) 2011, Olivier BIOT
 http://www.melonjs.org
 
 melonJS is an open-source, license free library for private / non commercial usage.
+
 melonJS is licensed under a Creative Commons Attribution-NonCommercial-NoDerivs 3.0 Unported License.
 http://creativecommons.org/licenses/by-nc-nd/3.0/
 
@@ -11,15 +12,15 @@ http://creativecommons.org/licenses/by-nc-nd/3.0/
 melonJS is the result of my enthusiasm & my past experiments with Javascript, 
 and currently features :
 
-- A fresh & lightweight 2D � sprite-based� engine
+- A fresh & lightweight 2D “sprite-based” engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
 - Compatible with most major browser (Chrome, Safari, Firefox, Opera)
-- Multiple Audio Channel support
+- “Multiple” Audio Channel support
 - Basic physics & collision mechanisms (to ensure low cpu requirements)
 - Tween Effects
 - A basic set of Object Entities (to be extended)
 - Basic animation management
-- A Game state manager (to easily manage loading, menu, options, in-game state)
+- A Game state “manager” (to easily manage loading, menu, options, in-game state)
 - Tiled map format version 0.6.x integration for easy level design
 	- Uncompressed Plain & Base64 encoded XML tilemap loading
 	- Orthogonal tilemap
@@ -31,4 +32,4 @@ and currently features :
 	- Solid, Platform, Slope and Breakable Tiles
 - System & bitmap fonts
 - some basic GUI elements
-- a customizable loader, etc�...
+- a customizable loader, etc…

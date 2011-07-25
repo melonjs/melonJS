@@ -37,6 +37,7 @@ var jsApp	=
 		
 		// load everything & display a loading screen
 		me.state.change(me.state.LOADING);
+		
 	},
 	
 	

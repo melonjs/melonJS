@@ -68,7 +68,10 @@
 			// real worl limits
 			this.limits   = new me.Vector2d(realw || this.width, realh || this.height);
 			
-			// target to follow
+			// set a default deadzone
+			this.setDeadzone(this.width/6, this.height/6);
+         
+   		// target to follow
 			this.target = null;
 			
 			// default value follow 
@@ -80,10 +83,7 @@
 			this._fadeOut = {color : 0, alpha : 0, duration : 0, onComplete : null};
 			// fade variables
 			this._fadeIn  = {color : 0, alpha : 0, duration : 0, onComplete : null};
-		
-         // set a default deadzone
-			this.setDeadzone(this.width/6, this.height/6);
-      },
+		},
 		
 		// -- some private function ---
 			
@@ -137,9 +137,6 @@
          // cache some value
          this._deadwidth  = this.width  - this.deadzone.x;
          this._deadheight = this.height - this.deadzone.y;
-         
-         // force a camera update
-         this.update(true);
 
 		},
 
@@ -160,7 +157,7 @@
 	   /**
        * set the viewport to follow the specified entity
 		 * @param {Object} Object Entity to follow
-       * @param {axis} [axis="AXIS.BOTH"] AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
+       * @param {axis} axis AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
 		 */
 
 		follow : function (target, axis)
