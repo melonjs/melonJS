@@ -20,8 +20,8 @@
 	 */
 	timer = (function()
 	{
-		// hold public stuff in our singletong
-		var singleton	= {};
+		// hold public stuff in our apig
+		var api	= {};
 	
 		/*---------------------------------------------
 			
@@ -68,21 +68,21 @@
        * @type {Int}
        * @name me.timer#tick
        */
-		singleton.tick		=	1.0;
+		api.tick		=	1.0;
 	
 		/* ---
 		
 			init our time stuff
 			
 			---							*/
-		singleton.init = function()
+		api.init = function()
 		{
 			// check if we have a framecounter display in the HTML
 			htmlCounter	 = document.getElementById("framecounter");
 			debug			 = (htmlCounter !== null);
 			
 			// reset variables to initial state
-			singleton.reset();			
+			api.reset();			
 		};
 		
 	   /**
@@ -91,7 +91,7 @@
 		 * @private
 		 * @function
    	 */
-		singleton.reset = function()
+		api.reset = function()
 		{
 			// set to "now"
 			now = last = new Date().getTime();
@@ -107,7 +107,7 @@
 		 * @return {Date}
 		 * @function
    	 */
-      singleton.getTime = function()
+      api.getTime = function()
 		{ 
 			return now;					
 		};
@@ -119,7 +119,7 @@
 			should be called once a frame
 			
 			---                           */
-		singleton.update = function()
+		api.update = function()
 		{ 
 			
 			last  = now;
@@ -142,15 +142,15 @@
 			}
 			
 			// get the game tick
-			singleton.tick  = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
+			api.tick  = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
 			
-			//console.log(singleton.tick);
+			//console.log(api.tick);
 					
 		};
 		
 		
-		// return our singletonect
-		return singleton;
+		// return our apiect
+		return api;
 
 	})();
 	/************************************************************************************/
@@ -164,8 +164,8 @@
 	 */
 	video = (function()
 	{
-		// hold public stuff in our singletong
-		var singleton	= {};
+		// hold public stuff in our apig
+		var api	= {};
 
 		// internal variables
 		var canvas					=	null;
@@ -211,7 +211,7 @@
        *    return;
        * }
    	 */
-		singleton.init = function (wrapperid, game_width, game_height, doublebuffering, scale) 
+		api.init = function (wrapperid, game_width, game_height, doublebuffering, scale) 
 		{
 			double_buffering = doublebuffering || false;
 			
@@ -224,7 +224,7 @@
 			
 			wrapper  = document.getElementById(wrapperid);
 			canvas	= document.createElement("canvas");
-			  
+         
 			canvas.setAttribute("width",	(game_width_zoom) + "px");
 			canvas.setAttribute("height",	(game_height_zoom) + "px");
 			canvas.setAttribute("border",	"0px solid black");
@@ -240,7 +240,7 @@
 				// create the back buffer if we use double buffering
 				if (double_buffering)
 				{
-					backBufferContext2D	= singleton.createCanvasSurface(game_width, game_height);
+					backBufferContext2D	= api.createCanvasSurface(game_width, game_height);
 					backBufferCanvas		= backBufferContext2D.canvas;
 				}
 				else
@@ -264,7 +264,7 @@
        * @function
        * @return {Document}
    	 */
-      singleton.getWrapper = function()
+      api.getWrapper = function()
 		{
 			return wrapper;
 		};
@@ -275,7 +275,7 @@
        * @function
        * @return {Int}
    	 */
-		singleton.getWidth =  function()
+		api.getWidth =  function()
 		{
 			return backBufferCanvas.width;
 			
@@ -287,7 +287,7 @@
        * @function
        * @return {Int}
    	 */
-		singleton.getHeight = function()
+		api.getHeight = function()
 		{
 			return backBufferCanvas.height;
 		};
@@ -301,7 +301,7 @@
        * @param {Int} height canvas height
        * @return {Context2D}
    	 */
-		singleton.createCanvasSurface = function(width, height)
+		api.createCanvasSurface = function(width, height)
 		{
 			var privateCanvas = document.createElement('canvas');
 				
@@ -318,7 +318,7 @@
        * @function
        * @return {Canvas}
    	 */
-		singleton.getScreenCanvas = function()
+		api.getScreenCanvas = function()
 		{
 			//console.log(VideoMngr._canvas);
 			return canvas;
@@ -331,7 +331,7 @@
        * @function
        * @return {Context2D}
    	 */
-      singleton.getScreenFrameBuffer = function()
+      api.getScreenFrameBuffer = function()
 		{
 			return backBufferContext2D; 
 		};
@@ -351,7 +351,7 @@
        * @function
        * @param {Number} scale scaling value
     	 */
-		singleton.updateDisplaySize = function(scale)
+		api.updateDisplaySize = function(scale)
 		{
 			if (double_buffering)
 			{
@@ -377,7 +377,7 @@
        * @param {Context2D} context
        * @param {Color} col
     	 */	
-		singleton.clearSurface = function(context, col)
+		api.clearSurface = function(context, col)
 		{
 			context.fillStyle = col;
 			context.fillRect (0, 0, 
@@ -395,7 +395,7 @@
        * @param {Context2D} context
        * @param {scale} scale
     	 */	
-		singleton.scale = function(context, scale)
+		api.scale = function(context, scale)
 		{
 			context.translate(	- (((context.canvas.width * scale)  - context.canvas.width) >> 1) , 
                               - (((context.canvas.height * scale) - context.canvas.height) >> 1));
@@ -412,7 +412,7 @@
        * @param {Context2D} context
        * @param {Boolean} enable
     	 */	
-      singleton.setAlpha = function(context, enable)
+      api.setAlpha = function(context, enable)
 		{
 			context.globalCompositeOperation = enable?"source-over":"copy";
 		};
@@ -423,11 +423,11 @@
        * @name me.video#blitSurface
        * @function
     	 */
-		singleton.blitSurface = function()
+		api.blitSurface = function()
 		{
 			if (double_buffering)
 			{
-				singleton.blitSurface = function () 
+				api.blitSurface = function () 
 				{
 					//FPS.update();
 					context2D.drawImage(	backBufferCanvas, 
@@ -440,27 +440,74 @@
 			else
 			{
 				// "empty" function, as we directly render stuff on "context2D"
-				singleton.blitSurface = function () {/*FPS.update()*/}; 
+				api.blitSurface = function (){}; 
 			}
-			singleton.blitSurface();
+			api.blitSurface();
 		};
 		
 		
 		/**
-		 * apply the specified effect to the main canvas<p>
-       * and return a new canvas object with the modified output
-       * @name me.video#applyEffect
-       * @param {String} effect "b&w", "brightness"
-       * @param {String} option brightness level
+		 * apply the specified filter to the main canvas
+       * and return a new canvas object with the modified output<br>
+       * (!) Due to the internal usage of getImageData to manipulate pixels,
+       * this function will throw a Security Exception with FF if used locally
+       * @name me.video#applyRGBFilter
        * @function
+       * @param {Object} [canvas] Canvas or Image Object on which to apply the filter
+       * @param {String} effect "b&w", "brightness", "transparent"
+       * @param {String} option : level [0...1] (for brightness), color to be replaced (for transparent) 
+       * @return {Context2D} context object
     	 */
-		singleton.applyEffect = function(effect, option)
+		api.applyRGBFilter = function()
 		{
-			var fcanvas = singleton.createCanvasSurface();
-			var imgpix = backBufferContext2D.getImageData( 0, 0, backBufferCanvas.width, backBufferCanvas.height);
-			var pix = imgpix.data;
-			
-			// apply selected effect
+                  
+         // if first arguments is not an image or a canvas
+         if (typeof arguments[0] == "string")
+         {
+            // get effect and option parameters value
+            var effect = arguments[0];
+            var option = arguments[1];
+            
+            //create a new canvas using the main canvas size
+            var fcanvas = api.createCanvasSurface();
+
+            
+            // get the content of the main canvas
+            var imgpix = backBufferContext2D.getImageData( 0, 0, backBufferCanvas.width, backBufferCanvas.height);
+            
+         }
+         else
+         {  
+            //create a output canvas using the given canvas or image size
+            var fcanvas = api.createCanvasSurface(arguments[0].width, arguments[0].height);
+               
+            // is it an image ?
+            if (arguments[0] instanceof Image)
+            {
+               // build a temp canvas
+               var tempCtx = me.video.createCanvasSurface(arguments[0].width, arguments[0].height);
+               
+               // draw the image into the canvas context
+               tempCtx.drawImage(arguments[0], 0, 0);
+               // get the image data               
+               var imgpix = tempCtx.getImageData( 0, 0, arguments[0].width, arguments[0].height);
+               
+            }
+            else // a canvas ?
+            {
+               // let's hope ! :)
+               var imgpix = arguments[0].getContext('2d').getImageData( 0, 0, arguments[0].width, arguments[0].height);
+            }
+            // get effect and option parameters value
+            var effect = arguments[1];
+            var option = arguments[2];
+            
+         }
+         
+         // pointer to the image data
+         var pix = imgpix.data;
+         
+         // apply selected effect
 			switch (effect)
 			{
 				case "b&w" : 
@@ -483,25 +530,38 @@
 					brightness = (brightness>1.0)?1.0:brightness;
 					for (var i = 0, n = pix.length; i < n; i += 4)
 					{	
+                  
 						pix[i  ] *= brightness;   // red
 						pix[i+1] *= brightness;   // green
 						pix[i+2] *= brightness;   // blue
 					}
 					break;
 				}
-				
-				
+
+            case "transparent": 
+				{
+					for (var i = 0, n = pix.length; i < n; i += 4)
+					{	
+                  if (me.utils.RGBToHex(pix[i],pix[i+1],pix[i+2]) === option)
+                  {
+                     pix[i+3] = 0;
+                  }
+               }
+					break;
+				}
+
 				default : return null;
 			}
-			
+         
+         // put our modified image back in the new filtered canvas
 			fcanvas.putImageData(imgpix, 0 ,0);
-			return fcanvas;
-			
-		};
 
+         // return it
+			return fcanvas;
+		};
 		
-		// return our singletonect
-		return singleton;
+      // return our api
+		return api;
 
 	})();
 

@@ -44,11 +44,11 @@ var jsApp	=
 	loaded: function ()
 	{
 		
+      // set the "Play/Ingame" Screen Object
+		me.state.set(me.state.PLAY, new PlayScreen());
+      
 		// set a fade transition effect
 		me.state.transition("fade","#000000", 15);
-		
-		// set the "Play/Ingame" Screen Object
-		me.state.set(me.state.PLAY, this);
 		
 		// add our player entity in the entity pool
 		me.entityPool.add("playerspawnpoint", PlayerEntity);
@@ -61,44 +61,22 @@ var jsApp	=
 		// start the game
 		me.state.change(me.state.PLAY);
 		
-	},
-
-	reset: function()
-	{	
-		// load a level
-		me.levelDirector.loadLevel("zone1/1/p1");
-	},
-
-	
-	/* ---
-	
-		 rendering loop
-		
-		---										*/
-	onUpdateFrame: function()
-	{
-		// update our sprites
-		me.game.update();
-	
-		// draw the rest of the game
-		me.game.draw();
-		
-		// draw our frame !
-		me.video.blitSurface();
-		
-	},
-	
-	/* ---
-	
-		 action to perform when game is finished (state change)
-		
-		---										*/
-	destroy: function()
-	{
-
 	}
 
 }; // jsApp
+
+/* game initialization */
+var PlayScreen = me.ScreenObject.extend(
+{
+   // we just defined what to be done on reset
+   // no need to do somehting else
+	onResetEvent: function()
+	{	
+		// load a level
+		me.levelDirector.loadLevel("zone1/1/p1");
+	}
+	
+});
 
 
 //bootstrap :)
