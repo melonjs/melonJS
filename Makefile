@@ -39,7 +39,7 @@ buildir = build/
 docdir = docs/
 
 # CURRENT BUILD VERSION
-JTB_VER=$(shell cat $(srcdir)version.txt)
+ME_VER=$(shell cat $(srcdir)version.txt)
 VERSION=sed "s/@VERSION/${VERSION}/"'
 
 # list of module to compile
@@ -61,10 +61,10 @@ MODULE = $(srcdir)core.js\
 	 $(srcdir)Utils/tween.js
 
 # Debug Target name
-DEBUG = $(buildir)melonJS-$(JTB_VER).js
+DEBUG = $(buildir)melonJS-$(ME_VER).js
 
 # Build Target name
-BUILD = $(buildir)melonJS-$(JTB_VER)-min.js
+BUILD = $(buildir)melonJS-$(ME_VER)-min.js
 
 #######################################################################
 
