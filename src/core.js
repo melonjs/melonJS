@@ -117,7 +117,7 @@
        * Global scaling factor(default 1.0)
        * @type {int}
        * @memberOf me.sys
-      */
+       */
        scale :  1.0,
     
       /** 
@@ -128,14 +128,23 @@
        */
        useNativeAnimFrame :  false,
        
-        /**
-        * cache Image using a Canvas element, instead of directly using the Image Object<br>
-        * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
-        * default value : false
-        * @type {Boolean}
-        * @memberOf me.sys 
-        */
-		 cacheImage : false
+      /**
+       * cache Image using a Canvas element, instead of directly using the Image Object<br>
+       * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
+       * default value : false
+       * @type {Boolean}
+       * @memberOf me.sys 
+       */
+		 cacheImage : false,
+       
+      /** 
+       * Enable dirtyRegion Feature <br>
+       * default value : false
+       * @type {Boolean}
+       * @memberOf me.sys
+       */
+       dirtyRegion :  false,
+
 
    };
 	   
@@ -659,12 +668,41 @@
 		
 	};
 	
-
+ 	
 	/************************************************************************************/
-	/*		OBJECT MNGR FUNCTIONS	:																		*/
+	/*		OBJECT MNGT & DRAWING FUNCTIONS	:															*/
 	/*		hold & manage app/game objects																*/
 	/************************************************************************************/
-	/**
+	
+   /**
+    * a dirty region management object
+    * only use by the game manager
+	 * @ignore
+	 */
+	dirtyRegion = (function()
+   {
+      // hold public stuff in our singletong
+		var api	= {};
+      
+      /*---------------------------------------------
+			
+			PRIVATE STUFF
+				
+		---------------------------------------------*/
+      
+      
+      /*---------------------------------------------
+			
+			PUBLIC STUFF
+				
+		---------------------------------------------*/
+      
+   })();
+
+   
+   
+   
+   /**
 	 * me.game represents your current game, it contains all the objects, tilemap layers,<br>
     * HUD information, current viewport, collision map, etc..<br>
     * me.game is also responsible for updating (each frame) the object status and draw them<br>
