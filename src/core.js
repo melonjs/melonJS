@@ -1424,24 +1424,28 @@
 	
 	/*---
 	
-	 	cross browser requestAnimationFrame.
-	
+	 	cross browser requestAnimationFrame/cancelRequestAnimFrame.
+
 		---*/
-    window.requestAnimFrame = (function(){
-      return  window.requestAnimationFrame       || 
-              window.webkitRequestAnimationFrame || 
-              window.mozRequestAnimationFrame    || 
-              window.oRequestAnimationFrame      || 
-              window.msRequestAnimationFrame     || 
-				  
-              function(callback, element) {
-					 //console.log("requestAnim : fallback to timeout");
-                return window.setTimeout(callback, ~~(1000/me.sys.fps));
-              };
-				  
-				  
-	   })();
-				  
+    window.requestAnimFrame = (function()
+    {
+      return   window.requestAnimationFrame       ||
+               window.webkitRequestAnimationFrame || 
+               window.mozRequestAnimationFrame    || 
+               window.oRequestAnimationFrame      || 
+               window.msRequestAnimationFrame     ||
+               function (){ return -1;} // return -1 if unsupported
+     })();
+   
+    window.cancelRequestAnimFrame = ( function() 
+    {
+      return window.cancelAnimationFrame              ||
+             window.webkitCancelRequestAnimationFrame ||
+             window.mozCancelRequestAnimationFrame    ||
+             window.oCancelRequestAnimationFrame      ||
+             window.msCancelRequestAnimationFrame     ||
+             function (){ return -1;} // return -1 if unsupported
+    })();
 	
 	
 	/* -----
@@ -1470,8 +1474,10 @@
 		
 		// current state
 		var _state			=	-1;
-		// current intervalId
+		// SetInterval Id
 		var _intervalId	=	-1;
+      // requestAnimeFrame Id
+      var _animFrameId	=	-1;
 		
 		// list of screenObject
 		var _screenObject  = {};
@@ -1500,33 +1506,44 @@
 		function _startRunLoop ()
 		{
 			// ensure nothing is running first
-			if (_intervalId==-1)
+			if ((_intervalId==-1)&&(_animFrameId==-1))
 			{
 				
-				// reset the FPS counter
+				// reset the timer
 				me.timer.reset();
 			
 				// start the main loop
 				if (me.sys.useNativeAnimFrame)
 				{	
-					_intervalId = window.requestAnimFrame(_renderFrame);
-				}
-				else
-				{	
-					_intervalId = setInterval(function(){_activeUpdateFrame()}, _fps);
-				}
+               // attempt to setup the game loop using requestAnimationFrame
+					_animFrameId = window.requestAnimFrame(_renderFrame);
+               
+               if (_animFrameId!=-1)
+               {	
+                  return;
+               }
+               // else feature not supported !
+               
+               // disable use of requestAnimationFrame (since unsupported)
+               me.sys.useNativeAnimFrame = false;
+               //console.log("using setInterval as fallback ("+_animFrameId+")");
+            }
+            
+            // setup the game loop using setInterval
+				_intervalId = setInterval(_activeUpdateFrame, _fps);
 			}
 		};
 		
 		/**
 		 * @ignore
+       * this is only called when using requestAnimFrame stuff
 		 */
 		function _renderFrame ()
 		{
-			_activeUpdateFrame();
-			
-			if (_intervalId!=-1)
-			 _intervalId = window.requestAnimFrame(_renderFrame);
+         _activeUpdateFrame();
+         // we already checked it was supported earlier
+         // so no need to do it again here
+			window.requestAnimFrame(_renderFrame);
 		};
 
 		/**
@@ -1535,16 +1552,19 @@
 		 */
 		function _stopRunLoop()
 		{
-			// just in case something is not running
+			// cancel any previous setInterval
 			if (_intervalId!=-1)
 			{
-				if (me.sys.useNativeAnimFrame)
-					clearTimeout(_intervalId);
-				else
-					clearInterval(_intervalId);
-				// allow to know if something is running
+            clearInterval(_intervalId);
 				_intervalId = -1;
 			}
+         // cancel any previous animationRequestFrame
+         if (_animFrameId!=-1)
+			{
+            cancelRequestAnimFrame(_animFrameId);
+				_animFrameId = -1;
+			}
+         
 		};
 		
 		
