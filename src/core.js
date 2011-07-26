@@ -59,6 +59,7 @@
 		 displayFPS	 : false,
       /**
        * render object Rectangle & Collision Box<br>
+       * default value : false
        * @type {Boolean}
        * @memberOf me.debug 
        */
@@ -125,7 +126,17 @@
        * @type {Boolean}
        * @memberOf me.sys
        */
-       useNativeAnimFrame :  false
+       useNativeAnimFrame :  false,
+       
+        /**
+        * cache Image using a Canvas element, instead of directly using the Image Object<br>
+        * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
+        * default value : false
+        * @type {Boolean}
+        * @memberOf me.sys 
+        */
+		 cacheImage : false
+
    };
 	   
    // add me to the global window variable
@@ -205,7 +216,7 @@
     *    onload: function()
     *    {
     *       // init video
-    *       if (!me.video.init('jsapp', 640, 480, false, 1.0))
+    *       if (!me.video.init('jsapp', 640, 480))
     *       {
     *          alert("Sorry but your browser does not support html 5 canvas. ");
     *          return;
@@ -982,7 +993,7 @@
 					canvas_invalidated = true;
 				}
 				// some quick & cheap broad(narrow) phase :)
-				// check if the object is an entity and is visible
+				// check if the object is an entity and is in the display area
 				if (obj.isEntity && !obj.flickering)
 				{
 			 	   obj.visible = api.viewport.isVisible(obj.collisionBox);
@@ -1198,14 +1209,43 @@
     *       this.parent(true);
     *       // a font logo
     *       this.logo = new me.Font('century gothic', 32, 'white');
+    *       // flag to know if we need to refresh the display
+    *       this.invalidate = false;
+    *       // load progress in percent
+    *       this.loadPercent = 0;
+    *       // setup a callback
+    *       me.loader.onProgress = this.onProgressUpdate.bind(this);
+    *
     *    },
 	 *
+    *    // will be fired by the loader each time a resource is loaded
+    *    onProgressUpdate: function(progress)
+    *    {
+    *       this.loadPercent = progress;
+    *       this.invalidate = true;
+    *    },
+    * 
+    *   
+    *    // make sure the screen is only refreshed on load progress 
+    *    update: function()
+	 *    {
+	 *       if (this.invalidate===true)
+    *       {
+    *          // clear the flag
+    *          this.invalidate = false;
+    *          // and return true
+    *          return true;
+    *       }
+    *       // else return false
+    *       return false;
+	 *    },
+    * 
     *    // on destroy event
     *    onDestroyEvent : function ()
     *    {
     *       // "nullify" all fonts
     *       this.logo = null;
-    *      },
+    *    },
     *
     *    //	draw function
     *    draw : function(context)
@@ -1223,7 +1263,7 @@
     *                      (context.canvas.height + 60) / 2);
     *   
     *       // display a progressive loading bar
-    *       var width = Math.floor(me.loader.getLoadProgress() * context.canvas.width);
+    *       var width = Math.floor(this.loadPercent * context.canvas.width);
     *     
     *       // draw the progress bar
     *       context.strokeStyle = "silver";
@@ -1601,6 +1641,22 @@
 		 * @name me.state#SETTINGS
 		 */
 		obj.SETTINGS   =  8;
+      
+      
+      /**
+	    * onPause callback
+		 * @type function
+		 * @name me.state#onPause
+		 */
+		obj.onPause = null;
+      
+      /**
+	    * onResume callback
+		 * @type function
+		 * @name me.state#onResume
+		 */
+		obj.onResume = null;
+
 
 		/**
 		 * @ignore
@@ -1617,6 +1673,11 @@
 				if (_state != obj.LOADING) 
 				{
 					obj.pause(true);
+               
+               // callback?
+               if (obj.onPause)
+               obj.onPause();
+
 				}
 			}, false);
 			// set play action on gaining focus
@@ -1626,6 +1687,14 @@
 				if (_state != obj.LOADING)
 				{
 					obj.resume(true);
+               
+               // callback?
+               if (obj.onResume)
+                  obj.onResume();
+               
+               // force repaint
+               me.game.repaint();
+
 				}
 			}, false);
          
@@ -1648,7 +1717,8 @@
 			// current music stop
 			if (music)
 				me.audio.pauseTrack();
-		};
+         
+       };
 
 	 	/**
 		 * resume the resume screen object

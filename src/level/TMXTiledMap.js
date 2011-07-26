@@ -5,7 +5,7 @@
  *
  *
  * TMX Loader
- * Tile QT 0.6.x format
+ * Tile QT 0.6.2 format
  *	http://www.mapeditor.org/	
  *
  */
@@ -22,6 +22,7 @@
 		 TMX_TAG_WIDTH				= "width",
 		 TMX_TAG_HEIGHT			= "height",
 		 TMX_TAG_OPACITY			= "opacity",
+       TMX_TAG_TRANS          = "trans",
 		 TMX_TAG_TILEWIDTH		= "tilewidth",
 		 TMX_TAG_TILEHEIGHT		= "tileheight",
 		 TMX_TAG_FIRSTGID			= "firstgid",
@@ -32,6 +33,7 @@
 	 	 TMX_TAG_COMPRESSION		= "compression",
 		 TMX_TAG_ENCODING			= "encoding",
 		 TMX_TAG_ATTR_BASE64		= "base64",
+       TMX_TAG_CSV            = "csv",
 		 TMX_TAG_SPACING			= "spacing",
 		 TMX_TAG_MARGIN			= "margin",
 		 TMX_TAG_PROPERTIES		= "properties",
@@ -100,27 +102,23 @@
 
 	};
 
-
-	
-
 	
 	/************************************************************************************/
-	/*		WIP WIP WIP WIP WIP WIP																			*/
+	/*                                                                                  */
 	/*		Manage a tile map																					*/
-	/*		Tile QT 0.6.x format																				*/
+	/*		Tile QT 0.6.2 format																				*/
 	/*		http://www.mapeditor.org/																		*/
 	/************************************************************************************/
 	function TMXTileMap(xmlfile, x, y)
 	{	
-		
+		// call the constructor
 		me.TileMap.call(this, x, y);
 		
 		this.xmlMap = me.loader.getXML(xmlfile);
 		
 		if (!this.xmlMap)
 		{
-			 alert(xmlfile + " map not found");
-			 return;
+			 throw "melonJS:" + xmlfile + " TMX map not found";
 		}
 		
 		// tilemap version
@@ -133,8 +131,6 @@
 		this.tileMapCanvas = null;
 
 	};
-	// TMX extends sprite object to benefit from some
-	// nice mechanism (sprite Object to be redone)
 	TMXTileMap.prototype = new me.TileMap();
 
 	
@@ -185,8 +181,7 @@
 					// check some returned values
 					if (this.orientation != "orthogonal")
 					{
-						alert("%s type tilemap not supported!", this.orientation);
-						return;
+						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
 					}
 					
 					// set the map properties (if any)
@@ -309,7 +304,17 @@
 										me.XMLParser.getIntAttribute(xmltileset,		TMX_TAG_SPACING,0),
 										me.XMLParser.getIntAttribute(xmltileset,		TMX_TAG_MARGIN,0),
 										xmltileset.getElementsByTagName(TMX_TAG_IMAGE)[0].getAttribute(TMX_TAG_SOURCE));
-			
+		
+      // check if transparency is defined for a specific color
+      this.trans = xmltileset.getElementsByTagName(TMX_TAG_IMAGE)[0].getAttribute(TMX_TAG_TRANS);
+      
+      // set Color Key for transparency if needed
+      if (this.trans !== null && this.image)
+      {
+         // applyRGB Filter (return a context object)
+         this.image = me.video.applyRGBFilter(this.image, "transparent", this.trans.toUpperCase()).canvas;
+      }
+
 		// set tile properties, if any
 		var tileInfo = xmltileset.getElementsByTagName(TMX_TAG_TILE);
 		for ( var i = 0; i < tileInfo.length; i++ )
@@ -392,11 +397,16 @@
 
 		// store the data information
 		var xmldata				= layer.getElementsByTagName(TMX_TAG_DATA)[0];
-		var encoding			= me.XMLParser.getStringAttribute(xmldata, TMX_TAG_ENCODING);
-		var compression		= me.XMLParser.getStringAttribute(xmldata, TMX_TAG_COMPRESSION);
+		var encoding			= me.XMLParser.getStringAttribute(xmldata, TMX_TAG_ENCODING, null);
+		var compression		= me.XMLParser.getStringAttribute(xmldata, TMX_TAG_COMPRESSION, null);
+      
+      // make sure this is not happening
+      if (encoding    == '') encoding    = null;
+      if (compression == '') compression = null;
+      
 		
-		// create a canvas (viewport = display)
-		if (this.visible || this.isCollisionMap)
+		// create a canvas where to draw our layer
+		if (this.visible)
 		{
 			this.layerSurface = me.video.createCanvasSurface(this.width * this.tilewidth, this.height * this.tileheight);
 			this.layerCanvas  = this.layerSurface.canvas;
@@ -406,17 +416,17 @@
 			{
 				this.layerSurface.globalAlpha = this.opacity;
 			}
-
-			// initiliaze array stuff
-			this.initArray(this.isCollisionMap);
-			// only in case of the collision map we create a lookup
-			// else the getTile function are never called
+      }
+      
+      if (this.visible || this.isCollisionMap)
+		{
+         // initiliaze the layer lookup table (only in case of collision map)
+         // else the getTile function are never called
+         this.initArray(this.isCollisionMap);
 								
-			// build the level
-			this.fillArray(xmldata, encoding, compression);
-
-		}
-	
+         // and populate our level with some data
+         this.fillArray(xmldata, encoding, compression);
+      }
 	};
 	TMXLayer.prototype = new me.TiledLayer();
 	
@@ -427,45 +437,64 @@
 		------								*/
 	TMXLayer.prototype.fillArray = function (xmldata, encoding, compression)
 	{
-		
-		// check the compression
-		if (compression != null)
-		{
-			alert (compression + " compressed tilemap not supported!");
-			return;
-		}
-		
-		// check the encoding type
-		if (encoding == TMX_TAG_ATTR_BASE64)
-		{
-			var data = me.utils.decodeNumBase64(xmldata.childNodes[0].nodeValue);
-			
-		}
-		else
-		{
-			var data = xmldata.getElementsByTagName(TMX_TAG_TILE);
-		}
-		
-		var idx=0;
+		// check if data is compressed
+      switch(compression)
+      {
+         // no compression
+         case null:
+            {
+               // decode data based on encoding type
+               switch (encoding)
+               {
+                  // XML encoding
+                  case null:
+                     {
+                        var data = xmldata.getElementsByTagName(TMX_TAG_TILE);
+                     }
+                     break;
+                  
+                  // CSV encoding
+                  case TMX_TAG_CSV:
+                  // Base 64 encoding
+                  case TMX_TAG_ATTR_BASE64:
+                     {
+                        // Merge all childNodes[].nodeValue into a single one
+                        var nodeValue = '';
+                        for (var i = 0, len = xmldata.childNodes.length; i < len; i++) {
+                            nodeValue += xmldata.childNodes[i].nodeValue;
+                        }
+                        // and then decode them
+                        if (encoding == TMX_TAG_ATTR_BASE64)
+                           var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+                        else
+                           var data = me.utils.decodeCSV(nodeValue, this.width);
+                        
+                        // ensure nodeValue is deallocated
+                        nodeValue = null;
+
+                     }
+                     break
+                  default :
+                   throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+                   // that's over !;
+               }
+            }
+            break;
+         default :
+            throw "melonJS: " + compression + " compressed TMX Tile Map not supported!";
+            // that's over !;
+      }
+   	
+		// I love reversed loop !
+      var idx = data.length - 1;
 		
 		// set everything
-		for(var y=0; y < this.height; y++)
-		{
-			for(var x= 0; x < this.width; x++)
-			{	
+		for(var y=this.height-1;y>=0; y--)
+      {
+		   for(var x=this.width-1;x>=0; x--)
+         {	
 				// get the value of the gid
-				if (encoding == TMX_TAG_ATTR_BASE64)
-				{
-					var gid = data[idx]	|
-					data[idx + 1] << 8  |
-					data[idx + 2] << 16 |
-					data[idx + 3] << 24;
-					idx+=4;
-				}
-				else
-				{
-					var gid = me.XMLParser.getIntAttribute(data[idx++],TMX_TAG_GID);
-				}
+            gid = (encoding == null)?me.XMLParser.getIntAttribute(data[idx--],TMX_TAG_GID):data[idx--];
 
 				// fill the array										
 				if (gid > 0)
@@ -476,12 +505,11 @@
 						this.tileset.drawTile(this.layerSurface, x * this.tilewidth, y * this.tileheight, this.layerData[x][y].tileId  - this.tileset.firstgid);
 
 				}
-				else
-				{
-					// draw a transparent square ?
-				}
 			}
-		}
+		};
+      
+      // make sure data is deallocated :)
+      data = null;
 		
 	};
 	
@@ -495,8 +523,11 @@
 		// call the parent function
 		me.TiledLayer.prototype.clearTile.call(this, x, y);
 		// erase the corresponding area in the canvas
-		this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
-	};
+      if (this.visible)
+		{
+         this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
+      }
+   };
 
 	
 	/* -----
@@ -607,7 +638,6 @@
 		// set the object properties
 		setTMXProperties(this, tmxObj);
 
-		//console.log(this);
 	};
 	
 	/* -----
@@ -623,7 +653,7 @@
 	
 		
 	/*------------------------------------------------------*/
-	// expose our stuff to the global scope
+	// expose our stuff to the me scope
 	/*------------------------------------------------------*/
 	$.me.TMXTileMap				= TMXTileMap;
 /*---------------------------------------------------------*/

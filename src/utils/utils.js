@@ -9,9 +9,64 @@
 (function($, undefined)
 {	
 	
+   /**
+    *  Base64 decoding
+    *  @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
+    */
+   var Base64  = (function()
+   {
+      
+      // hold public stuff in our singletong
+		var singleton	= {};
+      
+      // private property
+      var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+   
+      // public method for decoding
+      singleton.decode = function (input) 
+      {
+         var output = [],
+            chr1, chr2, chr3,
+            enc1, enc2, enc3, enc4,
+            i = 0;
+
+         input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+
+         while (i < input.length) 
+         {
+            enc1 = _keyStr.indexOf(input.charAt(i++));
+            enc2 = _keyStr.indexOf(input.charAt(i++));
+            enc3 = _keyStr.indexOf(input.charAt(i++));
+            enc4 = _keyStr.indexOf(input.charAt(i++));
+
+            chr1 = (enc1 << 2)   | (enc2 >> 4);
+            chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+            chr3 = ((enc3 & 3) << 6) | enc4;
+
+            output.push(String.fromCharCode(chr1));
+
+            if (enc3 != 64) {
+                output.push(String.fromCharCode(chr2));
+            }
+            if (enc4 != 64) {
+                output.push(String.fromCharCode(chr3));
+            }
+         }
+        
+         output = output.join('');
+         return output;
+    };
+   
+    return singleton;
+
+   })();
+
+   
 	/*---
 	
 	 	a collection of utility Function
+      
 								---*/
 	
 	var Utils  = (function()
@@ -24,63 +79,82 @@
 			PRIVATE STUFF
 				
 			---------------------------------------------*/
-		var b64chrs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.split("");
-		var b64inv  = null;
 		
-		// some basic init
-		function initb64()
-		{
-			if (b64inv == null) 
-			{
-				b64inv = {};
-				// create the inverse list for decoding
-				for (var i = 0; i < b64chrs.length; i++) 
-					b64inv[b64chrs[i]] = i; 
-			}
-		};
-		
-		
+		// a quick toHex function
+      function toHex(N) 
+      {
+         N = ~~(+N); 
+         if (N == 0) return "00";
+         N = N.clamp(0,255);
+         return "0123456789ABCDEF".charAt((N - N % 16) >> 4)+ "0123456789ABCDEF".charAt(N % 16);
+      };
+      
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
 				
 			---------------------------------------------*/
 		
-		/*---
-	
-	 	some Base64 usefull stuff
-		taken from :
-		http://en.wikibooks.org/wiki/Algorithm_Implementation/Miscellaneous/Base64#Javascript_2
-	
-								--- */
-	
-		api.decodeNumBase64 = function (s) 
-		{
-			 // init some usefull stuff if not yet done
-			 initb64();
-			 
-			 // decode our string
-			 s = s.replace(new RegExp('[^'+b64chrs.join("")+'=]', 'g'), "");
-
-			 p = (s.charAt(s.length-1) == '=' ? 
-			  	  (s.charAt(s.length-2) == '=' ? 'AA' : 'A') : "");
-			 
-			 r = []; 
-			 
-			 s = s.substr(0, s.length - p.length) + p;
-
-			 for (c = 0; c < s.length; c += 4) {
-				n = (b64inv[s.charAt(c)] << 18) + (b64inv[s.charAt(c+1)] << 12) +
-				    (b64inv[s.charAt(c+2)] << 6) + b64inv[s.charAt(c+3)];
-
-				r.push((n >>> 16) & 255);
-				r.push((n >>> 8) & 255);
-				r.push(n & 255);
-			 }
-			 return r;
-		};
+      /**
+       * Decode a base64 encoded string into a binary string
+       *
+       * @param {String} input Base64 encoded data
+       * @return {String} Binary string
+       */
+      api.decodeBase64 =  function(input) 
+      {
+        return Base64.decode(input);
+      };
 		
-	
+       /**
+        * Decode a base64 encoded string into a byte array
+        *
+        * @param {String} input Base64 encoded data
+        * @param {Int} [bytes] number of bytes per array entry
+        * @return {Int[]} Array of bytes
+        */
+       api.decodeBase64AsArray = function(input, bytes) 
+       {
+           bytes = bytes || 1;
+
+           var dec = Base64.decode(input),
+               ar = [], i, j, len;
+
+           for (i = 0, len = dec.length/bytes; i < len; i++)
+           {
+               ar[i] = 0;
+               for (j = bytes-1; j >= 0; --j)
+               {
+                   ar[i] += dec.charCodeAt((i * bytes) +j) << (j << 3);
+               }
+           }
+           return ar;
+       };
+
+      /**
+       * Decode a CSV encoded array into a binary array
+       *
+       * @param  {String} input CSV formatted data
+       * @param  {Int} limit row split limit
+       * @return {Int[]} Int Array
+       */
+      api.decodeCSV =  function(input, limit) 
+      {
+         input = input.trim().split("\n");
+         
+         var result = [];
+         for(var i=0; i < input.length; i++)
+         {
+				entries = input[i].split(",", limit);
+            for(var e=0; e < entries.length; e++)
+            {
+					result.push(+entries[e]);
+				}
+			}
+			return result;
+      };
+
+      
 	   /* ---
 		 
 			enable the nocache mechanism
@@ -89,8 +163,6 @@
 		api.setNocache = function(enable)
 		{
 			me.nocache = enable?"?"+parseInt(Math.random()*10000000):'';
-			
-			//console.log(jTB.nocache);
 		};
 		
 		
@@ -124,6 +196,12 @@
 			rgb += ","   + parseInt(h.substring(4,6),16) + (a?","+a+")":")");
 			return rgb;
 		};
+
+      // a Hex to RGB color function
+		api.RGBToHex = function(r, g, b)
+		{
+			 return toHex(r) + toHex(g) + toHex(b);
+      };
 		
 		// return our object
 		return api;

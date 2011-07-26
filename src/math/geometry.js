@@ -312,7 +312,15 @@
 			// to avoid recomputing same value
 			this.tthis = new Vector2d();
 			this.trect = new Vector2d();
-			
+         
+         // some cache function for our getter;
+         /*
+         this.getLeft   = function() { return this.pos.x};
+         this.getRight  = function() { return this.pos.x + this.width }
+         this.getTop    = function() { return this.pos.y }
+         this.getBottom = function() { return this.pos.y + this.height }
+			*/
+         
 			// some getter to get the rectangle coordinates /**
          this.__defineGetter__("left",		function() { return this.pos.x});
 			this.__defineGetter__("right",	function() { return this.pos.x + this.width });
@@ -339,7 +347,51 @@
 			this.hWidth  = ~~(w/2);
 			this.hHeight = ~~(h/2);
 		},
-		
+      
+      /**
+       * return a new Rect with this rectangle coordinates<
+       * @return {me.Rect} new rectangle	
+		 */
+		getRect : function() 
+		{
+			return new me.Rect(this.pos, this.width, this.height);
+		},
+
+      
+      /**
+       * merge this rectangle with another one
+		 *	@param {me.Rect} rect other rectangle to merge with
+       * @return {me.Rect} new rectangle	 
+		 */
+		merge : function(rect) 
+		{
+         if (this.pos.x > rect.pos.x)
+         {
+            this.width += this.pos.x - rect.pos.x;
+            this.pos.x = rect.pos.x;
+         }
+         else
+         {
+            // don't change this.pos, just update size
+            this.width += rect.pos.x - this.pos.x;
+         }
+         
+         if (this.pos.y > rect.pos.y)
+         {
+            this.height += this.pos.y - rect.pos.y;
+            this.pos.y = rect.pos.y;
+         }
+         else
+         {
+            // don't change this.pos, just update size
+            this.height += rect.pos.y - this.pos.y;
+         }
+         
+         return this;
+      },
+
+      
+      
 		/**
 		 * update the size of the collision rectangle<br>
        * the colPos Vector is then set as a relative offset to the initial position (pos)<br>

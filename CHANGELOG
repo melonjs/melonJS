@@ -1,29 +1,45 @@
 
 Version History 
 ---------------
+0.9.1
+* Core: "cache image" option (disabled by default) to use canvas instead of directly using Image Object
+* Core: add onPause and onResume callback when game is paused/resumed on losing/gaining focus
+* Core: added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
+* TMX: implemented Tiled "trans" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
+* TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
+* TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
+* Entity: merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
+* Viewport: fixed camera refresh when changing "deadzone" values
+* loader: added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
+* loader: fix progress notification when TMX files are loaded into the levelDirector
+* loader: added a retry counter for the audio loading : script will now stop and throw an exception after 3 unsuccessful loading attempts.
+* video: renamed "applyEffect" to "applyRGBFilter"
+* geometry : added a merge function to me.Rect
+* TMX: added support for CSV data encoding
+
 0.9.0
-[ADD] API documentation using jsdoc-toolkit (finally!)
-[ADD] define getter for me.Rect coordinates (simplify code)
-[ADD] support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
-[CHANGE] correctly implemented InvisibleEntity Objects (no longer inherit from ObjectEntity)
-[CHANGE] makes SpriteObjet inherit from me.Rect (make it easier to manage sprite pos and size)
-[CHANGE] cosmetic update of the preloader screen
-[FIX] "rounding" issue fix in the viewportEntity (~~30% less CPU usage on Safari/OSX!)
-[FIX] cleaned & refactored tilemap collision detection (still not perfect though)
+* Doc: API documentation using jsdoc-toolkit (finally!)
+* Geometry: define getter for me.Rect coordinates (simplify code)
+* Level: support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
+* Entity: correctly implemented InvisibleEntity Objects (no longer inherit from ObjectEntity)
+* Entity: makes SpriteObjet inherit from me.Rect (make it easier to manage sprite pos and size)
+* Loader: cosmetic update of the preloader screen
+* Viewport: "rounding" issue fix in the viewportEntity (~~30% less CPU usage on Safari/OSX!)
+* TMX: cleaned & refactored tilemap collision detection (still not perfect though)
 
 0.8.0
-[ADD] support for "TiledObject" (as supported in Tiled 0.6.2)
-[CHANGE] re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
-[FIX] moved collision function from AnimatedSpriteObject to ObjectEntity
+* TMX: support for "TiledObject" (as supported in Tiled 0.6.2)
+* Entity: re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
+* Entity: moved collision function from AnimatedSpriteObject to ObjectEntity
 
 0.7.9
-[ADD] added some effects to the camera object (shaking, fading, …)
-[CHANGE] re-factored public objects using John Resig Inheritance mechanism.
-[CHANGE] re-factored and fixed the camera/viewport code
-[FIX] fixed the "bootstrap" (unnecessary double call)
-[FIX] re-factored parallax code & corrected a bug that was causing the layers to be drawn 2x times(…)
-[FIX] partially fix crash audio in safari when audio is enabled
-[FIX] fixed gfx glitches (rounding issues)
+* Viewport: added some effects to the camera object (shaking, fading, ...)
+* Viewport: re-factored and fixed the camera/viewport code
+* Core: re-factored public objects using John Resig Inheritance mechanism.
+* Core: fixed the "bootstrap" (unnecessary double call)
+* Entity: re-factored parallax code & corrected a bug that was causing the layers to be drawn 2x times
+* Audio: partially fix crash audio in safari when audio is enabled
+* Core: fixed gfx glitches (rounding issues)
 
 0.7.6 (May 16, 2011) 
 first public version with alex4 !

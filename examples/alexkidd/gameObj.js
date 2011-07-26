@@ -29,6 +29,9 @@
 						
 			// set the display to follow our position on both axis
 			me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+         
+         // adjust the deadzone
+         me.game.viewport.setDeadzone( me.game.viewport.width/6,  me.game.viewport.height/4);
 			
 		},
 	

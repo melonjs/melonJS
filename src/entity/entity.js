@@ -329,7 +329,7 @@
    
    
 	/**
-	 * A Simple object to display static sprite on screen.
+	 * A Simple object to display static or animated sprite on screen.
     * @class
 	 *	@extends me.Rect
 	 * @memberOf me
@@ -337,10 +337,14 @@
 	 *	@param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.loader#getImage} image reference to the Sprite Image
+    * @param {int} [spritewidth] size of a single sprite inside the provided image
     * @example
-    * // create a Sprite Object
+    * // create a static Sprite Object
     * mySprite = new SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
-	 */
+	 * // create a animated Sprite Object
+    * mySprite = new SpriteObject (100, 100, me.loader.getImage("mySpriteImage"), 64);
+	 
+    */
 	SpriteObject = me.Rect.extend(
 	/** @scope me.SpriteObject.prototype */
 	{	
@@ -356,10 +360,11 @@
 		// z position (for ordering display)
 		z : 0,
 		
-		// always 0 for Sprite Object
-		currentSpriteOff : 0,
-	
-      	// if true, image scaling is needed
+		// offset of the sprite to be displayed
+		currentSprite     : 0,
+		currentSpriteOff	: 0,
+      	
+      // if true, image scaling is needed
 		scaleFlag : false,
 				
 		// if true, object will be immediately
@@ -383,27 +388,51 @@
 		
       // a reference to the game vp 
     	vp : null,
+      
+      // count the fps and manage animation change
+		fpscount : 0,
+      
+      // animation cyling speed
+		animationspeed : 0,
 
 		/**
 		 * @ignore 
 		 */
-		init: function(x, y, image)
+		init: function(x, y, image, spritewidth)
 		{	
-      
+         
          // call the parent constructor
-         this.parent(new me.Vector2d(x, y), image.width, image.height);
-
-			// scale of the object
+         this.parent(new me.Vector2d(x, y), spritewidth || image.width, image.height);
+         
+         // cache image reference
+			this.image = image;
+         
+         // #sprite in the image  
+			this.spritecount = spritewidth? ~~(image.width / spritewidth):1;
+                  
+			// scale factor of the object
 			this.scale	= new me.Vector2d(1.0, 1.0);
 			
- 			// cache image reference
-			this.image = image;
-						
-			// create a a default collision rectangle
+ 			// create a a default collision rectangle
 			this.collisionBox = new me.Rect(this.pos, this.width, this.height);
 			
          // get a reference to the current viewport
 			this.vp = me.game.viewport;
+         
+         // default animation speed
+			this.animationspeed = me.sys.fps / 10;
+         
+         // set the current sprite index & offset
+         this.currentSprite    = 0,
+			this.currentSpriteOff = 0;
+         
+         
+         // if one single image, disable animation
+			if (this.image.width == spritewidth)
+			{
+				this.update = function (){return false;}
+			}
+
 		},
 		
 		
@@ -419,17 +448,15 @@
 				
 				// invert the scale.x value
 				this.scale.x = -this.scale.x;
-				/*
-				if (flip)
-					this.scale.x = this.scale.x > 0.0 ? -this.scale.x : this.scale.x;
-				else
-					this.scale.x = this.scale.x < 0.0 ? -this.scale.x : this.scale.x;
-					*/
+
 				// set the scaleFlag
 				this.scaleFlag = ((this.scale.x!= 1.0)  || (this.scale.y!= 1.0))
 				
+            // flip ourself
+            //this.parent(this.width);
+            
 				// flip the collision box
-				this.collisionBox.flipX(this.width);//displayWidth
+				this.collisionBox.flipX(this.width);
 			}
 		},
 			
@@ -446,19 +473,15 @@
 				// invert the scale.x value
 				this.scale.y = -this.scale.y;
 				
-				/*
-				if (flip)
-					this.scale.y = this.scale.y > 0.0 ? -this.scale.y : this.scale.y;
-				else
-					this.scale.y = this.scale.y < 0.0 ? -this.scale.y : this.scale.y;
-				*/
 				// set the scaleFlag
 				this.scaleFlag = ((this.scale.x!= 1.0)  || (this.scale.y!= 1.0))
 				
+            // flip ourself
+            //this.parent(this.height);
+            
 				// flip the collision box
 				this.collisionBox.flipY(this.height);
 
-				
 			}
 		},
 		
@@ -476,17 +499,35 @@
 			this.scaleFlag = ((this.scale_x!= 1.0)  || (this.scale_y!= 1.0))
 		};
 		*/
+      
+      /**
+		 * set the current sprite
+		 * @private
+		 */
+		
+		setCurrentSprite : function(s)
+		{
+			this.currentSprite = s;
+			this.currentSpriteOff = this.width * s;
+		},
 
 		
 		/**
-       * object update<br>
+       * sprite update (animation update)<br>
        * not to be called by the end user<br>
        * called by the game manager on each game loop
        * @protected
-		 * @return true if object state changed (position, etc...)
+		 * @return true if object state changed (position, animation, etc...)
        **/
 		update : function()
 		{
+			if (this.visible && (this.fpscount++ > this.animationspeed))
+			{
+				//this.setCurrentSprite(++this.currentSprite < this.spritecount ? this.currentSprite : 0);
+				this.setCurrentSprite(++this.currentSprite % this.spritecount);
+				this.fpscount = 0;
+				return true;
+			}
 			return false;
 		},
 
@@ -574,91 +615,9 @@
 		}
       
 	});
-	$.me.SpriteObject				= SpriteObject;
+	$.me.SpriteObject = SpriteObject;
 		
-	/*********************************************************/
 	
-	
-	/**
-    * A Simple object to display animated sprite on screen.
-	 * @class
-	 *	@extends me.SpriteObject
-	 * @memberOf me
-	 * @constructor
-	 *	@param {int} x the x coordinates of the sprite object
-	 * @param {int} y the y coordinates of the sprite object
-	 * @param {me.loader#getImage} image reference to the Sprite Image
-	 * @param {int} spritewidth width of a sprite in the animation sheet
-	 */
-	AnimatedSpriteObject = SpriteObject.extend(
-	/** @scope me.AnimatedSpriteObject.prototype */
-	{	
-		
-      // offset of the sprite to be displayed
-		currentSprite     : 0,
-		currentSpriteOff	: 0,
-				
-		// count the fps and manage animation change
-		fpscount : 0,
-
-		/**
-		 * @private
-		 */
-		init: function (x, y, image, spritewidth)
-		{	
-			this.parent(x, y, image);
-			
-			// default animation speed
-			this.animationspeed = me.sys.fps / 10;
-
-         this.width = spritewidth;
-         
-			this.spritecount =  ~~(this.image.width / spritewidth);
-
-			// set the collision rect to match the multiple sprite image
-			this.collisionBox.set(this.pos, this.width, this.height);
-			
-			// set the currentSprite
-			this.currentSpriteOff = 0;
-			
-		},
-		
-		/**
-		 * set the current sprite
-		 * @private
-		 */
-		
-		setCurrentSprite : function(s)
-		{
-			this.currentSprite = s;
-			this.currentSpriteOff = this.width * s;
-		},
-		
-		/**
-       * object update (animation update)<br>
-       * not to be called by the end user<br>
-       * called by the game manager on each game loop
-       * @protected
-		 * @return true if object state changed (position, animation, etc...)
-       **/
-		update : function()
-		{
-			if (this.visible && (this.fpscount++ > this.animationspeed))
-			{
-				//this.setCurrentSprite(++this.currentSprite < this.spritecount ? this.currentSprite : 0);
-				this.setCurrentSprite(++thiscurrentSprite % this.spritecount);
-				this.fpscount = 0;
-				return true;
-			}
-			return false;
-		},
-
-		
-   });
-	// expose it to our scope
-	/** @private */
-	$.me.AnimatedSpriteObject	= AnimatedSpriteObject;
-
 	/************************************************************************************/
 	/*																												*/
 	/*		a generic object entity																			*/
@@ -667,7 +626,7 @@
 	/**
     * an object to manage animation
 	 * @class
-	 *	@extends me.AnimatedSpriteObject
+	 *	@extends me.SpriteObject
 	 * @memberOf me
 	 * @constructor
 	 *	@param {int} x the x coordinates of the sprite object
@@ -675,7 +634,7 @@
 	 * @param {me.loader#getImage} Image reference of the animation sheet
 	 * @param {int} spritewidth width of the sprite image
 	 */
-	AnimationSheet = me.AnimatedSpriteObject.extend(
+	AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
 	{	
 		/** @private */
