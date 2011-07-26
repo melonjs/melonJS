@@ -242,6 +242,9 @@
 		this.parallaxLayers = [];
 		// hold the number of entities
 		this.parallaxLayersCount = 0;
+      
+      // keep track of background update (scroll)
+      this.updated = false;
 		
 		/**
 		 * add a layer to the parallax
@@ -268,7 +271,7 @@
 		 */
 		this.update = function ()
 		{	
-			return false;
+			return this.updated;
 		};
 		
 		/**
@@ -294,6 +297,8 @@
 					layer.draw(context, ~~layer.baseOffset, y);
 					// save the last x pos
 					this.lastx = x;
+               // flag as updated
+               this.updated = true;
 				}
 				return;
 			}
@@ -308,7 +313,9 @@
 					layer.draw(context, ~~layer.baseOffset, y);
 					// save the last x pos
 					this.lastx = x;
-				}
+               // flag as updated
+               this.updated = true;
+            }
 				return;
 
 			} 
@@ -320,6 +327,8 @@
 				layer.draw(context, ~~layer.baseOffset, y);
 				// save the last x pos
 				this.lastx = x;
+            // flag as not updated
+            this.updated = false;
 			}
 		};
 
