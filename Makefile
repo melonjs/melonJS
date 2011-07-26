@@ -36,6 +36,7 @@ JSDOC_OPTION = -d=docs -s
 # Set the source directory
 srcdir = src/
 buildir = build/
+docdir = docs/
 
 # CURRENT BUILD VERSION
 JTB_VER=$(shell cat $(srcdir)version.txt)
@@ -83,6 +84,7 @@ debug: clean
 clean:
 	rm -f $(BUILD)
 	rm -f $(DEBUG)
+	rm -Rf $(docdir)
 
 doc:
 	java -jar $(JSDOC_PATH)/jsrun.jar $(JSDOC_PATH)/app/run.js -a -t=$(JSDOC_PATH)/templates/melonjs $(DEBUG) $(JSDOC_OPTION) 
