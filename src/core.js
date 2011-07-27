@@ -486,7 +486,7 @@
             {
                obj.__defineGetter__(prop, desc.get);
             }
-            if (args.set)
+            if (desc.set)
             {
                obj.__defineSetter__(prop, desc.set);
             }
