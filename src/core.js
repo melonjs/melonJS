@@ -466,6 +466,39 @@
 		};
 
 	};
+   
+  
+   if (!Object.defineProperty) 
+	{
+       /**
+        * simple defineProperty function definition (if not supported by the browser)<br>
+        * if defineProperty is redefined, internally use __defineGetter__/__defineSetter__ as fallback
+        * @param {Object} obj The object on which to define the property.
+        * @param {String} prop The name of the property to be defined or modified.
+        * @param {Object} desc The descriptor for the property being defined or modified.
+        */
+      Object.defineProperty = function (obj, prop, desc) 
+      {
+         // check if Object support __defineGetter function
+         if (obj.__defineGetter__) 
+         {
+            if (desc.get)
+            {
+               obj.__defineGetter__(prop, desc.get);
+            }
+            if (args.set)
+            {
+               obj.__defineSetter__(prop, desc.set);
+            }
+         }  
+         else 
+         {
+            // we should never reach this point....
+            throw "melonJS: Object.defineProperty not supported";
+         }
+      }
+	};
+
 			
 	/** 
 	 * add trim fn to the string object 
