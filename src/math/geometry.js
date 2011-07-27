@@ -313,20 +313,13 @@
 			this.tthis = new Vector2d();
 			this.trect = new Vector2d();
          
-         // some cache function for our getter;
-         /*
-         this.getLeft   = function() { return this.pos.x};
-         this.getRight  = function() { return this.pos.x + this.width }
-         this.getTop    = function() { return this.pos.y }
-         this.getBottom = function() { return this.pos.y + this.height }
-			*/
+         // some properties to ease my life when getting the rectangle coordinates /**
+         Object.defineProperty(this, "left",   { get: function() { return this.pos.x; }, configurable: true });
+         Object.defineProperty(this, "right",  { get: function() { return this.pos.x + this.width; }, configurable: true });
+         Object.defineProperty(this, "top",    { get: function() { return this.pos.y; }, configurable: true });
+         Object.defineProperty(this, "bottom", { get: function() { return this.pos.y + this.height; }, configurable: true });
          
-			// some getter to get the rectangle coordinates /**
-         this.__defineGetter__("left",		function() { return this.pos.x});
-			this.__defineGetter__("right",	function() { return this.pos.x + this.width });
-			this.__defineGetter__("top",		function() { return this.pos.y });
-			this.__defineGetter__("bottom",	function() { return this.pos.y + this.height });
-		},
+      },
 		
 		/**
        * set new value to the rectangle
@@ -409,18 +402,19 @@
 				this.colPos.x	= x;
 				this.width		= w;
 				this.hWidth		= ~~(this.width/2);
-            // redefine our setter taking colPos into account
-            this.__defineGetter__("left",		function() { return this.pos.x + this.colPos.x });
-            this.__defineGetter__("right",	function() { return this.pos.x + this.colPos.x + this.width });
+            
+            // redefine our properties taking colPos into account
+            Object.defineProperty(this, "left",  { get: function() { return this.pos.x + this.colPos.x; }, configurable: true });
+            Object.defineProperty(this, "right", { get: function() { return this.pos.x + this.colPos.x + this.width; }, configurable: true });
 			}
 			if (y!=-1)
 			{
 				this.colPos.y	= y;
 				this.height		= h;
 				this.hHeight	= ~~(this.height/2);
-            // redefine our setter taking colPos into account
-            this.__defineGetter__("top",		function() { return this.pos.y + this.colPos.y });
-            this.__defineGetter__("bottom",	function() { return this.pos.y + this.colPos.y + this.height });
+            // redefine our properties taking colPos into account
+            Object.defineProperty(this, "top",    { get: function() { return this.pos.y + this.colPos.y; }, configurable: true });
+            Object.defineProperty(this, "bottom", { get: function() { return this.pos.y + this.colPos.y + this.height; }, configurable: true });
 			}
 		},
 		
@@ -434,10 +428,8 @@
 		 */
 		flipX : function(sw) 
 		{
-			//console.log(this.colPos.x, this.hWidth);
 			this.colPos.x	= sw - this.width - this.colPos.x;
 			this.hWidth		= ~~(this.width/2);
-			//console.log(this.colPos.x, this.hWidth);
 		},
 		
 		/**
