@@ -482,7 +482,7 @@
             var fcanvas = api.createCanvasSurface(arguments[0].width, arguments[0].height);
                
             // is it an image ?
-            if (arguments[0] instanceof Image)
+            if (arguments[0] instanceof HTMLImageElement)
             {
                // build a temp canvas
                var tempCtx = me.video.createCanvasSurface(arguments[0].width, arguments[0].height);
