@@ -76,21 +76,6 @@
 		
 		/*---------------------------------------------
 			
-			PRIVATE STUFF
-				
-			---------------------------------------------*/
-		
-		// a quick toHex function
-      function toHex(N) 
-      {
-         N = ~~(+N); 
-         if (N == 0) return "00";
-         N = N.clamp(0,255);
-         return "0123456789ABCDEF".charAt((N - N % 16) >> 4)+ "0123456789ABCDEF".charAt(N % 16);
-      };
-      
-		/*---------------------------------------------
-			
 			PUBLIC STUFF
 				
 			---------------------------------------------*/
@@ -179,7 +164,7 @@
       // a Hex to RGB color function
 		api.RGBToHex = function(r, g, b)
 		{
-			 return toHex(r) + toHex(g) + toHex(b);
+			 return r.toHex() + g.toHex() + b.toHex();
       };
 		
 		// return our object

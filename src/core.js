@@ -583,7 +583,17 @@
       return (Math.round(num*powres)/powres);
    };
 
-		
+   /**
+    * a quick toHex function<br>
+    * given number <b>must</b> be an int, with a value between 0 and 255
+    * @extends Number
+    * @return {String} converted hexadecimal value
+    */
+   Number.prototype.toHex = function()
+   {
+      return "0123456789ABCDEF".charAt((this - this % 16) >> 4)+ "0123456789ABCDEF".charAt(this % 16);
+   };
+
 
 	/************************************************************************************/
 	
