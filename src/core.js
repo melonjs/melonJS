@@ -571,7 +571,7 @@
     * @example
     * // round a specific value to 2 digits
     * Number.prototype.round (10.33333, 2); // return 10.33
-    * // round a int value to 4 digits
+    * // round a float value to 4 digits
     * num = 10.3333333
     * num.round(4); // return 10.3333
     */
