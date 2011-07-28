@@ -78,7 +78,7 @@ var PlayScreen = me.ScreenObject.extend(
 		me.levelDirector.loadLevel("map1");
 		
 		// add a default HUD to the game mngr
-		me.game.addHUD(0,0,480,100);
+		me.game.addHUD(0,0,480,30);
 		
 		// add a new HUD item 
 		me.game.HUD.addItem("score", new ScoreObject(470,10));
