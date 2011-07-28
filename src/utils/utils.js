@@ -153,8 +153,7 @@
 			}
 			return result;
       };
-
-      
+    
 	   /* ---
 		 
 			enable the nocache mechanism
@@ -164,28 +163,8 @@
 		{
 			me.nocache = enable?"?"+parseInt(Math.random()*10000000):'';
 		};
+			
 		
-		
-		/* ---
-		
-			return a random between min, max
-			---										*/
-		api.random = function(min, max)
-		{
-			return (~~(Math.random()*(max - min + 1)) + min); //floor
-		};
-		
-		/* ---
-		
-			round "num" with "dec" digit
-			---										*/
-		
-		api.round = function(num, dec) 
-		{	
-			var powres = Math.pow(10,dec);
-			return (Math.round(num*powres)/powres);
-		};
-	
 		// a Hex to RGB color function
 		api.HexToRGB = function(h, a)
 		{

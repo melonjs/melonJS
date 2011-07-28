@@ -548,7 +548,40 @@
    Number.prototype.clamp = function (low, high) 
    {
       return this < low ? low : this > high ? high : this;
-   }
+   };
+   
+   /**
+    * return a random between min, max
+    * @param {Number} min minimum value.
+    * @param {Number} max maximum value.
+    * @extends Number
+    * @return {Number} random value
+    */
+   Number.prototype.random = function (min, max) 
+   {
+      return (~~(Math.random()*(max - min + 1)) + min);
+   };
+
+   /**
+    * round a value to the specified number of digit
+    * @param {Number} [num="Object value"] value to be rounded.
+    * @param {Number} dec number of decimal digit to be rounded to.
+    * @extends Number
+    * @return {Number} rounded value
+    * @example
+    * // round a specific value to 2 digits
+    * Number.prototype.round (10.33333, 2); // return 10.33
+    * // round a int value to 4 digits
+    * num = 10.3333333
+    * num.round(4); // return 10.3333
+    */
+   Number.prototype.round = function() 
+   {	
+      // if only one argument use the object value
+      num = (arguments.length==1)?this:arguments[0];
+      powres = Math.pow(10,arguments[1]||arguments[0]);
+      return (Math.round(num*powres)/powres);
+   };
 
 		
 
