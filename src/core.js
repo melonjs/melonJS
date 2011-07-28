@@ -63,7 +63,16 @@
        * @type {Boolean}
        * @memberOf me.debug 
        */
-		 renderHitBox : false
+		 renderHitBox : false,
+       
+      /**
+       * render dirty region/rectangle<br>
+       * default value : false
+       * @type {Boolean}
+       * @memberOf me.debug 
+       */
+		 renderDirty : false
+       
    };
                
    /**
@@ -143,7 +152,7 @@
        * @type {Boolean}
        * @memberOf me.sys
        */
-       dirtyRegion :  false,
+       dirtyRegion :  false
 
 
    };
@@ -760,6 +769,8 @@
       // hold public stuff in our singletong
 		var api	= {};
       
+      var dirtyObjects = [];
+      
       /*---------------------------------------------
 			
 			PRIVATE STUFF
@@ -773,10 +784,43 @@
 				
 		---------------------------------------------*/
       
+      
+      /**
+       * add a new rectangle to the list of dirty region/rectangle
+       */
+      api.makeDirty = function(rect)
+		{	
+         // push it in our array
+         dirtyObjects.push(rect);
+      };
+      
+
+      /**
+       * draw all dirty region/rectangle
+       */
+      api.draw = function(context)
+		{	
+         //draw all dirty rect
+         for (var i = dirtyObjects.length, obj; i--, obj = dirtyObjects[i];)
+         {
+            obj.draw(context, "white");
+         }
+      };
+      
+      
+      /**
+       * flush all rect
+       */
+      api.flush = function()
+		{	
+         dirtyObjects = [];
+      };
+
+      
+      return api;
+
    })();
 
-   
-   
    
    /**
 	 * me.game represents your current game, it contains all the objects, tilemap layers,<br>
@@ -805,15 +849,10 @@
 		var frameBuffer			= null;
 		
 		// hold all the objects							
-		var gameObjects			= [];//new Array(),
+		var gameObjects			= [];
 		
 		// hold number of object in the array
 		var objCount					= 0;
-		
-		var updating					= false;
-
-		// parent canvas on where to draw our stuff
-		//parentCanvas			: null,
 		
 		// flag to redraw the sprites 
 		var canvas_invalidated	= true;
@@ -944,7 +983,12 @@
 			// invalidate the canvas
 			canvas_invalidated = true;
 			
-			//api.HUD = null;
+         // re-add the HUD if defined
+			if (api.HUD != null)
+			{
+				api.add(api.HUD);
+			}
+
 		};
 		
 		
@@ -1042,17 +1086,14 @@
 		 */	
 		api.addHUD = function(x, y, w, h, bg)
 		{	
-		
 			// if no HUD existing
 			if (api.HUD == null)
 			{
 				// create a new default HUD object
 				api.HUD = new me.HUD_Object(x, y, w, h, bg);
-				//api.add(api.HUD);
+				api.add(api.HUD);
 			}
-			// else just ignored
 		};
-
 		
 		/**
 		 * disable the current HUD
@@ -1066,11 +1107,12 @@
 			// if no HUD existing
 			if (api.HUD != null)
 			{
-				// create a new default HUD object
-				api.HUD = null;
-				//api.add(api.HUD);
+				// remove the HUD object
+				api.remove(api.HUD);
+            // nullify it
+            api.HUD = null;
+				
 			}
-			// else just ignored
 		};
 
 		/**- 
@@ -1104,6 +1146,14 @@
 				// update return true, if the object changed (animation / pos)
 				if (obj.update()) // && obj.visible <- this is check in Object Entity directly
 				{
+               // mark the region as dirty
+               if (me.sys.dirtyRegion && obj.getRect)
+               { 
+                  // not all object are implementing getRect
+                  // should see how to manage this correctly
+                  dirtyRegion.makeDirty(obj.getRect());
+               }
+               // invalidate the canvas
 					canvas_invalidated = true;
 				}
 				// some quick & cheap broad(narrow) phase :)
@@ -1268,15 +1318,20 @@
 							obj.draw(spriteCanvasSurface, x, y);
 					}
 				}
-				
-				// draw a HUD if defined
-				if (api.HUD != null)
-					api.HUD.draw (spriteCanvasSurface, x, y);
-				
+            
 				// call the viewport draw function (for effects)
 				api.viewport.draw(spriteCanvasSurface)
-								
-				// blit everything to the specified canvas
+            
+            // if in dirtyRegion enabled & debug mode
+            if (me.sys.dirtyRegion && me.debug.renderDirty)
+            {
+               // draw our dirty rectangle
+               dirtyRegion.draw(spriteCanvasSurface);
+               // should go somewhere else after
+               dirtyRegion.flush();
+            }
+				
+            // blit everything to the specified canvas
 				frameBuffer.drawImage(spriteCanvasSurface.canvas, x, y);
 				
 				// clear our flag
@@ -1284,7 +1339,6 @@
 			}
 
 		};
-		
 		
 		// return our object
 		return api;
