@@ -347,7 +347,7 @@
 		 */
 		getRect : function() 
 		{
-			return new me.Rect(this.pos, this.width, this.height);
+			return new me.Rect(this.pos.clone(), this.width, this.height);
 		},
 
       
