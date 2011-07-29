@@ -74,6 +74,15 @@
 		// hold public stuff in our singletong
 		var api	= {};
 		
+      /*---------------------------------------------
+			
+         PRIVATE STUFF
+				
+       ---------------------------------------------*/
+      
+      // cache rgb converted value
+      var rgbCache = {};
+      
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
@@ -153,12 +162,15 @@
 		// a Hex to RGB color function
 		api.HexToRGB = function(h, a)
 		{
-			// remove the # if present
-			h = (h.charAt(0)=="#") ? h.substring(1,7):h;
-			rgb  = (a?"rgba(":"rgb(")+ parseInt(h.substring(0,2),16);
-			rgb += ","   + parseInt(h.substring(2,4),16);
-			rgb += ","   + parseInt(h.substring(4,6),16) + (a?","+a+")":")");
-			return rgb;
+         // remove the # if present
+         h = (h.charAt(0)=="#") ? h.substring(1,7):h;
+			// check if we already have the converted value cached
+         if (rgbCache[h]==null)
+         {
+            // else add it (format : "r,g,b")
+            rgbCache[h] = parseInt(h.substring(0,2),16) + "," + parseInt(h.substring(2,4),16) + "," + parseInt(h.substring(4,6),16);
+         }
+			return (a?"rgba(":"rgb(")+ rgbCache[h] + (a?","+a+")":")");
 		};
 
       // a Hex to RGB color function
