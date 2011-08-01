@@ -157,123 +157,156 @@
 	
 	
 	/************************************************************************/
-	/*	a parallax layer object entity												   */
-	/*																								*/
+   /*	a parallax layer object entity												   */
 	/************************************************************************/
 	/**
 	 * @ignore
 	 */
-	function ParallaxLayer(imagesrc, speed, zOrder)
-	{	
-		// image..
-		this.image =  me.loader.getImage(imagesrc);
-		
-		// cache a few values
-		this.imageWidth	= this.image.width;
-		this.imageHeight  = this.image.height;
-		
-		// base x offset within the image 
-		this.baseOffset = 0;
-		
-		// z Index
-		this.z = zOrder || 0;
-		
-		// layer scroll speed
-		this.scrollspeed = speed;
-		
-		// link to the gameviewport width
-		this.vp_width = me.game.viewport.width;
-	};
-				
-	/*--
-		
-		  draw the layer
-		  
-		  x coordinate is the current base offset in the texture
-		 
-	 --*/
-	ParallaxLayer.prototype.draw = function (context, x, y)
-	{	
-		// all this part should redone !
-		var xpos			 = 0;
-		var new_width   = MIN(this.imageWidth - x, this.vp_width);
-		do
-		{	
-			context.drawImage(this.image, 
-									x,	0,
-									new_width, this.imageHeight, 
-									xpos, y, 
-									new_width, this.imageHeight);
-			
-			xpos			+= new_width ;
-			x				= 0; // x_offset
-			new_width	= MIN(this.imageWidth, this.vp_width - xpos);
-		}
-		while ( (xpos < this.vp_width));
-		
-	};
-	
-	/************************************************************************************/
-	/*		a very basic & cheap parallax object entity												*/
-	/*		to be rewritten, this code is not optimized at all	...								*/
-	/************************************************************************************/
-	/**
-	 * @constructor
-	 * @memberOf me
-	 *	@param {int} [z="0"] z order value for the parallax background
-	 */
-	function ParallaxBackgroundEntity(z)
-	{	
-		// to identify the layer in the tilemap system
-		this.name = "parallaxBackgroundEntity";
-		
-		this.visible = true;
-		
-		// z Index
-		this.z = z || 0;
+   ParallaxLayer = me.Rect.extend(
+   {
+      /**
+       * @ignore 
+       */
+      init: function(imagesrc, speed, zOrder)
+      {	
+         // image..
+         this.image =  me.loader.getImage(imagesrc);
+         
+         // call the parent constructor
+         this.parent(new me.Vector2d(0,0), this.image.width, this.image.height);
 
-		// link to the gameviewport
-		this.vp = me.game.viewport.pos;
+         // base x offset within the image 
+         this.baseOffset = 0;
+
+         // z Index
+         this.z = zOrder || 0;
+
+         // layer scroll speed
+         this.scrollspeed = speed;
+
+         // link to the gameviewport width
+         this.vp_width = me.game.viewport.width;
+      },
+				
+      /*--
 		
-		// hold the last x position (to track viewport change)
-		this.lastx = this.vp.x;
-		
-		// hold all defined animation
-		this.parallaxLayers = [];
-		// hold the number of entities
-		this.parallaxLayersCount = 0;
-      
-      // keep track of background update (scroll)
-      this.updated = false;
-		
-		/**
-		 * add a layer to the parallax
+         draw the layer
+		   x coordinate is the current base offset in the texture
+		 
+      --*/
+      draw : function (context, x, y)
+      {	
+         // all this part should redone !
+         var xpos			 = 0;
+         var new_width   = MIN(this.width - x, this.vp_width);
+         do
+         {	
+            context.drawImage(this.image, 
+                              x,	0,
+                              new_width, this.height, 
+                              xpos, y, 
+                              new_width, this.height);
+			
+            xpos			+= new_width ;
+            x				= 0; // x_offset
+            new_width	= MIN(this.width, this.vp_width - xpos);
+         }
+         while ( (xpos < this.vp_width));
+      }
+	      
+	});
+   /************************************************************************************/
+   /*		a very basic & cheap parallax object entity												*/
+   /*		to be rewritten, this code is not optimized at all	...								*/
+   /************************************************************************************/
+   /**
+    * @constructor
+    * @memberOf me
+    *	@param {int} [z="0"] z order value for the parallax background
+    */
+   ParallaxBackgroundEntity = me.Rect.extend(
+   {
+      /**
+		 * @ignore 
 		 */
-		this.addLayer = function (imagesrc, speed, zOrder)
-		{	
-			// create the new layer
-			this.parallaxLayers.push(new ParallaxLayer(imagesrc, speed, zOrder));
-			// hold the number of entities
-			this.parallaxLayersCount = 0;
-		};
-		
-		/**
-		 * @private
-		 */
-		this.clearTile = function (x, y)
+		init: function(z)
 		{
+         // call the parent constructor
+         this.parent(new me.Vector2d(0,0), 0,0);
+         
+         // to identify the layer in the tilemap system
+         this.name = "parallaxBackgroundEntity";
+
+         this.visible = true;
+
+         // z Index
+         this.z = z || 0;
+
+         // link to the gameviewport
+         this.vp = me.game.viewport.pos;
+
+         // hold the last x position (to track viewport change)
+         this.lastx = this.vp.x;
+
+         // hold all defined animation
+         this.parallaxLayers = [];
+
+         // keep track of background update (scroll)
+         this.updated = true;
+		},
+      
+      /**
+       * add a layer to the parallax
+       */
+      addLayer : function (imagesrc, speed, zOrder)
+      {	
+         var idx = this.parallaxLayers.length;
+         // create the new layer
+			this.parallaxLayers.push(new ParallaxLayer(imagesrc, speed, zOrder));
+         
+         // check if new layer is bigger than the current rect size
+         if (this.parallaxLayers[idx].width > this.width)
+         {
+            // and adjust rect size if necessary
+            this.width = this.parallaxLayers[idx].width;
+         }
+         if (this.parallaxLayers[idx].height > this.height)
+         {
+            // and adjust rect size if necessary
+            this.height = this.parallaxLayers[idx].height;
+         }
+      },
 		
-		};
+      /**
+       * @private
+       */
+      clearTile : function (x, y)
+      {
+         ;// do nothing !
+      },
 		
-		/**
-		 * this method is called by the @see me.game object
-		 * @protected
+      /**
+       * this method is called by the @see me.game object
+       * @protected
+       */
+      update : function ()
+      {	
+         return this.updated;
+      },
+		
+      /**
+       * override the default me.Rect get Rectangle definition
+       * since the layer if a scrolling object
+       * (is this correct?)
+       * @return {me.Rect} new rectangle	
 		 */
-		this.update = function ()
-		{	
-			return this.updated;
-		};
-		
+      
+		getRect : function() 
+		{
+        return new me.Rect(this.vp.clone(), this.width, this.height);
+		},
+
+      
 		/**
 		 * draw the parallax object on the specified context
 		 *	@param {context} context 2D Context
@@ -281,9 +314,9 @@
 		 *	@param {y} y start y coordinates
 		 * @protected
 		 */
-		this.draw = function (context, x, y)
+		draw : function (context, x, y)
 		{	
-			// last x pos of the viewport
+ 			// last x pos of the viewport
 			x = this.vp.x;
 			
 			if (x>this.lastx)
@@ -292,7 +325,7 @@
 				for(var i=0, layer;layer = this.parallaxLayers[i++];)
 				{
 					// calculate the new basoffset
-					layer.baseOffset = (layer.baseOffset + layer.scrollspeed * me.timer.tick) % layer.imageWidth ;
+					layer.baseOffset = (layer.baseOffset + layer.scrollspeed * me.timer.tick) % layer.width ;
 					// draw the layer
 					layer.draw(context, ~~layer.baseOffset, y);
 					// save the last x pos
@@ -308,7 +341,7 @@
 				for(var i=0, layer;layer = this.parallaxLayers[i++];)
 				{
 					// calculate the new basoffset
-					layer.baseOffset = (layer.imageWidth + (layer.baseOffset - layer.scrollspeed * me.timer.tick)) % layer.imageWidth ;
+					layer.baseOffset = (layer.width + (layer.baseOffset - layer.scrollspeed * me.timer.tick)) % layer.width ;
 					// draw the layer
 					layer.draw(context, ~~layer.baseOffset, y);
 					// save the last x pos
@@ -330,10 +363,10 @@
             // flag as not updated
             this.updated = false;
 			}
-		};
-
-	};
-	// expose our object to our scope
+		}
+      
+	});
+	// expose our object to me scope
 	$.me.ParallaxBackgroundEntity	= ParallaxBackgroundEntity
    
    
