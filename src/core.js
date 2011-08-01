@@ -67,7 +67,8 @@
        
       /**
        * render dirty region/rectangle<br>
-       * default value : false
+       * default value : false<br>
+       * (feature must be enabled through the me.sys.dirtyRegion flag)
        * @type {Boolean}
        * @memberOf me.debug 
        */
@@ -148,7 +149,8 @@
        
       /** 
        * Enable dirtyRegion Feature <br>
-       * default value : false
+       * default value : false<br>
+       * (!) not fully implemented/supported (!)
        * @type {Boolean}
        * @memberOf me.sys
        */
@@ -754,68 +756,119 @@
 	};
 	
  	
-	/************************************************************************************/
-	/*		OBJECT MNGT & DRAWING FUNCTIONS	:															*/
-	/*		hold & manage app/game objects																*/
-	/************************************************************************************/
+   /******************************************/
+   /*		OBJECT DRAWING MANAGEMENT           */
+   /*		hold & manage app/game objects		*/
+   /******************************************/
 	
    /**
-    * a dirty region management object
-    * only use by the game manager
-	 * @ignore
-	 */
-	dirtyRegion = (function()
+    * a object drawing manager
+    * only used by the game manager
+    * @ignore
+    */
+   drawManager = (function()
    {
       // hold public stuff in our singletong
 		var api	= {};
       
+      // list of region to redraw
+      // valid for any updated object
+      var dirtyRects = [];
+      
+      // list of object to redraw
+      // only valid for visible and update object
       var dirtyObjects = [];
       
-      /*---------------------------------------------
-			
-			PRIVATE STUFF
-				
-		---------------------------------------------*/
-      
-      
-      /*---------------------------------------------
-			
-			PUBLIC STUFF
-				
-		---------------------------------------------*/
+      // a flag indicating if we need a redraw
+      api.isDirty = false;
       
       
       /**
-       * add a new rectangle to the list of dirty region/rectangle
+       * add a dirty object
        */
-      api.makeDirty = function(rect)
-		{	
-         // push it in our array
-         dirtyObjects.push(rect);
+      api.makeDirty = function(obj, dirty)
+      {	
+         if (dirty)
+         {
+            // yeah some drawing job to do !
+            api.isDirty = true;
+            
+            // add a dirty rect if feature enable
+            if (me.sys.dirtyRegion && obj.getRect)
+            {
+               // checking for getRect is a temporary workaround
+               // for object not (yet) implementing getRect
+               dirtyRects.push(obj.getRect());
+            }
+         }
+         
+         // for now if obj is visible add it to the list of obj to draw
+         // (don't take dirty rect in account)
+         if (obj.visible)
+         {
+            // add obj at index 0, so that we can keep
+            // our inverted loop later
+            dirtyObjects.splice(0, 0, obj);
+         }
       };
       
 
       /**
-       * draw all dirty region/rectangle
+       * make all object dirty
        */
-      api.draw = function(context)
-		{	
-         //draw all dirty rect
-         for (var i = dirtyObjects.length, obj; i--, obj = dirtyObjects[i];)
-         {
-            obj.draw(context, "white");
-         }
+      api.makeAllDirty = function()
+      {	      
+         // it's enough
+         // later all region should invalidated
+         api.isDirty = true;
       };
       
+      /**
+       * remove an object
+       */
+      api.remove = function (obj)
+      {
+         // remove the object from the list of obj to draw
+         dirtyObjects.splice(dirtyObjects.indexOf(obj),1);
+         
+         // here we should also add a corresponding rect if not already present
+         // do we need a hashTable ?
+         
+         // make sure we redraw something
+         api.isDirty = true;
+      };
+         
+      /**
+       * draw all dirty object/region
+       */
+      api.draw = function(context, x , y)
+      {	
+         // we should only redraw object that are in the dirty rect area
+         for (var i = dirtyObjects.length, obj; i--, obj = dirtyObjects[i];)
+         {
+               obj.draw(context, x, y);
+         }
+         //if debug mode, draw all dirty rect
+         if (me.debug.renderDirty)
+         {
+            for (var i = dirtyRects.length, obj; i--, obj = dirtyRects[i];)
+            {
+               obj.draw(context, "white");
+            }
+         }
+      };
       
       /**
        * flush all rect
        */
       api.flush = function()
-		{	
-         dirtyObjects = [];
+      {	
+         // empty them
+         dirtyRects = dirtyObjects = [];
+         
+         // clear the flag
+         api.isDirty = false;
       };
-
       
       return api;
 
@@ -854,8 +907,6 @@
 		// hold number of object in the array
 		var objCount					= 0;
 		
-		// flag to redraw the sprites 
-		var canvas_invalidated	= true;
 		// flag to redraw the sprites 
 		var initialized			= false;
 		
@@ -975,13 +1026,10 @@
 				
 			// remove all objects
 			api.removeAll();
-			
-			// reset the viewport to zero ?
+
+         // reset the viewport to zero ?
 			if (api.viewport)
 				api.viewport.reset();
-
-			// invalidate the canvas
-			canvas_invalidated = true;
 			
          // re-add the HUD if defined
 			if (api.HUD != null)
@@ -1143,29 +1191,21 @@
 			//for(var i=0, soundclip;soundclip = channels[i++];)
 			for (var i = objCount, obj; i--, obj = gameObjects[i];)
 			{
-				// update return true, if the object changed (animation / pos)
-				if (obj.update()) // && obj.visible <- this is check in Object Entity directly
-				{
-               // mark the region as dirty
-               if (me.sys.dirtyRegion && obj.getRect)
-               { 
-                  // not all object are implementing getRect
-                  // should see how to manage this correctly
-                  dirtyRegion.makeDirty(obj.getRect());
-               }
-               // invalidate the canvas
-					canvas_invalidated = true;
-				}
-				// some quick & cheap broad(narrow) phase :)
-				// check if the object is an entity and is in the display area
-				if (obj.isEntity && !obj.flickering)
-				{
-			 	   obj.visible = api.viewport.isVisible(obj.collisionBox);
-				}
+            // update our object
+				updated = obj.update();
+            
+            // check if object is visible
+            if (obj.isEntity && !obj.flickering)
+            {
+               obj.visible = api.viewport.isVisible(obj.collisionBox);
+            }
+            
+            // add it to the draw manager
+            drawManager.makeDirty(obj, updated);
 			}
 			// update the camera viewport
-			canvas_invalidated = api.viewport.update(canvas_invalidated);
-		};
+         drawManager.isDirty = api.viewport.update(drawManager.isDirty);
+      };
 		
 			
 		/**
@@ -1177,7 +1217,11 @@
 		
 		api.remove = function (obj)
 		{
-			gameObjects.splice(gameObjects.indexOf(obj),1);
+         // remove the object from the object to draw
+         drawManager.remove(obj);
+         
+         // remove the object from the object list
+         gameObjects.splice(gameObjects.indexOf(obj),1);
 			
 			if (obj.mouseEvent)
 			{
@@ -1187,8 +1231,6 @@
 			
 			// cache the number of object
 			objCount = gameObjects.length;
-			// force redraw
-			canvas_invalidated = true;
 			
 		};
 		
@@ -1206,8 +1248,10 @@
 			objCount = 0;
 			gameObjects	= [];
 			registeredMouseEventObj = [];
-			// force redraw
-			canvas_invalidated = true;
+         
+         // make sure it's empty there as well
+         drawManager.flush();
+
 		};
 
 		/**
@@ -1224,7 +1268,11 @@
 			// sort order is inverted, 
 			// since we use a reverse loop for the display 
 			gameObjects.sort(function (a, b){return (b.z - a.z);});
-			canvas_invalidated = true;
+			
+         //do the same for the draw manager ?
+         
+         // make sure the dirty flag is set
+         drawManager.isDirty = true;
 		};
 
 		
@@ -1294,7 +1342,7 @@
 	
 		api.repaint = function()
 		{
-			canvas_invalidated = true;
+			drawManager.makeAllDirty();
 		};
 
 		/**
@@ -1304,41 +1352,23 @@
 		 * @function
 		 */
 		
-		api.draw = function()
-		{	
-			//var count =0;
-			if (canvas_invalidated)
-			{	
-				// draw all the game objects
-				for (var i = objCount, obj; i--, obj = gameObjects[i];)
-				{
-					if (obj.visible)
-					{
-							//count++;
-							obj.draw(spriteCanvasSurface, x, y);
-					}
-				}
+      api.draw = function()
+      {	
+         if (drawManager.isDirty)
+         {	
+            // draw our objects
+            drawManager.draw(spriteCanvasSurface, x, y);
+             
+            // call the viewport draw function (for effects)
+            api.viewport.draw(spriteCanvasSurface)
             
-				// call the viewport draw function (for effects)
-				api.viewport.draw(spriteCanvasSurface)
-            
-            // if in dirtyRegion enabled & debug mode
-            if (me.sys.dirtyRegion && me.debug.renderDirty)
-            {
-               // draw our dirty rectangle
-               dirtyRegion.draw(spriteCanvasSurface);
-               // should go somewhere else after
-               dirtyRegion.flush();
-            }
-				
             // blit everything to the specified canvas
-				frameBuffer.drawImage(spriteCanvasSurface.canvas, x, y);
-				
-				// clear our flag
-				canvas_invalidated = false;
-			}
-
-		};
+            frameBuffer.drawImage(spriteCanvasSurface.canvas, x, y);
+         }
+         
+         // clean everything for next frame
+         drawManager.flush();
+      };
 		
 		// return our object
 		return api;
@@ -1490,6 +1520,10 @@
 		{
 			// call the destroy notification function
 			this.onDestroyEvent();
+         
+         // remove it
+         if (this.visible)
+           me.game.remove(this);
 		},
 
 		/**
