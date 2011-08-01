@@ -268,19 +268,19 @@
 			}
 			
 			
-			// and for flash effect
-			if (this._fadeOut.alpha > 0.0)
-			{
-				this._fadeOut.alpha -= me.timer.tick/this._fadeOut.duration;
-				if(this._fadeOut.alpha <= 0.0)
-				{
-					this._fadeOut.alpha = 0.0;
-					if (this._fadeOut.onComplete)
-					  this._fadeOut.onComplete();
-				}
-				// updated!
-				updateTarget = true;
-			}
+         // and for flash effect
+         if (this._fadeOut.alpha > 0.0)
+         {
+            this._fadeOut.alpha -= me.timer.tick/this._fadeOut.duration;
+            if(this._fadeOut.alpha <= 0.0)
+            {
+               this._fadeOut.alpha = 0.0;
+               if (this._fadeOut.onComplete)
+                  this._fadeOut.onComplete();
+            }
+            // updated!
+            updateTarget = true;
+         }
 			
 						
 			// return same value that the one given
