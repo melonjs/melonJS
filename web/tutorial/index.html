@@ -1,1173 +1,1471 @@
 <!DOCTYPE HTML>
-<html>
-
 <head>
-  <title>melonJS</title>
-  <meta name="description" content="melonJS Tutoriam" />
-  <meta name="keywords" content="melonJS, A lightweight HTML5 game engine, HTML5, javascript, canvas, game, engine, framework, tiled, tile, map, loader, parser, TMX, XML, tutorial" />
-  <meta http-equiv="content-type" content="text/html; charset=windows-1252" />
-  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
-	<script type="text/javascript">
+    <title>melonJS</title>
+    <meta name="description" content="melonJS Tutorial"/>
+    <meta name="keywords" content=
+            "melonJS, lightweight, HTML5 game engine, HTML5, javascript, canvas, game, engine, framework, tiled, tile, map, loader, parser, TMX, XML, tutorial"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" type="text/css" href="style/style.css" title="style"/>
+    <script type="text/javascript">
+        //<![CDATA[
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-13050059-3']);
-  _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-13050059-3']);
+        _gaq.push(['_trackPageview']);
 
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
+        (function() {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
 
-</script>
+        //]]>
+    </script>
+    <style type="text/css">
+            /*<![CDATA[*/
+        pre.c2 {
+            font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace;
+            color: #000000;
+            background-color: #eee;
+            font-size: 12px;
+            border: 1px dashed #999999;
+            line-height: 14px;
+            padding: 5px;
+            overflow: auto;
+            width: 100%
+        }
+
+        p.c1 {
+            font-weight: bold
+        }
+
+            /*]]>*/
+    </style>
 </head>
 
 <body>
-  <div id="main">
+<div id="main">
     <div id="header">
-      <div id="logo">
-        <div id="logo_text">
-          <!-- class="logo_colour", allows you to change the colour of the text -->
-          <h1><a href="http://www.melonjs.org">melon<span class="logo_colour">JS</span></a></h1>
-          <h2>A lightweight HTML5 game engine</h2>
+        <div id="logo">
+            <div id="logo_text">
+                <!-- class="logo_colour", allows you to change the colour of the text -->
+
+                <h1><a href="http://www.melonjs.org">melon<span class=
+                                                                        "logo_colour">JS</span></a></h1>
+
+                <h2>A lightweight HTML5 game engine</h2>
+            </div>
         </div>
-      </div>
     </div>
+
     <div id="site_content">
-		<div class="sidebar">
-		 <p><img src="media/HTML5_Badge_128.png"/></p>
-		 <h3>Useful Links</h3>
+	<div class="sidebar">
+        <p><img src="media/HTML5_Badge_128.png" alt="HTML5 badge"/></p>
+
+        <h3>Useful Links</h3>
+
         <ul>
-          <li><a href="http://www.mapeditor.org/">Tiled Homepage</a></li>
-			 <li><a href="http://www.tapjs.com/">TapJS Homepage</a></li>
+            <li><a href="http://www.mapeditor.org/">Tiled Homepage</a></li>
+
+            <li><a href="http://www.tapjs.com/">TapJS Homepage</a></li>
         </ul>
-		</div>
-      <div id="content">
-        <!-- insert the page content here -->
-        <h1>Tutorial : a step by step game creation tutorial</h1>
-        <h2>Introduction :</h2>
-        <p><b>Prerequisites :</b>
+    </div>
+<div id="content">
+<!-- insert the page content here -->
+
+<h1>A step by step game creation tutorial</h1>
+
+<h2>Introduction:</h2>
+
+<p class="c1">Prerequisites :</p>
+
+<ul>
+    <li><a href="http://www.mapeditor.org/">Tiled</a> version 0.6.2 or 0.7.0, installed
+        and running
+    </li>
+
+    <li>The melonJS <a href="http://www.melonjs.org/docs/index.html">documentation</a>
+        if you need more details
+    </li>
+
+    <li>
+        <a href="tutorial_template.zip">This template file</a>, containing what we will
+        use for the tutorial :
+
         <ul>
-          <li><a href="http://www.mapeditor.org/">Tiled</a> version 0.6.2, installed and running</li>
-          <li>the melonJS <a href="http://www.melonjs.org/docs/index.html">documentation</a> if you need more details</li>
-          <li><a href="tutorial_template.zip">this template file</a>, containing what we will use for the tutorial :
-             <ul>
-               <li>a copy of melonJS (0.9.0) (/lib)</li>
-               <li>a level tileset and a metatileset for collision (/data/area01_tileset/)</li>
-               <li>two background for parallax layers (/data/area01_parallax/)</li>
-               <li>some basic spritesheet (/data/sprite/)</li>
-               <li>some audio sfx and music (/data/audio/)</li>
-               <li>a title screen background (/data/GUI/)</li>
-               <li>a main.js skeleton</li>
-               <li>a default index.html</li>
-             </ul>
-           </li>
-		   </ul>
-         </p>
-         <p><b>Testing/debubbing :</b><br>
-         Due to the "cross-origin request" security mechanism implemented in Chrome, it's unfortunately (at least for now) not possible to test any local content (the browser will complain when trying to load a level map). Which means that except if you have a local server, you can only test your game with Chrome when on an actual web server. I therefore recommend using Safari or Opera locally, and then check the final result "online" with Chrome. 
-         <br>
-         <p><b>Additional Credits :</b><br>
-         - <a href="http://www.spicypixel.net/2008/01/10/gfxlib-fuzed-a-free-developer-graphic-library/">SpicyPixel.NET</a> for the GfxLib-Fuzed assets<br>
-         - <a href="http://www.nosoapradio.us/">noSaopRadio</a> for the ingame music</p>
+            <li>a copy of melonJS (0.9.0) (/lib)</li>
 
-         <p>Feel free of course to modify whatever you want. We also assume here, that you are already familiar with Tiled, if you need more help with the tool, you can check the Tiled homepage and wiki for further help</p>
-         
-               
-         <h2>Part1 : create a level using Tiled</h2>
+            <li>a level tileset and a metatileset for collision
+                (/data/area01_tileset/)
+            </li>
 
-            <p>melonJS <i>only</i> supports XML and Base64 (uncompressed) encoded tilemap, so before continuing, please check that your settings are correct (Tiled/Preferences). I also recommend the Base64 encoding, since it produces a smaller file.
-         <img src="media/tiled_settings.png"/></p>
-            
-            <p>First let's open Tiled and create a new map : for this tutorial we will we use a 640x480 canvas, and since we have 32x32 tiles, we must specify at least 20 and 15 for the map size. In my example I'll define a <b>40x15</b> level, so we can play with scrolling background later.</p>
-            <img src="media/step1_newmap.png"/>
-            <p>Then let's add both our tileset (using Map/New Tileset), and the "meta" tileset that we will use for collision. Both have no spacing or margin, so be sure to let the corresponding values to zero in tiled (note: melonJS support tilesets with margin and space)</p>
-             <img src="media/step1_newtileset.png"/>
-            
-            <p>For the beauty of it, we will create two layers, one background layer, and one foreground layer, feel free to use your imagination to do whatever you want. I named them logically "background" and "foreground", but you can of course put whatever you want.</>
-            
-            <p>Once finished it should look like this :
-            <img src="media/step1_tiled_level_design.png"/>
-            
-            <p>And finally let's define a background color for our level, by adding a "background_color" property to the map (Map/Map Properties), and just specify any color (in CSS format) you prefer.</p>
-            <img src="media/step1_background_color.png"/>
-            <p>To finish, let's save our new map as "area01" under the "data" folder, and we are done !</p>
-         <h2>Part2 : loading our level</h2>
-            <p>First let's have a look at our main.js skeleton :</p>
-            
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-/*!
- * 
- *   melonJS
- *   http://www.melonjs.org
- *        
- *   Step by step game creation tutorial
- *
- **/
+            <li>two background for parallax layers (/data/area01_parallax/)</li>
 
+            <li>some basic spritesheet (/data/sprite/)</li>
+
+            <li>some audio sfx and music (/data/audio/)</li>
+
+            <li>a title screen background (/data/GUI/)</li>
+
+            <li>a main.js skeleton</li>
+
+            <li>a default index.html</li>
+        </ul>
+    </li>
+</ul>
+
+<p><b>Testing/debugging :</b><br/>
+    Due to the "cross-origin request" security mechanism implemented in Chrome, it's
+    unfortunately not possible to test any local content (at least for now). The browser
+    will complain when trying to load a level map. This means that, except if you have a
+    local server, you can only test your game with Chrome when the game is uploaded to an
+    actual web server. I therefore recommend using Safari or Opera locally, and then
+    check the final result "online" with Chrome.<br/></p>
+
+<p><b>Additional Credits :</b><br/>
+    - <a href=
+                 "http://www.spicypixel.net/2008/01/10/gfxlib-fuzed-a-free-developer-graphic-library/">
+        SpicyPixel.NET</a> for the GfxLib-Fuzed assets<br/>
+    - <a href="http://www.nosoapradio.us/">noSoapRadio</a> for the in game music</p>
+
+<p>Feel free to modify whatever you want. We also assume here, that you are already
+    familiar with Tiled; if you need more help with the tool, you can check the Tiled
+    homepage and wiki for further help</p>
+
+<h2>Part 1: Creating a level using Tiled</h2>
+
+<p>melonJS <i>only</i> supports XML and Base64 (uncompressed) encoded tilemaps, so
+    before continuing, please check that your settings are correct (Tiled/Preferences). I
+    recommend the Base64 encoding, since it produces a smaller file. <img src=
+                                                                                  "media/tiled_settings.png"
+                                                                          alt="Tiled Settings"/></p>
+
+<p>First let's open Tiled and create a new map : for this tutorial we will we use a
+    640x480 canvas, and since we have 32x32 tiles, we must specify at least 20 and 15 for
+    the map size. In my example I'll define a <b>40x15</b> level, so we can play with
+    scrolling background later.</p><img src="media/step1_newmap.png" alt=
+        "Step 1 of creating a new map"/>
+
+<p>Then let's add both our tileset (using Map/New Tileset), and the "meta" tileset
+    that we will use for collision. Both have no spacing or margin, so be sure to let the
+    corresponding values to zero in tiled (note: melonJS support tilesets with margin and
+    space)</p><img src="media/step1_newtileset.png" alt="Adding a tileset"/>
+
+<p>For the beauty of it, we will create two layers - one background layer, and one
+    foreground layer. Feel free to use your imagination and do whatever you want. I named
+    them logically "background" and "foreground", but you can put whatever you want.</p>
+
+<p>Here's what my level looked like when I finished it : <img src=
+                                                                      "media/step1_tiled_level_design.png"
+                                                              alt="Tiled level design"/></p>
+
+<p>Finally, let's define a background color for our level, by adding a
+    "background_color" property to the map (Map/Map Properties), and just specify any
+    color (in CSS format) you prefer.</p><img src="media/step1_background_color.png" alt=
+        "Setting a background color in Tiled"/>
+
+<p>To finish, let's save our new map as "area01" under the "data" folder. We are done
+    the first step!</p>
+
+<h2>Part 2: Loading our level</h2>
+
+<p>First let's have a look at our main.js skeleton :</p>
+    <pre class="c2">
+<code>
 // game resources
-var g_resources= [];
+var g_resources = [];
 
-
-var jsApp    = 
-{    
+var jsApp = {
     /* ---
-    
-        Initialize the jsApp
-        
-        ---            */
-    onload: function()
-    {
-        
-      // init the video
-        if (!me.video.init('jsapp', 640, 480, false, 1.0))
-        {
-            alert(&quot;Sorry but your browser does not support html 5 canvas.&quot;);
-         return;
+
+     Initialize the jsApp
+
+     --- */
+    onload: function() {
+
+        // init the video
+        if (!me.video.init('jsapp', 640, 480, false, 1.0)) {
+            alert("Sorry but your browser does not support html 5 canvas.");
+            return;
         }
-                
-        // initialize the &quot;audio&quot;
-        me.audio.init(&quot;mp3,ogg&quot;);
-        
+
+        // initialize the "audio"
+        me.audio.init("mp3,ogg");
+
         // set all resources to be loaded
         me.loader.onload = this.loaded.bind(this);
-        
+
         // set all resources to be loaded
         me.loader.preload(g_resources);
 
         // load everything &amp; display a loading screen
         me.state.change(me.state.LOADING);
     },
-    
-    
+
     /* ---
-    
-        callback when everything is loaded
-        
-        ---                                        */
-    loaded: function ()
-    {
-        // set the &quot;Play/Ingame&quot; Screen Object
+
+     callback when everything is loaded
+
+     --- */
+    loaded: function() {
+        // set the "Play/Ingame" Screen Object
         me.state.set(me.state.PLAY, new PlayScreen());
-        
-        // start the game 
+
+        // start the game
         me.state.change(me.state.PLAY);
     }
 
-}; // jsApp
-
+};
+// jsApp
 /* the in game stuff*/
-var PlayScreen = me.ScreenObject.extend(
-{
+var PlayScreen = me.ScreenObject.extend({
 
-   onResetEvent: function()
-    {    
-      // stuff to reset on state change
+    onResetEvent: function() {
+        // stuff to reset on state change
     },
-    
-    
+
     /* ---
-    
-         action to perform when game is finished (state change)
-        
-        ---    */
-    onDestroyEvent: function()
-    {
-    
-   }
+
+     action to perform when game is finished (state change)
+
+     --- */
+    onDestroyEvent: function() {
+    }
 
 });
-
 
 //bootstrap :)
-window.onReady(function() 
-{
+window.onReady(function() {
     jsApp.onload();
 });
+</code>
+</pre>
 
-</code></pre>
-   
-            <p>This is very simple, once the page is loaded, the <b>onload()</b> function is called, initialize the display, 
-            the audio (we'll come back on this later), and start loading all the game resources. We also define a callback 
-            to be called when everything is ready to be used. And within the callback we define a new state, that will be used 
-            for the ingame stuff, together with a <b>PlayScreen</b> object that we will use to manage the game event (reset, etc...).</p>
-            
-            <p>So in order to load our level, the next thing is to add the resources to be loaded by adding the following information 
-            into (here for example) the <b>g_resources</b> object : </p>
-            <ul>
-               <li>the tileset itself, an image</li>
-               <li>our map "area01", a <b>"tmx"</b> object</li>
-            </ul>
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>// game resources
-var g_resources= [  {name: &quot;area01_level_tiles&quot;,  type:&quot;image&quot;, src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     {name: &quot;area01&quot;,              type: &quot;tmx&quot;,  src: &quot;data/area01.tmx&quot;}
-                  ]; 
+<p>This is very simple. Once the page is loaded, the <b>onload()</b> function is
+    called, the display and audio is initialized, and all game resources begin loading.
+    We also define a callback to be called when everything is ready to be used. Within
+    the callback, we define a new state that will be used for the in game stuff, together
+    with a <b>PlayScreen</b> object that we will use to manage the game event (reset,
+    etc...).</p>
 
-</code></pre>
-          
-         <p>Be sure as well to correctly name the tileset resource name accordingly to the filename, else the level loader won't be able to find the tileset and will fail.</p>
-         
-         <p>And finally, in the <b>onResetEvent()</b> function (which is called on state change), we ask the level director to display our previously preloaded level :</p>
-         
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-/* the in game stuff*/
-var PlayScreen = me.ScreenObject.extend(
-{
+<p>So in order to load our level, the next thing is to add the resources to be loaded
+    by adding the following information into here (for example) the <b>g_resources</b>
+    object :</p>
 
-   onResetEvent: function()
-    {    
-      // stuff to reset on state change
-          // load a level
-        me.levelDirector.loadLevel(&quot;area01&quot;);
+<ul>
+    <li>the tileset itself, an image</li>
+
+    <li>our map "area01", a <b>"tmx"</b> object</li>
+</ul>
+    <pre class="c2">
+<code>//game resources
+var g_resources = [{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, {
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}];
+
+</code>
+</pre>
+
+<p>Be sure as well to correctly name the tileset resource name accordingly to the
+    filename, else the level loader will not be able to find the tileset and will
+    fail.</p>
+
+<p>Finally, in the <b>onResetEvent()</b> function (which is called on a state
+    change), we ask the level director to display our previously preloaded level :</p>
+    <pre class="c2">
+<code>/* the in game stuff*/
+var PlayScreen = me.ScreenObject.extend({
+
+    onResetEvent: function() {
+        // stuff to reset on state change
+        // load a level
+        me.levelDirector.loadLevel("area01");
     },
-    
-    
+
     /* ---
+
+    action to perform when game is finished (state change)
+
+    --- */
+    onDestroyEvent: function() {
+}
+
+});
     
-         action to perform when game is finished (state change)
-        
-        ---    */
-    onDestroyEvent: function()
-    {
-    
-   }
+</code>
+</pre>
+
+<p><br/>
+    That's all! If you did everything correctly, and open you index.html, you should see
+    something like this:<br/>
+    (click on the image to see it running in your browser) <a href=
+                                                                      "./tutorial_step2/index.html"><img
+            src="media/tutorial_step2.png" alt=
+            "Step 2 results"/></a><br/>
+    Yes, nothing fancy yet, but that's only the beginning!</p>
+
+<p>Also in case you didn't noticed, since we defined a 640x480 display in our
+    application, we only see a part of the map (the half of it to be exact-, which is
+    normal. <b>melonJS</b> automatically create a corresponding viewport, and we will be
+    able to navigate through the map in the next step, when we will add a "main
+    player"</p>
+
+<h2>Part 3: Add a main player</h2>
+
+<p>Here we will create a new object by extending the default ObjectEntity, to create
+    our player. We will use the provided simple spritesheet <b>(gripe_run_right.png)</b>
+    to animate our character. It's of course possible to define different animation for
+    the same entity, but let's keep things simple first.</p><img src=
+                                                                         "media/gripe_run_right.png"
+                                                                 alt="Gripe run right"/>
+
+<p>First, let's add our spritesheet in the list of the resources to be loaded, just
+    after our map :</p>
+    <pre class="c2">
+<code>//game resources
+var g_resources = [{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, {
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}, {
+    name: "gripe_run_right",
+    type: "image",
+    src: "data/sprite/gripe_run_right.png"
+}];
+</code>
+</pre>
+
+<p>Then it's time to create our entity :</p>
+    <pre class="c2">
+<code>/*------------------- 
+a player entity
+-------------------------------- */
+var PlayerEntity = me.ObjectEntity.extend({
+
+    /* -----
+
+    constructor
+
+    ------ */
+
+    init: function(x, y, settings) {
+        // call the constructor
+        this.parent(x, y, settings);
+
+        // set the walking &amp; jumping speed
+        this.setVelocity(3, 15);
+
+        // set the display to follow our position on both axis
+        me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+
+    },
+
+    /* -----
+
+    update the player pos
+
+    ------ */
+    update: function() {
+
+        if (me.input.isKeyPressed('left')) {
+            this.doWalk(true);
+        } else if (me.input.isKeyPressed('right')) {
+            this.doWalk(false);
+        } else {
+            this.vel.x = 0;
+        }
+        if (me.input.isKeyPressed('jump')) {
+            this.doJump();
+        }
+
+        // check &amp; update player movement
+        updated = this.updateMovement();
+
+        // update animation
+        if (updated) {
+            // update objet animation
+            this.parent(this);
+        }
+        return updated;
+    }
+
+});
+</code>
+</pre>
+
+<p>I think the above code is quite easy to understand. Basically, we extend the
+    ObjectEntity, configure the default player speed, tweak the camera, and test if some
+    keys are pressed and manage our player movement. Also, you may notice that I'm
+    testing the return value of the <b>updateMovement() function</b>, which allows me to
+    control if I want the sprite animation to run or not.</p>
+
+<p>Then, we have to modify our "main" to actually declare our new Object in the
+    EntityPool (that is used by the engine to instantiate object), and finally to map the
+    keys we will use for the player movement. So our <b>loaded()</b> function will become
+    :</p>
+    <pre class="c2">
+<code>/* -----
+
+    constructor
+
+    ------ */
+
+init: function(x, y, settings) {
+    // call the constructor
+    this.parent(x, y, settings);
+
+    // set the walking &amp; jumping speed
+    this.setVelocity(3, 15);
+
+    // adjust the bounding box
+    this.updateColRect(8, 48, -1, 0);
+
+    // set the display to follow our position on both axis
+    me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+
+},
+
+</code>
+</pre>
+<br/>
+
+<p>And now we can add our entity into the level! Go back to Tiled, add an new Object
+    Layer, and finally a new Entity.<br/>
+    Name it (case does not matter) <b>mainPlayer</b> (or using the same name you used
+    when adding our Object into the entityPool), and add two properties to the Object
+    :<br/>
+    - <b>image</b> with the <b>gripe_run_right</b> value (name of our resource<br/>
+    - <b>spritewidth</b> with the value <b>64</b> which is the size of a single sprite in
+    the spritesheet<br/>
+    These two parameters will be passed as parameters (<b>settings</b> object here above
+    used by the constructor) when the object will be created. Now you can either specify
+    these fields here in Tiled, or directly in your code (when dealing with multiple
+    objects, it can be easier to just specify the name in Tiled, and manage the rest in
+    the constructor directly).<br/>
+    <br/>
+    Note: You also free to add as many properties as you want, they will all be available
+    in the settings object passed to your constructor.</p><img src=
+                                                                       "media/step3_addEntity.png"
+                                                               alt="Adding an entity"/>
+
+<p>We are almost done! The last step is to define the collision layer, for this we
+    will use the other tileset we previously added into Tiled, and specify for each tile
+    a property corresponding to the tile type.</p><img src="media/step3_metatileset.png"
+                                                       alt="Using the meta tileset"/>
+
+<p>First, right click on the "Solid" tile (1st one), and add a <b>"type"</b> property
+    with <b>"solid"</b> as a value.</p><img src="media/step3_tile_solid.png" alt=
+        "Configuring the solid tile"/>
+
+<p>Then, right click on the "Platform" tile (2nd one), and add a <b>"type"</b>
+    property with <b>"platform"</b> as a value.</p><img src=
+                                                                "media/step3_tile_platform.png"
+                                                        alt="Configuring the platform tile"/>
+
+<p>That's it! Though we won't be using them for this tutorial, it is nice to know
+    that the others possible values are <b>"lslope"</b> for the left slope,
+    <b>"rslope"</b> for the right slope, <b>"ladder"</b> for ladder tiles and
+    <b>"breakable"</b> (you'll never guess) for breakable tiles. Also be careful when
+    defining these two fields, as the engine is exactly MelonJS wil be looking for these
+    labels, so if they are incorrect, it won't work.</p>
+
+<p>Now add a new Tilelayer. This layer <b>MUST contains the keyword "collision"</b>
+    for the engine to recognize it as a collision layer.</p>
+
+<p>Once the layer added, select it, and just "draw" you level collision map. At the
+    end it should look like this:</p><img src="media/step3_collision_draw.png" alt=
+        "Drawing the collision layer"/>
+
+<p><br/>
+    Save everything, and if you now re-open you index.html, you should see something like
+    this :<br/>
+    (click on the image to see it running in your browser) <a href=
+                                                                      "./tutorial_step3/index.html"><img
+            src="media/tutorial_step3.png" alt=
+            "Step 3 Results"/></a><br/></p>
+
+<p>You will also notice that display is automatically following our player.</p>
+
+<p>One last thing - when creating an object, a collision rectangle is automatically
+    created to manage collision between objects. For debugging purposes, you can use the
+    following debug settings in your main to enable it :</p>
+    <pre class="c2">
+<code>me.debug.renderHitBox = true;
+</code>
+</pre>
+
+<p>If you reload the game, you will see this:</p><img src="media/step3_hitbox1.png"
+                                                      alt="Enabling hit box"/>
+
+<p>As you can see we have a lot of white space on the left and right of our
+    character, so let's adjust the collision rectangle to our sprite:</p>
+    <pre class="c2">
+<code>/* -----
+
+    constructor
+
+    ------ */
+
+init: function(x, y, settings) {
+    // call the constructor
+    this.parent(x, y, settings);
+
+    // set the walking &amp; jumping speed
+    this.setVelocity(3, 15);
+
+    // adjust the bounding box
+    this.updateColRect(8, 48, -1, 0);
+
+    // set the display to follow our position on both axis
+    me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+
+},
+</code>
+</pre>
+
+<p>Here we add a horizontal 8 pixel offset, and set it's width to 48 pixels. We don't
+    change the height, so we specify -1.</p><img src="media/step3_hitbox2.png" alt=
+        "Tweaking the hit box"/>
+
+<p>(Note: When you change the vertical size of the hitbox, be sure to keep the bottom
+    of the hitboxes aligned.</p>
+
+<h2>Part 4: Add a scrolling background</h2>
+
+<p>This one is very easy. We don't even have to add a single line of code, since
+    everything is done through Tiled.</p>
+
+<p>First, let's remove in Tiled the "background_color" property (Map/Map properties)
+    that we added previously at the end of Part 1. Since the background will be filled
+    with our scrolling layers, we don't need the display to be cleared with a specific
+    color (furthermore it will save some precious frames).</p>
+
+<p>Then we will use the two following backgrounds :</p>
+
+<p><b>/data/area01_parallax/area01_bkg0.png</b> for the first background
+    layer</p><img src="media/area01_bkg0.png" alt="Parallax background 1"/>
+
+<p><b>/data/area01_parallax/area01_bkg1.png</b> for the second background
+    layer</p><img src="media/area01_bkg1.png" alt="Parallax background 2"/>
+
+<p>Let's add them in the resource list:</p>
+    <pre class="c2">
+<code>// game resources
+var g_resources = [
+// our level tileset
+{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, 
+// our level
+{
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}, 
+// the main player spritesheet
+{
+    name: "gripe_run_right",
+    type: "image",
+    src: "data/sprite/gripe_run_right.png"
+}, 
+// the parallax background
+{
+    name: "area01_bkg0",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg0.png"
+}, {
+    name: "area01_bkg1",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg1.png"
+}];
+</code>
+</pre>
+
+<p>Open Tiled, and add two new Tile Layer. These layers <b>MUST contains the keyword
+    "parallax"</b> for the engine to recognize it as a parallax layers. Be sure as well
+    to adjust correctly the layer order (the display order being from bottom to
+    top)</p><img src="media/step4_layer.png" alt="Layering parallax layers"/>
+
+<p>Now right-click the layers to define their properties and add the following
+    property<br/>
+    - <b>imagesrc</b> property with the <b>area01_bkg0</b> value for the first layer
+    (<b>parallax_layer1</b> in my example), and <b>area01_bkg1</b> value for the second
+    one (<b>parallax_layer2</b> in my example)<br/></p>
+
+<p><img src="media/step4_layer_property.png" alt=
+        "Configuring parallax properties"/></p>
+
+<p><br/>
+    "Et voila!". If you now open you index.html, you should see:<br/>
+    <a href="./tutorial_step4/index.html"><img src="media/tutorial_step4.png" alt=
+            "Step 4 results"/></a><br/></p>
+
+<p>Play around with your player, and enjoy the view :)</p>
+
+<h2>Part 5: Adding some basic objects and enemies</h2>
+
+<p>In this part we will add a collectible coin (that we will use later to add to our
+    score), using the <b>spinning_coin_gold.png</b> spritesheet : <img src=
+                                                                               "media/spinning_coin_gold.png"
+                                                                       alt="Spinning gold coin"/></p>
+
+<p>And a basic enemy, using the <b>wheelie_right.png</b> spritesheet : <img src=
+                                                                                    "media/wheelie_right.png"
+                                                                            alt="Wheelie right sprite"/></p>
+
+<p>As always, add them to the resource list:</p>
+    <pre class="c2">
+<code>// game resources
+var g_resources = [
+// our level tileset
+{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, 
+// our level
+{
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}, 
+// the main player spritesheet
+{
+    name: "gripe_run_right",
+    type: "image",
+    src: "data/sprite/gripe_run_right.png"
+}, 
+// the parallax background
+{
+    name: "area01_bkg0",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg0.png"
+}, {
+    name: "area01_bkg1",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg1.png"
+}, 
+// the spinning coin spritesheet
+{
+    name: "spinning_coin_gold",
+    type: "image",
+    src: "data/sprite/spinning_coin_gold.png"
+}, 
+// our enemty entity
+{
+    name: "wheelie_right",
+    type: "image",
+    src: "data/sprite/wheelie_right.png"
+}, 
+];
+</code>
+</pre>
+<br/>
+
+<p>The coin itself is pretty easy; we just extend the me.CollectableEntity. Actually,
+    we could directly use it in Tiled (without needing to create CoinEntity here), but
+    since we will add some score and some audio sfx later when the coin is collected,
+    let's do it directly this way.</p>
+    <pre class="c2">
+<code>/*----------------
+ a Coin entity
+------------------------ */
+var CoinEntity = me.CollectableEntity.extend({
+    // extending the init function is not mandatory
+    // unless you need to add some extra initialization
+    init: function(x, y, settings) {
+        // call the parent constructor
+        this.parent(x, y, settings);
+    },
+
+    // this function is called by the engine, when
+    // an object is destroyed (here collected)
+    onDestroyEvent: function() {
+        // do something when collected
+        }
 
 });
 
-</code></pre>
+</code>
+</pre>
+<br/>
 
-         <p><br>That's all ! And normally if you open you index.html, you should see something like this :<br>
-         (click on the image to see it running in your browser)
-         <a href="./tutorial_step2/index.html"><img src="media/tutorial_step2.png"/></a><br>
-         Yes, nothing fancy yet, but that's only the beginning ! </p>
-         
-         <p>Also in case you didn't noticed, since we defined a 640x480 display in our application, we only see a part
-         of the map (the half of it to be exact-, which is normal. <b>melonJS</b> automatically create a corresponding viewport, and we will be able
-         to navigate through the map in the next step, when we will add a "main player"<p>
-         
-         
-         <h2>Part3 : add a main player</h2>
-            <p>Here we will create a new object, by extending the default ObjectEntity, to create our player. And we will 
-            use the provided simple spritesheet <b>(gripe_run_right.png)</b> to animate our character. It's of course possible to define different animation for the same entity, but let's keep things simple first.</p>
-            <img src="media/gripe_run_right.png"/>
-            
-            <p> First, let's add our spritesheet in the list of the resources to be loaded, just after our map :</p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>// game resources
-var g_resources= [  {name: &quot;area01_level_tiles&quot;,     type:&quot;image&quot;,    src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     {name: &quot;area01&quot;,               type: &quot;tmx&quot;,    src: &quot;data/area01.tmx&quot;},
-                     {name: &quot;gripe_run_right&quot;,      type:&quot;image&quot;,    src: &quot;data/sprite/gripe_run_right.png&quot;}
-                  ]; 
-</code></pre>
-            <p> Then it's time to create our entity :</p>
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>    /*************************/
-    /*                      */
-    /*   a player entity    */
-    /*                      */
-    /************************/
-    var PlayerEntity = me.ObjectEntity.extend(
-    {    
-      
-       /* -----
+<p>For our enemy, it's a bit longer :</p>
+    <pre class="c2">
+<code>/* --------------------------
+an enemy Entity
+------------------------ */
+var EnemyEntity = me.ObjectEntity.extend({
+    init: function(x, y, settings) {
+        // define this here instead of tiled
+        settings.image = "wheelie_right";
+        settings.spritewidth = 64;
 
-            constructor
-            
-          ------            */
-        
-        init:function (x, y, settings)
-        {
-            // call the constructor
-            this.parent(x, y , settings);
-            
-            // set the walking &amp; jumping speed
-            this.setVelocity(3, 15);
-         
-            // set the display to follow our position on both axis
-            me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-            
-        },
-    
-        /* -----
+        // call the parent constructor
+        this.parent(x, y, settings);
 
-            update the player pos
-            
-          ------            */
-        update : function ()
-        {
-                
-            if (me.input.isKeyPressed('left'))
-            {
-                this.doWalk(true);
-            }
-            else if (me.input.isKeyPressed('right'))
-            {
-                this.doWalk(false);
-            }
-            else
-            {
-                this.vel.x = 0;
-            }
-            if (me.input.isKeyPressed('jump'))
-            {    
-                this.doJump();
-            }
-            
-            // check &amp; update player movement
-            updated = this.updateMovement();
-                    
-            // update animation
-            if (updated)
-            {
-                // update objet animation
-                this.parent(this);
-            }
-            return updated;
+        this.startX = x;
+        this.endX = x + settings.width - settings.spritewidth;
+        // size of sprite
+
+        // make him start from the right
+        this.pos.x = x + settings.width - settings.spritewidth;
+        this.walkLeft = true;
+
+        // walking &amp; jumping speed
+        this.setVelocity(4, 6);
+
+        // make it collidable
+        this.collidable = true;
+        // make it a enemy object
+        this.type = me.game.ENEMY_OBJECT;
+
+    },
+
+    // call by the engine when colliding with another object
+    // obj parameter corresponds to the other object (typically the player) touching this one
+    onCollision: function(res, obj) {
+
+        // res.y &gt;0 means touched by something on the bottom
+        // which mean at top position for this one
+        if (this.alive &amp;&amp; (res.y &gt; 0) &amp;&amp; obj.falling) {
+            this.flicker(45);
         }
+    },
 
-    });
-</code></pre>
-            
-            
-            <p> I think how things are working here a quite easy to understand, basically we extend ObjectEntity, configure the default player speed, the camera, test if some keys are pressed and manage our player movement. Also here I'm testing the return value of the <b>updateMovement() function</b>, which allows me to control if I want the sprite animation to run or not.</p>
-            
-            <p> Then, we have to modify our "main" to actually declare our new Object in the EntityPool (that is used by the engine to instantiate object), and finally to map the keys we will use for the player movement. So our <b>loaded()</b> function will become :</p>
-            
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>/* ---
+    // manage the enemy movement
+    update: function() {
+        // do nothing if not visible
+        if (!this.visible &amp;&amp; ! this.flickering)
+            return false;
+
+        if (this.alive) {
+            if (this.walkLeft &amp;&amp; this.pos.x &lt; = this.startX) {
+                this.walkLeft = false;
+            } else if (!this.walkLeft &amp;&amp; this.pos.x &gt; = this.endX) {
+                this.walkLeft = true;
+            }
+
+            //console.log(this.walkLeft);
+            this.doWalk(this.walkLeft);
+        } else {
+            this.vel.x = 0;
+        }
+        // check &amp; update movement
+        updated = this.updateMovement();
+
+        if (updated) {
+            // update the object animation
+            this.parent();
+        }
+        return updated;
+    }
+});
     
-        callback when everything is loaded
-        
-        ---                                        */
-    loaded: function ()
-    {
-        // set the &quot;Play/Ingame&quot; Screen Object
-        me.state.set(me.state.PLAY, new PlayScreen());
-      
-        // add our player entity in the entity pool
-        me.entityPool.add(&quot;mainPlayer&quot;, PlayerEntity);
-            
-        // enable the keyboard
-        me.input.bindKey(me.input.KEY.LEFT,     &quot;left&quot;);
-        me.input.bindKey(me.input.KEY.RIGHT,    &quot;right&quot;);
-        // bind X key, and disable key repeating (2nd parameter)
-        me.input.bindKey(me.input.KEY.X,        &quot;jump&quot;, true);
-      
-      // start the game 
-        me.state.change(me.state.PLAY);
+</code>
+</pre>
+
+<p>As you can see here, I specified the <b>settings.image</b> and
+    <b>settings.spritewidth</b> properties in the constructor directly, meaning that in
+    Tiled, I won't have to add these properties to my Object (Once again, it's up to you
+    to decide how to use it).<br/>
+    Also, I am using the <b>width</b> property given by Tiled to specify a path on which
+    this enemy will run. Finally, in the onCollision method, I make the enemy flicker if
+    something is jumping on top of it.</p>
+
+<p>Then again, we add these new objects in the entityPool</p>
+    <pre class="c2">
+<code>
+// add our object entities in the entity pool
+me.entityPool.add("mainPlayer", PlayerEntity);
+me.entityPool.add("CoinEntity", CoinEntity);
+me.entityPool.add("EnemyEntity", EnemyEntity);
+</code>
+</pre>
+<br/>
+
+<p>And we are ready to complete our level in Tiled. Create a new object layer, and use the Insert Object tool to add coins and enemies where you want. Right-click on each object and make sure to set their name to either CoinEntity or EnemyEntity. <img src=
+                                                                  "media/tutorial_tiled_step5.png" alt="Step 5"/></p>
+
+<p>Before testing, we also need to modify our player to heck for collision with other
+    entities. In order to do this, we add a call to the <b>me.game.collide(this)</b>
+    function in our mainPlayer code, see below :</p>
+    <pre class="c2">
+<code>
+/* -----
+update the player pos
+------ */
+update: function() {
+
+    if (me.input.isKeyPressed('left')) {
+        this.doWalk(true);
+    } else if (me.input.isKeyPressed('right')) {
+        this.doWalk(false);
+    } else {
+        this.vel.x = 0;
+    }
+    if (me.input.isKeyPressed('jump')) {
+        this.doJump();
     }
 
-</code></pre>
-         <br>
-         <p>And now we can add our entity into the level, go back to Tiled, add an new Object Layer, and finally a new Entity. <br>Name it (case does not matter) <b>mainPlayer</b> (or using the same name you used when adding our Object into the entityPool), and add two properties to the Object :<br>
-         - <b>image</b>  with the <b>gripe_run_right</b> value (name of our resource <br>
-         - <b>spritewidth</b> with the value <b>64</b> which is the size of a single sprite in the spritesheet</b><br>
-         These two parameters will be passed as parameters (<b>settings</b> object here above used by the constructor) when the object will be created. Now you can either specify these fields here in Tiled, or directly in your code (when dealing with multiple objects, it can be easier to just specify the name in Tiled, and manage the rest in the constructor directly).<br><br>
-         Note: You also free to add as many properties as you want, they will all be available in the settings object passed to your constructor.
-          </p>
-         <img src="media/step3_addEntity.png"/>
-         
-          <p>So, we are almost done ! The last step is to define the collision layer, for this we will use the other tileset we previously added into Tiled, and specify for each tile a property corresponding to the tile type.</p>
-          <img src="media/step3_metatileset.png"/>
-          
-          <p>First, right click on the "Solid" tile (1st one), and add a <b>"type"</b> property with <b>"solid"</b> as a value.</p>
-          <img src="media/step3_tile_solid.png"/>
-          <p> Then, right click on the "Platform" tile (2nd one), and add a <b>"type"</b> property with <b>"platform"</b> as a value.</p>
-          <img src="media/step3_tile_platform.png"/>
-          
-          <p>That's it! For information the others possible values are <b>"lslope"</b> for the left slope, <b>"rslope"</b> for the right slope, <b>"ladder"</b> for  ladder tiles and <b>"breakable"</b>  (you'll never guess) for breakable tiles, but we don't need them for this tutorial. Also be careful when defining these two fields, as the engine is exactly looking for these labels, so if you got it wrong, it won't work.</p>
-          
-          <p>Now add a new Tilelayer. This layer <b>MUST contains the keyword "collision"</b> for the engine to recognize it as a collision layer</p>
-          <p>Once the layer added, select it, and just "draw" you level collision map. At the end it should look like this :</p>
-          <img src="media/step3_collision_draw.png"/>
-          
-          <p><br>Save everything, and if you now re-open you index.html, you should see something like this :<br>
-         (click on the image to see it running in your browser)
-         <a href="./tutorial_step3/index.html"><img src="media/tutorial_step3.png"/></a><br>
-         <p>you will also notice that display is automatically following our player<p>
-         
-         <p>One last thing, when creating an object, a collision rectangle is automatically created to manage collision between objects. For debug purpose, you can use the following debug settings in your main to enable it : <p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>me.debug.renderHitBox = true;
-</code></pre>
-          <p>If you reload the game, you will see this:</p>
-          <img src="media/step3_hitbox1.png"/>
-          
-          <p>As you can see we have a "lot" of white space on the left and right of our character, so let's adjust the collision rectangle to our sprite:</p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code> 
-         /* -----
+    // check &amp; update player movement
+    updated = this.updateMovement();
 
-            constructor
-            
-          ------            */
-        
-        init:function (x, y, settings)
-        {
-            // call the constructor
-            this.parent(x, y , settings);
-            
-            // set the walking &amp; jumping speed
-            this.setVelocity(3, 15);
-         
-            // adjust the bounding box
-            this.updateColRect(8,48, -1,0);
-            
-            // set the display to follow our position on both axis
-            me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-            
-        },
+    // check for collision
+    res = me.game.collide(this);
 
-</code></pre>
-           <p>Here we add a horizontal 8 pixel offset, and set it's width to 48pixel. We don't change the height, so we specify -1 </p>
-          <img src="media/step3_hitbox2.png"/>
-          <p>(note: when you change the vertical size of the hitbox, be sure to always keep aligned the bottom of the sprite rectangle (in blue) and the collision rectangle(in red)</p>
-         <h2>Part4 : add a scrolling background</h2>
-            <p>This one is very easy, and we don't even have to add a single line of code, since everything is done through Tiled.</p>
-            
-            <p>First, let's remove in Tiled the "background_color" property (Map/Map properties) we added previously  at the end of Part 1. Since the background will be filled with our scrolling layers, we don't need the display to be cleared with a specific color (furthermore it will save some precious frame)</p>
-            
-            <p>Then we will use the two following backgrounds :</p>
-            
-            <p><b>/data/area01_parallax/area01_bkg0.png</b> for the first background layer </p>
-            <img src="media/area01_bkg0.png"/>
-            <p><b>/data/area01_parallax/area01_bkg1.png</b> for the second background layer </p>
-            <img src="media/area01_bkg1.png"/>
-            
-            <p>let's add them in the resource list:</p>
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-// game resources
-var g_resources= [  
-                     // our level tileset
-                     {name: &quot;area01_level_tiles&quot;,  type:&quot;image&quot;,    src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     // our level
-                     {name: &quot;area01&quot;,              type: &quot;tmx&quot;,    src: &quot;data/area01.tmx&quot;},
-                     // the main player spritesheet
-                     {name: &quot;gripe_run_right&quot;,     type:&quot;image&quot;,    src: &quot;data/sprite/gripe_run_right.png&quot;},
-                     // the parallax background
-                     {name: &quot;area01_bkg0&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg0.png&quot;},
-                     {name: &quot;area01_bkg1&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg1.png&quot;}
-                  ]; 
-
-</code></pre>
-            <p>Open Tiled, and add two new Tile Layer, these layer <b>MUST contains the keyword "parallax"</b> for the engine to recognize it as a parallax layers. Be sure as well to adjust correctly the layer order (the display order being from bottom to top)</p>
-            <img src="media/step4_layer.png"/>
-            
-            <p>Now right-click to define their properties and add the following property <br>
-            - <b>imagesrc</b> property with the <b>area01_bkg0</b> value for the first layer (<b>parallax_layer1</b> in my example), and <b>area01_bkg1</b> value for the second one (<b>parallax_layer2</b> in my example)<br>
-            <p>
-            <img src="media/step4_layer_property.png"/>
-         
-           <p><br>"Et voila!" if you now open you index.html, you should see :<br>
-           <a href="./tutorial_step4/index.html"><img src="media/tutorial_step4.png"/></a><br>
-           <p>play around with your player, and enjoy the view :)</p>
-         
-         <h2>Part5 : add some basic objects and enemies</h2>
-            <p>In this part we will add a collectable coin (that we will also use later to add and manage score), using the <b>spinning_coin_gold.png</b> spritesheet :
-            <img src="media/spinning_coin_gold.png"/></p>
-            <p>And a basic enemy, using the <b>wheelie_right.png</b> spritesheet :
-            <img src="media/wheelie_right.png"/></p>
-            
-             <p>first let's add them in the resource list:</p>
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-// game resources
-var g_resources= [  
-                     // our level tileset
-                     {name: &quot;area01_level_tiles&quot;,  type:&quot;image&quot;,    src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     // our level
-                     {name: &quot;area01&quot;,              type: &quot;tmx&quot;,    src: &quot;data/area01.tmx&quot;},
-                     // the main player spritesheet
-                     {name: &quot;gripe_run_right&quot;,     type:&quot;image&quot;,    src: &quot;data/sprite/gripe_run_right.png&quot;},
-                     // the parallax background
-                     {name: &quot;area01_bkg0&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg0.png&quot;},
-                     {name: &quot;area01_bkg1&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg1.png&quot;},
-                     // the spinning coin spritesheet
-                     {name: &quot;spinning_coin_gold&quot;,  type:&quot;image&quot;,    src: &quot;data/sprite/spinning_coin_gold.png&quot;},
-                     // our enemty entity
-                     {name: &quot;wheelie_right&quot;,       type:&quot;image&quot;,    src: &quot;data/sprite/wheelie_right.png&quot;},
-                     
-                  ]; 
-
-</code></pre>
-            <br>
-            <p>Then the coin itself, is pretty easy, we just extend the me.CollectableEntity. Actually we could directly use it in Tiled (without needing to create CoinEntity here), but since we will add some score and some audio sfx later when the coin is collected, let's do it directly this way.<p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>  
-    /***************************/
-    /*                         */
-    /*        a Coin entity    */
-    /*                         */
-    /***************************/
-    var CoinEntity = me.CollectableEntity.extend(
-    {    
-        // extending the init function is not mandatory
-        // unless you need to add some extra initialization
-        init: function (x, y, settings)
-        {
-            // call the parent constructor
-            this.parent(x, y , settings);
-        },        
-         
-        // this function is called by the engine, when
-        // an object is destroyed (here collected)
-        onDestroyEvent : function ()
-        {
-            // do something when collected
+    if (res) {
+        // if we collide with an enemy
+        if (res.type == me.game.ENEMY_OBJECT) {
+            // check if we jumped on it
+            if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
+                // bounce
+                this.forceJump();
+            } else {
+                // let's flicker in case we touched an enemy
+                this.flicker(45);
+            }
         }
-        
-    });
+    }
 
-</code></pre>
-         <br>
-         <p>For our enemy it's a big longer :<p>
+    // update animation
+    if (updated) {
+        // update objet animation
+        this.parent(this);
+    }
+    return updated;
+}
 
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-    /*************************************/
-    /*                                   */
-    /*        an enemy Entity            */
-    /*                                   */
-    /*************************************/
-    var EnemyEntity = me.ObjectEntity.extend(
-    {    
-        init: function (x, y, settings)
-        {
-            // define this here instead of tiled
-            settings.image = &quot;wheelie_right&quot;;
-            settings.spritewidth = 64;
-            
-            // call the parent constructor
-            this.parent(x, y , settings);
-            
-            this.startX = x;
-            this.endX   = x+settings.width - settings.spritewidth; // size of sprite
-            
-            
-            // make him start from the right
-            this.pos.x = x + settings.width - settings.spritewidth;
-            this.walkLeft = true;
+});
+</code>
+</pre>
 
-            // walking &amp; jumping speed
-            this.setVelocity(4, 6);
-            
-            // make it collidable
-            this.collidable = true;
-            // make it a enemy object
-            this.type = me.game.ENEMY_OBJECT;
-                      
-        },
-        
-        // call by the engine when colliding with another object
-        // obj parameter corresponds to the other object (typically the player)    touching this one 
-        onCollision : function (res, obj)
-        {
-                
-            // res.y &gt;0 means touched by something on the bottom
-            // which mean at top position for this one
-            if (this.alive &amp;&amp; (res.y &gt; 0) &amp;&amp; obj.falling)
-            {
-              this.flicker(45);
-            }
-        },
+<p><br/>
+    And this is what you should get (note that I completed the level a little bit, adding
+    platforms, etc...) :<br/>
+    <a href="./tutorial_step5/index.html"><img src="media/tutorial_step5.png" alt=
+            "Step 5 results"/></a><br/></p>
 
-        
-        // manage the enemy movement
-        update : function ()
-        {
-            // do nothing if not visible
-            if (!this.visible &amp;&amp; !this.flickering)
-                return false;
-                
-            if (this.alive)
-            {
-                if (this.walkLeft &amp;&amp; this.pos.x &lt;= this.startX)
-                {
-                    this.walkLeft = false;
-                }
-                else if (!this.walkLeft &amp;&amp; this.pos.x &gt;= this.endX)
-                {
-                    this.walkLeft = true;
-                }
-                
-                //console.log(this.walkLeft);
-                this.doWalk(this.walkLeft);
-            }
-            else
-            {
-                this.vel.x = 0;
-            }
-            // check &amp; update movement
-            updated = this.updateMovement();
-                
-            if (updated)
-            {
-                // update the object animation
-                this.parent();
-            }
-            return updated;
-        }
-    });
+<p>Try to collect your coins, avoid the enemy or jump on it!</p>
 
-</code></pre>
+<h2>Part 6: Adding some basic HUD information</h2>
 
-         <p>As you can see here, I specified the <b>settings.image</b> and <b>settings.spritewidth</b> properties in the constructor directly, meaning that in Tiled I won't have to add these properties to my Object (Once again, it's up to you to decide how to use it).<br>
-         Also here I use the <b>width</b> property given by Tiled to specify a path on which my enemy will run. And finally, in the onCollision method, I make my object flicker, in case someone is jumping on me.
-         <p>
-         
-         <p>Then again, we add these new objects in the entityPool</p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-// add our object entities in the entity pool
-me.entityPool.add(&quot;mainPlayer&quot;, PlayerEntity);
-me.entityPool.add(&quot;CoinEntity&quot;, CoinEntity);
-me.entityPool.add(&quot;EnemyEntity&quot;, EnemyEntity);
+<p>It's time now to display some score when we collect those coins, right?</p>
 
-</code></pre>
-         <br>
-         <p>And we are ready to complete our level in Tiled :
-         <img src="media/tutorial_tiled_step5.png"/></p>
-         
-         
-         <p>Before testing, we also need to modify our player, and check for collision with other entities. In order to do this, we add a call to the <b>me.game.collide(this)</b> function in our mainPlayer code, see below :</p>
-         
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
+<p>We will use a bitmap font <b>(data/sprite/32x32_font.png)</b> to display our
+    score, as always we need to add it in our list of resources to be loaded :</p>
+    <pre class="c2">
+<code>// game resources
+var g_resources = [
+// our level tileset
+{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, 
+// our level
+{
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}, 
+// the main player spritesheet
+{
+    name: "gripe_run_right",
+    type: "image",
+    src: "data/sprite/gripe_run_right.png"
+}, 
+// the parallax background
+{
+    name: "area01_bkg0",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg0.png"
+}, {
+    name: "area01_bkg1",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg1.png"
+}, 
+// the spinning coin spritesheet
+{
+    name: "spinning_coin_gold",
+    type: "image",
+    src: "data/sprite/spinning_coin_gold.png"
+}, 
+// our enemty entity
+{
+    name: "wheelie_right",
+    type: "image",
+    src: "data/sprite/wheelie_right.png"
+}, 
+// game font
+{
+    name: "32x32_font",
+    type: "image",
+    src: "data/sprite/32x32_font.png"
+}];
+</code>
+</pre>
+<br/>
+
+<p>Let's then define a new Object, that will extend the me.HUD_Item, in which we will
+    draw the object value using our font.</p>
+    <pre class="c2">
+<code>/*-------------- 
+a score HUD Item
+--------------------- */
+
+var ScoreObject = me.HUD_Item.extend({
+    init: function(x, y) {
+        // call the parent constructor
+        this.parent(x, y);
+        // create a font
+        this.font = new me.BitmapFont("32x32_font", 32);
+    },
+
     /* -----
 
-            update the player pos
-            
-          ------            */
-        update : function ()
-        {
-                
-            if (me.input.isKeyPressed('left'))
-            {
-                this.doWalk(true);
-            }
-            else if (me.input.isKeyPressed('right'))
-            {
-                this.doWalk(false);
-            }
-            else
-            {
-                this.vel.x = 0;
-            }
-            if (me.input.isKeyPressed('jump'))
-            {    
-                this.doJump();
-            }
-            
-            // check &amp; update player movement
-            updated = this.updateMovement();
-         
-            // check for collision
-            res = me.game.collide(this);
-         
-            if (res)
-            {
-               // if we collide with an enemy
-               if (res.type == me.game.ENEMY_OBJECT)
-               {
-                  // check if we jumped on it
-                  if ((res.y&gt;0) &amp;&amp; !this.jumping)
-                  {
-                     // bounce
-                     this.forceJump();
-                  }
-                  else
-                  {
-                     // let's flicker in case we touched an enemy
-                     this.flicker(45);
-                  }
-               }
-            }
-         
-                    
-            // update animation
-            if (updated)
-            {
-                // update objet animation
-                this.parent(this);
-            }
-            return updated;
-        }
+    draw our score
 
-    });
+    ------ */
+    draw: function(context, x, y) {
+        this.font.draw(context, this.value, this.pos.x + x, this.pos.y + y);
+    }
 
-</code></pre>
+});
+</code>
+</pre>
+<br/>
 
-          <p><br>And this is what you should get (note that I completed the level a little bit, adding platforms, etc...) :<br>
-           <a href="./tutorial_step5/index.html"><img src="media/tutorial_step5.png"/></a><br>
-          <p>Try to collect your coins, avoid the enemy or jump on it!</p> 
-           
-         <h2>Part6 : add some basic HUD information</h2>
-            <p>It's time now to display some score when we collect those coins, right ?</p>
-            
-            <p>We will use a bitmap font <b>(data/sprite/32x32_font.png)</b> to display our score, as always we need to add it in our list of resources to be loaded :</p>
-            
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-// game resources
-var g_resources= [  
-                     // our level tileset
-                     {name: &quot;area01_level_tiles&quot;,  type:&quot;image&quot;,    src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     // our level
-                     {name: &quot;area01&quot;,              type: &quot;tmx&quot;,    src: &quot;data/area01.tmx&quot;},
-                     // the main player spritesheet
-                     {name: &quot;gripe_run_right&quot;,     type:&quot;image&quot;,    src: &quot;data/sprite/gripe_run_right.png&quot;},
-                     // the parallax background
-                     {name: &quot;area01_bkg0&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg0.png&quot;},
-                     {name: &quot;area01_bkg1&quot;,         type:&quot;image&quot;,    src: &quot;data/area01_parallax/area01_bkg1.png&quot;},
-                     // the spinning coin spritesheet
-                     {name: &quot;spinning_coin_gold&quot;,  type:&quot;image&quot;,    src: &quot;data/sprite/spinning_coin_gold.png&quot;},
-                     // our enemty entity
-                     {name: &quot;wheelie_right&quot;,       type:&quot;image&quot;,    src: &quot;data/sprite/wheelie_right.png&quot;},
-                     // game font
-                     {name: &quot;32x32_font&quot;,          type:&quot;image&quot;,    src: &quot;data/sprite/32x32_font.png&quot;}
-                  ]; 
+<p>And display it when we start a new game :</p>
+    <pre class="c2">
+<code>/* the in game stuff*/
+var PlayScreen = me.ScreenObject.extend({
 
-</code></pre>
-            <br>
-            <p>Let's then define a new Object, that will extend the me.HUD_Item, in which we will draw the object value using our font.</p>
-            
-            
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-    /****************************/
-    /*                          */
-    /*   a score HUD Item       */
-    /*                          */
-    /****************************/
-
-   
-   var ScoreObject = me.HUD_Item.extend(
-    {    
-        init: function(x, y)
-        {
-            // call the parent constructor
-            this.parent(x, y);
-            // create a font
-            this.font = new me.BitmapFont(&quot;32x32_font&quot;, 32);
-        },
-        
-        /* -----
-
-            draw our score
-            
-        ------            */
-        draw : function (context, x, y)
-        {
-            this.font.draw (context, this.value, this.pos.x +x, this.pos.y+y);
-        }
-    
-    });
-
-</code></pre>
-
-    <br>
-    <p>And of course display it when we start a new game : </p>
-
-   <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-/* the in game stuff*/
-var PlayScreen = me.ScreenObject.extend(
-{
-
-   onResetEvent: function()
-   {    
+    onResetEvent: function() {
         // load a level
-        me.levelDirector.loadLevel(&quot;area01&quot;);
-      
+        me.levelDirector.loadLevel("area01");
+
         // add a default HUD to the game mngr
-        me.game.addHUD(0,430,640,60);
-        
-        // add a new HUD item 
-        me.game.HUD.addItem(&quot;score&quot;, new ScoreObject(620,10));
-        
+        me.game.addHUD(0, 430, 640, 60);
+
+        // add a new HUD item
+        me.game.HUD.addItem("score", new ScoreObject(620, 10));
+
         // make sure everyhting is in the right order
         me.game.sort();
 
     },
-    
-    
+
     /* ---
-    
-         action to perform when game is finished (state change)
-        
-        ---    */
-    onDestroyEvent: function()
-    {
+
+    action to perform when game is finished (state change)
+
+    --- */
+    onDestroyEvent: function() {
         // remove the HUD
         me.game.disableHUD();
     }
 
 });
+</code>
+</pre>
 
-</code></pre>
+<p>The <b>me.game.addHUD()</b> function is used to enable a HUD (specifying the HUD
+    size), and we can then add our previously created score HUD Item by calling the
+    <b>me.game.addItem()</b> function (and specifying its position within the HUD). We
+    also assign the <b>"score"</b> keyword to that item, so that we can later access and
+    modify it's value.</p>
 
-         <p>the <b>me.game.addHUD()</b> function is used to enable a HUD (specifying the HUD size), and we can then add our previously created score HUD Item by calling the  <b>me.game.addItem()</b> function (and specifying his position within the HUD). We also assign the <b>"score"</b> keyword to that item, so that we can later access and/or modify it's value.</p>
-         
-         <p>Additionnaly, we also add a call to <b>me.game.disableHUD()</b> in the <b>onDestroyEvent()</b> function, so that the HUD is removed when exiting the "play" state.</p>
-         
-         
-         <p>Now let's modify our Coin Object, and add some score when a coin is colleted :</p>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-    onDestroyEvent : function ()
-    {
-      // increase score
-      me.game.HUD.updateItemValue(&quot;score&quot;, 250);
-    }
+<p>Additionally, we also add a call to <b>me.game.disableHUD()</b> in the
+    <b>onDestroyEvent()</b> function, so that the HUD is removed when exiting the "play"
+    state.</p>
+
+<p>Now let's modify our Coin Object, and add some score when a coin is collected
+    :</p>
+    <pre class="c2">
+<code>
+onDestroyEvent : function ()
+{
+	// increase score
+	me.game.HUD.updateItemValue("score", 250);
+}
+
+</code>
+</pre>
+
+<p>As you can see, in the <b>onDestroyEvent function</b>, we just call the
+    <b>me.game.HUD.updateItemValue</b> function, giving the "score" keyword (we
+    previously defined), and the value to be added to the score</p>
+
+<p><br/>
+    We can now check the result, and we should now have our score displayed in the
+    bottom-right corner of the screen :<br/>
+    <a href="./tutorial_step6/index.html"><img src="media/tutorial_step6.png" alt=
+            "Step 6 results"/></a><br/></p>
+
+<h2>Part 7: Adding some audio</h2>
+
+<p>In this section we will add some audio to our game:</p>
+
+<ul>
+    <li>a sound when collecting a coin</li>
+
+    <li>a sound when jumping</li>
+
+    <li>a sound when stomping on enemy</li>
+
+    <li>a background (or in game music)</li>
+</ul>
+
+<p>Then we will first add them to our resource list:</p>
+    <pre class="c2">
+<code>//game resources
+var g_resources = [
+// our level tileset
+{
+    name: "area01_level_tiles",
+    type: "image",
+    src: "data/area01_tileset/area01_level_tiles.png"
+}, 
+// our level
+{
+    name: "area01",
+    type: "tmx",
+    src: "data/area01.tmx"
+}, 
+// the main player spritesheet
+{
+    name: "gripe_run_right",
+    type: "image",
+    src: "data/sprite/gripe_run_right.png"
+}, 
+// the parallax background
+{
+    name: "area01_bkg0",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg0.png"
+}, {
+    name: "area01_bkg1",
+    type: "image",
+    src: "data/area01_parallax/area01_bkg1.png"
+}, 
+// the spinning coin spritesheet
+{
+    name: "spinning_coin_gold",
+    type: "image",
+    src: "data/sprite/spinning_coin_gold.png"
+}, 
+// our enemty entity
+{
+    name: "wheelie_right",
+    type: "image",
+    src: "data/sprite/wheelie_right.png"
+}, 
+// game font
+{
+    name: "32x32_font",
+    type: "image",
+    src: "data/sprite/32x32_font.png"
+}, 
+// audio resources
+{
+    name: "cling",
+    type: "audio",
+    src: "data/audio/",
+    channel: 2
+}, {
+    name: "stomp",
+    type: "audio",
+    src: "data/audio/",
+    channel: 1
+}, {
+    name: "jump",
+    type: "audio",
+    src: "data/audio/",
+    channel: 1
+}, {
+    name: "DST-InertExponent",
+    type: "audio",
+    src: "data/audio/",
+    channel: 1
+}];
     
-</code></pre>
-         
-         <p>as you can see, in the <b>onDestroyEvent function</b>, we just call the <b>me.game.HUD.updateItemValue</b> function, giving the "score" keyword (we previously defined), and the value to be added to the score</p>
-         
-         <p><br>we can now check the result, and we should now have our score displayed in the bottom-right corner of the screen :<br>
-           <a href="./tutorial_step6/index.html"><img src="media/tutorial_step6.png"/></a><br>
-         
-         <h2>Part7 : add some audio</h2>
-          <p>In this section we will add some audio to our game
-            <ul>
-               <li>a sound when collecting a coin</li>
-               <li>a sound when jumping</li>
-               <li>a sound when stomping on enemy</li>
-               <li>a background (or ingame music)</li>
-            </ul>
-           </p>
-           
-            <p>Then as previously we will first add them in our resource list</p> 
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>// game resources
-var g_resources= [  
-                     // our level tileset
-                     {name: &quot;area01_level_tiles&quot;,  type:&quot;image&quot;,   src: &quot;data/area01_tileset/area01_level_tiles.png&quot;},
-                     // our level
-                     {name: &quot;area01&quot;,              type: &quot;tmx&quot;,    src: &quot;data/area01.tmx&quot;},
-                     // the main player spritesheet
-                     {name: &quot;gripe_run_right&quot;,     type:&quot;image&quot;,   src: &quot;data/sprite/gripe_run_right.png&quot;},
-                     // the parallax background
-                     {name: &quot;area01_bkg0&quot;,         type:&quot;image&quot;,   src: &quot;data/area01_parallax/area01_bkg0.png&quot;},
-                     {name: &quot;area01_bkg1&quot;,         type:&quot;image&quot;,   src: &quot;data/area01_parallax/area01_bkg1.png&quot;},
-                     // the spinning coin spritesheet
-                     {name: &quot;spinning_coin_gold&quot;,  type:&quot;image&quot;,   src: &quot;data/sprite/spinning_coin_gold.png&quot;},
-                     // our enemty entity
-                     {name: &quot;wheelie_right&quot;,       type:&quot;image&quot;,   src: &quot;data/sprite/wheelie_right.png&quot;},
-                     // game font
-                     {name: &quot;32x32_font&quot;,          type:&quot;image&quot;,   src: &quot;data/sprite/32x32_font.png&quot;},
-                     // audio resources
-                     {name: &quot;cling&quot;,               type: &quot;audio&quot;,  src: &quot;data/audio/&quot;,    channel : 2},
-                     {name: &quot;stomp&quot;,               type: &quot;audio&quot;,  src: &quot;data/audio/&quot;,    channel : 1},
-                     {name: &quot;jump&quot;,                type: &quot;audio&quot;,  src: &quot;data/audio/&quot;,    channel : 1},
-                     {name: &quot;DST-InertExponent&quot;,   type: &quot;audio&quot;,  src: &quot;data/audio/&quot;,    channel : 1}
-                  ]; 
+</code>
+</pre>
 
-</code></pre>
-            
-            <p>In case you did not yet notice, when adding audio element to the resource list, we don't specify any extension, but the path where the audio can be found. Why ? Simply because since we cannot know which format is supported by the browser, we let melonJS find the right format, and then load the right audio file accordingly.</p>
-            
-            <p>If we take a look back on how we first initialized the audio, you can see that I passed the <b>"mp3,ogg"</b> parameter to the initialization function, asking to try to use first the mp3 format, and then ogg as a fallback if mp3 is not supported. Which also means that in this case, I must provide each time two versions of my audio files, one mp3, and one ogg. The engine will then use the right based on your browser capabilities</p>
-            
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-// initialize the &quot;audio&quot;
-me.audio.init(&quot;mp3,ogg&quot;);
-</code></pre>
-         
-         <p>Then finally, still in the resource list, an audio element takes an extra parameter, the number of channel. This is usefull if you "need" a sound to be played simultaneously. Let's take the example of the coin, if two coins are very close, there is a high "risk" ou player will hit them almost at the same time, and we must be able to notify the user with two distinct "bling" sound.</p>
-         
-         <p>Still following ? Yes? So let's modify our game :
-         <ul>
-           <li>collecting a coin</li>
-           in the CoinEntity code, where we previously managed our earned points, we just need to add a new call to <b>me.audio.play()</b> and use the <b>"cling"</b> audio resource. that's all !<br>
-           
-           <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-    onDestroyEvent : function ()
-    {
-      // do something when collide
-      me.audio.play(&quot;cling&quot;);
-      // give some score
-      me.game.HUD.updateItemValue(&quot;score&quot;, 250);
+<p>In case you did not notice yet, we didn't specify any extension when adding the
+    audio element to the resource list, but instead, the path where the audio can be
+    found. Why? Simply because we cannot know which format is supported by the browser.
+    Instead, we let melonJS find the right format, and then load the right audio file
+    accordingly.</p>
+
+<p>If we take a look back on how we first initialized the audio, you can see that I
+    passed the <b>"mp3,ogg"</b> parameter to the initialization function, asking to try
+    to use first the mp3 format, and then ogg as a fallback if mp3 is not supported. This
+    also means, in this case, I must provide two versions of my audio files, one as mp3,
+    and one as ogg. The engine will then use the right based on your browser
+    capabilities</p>
+    <pre class="c2">
+<code>// initialize the "audio"
+me.audio.init("mp3,ogg");
+</code>
+</pre>
+
+<p>Then finally, still in the resource list, an audio element takes an extra
+    parameter, the number of channel. This is useful if you need a sound to be played
+    simultaneously. Let's take the example of the coin, if two coins are very close,
+    there is a high "risk" ou player will hit them almost at the same time, and we must
+    be able to notify the user with two distinct "bling" sound.</p>
+
+<p>Still following? Let's modify our game :</p>
+
+<ul>
+    <li>Collecting a coin</li>
+</ul>
+
+<p>In the CoinEntity code, where we previously managed our earned points, we just
+    need to add a new call to <b>me.audio.play()</b> and use the <b>"cling"</b> audio
+    resource. that's all !</p><br/>
+    <pre class="c2">
+<code>
+onDestroyEvent : function ()
+{
+	// do something when collide
+	me.audio.play("cling");
+	// give some score
+	me.game.HUD.updateItemValue("score", 250);
+}
+
+</code>
+</pre>
+<br/>
+
+<ul>
+    <li>Jumping</li>
+</ul>
+
+<p>In the <b>update()</b> function of the mainPlayer, we also add a call to
+    <b>me.audio.play()</b> and use the <b>"jump"</b> audio resource. You can also note
+    that I added a test on the return value of doJump(). doJump can return false in case
+    you are not allowed to jump (already jumping, etc..) and in that case there is no
+    need to play the sound sfx.</p><br/>
+    <pre class="c2">
+<code>if (me.input.isKeyPressed('jump')) {
+    if (this.doJump()) {
+        me.audio.play("jump");
     }
-
-</code></pre>
-           <br>
-           <li>jumping</li>
-              in the <b>update()</b> function of the mainPlayer, we also add a call to <b>me.audio.play()</b> and use the <b>"jump"</b> audio resource. You can also note that I added a test on the return value of doJump(). doJump can return false in case you are not allowed to jump (already jumping, etc..) and in that case there is of course no need to play the sound sfx.<br>
-           <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-if (me.input.isKeyPressed('jump'))
-{    
-   if (this.doJump())
-   {
-      me.audio.play(&quot;jump&quot;);
-   }
 }
-</code></pre>
-           <br>
-           <li>stomping</li>
-           and still the same for this one, but using the "stomp" resource, still in the update function of the mainPlayer :<br>
-           <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-         // check for collision
-         res = me.game.collide(this);
-         
-         if (res)
-         {
-            if (res.type == me.game.ENEMY_OBJECT)
-            {
-               if ((res.y&gt;0) &amp;&amp; !this.jumping)
-               {
-                  // bounce
-                  me.audio.play(&quot;stomp&quot;);
-                  this.forceJump();
-               }
-               else
-               {
-                  // let's flicker in case we touched an enemy
-                  this.flicker(45);
-               }
-            }
-         }
+</code>
+</pre>
+<br/>
 
-</code></pre>
-           <br>
-           <li>Ingame music</li>
-            in our main , in the <b>onResetEvent()</b> function, we just add a call to the <b>me.audio.playTrack()</b> function, specify the audio to be used :<br>
-           <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-  onResetEvent: function()
-  {    
-      // play the audio track
-      me.audio.playTrack(&quot;DST-InertExponent&quot;);
-     
-      ....
+<ul>
+    <li>Stomping</li>
+</ul>
 
- },
+<p>And still the same for this one, but using the "stomp" resource, still in the
+    update function of the mainPlayer :</p><br/>
+    <pre class="c2">
+<code>// check for collision
+res = me.game.collide(this);
 
-</code></pre>
-          And we also need to modify the <b>onDestroyEvent()</b> function to stop the current track when exiting the game :<br>
-          
-          <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-  onDestroyEvent: function()
-  {  
-      // remove the HUD
-      me.game.disableHUD();
-      
-      // stop the current audio track
-      me.audio.stopTrack();
+if (res) {
+    if (res.type == me.game.ENEMY_OBJECT) {
+        if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
+            // bounce
+            me.audio.play("stomp");
+            this.forceJump();
+        } else {
+            // let's flicker in case we touched an enemy
+            this.flicker(45);
+        }
+    }
 }
+</code>
+</pre>
+<br/>
 
-</code></pre>
-          </ul>
-         </p>
-         <p>And that's actually all ! click <a href="./tutorial_step7/index.html">here</a> to see the final result.
-         
-         <h2>Part8 : add a second level</h2>
-              <p>If you went so far, you actually already know how to create a level, and how to add it in the resource list. 
-            the point here being to show you how to go to the next level.</p>
-            <p>To do this, melonJS has an Object call me.LevelEntity, that we will add in Tiled and specify what to do when our main player hit it :</p>
-            <img src="media/step8_next_level.png"/>
-            <p>Assuming that our new level is called "area02", we just need to add a <b>"to"</b> property with <b>"area02"</b> for the value. So that when our player will hit the Object, the engine will automatically load the "area02" level.<br>
-            Optionally we can also ask the engine to add a fadeOut/fadeIn effect when changing level by adding the <b>"fade"</b> and <b>"duration"</b> property (as in the image)</p>
+<ul>
+    <li>In game music</li>
+</ul>
 
-         <p>click <a href="./tutorial_step8/index.html">here</a> to see the final result.</p>
-         <h2>Part9 : add a title screen</h2>
-            <p>And to finish, let's add a title screen to our game, using the <b>title_screen.jpg</b> files in the <b>"/data/GUI"</b> folder:
-            <img src="media/title_screen.jpg"/>
-            and on top of it we will add some message, and wait for the user input to start the game !</p>
-            
-            <p>First let's declare a new Object, extending the me.ScreenObject :
-            <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-/*----------------------
+<p>In our main, in the <b>onResetEvent()</b> function, we just add a call to the
+    <b>me.audio.playTrack()</b> function, specify the audio to be used:</p><br/>
+    <pre class="c2">
+<code>onResetEvent: function() {
+    // play the audio track
+    me.audio.playTrack("DST-InertExponent");
+....
+},
+</code>
+</pre>
+
+<p>And we also need to modify the <b>onDestroyEvent()</b> function to stop the
+    current track when exiting the game :</p><br/>
+    <pre class="c2">
+<code>onDestroyEvent: function() {
+    // remove the HUD
+    me.game.disableHUD();
+
+    // stop the current audio track
+    me.audio.stopTrack();
+}
+</code>
+</pre>
+
+<p>That's all! click <a href="./tutorial_step7/index.html">here</a> to see the final
+    result.</p>
+
+<h2>Part 8: Adding a second level</h2>
+
+<p>You should know how to create a level now. However, here I will show you how to go
+    to another level.</p>
+
+<p>To do this, melonJS has an Object call me.LevelEntity, that we will add in Tiled
+    and specify what to do when our main player hit it :</p><img src=
+                                                                         "media/step8_next_level.png"
+                                                                 alt="Creating an object to go to next level"/>
+
+<p>Assuming that our new level is called "area02", we just need to add a <b>"to"</b>
+    property with <b>"area02"</b> for the value. So that when our player will hit the
+    Object, the engine will automatically load the "area02" level.<br/>
+    Optionally we can also ask the engine to add a fadeOut/fadeIn effect when changing
+    level by adding the <b>"fade"</b> and <b>"duration"</b> property (as in the
+    image)</p>
+
+<p>click <a href="./tutorial_step8/index.html">here</a> to see the final result.</p>
+
+<h2>Part 9: Adding a title screen</h2>
+
+<p>To finish, let's add a title screen to our game, using the <b>title_screen.jpg</b>
+    files in the <b>"/data/GUI"</b> folder: <img src="media/title_screen.jpg" alt=
+            "Title screen"/> and on top of it we will add some message, and wait for the user
+    input to start the game !</p>
+
+<p>First let's declare a new Object, extending me.ScreenObject :</p>
+    <pre class="c2">
+<code>/*----------------------
 
     A title screen
 
-  ----------------------*/
+    ----------------------*/
 
-var TitleScreen = me.ScreenObject.extend(
-{
+var TitleScreen = me.ScreenObject.extend({
     // constructor
-    init : function()
-    {
+    init: function() {
         this.parent(true);
     },
-    
-    // reset function    
-    onResetEvent : function()
-    {
-        
-    },
-    
+
+    // reset function
+    onResetEvent: function() {
+},
+
     // update function
-    update : function()
-    {
-    },
+    update: function() {},
 
-    
     // draw function
-    draw : function(context)
-    {
-    
-    },
-    
+    draw: function(context) {
+},
+
     // destroy function
-    onDestroyEvent : function()
-    {
-    },
+    onDestroyEvent: function() {},
 
-});
+    });
+</code>
+</pre>
 
-</code></pre></p>
-         <p>Note that in this example, when I call the parent constructor, I'm passing the "true" function to the function, allowing
-         me to extend the update and draw function of my Object (else they are not called by the engine).</p>
-         
-         <p>So now we want to : <br>
-         - display the above background<br>
-         - add some title in the center of the screen ("press enter to play")<br>
-         - wait for user input (to press enter)<br>
-         additionally I also want to add a small scrolling text about this tutorial.</p>
-         
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-/*----------------------
+<p>Note that in this example, when I call the parent constructor, I'm passing the
+    "true" to the function, allowing me to extend the update and draw function of my
+    Object (else they are not called by the engine).</p>
+
+<p>So now we want to:<br/>
+    - display the above screen<br/>
+    - add some text to the center of the screen ("Press enter to play")<br/>
+    - wait for user input (pressing enter)<br/>
+    Additionally, I also want to add a small scrolling text about this tutorial.</p>
+    <pre class="c2">
+<code>/*----------------------
 
     A title screen
 
   ----------------------*/
 
-var TitleScreen = me.ScreenObject.extend(
-{
+var TitleScreen = me.ScreenObject.extend({
     // constructor
-    init : function()
-    {
+    init: function() {
         this.parent(true);
-        
+
         // title screen image
-        this.title         = null;
-        
-        this.font          =  null;
-        this.scrollerfont  =  null;
+        this.title = null;
+
+        this.font = null;
+        this.scrollerfont = null;
         this.scrollertween = null;
-        
-        this.scroller = &quot;A SMALL STEP BY STEP TUTORIAL FOR GAME CREATION WITH MELONJS       &quot;;
+
+        this.scroller = "A SMALL STEP BY STEP TUTORIAL FOR GAME CREATION WITH MELONJS       ";
         this.scrollerpos = 600;
     },
-    
+
     // reset function
-    onResetEvent : function()
-    {
-        if (this.title == null)
-        {
+    onResetEvent: function() {
+        if (this.title == null) {
             // init stuff if not yet done
-            this.title = me.loader.getImage(&quot;title_screen&quot;);
+            this.title = me.loader.getImage("title_screen");
             // font to display the menu items
-            this.font = new me.BitmapFont(&quot;32x32_font&quot;, 32);
-            this.font.set(&quot;left&quot;);
-            
+            this.font = new me.BitmapFont("32x32_font", 32);
+            this.font.set("left");
+
             // set the scroller
-            this.scrollerfont = new me.BitmapFont(&quot;32x32_font&quot;, 32);
-            this.scrollerfont.set(&quot;left&quot;);
-                        
+            this.scrollerfont = new me.BitmapFont("32x32_font", 32);
+            this.scrollerfont.set("left");
+
         }
-      
-      // reset to default value
-      this.scrollerpos = 640;
-        
-      // a tween to animate the arrow
-      this.scrollertween = new me.Tween(this).to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
-        
-      // enable the keyboard
-      me.input.bindKey(me.input.KEY.ENTER,    &quot;enter&quot;, true);
-      
-      // play something
-      me.audio.play(&quot;cling&quot;);
-        
-    },
-    
-    
-    // some callback for the tween objects
-    scrollover : function()
-    {
+
         // reset to default value
         this.scrollerpos = 640;
-        this.scrollertween.to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
+
+        // a tween to animate the arrow
+        this.scrollertween = new me.Tween(this).to({
+            scrollerpos: -2200
+        }, 10000).onComplete(this.scrollover.bind(this)).start();
+
+        // enable the keyboard
+        me.input.bindKey(me.input.KEY.ENTER, "enter", true);
+
+        // play something
+        me.audio.play("cling");
+
     },
-        
+
+    // some callback for the tween objects
+    scrollover: function() {
+        // reset to default value
+        this.scrollerpos = 640;
+        this.scrollertween.to({
+            scrollerpos: -2200
+        }, 10000).onComplete(this.scrollover.bind(this)).start();
+    },
+
     // update function
-    update : function()
-    {
+    update: function() {
         // enter pressed ?
-        if (me.input.isKeyPressed('enter'))
-        {
-         me.state.change(me.state.PLAY);
+        if (me.input.isKeyPressed('enter')) {
+            me.state.change(me.state.PLAY);
         }
         return true;
     },
 
-    
     // draw function
-    draw : function(context)
-    {
-        context.drawImage(this.title, 0,0);
-        
-        this.font.draw (context, &quot;PRESS ENTER TO PLAY&quot;,     20, 240);
+    draw: function(context) {
+        context.drawImage(this.title, 0, 0);
+
+        this.font.draw(context, "PRESS ENTER TO PLAY", 20, 240);
         this.scrollerfont.draw(context, this.scroller, this.scrollerpos, 440);
     },
-    
+
     // destroy function
-    onDestroyEvent : function()
-    {
+    onDestroyEvent: function() {
         me.input.unbindKey(me.input.KEY.ENTER);
-        
-      //just in case
-      this.scrollertween.stop();
-   },
 
-});
+        //just in case
+        this.scrollertween.stop();
+    },
 
-</code></pre>
-         
-         <p>What do we have ? <br>
-         1) In the constructor, we declare a few objects to handle the background tile, a font for display our message, and our scroller.<br>
-         2) in the reset function, we load the resources we need (image, font, etc..) and reset our scrolling text position, add a tween object for it (with a callback to reset the scrolling text), and bind the ENTER key. Additionally, I'm also playing the "cling" sound, when the title menu is loaded, because it's nice :) <br>
-         3) in the update function, we check for user input (to press enter) and switch to PLAY state if pressed.<br>
-         4) in the draw function, we draw our background (using regular the drawImage), draw our text and the scrolling text<br>
-         5) on destroy, we unbind the ENTER key, and stop the tween !<br>
-         Easy no ?</p>
-         
-         <p> And of course the very last thing is to indicate to the engine we created a new object and associate it to the corresponding state (here <b>MENU</b>).
-         Also, using the me.state.transition, I'm telling the engine to add a fading effect between state change.<br>
-         And finally, instead of switching to the <b>PLAY</b> state at the end of the loaded function, I'm switching now to the <b>MENU</b> state, and that's all :<br>
-         <pre style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; color: #000000; background-color: #eee;font-size: 12px;border: 1px dashed #999999;line-height: 14px;padding: 5px; overflow: auto; width: 100%"><code>
-    /* ---
-    
-        callback when everything is loaded
-        
-        ---                                        */
-    loaded: function ()
-    {
-      // set the &quot;Play/Ingame&quot; Screen Object
-      me.state.set(me.state.MENU, new TitleScreen());
-      
-      // set the &quot;Play/Ingame&quot; Screen Object
-      me.state.set(me.state.PLAY, new PlayScreen());
-      
-      // set a global fading transition for the screen
-      me.state.transition(&quot;fade&quot;, &quot;#FFFFFF&quot;, 15);
-      
-      // add our player entity in the entity pool
-      me.entityPool.add(&quot;mainPlayer&quot;, PlayerEntity);
-      me.entityPool.add(&quot;CoinEntity&quot;, CoinEntity);
-      me.entityPool.add(&quot;EnemyEntity&quot;, EnemyEntity);
-      
-            
-      // enable the keyboard
-      me.input.bindKey(me.input.KEY.LEFT,   &quot;left&quot;);
-      me.input.bindKey(me.input.KEY.RIGHT,  &quot;right&quot;);
-      me.input.bindKey(me.input.KEY.X,      &quot;jump&quot;, true);
-      
-      // display the menu title 
-      me.state.change(me.state.MENU);
-    }
+    });
+</code>
+</pre>
 
-</code></pre></p>
-         
-         <p>.... and ... congratulations! You reached the end of this tutorial, time to test it, and you should have something like this : </p>
-         <a href="./tutorial_final/index.html"><img src="media/tutorial_final.png"/></a>
-         <h2>Part10 : conclusion</h2>
-            <p>Well, I hope that you enjoyed this time spent together with this little introduction of melonJS. 
-            If you like it and are willing to really give it a try, please keep in mind that melonJS is still in development, won't be perfect and most of all is free ! 
-            Also, don't hesitate to contact me if you have any feedback to provide, have suggestions, or found some bugs in the engine (and for sure you'll find some), I will be very happy to help you !</p>
-            
-            <p>And don't forget, this is all for fun, so have fun !</p>
-      </div>
-    </div>
-    <div id="content_footer"></div>
-    <div id="footer">
-      Copyright &copy; melonJS 2011</a>
-    </div>
-  </div>
+<p>What do we have above?<br/>
+    1) In the constructor, we declare a few objects to handle the background tile, a font
+    for displaying our message, and our scroller.<br/>
+    2) In the reset function, we load the resources we need (image, font, etc..) and
+    reset our scrolling text position, add a tween object for it (with a callback to
+    reset the scrolling text), and bind the ENTER key. Additionally, I'm also playing the
+    "cling" sound, when the title menu is loaded, because it's nice :)<br/>
+    3) In the update function, we check for user input (to press enter) and switch to the
+    PLAY state if pressed.<br/>
+    4) In the draw function, we draw our background (using the drawImage function), draw
+    both the static and scrolling text.<br/>
+    5) On destroy, we unbind the ENTER key, and stop the tween!<br/>
+    Easy, no?</p>
+
+<p>And of course the very last thing is to indicate to the engine we created a new
+    object and associate it to the corresponding state (here, <b>MENU</b>). Also, using
+    the me.state.transition, I'm telling the engine to add a fading effect between state
+    changes.<br/>
+    Finally, instead of switching to the <b>PLAY</b> state at the end of the loaded
+    function, I'm switching now to the <b>MENU</b> state:<br/></p>
+    <pre class="c2">
+<code>/* ---
+
+    callback when everything is loaded
+
+    --- */
+loaded: function() {
+    // set the "Play/Ingame" Screen Object
+    me.state.set(me.state.MENU, new TitleScreen());
+
+    // set the "Play/Ingame" Screen Object
+    me.state.set(me.state.PLAY, new PlayScreen());
+
+    // set a global fading transition for the screen
+    me.state.transition("fade", "#FFFFFF", 15);
+
+    // add our player entity in the entity pool
+    me.entityPool.add("mainPlayer", PlayerEntity);
+    me.entityPool.add("CoinEntity", CoinEntity);
+    me.entityPool.add("EnemyEntity", EnemyEntity);
+
+    // enable the keyboard
+    me.input.bindKey(me.input.KEY.LEFT, "left");
+    me.input.bindKey(me.input.KEY.RIGHT, "right");
+    me.input.bindKey(me.input.KEY.X, "jump", true);
+
+    // display the menu title
+    me.state.change(me.state.MENU);
+}
+
+</code>
+</pre>
+
+<p>.... and ... congratulations! You reached the end of this tutorial, time to test
+    it, and you should have something like this:</p><a href=
+                                                               "./tutorial_final/index.html"><img
+        src="media/tutorial_final.png" alt=
+        "Your completed game"/></a>
+
+<h2>Part 10: Conclusion</h2>
+
+<p>Well, I hope that you enjoyed this time spent together with this little
+    introduction of melonJS. I hope you like it and are willing to give it a try! Please
+    keep in mind that melonJS is still in development, so it won't be perfect and that
+    it's free! Also, don't hesitate to contact me if you have any feedback, suggestions,
+    or found some bugs in the engine (and for sure you'll find some). I will be very
+    happy to help you!</p>
+
+<p>Never forget that this is all for fun, so have fun!</p>
+</div>
+</div>
+<div id="content_footer"></div>
+
+<div id="footer">
+    Copyright © melonJS 2011
+</div>
+</div>
 </body>
 </html>
