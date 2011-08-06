@@ -161,19 +161,36 @@
 		draw the x,y tile
 			
 		------								*/
-	TileSet.prototype.drawTile = function (context, x, y, tileId)
+	TileSet.prototype.drawTile = function (context, x, y, tileId, flipx, flipy)
 	{
-   	//console.log(gid);
-		var texturePositionX = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
-		var texturePositionY = this.margin + (this.spacing + this.tileheight) * ~~(tileId / this.hTileCount);
+      var texturePositionX = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+      var texturePositionY = this.margin + (this.spacing + this.tileheight) * ~~(tileId / this.hTileCount);
 	   
+      if (flipx||flipy)
+      {
+         // "normalize" the flag value
+         flipx = (flipx==0)?1.0:-1.0; 
+         flipy = (flipy==0)?1.0:-1.0;
+         
+         context.scale(flipx, flipy);
+         
+         x = (x * flipx)-(flipx<0?this.tilewidth:0);
+			y = (y * flipy)-(flipy<0?this.tileheight:0);
+      }
+      
 		context.drawImage(this.image,
 								texturePositionX, texturePositionY,
-								this.tilewidth, this.tileheight,
-								x,y,
-								this.tilewidth, this.tileheight);
+								this.tilewidth,   this.tileheight,
+								x,                y,
+								this.tilewidth,   this.tileheight);
 
-	};
+      if (flipx||flipy)
+      {
+         // restore the transform matrix to the normal one
+         context.setTransform(1,0,0,1,0,0);
+      }
+		
+   };
 	
 	/************************************************************************************/
 	/*																												*/

@@ -5,7 +5,7 @@
  *
  *
  * TMX Loader
- * Tile QT 0.6.2 format
+ * Tile QT 0.7.0 format
  *	http://www.mapeditor.org/	
  *
  */
@@ -48,7 +48,14 @@
 		 TMX_TAG_X					= "x",
 		 TMX_TAG_Y					= "y",
 		 TMX_TAG_WIDTH				= "width",
-		 TMX_TAG_HEIGHT			= "height";
+		 TMX_TAG_HEIGHT			= "height",
+       
+       // some other global value 
+   
+       // bitmaks to check for flipped tiles
+       FlipH_Flag             = 0x80000000,
+       FlipV_Flag             = 0x40000000;
+
 	
 	/* -----
 
@@ -103,12 +110,13 @@
 	};
 
 	
-	/************************************************************************************/
-	/*                                                                                  */
-	/*		Manage a tile map																					*/
-	/*		Tile QT 0.6.2 format																				*/
-	/*		http://www.mapeditor.org/																		*/
-	/************************************************************************************/
+   /***************************************************************/
+   /*                                                             */
+   /*    Manage a tile map                                        */
+   /*    Tile QT 0.7.0 format                                     */
+   /*    http://www.mapeditor.org/                                */
+   /*                                                             */
+   /***************************************************************/
 	function TMXTileMap(xmlfile, x, y)
 	{	
 		// call the constructor
@@ -320,9 +328,8 @@
 		for ( var i = 0; i < tileInfo.length; i++ )
 		{
 			var tileID	 = me.XMLParser.getIntAttribute(tileInfo[i], TMX_TAG_ID)  + this.firstgid;
-			
-			
-			this.TileProperties[tileID] = {};			
+         
+			this.TileProperties[tileID] = {};	
 			
 			tileProp = this.TileProperties[tileID];
 			
@@ -349,10 +356,7 @@
 		//console.log("new tileset %s", this.name);
 	};
 	TMXTileSet.prototype = new me.TileSet();
-	
-	
-		
-		
+
 	/************************************************************************************/
 	/*																												*/
 	/*		Tile map Stuff																						*/
@@ -488,21 +492,34 @@
 		// I love reversed loop !
       var idx = data.length - 1;
 		
-		// set everything
+      var flipx, flipy;
+      
+    	// set everything
 		for(var y=this.height-1;y>=0; y--)
       {
 		   for(var x=this.width-1;x>=0; x--)
          {	
 				// get the value of the gid
             gid = (encoding == null)?me.XMLParser.getIntAttribute(data[idx--],TMX_TAG_GID):data[idx--];
-
+            
+            // check if tile is horizontally flipped
+            // (this should be save somewhere!)
+            flipx = (gid & FlipH_Flag);
+            
+            // check if tile is vertically flipped
+            // (this should be save somewhere!)
+            flipy = (gid & FlipV_Flag);
+            
+            // clear out the flags
+            gid &= ~(FlipH_Flag | FlipV_Flag);
+            
 				// fill the array										
 				if (gid > 0)
 				{	
 					this.setTile(x, y, gid);
 					
 					if (this.visible)
-						this.tileset.drawTile(this.layerSurface, x * this.tilewidth, y * this.tileheight, this.layerData[x][y].tileId  - this.tileset.firstgid);
+						this.tileset.drawTile(this.layerSurface, x * this.tilewidth, y * this.tileheight, this.layerData[x][y].tileId  - this.tileset.firstgid, flipx, flipy);
 
 				}
 			}
@@ -513,6 +530,8 @@
 		
 	};
 	
+
+   
 	/* -----
 
 		clear a tile
