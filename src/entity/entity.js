@@ -409,14 +409,22 @@
       // if true, image scaling is needed
 		scaleFlag : false,
 				
-		// if true, object will be immediately
-		// destroy upon destroy() call
+      /**
+       * a flag that can prevent the object to be destroyed<br>
+       * if set to false, the objet won't be destroy when calling me.game.remove(obj)<br>
+       * default value : true
+       * @public
+       * @type Boolean
+       * @name me.SpriteObject#autodestroy
+		 */
 		autodestroy : true,
-		
-		/*
-		 * the visible state of the object
-		 * @fieldOf SpriteObject
-		 * @type boolean
+      
+      /**
+       * the visible state of the object<br>
+       * default value : true
+       * @public
+       * @type Boolean
+       * @name me.SpriteObject#visible
 		 */
 		visible : true,
 		
@@ -624,37 +632,31 @@
 			}
 		},
 
-
-		/*--
-			
-		  Destroy function
-		  (object is only removed if the autodestroy flag is set)
-			
-		 --*/
-		destroy : function ()
-		{
-			// call the destroy notification function
-			this.onDestroyEvent();
-			
-			if (this.autodestroy)
-			{
-				// call the gameobj manager to remove the item
-				this.image = null;
-				me.game.remove(this);
-			}
+      /**
+		 * Destroy function<br>
+		 * object is only removed if the autodestroy flag is set (to be removed, useless)
+		 * @private
+       */
+      destroy : function ()
+      {
+         // if object can be destroyed
+         if (this.autodestroy)
+         {
+            // call the destroy notification function
+            this.onDestroyEvent();
+         }
+         return this.autodestroy;
 		},
 		
-		/*--
-			
-		  OnDestroy Event function
-		  (call by destroy before deleting the object)
-		  
-		 --*/
-
-		onDestroyEvent : function ()
-		{
-			;// to be extended !
-		}
+		
+      /**
+       * OnDestroy Notification function<br>
+       * Called by engine before deleting the object
+       */
+      onDestroyEvent : function ()
+      {
+         ;// to be extended !
+      }
       
 	});
 	$.me.SpriteObject = SpriteObject;
@@ -955,7 +957,7 @@
 		{
 			// destroy the object if collectable
 			if (this.collidable && (this.type==me.game.COLLECTABLE_OBJECT))
-				this.destroy();
+				me.game.remove(this);
 		},
 
       
@@ -1446,8 +1448,28 @@
 		{
 			// destroy the object if collectable
 			if (this.collidable && (this.type==me.game.COLLECTABLE_OBJECT))
-				this.destroy();
+				me.game.remove(this);
 		},
+
+      /**
+       * Destroy function
+		 * @private
+       */
+      destroy : function ()
+      {
+         // call the destroy notification function
+         this.onDestroyEvent();
+         return true;
+		},
+		
+      /**
+       * OnDestroy Notification function<br>
+       * Called by engine before deleting the object
+       */
+      onDestroyEvent : function ()
+      {
+         ;// to be extended !
+      },
 
 
 		/** @private */

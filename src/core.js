@@ -831,11 +831,15 @@
          // remove the object from the list of obj to draw
          dirtyObjects.splice(dirtyObjects.indexOf(obj),1);
          
-         // here we should also add a corresponding rect if not already present
-         // do we need a hashTable ?
-         
-         // make sure we redraw something
-         api.isDirty = true;
+         // save the visible state of the object
+         wasVisible = obj.visible;
+         // mark the object as not visible
+         // so it won't be added (again) in the list object to be draw
+         obj.visible = false;
+         // and flag the area as dirty
+         api.makeDirty(obj, true);
+         // restore visible state, this is needed for "persistent" object like screenObject
+         obj.visible = wasVisible;
       };
          
       /**
@@ -1208,31 +1212,34 @@
       };
 		
 			
-		/**
-		 * remove an object
-		 * @name me.game#remove
-		 * @public
-		 * @function
-		 */
-		
-		api.remove = function (obj)
-		{
-         // remove the object from the object to draw
-         drawManager.remove(obj);
+      /**
+       * remove an object
+       * @name me.game#remove
+       * @public
+       * @function
+       * @param {me.ObjectEntity} obj Object to be removed
+       */
+      api.remove = function (obj)
+      {
+         // if object can be destroy
+         if (!obj.destroy || obj.destroy());
+         {
+            // remove the object from the object to draw
+            drawManager.remove(obj);
          
-         // remove the object from the object list
-         gameObjects.splice(gameObjects.indexOf(obj),1);
+            // remove the object from the object list
+            gameObjects.splice(gameObjects.indexOf(obj),1);
 			
-			if (obj.mouseEvent)
-			{
-				// remove reference in the object even list
-				registeredMouseEventObj.splice(registeredMouseEventObj.indexOf(obj),1);
-			}
+            if (obj.mouseEvent)
+            {
+               // remove reference in the object even list
+               registeredMouseEventObj.splice(registeredMouseEventObj.indexOf(obj),1);
+            }
 			
-			// cache the number of object
-			objCount = gameObjects.length;
-			
-		};
+            // cache the number of object
+            objCount = gameObjects.length;
+         }
+      };
 		
 		
 		/**
@@ -1512,19 +1519,18 @@
 			
 		},
 		
-		/**
-		 *	Destroy function
-	    * @private
+      /**
+       * destroy function
+       * @private
        */
-		destroy: function ()
-		{
-			// call the destroy notification function
-			this.onDestroyEvent();
+      destroy: function ()
+      {
+         // notify the object
+         this.onDestroyEvent();
          
-         // remove it
-         if (this.visible)
-           me.game.remove(this);
-		},
+         // object can be destroyed
+         return true;
+      },
 
 		/**
 		 * update function<br>
@@ -1779,9 +1785,14 @@
 			// clear previous interval if any
 			_stopRunLoop();
 					
-			// call the screen object destroy method
-			if (_screenObject[_state])
-				_screenObject[_state].screen.destroy();
+         // call the screen object destroy method
+         if (_screenObject[_state])
+         {
+				if (_screenObject[_state].screen.visible)
+               me.game.remove(_screenObject[_state].screen);
+            else
+               _screenObject[_state].screen.destroy();
+         }
 					
 			// call the reset function with _extraArgs as arguments
           _screenObject[state].screen.reset.apply(_screenObject[state].screen, _extraArgs);

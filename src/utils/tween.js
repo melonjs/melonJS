@@ -117,7 +117,7 @@
        */
 		this.stop = function () {
 
-			this.destroy();
+			me.game.remove( this );
 			return this;
 
 		};
@@ -224,7 +224,7 @@
 			if ( elapsed == 1 ) {
 
 				// remove the tween from the object pool
-				this.destroy();
+				me.game.remove( this );
 				
 				if ( _onCompleteCallback !== null ) {
 					
@@ -248,8 +248,9 @@
 		
       /** @private*/
 		this.destroy = function () {
-
-			me.game.remove( this );
+         
+         // indicate we can safely be destroyed
+			return true;
 
 		};
 		
