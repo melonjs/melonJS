@@ -252,7 +252,7 @@
 				// set dead animation
 				this.setCurrentAnimation("dead");
 				// make it flicker and call destroy once timer finished
-				this.flicker(45, this.destroy.bind(this));
+				this.flicker(45, function (){me.game.remove(this)});
 				// dead sfx
 				me.audio.play("enemykill", false);
 				
