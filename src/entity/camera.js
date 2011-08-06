@@ -292,10 +292,13 @@
 		 
       /**
        *	shake the camera 
-       * @param {int} intensity
-       * @param {int} duration
-       * @param {axis} axis AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
-       * @param {function} [onComplete] callback once shaking is over
+       * @param {int} intensity maximum offset that the screen can be moved while shaking
+       * @param {int} duration expressed in frame
+       * @param {axis} axis specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
+       * @param {function} [onComplete] callback once shaking effect is over
+       * @example
+       * // shake it baby !
+       * me.game.viewport.shake(10, 30, me.game.viewport.AXIS.BOTH);
 		 */
 
 		shake : function (intensity, duration, axis, onComplete)
@@ -402,23 +405,31 @@
 			return this.checkAxisAligned(rect);
 		},
 		
-		/**
+      /**
        * @private
-		 *	render the camera effects
-		 */
-		
-		draw : function(context) 
-		{
-			// fading effect
-			if (this._fadeIn.alpha < 1.0)
-				me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color, this._fadeIn.alpha));
-			
-			// flashing effect
+       *	render the camera effects
+       */
+      draw : function(context) 
+      {
+         // fading effect
+         if (this._fadeIn.alpha < 1.0)
+         { 
+            context.globalAlpha = this._fadeIn.alpha;
+            me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color));
+            // set back full opacity
+            context.globalAlpha = 1.0;
+         }
+         // flashing effect
 			if (this._fadeOut.alpha > 0.0)
-				me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color, this._fadeOut.alpha));
-		}
+         {
+            context.globalAlpha = this._fadeOut.alpha;
+            me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color));
+            // set back full opacity
+            context.globalAlpha = 1.0;
+         }
+      }
 
-	});
+   });
 				
 	/*---------------------------------------------------------*/
 	// expose our stuff to the global scope
