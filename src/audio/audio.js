@@ -164,27 +164,32 @@
 			// reset the retry counter
          retry_counter = 0;
          
-         //console.log("sound loaded");
-			// create other "copy" channels if necessary
-			if (sound_channel > 1)
-			{
-				var soundclip = audio_channels[sound_id][0];
-				// make sure they are all paused & start at 0.01;
-				//soundclip.pause();
-				//soundclip.currentTime = reset_val;
-				// clone copy to create multiple channel version
-				for(channel=1;channel<sound_channel;channel++)
-				{	
-					audio_channels[sound_id][channel] = soundclip.cloneNode(true);
-					audio_channels[sound_id][channel].load();
-				}
-			}
-			// callback if defined
-			if (load_cb)
-			{
-				load_cb();
-			}
-		};
+         // create other "copy" channels if necessary
+         if (sound_channel > 1)
+         {
+            var soundclip = audio_channels[sound_id][0];
+            // clone copy to create multiple channel version
+            for(channel=1;channel<sound_channel;channel++)
+            {
+               // make sure it's a new copy each time
+               var node = soundclip.cloneNode(true);
+               // fix for IE platform not properly
+               // initializating everything when using cloneNode
+               if (node.currentSrc.length == 0)
+               {
+                  node.src = soundclip.src;
+               }
+               // allocate the new channel
+               audio_channels[sound_id][channel] = node;
+               audio_channels[sound_id][channel].load();
+            }
+         }
+         // callback if defined
+         if (load_cb)
+         {
+            load_cb();
+         }
+      };
 
       /**
 		 * play the specified sound
