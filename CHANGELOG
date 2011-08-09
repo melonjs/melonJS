@@ -11,7 +11,7 @@ Version History
 * TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
 * TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
 * TMX: added support for CSV data encoding
-* TMX: added support for flipped tiles, as supported in Tiled 7.0
+* TMX: added support for flipped tiles, as supported in Tiled 0.7
 * Entity: merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
 * Viewport: fixed camera refresh when changing "deadzone" values
 * loader: added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
