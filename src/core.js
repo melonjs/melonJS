@@ -154,7 +154,19 @@
        * @type {Boolean}
        * @memberOf me.sys
        */
-       dirtyRegion :  false
+       dirtyRegion :  false,
+       
+       
+      /** 
+       * Experimental WebGl support <br>
+       * https://github.com/corbanbrook/webgl-2d<br>
+       * Be sure to also load the WebGL library (webgl-2d.js) before melonJS<br>
+       * default value : false
+       * @type {Boolean}
+       * @memberOf me.sys
+       */
+       enableWebGL :  false
+
 
 
    };

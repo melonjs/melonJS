@@ -20,7 +20,7 @@
 	 */
 	timer = (function()
 	{
-		// hold public stuff in our apig
+		// hold public stuff in our api
 		var api	= {};
 	
 		/*---------------------------------------------
@@ -34,7 +34,6 @@
 		var debug				= false;
 		var framecount			= 0;
 		var framedelta			= 0;
-		var lastfps				= 0;
 		
 		/* fps count stuff */
 		var last					= 0;
@@ -50,9 +49,9 @@
 			update the fps counter
 			
 			---*/                           
-		function draw()
+		function draw(fps)
 		{
-			htmlCounter.replaceChild(document.createTextNode("(" + lastfps + "/" + me.sys.fps + " fps)"), htmlCounter.firstChild);
+			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/" + me.sys.fps + " fps)"), htmlCounter.firstChild);
 		};
 		
 	
@@ -119,33 +118,29 @@
 			should be called once a frame
 			
 			---                           */
-		api.update = function()
-		{ 
+      api.update = function()
+      { 
+         last  = now;
+         now	= new Date().getTime();
 			
-			last  = now;
-			now	= new Date().getTime();
+         delta = (now - last);
 			
-			delta = (now - last);
-			
-			// only draw the FPS on in the HTML page 
-			if (debug)
-			{ 
-				framecount++;
-				framedelta += delta;
-				if (framecount % 10 == 0) 
-				{
-					lastfps = Math.ceil((1000 * framecount) / framedelta);
-					draw();
-					framedelta = 0;
-					framecount = 0;
-				} 
-			}
-			
+         // only draw the FPS on in the HTML page 
+         if (debug)
+         { 
+            framecount++;
+            framedelta += delta;
+            if (framecount % 10 == 0) 
+            {
+               lastfps = ~~((1000 * framecount) / framedelta);
+               // clamp the result and "draw" it
+               draw(lastfps.clamp(0, me.sys.fps));
+               framedelta = 0;
+               framecount = 0;
+            }
+         }
 			// get the game tick
 			api.tick  = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
-			
-			//console.log(api.tick);
-					
 		};
 		
 		
@@ -177,6 +172,7 @@
 		var double_buffering		=	false;
 		var game_width_zoom		=	0;
 		var game_height_zoom		=	0;
+
 	
 		/*---------------------------------------------
 			
@@ -205,9 +201,9 @@
 		 * @return {Boolean}
        * @example
        * // init the video with a 480x320 canvas
- 		 * if (!me.video.init('jsapp', 480, 320, false, 1.0))
+ 		 * if (!me.video.init('jsapp', 480, 320))
 		 * {
-       *    alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
+       *    alert("Sorry but your browser does not support html 5 canvas !");
        *    return;
        * }
    	 */
@@ -223,38 +219,59 @@
 			game_height_zoom		= game_height * me.sys.scale;
 			
 			wrapper  = document.getElementById(wrapperid);
-			canvas	= document.createElement("canvas");
          
-			canvas.setAttribute("width",	(game_width_zoom) + "px");
-			canvas.setAttribute("height",	(game_height_zoom) + "px");
-			canvas.setAttribute("border",	"0px solid black");
-			//_canvas.setAttribute("style",		"background: #ffff");
-			
-			wrapper.appendChild(canvas);
-			
-						
-			if (canvas.getContext) 
+         canvas	= document.createElement("canvas");
+         
+         canvas.setAttribute("width",  (game_width_zoom) + "px");
+         canvas.setAttribute("height", (game_height_zoom) + "px");
+         canvas.setAttribute("border", "0px solid black");
+         
+         // add our canvas
+         wrapper.appendChild(canvas);
+         
+         // check if WebGL feature is supported & required
+         if (me.sys.enableWebGL && window.WebGLRenderingContext)
+         {
+            // in case the library is not loaded
+            try
+            {
+               // try to enable WebGL
+               WebGL2D.enable(canvas);
+               context2D = canvas.getContext('webgl-2d');
+               // enable cacheImage feature, so that we use
+               // canvas and not Image for assets.
+               me.sys.cacheImage = true;
+            }
+            catch (e)
+            {
+               // just to be sure
+               context2D = null;
+            }
+         }
+         
+         // if context2D not initialized, 
+         if (context2D == null)
+         {
+            // make sure it's disabled
+            me.sys.enableWebGL = false;
+            
+            if (!canvas.getContext) 
+               return false;
+            
+            context2D = canvas.getContext('2d');
+         }
+      			
+			// create the back buffer if we use double buffering
+			if (double_buffering)
 			{
-				context2D = canvas.getContext('2d');
-					
-				// create the back buffer if we use double buffering
-				if (double_buffering)
-				{
-					backBufferContext2D	= api.createCanvasSurface(game_width, game_height);
-					backBufferCanvas		= backBufferContext2D.canvas;
-				}
-				else
-				{
-					backBufferContext2D	= context2D;
-					backBufferCanvas		= context2D.canvas;
-				}
+				backBufferContext2D	= api.createCanvasSurface(game_width, game_height);
+				backBufferCanvas		= backBufferContext2D.canvas;
 			}
 			else
 			{
-				// canvas not supported by the browser
-				return false;
+				backBufferContext2D	= context2D;
+				backBufferCanvas		= context2D.canvas;
 			}
-						
 			return true;
 		};
 		
@@ -303,13 +320,23 @@
    	 */
 		api.createCanvasSurface = function(width, height)
 		{
-			var privateCanvas = document.createElement('canvas');
-				
-			privateCanvas.width = width   || backBufferCanvas.width;
+			var privateCanvas = document.createElement("canvas");
+    
+    		privateCanvas.width = width   || backBufferCanvas.width;
 			privateCanvas.height = height || backBufferCanvas.height;
-				
-			return privateCanvas.getContext('2d');
-		};
+         
+         /* !! this should be working, no ?
+         if (me.sys.enableWebGL)
+         {   
+            WebGL2D.enable(privateCanvas);
+            return privateCanvas.getContext('webgl-2d');
+         }
+         else
+         { 
+         */
+            return privateCanvas.getContext('2d');
+         //}
+      };
 
 		
 		/**
