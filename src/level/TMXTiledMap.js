@@ -554,7 +554,7 @@
 		draw a tileset layer
 			
 		------								*/
-	TMXLayer.prototype.draw = function (context, x, y)
+	TMXLayer.prototype.draw = function (context)
 	{
 		/*
 		if (this.layerInvalidated)
@@ -578,7 +578,7 @@
 		context.drawImage(this.layerCanvas,
 								this.vp.pos.x,	this.vp.pos.y,
 								this.vp.width,	this.vp.height,
-								x,					y,
+								0,					0,
 								this.vp.width,	this.vp.height);
 	};
 	

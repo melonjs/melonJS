@@ -310,11 +310,9 @@
 		/**
 		 * draw the parallax object on the specified context
 		 *	@param {context} context 2D Context
-		 *	@param {x} x start x coordinates (ovewritten by the method)
-		 *	@param {y} y start y coordinates
 		 * @protected
 		 */
-		draw : function (context, x, y)
+		draw : function (context)
 		{	
  			// last x pos of the viewport
 			x = this.vp.x;
@@ -327,7 +325,7 @@
 					// calculate the new basoffset
 					layer.baseOffset = (layer.baseOffset + layer.scrollspeed * me.timer.tick) % layer.width ;
 					// draw the layer
-					layer.draw(context, ~~layer.baseOffset, y);
+					layer.draw(context, ~~layer.baseOffset, 0);
 					// save the last x pos
 					this.lastx = x;
                // flag as updated
@@ -343,7 +341,7 @@
 					// calculate the new basoffset
 					layer.baseOffset = (layer.width + (layer.baseOffset - layer.scrollspeed * me.timer.tick)) % layer.width ;
 					// draw the layer
-					layer.draw(context, ~~layer.baseOffset, y);
+					layer.draw(context, ~~layer.baseOffset, 0);
 					// save the last x pos
 					this.lastx = x;
                // flag as updated
@@ -357,7 +355,7 @@
 			for(var i=0, layer;layer = this.parallaxLayers[i++];)
 			{	
 				// draw the layer
-				layer.draw(context, ~~layer.baseOffset, y);
+				layer.draw(context, ~~layer.baseOffset, 0);
 				// save the last x pos
 				this.lastx = x;
             // flag as not updated

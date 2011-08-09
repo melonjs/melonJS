@@ -240,7 +240,7 @@
       /**
 		 * draw the HUD
 		 */  
-      draw:function (context, x, y)
+      draw:function (context)
       {
          //console.log("draw HUD");
          if (this.HUD_invalidated)
@@ -254,7 +254,7 @@
             {
                if (obj.visible)
                {
-                  obj.draw(HUDCanvasSurface, x, y);
+                  obj.draw(HUDCanvasSurface, 0, 0);
                }
             }
          }

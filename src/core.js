@@ -865,12 +865,12 @@
       /**
        * draw all dirty object/region
        */
-      api.draw = function(context, x , y)
+      api.draw = function(context)
       {	
          // we should only redraw object that are in the dirty rect area
          for (var i = dirtyObjects.length, obj; i--, obj = dirtyObjects[i];)
          {
-               obj.draw(context, x, y);
+               obj.draw(context);
          }
          //if debug mode, draw all dirty rect
          if (me.debug.renderDirty)
@@ -912,15 +912,12 @@
 	{
 		// hold public stuff in our singletong
 		var api	= {};
-		/*---------------------------------------------
+		
+      /*---------------------------------------------
 			
 			PRIVATE STUFF
 				
 			---------------------------------------------*/
-		
-		// x,y coordindates where to draw the game
-		var x							= 0;
-		var y							= 0;
 		
 		// ref to the "system" context
 		var frameBuffer			= null;
@@ -1003,21 +1000,16 @@
 		/**
 		 * Initialize the game manager
 		 * @name me.game#init
-		 * @public
+		 * @private
 		 * @function
-		 *	@param {int} [x="0"] x coordinates of the canvas
-		 * @param {int} [y="0"] y coordinates of the canvas
 		 * @param {int} [width="full size of the created canvas"] width of the canvas
 		 * @param {int} [height="full size of the created canvas"] width of the canvas
 		 * init function.
 		 */
-		api.init = function(x, y, width, height)
+		api.init = function(width, height)
 		{	
 			if (!initialized)
 			{
-				x = x || 0;
-				y = y || 0;
-				
             // if no parameter specified use the system size
 				var width  = width  || me.video.getWidth();
 				var height = height || me.video.getHeight();
@@ -1382,7 +1374,7 @@
          if (drawManager.isDirty)
          {	
             // draw our objects
-            drawManager.draw(frameBuffer, x, y);
+            drawManager.draw(frameBuffer);
              
             // call the viewport draw function (for effects)
             api.viewport.draw(frameBuffer)
