@@ -686,9 +686,13 @@ var g_resources = [
  a Coin entity
 ------------------------ */
 var CoinEntity = me.CollectableEntity.extend({
-    // extending the init function is not mandatory
+    // extending the init function is not mandatory by the way
     // unless you need to add some extra initialization
     init: function(x, y, settings) {
+        // define this here instead of tiled
+        settings.image = "spinning_coin_gold";
+        settings.spritewidth = 32;
+
         // call the parent constructor
         this.parent(x, y, settings);
     },
