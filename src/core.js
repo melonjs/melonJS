@@ -132,7 +132,7 @@
     
       /** 
        * Use native "requestAnimFrame" function if supported <br>
-       * (!) not supported on all browsers
+       * fallback to clearInterval if not supported by the browser<br>
        * @type {Boolean}
        * @memberOf me.sys
        */
@@ -214,14 +214,22 @@
 		    return;
 	   }
 		readyBound = true;
-
-		if (document.addEventListener)
-		{
-			// Use the handy event callback
-			document.addEventListener("DOMContentLoaded", domReady, false);
-		}
-		// A fallback to window.onload, that will always work
-		$.addEventListener( "load", domReady, false );
+      
+      // directly call domReady if document is already "ready"
+      if ( document.readyState === "complete" ) 
+      {
+         return util.domReady();
+      }
+      else
+      {
+         if (document.addEventListener)
+         {
+            // Use the handy event callback
+            document.addEventListener("DOMContentLoaded", domReady, false);
+         }
+         // A fallback to window.onload, that will always work
+         $.addEventListener( "load", domReady, false );
+      }
 	};
 
 	/**
@@ -997,12 +1005,10 @@
 			{
 				x = x || 0;
 				y = y || 0;
-				// if no parameter specified use the system size
+				
+            // if no parameter specified use the system size
 				var width  = width  || me.video.getWidth();
 				var height = height || me.video.getHeight();
-				
-				// create a canvas where to draw everything
-				spriteCanvasSurface = me.video.createCanvasSurface(width, height);
 				
 				// create a defaut viewport of the same size
 				api.viewport = new me.Viewport(0, 0, width, height);
@@ -1364,15 +1370,11 @@
          if (drawManager.isDirty)
          {	
             // draw our objects
-            drawManager.draw(spriteCanvasSurface, x, y);
+            drawManager.draw(frameBuffer, x, y);
              
             // call the viewport draw function (for effects)
-            api.viewport.draw(spriteCanvasSurface)
-            
-            // blit everything to the specified canvas
-            frameBuffer.drawImage(spriteCanvasSurface.canvas, x, y);
+            api.viewport.draw(frameBuffer)
          }
-         
          // clean everything for next frame
          drawManager.flush();
       };
