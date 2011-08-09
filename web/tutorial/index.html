@@ -681,6 +681,7 @@ var g_resources = [
     we could directly use it in Tiled (without needing to create CoinEntity here), but
     since we will add some score and some audio sfx later when the coin is collected,
     let's do it directly this way.</p>
+
     <pre class="c2">
 <code>/*----------------
  a Coin entity
@@ -703,6 +704,13 @@ var CoinEntity = me.CollectableEntity.extend({
 
 </code>
 </pre>
+<p>    
+    Also, just to be sure it's clear for you that both ways of doing this is possible, 
+    we will define the Coin object properties directly in Tiled, so we don't need to add 
+    anything else in the constructor for now :<br>
+    <img src="media/coin_properties.png" alt="Spinning gold coin"/>
+</p>
+
 <br/>
 
 <p>For our enemy, it's a bit longer :</p>
