@@ -350,41 +350,24 @@
 			return new me.Rect(this.pos.clone(), this.width, this.height);
 		},
 
-      
       /**
        * merge this rectangle with another one
-		 *	@param {me.Rect} rect other rectangle to merge with
-       * @return {me.Rect} new rectangle	 
+		 *	@param {me.Rect} rect other rectangle to union with
+       * @return {me.Rect} the union(ed) rectangle	 
 		 */
-		merge : function(rect) 
-		{
-         if (this.pos.x > rect.pos.x)
-         {
-            this.width += this.pos.x - rect.pos.x;
-            this.pos.x = rect.pos.x;
-         }
-         else
-         {
-            // don't change this.pos, just update size
-            this.width += rect.pos.x - this.pos.x;
-         }
-         
-         if (this.pos.y > rect.pos.y)
-         {
-            this.height += this.pos.y - rect.pos.y;
-            this.pos.y = rect.pos.y;
-         }
-         else
-         {
-            // don't change this.pos, just update size
-            this.height += rect.pos.y - this.pos.y;
-         }
-         
+      union : function(/** {me.Rect} */ r) 
+      {
+         x1 = Math.min(this.pos.x, r.pos.x);
+         y1 = Math.min(this.pos.y, r.pos.y);
+        
+         this.width  = Math.ceil(Math.max(this.pos.x + this.width,  r.pos.x + r.width)  -x1);
+         this.height = Math.ceil(Math.max(this.pos.y + this.height, r.pos.y + r.height) -y1);
+         this.pos.x  = ~~x1;
+         this.pos.y  = ~~y1;
+
          return this;
       },
 
-      
-      
 		/**
 		 * update the size of the collision rectangle<br>
        * the colPos Vector is then set as a relative offset to the initial position (pos)<br>
