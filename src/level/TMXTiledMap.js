@@ -287,11 +287,16 @@
 		this is only called if the background_color property is defined
 			
 		------								*/
-	TMXTileMap.prototype.draw = function (context)
-	{
-		// clear the background if a color is defined
-		me.video.clearSurface(context, this.background_color);
-	};
+   TMXTileMap.prototype.draw = function (context, rect)
+   {
+      // set the background color
+      context.fillStyle = this.background_color;
+      // clear the specified rect
+      context.fillRect (rect.left,
+                        rect.top, 
+                        rect.width,
+                        rect.height); 
+   };
 	
 	/************************************************************************************/
 	/*																												*/
@@ -554,33 +559,14 @@
 		draw a tileset layer
 			
 		------								*/
-	TMXLayer.prototype.draw = function (context)
-	{
-		/*
-		if (this.layerInvalidated)
-		{
-			// rebuild the layer data
-			//console.log("drawing layer %s",this.name);
-			for(var x= this.width; x--;)
-			{
-				for(var y= this.height; y--;)
-				{		
-					//this.layerData[x][y] = data[idx++].getAttribute("gid");
-					this.tileset.drawTile(this.layerCanvas, x * 32, y * 32, this.layerData[x][y]);
-			
-				}
-			}
-			this.layerInvalidated = false;
-
-		}
-		*/
-		
-		context.drawImage(this.layerCanvas,
-								this.vp.pos.x,	this.vp.pos.y,
-								this.vp.width,	this.vp.height,
-								0,					0,
-								this.vp.width,	this.vp.height);
-	};
+   TMXLayer.prototype.draw = function (context, rect)
+   {
+      context.drawImage(this.layerCanvas,
+                        this.vp.pos.x + rect.pos.x, this.vp.pos.y + rect.pos.y, //sx, sy
+                        rect.width,                 rect.height,                //sw, sh
+                        rect.pos.x,                 rect.pos.y,                 //dx, dy
+                        rect.width,                 rect.height);               //dw, dh
+   };
 	
 	/************************************************************************************/
 	/*																												*/

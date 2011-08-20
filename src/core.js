@@ -802,28 +802,47 @@
       // a flag indicating if we need a redraw
       api.isDirty = false;
       
-      
+      /**
+       * init function
+       */
+      api.reset = function()
+      {	 
+         // make sure it's empty
+         dirtyRects = [];
+         //add a default region with the screen area size
+         dirtyRects.push(me.game.viewport.getRect());
+         // make everything dirty
+         api.makeAllDirty();
+      };
+
       /**
        * add a dirty object
+       * I should find a cleaner way to manage old/new object rect
        */
-      api.makeDirty = function(obj, dirty)
+      api.makeDirty = function(obj, updated, oldRect)
       {	
-         if (dirty)
+         // object updated ?
+         if (updated)
          {
             // yeah some drawing job to do !
             api.isDirty = true;
-            
+
             // add a dirty rect if feature enable
-            if (me.sys.dirtyRegion && obj.getRect)
+            if (me.sys.dirtyRegion)
             {
-               // checking for getRect is a temporary workaround
-               // for object not (yet) implementing getRect
-               dirtyRects.push(obj.getRect());
+               if (oldRect)
+               {
+                  // merge both rect, and add it to the list
+                  dirtyRects.push(oldRect.union(obj.getRect()));
+               }
+               else
+               {
+                  dirtyRects.push(obj.getRect());
+               }
             }
          }
          
-         // for now if obj is visible add it to the list of obj to draw
-         // (don't take dirty rect in account)
+         // if obj is visible add it to the list of obj to draw
          if (obj.visible)
          {
             // add obj at index 0, so that we can keep
@@ -850,7 +869,6 @@
       {
          // remove the object from the list of obj to draw
          dirtyObjects.splice(dirtyObjects.indexOf(obj),1);
-         
          // save the visible state of the object
          wasVisible = obj.visible;
          // mark the object as not visible
@@ -863,21 +881,28 @@
       };
          
       /**
-       * draw all dirty object/region
+       * draw all dirty objects/regions
        */
       api.draw = function(context)
       {	
-         // we should only redraw object that are in the dirty rect area
-         for (var i = dirtyObjects.length, obj; i--, obj = dirtyObjects[i];)
+         // if feature disable, we only have one dirty rect (the viewport area)
+         for (var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];)
          {
-               obj.draw(context);
-         }
-         //if debug mode, draw all dirty rect
-         if (me.debug.renderDirty)
-         {
-            for (var i = dirtyRects.length, obj; i--, obj = dirtyRects[i];)
+            // parse all objects 
+            for (var o = dirtyObjects.length, obj; o--, obj = dirtyObjects[o];)
             {
-               obj.draw(context, "white");
+               // if dirty region enabled, make sure the object is in the area to be refreshed
+               if (me.sys.dirtyRegion && obj.isEntity && !obj.checkAxisAligned(rect))
+               {
+                  continue;
+               }
+               // draw the object using the dirty area to be updated
+               obj.draw(context, rect);
+            }
+            // some debug stuff
+            if (me.debug.renderDirty)
+            {   
+               rect.draw(context, "white");
             }
          }
       };
@@ -887,9 +912,15 @@
        */
       api.flush = function()
       {	
-         // empty them
-         dirtyRects = dirtyObjects = [];
+         if (me.sys.dirtyRegion)
+         {
+            // only empty dirty area list if dirtyRec feature is enable
+            // allows to keep the viewport area as a default dirty rect
+            dirtyRects = [];
+         }
          
+         dirtyObjects = [];
+
          // clear the flag
          api.isDirty = false;
       };
@@ -1050,6 +1081,9 @@
 			{
 				api.add(api.HUD);
 			}
+         
+         // also reset the draw manager
+         drawManager.reset();
 
 		};
 		
@@ -1191,20 +1225,29 @@
 		
 	
 		
-		/**
-		 * update elements of the sprite manager
-		 * @name me.game#update
-		 * @private
-		 * @function
-		 */
-		api.update = function()
-		{
-			// update the Frame counter
-			me.timer.update();
-			
-			//for(var i=0, soundclip;soundclip = channels[i++];)
-			for (var i = objCount, obj; i--, obj = gameObjects[i];)
-			{
+      /**
+       * update all objects of the game manager
+       * @name me.game#update
+       * @private
+       * @function
+       */
+      api.update = function()
+      {
+         // update the Frame counter
+         me.timer.update();
+         
+         // loop through our objects
+         for (var i = objCount, obj; i--, obj = gameObjects[i];)
+         {
+            // make sure oldRect is null by default
+            oldRect = null;
+            
+            // we should not have to care about this here...
+            if (me.sys.dirtyRegion && obj.isEntity)
+            {
+               oldRect = obj.getRect();
+            }
+            
             // update our object
 				updated = obj.update();
             
@@ -1215,8 +1258,8 @@
             }
             
             // add it to the draw manager
-            drawManager.makeDirty(obj, updated);
-			}
+            drawManager.makeDirty(obj, updated, updated?oldRect:null);
+         }
 			// update the camera viewport
          drawManager.isDirty = api.viewport.update(drawManager.isDirty);
       };
@@ -1490,6 +1533,8 @@
 	{	
 		
 		visible		 : true,
+      
+      rect         : null,
 		
 		/**
        *	initialization function
@@ -1500,6 +1545,8 @@
 		init: function(addAsObject)
 		{
          this.visible = (addAsObject===true) || false;
+         
+         this.rect = new me.Rect(new Vector2d(0,0),0,0);
 		},
 			
 		/** 
@@ -1515,8 +1562,12 @@
 			// add our object to the GameObject Manager
 			// allowing to benefit from the keyboard event stuff
 			if (this.visible)
-           me.game.add(this,999);
-			
+         {
+            // update the rect size if added as an object
+            this.rect = me.game.viewport.getRect();
+            // add ourself !
+            me.game.add(this,999);
+         }
 			// call the onReset Function
          this.onResetEvent.apply(this, arguments);
 
@@ -1525,6 +1576,16 @@
 			
 		},
 		
+      /**
+       * getRect function
+       * @private
+       */
+      getRect: function ()
+      {
+         return this.rect;
+      },
+
+      
       /**
        * destroy function
        * @private
