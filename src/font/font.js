@@ -82,6 +82,16 @@
 			this.align  = align || "top";
 		},
 		
+      /**
+       * FIX ME !
+       * @private
+       */
+      getRect : function ()
+      {
+         return new me.Rect(new Vector2d(0,0), 0, 0);
+      },
+
+      
 		/**
 		 *	measure the given test width
 		 *	@param {String} text
