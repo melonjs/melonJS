@@ -21,11 +21,11 @@ var TitleScreen = me.ScreenObject.extend(
       this.title         = null;
 		
       this.font          =  null;
-      this.scrollerfont  =  null;
-      this.scrollertween = null;
+      //this.scrollerfont  =  null;
+      //this.scrollertween = null;
 		
-      this.scroller = "A SMALL STEP BY STEP TUTORIAL FOR GAME CREATION WITH MELONJS       ";
-      this.scrollerpos = 600;
+      //this.scroller = "A SMALL STEP BY STEP TUTORIAL FOR GAME CREATION WITH MELONJS       ";
+      //this.scrollerpos = 600;
    },
    
    /* ---
@@ -45,32 +45,34 @@ var TitleScreen = me.ScreenObject.extend(
          this.font.set("left");
 			
          // set the scroller
-         this.scrollerfont = new me.BitmapFont("32x32_font", 32);
-         this.scrollerfont.set("left");
+         //this.scrollerfont = new me.BitmapFont("32x32_font", 32);
+         //this.scrollerfont.set("left");
       }
       
       // reset to default value
-      this.scrollerpos = 640;
+      //this.scrollerpos = 640;
 		
       // a tween to animate the arrow
-      this.scrollertween = new me.Tween(this).to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
+      //this.scrollertween = new me.Tween(this).to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
 		
       // enable the keyboard
       me.input.bindKey(me.input.KEY.ENTER,	"enter", true);
       
       // play something
-      me.audio.play("cling");
+      //me.audio.play("cling");
 		
    },
 
 	
    // some callback for the tween objects
+   /*
    scrollover : function()
    {
       // reset to default value
       this.scrollerpos = 640;
       this.scrollertween.to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
    },
+   */
 		
    /*---
 		
@@ -85,7 +87,7 @@ var TitleScreen = me.ScreenObject.extend(
       {
          me.state.change(me.state.PLAY);
       }
-      return true;
+      return false;
    },
 
 	
@@ -97,10 +99,10 @@ var TitleScreen = me.ScreenObject.extend(
 	
    draw : function(context)
    {
-      context.drawImage(this.title, 0,0);
+      context.drawImage(this.title, 0,0, me.game.viewport.width, me.game.viewport.height);
 		
-      this.font.draw (context, "PRESS ENTER TO PLAY",	 20, 240);
-      this.scrollerfont.draw(context, this.scroller, this.scrollerpos, 440);
+      this.font.draw (context, "PRESS ENTER TO PLAY",	 170, me.game.viewport.height/2);
+      //this.scrollerfont.draw(context, this.scroller, this.scrollerpos, 440);
    },
 	
    /*---
@@ -113,7 +115,7 @@ var TitleScreen = me.ScreenObject.extend(
    {
       me.input.unbindKey(me.input.KEY.ENTER);
 	   //just in case
-      this.scrollertween.stop();
+      //this.scrollertween.stop();
    },
 
 });
