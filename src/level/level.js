@@ -671,7 +671,7 @@
        */
 		obj.addLevel = function(level)
 		{
-			console.log("no level loader defined");
+			throw "melonJS: no level loader defined";
 		};
 
 		/**
@@ -713,35 +713,47 @@
        * // load a level
 		 * me.levelDirector.loadLevel("a4_level1");
        */	
-		obj.loadLevel = function(level)
-		{
-			if (levels[level] === undefined)
-			{
-				console.log("level %s not found",level);
-				return;
-			}
+      obj.loadLevel = function(level)
+      {
+         if (levels[level] === undefined)
+         {
+            throw ("melonJS: level %s not found" + level);
+            return;
+         }
 			
-			if (levels[level] instanceof me.TMXTileMap)
-			{
-				// pause the game loop to avoid some silly side effects
-				me.state.pause();
-				// reset the gameObject Manager (just in case!)
-				me.game.reset();
-				// load the level
-				levels[level].reset();
-				levels[level].load();
-				// set the current level
-				currentLevel = level;
-				// add the specified level to the game manager
-				me.game.loadTMXLevel(levels[currentLevel]);
+         if (levels[level] instanceof me.TMXTileMap)
+         {
 				
-				// and resume it
-				me.state.resume();
-			}
+            // check the status of the state mngr
+            isRunning = me.state.isRunning();
+            
+            if (isRunning)
+            {
+               // pause the game loop to avoid 
+               // some silly side effects
+               me.state.pause();
+            }
+            
+            // reset the gameObject Manager (just in case!)
+            me.game.reset();
+            // load the level
+            levels[level].reset();
+            levels[level].load();
+            // set the current level
+            currentLevel = level;
+            // add the specified level to the game manager
+            me.game.loadTMXLevel(levels[currentLevel]);
+				
+				if (isRunning)
+            {
+               // resume the game loop if it was
+               // previously running
+               me.state.resume();
+            }
+         }
 			else
-				console.log("no level loader defined");
-			
-		};
+            throw "melonJS: no level loader defined";
+      };
 		
 		/**
 		 * return the current level id<br>
