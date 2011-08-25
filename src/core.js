@@ -795,9 +795,16 @@
       // valid for any updated object
       var dirtyRects = [];
       
+      // cache the full screen area rect
+      var fullscreen_rect;
+      
       // list of object to redraw
       // only valid for visible and update object
       var dirtyObjects = [];
+      
+      // flag to keep track of the reset
+      var resetted = false;
+      
       
       // a flag indicating if we need a redraw
       api.isDirty = false;
@@ -808,11 +815,16 @@
       api.reset = function()
       {	 
          // make sure it's empty
-         dirtyRects = [];
-         //add a default region with the screen area size
-         dirtyRects.push(me.game.viewport.getRect());
+         dirtyRects	 = [];
+         dirtyObjects = [];
+         
+         // set our cached rect to the actual screen size
+         fullscreen_rect = me.game.viewport.getRect();
+         
          // make everything dirty
          api.makeAllDirty();
+         
+         resetted = true;
       };
 
       /**
@@ -830,12 +842,17 @@
             // add a dirty rect if feature enable
             if (me.sys.dirtyRegion)
             {
+               // some stuff to optimiwze the amount
+               // of dirty rect would be nice here
+               // instead of adding everything :)
+               // this is for later I guess !
                if (oldRect)
                {
                   // merge both rect, and add it to the list
-                  dirtyRects.push(oldRect.union(obj.getRect()));
+                  // directly pass object, since anyway it inherits from rect
+                  dirtyRects.push(oldRect.union(obj));
                }
-               else
+               else if (obj.getRect)
                {
                   dirtyRects.push(obj.getRect());
                }
@@ -857,9 +874,15 @@
        */
       api.makeAllDirty = function()
       {	      
-         // it's enough
-         // later all region should invalidated
+         //empty the dirty rect list
+         dirtyRects = [];
+         //and add a dirty region with the screen area size
+         dirtyRects.push(fullscreen_rect);
+         // make sure it's dirty
          api.isDirty = true;
+         // they are maybe too much call to this function
+         // to be checked later...
+         //console.log("making everything dirty!");
       };
       
       /**
@@ -912,13 +935,26 @@
        */
       api.flush = function()
       {	
+         // only empty dirty area list if dirtyRec feature is enable
+         // allows to keep the viewport area as a default dirty rect
          if (me.sys.dirtyRegion)
          {
-            // only empty dirty area list if dirtyRec feature is enable
-            // allows to keep the viewport area as a default dirty rect
+            // small trick to ensure we still redraw
+            // everything at least for T0+2 frames.
+            // This is a cheap workaround for the 
+            // threading issue when using clearInterval
+            // as the old function is still called
+            // clearing some flags when it should not...
+            // there should be a cleaner way to do this !
+            if (resetted)
+            {
+               api.makeAllDirty();
+               resetted = false;
+               return;
+            }
             dirtyRects = [];
          }
-         
+         // empty the dirty object list
          dirtyObjects = [];
 
          // clear the flag
@@ -957,14 +993,14 @@
 		var gameObjects			= [];
 		
 		// hold number of object in the array
-		var objCount					= 0;
+		var objCount				= 0;
 		
 		// flag to redraw the sprites 
 		var initialized			= false;
 		
 		// to handle mouse event
 		var registeredMouseEventObj = [];
-		
+      
 		
 		/*---------------------------------------------
 			
@@ -1026,7 +1062,7 @@
 		 * @name me.game#ACTION_OBJECT
 		 */
 	   api.ACTION_OBJECT			= 3; // door, etc...
-		
+      
 
 		/**
 		 * Initialize the game manager
@@ -1109,7 +1145,7 @@
 			
 			// add ou tile map object to the game mngr
 			api.currentLevel.addTo(me.game);
-									
+
 			// change the viewport limit
 			api.viewport.setBounds(api.currentLevel.realwidth, api.currentLevel.realheight);
 			
@@ -1125,6 +1161,7 @@
 			
 			// sort all our stuff !!
 			api.sort();
+         
 	
 		};
 		
@@ -1260,8 +1297,12 @@
             // add it to the draw manager
             drawManager.makeDirty(obj, updated, updated?oldRect:null);
          }
-			// update the camera viewport
-         drawManager.isDirty = api.viewport.update(drawManager.isDirty);
+			// update the camera/viewport
+         //drawManager.isDirty = api.viewport.update(drawManager.isDirty);
+         if (api.viewport.update(drawManager.isDirty))
+         {
+            drawManager.makeAllDirty();
+         }
       };
 		
 			
@@ -1329,10 +1370,8 @@
 			// since we use a reverse loop for the display 
 			gameObjects.sort(function (a, b){return (b.z - a.z);});
 			
-         //do the same for the draw manager ?
-         
-         // make sure the dirty flag is set
-         drawManager.isDirty = true;
+         // make sure we redraw everything
+         api.repaint();
 		};
 
 		
@@ -1725,7 +1764,7 @@
 	
 	/* -----
 
-		the game App Manager (state machine)
+		the game State Manager (state machine)
 			
 		------	*/
 	/**
@@ -1872,12 +1911,14 @@
 					
 			// and start the main loop of the 
 			// new requested state
-					
 			_startRunLoop();
 			
 			// execute callback if defined
 			if (_onSwitchComplete)
 				_onSwitchComplete();
+         
+         // force repaint
+         me.game.repaint();
 		};
 
 
@@ -1966,6 +2007,7 @@
 			// set the embedded loading screen
 			obj.set(obj.LOADING, me.loadingScreen);
 			
+        
 			// set pause action on losing focus
 			$.addEventListener("blur", function () 
 			{
@@ -1997,6 +2039,7 @@
 
 				}
 			}, false);
+
          
          // cache the FPS information
          _fps = ~~(1000/me.sys.fps);
@@ -2035,9 +2078,21 @@
 			if (music)
 				me.audio.resumeTrack();
 		};
-			
-					
-		/**
+      
+      /**
+		 * return the running state of the state manager
+		 * @name me.state#isRunning
+		 * @public
+		 * @function
+		 *	@param {Boolean} true if a "process is running"
+		 */
+		obj.isRunning = function ()
+		{
+			return ((_intervalId!=-1)||(_animFrameId!=-1))
+		};
+
+	
+      /**
 		 * associate the specified state with a screen object
 		 * @name me.state#set
 		 * @public
@@ -2054,7 +2109,7 @@
       
       /**
 		 * return a reference to the current screen object<br>
-       * usefull to call a object specific method
+       * useful to call a object specific method
 		 * @name me.state#set
 		 * @public
 		 * @function
@@ -2064,7 +2119,6 @@
 		{
 			return _screenObject[_state].screen;
 		};
-
 		
 	
 		/**
@@ -2143,16 +2197,16 @@
 						_switchState(state);
 					}
 					
-									
+
 					break;
 				}
-
 
 				default :
 				{
 					break;
 				}	
 			}
+
 		};
 		
 		/**
@@ -2167,7 +2221,7 @@
 			return _state == state;
 		};
 
-			
+
 		// return our object
 		return obj;
 
