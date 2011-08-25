@@ -65,6 +65,9 @@
 			// viewport coordinates
 			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 		
+         // keep track of camera update
+         this.last = new me.Vector2d(-1,-1);
+      
 			// real worl limits
 			this.limits   = new me.Vector2d(realw || this.width, realh || this.height);
 			
@@ -90,21 +93,20 @@
 		/** @private */
 		_followH : function (target)
 		{
-			if ((target.x - this.pos.x) > (this._deadwidth))
-				this.pos.x = ~~MIN((target.x) - (this._deadwidth) , this._limitwidth );
-			else if ((target.x - this.pos.x) < (this.deadzone.x))
-				this.pos.x = ~~MAX((target.x) - this.deadzone.x, 0 );
-         
+         if ((target.x - this.pos.x) > (this._deadwidth))
+            this.pos.x = ~~MIN((target.x) - (this._deadwidth) , this._limitwidth );
+         else if ((target.x - this.pos.x) < (this.deadzone.x))
+            this.pos.x = ~~MAX((target.x) - this.deadzone.x, 0 );
       },
 		
 		/** @private */
 		_followV : function (target)
 		{
-			if ((target.y - this.pos.y) > (this._deadheight))
-				this.pos.y = ~~MIN((target.y) - (this._deadheight), this._limitheight );
-			else 	if ((target.y - this.pos.y) < (this.deadzone.y))
-				this.pos.y = ~~MAX((target.y) - this.deadzone.y, 0 );
-		},
+         if ((target.y - this.pos.y) > (this._deadheight))
+            this.pos.y = ~~MIN((target.y) - (this._deadheight), this._limitheight );
+         else 	if ((target.y - this.pos.y) < (this.deadzone.y))
+            this.pos.y = ~~MAX((target.y) - this.deadzone.y, 0 );
+      },
 
 		// -- public function ---
 		
@@ -119,9 +121,13 @@
 			this.pos.x = x || 0;
 			this.pos.y = y || 0;
 			
+         // reset our position "tracker"
+         this.last.set(-1,-1);
+			
 			// reset the target
 			this.target = null;
-			// reset default axis value for follow 
+         
+         // reset default axis value for follow 
 			this.follow_axis = null;
 
 		},
@@ -192,9 +198,8 @@
 		/** @private */
 		update : function (updateTarget)
 		{
-			if (this.target && (updateTarget || (this._shake.duration > 0)))
+			if (this.target && updateTarget)
 			{
-				
 				switch (this.follow_axis)
 				{
 					case this.AXIS.NONE :
@@ -202,22 +207,26 @@
 						break;
 
 					case this.AXIS.HORIZONTAL :
-						this._followH(this.target);
+						this._followH(this.target, (this._shake.duration > 0));
 						break;
 
 					case this.AXIS.VERTICAL :
-						this._followV(this.target);
+						this._followV(this.target, (this._shake.duration > 0));
 						break;
 
 					case this.AXIS.BOTH :
-						this._followH(this.target);
-						this._followV(this.target);
+						this._followH(this.target, (this._shake.duration > 0));
+						this._followV(this.target, (this._shake.duration > 0));
 						break;
 				
 					default :
 						break;
 				}
-			}
+            // check if the viewport position has changed (scrolling level)
+            updateTarget = (this.last.x != this.pos.x) || (this.last.y != this.pos.y)
+            // and keep track of last position for the next update
+            this.last.copy(this.pos);
+         }
 			
 			if (this._shake.duration > 0)
 			{
@@ -446,11 +455,10 @@
       }
 
    });
-				
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.Viewport				= ViewportEntity;
+   /*---------------------------------------------------------*/
+   // expose our stuff to the global scope
+   /*---------------------------------------------------------*/
+   $.me.Viewport				= ViewportEntity;
 /*---------------------------------------------------------*/
 // END END END
 /*---------------------------------------------------------*/
