@@ -53,8 +53,7 @@ var jsApp	=
          return;
       }
 		
-				
-      // initialize the "audio"
+	   // initialize the "audio"
       me.audio.init("mp3,ogg");
 		
       // set all resources to be loaded
@@ -70,8 +69,9 @@ var jsApp	=
 	
    /* ---
 
-		callback when everything is loaded
-   ---										*/
+         callback when everything is loaded
+ 
+      --- */
    loaded: function ()
    {
       // set the "Play/Ingame" Screen Object
@@ -80,25 +80,20 @@ var jsApp	=
       // set the "Play/Ingame" Screen Object
       me.state.set(me.state.PLAY, new PlayScreen());
       
-      // NOT WORKING WITH Dirty Rect..
-      // Screen is not refresh when the fading is over
       // set a global fading transition for the screen
-		//me.state.transition("fade", "#FFFFFF", 15);
+		me.state.transition("fade", "#FFFFFF", 15);
       
       // add our Player entity & Coin in the entity pool
       me.entityPool.add("mainPlayer", PlayerEntity);
       me.entityPool.add("CoinEntity", CoinEntity);
       
-			
       // enable the keyboard
       me.input.bindKey(me.input.KEY.LEFT,    "left");
       me.input.bindKey(me.input.KEY.RIGHT,   "right");
       me.input.bindKey(me.input.KEY.X,       "jump", true);
       
-      // BUG WITH Dirty rec
-      // Menu screen is broken when using dirty rect
-      // SO start the game directly !
-      me.state.change(me.state.PLAY);
+      // switch to our menu !
+      me.state.change(me.state.MENU);
 	}
 
 }; // jsApp
@@ -117,10 +112,6 @@ var PlayScreen = me.ScreenObject.extend(
 		
       // add a new HUD item 
       me.game.HUD.addItem("score", new ScoreObject(170,10));
-		
-      // make sure everyhting is in the right order
-      me.game.sort();
-
    },
 	
 	
