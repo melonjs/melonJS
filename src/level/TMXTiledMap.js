@@ -195,15 +195,25 @@
 					// set the map properties (if any)
 					setTMXProperties(this, map);
 					
-					// check if something is defined that force display of the object
-					if (this.background_color)
-					{
-						this.visible = true;
-						// convert to a rgb string (needed for Opera);//////bb
-						this.background_color = me.utils.HexToRGB(this.background_color);
-					}
-					else
-						this.visible = false;
+               // ensure the visible flag is set to false, by default
+               this.visible = false;
+               
+               // check if a backgroud color is defined  
+               if (this.background_color)
+               {
+                  this.visible = true;
+                  // convert to a rgb string (needed for Opera)
+                  this.background_color = me.utils.HexToRGB(this.background_color);
+               }
+               
+               // check if a backgroud image is defined
+               if (this.background_image)
+               {  
+                  this.visible = true;
+                  // retrieve the corresponding image ressource
+                  this.background_image = me.loader.getImage(this.background_image);
+               }
+											
 					
 				}
 				break;
@@ -289,13 +299,25 @@
 		------								*/
    TMXTileMap.prototype.draw = function (context, rect)
    {
-      // set the background color
-      context.fillStyle = this.background_color;
-      // clear the specified rect
-      context.fillRect (rect.left,
-                        rect.top, 
-                        rect.width,
-                        rect.height); 
+      if (this.background_color)
+      {
+         // set the background color
+         context.fillStyle = this.background_color;
+         // clear the specified rect
+         context.fillRect (rect.left,
+                           rect.top, 
+                           rect.width,
+                           rect.height);
+      }
+      if (this.background_image)
+      {
+         context.drawImage(this.background_image,
+                           rect.left, rect.top,
+                           rect.width, rect.height,
+                           rect.left, rect.top,
+                           rect.width, rect.height);
+      
+      }
    };
 	
 	/************************************************************************************/
