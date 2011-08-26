@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="32" height="24" tilewidth="32" tileheight="32">
  <properties>
-  <property name="background_color" value="#FFBBCC"/>
+  <property name="background_image" value="area01_bkg0"/>
  </properties>
  <tileset firstgid="1" name="area01_level_tiles" tilewidth="32" tileheight="32">
   <image source="area01_tileset/area01_level_tiles.png" width="640" height="241"/>
