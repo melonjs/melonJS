@@ -430,8 +430,7 @@
 			_fn.prototype = o;
 			return new _fn();
 		};
-	}
-	;
+	};
 
 	if (!Function.bind) {
 		/**
@@ -465,17 +464,31 @@
 		 */
 
 		Function.prototype.bind = function() {
-			var fn = this, args = Array.prototype.slice.call(arguments), object = args
-					.shift();
+			var fn = this, args = Array.prototype.slice.call(arguments), object = args.shift();
 			return function() {
-				return fn.apply(object, args.concat(Array.prototype.slice
-						.call(arguments)));
+				return fn.apply(object, args.concat(Array.prototype.slice.call(arguments)));
 			};
 		};
 
-	}
-	;
+	};
+   
 
+	/**
+	 * Executes a function as soon as the interpreter is idle (stack empty).
+	 * @returns Function
+	 * @example
+	 *
+	 *   // execute myFunc() when the stack is empty, with 'myArgument'
+	 *   myFunc.defer('myArgument');
+	 *
+	 */
+	Function.prototype.defer = function() {
+		var fn = this, args = Array.prototype.slice.call(arguments);
+		return window.setTimeout(function() {
+			return fn.apply(fn, args);
+		}, 0.01);
+	};
+   
 	if (!Object.defineProperty) {
 		/**
 		 * simple defineProperty function definition (if not supported by the browser)<br>
@@ -498,8 +511,7 @@
 				throw "melonJS: Object.defineProperty not supported";
 			}
 		}
-	}
-	;
+	};
 
 	/** 
 	 * add trim fn to the string object 
@@ -750,9 +762,6 @@
 		// only valid for visible and update object
 		var dirtyObjects = [];
 
-		// flag to keep track of the reset
-		var resetted = false;
-
 		// a flag indicating if we need a redraw
 		api.isDirty = false;
 
@@ -769,8 +778,6 @@
 
 			// make everything dirty
 			api.makeAllDirty();
-
-			resetted = true;
 		};
 
 		/**
@@ -870,18 +877,6 @@
 			// only empty dirty area list if dirtyRec feature is enable
 			// allows to keep the viewport area as a default dirty rect
 			if (me.sys.dirtyRegion) {
-				// small trick to ensure we still redraw
-				// everything at least for T0+2 frames.
-				// This is a cheap workaround for the 
-				// threading issue when using clearInterval
-				// as the old function is still called
-				// clearing some flags when it should not...
-				// there should be a cleaner way to do this !
-				if (resetted) {
-					api.makeAllDirty();
-					resetted = false;
-					return;
-				}
 				dirtyRects = [];
 			}
 			// empty the dirty object list
@@ -2040,7 +2035,10 @@
 				}
 				// else just switch without any effects
 				else {
-					_switchState(state);
+					// wait for the last frame to be
+					// "finished" before switching
+					_switchState.defer(state);
+					
 				}
 
 				break;
