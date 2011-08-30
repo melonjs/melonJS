@@ -103,14 +103,12 @@
 					.clamp(low, high));
 		},
 
-		minV : function(/**me.Vector2d*/
-		v) {
+		minV : function(/**me.Vector2d*/ v) {
 			this.x = this.x < v.x ? this.x : v.x;
 			this.y = this.y < v.y ? this.y : v.y;
 		},
 
-		maxV : function(/**me.Vector2d*/
-		v) {
+		maxV : function(/**me.Vector2d*/ v) {
 			this.x = this.x > v.x ? this.x : v.x;
 			this.y = this.y > v.y ? this.y : v.y;
 		},
@@ -126,8 +124,7 @@
 		},
 
 		//copy() copies the x,y values of another instance to this
-		copy : function(/**me.Vector2d*/
-		v) {
+		copy : function(/**me.Vector2d*/ v) {
 			this.x = v.x;
 			this.y = v.y;
 		},
@@ -150,14 +147,12 @@
 		},
 
 		/** @return {int} */
-		dotProduct : function(/**me.Vector2d*/
-		v) {
+		dotProduct : function(/**me.Vector2d*/ v) {
 			return this.x * v.x + this.y * v.y;
 		},
 
 		/** @return {int} */
-		distance : function(/**me.Vector2d*/
-		v) {
+		distance : function(/**me.Vector2d*/ v) {
 			return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y)
 					* (this.y - v.y));
 		},
@@ -263,20 +258,11 @@
 				 */
 				height : 0,
 
-				// full width/height
-				/*
-				fWidth  : 0,
-				fHeight : 0,
-				 */
 				// half width/height
 				hWidth : 0,
 				hHeight : 0,
 
-				// some private temp variable
-				// to avoid recomputing same value
-				tthis : null,
-				trect : null,
-
+				
 				/** @private */
 				init : function(v, w, h) {
 					// reference to the initial position
@@ -300,11 +286,7 @@
 					this.hWidth = ~~(w / 2);
 					this.hHeight = ~~(h / 2);
 
-					// some private temp variable
-					// to avoid recomputing same value
-					this.tthis = new Vector2d();
-					this.trect = new Vector2d();
-
+					
 					// some properties to ease my life when getting the rectangle coordinates /**
 					Object.defineProperty(this, "left", {
 						get : function() {
@@ -344,10 +326,7 @@
 
 					this.width = w;
 					this.height = h;
-					/*
-					this.fWidth  = w;
-					this.fHeight = h;
-					 */
+					
 					this.hWidth = ~~(w / 2);
 					this.hHeight = ~~(h / 2);
 				},
@@ -366,8 +345,7 @@
 				 * @param {me.Rect} rect other rectangle to union with
 				 * @return {me.Rect} the union(ed) rectangle	 
 				 */
-				union : function(/** {me.Rect} */
-				r) {
+				union : function(/** {me.Rect} */ r) {
 					x1 = Math.min(this.pos.x, r.pos.x);
 					y1 = Math.min(this.pos.y, r.pos.y);
 
@@ -465,18 +443,14 @@
 				 * @param  {me.Rect} rect
 				 * @return {boolean} true if intersecting
 				 */
-				checkAxisAligned : function(rect) {
-					this.tthis.x = this.left;
-					this.tthis.y = this.top;
-
-					this.trect.x = rect.left;
-					this.trect.y = rect.top;
-
-					return (this.tthis.x < this.trect.x + rect.width
-							&& this.trect.x < this.tthis.x + this.width
-							&& this.tthis.y < this.trect.y + rect.height && this.trect.y < this.tthis.y
-							+ this.height);
+				checkAxisAligned : function(r) 
+				{
+					return (this.left < r.right && 
+							r.left < this.right && 
+							this.top < r.bottom &&
+							r.top < this.bottom);
 				},
+
 
 				/**
 				 * AABB vs AABB collission dectection<p>
@@ -506,22 +480,15 @@
 				 * @param {me.Rect} rect
 				 * @return {me.Vector2d} 
 				 */
-				collideVsAABB : function(/** {me.Rect} */
-				rect) {
+				collideVsAABB : function(/** {me.Rect} */ rect) {
 					// response vector
 					p = new Vector2d(0, 0);
 
 					// check if both box are overlaping
 					if (this.checkAxisAligned(rect)) {
 						// compute delta between this & rect
-						var dx = this.tthis.x + this.hWidth - this.trect.x
-								- rect.hWidth;
-						var dy = this.tthis.y + this.hHeight - this.trect.y
-								- rect.hHeight;
-
-						//console.log(dx,dy);
-
-						//console.log(Math.sqrt(dx * dx + dy * dy));
+						var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
+						var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
 
 						// compute penetration depth for both axis
 						p.x = (rect.hWidth + this.hWidth) - (dx < 0 ? -dx : dx); // - Math.abs(dx);
