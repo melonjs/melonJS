@@ -1112,7 +1112,27 @@
 		api.addEntity = function(entityType, zOrder) {
 			api.add(me.entityPool.newIstanceOf(entityType), zOrder);
 		};
-
+		
+		/**
+		 * returns the list of entities with the specified name<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name me.game#getEntityByName
+		 * @public
+		 * @function
+		 * @param {String} entityName entity name
+		 * @return {me.ObjectEntity[]} Array of object entities
+		 */
+		api.getEntityByName = function(entityName)
+		{
+			var objList = [];
+			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+				if(obj.isEntity && obj.name == entityName) {
+					objList.push(obj);
+				}
+			}
+			return objList;
+		};
 		/**
 		 * add a HUD obj to the game manager
 		 * @name me.game#addHUD

@@ -25,6 +25,15 @@
 	 */
 	ObjectSettings = {
 		/**
+		 * object entity name<br>
+		 * OPTIONAL
+		 * @public
+		 * @type {String}
+		 * @name me.ObjectSettings#name
+		 */
+		name : null,
+
+		/**
 		 * image ressource name to be loaded<br>
 		 * MANDATORY<br>
 		 * (in case of TiledObject, this field is automatically set)
@@ -807,7 +816,10 @@
 							(typeof settings.image == "string") ? me.loader
 									.getImage(settings.image) : settings.image,
 							settings.spritewidth);
-
+					
+					// set the object entity name
+					this.name = settings.name;
+					
 					// adjust initial coordinates should be bottom left ones
 					this.pos.set(x, y + me.game.currentLevel.tileheight
 							- this.height);
