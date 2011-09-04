@@ -1229,7 +1229,6 @@
 		api.remove = function(obj) {
 			// if object can be destroy
 			if (!obj.destroy || obj.destroy())
-				;
 			{
 				// remove the object from the object to draw
 				drawManager.remove(obj);
