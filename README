@@ -6,29 +6,9 @@ melonJS is an open-source, license free library for private / non commercial usa
 
 ------------------------------------------------------------------------------------------------------
 
-melonJS is the result of my enthusiasm & my past experiments with Javascript, 
-and currently features :
-
-- A fresh & lightweight 2D sprite-based engine
-- Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE)
-- Multiple Audio Channel support
-- Basic physics & collision mechanisms (to ensure low cpu requirements)
-- Tween Effects
-- Transition effects
-- A basic set of Object Entities (to be extended)
-- Basic animation management
-- A state manager (to easily manage loading, menu, options, in-game state)
-- Tiled map format version 0.6.x integration for easy level design
-	- Uncompressed Plain, Base64 and CSV encoded XML tilemap loading
-	- Orthogonal tilemap
-	- Multiple layers (multiple background/Foreground, collision and "Parallax" layers)
-	- Layer Alpha settings
-	- Tileset Transparency settings
-	- Tiled Object
-	- Dynamic Layer and Object/Group ordering
-	- Dynamic Entity loading
-	- Solid, Platform, Slope and Breakable Tiles
-- System & bitmap fonts
-- some basic GUI elements
-- a customizable loader, etc
+Some contributions to MelonJS. Here's the plan :
+- Some visual documentation (diagrams)
+- Small core updates (add lifeSpan to entities, change the "DoWalk"-like things)
+- First game
+- If I'm smart enough, bigger things like (simple) particles
+....
