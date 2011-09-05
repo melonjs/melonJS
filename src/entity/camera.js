@@ -239,7 +239,7 @@
 						}
 						// check if the viewport position has changed (scrolling level)
 						updateTarget = (this.last.x != this.pos.x)
-								|| (this.last.y != this.pos.y)
+								|| (this.last.y != this.pos.y);
 						// and keep track of last position for the next update
 						this.last.copy(this.pos);
 					}
