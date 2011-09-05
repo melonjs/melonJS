@@ -494,7 +494,7 @@
 				nodeValue = null;
 
 			}
-				break
+				break;
 			default:
 				throw "melonJS: TMX Tile Map " + encoding
 						+ " encoding not supported!";
