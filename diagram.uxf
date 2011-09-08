@@ -1,0 +1,797 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="11.3">
+  <zoom_level>7</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>448</x>
+      <y>420</y>
+      <w>210</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>AnimatedSpriteObject
+--
+AnimatedSpriteObject(x, y, image, spritewidth)
+update() //called by the game manager
+--
+{me.loader#getImage} image
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>770</x>
+      <y>14</y>
+      <w>140</w>
+      <h>28</h>
+    </coordinates>
+    <panel_attributes>/Object/
+--
+JavaScript Inheritance Helper
+bg=light_gray
+fg=white</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>392</x>
+      <y>14</y>
+      <w>442</w>
+      <h>104</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>21;91;399;35;420;28</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>448</x>
+      <y>273</y>
+      <w>210</w>
+      <h>119</h>
+    </coordinates>
+    <panel_attributes>SpriteObject
+--
+SpriteObject(x, y, image)
+destroy()
+draw()
+flix(flip)
+flipy(flip)
+onDestroyEvent()
+update() //called by the game manager
+--
+{me.loader#getImage} image
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>497</x>
+      <y>371</y>
+      <w>91</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;49;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>287</x>
+      <y>105</y>
+      <w>126</w>
+      <h>133</h>
+    </coordinates>
+    <panel_attributes>Rect
+--
+Rect(Vector2d v, int w, int h)
+set(Vector 2d v, int w, int h)
+--
+bottom int
+height int
+left int
+Vector2d pos
+right int
+top int
+width int
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>350</x>
+      <y>217</y>
+      <w>209</w>
+      <h>69</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>196;56;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>448</x>
+      <y>497</y>
+      <w>210</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>AnimationSheet
+--
+AnimationSheet(name, frame)
+addAnimation(name, frame)
+isCurrentAnimation(name)
+setCurrentAnimation(name, onComplete)
+update() //called by the game manager
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>497</x>
+      <y>455</y>
+      <w>91</w>
+      <h>49</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;42;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>679</x>
+      <y>105</y>
+      <w>126</w>
+      <h>147</h>
+    </coordinates>
+    <panel_attributes>Font
+--
+Font(font, size, color, align)
+--
+bold()
+draw(context, text, x, y)
+italic()
+measureText(text, text)
+set(font, size, color, align)
+--
+font string
+size int
+color string
+align string
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>721</x>
+      <y>21</y>
+      <w>119</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>21;84;112;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>679</x>
+      <y>287</y>
+      <w>126</w>
+      <h>119</h>
+    </coordinates>
+    <panel_attributes>BitmapFont
+--
+BitmapFont(font, size, scale, firstChar)
+draw(context, text, x, y)
+measureText(text, text)
+set(align, scale)
+--
+{String} font
+{int} size
+{int} scale Optional, Default: "1.0"
+{String} firstChar Optional, Default: "0x20"</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>693</x>
+      <y>231</y>
+      <w>91</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;56;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>448</x>
+      <y>616</y>
+      <w>210</w>
+      <h>175</h>
+    </coordinates>
+    <panel_attributes>ObjectEntity
+--
+ObjectEntity(x, y, settings)
+doClimb(up)
+doJump()
+doWalk(left)
+flicker(duration, callback)
+forceJump()
+onCollision(res, obj)
+setVelocity(x, y)
+updateCollRect(x, w, y, h)
+updateMovement()
+--
+{int} x the x coordinates of the sprite object
+{int} y the y coordinates of the sprite object
+{me.ObjectSettings} settings Object Properties as defined in Tiled </panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>497</x>
+      <y>567</y>
+      <w>91</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;49;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>749</x>
+      <y>721</y>
+      <w>70</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>ObjectSettings
+--
+collidable
+image
+spriteWidth
+type
+bg=white
+fg=gray</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>637</x>
+      <y>616</y>
+      <w>119</w>
+      <h>133</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;include&gt;&gt;</panel_attributes>
+    <additional_attributes>112;126;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>448</x>
+      <y>833</y>
+      <w>210</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>CollectableEntity
+--
+CollectableEntity(x, y, settings)
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>497</x>
+      <y>770</y>
+      <w>91</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;63;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>637</x>
+      <y>749</y>
+      <w>119</w>
+      <h>105</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;include&gt;&gt;</panel_attributes>
+    <additional_attributes>112;21;21;98</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>427</x>
+      <y>42</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>Audio</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>497</x>
+      <y>42</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>debug</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1078</x>
+      <y>14</y>
+      <w>203</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>entityPool
+--
+add(className, object)
+--
+{String} className as defined in the Name fied of the Object Properties (in Tiled)
+{Object} object corresponding Object to be instanciated</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>889</x>
+      <y>0</y>
+      <w>196</w>
+      <h>49</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;include&gt;&gt;</panel_attributes>
+    <additional_attributes>21;28;189;42</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1008</x>
+      <y>518</y>
+      <w>217</w>
+      <h>329</h>
+    </coordinates>
+    <panel_attributes>game
+--
+add()
+addEntity()
+addHUD(x, y, w, h, bg)
+colllide(obj)
+disableHUD()
+init(x, y, width, height)
+remove()
+removeAll()
+repaint()
+reset()
+sort()
+--
+&lt;constant&gt; ACTION_OBJECT
+Default object type constant.
+See type property of the returned collision vector.
+&lt;constant&gt; COLLECTABLE_OBJECT
+Default object type constant.
+See type property of the returned collision vector.
+{me.TiledLayer} collisionMap
+a reference to the game collision Map
+{me.TMXTileMap} currentLevel
+a reference to the game current level
+&lt;constant&gt; ENEMY_OBJECT
+Default object type constant.
+See type property of the returned collision vector.
+{me.HUD_Object} HUD
+a reference to the game HUD (if defined).
+{me.ViewportEntity} viewport
+a reference to the game viewport.</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>567</x>
+      <y>42</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>gamestat</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>840</x>
+      <y>112</y>
+      <w>105</w>
+      <h>98</h>
+    </coordinates>
+    <panel_attributes>HUD_Item
+--
+HUD_Item(x, y, val)
+draw(context, x, y)
+init(x, y, val)
+reset()
+update(value)
+--
+{me.Vector2d} pos
+{Int} value</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>749</x>
+      <y>21</y>
+      <w>91</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>35;49;63;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>833</x>
+      <y>21</y>
+      <w>91</w>
+      <h>98</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>56;91;42;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1134</x>
+      <y>126</y>
+      <w>133</w>
+      <h>105</h>
+    </coordinates>
+    <panel_attributes>input
+--
+bindKey(keycode, action, lock)
+enableGyroscopicEvent()
+enableMouseEvent()
+isKeyPressed()
+keyStatus()
+unbindKey()
+--
+KEY</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>266</x>
+      <y>273</y>
+      <w>140</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>InvisibleEntity
+--
+InvisibleEntity(x, y, settings)
+onCollision(res, obj)
+updateColRect(x, w, y, h)
+--
+{int} x
+{int} y
+{me.ObjectSettings} settings
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>294</x>
+      <y>217</y>
+      <w>92</w>
+      <h>69</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;56;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1001</x>
+      <y>259</y>
+      <w>105</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>levelDirector
+--
+getCurrentLevelId()
+loadLevel(level)
+nextLevel
+previousLevel()
+bg=blue
+fg=black</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>266</x>
+      <y>399</y>
+      <w>140</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>LevelEntity
+--
+LevelEntity(x, y, settings)
+goTo(level)
+--
+{int} x
+{int} y
+{me.ObjectSettings} settings
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>287</x>
+      <y>343</y>
+      <w>92</w>
+      <h>69</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>49;56;49;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1162</x>
+      <y>364</y>
+      <w>98</w>
+      <h>105</h>
+    </coordinates>
+    <panel_attributes>loader
+--
+getImage(image)
+getLoadProgree()
+getXml(xmlfile)
+preload(ressources)
+--
+onload
+{String} Image
+{Array.} ressources</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>861</x>
+      <y>420</y>
+      <w>168</w>
+      <h>77</h>
+    </coordinates>
+    <panel_attributes>ParallaxBackgroundEntity
+--
+ParallaxBackgroundEntity(z)
+addLayer(imagesrc, speed, zOrder)
+draw(context, x, y)
+update() //this method is called by the @see me.game object
+--
+{int} z Optional, Default: "0"</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>980</x>
+      <y>112</y>
+      <w>119</w>
+      <h>84</h>
+    </coordinates>
+    <panel_attributes>ScreenObject
+--
+ScreenObject()
+draw()
+init(addAdObject)
+onDestroyEvent()
+onResetEvent(arguments)
+update()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>868</x>
+      <y>21</y>
+      <w>161</w>
+      <h>98</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>154;91;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>854</x>
+      <y>518</y>
+      <w>140</w>
+      <h>203</h>
+    </coordinates>
+    <panel_attributes>state
+--
+change(state, args)
+isCurrent(state)
+pause(pauseTrack)
+resume(resumeTrack)
+set(state, so)
+setTransition()
+transition(effect, color, duration)
+--
+&lt;constant&gt; CREDITS
+&lt;constant&gt; GAME_END
+&lt;constant&gt; GAMEOVER
+&lt;constant&gt; LOADING
+&lt;constant&gt; MENU
+&lt;constant&gt; PLAY
+&lt;constant&gt; READY
+&lt;constant&gt; SCORE
+&lt;constant&gt; SETTINGS
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>854</x>
+      <y>742</y>
+      <w>140</w>
+      <h>105</h>
+    </coordinates>
+    <panel_attributes>sys
+--
+&lt;static&gt; fps
+&lt;static&gt; gyro
+&lt;static&gt; interpolation
+&lt;static&gt; scale
+&lt;static&gt; sound
+&lt;static&gt; storage
+&lt;static&gt; ua
+&lt;static&gt; useNativeAnimFrame
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>357</x>
+      <y>42</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>timer</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>357</x>
+      <y>63</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>Tween</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>427</x>
+      <y>63</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>Vector2d</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>497</x>
+      <y>63</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>video</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>0</x>
+      <y>273</y>
+      <w>231</w>
+      <h>175</h>
+    </coordinates>
+    <panel_attributes>ViewportEntity
+--
+ViewportEntity(minX, minY, maxX, maxY, realw, realh)
+fadeIn(color, duration, onComplete)
+fadeOut(color, duration, onComplete)
+fadeOut(flash) effect
+follow(Object, axis)
+getHeight()
+getWidth()
+isVisible(rect)
+move(x, y)
+reset(x, y)
+setBounds(w, h)
+setDeadzone(w, h)
+shake(intensity, duration, axis, onComplete)
+--
+AXIS</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>140</x>
+      <y>217</y>
+      <w>174</w>
+      <h>69</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;extends&gt;&gt;</panel_attributes>
+    <additional_attributes>21;56;161;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>287</x>
+      <y>42</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>Number</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>287</x>
+      <y>63</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>String</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
