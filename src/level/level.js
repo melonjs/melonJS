@@ -68,7 +68,6 @@
 		if (this.image) {
 			this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
 			this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			//console.log("%d tiles", this.hTileCount * this.vTileCount);
 		}
 
 	}
@@ -233,7 +232,7 @@
 	/*      a generic Tile based Layer object                                           */
 	/*                                                                                  */
 	/************************************************************************************/
-	function TiledLayer(w, h, tileset, z) {
+	function TiledLayer(w, h, tilesets, z) {
 		this.width = w;
 		this.height = h;
 
@@ -250,22 +249,19 @@
 		this.xLUT = {};
 		this.yLUT = {};
 
-		// a reference to the tileset object
-		this.tileset = tileset;
+		// a reference to the tilesets object
+		this.tilesets = tilesets;
+		// link to the first tileset by default
+		this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
 
-		if (tileset) {
-			this.tilewidth = tileset.tilewidth;
-			this.tileheight = tileset.tileheight;
-		} else {
-			this.tilewidth = 0;
-			this.tileheight = 0;
-		}
-
+		// tile width & height
+		this.tilewidth  = this.tileset?this.tileset.tilewidth:0;
+		this.tileheight = this.tileset?this.tileset.tileheight:0;
+  
 		// layer "real" size
 		this.realwidth = this.width * this.tilewidth;
 		this.realheight = this.height * this.tileheight;
-	}
-	;
+	};
 
 	/* -----
 
@@ -367,9 +363,6 @@
 		};
 
 		//var tile;
-
-		//console.log(obj.colPos.x);
-
 		if (x <= 0 || x >= this.realwidth) {
 			collide.x = true;
 		} else {
@@ -443,7 +436,7 @@
 		this.tileheight = 0;
 
 		// corresponding tileset for this map
-		this.tileset = [];
+		this.tilesets = null;
 
 		// map layers
 		this.mapLayers = [];
@@ -454,8 +447,7 @@
 		// loading flag
 		this.initialized = false;
 
-	}
-	;
+	};
 
 	/* -----
 
@@ -463,7 +455,7 @@
 			
 		------								*/
 	TileMap.prototype.reset = function() {
-		this.tileset = [];
+		this.tilesets = null;
 		this.mapLayers = [];
 		this.objectGroups = [];
 		this.initialized = false;

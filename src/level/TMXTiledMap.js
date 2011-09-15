@@ -97,10 +97,7 @@
 		}
 		// add the new prop to the object prop list
 		object[propname] = value;
-		//console.log("new prop: "+ propname + "(" + object[ propname ]+ ")");
-
-	}
-	;
+	};
 
 	/***************************************************************/
 	/*                                                             */
@@ -127,9 +124,11 @@
 
 		// a canvas where to draw our map(s)
 		this.tileMapCanvas = null;
+      
+      // tileset(s)
+      this.tilesets = null;
 
-	}
-	;
+	};
 	TMXTileMap.prototype = new me.TileMap();
 
 	/* -----
@@ -159,117 +158,109 @@
 			var tagName = xmlElements.item(i).nodeName;
 
 			switch (tagName) {
-			// get the map information
-			case TMX_TAG_MAP: {
-				var map = xmlElements.item(i);
-				this.version = me.XMLParser.getStringAttribute(map,
-						TMX_TAG_VERSION);
-				this.orientation = me.XMLParser.getStringAttribute(map,
-						TMX_TAG_ORIENTATION);
-				this.width = me.XMLParser.getIntAttribute(map, TMX_TAG_WIDTH);
-				this.height = me.XMLParser.getIntAttribute(map, TMX_TAG_HEIGHT);
-				this.tilewidth = me.XMLParser.getIntAttribute(map,
-						TMX_TAG_TILEWIDTH);
-				this.tileheight = me.XMLParser.getIntAttribute(map,
-						TMX_TAG_TILEHEIGHT);
-				this.realwidth = this.width * this.tilewidth;
-				this.realheight = this.height * this.tileheight;
-				this.z = zOrder++;
+            // get the map information
+            case TMX_TAG_MAP: {
+               var map = xmlElements.item(i);
+               this.version = me.XMLParser.getStringAttribute(map, TMX_TAG_VERSION);
+               this.orientation = me.XMLParser.getStringAttribute(map, TMX_TAG_ORIENTATION);
+               this.width = me.XMLParser.getIntAttribute(map, TMX_TAG_WIDTH);
+               this.height = me.XMLParser.getIntAttribute(map, TMX_TAG_HEIGHT);
+               this.tilewidth = me.XMLParser.getIntAttribute(map,	TMX_TAG_TILEWIDTH);
+               this.tileheight = me.XMLParser.getIntAttribute(map, TMX_TAG_TILEHEIGHT);
+               this.realwidth = this.width * this.tilewidth;
+               this.realheight = this.height * this.tileheight;
+               this.z = zOrder++;
 
-				// check some returned values
-				if (this.orientation != "orthogonal") {
-					throw "melonJS: " + this.orientation
-							+ " type TMX Tile Map not supported!";
-				}
+               // check some returned values
+               if (this.orientation != "orthogonal") {
+                  throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
+               }
 
-				// set the map properties (if any)
-				setTMXProperties(this, map);
+               // set the map properties (if any)
+               setTMXProperties(this, map);
 
-				// ensure the visible flag is set to false, by default
-				this.visible = false;
+               // ensure the visible flag is set to false, by default
+               this.visible = false;
 
-				// check if a backgroud color is defined  
-				if (this.background_color) {
-					this.visible = true;
-					// convert to a rgb string (needed for Opera)
-					this.background_color = me.utils
-							.HexToRGB(this.background_color);
-				}
+               // check if a backgroud color is defined  
+               if (this.background_color) {
+                  this.visible = true;
+                  // convert to a rgb string (needed for Opera)
+                  this.background_color = me.utils
+                        .HexToRGB(this.background_color);
+               }
 
-				// check if a backgroud image is defined
-				if (this.background_image) {
-					this.visible = true;
-					// retrieve the corresponding image ressource
-					this.background_image = me.loader
-							.getImage(this.background_image);
-				}
+               // check if a backgroud image is defined
+               if (this.background_image) {
+                  this.visible = true;
+                  // retrieve the corresponding image ressource
+                  this.background_image = me.loader.getImage(this.background_image);
+               }
+               break;
+            }
+               
 
-			}
-				break;
+            // get the tileset information
+            case TMX_TAG_TILESET: {
+            
+               // Initialize our object if not yet done
+               if (!this.tilesets)
+               {
+                  // make sure tilesets if of the right type
+                  this.tilesets = new TMXTileSetGroup();
+               }
 
-			// get the tileset information
-			case TMX_TAG_TILESET: {
-				// shoud be :
-				// tileset 0 : scene (background/foreground) tileset
-				// tileset 1 : collision tileset
-				this.tileset.push(new TMXTileSet(xmlElements.item(i)));
-			}
-				break;
+               // add the new tileset
+               this.tilesets.add(new TMXTileSet(xmlElements.item(i)));
+               break;
+            }
+               
 
-			// get the layer(s) information
-			case TMX_TAG_LAYER: {
-				// try to identify the layer type based on the naming convention
-				var layer_name = me.XMLParser.getStringAttribute(xmlElements
-						.item(i), TMX_TAG_NAME);
+            // get the layer(s) information
+            case TMX_TAG_LAYER: {
+               // try to identify specific layer type based on the naming convention
+               var layer_name = me.XMLParser.getStringAttribute(xmlElements
+                     .item(i), TMX_TAG_NAME);
 
-				// collision layer
-				if (layer_name.contains(me.LevelConstants.COLLISION_MAP)) {
-					this.mapLayers.push(new TMXLayer(xmlElements.item(i),
-							this.tileset, zOrder++));
-				}
-				// parallax layer
-				else if (layer_name.contains(me.LevelConstants.PARALLAX_MAP)) {
-					var visible = (me.XMLParser.getIntAttribute(xmlElements
-							.item(i), TMX_TAG_VISIBLE, 1) == 1);
+               // parallax layer
+               if (layer_name.contains(me.LevelConstants.PARALLAX_MAP)) {
+                  var visible = (me.XMLParser.getIntAttribute(xmlElements
+                        .item(i), TMX_TAG_VISIBLE, 1) == 1);
 
-					// only add if visible
-					if (visible) {
-						// check the object properties 
-						var tprop = {};
-						setTMXProperties(tprop, xmlElements.item(i));
+                  // only add if visible
+                  if (visible) {
+                     // check the object properties 
+                     var tprop = {};
+                     setTMXProperties(tprop, xmlElements.item(i));
 
-						// check if we already have a parallax layer
-						parallax_layer = this
-								.getLayerByName(me.LevelConstants.PARALLAX_MAP);
+                     // check if we already have a parallax layer
+                     parallax_layer = this.getLayerByName(me.LevelConstants.PARALLAX_MAP);
 
-						if (!parallax_layer) {
-							parallax_layer = new me.ParallaxBackgroundEntity(
-									zOrder);
-							this.mapLayers.push(parallax_layer);
-						}
-						// add the new parallax layer
-						parallax_layer.addLayer(tprop.imagesrc, pLayer++,
-								zOrder++);
-					}
-				}
-				// regular layer
-				else {
-					this.mapLayers.push(new TMXLayer(xmlElements.item(i),
-							this.tileset, zOrder++));
-					zOrder++;
-				}
+                     if (!parallax_layer) {
+                        parallax_layer = new me.ParallaxBackgroundEntity(zOrder);
+                        this.mapLayers.push(parallax_layer);
+                     }
+                     // add the new parallax layer
+                     parallax_layer.addLayer(tprop.imagesrc, pLayer++, zOrder++);
+                  }
+               }
+               else {
+                  // regular layer or collision layer
+                  this.mapLayers.push(new TMXLayer(xmlElements.item(i),
+                                       this.tilesets, zOrder++));
+                  zOrder++;
+               }
+               break;
+            }
+               
 
-			}
-				break;
-
-			// get the object groups information
-			case TMX_TAG_OBJECTGROUP: {
-				var name = me.XMLParser.getStringAttribute(xmlElements.item(i),
-						TMX_TAG_NAME);
-				this.objectGroups.push(new TMXOBjectGroup(name, xmlElements
-						.item(i), this.tileset[0], zOrder++));
-			}
-				break;
+            // get the object groups information
+            case TMX_TAG_OBJECTGROUP: {
+               var name = me.XMLParser.getStringAttribute(xmlElements.item(i), TMX_TAG_NAME);
+               this.objectGroups.push(new TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++));
+               break;
+            }
+				
 			} // end switch 
 		} // end for
 
@@ -302,44 +293,90 @@
 		}
 	};
 
-	/************************************************************************************/
-	/*                                                                                  */
-	/*      Tile map Stuff                                                              */
-	/*      Manage a tile set                                                           */
-	/*                                                                                  */
-	/************************************************************************************/
+	/**************************************************/
+	/*                                                */
+	/*      Tileset Management                        */
+	/*                                                */
+	/**************************************************/
+	
+	/* -------------------------
+	 * Manage a group of Tileset
+	 * -------------------------*/
+	function TMXTileSetGroup() {
+		this.tilesets = [];
+	};
+	/*
+	 * add a tileset to the tileset group
+	 */
+	TMXTileSetGroup.prototype.add = function(tileset) {
+		this.tilesets.push(tileset);
+	};
+
+	/*
+	 * return the tileset at the specified index
+	 */
+	TMXTileSetGroup.prototype.getTilesetByIndex = function(i) {
+		return this.tilesets[i];
+	};
+   
+	/*
+	 * return the tileset corresponding to  the specified gid
+	 *		
+	 */
+	TMXTileSetGroup.prototype.getTilesetByGid = function(gid) {
+      	var invalidRange = -1;
+		// cycle through all tilesets
+		for ( var i = 0, len = this.tilesets.length; i < len; i++) {
+			// return the corresponding tileset if matching
+			if (this.tilesets[i].contains(gid))
+				return this.tilesets[i];
+			// typically indicates a layer with no asset loaded (collision?)
+			if (this.tilesets[i].firstgid == this.tilesets[i].lastgid) {
+				if (gid >= this.tilesets[i].firstgid)
+				// store the id if the [firstgid .. lastgid] is invalid
+				invalidRange = i;
+			}
+		}
+		// return the tileset with the invalid range
+		if (invalidRange!=-1)
+			return this.tilesets[invalidRange];
+		else
+		throw "no matching tileset found for gid " + gid;
+	};
+   
+	/* -------------------------
+	 * Tileset Object
+	 * -------------------------*/
 	function TMXTileSet(xmltileset) {
 
 		// first gid
-		this.firstgid = me.XMLParser.getIntAttribute(xmltileset,
-				TMX_TAG_FIRSTGID);
+		this.firstgid = me.XMLParser.getIntAttribute(xmltileset, TMX_TAG_FIRSTGID);
 
 		// call our super parent
-		me.TileSet.call(this, me.XMLParser.getStringAttribute(xmltileset,
-				TMX_TAG_NAME), me.XMLParser.getIntAttribute(xmltileset,
-				TMX_TAG_TILEWIDTH), me.XMLParser.getIntAttribute(xmltileset,
-				TMX_TAG_TILEHEIGHT), me.XMLParser.getIntAttribute(xmltileset,
-				TMX_TAG_SPACING, 0), me.XMLParser.getIntAttribute(xmltileset,
-				TMX_TAG_MARGIN, 0), xmltileset
-				.getElementsByTagName(TMX_TAG_IMAGE)[0]
-				.getAttribute(TMX_TAG_SOURCE));
-
+		me.TileSet.call(this,
+                        me.XMLParser.getStringAttribute(xmltileset, TMX_TAG_NAME),
+                        me.XMLParser.getIntAttribute(xmltileset, TMX_TAG_TILEWIDTH),
+                        me.XMLParser.getIntAttribute(xmltileset, TMX_TAG_TILEHEIGHT),
+                        me.XMLParser.getIntAttribute(xmltileset, TMX_TAG_SPACING, 0), 
+                        me.XMLParser.getIntAttribute(xmltileset, TMX_TAG_MARGIN, 0), 
+                        xmltileset.getElementsByTagName(TMX_TAG_IMAGE)[0].getAttribute(TMX_TAG_SOURCE));
+		
+		// compute the last gid value in the tileset
+		this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
+      
 		// check if transparency is defined for a specific color
-		this.trans = xmltileset.getElementsByTagName(TMX_TAG_IMAGE)[0]
-				.getAttribute(TMX_TAG_TRANS);
+		this.trans = xmltileset.getElementsByTagName(TMX_TAG_IMAGE)[0].getAttribute(TMX_TAG_TRANS);
 
 		// set Color Key for transparency if needed
 		if (this.trans !== null && this.image) {
 			// applyRGB Filter (return a context object)
-			this.image = me.video.applyRGBFilter(this.image, "transparent",
-					this.trans.toUpperCase()).canvas;
+			this.image = me.video.applyRGBFilter(this.image, "transparent", this.trans.toUpperCase()).canvas;
 		}
 
 		// set tile properties, if any
 		var tileInfo = xmltileset.getElementsByTagName(TMX_TAG_TILE);
 		for ( var i = 0; i < tileInfo.length; i++) {
-			var tileID = me.XMLParser.getIntAttribute(tileInfo[i], TMX_TAG_ID)
-					+ this.firstgid;
+			var tileID = me.XMLParser.getIntAttribute(tileInfo[i], TMX_TAG_ID) + this.firstgid;
 
 			this.TileProperties[tileID] = {};
 
@@ -349,18 +386,12 @@
 			setTMXProperties(tileProp, tileInfo[i]);
 
 			// check what we found and adjust property
-			tileProp.isSolid = tileProp.type ? tileProp.type.toLowerCase() === this.type.SOLID
-					: false;
-			tileProp.isPlatform = tileProp.type ? tileProp.type.toLowerCase() === this.type.PLATFORM
-					: false;
-			tileProp.isLeftSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.L_SLOPE
-					: false;
-			tileProp.isRightSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.R_SLOPE
-					: false;
-			tileProp.isBreakable = tileProp.type ? tileProp.type.toLowerCase() === this.type.BREAKABLE
-					: false;
-			tileProp.isLadder = tileProp.type ? tileProp.type.toLowerCase() === this.type.LADDER
-					: false;
+			tileProp.isSolid = tileProp.type ? tileProp.type.toLowerCase() === this.type.SOLID : false;
+			tileProp.isPlatform = tileProp.type ? tileProp.type.toLowerCase() === this.type.PLATFORM : false;
+			tileProp.isLeftSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.L_SLOPE : false;
+			tileProp.isRightSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.R_SLOPE	: false;
+			tileProp.isBreakable = tileProp.type ? tileProp.type.toLowerCase() === this.type.BREAKABLE : false;
+			tileProp.isLadder = tileProp.type ? tileProp.type.toLowerCase() === this.type.LADDER : false;
 			tileProp.isSlope = tileProp.isLeftSlope || tileProp.isRightSlope;
 
 			// ensure the collidable flag is correct
@@ -368,53 +399,46 @@
 					|| tileProp.isSlope || tileProp.isLadder
 					|| tileProp.isBreakable;
 
-			//console.log(tileID);
-			// check if the array is correct udptaded
-			//console.log(this.TileProperties[tileID]);
 		}
 
-		//console.log("new tileset %s", this.name);
-	}
-	;
+	};
 	TMXTileSet.prototype = new me.TileSet();
 
+	/*
+	 * check if the gid belongs to the tileset
+	 */
+	TMXTileSet.prototype.contains = function(gid) {
+		return (gid >= this.firstgid && gid <= this.lastgid)
+	}
+	
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      Tile map Stuff                                                              */
 	/*      Manage a tile Layer                                                         */
 	/*                                                                                  */
 	/************************************************************************************/
-	function TMXLayer(layer, tileset, zOrder) {
+	function TMXLayer(layer, tilesets, zOrder) {
 		// call the parent
-		me.TiledLayer.call(this, me.XMLParser.getIntAttribute(layer,
-				TMX_TAG_WIDTH), me.XMLParser.getIntAttribute(layer,
-				TMX_TAG_HEIGHT),
-		// tileset 0 should exist here !
-		tileset[0], zOrder);
-
-		// get invalidated when the viewport is changed
+		me.TiledLayer.call(this, 
+                         me.XMLParser.getIntAttribute(layer, TMX_TAG_WIDTH), 
+                         me.XMLParser.getIntAttribute(layer, TMX_TAG_HEIGHT),
+                         // tilesets should exist here !
+                         tilesets, zOrder);
+      
+ 		// get invalidated when the viewport is changed
 		this.layerInvalidated = true;
 		this.name = me.XMLParser.getStringAttribute(layer, TMX_TAG_NAME);
 		this.visible = (me.XMLParser.getIntAttribute(layer, TMX_TAG_VISIBLE, 1) == 1);
-		this.opacity = me.XMLParser.getFloatAttribute(layer, TMX_TAG_OPACITY,
-				1.0);
-
-		//console.log("layer %s, visible %s", this.name, this.visible);
-
+		this.opacity = me.XMLParser.getFloatAttribute(layer, TMX_TAG_OPACITY, 1.0);
+            
 		// check if we have any properties 
 		setTMXProperties(this, layer);
 
 		// detect if the layer is a collision map
-		this.isCollisionMap = (this.name
-				.contains(me.LevelConstants.COLLISION_MAP));
+		this.isCollisionMap = (this.name.contains(me.LevelConstants.COLLISION_MAP));
 		if (this.isCollisionMap) {
-			//console.log("Collision Map detected");
 			// force the layer as invisible
 			this.visible = false;
-
-			// if the control tileset exist, link it to it
-			if (tileset[1])
-				this.tileset = tileset[1];
 		}
 
 		// link to the gameviewport;
@@ -422,10 +446,8 @@
 
 		// store the data information
 		var xmldata = layer.getElementsByTagName(TMX_TAG_DATA)[0];
-		var encoding = me.XMLParser.getStringAttribute(xmldata,
-				TMX_TAG_ENCODING, null);
-		var compression = me.XMLParser.getStringAttribute(xmldata,
-				TMX_TAG_COMPRESSION, null);
+		var encoding = me.XMLParser.getStringAttribute(xmldata, TMX_TAG_ENCODING, null);
+		var compression = me.XMLParser.getStringAttribute(xmldata, TMX_TAG_COMPRESSION, null);
 
 		// make sure this is not happening
 		if (encoding == '')
@@ -446,15 +468,13 @@
 		}
 
 		if (this.visible || this.isCollisionMap) {
-			// initiliaze the layer lookup table (only in case of collision map)
-			// else the getTile function are never called
+			// initialize the layer lookup table (only in case of collision map)
 			this.initArray(this.isCollisionMap);
 
-			// and populate our level with some data
+			// populate our level with some data
 			this.fillArray(xmldata, encoding, compression);
 		}
-	}
-	;
+	};
 	TMXLayer.prototype = new me.TiledLayer();
 
 	/* -----
@@ -465,47 +485,48 @@
 	TMXLayer.prototype.fillArray = function(xmldata, encoding, compression) {
 		// check if data is compressed
 		switch (compression) {
-		// no compression
-		case null: {
-			// decode data based on encoding type
-			switch (encoding) {
-			// XML encoding
-			case null: {
-				var data = xmldata.getElementsByTagName(TMX_TAG_TILE);
-			}
-				break;
+         
+         // no compression
+         case null: {
+            // decode data based on encoding type
+            switch (encoding) {
+            // XML encoding
+               case null: {
+                  var data = xmldata.getElementsByTagName(TMX_TAG_TILE);
+                  break;
+               }
+               
+               // CSV encoding
+               case TMX_TAG_CSV:
+                  // Base 64 encoding
+               case TMX_TAG_ATTR_BASE64: {
+                  // Merge all childNodes[].nodeValue into a single one
+                  var nodeValue = '';
+                  for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
+                     nodeValue += xmldata.childNodes[i].nodeValue;
+                  }
+                  // and then decode them
+                  if (encoding == TMX_TAG_ATTR_BASE64)
+                     var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+                  else
+                     var data = me.utils.decodeCSV(nodeValue, this.width);
 
-			// CSV encoding
-			case TMX_TAG_CSV:
-				// Base 64 encoding
-			case TMX_TAG_ATTR_BASE64: {
-				// Merge all childNodes[].nodeValue into a single one
-				var nodeValue = '';
-				for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
-					nodeValue += xmldata.childNodes[i].nodeValue;
-				}
-				// and then decode them
-				if (encoding == TMX_TAG_ATTR_BASE64)
-					var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-				else
-					var data = me.utils.decodeCSV(nodeValue, this.width);
-
-				// ensure nodeValue is deallocated
-				nodeValue = null;
-
-			}
-				break
-			default:
-				throw "melonJS: TMX Tile Map " + encoding
-						+ " encoding not supported!";
-				// that's over !;
-			}
-		}
-			break;
-		default:
-			throw "melonJS: " + compression
-					+ " compressed TMX Tile Map not supported!";
-			// that's over !;
+                  // ensure nodeValue is deallocated
+                  nodeValue = null;
+                  break;
+               }
+                  
+               default:
+                  throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+                  break;
+            }
+            
+         break;
+         }
+            
+         default:
+            throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
+            break;
 		}
 
 		// I love reversed loop !
@@ -517,8 +538,7 @@
 		for ( var y = this.height - 1; y >= 0; y--) {
 			for ( var x = this.width - 1; x >= 0; x--) {
 				// get the value of the gid
-				gid = (encoding == null) ? me.XMLParser.getIntAttribute(
-						data[idx--], TMX_TAG_GID) : data[idx--];
+				gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx--], TMX_TAG_GID) : data[idx--];
 
 				// check if tile is horizontally flipped
 				// (this should be save somewhere!)
@@ -534,17 +554,22 @@
 				// fill the array										
 				if (gid > 0) {
 					this.setTile(x, y, gid);
+					// check if we are using the right tileset
+					if (!this.tileset.contains(gid)) {
+						// switch to the right tileset
+						this.tileset = this.tilesets.getTilesetByGid(gid);
+					}
+				   
+					if (this.visible) {
+					  //draw our tile
+					  this.tileset.drawTile(this.layerSurface, 
+										   x * this.tilewidth, y * this.tileheight,
+										   gid - this.tileset.firstgid, flipx, flipy);
 
-					if (this.visible)
-						this.tileset.drawTile(this.layerSurface, x
-								* this.tilewidth, y * this.tileheight,
-								this.layerData[x][y].tileId
-										- this.tileset.firstgid, flipx, flipy);
-
+					}
 				}
 			}
 		}
-		;
 
 		// make sure data is deallocated :)
 		data = null;
@@ -572,11 +597,12 @@
 			
 		------								*/
 	TMXLayer.prototype.draw = function(context, rect) {
-		context.drawImage(this.layerCanvas, this.vp.pos.x + rect.pos.x,
-				this.vp.pos.y + rect.pos.y, //sx, sy
-				rect.width, rect.height, //sw, sh
-				rect.pos.x, rect.pos.y, //dx, dy
-				rect.width, rect.height); //dw, dh
+		context.drawImage(this.layerCanvas, 
+                        this.vp.pos.x + rect.pos.x, //sx
+                        this.vp.pos.y + rect.pos.y, //sy
+                        rect.width, rect.height,    //sw, sh
+                        rect.pos.x, rect.pos.y,     //dx, dy
+                        rect.width, rect.height);   //dw, dh
 	};
 
 	/************************************************************************************/
@@ -585,24 +611,21 @@
 	/*      Manage a Object Group                                                       */
 	/*                                                                                  */
 	/************************************************************************************/
-	function TMXOBjectGroup(name, tmxObjGroup, tileset, z) {
+	function TMXOBjectGroup(name, tmxObjGroup, tilesets, z) {
 		this.objects = [];
 
-		this.name = name;
-		this.width = me.XMLParser.getIntAttribute(tmxObjGroup, TMX_TAG_WIDTH);
+		this.name   = name;
+		this.width  = me.XMLParser.getIntAttribute(tmxObjGroup, TMX_TAG_WIDTH);
 		this.height = me.XMLParser.getIntAttribute(tmxObjGroup, TMX_TAG_HEIGHT);
-		this.z = z;
-
-		//console.log("ObjectGroup : %s, w:%d, h:%d", this.name, this.width, this.height);
+		this.z      = z;
 
 		var data = tmxObjGroup.getElementsByTagName(TMX_TAG_OBJECT);
 
 		for ( var i = 0; i < data.length; i++) {
-			this.objects.push(new TMXOBject(data[i], tileset, z));
+			this.objects.push(new TMXOBject(data[i], tilesets, z));
 		}
 
-	}
-	;
+	};
 
 	TMXOBjectGroup.prototype.getObjectCount = function() {
 		return this.objects.length;
@@ -615,10 +638,10 @@
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      Tile map Stuff                                                              */
-	/*      Manage a Object                                                             */
+	/*      Manage a TMX Object                                                         */
 	/*                                                                                  */
 	/************************************************************************************/
-	function TMXOBject(tmxObj, tileset, z) {
+	function TMXOBject(tmxObj, tilesets, z) {
 		this.name = me.XMLParser.getStringAttribute(tmxObj, TMX_TAG_NAME);
 		this.x = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_X);
 		this.y = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_Y);
@@ -627,7 +650,11 @@
 		this.gid = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_GID, null);
 		// check if the object has an associated gid	
 		if (this.gid) {
-			// set width and heigh equal to tile size
+			
+			// get the corresponding tileset
+			tileset = tilesets.getTilesetByGid(this.gid);
+         
+			// set width and height equal to tile size
 			this.width = tileset.tilewidth;
 			this.height = tileset.tileheight;
 
@@ -638,16 +665,15 @@
 
 			// get the corresponding tile into our object
 			this.image = tileset.getTileImage(this.gid - tileset.firstgid);
-		} else {
+		} 
+		else {
 			this.width = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_WIDTH, 0);
-			this.height = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_HEIGHT,
-					0);
+			this.height = me.XMLParser.getIntAttribute(tmxObj, TMX_TAG_HEIGHT, 0);
 		}
 		// set the object properties
 		setTMXProperties(this, tmxObj);
 
-	}
-	;
+	};
 
 	/* -----
 
