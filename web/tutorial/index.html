@@ -417,26 +417,30 @@ var PlayerEntity = me.ObjectEntity.extend({
     keys we will use for the player movement. So our <b>loaded()</b> function will become
     :</p>
     <pre class="c2">
-<code>/* -----
+<code>
+/* ---
 
-    constructor
+   callback when everything is loaded
+	
+   ---	*/
+	
+loaded: function ()
+{
+   // set the "Play/Ingame" Screen Object
+   me.state.set(me.state.PLAY, new PlayScreen());
+    
+   // add our player entity in the entity pool
+   me.entityPool.add("mainPlayer", PlayerEntity);
+			
+   // enable the keyboard
+   me.input.bindKey(me.input.KEY.LEFT,	"left");
+   me.input.bindKey(me.input.KEY.RIGHT,	"right");
+   me.input.bindKey(me.input.KEY.X,     "jump", true);
+     
+   // start the game 
+   me.state.change(me.state.PLAY);
+}
 
-    ------ */
-
-init: function(x, y, settings) {
-    // call the constructor
-    this.parent(x, y, settings);
-
-    // set the walking &amp; jumping speed
-    this.setVelocity(3, 15);
-
-    // adjust the bounding box
-    this.updateColRect(8, 48, -1, 0);
-
-    // set the display to follow our position on both axis
-    me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-
-},
 
 </code>
 </pre>
