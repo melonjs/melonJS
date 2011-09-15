@@ -19,13 +19,15 @@ and currently features :
 - A basic set of Object Entities (to be extended)
 - Basic animation management
 - A state manager (to easily manage loading, menu, options, in-game state)
-- Tiled map format version 0.6.x integration for easy level design
+- Tiled map format version 0.7.0 integration for easy level design
 	- Uncompressed Plain, Base64 and CSV encoded XML tilemap loading
 	- Orthogonal tilemap
 	- Multiple layers (multiple background/Foreground, collision and "Parallax" layers)
+	- Multiple Tileset
 	- Layer Alpha settings
 	- Tileset Transparency settings
 	- Tiled Object
+	- Flipped Tiles
 	- Dynamic Layer and Object/Group ordering
 	- Dynamic Entity loading
 	- Solid, Platform, Slope and Breakable Tiles

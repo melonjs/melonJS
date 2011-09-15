@@ -7,11 +7,18 @@ Version History
 * Core: add onPause and onResume callback when game is paused/resumed on losing/gaining focus
 * Core: added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
 * Core: object can now only be destroyed using me.game.remove(obj), made of ObjectEntity.destroy a private function
+* Core: beta dirty Rectangle support (only working for non scrolling level for now)
+* Core: experimental webGL wrapper
+* Core: added a getEntityByName function
+* Core: fixed some kind of "lag" issues when deleting objects
+* Core: optimized the way objects are managed in the game loop
 * TMX: implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
 * TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
 * TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
 * TMX: added support for CSV data encoding
 * TMX: added support for flipped tiles, as supported in Tiled 0.7
+* TMX: added multiple tileset support
+* TMX: Added a "background_image" property. To be set through Tiled, and allowing to specify a fix background.
 * Entity: merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
 * Viewport: fixed camera refresh when changing "deadzone" values
 * loader: added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
