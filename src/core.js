@@ -190,8 +190,7 @@
 
 			// clean up loading event
 			if (document.removeEventListener)
-				document.removeEventListener("DOMContentLoaded", domReady,
-						false);
+				document.removeEventListener("DOMContentLoaded", domReady, false);
 			else
 				$.removeEventListener("load", domReady, false);
 
@@ -306,9 +305,8 @@
 	
 						---*/
 
-	var initializing = false, fnTest = /xyz/.test(function() {
-		xyz;
-	}) ? /\bparent\b/ : /.*/;
+	var initializing = false, 
+       fnTest = /xyz/.test(function() {xyz;}) ? /\bparent\b/ : /.*/;
 
 	/**
 	 * JavaScript Inheritance Helper <br>
@@ -424,9 +422,7 @@
 		 * newObject = Object.create(oldObject);
 		 */
 		Object.create = function(o) {
-			function _fn() {
-			}
-			;
+			function _fn() {};
 			_fn.prototype = o;
 			return new _fn();
 		};
@@ -475,10 +471,10 @@
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
-	 * @returns Function
+	 * @returns id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 *
-	 *   // execute myFunc() when the stack is empty, with 'myArgument'
+	 *   // execute myFunc() when the stack is empty, with 'myArgument' as parameter
 	 *   myFunc.defer('myArgument');
 	 *
 	 */
@@ -692,17 +688,16 @@
 			me.audio.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg"))
 					&& ("" != a.canPlayType("audio/mpeg"));
 
-			me.audio.capabilities.ogg = ("no" != a
-					.canPlayType('audio/ogg; codecs="vorbis"'))
+			me.audio.capabilities.ogg = ("no" != a.canPlayType('audio/ogg; codecs="vorbis"'))
 					&& ("" != a.canPlayType('audio/ogg; codecs="vorbis"'));
 
-			me.audio.capabilities.wav = ("no" != a
-					.canPlayType('audio/wav; codecs="1"'))
+			me.audio.capabilities.wav = ("no" != a.canPlayType('audio/wav; codecs="1"'))
 					&& ("" != a.canPlayType('audio/wav; codecs="1"'));
 
 			// enable sound if any of the audio format is supported
-			me.sys.sound = me.audio.capabilities.mp3
-					|| me.audio.capabilities.ogg || me.audio.capabilities.wav;
+			me.sys.sound = me.audio.capabilities.mp3 || 
+                        me.audio.capabilities.ogg || 
+                        me.audio.capabilities.wav;
 
 		}
 		// hack, check for specific platform
@@ -833,18 +828,18 @@
 		 * remove an object
 		 */
 		api.remove = function(obj) {
-			// remove the object from the list of obj to draw
-			dirtyObjects.splice(dirtyObjects.indexOf(obj), 1);
-			// save the visible state of the object
-			wasVisible = obj.visible;
-			// mark the object as not visible
-			// so it won't be added (again) in the list object to be draw
-			obj.visible = false;
-			// and flag the area as dirty
-			api.makeDirty(obj, true);
-			// restore visible state, this is needed for "persistent" object like screenObject
-			obj.visible = wasVisible;
-		};
+            // remove the object from the list of obj to draw
+            dirtyObjects.splice(dirtyObjects.indexOf(obj), 1);
+            // save the visible state of the object
+            wasVisible = obj.visible;
+            // mark the object as not visible
+            // so it won't be added (again) in the list object to be draw
+            obj.visible = false;
+            // and flag the area as dirty
+            api.makeDirty(obj, true);
+            // restore visible state, this is needed for "persistent" object like screenObject
+            obj.visible = wasVisible;
+ 		};
 
 		/**
 		 * draw all dirty objects/regions
@@ -923,11 +918,14 @@
 
 		// to handle mouse event
 		var registeredMouseEventObj = [];
-
+      
+		// to keep track of deferred stuff
+		var pendingDefer = null;
+      
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
-				
+
 			---------------------------------------------*/
 		/**
 		 * a reference to the game viewport.
@@ -1019,6 +1017,14 @@
 		 * @function
 		 */
 		api.reset = function() {
+			
+			//cancel any pending task
+			if (pendingDefer)
+			{
+				clearTimeout(pendingDefer);
+			}
+			pendingDefer = null;
+         
 			// initialized the object if not yet done
 			if (!initialized)
 				api.init();
@@ -1193,14 +1199,9 @@
 
 			// loop through our objects
 			for ( var i = objCount, obj; i--, obj = gameObjects[i];) {
-				// make sure oldRect is null by default
-				oldRect = null;
-
-				// we should not have to care about this here...
-				if (me.sys.dirtyRegion && obj.isEntity) {
-					oldRect = obj.getRect();
-				}
-
+				// check for previous rect before position change
+				oldRect = (me.sys.dirtyRegion && obj.isEntity) ? obj.getRect() : null;
+            
 				// update our object
 				updated = obj.update();
 
@@ -1213,7 +1214,6 @@
 				drawManager.makeDirty(obj, updated, updated ? oldRect : null);
 			}
 			// update the camera/viewport
-			//drawManager.isDirty = api.viewport.update(drawManager.isDirty);
 			if (api.viewport.update(drawManager.isDirty)) {
 				drawManager.makeAllDirty();
 			}
@@ -1227,25 +1227,36 @@
 		 * @param {me.ObjectEntity} obj Object to be removed
 		 */
 		api.remove = function(obj) {
-			// if object can be destroy
-			if (!obj.destroy || obj.destroy())
-			{
+			// check if object can be destroy
+			if (!obj.destroy || obj.destroy()) {
+				// make it invisible (this is bad...)
+				obj.visible = false
+				// ensure it won't be turn back to visible later
+				// PS: may be use obj.alive instead ?
+				obj.isEntity = false;
+				
 				// remove the object from the object to draw
 				drawManager.remove(obj);
 
-				// remove the object from the object list
-				gameObjects.splice(gameObjects.indexOf(obj), 1);
-
 				if (obj.mouseEvent) {
-					// remove reference in the object even list
-					registeredMouseEventObj.splice(registeredMouseEventObj
-							.indexOf(obj), 1);
+				   // remove object from the mouse event list
+				   registeredMouseEventObj.splice(registeredMouseEventObj.indexOf(obj), 1);
 				}
-
-				// cache the number of object
-				objCount = gameObjects.length;
+				
+				// remove the object from the object list
+				/** @private */
+				pendingDefer = function () 
+				{
+				   idx = gameObjects.indexOf(obj);
+				   if (idx!=-1) {
+					  gameObjects.splice(idx, 1);
+					  // update the number of object
+					  objCount = gameObjects.length;
+				   }
+				   pendingDefer = null;
+				}.defer(obj);
 			}
-		};
+      };
 
 		/**
 		 * remove all objects
@@ -1476,6 +1487,8 @@
 	{
 
 		visible : true,
+		addAsObject : false,
+		
 
 		rect : null,
 
@@ -1486,8 +1499,8 @@
 		 */
 
 		init : function(addAsObject) {
+			this.addAsObject = addAsObject;
 			this.visible = (addAsObject === true) || false;
-
 			this.rect = new me.Rect(new Vector2d(0, 0), 0, 0);
 		},
 
@@ -1502,7 +1515,9 @@
 
 			// add our object to the GameObject Manager
 			// allowing to benefit from the keyboard event stuff
-			if (this.visible) {
+			if (this.addAsObject) {
+				// make sure it's visible
+				this.visible = true;
 				// update the rect size if added as an object
 				this.rect = me.game.viewport.getRect();
 				// add ourself !
@@ -1530,8 +1545,7 @@
 		 */
 		destroy : function() {
 			// notify the object
-			this.onDestroyEvent();
-
+			this.onDestroyEvent.apply(this, arguments);
 			// object can be destroyed
 			return true;
 		},
@@ -1781,29 +1795,29 @@
 				else
 					_screenObject[_state].screen.destroy();
 			}
-
-			// call the reset function with _extraArgs as arguments
-			_screenObject[state].screen.reset.apply(
-					_screenObject[state].screen, _extraArgs);
-
+			
+			
 			// set the global variable
 			_state = state;
+			
+			// call the reset function with _extraArgs as arguments
+			_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
 
 			// cache the new screen object update function
-			_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame
+			_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame;
 
 			// and start the main loop of the 
 			// new requested state
 			_startRunLoop();
 
 			// execute callback if defined
-			if (_onSwitchComplete)
+			if (_onSwitchComplete) {
 				_onSwitchComplete();
-
+			}
+			
 			// force repaint
 			me.game.repaint();
-		}
-		;
+		};
 
 		/*---------------------------------------------
 			
@@ -2023,49 +2037,48 @@
 		 */
 
 		obj.change = function(state) {
-
 			switch (state) {
-			case obj.LOADING:
-			case obj.MENU:
-			case obj.PLAY:
-			case obj.READY:
-			case obj.GAMEOVER:
-			case obj.GAME_END:
-			case obj.SCORE:
-			case obj.CREDITS:
-			case obj.SETTINGS: {
+				case obj.LOADING:
+				case obj.MENU:
+				case obj.PLAY:
+				case obj.READY:
+				case obj.GAMEOVER:
+				case obj.GAME_END:
+				case obj.SCORE:
+				case obj.CREDITS:
+				case obj.SETTINGS: {
 
-				_extraArgs = null;
-				if (arguments.length > 1) {
-					// store extra arguments if any
-					_extraArgs = Array.prototype.slice.call(arguments, 1);
+					_extraArgs = null;
+					if (arguments.length > 1) {
+						// store extra arguments if any
+						_extraArgs = Array.prototype.slice.call(arguments, 1);
+					}
+					// if fading effect
+					if (_fade.duration && _screenObject[state].transition) {
+						/** @private */
+						_onSwitchComplete = function() {
+							me.game.viewport.fadeOut(_fade.color, _fade.duration);
+						};
+						me.game.viewport.fadeIn(_fade.color, _fade.duration,
+								function() {
+									_switchState(state);
+								});
+
+					}
+					// else just switch without any effects
+					else {
+						// wait for the last frame to be
+						// "finished" before switching
+						_switchState.defer(state);
+						
+					}
+
+					break;
 				}
-				// if fading effect
-				if (_fade.duration && _screenObject[state].transition) {
-					/** @private */
-					_onSwitchComplete = function() {
-						me.game.viewport.fadeOut(_fade.color, _fade.duration);
-					};
-					me.game.viewport.fadeIn(_fade.color, _fade.duration,
-							function() {
-								_switchState(state);
-							});
 
+				default: {
+					break;
 				}
-				// else just switch without any effects
-				else {
-					// wait for the last frame to be
-					// "finished" before switching
-					_switchState.defer(state);
-					
-				}
-
-				break;
-			}
-
-			default: {
-				break;
-			}
 			}
 
 		};
