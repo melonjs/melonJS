@@ -4,8 +4,8 @@
  * http://www.melonjs.org
  * 
  * melonJS is licensed under a Creative Commons 
- * Attribution-NonCommercial-NoDerivs 3.0 Unported License.
- * http://creativecommons.org/licenses/by-nc-nd/3.0/
+ * Attribution-NonCommercial-ShareAlike 3.0 Unported License. 
+ * http://creativecommons.org/licenses/by-nc-sa/3.0/
  *
  * @author Olivier Biot 2011
  *
