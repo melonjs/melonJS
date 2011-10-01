@@ -2,7 +2,6 @@
 Version History 
 ---------------
 0.9.1
-* General: fixed compatibility issues with IE9/10
 * Core: "cache image" option (disabled by default) to use canvas instead of directly using Image Object
 * Core: add onPause and onResume callback when game is paused/resumed on losing/gaining focus
 * Core: added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
@@ -11,7 +10,9 @@ Version History
 * Core: experimental webGL wrapper
 * Core: added a getEntityByName function
 * Core: fixed some kind of "lag" issues when deleting objects
+* Core: improved the requestAnimFrame usage, and fallback to setTimeOut. me.sys.useNativeAnimFrame to enable it (disable by default)
 * Core: optimized the way objects are managed in the game loop
+* Core: defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10) 
 * TMX: implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
 * TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
 * TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
@@ -20,11 +21,13 @@ Version History
 * TMX: added multiple tileset support
 * TMX: Added a "background_image" property. To be set through Tiled, and allowing to specify a fix background.
 * Entity: merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
+* Entity: added a distanceTo function
 * Viewport: fixed camera refresh when changing "deadzone" values
 * loader: added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
 * loader: fix progress notification when TMX files are loaded into the levelDirector
 * loader: added a retry counter for the audio loading : script will now stop and throw an exception after 3 unsuccessful loading attempts.
 * video: renamed "applyEffect" to "applyRGBFilter", and fixed an issue on Opera
+* audio: fixed compatibility issues with IE9/10
 * geometry : added a merge function to me.Rect
 
 0.9.0
