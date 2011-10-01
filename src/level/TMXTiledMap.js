@@ -1,11 +1,11 @@
 /*
  * MelonJS Game Engine
  * Copyright (C) 2011, Olivier BIOT
- * http://olivierbiot.wordpress.com/
+ * http://www.melonjs.org
  *
  *
  * TMX Loader
- * Tile QT 0.7.0 format
+ * Tile QT 0.7.x format
  *	http://www.mapeditor.org/	
  *
  */

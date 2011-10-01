@@ -1,8 +1,7 @@
 /*
  * MelonJS Game Engine
  * Copyright (C) 2011, Olivier BIOT
- * http://olivierbiot.wordpress.com/
- *
+ * http://www.melonjs.org
  *
  * Audio Mngt Objects
  *

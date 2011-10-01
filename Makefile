@@ -1,7 +1,7 @@
 #######################################################################
 #   MelonJS Game Engine
 #   Copyright (C) 2011, Olivier BIOT
-#   http://olivierbiot.wordpress.com/
+#   http://www.melonjs.org
 #
 #   melonJS is licensed under a Creative Commons 
 #   Attribution-NonCommercial-NoDerivs 3.0 Unported License.
