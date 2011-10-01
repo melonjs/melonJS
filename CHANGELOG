@@ -10,7 +10,7 @@ Version History
 * Core: experimental webGL wrapper
 * Core: added a getEntityByName function
 * Core: fixed some kind of "lag" issues when deleting objects
-* Core: improved the requestAnimFrame usage, and fallback to setTimeOut. me.sys.useNativeAnimFrame to enable it (disable by default)
+* Core: improved the requestAnimFrame usage, and fallback to setInterval. me.sys.useNativeAnimFrame to enable it (disable by default)
 * Core: optimized the way objects are managed in the game loop
 * Core: defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10) 
 * TMX: implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
