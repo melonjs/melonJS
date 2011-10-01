@@ -153,8 +153,7 @@
 
 		/** @return {int} */
 		distance : function(/**me.Vector2d*/ v) {
-			return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y)
-					* (this.y - v.y));
+			return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y) * (this.y - v.y));
 		},
 
 		/** @return {me.Vector2d} */

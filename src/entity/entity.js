@@ -973,7 +973,21 @@
 					}
 					return false;
 				},
-
+				
+				/**
+				 * return the distance to the specified entity
+				 * @param {me.ObjectEntity} entity Entity 
+				 * @return {float} distance
+				 */
+				distanceTo: function(o) 
+				{
+					// the Vector object also implements the same function, but
+					// we have to use here the center of both object
+					dx = (this.pos.x + (this.width>>1))  - (o.pos.x + (o.width>>1)); 
+					dy = (this.pos.y + (this.height>>1)) - (o.pos.y + (o.height>>1));
+					return Math.sqrt(dx*dx+dy*dy);
+				},
+				
 				/* -----
 
 					make the player jump
