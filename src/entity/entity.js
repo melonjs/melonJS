@@ -829,6 +829,9 @@
 
 					// default speed
 					this.accel = new me.Vector2d();
+					
+					// max velocity to be applied on entity movement
+					this.maxVel = new me.Vector2d(1000,1000);
 
 					// some default contants
 					this.gravity = 0.98;
@@ -927,6 +930,19 @@
 				setVelocity : function(x, y) {
 					this.accel.x = (x != 0) ? x : this.accel.x;
 					this.accel.y = (x != 0) ? y : this.accel.y;
+				},
+				
+				
+				/**
+				 * cap the entity velocity to the specified value<br>
+				 * (!) this will only cap the y velocity for now(!)
+				 * @param {Int} x max velocity on x axis
+				 * @param {Int} y max velocity on y axis
+				 * @protected
+				 */
+				setMaxVelocity : function(x, y) {
+					this.maxVel.x = x;
+					this.maxVel.y = y;
 				},
 
 				/**
@@ -1087,6 +1103,12 @@
 						//this.jumping = false
 						this.falling = true;
 						this.vel.y += (this.gravity * me.timer.tick);
+					}
+					
+					// cap the y velocity
+					if (this.vel.y !=0)
+					{
+						this.vel.y = this.vel.y.clamp(-this.maxVel.y,this.maxVel.y);
 					}
 
 					// check for collision
