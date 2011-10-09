@@ -1267,7 +1267,7 @@ if (res) {
 <h2>Part 9: Adding a title screen</h2>
 
 <p>To finish, let's add a title screen to our game, using the <b>title_screen.jpg</b>
-    files in the <b>"/data/GUI"</b> folder: <img src="media/title_screen.jpg" alt=
+    files in the <b>"/data/GUI"</b> folder (and of course to be added in the ressource list, as we done it previously for other images) : <img src="media/title_screen.jpg" alt=
             "Title screen"/> and on top of it we will add some message, and wait for the user
     input to start the game !</p>
 
@@ -1407,6 +1407,9 @@ var TitleScreen = me.ScreenObject.extend({
 <p>What do we have above?<br/>
     1) In the constructor, we declare a few objects to handle the background tile, a font
     for displaying our message, and our scroller.<br/>
+	Note : Concerning the font, if you check carefully the corresponding asset 
+	(32x32_font.png), you will notice that it only contains uppercase letters, so be sure 
+	as well to only use uppercase letter in your text.<br/>
     2) In the reset function, we load the resources we need (image, font, etc..) and
     reset our scrolling text position, add a tween object for it (with a callback to
     reset the scrolling text), and bind the ENTER key. Additionally, I'm also playing the
