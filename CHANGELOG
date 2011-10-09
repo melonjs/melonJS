@@ -1,6 +1,9 @@
 
 Version History 
 ---------------
+0.9.2
+*
+
 0.9.1
 * Core: "cache image" option (disabled by default) to use canvas instead of directly using Image Object
 * Core: add onPause and onResume callback when game is paused/resumed on losing/gaining focus
