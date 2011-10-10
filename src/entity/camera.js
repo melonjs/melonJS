@@ -182,12 +182,17 @@
 
 				/**
 				 * set the viewport to follow the specified entity
-				 * @param {Object} Object Entity to follow
+				 * @param {Object} Object ObjectEntity or Position Vector to follow
 				 * @param {axis} [axis="AXIS.BOTH"] AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
 				 */
 
 				follow : function(target, axis) {
-					this.target = target;
+					if (target instanceof me.ObjectEntity)
+						this.target = target.pos;
+					else if (target instanceof me.Vector2d)
+						this.target = target;
+					else
+						throw "melonJS: invalid target for viewport.follow";
 					// if axis is null, camera is moved on target center
 					this.follow_axis = axis || this.AXIS.NONE;
 				},
