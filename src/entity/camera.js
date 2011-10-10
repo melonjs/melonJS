@@ -194,7 +194,7 @@
 					else
 						throw "melonJS: invalid target for viewport.follow";
 					// if axis is null, camera is moved on target center
-					this.follow_axis = axis || this.AXIS.NONE;
+					this.follow_axis = axis || this.AXIS.BOTH;
 				},
 
 				/**
