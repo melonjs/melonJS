@@ -1245,7 +1245,7 @@
 				
 				// remove the object from the object list
 				/** @private */
-				pendingDefer = function () 
+				pendingDefer = (function (obj) 
 				{
 				   idx = gameObjects.indexOf(obj);
 				   if (idx!=-1) {
@@ -1254,7 +1254,7 @@
 					  objCount = gameObjects.length;
 				   }
 				   pendingDefer = null;
-				}.defer(obj);
+				}).defer(obj);
 			}
       };
 
