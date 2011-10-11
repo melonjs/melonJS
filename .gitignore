@@ -5,3 +5,8 @@ Desktop.ini
 
 # project specific ignore
 add-on/
+node_modules/
+build/
+
+# Vim swap files
+*.sw*
