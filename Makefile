@@ -39,7 +39,7 @@ buildir = build/
 docdir = docs/
 
 # CURRENT BUILD VERSION
-ME_VER=$(shell cat src/version.js | sed -re "s/.*'([0-9].[0-9].[0-9])'.*/\1/")
+ME_VER=$(shell cat $(srcdir)version.js | sed "s/^.*[^0-9]\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/")
 VERSION=sed "s/@VERSION/${VERSION}/"
 
 # list of module to compile
