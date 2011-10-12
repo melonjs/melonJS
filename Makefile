@@ -39,8 +39,8 @@ buildir = build/
 docdir = docs/
 
 # CURRENT BUILD VERSION
-ME_VER=$(shell cat $(srcdir)version.txt)
-VERSION=sed "s/@VERSION/${VERSION}/"'
+ME_VER=$(shell cat src/version.js | sed -re "s/.*'([0-9].[0-9].[0-9])'.*/\1/")
+VERSION=sed "s/@VERSION/${VERSION}/"
 
 # list of module to compile
 MODULE = $(srcdir)core.js\
