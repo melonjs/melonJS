@@ -769,9 +769,9 @@ var EnemyEntity = me.ObjectEntity.extend({
             return false;
 
         if (this.alive) {
-            if (this.walkLeft &amp;&amp; this.pos.x &lt; = this.startX) {
+            if (this.walkLeft &amp;&amp; this.pos.x &lt;= this.startX) {
                 this.walkLeft = false;
-            } else if (!this.walkLeft &amp;&amp; this.pos.x &gt; = this.endX) {
+            } else if (!this.walkLeft &amp;&amp; this.pos.x &gt;= this.endX) {
                 this.walkLeft = true;
             }
 
@@ -1266,7 +1266,7 @@ if (res) {
 
 <h2>Part 9: Adding a title screen</h2>
 
-<p>To finish, let's add a title screen to our game, using the <b>title_screen.jpg</b>
+<p>To finish, let's add a title screen to our game, using the <b>title_screen.png</b>
     files in the <b>"/data/GUI"</b> folder (and of course to be added in the ressource list, as we done it previously for other images) : <img src="media/title_screen.jpg" alt=
             "Title screen"/> and on top of it we will add some message, and wait for the user
     input to start the game !</p>
