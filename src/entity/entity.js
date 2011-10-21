@@ -1099,7 +1099,7 @@
 						//		console.log(this.jumpspeed);
 					}
 					// else apply a constant gravity
-					else if (!this.onladder) {
+					else if (!this.onladder && this.gravity) {
 						//this.jumping = false
 						this.falling = true;
 						this.vel.y += (this.gravity * me.timer.tick);
