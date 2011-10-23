@@ -23,8 +23,7 @@
 		this.defaultvalue = val || 0;
 		this.value = val || 0;
 		this.updated = true;
-	}
-	;
+	};
 
 	/* ----
 		
@@ -33,8 +32,7 @@
 		--- */
 
 	Stat_Item.prototype.reset = function() {
-		this.value = this.defaultvalue;
-		this.updated = true;
+		this.set(this.defaultvalue);
 	};
 
 	/* ----
@@ -43,11 +41,18 @@
 		
 		--- */
 
-	Stat_Item.prototype.update = function(value) {
-		this.value += value;
-		this.updated = true;
-		return this.updated;
+	Stat_Item.prototype.update = function(val) {
+		return this.set(this.value + val);
 	};
+	
+	/** 
+      * Sets the value of an item 
+      */ 
+    Stat_Item.prototype.set = function(value) { 
+		this.value = value; 
+		this.updated = true; 
+		return this.updated; 
+	}; 
 
 	/*---------------------------------------------------------*/
 
@@ -105,14 +110,31 @@
 		 * @param {String} name name of the item
 		 * @param {int} val value to be added
 		 * @example
-		 * // update the"stars" item
+		 * // update the "stars" item
 		 * me.gamestat.updateValue("stars", 1);
 		 */
 		singleton.updateValue = function(name, value) {
 			if (items[name])
 				items[name].update(value);
 		};
+		
+		/** 
+		 * set value of an item 
+		 * @name me.gamestat#setValue 
+		 * @public 
+		 * @function 
+		 * @param {String} name name of the item 
+		 * @param {int} val value to be set 
+		 * @example 
+		 * // set the"stars" item 
+		 * me.gamestat.setValue("stars", 1); 
+		 */ 
+		singleton.setValue = function(name, value) { 
+			if (items[name]) 
+				items[name].set(value); 
+		}; 
 
+		
 		/**
 		 * return an item value
 		 * @name me.gamestat#getItemValue
