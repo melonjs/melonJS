@@ -81,8 +81,16 @@
 		 * reset the item to the default value
 		 */
 		reset : function() {
-			this.value = this.defaultvalue;
+			this.set(this.defaultvalue);
+		},
+		
+		/**
+		 * set the item value to the specified one
+		 */
+		set : function(value) {
+			this.value = value;
 			this.updated = true;
+			return true;
 		},
 
 		/**
@@ -90,9 +98,7 @@
 		 * @param {int} value add the specified value
 		 */
 		update : function(value) {
-			this.value += value;
-			this.updated = true;
-			return this.updated;
+			return this.set(this.value + value);
 		},
 
 		/**
@@ -161,13 +167,21 @@
 					this.objCount++;
 					this.HUD_invalidated = true;
 				},
+				
+				/**
+				 * set the value of an item
+				 */
+				setItemValue : function(name) {
+					if (this.HUDItems[name] && (this.HUDItems[name].set(value) == true))
+						this.HUD_invalidated = true;				
+				},
 
+				
 				/**
 				 * update the value of an item
 				 */
 				updateItemValue : function(name, value) {
-					if (this.HUDItems[name]
-							&& (this.HUDItems[name].update(value) == true))
+					if (this.HUDItems[name] && (this.HUDItems[name].update(value) == true))
 						this.HUD_invalidated = true;
 				},
 
@@ -175,10 +189,10 @@
 				 * get the value of an item
 				 */
 				getItemValue : function(name) {
-					return (this.HUDItems[name]) ? this.HUDItems[name].value
-							: 0;
+					return (this.HUDItems[name]) ? this.HUDItems[name].value : 0;
 				},
-
+				
+				
 				/**
 				 * return true if the HUD has been updated
 				 */
