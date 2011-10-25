@@ -1339,7 +1339,7 @@
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = objCount, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.visible && obj.collidable && obj.isEntity)// && (obj!=objB))
+				if (obj.visible && obj.collidable && obj.isEntity && (obj!=objB))
 				{
 					// if return value != null, we have a collision
 					if (result = obj.checkCollision(objB))
