@@ -160,8 +160,17 @@
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		enableWebGL : false
-
+		enableWebGL : false,
+		
+		/**
+		 * Specify either to stop on audio loading error or not<br>
+		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
+		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
+		 * default value : true<br>
+		 * @type {Boolean}
+		 * @memberOf me.sys 
+		 */
+		stopOnAudioError : true
 	};
 
 	// add me to the global window variable

@@ -139,15 +139,26 @@
 		function soundLoadError(sound_id) {
 			// check the retry counter
 			if (retry_counter++ > 3) {
-				// what the hell ...?
-				throw "melonJS: failed loading audio: " + sound_id + "."
-						+ activeAudioExt;
+				// something went wrong
+				var errmsg = "melonJS: failed loading " + sound_id + "." + activeAudioExt;
+				if (me.sys.stopOnAudioError===false) {
+					// disable audio
+					me.audio.disable();
+					// call load callback if defined
+					if (load_cb) {
+						load_cb();
+					}
+					// warning
+					console.log(errmsg + ", disabling audio");
+				} else {
+					// throw an exception and stop everything !
+					throw errmsg;
+				}
+			// else try loading again !
 			} else {
-				// reload !
 				audio_channels[sound_id][0].load();
 			}
-		}
-		;
+		};
 
 		/*
 		 * ---
