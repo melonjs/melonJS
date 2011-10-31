@@ -118,146 +118,223 @@
 	});
 	/*---------------------------------------------------------*/
 
-	/* -----
+	/**
+	 * HUD Object<br>
+	 * There is no constructor function for me.HUD_Object<br>
+	 * Object instance is accessible through me.game.HUD if previously initialized using me.game.addHUD(...);
+	 * @class
+	 * @extends Object
+	 * @memberOf me
+	 * @example
+	 * // create a "score object" that will use a Bitmap font
+	 * // to display the score value
+	 * ScoreObject = me.HUD_Item.extend(
+	 * {	
+	 *    // constructor
+	 *    init: function(x, y)
+	 *    {
+	 *       // call the parent constructor
+	 *       this.parent(x, y);
+	 *       // create a font
+	 *       this.font = new me.BitmapFont("font16px", 16);
+	 *    },
+	 *    // draw function
+	 *    draw : function (context, x, y)
+	 *    {
+	 *       this.font.draw (context, this.value, this.pos.x +x, this.pos.y +y);
+	 *    }
+	 * });
+	 * 
+	 * // add a default HUD to the game mngr (with no background)
+	 * me.game.addHUD(0,0,480,100);
+	 * // add the "score" HUD item
+	 * me.game.HUD.addItem("score", new ScoreObject(470,10));
+	 */
 
-		a Simple HUD object
-			
-		------									*/
-	HUD_Object = me.Rect
-			.extend({
-				/**
-				 * Constructor
-				 */
-				init : function(x, y, w, h, bg) {
-					// call the parent constructor
-					this.parent(new me.Vector2d(x || 0, y || 0), w
-							|| me.video.getWidth(), h || me.video.getHeight());
 
-					// default background color (if specified)
-					this.bgcolor = bg;
+	HUD_Object = me.Rect.extend(
+	/** @scope me.HUD_Object.prototype */
+	{
+		/**
+		 * @Constructor
+		 * @private
+		 */
+		init : function(x, y, w, h, bg) {
+			// call the parent constructor
+			this.parent(new me.Vector2d(x || 0, y || 0), w
+					|| me.video.getWidth(), h || me.video.getHeight());
 
-					// hold all the items labels						
-					this.HUDItems = {};
-					// hold all the items objects
-					this.HUDobj = [];
-					// Number of items in the HUD
-					this.objCount = 0;
+			// default background color (if specified)
+			this.bgcolor = bg;
 
-					// visible or not...	
-					this.visible = true;
+			// hold all the items labels						
+			this.HUDItems = {};
+			// hold all the items objects
+			this.HUDobj = [];
+			// Number of items in the HUD
+			this.objCount = 0;
 
-					// state of HUD (to trigger redraw);
-					this.HUD_invalidated = true;
+			// visible or not...	
+			this.visible = true;
 
-					// create a canvas where to draw everything
-					HUDCanvasSurface = me.video.createCanvasSurface(this.width,
-							this.height);
+			// state of HUD (to trigger redraw);
+			this.HUD_invalidated = true;
 
-					// this is a little hack to ensure the HUD is always the first draw
-					this.z = 999;
+			// create a canvas where to draw everything
+			HUDCanvasSurface = me.video.createCanvasSurface(this.width,
+					this.height);
 
-				},
+			// this is a little hack to ensure the HUD is always the first draw
+			this.z = 999;
 
-				/**
-				 * add an item to the HUD Object
-				 */
-				addItem : function(name, item) {
-					this.HUDItems[name] = item;
-					this.HUDobj.push(this.HUDItems[name]);
-					this.objCount++;
-					this.HUD_invalidated = true;
-				},
-				
-				/**
-				 * set the value of an item
-				 */
-				setItemValue : function(name) {
-					if (this.HUDItems[name] && (this.HUDItems[name].set(value) == true))
-						this.HUD_invalidated = true;				
-				},
+		},
 
-				
-				/**
-				 * update the value of an item
-				 */
-				updateItemValue : function(name, value) {
-					if (this.HUDItems[name] && (this.HUDItems[name].update(value) == true))
-						this.HUD_invalidated = true;
-				},
+		/**
+		 * add an item to the me.game.HUD Object
+		 * @name me.HUD_Object#addItem
+		 * @public
+		 * @function
+		 * @param {String} name name of the item
+		 * @param {me.HUD_Item} item HUD Item to be added
+		 * @example
+		 * // add a "score" HUD item
+		 * me.game.HUD.addItem("score", new ScoreObject(470,10));
+		 */
+		addItem : function(name, item) {
+			this.HUDItems[name] = item;
+			this.HUDobj.push(this.HUDItems[name]);
+			this.objCount++;
+			this.HUD_invalidated = true;
+		},
+		
+		/**
+		 * set the value of the specified item
+		 * @name me.HUD_Object#setItemValue
+		 * @public
+		 * @function
+		 * @param {String} name name of the item
+		 * @param {int} val value to be set 
+		 * @example
+		 * // set the "score" item value to 100
+		 * me.game.HUD.setItemValue("score", 100);
+		 */
+		setItemValue : function(name, value) {
+			if (this.HUDItems[name] && (this.HUDItems[name].set(value) == true))
+				this.HUD_invalidated = true;				
+		},
 
-				/**
-				 * get the value of an item
-				 */
-				getItemValue : function(name) {
-					return (this.HUDItems[name]) ? this.HUDItems[name].value : 0;
-				},
-				
-				
-				/**
-				 * return true if the HUD has been updated
-				 */
-				update : function() {
-					return this.HUD_invalidated;
-				},
+		
+		/**
+		 * update (add) the value of the specified item
+		 * @name me.HUD_Object#updateItemValue
+		 * @public
+		 * @function
+		 * @param {String} name name of the item
+		 * @param {int} val value to be set 
+		 * @example
+		 * // add 10 to the current "score" item value
+		 * me.game.HUD.setItemValue("score", 10);
+		 */
+		updateItemValue : function(name, value) {
+			if (this.HUDItems[name] && (this.HUDItems[name].update(value) == true))
+				this.HUD_invalidated = true;
+		},
 
-				/**
-				 * reset the item to it's default value
-				 */
-				reset : function(name) {
-					if (this.HUDItems[name])
-						this.HUDItems[name].reset();
-					this.HUD_invalidated = true;
-				},
+		/**
+		 * return the value of the specified item
+		 * @name me.HUD_Object#getItemValue
+		 * @public
+		 * @function
+		 * @param {String} name name of the item
+		 * @return {int}
+		 * @example
+		 * // return the value of the "score" item
+		 * score = me.game.HUD.getItemValue("score");
+		 */
+		getItemValue : function(name) {
+			return (this.HUDItems[name]) ? this.HUDItems[name].value : 0;
+		},
+		
+		
+		/**
+		 * return true if the HUD has been updated
+		 * @private
+		 */
+		update : function() {
+			return this.HUD_invalidated;
+		},
 
-				/**
-				 * reset all items to their default value
-				 */
-				resetAll : function() {
-					for ( var i = this.objCount, obj; i--, obj = this.HUDobj[i];) {
-						obj.reset();
+		/**
+		 * reset the specified item to default value
+		 * @name me.HUD_Object#reset
+		 * @public
+		 * @function
+		 * @param {String} [name="all"] name of the item
+		 */		
+		reset : function(name) {
+			if (name != undefined) {
+				// only reset the specified one
+				if (this.HUDItems[name])
+					this.HUDItems[name].reset();
+				this.HUD_invalidated = true;
+			} else {
+				// reset everything
+				singleton.resetAll();
+			}
+		},
+
+		/**
+		 * reset all items to default value
+		 * @private
+		 */
+		resetAll : function() {
+			for ( var i = this.objCount, obj; i--, obj = this.HUDobj[i];) {
+				obj.reset();
+			}
+			this.HUD_invalidated = true;
+		},
+
+		/**
+		 * override the default me.Rect get Rectangle definition
+		 * since the HUD if a flaoting object
+		 * (is this correct?)
+		 * @private
+		 * @return {me.Rect} new rectangle
+		 */
+
+		getRect : function() {
+			p = this.pos.clone();
+			p.add(me.game.viewport.pos);
+			return new me.Rect(p, this.width, this.height);
+		},
+
+		/**
+		 * draw the HUD
+		 * @private
+		 */
+		draw : function(context) {
+			//console.log("draw HUD");
+			if (this.HUD_invalidated) {
+				if (this.bgcolor)
+					me.video.clearSurface(HUDCanvasSurface,
+							this.bgcolor);
+				else
+					HUDCanvasSurface.canvas.width = HUDCanvasSurface.canvas.width;
+
+				for ( var i = this.objCount, obj; i--,
+						obj = this.HUDobj[i];) {
+					if (obj.visible) {
+						obj.draw(HUDCanvasSurface, 0, 0);
 					}
-					this.HUD_invalidated = true;
-				},
-
-				/**
-				 * override the default me.Rect get Rectangle definition
-				 * since the HUD if a flaoting object
-				 * (is this correct?)
-				 * @return {me.Rect} new rectangle	
-				 */
-
-				getRect : function() {
-					p = this.pos.clone();
-					p.add(me.game.viewport.pos);
-					return new me.Rect(p, this.width, this.height);
-				},
-
-				/**
-				 * draw the HUD
-				 */
-				draw : function(context) {
-					//console.log("draw HUD");
-					if (this.HUD_invalidated) {
-						if (this.bgcolor)
-							me.video.clearSurface(HUDCanvasSurface,
-									this.bgcolor);
-						else
-							HUDCanvasSurface.canvas.width = HUDCanvasSurface.canvas.width;
-
-						for ( var i = this.objCount, obj; i--,
-								obj = this.HUDobj[i];) {
-							if (obj.visible) {
-								obj.draw(HUDCanvasSurface, 0, 0);
-							}
-						}
-					}
-					// draw the HUD
-					context.drawImage(HUDCanvasSurface.canvas, this.pos.x,
-							this.pos.y);
-					// reset the flag
-					this.HUD_invalidated = false;
 				}
-			});
+			}
+			// draw the HUD
+			context.drawImage(HUDCanvasSurface.canvas, this.pos.x,
+					this.pos.y);
+			// reset the flag
+			this.HUD_invalidated = false;
+		}
+	});
 
 	// expose our stuff to the global scope
 	$.me.HUD_Item = HUD_Item;
