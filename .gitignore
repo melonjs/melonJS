@@ -7,6 +7,7 @@ Desktop.ini
 add-on/
 node_modules/
 build/
+docs/
 
 # Vim swap files
 *.sw*
