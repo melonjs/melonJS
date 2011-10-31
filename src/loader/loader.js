@@ -174,19 +174,19 @@
 			
 			preloadImages(
 						 [{name: 'image1', src: 'images/image1.png'},
-						  {name: 'image1', src: 'images/image1.png'},
-						  {name: 'image1', src: 'images/image1.png'},
-						  {name: 'image1', src: 'images/image1.png'}]);
+						  {name: 'image2', src: 'images/image2.png'},
+						  {name: 'image3', src: 'images/image3.png'},
+						  {name: 'image4', src: 'images/image4.png'}]);
 			
 			---										*/
 
-		function preloadImage(img) {
+		function preloadImage(img, onload, onerror) {
 			// create new Image object and add to array
 			imgList.push(img.name);
 
 			imgList[img.name] = new Image();
-			imgList[img.name].onload = obj.onResourceLoaded.bind(obj);
-			imgList[img.name].onerror = onImageError.bind(this);
+			imgList[img.name].onload = onload || obj.onResourceLoaded.bind(obj);
+			imgList[img.name].onerror = onerror || onImageError.bind(this);
 			imgList[img.name].src = img.src + me.nocache;
 		}
 		;
@@ -333,7 +333,7 @@
 					break;
 
 				default:
-					throw "melonJS: loader : unknow resource type : %s"
+					throw "melonJS: me.loader.preload : unknow resource type : %s"
 							+ res[i].type;
 					break;
 				}
@@ -343,6 +343,38 @@
 			// check load status
 			checkLoadStatus();
 		};
+
+		/**
+		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
+		 * Given parmeter must contain the following fields :<br>
+		 * - name    : internal name of the resource<br>
+		 * - type    : only "image" supported <br>
+		 * - src     : path and file name of the resource<br>
+		 * @name me.loader#load
+		 * @public
+		 * @function
+		 * @param {Object} resource
+		 * @param {Function} onload function to be called when the resource is loaded
+		 * @param {Function} onerror function to be called in case of error
+		 * @example
+		 * // load a image asset
+		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+		 */
+
+		obj.load = function(res, onload, onerror) {
+			// check ressource type
+			switch (res.type) {
+				case "image":
+					// reuse the preloadImage fn
+					preloadImage(res, onload, onerror);
+					break;
+
+				default:
+					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
+					break;
+			};
+		};
+
 
 		/**
 		 * return the specified XML object
