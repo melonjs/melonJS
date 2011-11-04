@@ -605,6 +605,15 @@
 		return "0123456789ABCDEF".charAt((this - this % 16) >> 4)
 				+ "0123456789ABCDEF".charAt(this % 16);
 	};
+	
+	/**
+	 * Returns a value indicating the sign of a number<br>
+	 * @extends Number
+	 * @return {Number} sign of a the number
+	 */
+	Number.prototype.sign = function() {
+		return this < 0 ? -1 : (this > 0 ? 1 : 0);  
+	}
 
 	/************************************************************************************/
 
