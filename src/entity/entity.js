@@ -821,14 +821,16 @@
 					this.name = settings.name;
 					
 					// adjust initial coordinates should be bottom left ones
-					this.pos.set(x, y + me.game.currentLevel.tileheight
-							- this.height);
+					this.pos.set(x, y + me.game.currentLevel.tileheight	- this.height);
 
 					// velocity to be applied on player movement
 					this.vel = new me.Vector2d();
 
 					// default speed
 					this.accel = new me.Vector2d();
+					
+					// default friction (0,0)
+					this.friction = new me.Vector2d();
 					
 					// max velocity to be applied on entity movement
 					this.maxVel = new me.Vector2d(1000,1000);
@@ -921,7 +923,8 @@
 				},
 
 				/**
-				 * set the player default velocity<br>
+				 * set the entity default velocity<br>
+				 * note : velocity is by default limited to the same value, see setMaxVelocity if needed<br>
 				 * @param {Int} x velocity on x axis
 				 * @param {Int} y velocity on y axis
 				 * @protected
@@ -930,8 +933,10 @@
 				setVelocity : function(x, y) {
 					this.accel.x = (x != 0) ? x : this.accel.x;
 					this.accel.y = (x != 0) ? y : this.accel.y;
+					
+					// limit by default to the same max value
+					this.setMaxVelocity(x,y);
 				},
-				
 				
 				/**
 				 * cap the entity velocity to the specified value<br>
@@ -946,7 +951,20 @@
 				},
 
 				/**
-				 * make the player move left of right
+				 * set the entity default friction<br>
+				 * @param {Int} x horizontal friction
+				 * @param {Int} y vertical friction
+				 * @protected
+				 */
+				setFriction : function(x, y) {
+					this.friction.x = x || 0;
+					this.friction.y = y || 0;
+				},
+
+				
+				/**
+				 * helper function for platform games: <br>
+				 * make the entity move left of right<br>
 				 * @param {Boolean} left 
 				 * @protected
 				 * @example
@@ -961,12 +979,12 @@
 				 */
 				doWalk : function(left) {
 					this.flipX(left);
-					this.vel.x = (left) ? -this.accel.x * me.timer.tick
-							: this.accel.x * me.timer.tick;
+					this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
 				},
 
 				/**
-				 * make the player move up and down<br>
+				 * helper function for platform games: <br>
+				 * make the entity move up and down<br>
 				 * only valid is the player is on a ladder
 				 * @param {Boolean} up 
 				 * @protected
@@ -990,25 +1008,12 @@
 					return false;
 				},
 				
+								
 				/**
-				 * return the distance to the specified entity
-				 * @param {me.ObjectEntity} entity Entity 
-				 * @return {float} distance
+				 * helper function for platform games: <br>
+				 * make the entity jump<br>
+				 * @protected
 				 */
-				distanceTo: function(o) 
-				{
-					// the Vector object also implements the same function, but
-					// we have to use here the center of both object
-					dx = (this.pos.x + (this.width>>1))  - (o.pos.x + (o.width>>1)); 
-					dy = (this.pos.y + (this.height>>1)) - (o.pos.y + (o.height>>1));
-					return Math.sqrt(dx*dx+dy*dy);
-				},
-				
-				/* -----
-
-					make the player jump
-					
-				------			*/
 				doJump : function() {
 					if (!this.jumping && !this.falling) {
 						this.jumpspeed = this.accel.y;
@@ -1025,17 +1030,33 @@
 					return false;
 				},
 
-				/* -----
-
-					force the player to jump
-					
-				------			*/
+				/**
+				 * helper function for platform games: <br>
+				 * force to the entity to jump (for double jump)<br>
+				 * @protected
+				 */
 				forceJump : function() {
 					this.jumping = false;
 					this.falling = false;
 					this.doJump();
 				},
+				
+				
+				/**
+				 * return the distance to the specified entity
+				 * @param {me.ObjectEntity} entity Entity 
+				 * @return {float} distance
+				 */
+				distanceTo: function(o) 
+				{
+					// the Vector object also implements the same function, but
+					// we have to use here the center of both object
+					dx = (this.pos.x + (this.width>>1))  - (o.pos.x + (o.width>>1)); 
+					dy = (this.pos.y + (this.height>>1)) - (o.pos.y + (o.height>>1));
+					return Math.sqrt(dx*dx+dy*dy);
+				},
 
+				
 				/** 
 				 * handle the player movement on a slope
 				 * and update vel value
@@ -1065,7 +1086,48 @@
 						this.pos.y += this.slopeY;
 					}
 				},
+				
+				/**
+				 * compute the new velocity value
+				 * @private
+				 */
+				computeVelocity : function(vel) {
+				
+					// apply gravity on y axis
+					if (this.jumping) {
+						this.jumpspeed -= this.gravity;
+						if ((this.jumpspeed < 0))// || !me.input.keyStatus('jump')) // jumping)
+						{
+							this.jumping = false;
+							this.falling = true;
+							vel.y = 0;
+						} else
+							vel.y = -this.jumpspeed;
+					}
+					// else apply a constant gravity
+					else if (!this.onladder && this.gravity) {
+						//this.jumping = false
+						this.falling = true;
+						vel.y += (this.gravity * me.timer.tick);
+					}
+					
+					// apply friction
+					if (this.friction.x)
+						vel.x = me.utils.applyFriction(vel.x,this.friction.x);
+					if (this.friction.y)
+						vel.y = me.utils.applyFriction(vel.y,this.friction.y);
+					
+					// cap velocity
+					if (vel.y !=0)
+						vel.y = vel.y.clamp(-this.maxVel.y,this.maxVel.y);
+					if (vel.x !=0)
+						vel.x = vel.x.clamp(-this.maxVel.x,this.maxVel.x);
+					
+					return vel;
+				},
 
+				
+				
 				/**
 				 * handle the player movement, "trying" to update his position<br>
 				 * @return {Boolean} <b>true<b> if player position has been updated
@@ -1084,42 +1146,14 @@
 				 */
 				updateMovement : function() {
 
-					// apply gravity on y axis
-					if (this.jumping) {
-						this.jumpspeed -= this.gravity;
-						if ((this.jumpspeed < 0))// || !me.input.keyStatus('jump')) // jumping)
-						{
-							this.jumping = false;
-							this.falling = true;
-							this.vel.y = 0;
-							//console.log("falling!");
-						} else
-							this.vel.y = -this.jumpspeed;
-
-						//		console.log(this.jumpspeed);
-					}
-					// else apply a constant gravity
-					else if (!this.onladder && this.gravity) {
-						//this.jumping = false
-						this.falling = true;
-						this.vel.y += (this.gravity * me.timer.tick);
-					}
+					this.vel = this.computeVelocity(this.vel);
 					
-					// cap the y velocity
-					if (this.vel.y !=0)
-					{
-						this.vel.y = this.vel.y.clamp(-this.maxVel.y,this.maxVel.y);
-					}
-
 					// check for collision
-					collision = this.collisionMap.checkCollision(
-							this.collisionBox, this.vel);
+					collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
 
 					// update some flags
 					this.onladder = collision.xprop.isLadder;
-					this.onslope = collision.yprop.isSlope
-							|| collision.xprop.isSlope;
-					//console.log(this.onslope);
+					this.onslope = collision.yprop.isSlope || collision.xprop.isSlope;
 
 					// y collision
 					if (collision.y) {

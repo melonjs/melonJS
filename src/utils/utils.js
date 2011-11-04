@@ -158,6 +158,11 @@
 		api.RGBToHex = function(r, g, b) {
 			return r.toHex() + g.toHex() + b.toHex();
 		};
+		
+		// apply friction to a force
+		api.applyFriction = function(v, f) {
+			return (v+f<0)?v+(f*me.timer.tick):(v-f>0)?v-(f*me.timer.tick):0;
+		};
 
 		// return our object
 		return api;
