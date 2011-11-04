@@ -25,6 +25,9 @@ var PlayerEntity = me.ObjectEntity.extend(
       
       // set the walking & jumping speed
       this.setVelocity(3, 15);
+	  
+	  // set the walking & jumping speed
+      this.setFriction(0.3);
       
       // adjust the bounding box
       this.updateColRect(8,48, -1,0);
@@ -48,11 +51,8 @@ var PlayerEntity = me.ObjectEntity.extend(
       {
          this.doWalk(false);
       }
-      else
-      {
-         this.vel.x = 0;
-      }
-      if (me.input.isKeyPressed('jump'))
+     
+	  if (me.input.isKeyPressed('jump'))
       {	
          this.doJump();
       }
