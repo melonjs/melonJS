@@ -302,7 +302,7 @@
 				 */
 				draw : function(context) {
 					// last x pos of the viewport
-					x = this.vp.x;
+					var x = this.vp.x;
 
 					if (x > this.lastx) {
 						// going right
@@ -564,8 +564,7 @@
 				 * @param {Context2d} context 2d Context on which draw our object
 				 **/
 				draw : function(context) {
-					var xpos = this.pos.x - this.vp.pos.x, ypos = this.pos.y
-							- this.vp.pos.y;
+					var xpos = this.pos.x - this.vp.pos.x, ypos = this.pos.y - this.vp.pos.y;
 
 					if (this.scaleFlag) {
 						context.scale(this.scale.x, this.scale.y);
@@ -768,8 +767,7 @@
 				 */
 				update : function() {
 					if (this.visible && (this.fpscount++ > this.animationspeed)) {
-						this.setCurrentSprite(++this.current.idx
-								% this.current.length);
+						this.setCurrentSprite(++this.current.idx % this.current.length);
 
 						if ((this.current.idx == 0) && this.resetAnim)
 							this.setCurrentAnimation(this.resetAnim);
@@ -812,10 +810,7 @@
 
 				/** @private */
 				init : function(x, y, settings) {
-					this.parent(x, y,
-							(typeof settings.image == "string") ? me.loader
-									.getImage(settings.image) : settings.image,
-							settings.spritewidth);
+					this.parent(x, y, (typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image, settings.spritewidth);
 					
 					// set the object entity name
 					this.name = settings.name;
@@ -1149,7 +1144,7 @@
 					this.vel = this.computeVelocity(this.vel);
 					
 					// check for collision
-					collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
+					var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
 
 					// update some flags
 					this.onladder = collision.xprop.isLadder;

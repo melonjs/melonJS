@@ -130,8 +130,7 @@
 				}
 			}
 			// get the game tick
-			api.tick = (delta > minstep && me.sys.interpolation) ? delta / step
-					: 1;
+			api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
 		};
 
 		// return our apiect

@@ -1214,7 +1214,8 @@
 		api.update = function() {
 			// update the Frame counter
 			me.timer.update();
-
+			// previous rect (if any)
+			var oldRect = null;
 			// loop through our objects
 			for ( var i = objCount, obj; i--, obj = gameObjects[i];) {
 				// check for previous rect before position change
@@ -1265,7 +1266,7 @@
 				/** @private */
 				pendingDefer = (function (obj) 
 				{
-				   idx = gameObjects.indexOf(obj);
+				   var idx = gameObjects.indexOf(obj);
 				   if (idx!=-1) {
 					  gameObjects.splice(idx, 1);
 					  // update the number of object

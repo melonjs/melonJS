@@ -347,11 +347,8 @@
 
 	TiledLayer.prototype.checkCollision = function(obj, pv) {
 
-		//var x = (pv.x > 0) ? obj.pos.x + obj.colPos.x + obj.width  + pv.x - 1 : obj.pos.x + obj.colPos.x + pv.x; // first pv.x - 1
-		//var y = (pv.y > 0) ? obj.pos.y + obj.colPos.y + obj.height + pv.y	: obj.pos.y + obj.colPos.y + pv.y ;
-
-		x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
-		y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
+		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
+		var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
 		//to return tile collision detection
 		collide = {
 			x : false, // true if collision on x axis
@@ -658,7 +655,7 @@
 			if (levels[level] instanceof me.TMXTileMap) {
 
 				// check the status of the state mngr
-				isRunning = me.state.isRunning();
+				var isRunning = me.state.isRunning();
 
 				if (isRunning) {
 					// pause the game loop to avoid 

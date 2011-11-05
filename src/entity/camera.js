@@ -65,15 +65,13 @@
 				/** @private */
 				init : function(minX, minY, maxX, maxY, realw, realh) {
 					// viewport coordinates
-					this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY
-							- minY);
+					this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
 					// keep track of camera update
 					this.last = new me.Vector2d(-1, -1);
 
 					// real worl limits
-					this.limits = new me.Vector2d(realw || this.width, realh
-							|| this.height);
+					this.limits = new me.Vector2d(realw||this.width, realh||this.height);
 
 					// target to follow
 					this.target = null;
@@ -207,8 +205,8 @@
 				 */
 
 				move : function(x, y) {
-					newx = ~~(this.pos.x + x);
-					newy = ~~(this.pos.y + y);
+					var newx = ~~(this.pos.x + x);
+					var newy = ~~(this.pos.y + y);
 
 					if ((newx >= 0) && (newx <= this._limitwidth))
 						this.pos.x = newx;

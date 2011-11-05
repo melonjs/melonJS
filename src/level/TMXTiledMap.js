@@ -380,7 +380,7 @@
 
 			this.TileProperties[tileID] = {};
 
-			tileProp = this.TileProperties[tileID];
+			var tileProp = this.TileProperties[tileID];
 
 			// apply tiled defined properties
 			setTMXProperties(tileProp, tileInfo[i]);
@@ -533,6 +533,8 @@
 		var idx = data.length - 1;
 
 		var flipx, flipy;
+		
+		var gid;
 
 		// set everything
 		for ( var y = this.height - 1; y >= 0; y--) {
