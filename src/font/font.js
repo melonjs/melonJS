@@ -87,6 +87,7 @@
 
 		/**
 		 * measure the given test width
+		 * @param {Context} context 2D Context
 		 * @param {String} text
 		 * @return {int} width
 		 */
@@ -197,7 +198,7 @@
 		},
 
 		/**
-		 *	measure the given test width
+		 * measure the given test width
 		 * @param {String} text
 		 * @return {int} width
 		 */
