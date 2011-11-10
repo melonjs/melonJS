@@ -260,6 +260,11 @@
 				// half width/height
 				hWidth : 0,
 				hHeight : 0,
+				
+				// flags to check if we
+				// already redefined properties
+				hProp : false,
+				vProp : false,
 
 				
 				/** @private */
@@ -276,11 +281,6 @@
 					this.width = w;
 					this.height = h;
 
-					// full width/height
-					/*
-					this.fWidth = w;
-					this.fHeight = h;
-					 */
 					// half width/height
 					this.hWidth = ~~(w / 2);
 					this.hHeight = ~~(h / 2);
@@ -375,40 +375,47 @@
 						this.colPos.x = x;
 						this.width = w;
 						this.hWidth = ~~(this.width / 2);
-
-						// redefine our properties taking colPos into account
-						Object.defineProperty(this, "left", {
-							get : function() {
-								return this.pos.x + this.colPos.x;
-							},
-							configurable : true
-						});
-						Object.defineProperty(this, "right", {
-							get : function() {
-								return this.pos.x + this.colPos.x + this.width;
-							},
-							configurable : true
-						});
+						
+						// avoid Property definition if not necessary
+						if (!this.hProp) {
+							// redefine our properties taking colPos into account
+							Object.defineProperty(this, "left", {
+								get : function() {
+									return this.pos.x + this.colPos.x;
+								},
+								configurable : true
+							});
+							Object.defineProperty(this, "right", {
+								get : function() {
+									return this.pos.x + this.colPos.x + this.width;
+								},
+								configurable : true
+							});
+							this.hProp = true;
+						}
 					}
 					if (y != -1) {
 						this.colPos.y = y;
 						this.height = h;
 						this.hHeight = ~~(this.height / 2);
-						// redefine our properties taking colPos into account
-						Object.defineProperty(this, "top", {
-							get : function() {
-								return this.pos.y + this.colPos.y;
-							},
-							configurable : true
-						});
-						Object.defineProperty(this, "bottom",
-								{
-									get : function() {
-										return this.pos.y + this.colPos.y
-												+ this.height;
-									},
-									configurable : true
-								});
+						
+						// avoid Property definition if not necessary
+						if (!this.vProp) {
+							// redefine our properties taking colPos into account
+							Object.defineProperty(this, "top", {
+								get : function() {
+									return this.pos.y + this.colPos.y;
+								},
+								configurable : true
+							});
+							Object.defineProperty(this, "bottom", {
+								get : function() {
+									return this.pos.y + this.colPos.y + this.height;
+								},
+								configurable : true
+							});
+							this.vProp = true;
+						}
 					}
 				},
 
