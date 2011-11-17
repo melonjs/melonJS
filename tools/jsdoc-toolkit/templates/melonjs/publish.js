@@ -108,6 +108,7 @@ function publish(symbolSet) {
    if (out) {
 		IO.copyFile(template+"images/logo.png", out);
       IO.copyFile(template+"images/logo.png", symbol);
+	  IO.copyFile(template+"images/spritesheet_grid.png", symbol);
       IO.copyFile(template+"tiled/object_properties.png", symbol);
       IO.copyFile(template+"misc/me.Rect.colpos.png", symbol);
  	}

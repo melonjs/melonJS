@@ -26,7 +26,7 @@
 	ObjectSettings = {
 		/**
 		 * object entity name<br>
-		 * OPTIONAL
+		 * as defined in the Tiled Object Properties
 		 * @public
 		 * @type {String}
 		 * @name me.ObjectSettings#name
@@ -43,7 +43,7 @@
 		 */
 		image : null,
 		/**
-		 * size of a single sprite in the spritesheet<br>
+		 * width of a single sprite in the spritesheet<br>
 		 * MANDATORY<br>
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
@@ -51,6 +51,18 @@
 		 * @name me.ObjectSettings#spritewidth
 		 */
 		spritewidth : null,
+		
+		/**
+		 * height of a single sprite in the spritesheet<br>
+		 * OPTIONAL<br>
+		 * if not specified the value will be set to the corresponding image height<br>
+		 * (in case of TiledObject, this field is automatically set)
+		 * @public
+		 * @type {Int}
+		 * @name me.ObjectSettings#spriteheight
+		 */
+		spriteheight : null,
+
 
 		/**
 		 * custom type for collision detection<br>
@@ -384,9 +396,10 @@
 				// z position (for ordering display)
 				z : 0,
 
-				// offset of the sprite to be displayed
+				// index of the sprite to be displayed
 				currentSprite : 0,
-				currentSpriteOff : 0,
+				// and corresponding offset
+				offset : null,
 
 				// if true, image scaling is needed
 				scaleFlag : false,
@@ -430,25 +443,24 @@
 				/**
 				 * @ignore 
 				 */
-				init : function(x, y, image, spritewidth) {
+				init : function(x, y, image, spritewidth, spriteheight) {
 
 					// call the parent constructor
-					this.parent(new me.Vector2d(x, y), spritewidth
-							|| image.width, image.height);
+					this.parent(new me.Vector2d(x, y), 
+								spritewidth  || image.width, 
+								spriteheight || image.height);
 
 					// cache image reference
 					this.image = image;
 
-					// #sprite in the image  
-					this.spritecount = spritewidth ? ~~(image.width / spritewidth)
-							: 1;
+					// #sprite per row  
+					this.spritecount = spritewidth ? ~~(image.width / spritewidth) : 1;
 
 					// scale factor of the object
 					this.scale = new me.Vector2d(1.0, 1.0);
 
 					// create a a default collision rectangle
-					this.collisionBox = new me.Rect(this.pos, this.width,
-							this.height);
+					this.collisionBox = new me.Rect(this.pos, this.width, this.height);
 
 					// get a reference to the current viewport
 					this.vp = me.game.viewport;
@@ -456,9 +468,10 @@
 					// default animation speed
 					this.animationspeed = me.sys.fps / 10;
 
-					// set the current sprite index & offset
-					this.currentSprite = 0, this.currentSpriteOff = 0;
-
+					// set the default sprite index & offset
+					this.currentSprite = 0;
+					this.offset = new me.Vector2d(0, 0);
+			
 					// if one single image, disable animation
 					if (this.image.width == spritewidth) {
 						this.update = function() {
@@ -535,7 +548,7 @@
 
 				setCurrentSprite : function(s) {
 					this.currentSprite = s;
-					this.currentSpriteOff = this.width * s;
+					this.offset.x = this.width * s;
 				},
 
 				/**
@@ -582,9 +595,10 @@
 
 					}
 
-					context.drawImage(this.image, this.currentSpriteOff, 0,
-							this.width, this.height, ~~xpos, ~~ypos,
-							this.width, this.height);
+					context.drawImage(this.image, 
+									this.offset.x, this.offset.y,
+									this.width, this.height, ~~xpos, ~~ypos,
+									this.width, this.height);
 
 					if (this.scaleFlag) {
 						// restore the transform matrix to the normal one
@@ -639,14 +653,15 @@
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.loader#getImage} Image reference of the animation sheet
-	 * @param {int} spritewidth width of the sprite image
+	 * @param {int} spritewidth width of a single sprite within the spritesheet
+	 * @param {int} [spriteheight] height of a single sprite within the spritesheet (value will be set to the image height if not specified)
 	 */
 	AnimationSheet = me.SpriteObject
 			.extend(
 			/** @scope me.AnimationSheet.prototype */
 			{
 				/** @private */
-				init : function(x, y, image, spritewidth) {
+				init : function(x, y, image, spritewidth, spriteheight) {
 					// hold all defined animation
 					this.anim = [];
 
@@ -657,7 +672,7 @@
 					this.current = null;
 
 					// call the constructor
-					this.parent(x, y, image, spritewidth);
+					this.parent(x, y, image, spritewidth, spriteheight);
 
 					// if one single image, disable animation
 					if (this.image.width == spritewidth) {
@@ -673,9 +688,11 @@
 				},
 
 				/**
-				 * add an animation
+				 * add an animation <br>
+				 * the index list must follow the logic as per the following example :<br>
+				 * <img src="spritesheet_grid.png"/>
 				 * @param {String} name animation id
-				 * @param {Int[]} frame list of sprite offset defining the animaton
+				 * @param {Int[]} index list of sprite index defining the animaton
 				 * @example
 				 * // walking animatin
 				 * this.addAnimation ("walk", [0,1,2,3,4,5]);
@@ -693,22 +710,18 @@
 					};
 
 					if (frame == null) {
-						// add them all
+						// by default create an animation with all sprites from row #0
 						for ( var i = 0; i < this.spritecount; i++) {
 							// compute and add the offset of each frame
-							//console.log(this.spriteWidth);
-							this.anim[name].frame[i] = i * this.width;//spriteWidth
-							//console.log(this.anim[name].frame[i]);
+							this.anim[name].frame[i] = new me.Vector2d(i * this.width, 0);
 						}
 
 					} else {
 						var frameidx = 0;
 						for ( var i = 0; i < frame.length; i++) {
 							// compute and add the offset of each frame
-							//console.log(frame[i]);
-							this.anim[name].frame[frameidx] = frame[i]
-									* this.width;//spriteWidth
-							//console.log(this.anim[name].frame[frameidx]);
+							this.anim[name].frame[frameidx] = new me.Vector2d(this.width * (frame[i] % this.spritecount), 
+																			  this.height * ~~(frame[i] / this.spritecount));
 							frameidx++;
 						}
 					}
@@ -734,7 +747,7 @@
 				setCurrentAnimation : function(name, resetAnim) {
 					this.current = this.anim[name];
 					this.resetAnim = resetAnim || null;
-					this.currentSpriteOff = this.current.frame[this.current.idx];
+					this.offset = this.current.frame[this.current.idx];
 				},
 
 				/**
@@ -757,7 +770,7 @@
 
 				setCurrentSprite : function(s) {
 					this.current.idx = s;
-					this.currentSpriteOff = this.current.frame[s];
+					this.offset = this.current.frame[s];
 				},
 
 				/**
@@ -810,7 +823,10 @@
 
 				/** @private */
 				init : function(x, y, settings) {
-					this.parent(x, y, (typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image, settings.spritewidth);
+					this.parent(x, y, 
+								(typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image, 
+								settings.spritewidth, 
+								settings.spriteheight);
 					
 					// set the object entity name
 					this.name = settings.name;
