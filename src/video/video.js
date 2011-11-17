@@ -414,6 +414,7 @@
 					context2D.drawImage(backBufferCanvas, 0, 0,
 							backBufferCanvas.width, backBufferCanvas.height, 0,
 							0, game_width_zoom, game_height_zoom);
+					
 				};
 			} else {
 				// "empty" function, as we directly render stuff on "context2D"
@@ -430,56 +431,17 @@
 		 * this function will throw a Security Exception with FF if used locally
 		 * @name me.video#applyRGBFilter
 		 * @function
-		 * @param {Object} [canvas] Canvas or Image Object on which to apply the filter
+		 * @param {Object} object Canvas or Image Object on which to apply the filter
 		 * @param {String} effect "b&w", "brightness", "transparent"
 		 * @param {String} option : level [0...1] (for brightness), color to be replaced (for transparent) 
 		 * @return {Context2D} context object
 		 */
-		api.applyRGBFilter = function() {
-
-			// if first arguments is not an image or a canvas
-			if (typeof arguments[0] == "string") {
-				// get effect and option parameters value
-				var effect = arguments[0];
-				var option = arguments[1];
-
-				//create a new canvas using the main canvas size
-				var fcanvas = api.createCanvasSurface();
-
-				// get the content of the main canvas
-				var imgpix = backBufferContext2D.getImageData(0, 0,
-						backBufferCanvas.width, backBufferCanvas.height);
-
-			} else {
-				//create a output canvas using the given canvas or image size
-				var fcanvas = api.createCanvasSurface(arguments[0].width,
-						arguments[0].height);
-
-				// is it an image ?
-				if (arguments[0] instanceof HTMLImageElement) {
-					// build a temp canvas
-					var tempCtx = me.video.createCanvasSurface(
-							arguments[0].width, arguments[0].height);
-
-					// draw the image into the canvas context
-					tempCtx.drawImage(arguments[0], 0, 0);
-					// get the image data               
-					var imgpix = tempCtx.getImageData(0, 0, arguments[0].width,
-							arguments[0].height);
-
-				} else // a canvas ?
-				{
-					// let's hope ! :)
-					var imgpix = arguments[0].getContext('2d').getImageData(0,
-							0, arguments[0].width, arguments[0].height);
-				}
-				// get effect and option parameters value
-				var effect = arguments[1];
-				var option = arguments[2];
-
-			}
-
-			// pointer to the image data
+		api.applyRGBFilter = function(object, effect, option) {
+			//create a output canvas using the given canvas or image size
+			var fcanvas = api.createCanvasSurface(object.width, object.height);
+			// get the pixels array of the give parameter
+			var imgpix = me.utils.getPixels(object);
+			// pointer to the pixels data
 			var pix = imgpix.data;
 
 			// apply selected effect
@@ -495,9 +457,8 @@
 			}
 
 			case "brightness": {
-				var brightness = Math.abs(option);
-				// make sure it's not greater than 1.0
-				brightness = (brightness > 1.0) ? 1.0 : brightness;
+				// make sure it's between 0.0 and 1.0
+				var brightness = Math.abs(option).clamp(0.0, 1.0);
 				for ( var i = 0, n = pix.length; i < n; i += 4) {
 
 					pix[i] *= brightness; // red

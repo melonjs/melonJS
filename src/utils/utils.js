@@ -159,6 +159,19 @@
 			return r.toHex() + g.toHex() + b.toHex();
 		};
 		
+		// return the given canvas or image pixels
+		api.getPixels = function(arg) {
+			if (arg instanceof HTMLImageElement) {
+				var c = me.video.createCanvasSurface(arg.width, arg.height);
+				c.drawImage(arg, 0, 0);
+				return c.getImageData(0, 0, arg.width, arg.height);
+			} else { 
+				// canvas !
+				return arg.getContext('2d').getImageData(0, 0, arg.width, arg.height);
+			}
+		};
+
+		
 		// apply friction to a force
 		api.applyFriction = function(v, f) {
 			return (v+f<0)?v+(f*me.timer.tick):(v-f>0)?v-(f*me.timer.tick):0;
