@@ -862,38 +862,102 @@
 					// adjust initial coordinates should be bottom left ones
 					this.pos.set(x, y + me.game.currentLevel.tileheight	- this.height);
 
-					// velocity to be applied on player movement
+					/**
+					 * entity current velocity<br>
+					 * @public
+					 * @type me.Vector2d
+					 * @name me.ObjectEntity#vel
+					 */
 					this.vel = new me.Vector2d();
 
-					// default speed
+					/**
+					 * entity current acceleration<br>
+					 * @public
+					 * @type me.Vector2d
+					 * @name me.ObjectEntity#accel
+					 */
 					this.accel = new me.Vector2d();
 					
-					// default friction (0,0)
+					/**
+					 * entity current friction<br>
+					 * @public
+					 * @type me.Vector2d
+					 * @name me.ObjectEntity#friction
+					 */
 					this.friction = new me.Vector2d();
 					
-					// max velocity to be applied on entity movement
+					/**
+					 * max velocity (to limit entity velocity)<br>
+					 * @public
+					 * @type me.Vector2d
+					 * @name me.ObjectEntity#maxVel
+					 */
 					this.maxVel = new me.Vector2d(1000,1000);
 
 					// some default contants
+					/**
+					 * Default gravity value of the entity<br>
+					 * default value : 0.98 (earth gravity)<br>
+					 * to be set to 0 for RPG, shooter, etc...
+					 * @public
+					 * @type Number
+					 * @name me.ObjectEntity#gravity
+					 */
 					this.gravity = 0.98;
 
 					// just to identify our object
 					this.isEntity = true;
 
-					// to know if our object can break tiles
-					this.canBreakTile = false;
-
 					// dead state :)
+					/**
+					 * dead/living state of the entity<br>
+					 * default value : true
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#alive
+					 */
 					this.alive = true;
 
-					// some usefull jump variable
+					// some usefull variable
+					
+					/**
+					 * falling state of the object<br>
+					 * true if the object is falling<br>
+					 * false if the object is standing on something<br>
+					 * (!) READ ONLY property
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#falling
+					 */
 					this.falling = false;
+					/**
+					 * jumping state of the object<br>
+					 * equal true if the entity is jumping<br>
+					 * (!) READ ONLY property
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#jumping
+					 */
 					this.jumping = false;
 					this.jumpspeed = 0;
 
 					// some usefull slope variable
 					this.slopeY = 0;
+					/**
+					 * equal true if the entity is standing on a slope<br>
+					 * (!) READ ONLY property
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#onslope
+					 */
 					this.onslope = false;
+					/**
+					 * equal true if the entity is on a ladder<br>
+					 * (!) READ ONLY property
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#onladder
+					 */
 					this.onladder = false;
 
 					// to enable collision detection
@@ -903,14 +967,36 @@
 					this.type = settings.type || 0;
 
 					// to manage the flickering effect
+					/**
+					 * equal true if the entity is flickering<br>
+					 * (!) READ ONLY property
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#flickering
+					 */
 					this.flickering = false;
 					this.flickerTimer = -1;
 					this.flickercb = null;
 
 					// ref to the collision map
 					this.collisionMap = me.game.collisionMap;
-
-					// a callback when the entity break a tile :) 
+					
+					// to know if our object can break tiles
+					/**
+					 * Define if an entity can go through breakable tiles<br>
+					 * default value : false<br>
+					 * @public
+					 * @type Boolean
+					 * @name me.ObjectEntity#canBreakTile
+					 */
+					this.canBreakTile = false;
+					
+					/**
+					 * a callback when an entity break a tile<br>
+					 * @public
+					 * @type Function
+					 * @name me.ObjectEntity#onTileBreak
+					 */
 					this.onTileBreak = null;
 				},
 
@@ -1004,7 +1090,7 @@
 				/**
 				 * helper function for platform games: <br>
 				 * make the entity move left of right<br>
-				 * @param {Boolean} left 
+				 * @param {Boolean} left will automatically flip horizontally the entity sprite
 				 * @protected
 				 * @example
 				 * if (me.input.isKeyPressed('left'))
@@ -1025,7 +1111,7 @@
 				 * helper function for platform games: <br>
 				 * make the entity move up and down<br>
 				 * only valid is the player is on a ladder
-				 * @param {Boolean} up 
+				 * @param {Boolean} up will automatically flip vertically the entity sprite
 				 * @protected
 				 * @example
 				 * if (me.input.isKeyPressed('up'))
@@ -1174,11 +1260,11 @@
 				 * // make the player move
 				 * if (me.input.isKeyPressed('left'))
 				 * {
-				 *     this.doWalk(true);
+				 *     this.vel.x -= this.accel.x * me.timer.tick;
 				 * }
 				 * else if (me.input.isKeyPressed('right'))
 				 * {
-				 *     this.doWalk(false);
+				 *     this.vel.x += this.accel.x * me.timer.tick;
 				 * }
 				 * // update player position
 				 * this.updateMovement();
