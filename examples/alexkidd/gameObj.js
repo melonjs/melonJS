@@ -5,9 +5,9 @@
 	------			*/
 
 	/************************************************************************************/
-	/*																												*/
-	/*		a player entity																					*/
-	/*																												*/
+	/*																					*/
+	/*			a player entity															*/
+	/*																					*/
 	/************************************************************************************/
 	var PlayerEntity = me.ObjectEntity.extend(
 	{	
@@ -15,8 +15,10 @@
 		init:function (x, y, settings)
 		{
 			// define this here, since not defined in tiled
-			settings.image = "alex_light";
-			settings.spritewidth = 16;
+			settings.image = "alexkidd";
+			settings.transparent_color = "#ff00ff";
+			settings.spritewidth = 17;
+			settings.spriteheight = 26;
 			
 			// call the constructor
 			this.parent(x, y , settings);
@@ -35,6 +37,13 @@
          
 			// adjust the deadzone
 			me.game.viewport.setDeadzone( me.game.viewport.width/6,  me.game.viewport.height/4);
+			
+			// walking animation
+			this.addAnimation ("walk",  [1,2,3,0]);
+			
+			// set default one
+			this.setCurrentAnimation("walk");
+
 			
 		},
 	
