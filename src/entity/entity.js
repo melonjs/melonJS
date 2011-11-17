@@ -42,6 +42,17 @@
 		 * @name me.ObjectSettings#image
 		 */
 		image : null,
+		
+		/**
+		 * specify a transparent color for the image in rgb format (rrggb or #rrggb)<br>
+		 * OPTIONAL<br>
+		 * (using this option will imply processing time on the image)
+		 * @public
+		 * @type {String}
+		 * @name me.ObjectSettings#transparent_color
+		 */
+		transparent_color : null,
+		
 		/**
 		 * width of a single sprite in the spritesheet<br>
 		 * MANDATORY<br>
@@ -480,7 +491,19 @@
 					}
 
 				},
+				
+				/**
+				 *	specify a transparent color
+				 *	@param {String} color color key in rgb format (rrggb or #rrggb)
+				 */
+				setTransparency : function(col) {
+					// remove the # if present
+					col = (col.charAt(0) == "#") ? col.substring(1, 7) : col;
+					// applyRGB Filter (return a context object)
+					this.image = me.video.applyRGBFilter(this.image, "transparent", col.toUpperCase()).canvas;
+				},
 
+				
 				/**
 				 *	Flip object on horizontal axis
 				 *	@param {Boolean} flip enable/disable flip
@@ -827,6 +850,11 @@
 								(typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image, 
 								settings.spritewidth, 
 								settings.spriteheight);
+					
+					// check for user defined transparent color
+					if (settings.transparent_color) {
+						this.setTransparency(settings.transparent_color);
+					}
 					
 					// set the object entity name
 					this.name = settings.name;
