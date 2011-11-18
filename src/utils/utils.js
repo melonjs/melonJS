@@ -72,6 +72,11 @@
 
 		// cache rgb converted value
 		var rgbCache = {};
+		
+		// guid default value
+		var GUID_base  = "";
+		var GUID_index = 0;
+
 
 		/*---------------------------------------------
 			
@@ -170,7 +175,21 @@
 				return arg.getContext('2d').getImageData(0, 0, arg.width, arg.height);
 			}
 		};
-
+   
+		// reset the GUID Base Name
+		// the idea here being to have a unique ID
+		// per level / object
+		api.resetGUID = function(base) {
+			// also ensure it's only 8bit ASCII characters
+			GUID_base  = base.toUpperCase().toHex();
+			GUID_index = 0;
+		};
+      
+		// create and return a very simple GUID
+		// Game Unique ID
+		api.createGUID = function() {
+			return GUID_base + "-" + (GUID_index++);
+		};
 		
 		// apply friction to a force
 		api.applyFriction = function(v, f) {

@@ -554,6 +554,20 @@
 	String.prototype.contains = function(word) {
 		return this.indexOf(word) > -1;
 	};
+	
+   /**
+	 * convert the string to hex value
+	 * @extends String
+	 * @return {String} 
+	 */
+	String.prototype.toHex = function() {
+      var res = "", c = 0;
+      while(c<this.length){
+         res += this.charCodeAt(c++).toString(16);
+      }
+      return res;
+	};
+
 
 	/**
 	 * add a clamp fn to the Number object
@@ -1157,6 +1171,27 @@
 			}
 			return objList;
 		};
+		
+		/**
+		 * return the entity corresponding to the specified GUID<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name me.game#getEntityByGUID
+		 * @public
+		 * @function
+		 * @param {String} GUID entity GUID
+		 * @return {me.ObjectEntity} Object Entity (or null if not found)
+		 */
+		api.getEntityByGUID = function(guid)
+		{
+			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+				if(obj.isEntity && obj.GUID == guid) {
+					return obj;
+				}
+			}
+			return null;
+		};
+		
 		/**
 		 * add a HUD obj to the game manager
 		 * @name me.game#addHUD

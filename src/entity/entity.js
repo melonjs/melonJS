@@ -838,6 +838,14 @@
 			.extend(
 			/** @scope me.ObjectEntity.prototype */
 			{
+			   /**
+				* Entity "Game Unique Identifier"<br>
+				* @public
+				* @type String
+				* @name me.ObjectEntity#GUID
+				*/
+				GUID : null,
+			
 				// default type of the object (null)
 				type : 0,
 
@@ -855,6 +863,9 @@
 					if (settings.transparent_color) {
 						this.setTransparency(settings.transparent_color);
 					}
+					
+					// set the object GUID value
+					this.GUID = me.utils.createGUID();
 					
 					// set the object entity name
 					this.name = settings.name;

@@ -665,6 +665,11 @@
 
 				// reset the gameObject Manager (just in case!)
 				me.game.reset();
+				
+				// reset the GUID generator
+				// and pass the level id as parameter
+				me.utils.resetGUID(level);
+				
 				// load the level
 				levels[level].reset();
 				levels[level].load();
