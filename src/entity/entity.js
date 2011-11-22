@@ -396,9 +396,8 @@
 			.extend(
 			/** @scope me.SpriteObject.prototype */
 			{
-				// default pos & scale of the object
-				//pos		: null,
-				scale : null,
+				// default scale ratio of the object
+				scale	   : null,
 
 				// just to keep track of when we flip
 				lastflipX : false,
@@ -412,8 +411,10 @@
 				// and corresponding offset
 				offset : null,
 
-				// if true, image scaling is needed
+				// if true, image flipping/scaling is needed
 				scaleFlag : false,
+				
+				
 
 				/**
 				 * a flag that can prevent the object to be destroyed<br>
@@ -549,26 +550,25 @@
 					}
 				},
 
-				/*---
-				
-				  scale the object
-				 
-					NOT WORKING FOR NOW...
-				 ---
-				scale : function(x, y)
-				{
-					this.scale_x = this.scale_x < 0.0 ? -x : x;
-					this.scale_y = this.scale_y < 0.0 ? -y : y;
-					// set the scaleFlag
-					this.scaleFlag = ((this.scale_x!= 1.0)  || (this.scale_y!= 1.0))
-				};
+				/**
+				 *	Resize the object around his center<br>
+				 *  Note : This won't resize the corresponding collision box
+				 *	@param {Boolean} ratio scaling ratio
 				 */
+				resize : function(ratio)
+				{	
+					if (ratio > 0) {
+						this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
+						this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
+						// set the scaleFlag
+						this.scaleFlag = ((this.scale.x!= 1.0)  || (this.scale.y!= 1.0))
+					}
+				},
 
 				/**
 				 * set the current sprite
 				 * @private
 				 */
-
 				setCurrentSprite : function(s) {
 					this.currentSprite = s;
 					this.offset.x = this.width * s;
@@ -600,27 +600,24 @@
 				 * @param {Context2d} context 2d Context on which draw our object
 				 **/
 				draw : function(context) {
+					
 					var xpos = this.pos.x - this.vp.pos.x, ypos = this.pos.y - this.vp.pos.y;
 
 					if (this.scaleFlag) {
+						// translate to the middle of the sprite
+						context.translate(xpos + this.hWidth, ypos + this.hHeight);
+						// scale
 						context.scale(this.scale.x, this.scale.y);
-
-						/*
-						 ...??????
-						context.translate( - this.width - ((this.width * this.scale_x)),
-													 this.height -((this.height * this.scale_y)));
-						 */
-
-						xpos = (xpos * this.scale.x)
-								- (this.scale.x < 0 ? this.width : 0);
-						ypos = (ypos * this.scale.y)
-								- (this.scale.y < 0 ? this.height : 0);
-
+						// translate back to upper left coordinates
+						context.translate(-this.hWidth, -this.hHeight);
+						// reset coordinates
+						xpos = ypos = 0;
 					}
-
+					
 					context.drawImage(this.image, 
 									this.offset.x, this.offset.y,
-									this.width, this.height, ~~xpos, ~~ypos,
+									this.width, this.height, 
+									~~xpos, ~~ypos,
 									this.width, this.height);
 
 					if (this.scaleFlag) {
@@ -629,7 +626,6 @@
 					}
 
 					if (me.debug.renderHitBox) {
-
 						// draw the sprite rectangle
 						this.parent(context, "blue");
 						// draw the collisionBox
