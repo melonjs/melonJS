@@ -1165,7 +1165,7 @@
 		{
 			var objList = [];
 			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
-				if(obj.isEntity && obj.name == entityName) {
+				if(obj.name == entityName) {
 					objList.push(obj);
 				}
 			}
