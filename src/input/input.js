@@ -60,8 +60,7 @@
 				$.removeEventListener('keyup', keyup, false);
 			}
 			keyboardInitialized = enable;
-		}
-		;
+		};
 
 		/* ---
 			
@@ -73,9 +72,9 @@
 			if (e.preventDefault)
 				e.preventDefault();
 			e.returnValue = false;
-			//e.cancelBubble = true;
-		}
-		;
+			// this is apprently needed on some platforms
+			e.cancelBubble = true;
+		};
 
 		/* ---
 			
