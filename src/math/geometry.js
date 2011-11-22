@@ -345,8 +345,8 @@
 				 * @return {me.Rect} the union(ed) rectangle	 
 				 */
 				union : function(/** {me.Rect} */ r) {
-					x1 = Math.min(this.pos.x, r.pos.x);
-					y1 = Math.min(this.pos.y, r.pos.y);
+					var x1 = Math.min(this.pos.x, r.pos.x);
+					var y1 = Math.min(this.pos.y, r.pos.y);
 
 					this.width = Math.ceil(Math.max(this.pos.x + this.width,
 							r.pos.x + r.width)
@@ -488,7 +488,7 @@
 				 */
 				collideVsAABB : function(/** {me.Rect} */ rect) {
 					// response vector
-					p = new Vector2d(0, 0);
+					var p = new Vector2d(0, 0);
 
 					// check if both box are overlaping
 					if (this.checkAxisAligned(rect)) {
