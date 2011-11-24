@@ -376,7 +376,7 @@
 	$.me.ParallaxBackgroundEntity = ParallaxBackgroundEntity
 
 	/**
-	 * A Simple object to display static or animated sprite on screen.
+	 * A Simple object to display a sprite on screen.
 	 * @class
 	 * @extends me.Rect
 	 * @memberOf me
@@ -384,13 +384,11 @@
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.loader#getImage} image reference to the Sprite Image
-	 * @param {int} [spritewidth] size of a single sprite inside the provided image
+	 * @param {int} [spritewidth] sprite width
+	 * @param {int} [spriteheigth] sprite height
 	 * @example
 	 * // create a static Sprite Object
 	 * mySprite = new SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
-	 * // create a animated Sprite Object
-	 * mySprite = new SpriteObject (100, 100, me.loader.getImage("mySpriteImage"), 64);
-	 
 	 */
 	SpriteObject = me.Rect
 			.extend(
@@ -399,6 +397,9 @@
 				// default scale ratio of the object
 				scale	   : null,
 
+				// if true, image flipping/scaling is needed
+				scaleFlag : false,
+
 				// just to keep track of when we flip
 				lastflipX : false,
 				lastflipY : false,
@@ -406,15 +407,8 @@
 				// z position (for ordering display)
 				z : 0,
 
-				// index of the sprite to be displayed
-				currentSprite : 0,
-				// and corresponding offset
+				// image offset
 				offset : null,
-
-				// if true, image flipping/scaling is needed
-				scaleFlag : false,
-				
-				
 
 				/**
 				 * a flag that can prevent the object to be destroyed<br>
@@ -446,12 +440,6 @@
 				// a reference to the game vp 
 				vp : null,
 
-				// count the fps and manage animation change
-				fpscount : 0,
-
-				// animation cyling speed
-				animationspeed : 0,
-
 				/**
 				 * @ignore 
 				 */
@@ -465,9 +453,6 @@
 					// cache image reference
 					this.image = image;
 
-					// #sprite per row  
-					this.spritecount = spritewidth ? ~~(image.width / spritewidth) : 1;
-
 					// scale factor of the object
 					this.scale = new me.Vector2d(1.0, 1.0);
 
@@ -477,11 +462,7 @@
 					// get a reference to the current viewport
 					this.vp = me.game.viewport;
 
-					// default animation speed
-					this.animationspeed = me.sys.fps / 10;
-
 					// set the default sprite index & offset
-					this.currentSprite = 0;
 					this.offset = new me.Vector2d(0, 0);
 			
 				},
@@ -512,9 +493,6 @@
 						// set the scaleFlag
 						this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
 
-						// flip ourself
-						//this.parent(this.width);
-
 						// flip the collision box
 						this.collisionBox.flipX(this.width);
 					}
@@ -533,9 +511,6 @@
 
 						// set the scaleFlag
 						this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
-
-						// flip ourself
-						//this.parent(this.height);
 
 						// flip the collision box
 						this.collisionBox.flipY(this.height);
@@ -559,29 +534,13 @@
 				},
 
 				/**
-				 * set the current sprite
-				 * @private
-				 */
-				setCurrentSprite : function(s) {
-					this.currentSprite = s;
-					this.offset.x = this.width * s;
-				},
-
-				/**
-				 * sprite update (animation update)<br>
+				 * sprite update<br>
 				 * not to be called by the end user<br>
 				 * called by the game manager on each game loop
 				 * @protected
-				 * @return true if object state changed (position, animation, etc...)
+				 * @return false
 				 **/
 				update : function() {
-					if (this.visible && (this.fpscount++ > this.animationspeed)) {
-						//this.setCurrentSprite(++this.currentSprite < this.spritecount ? this.currentSprite : 0);
-						this.setCurrentSprite(++this.currentSprite
-								% this.spritecount);
-						this.fpscount = 0;
-						return true;
-					}
 					return false;
 				},
 
@@ -672,6 +631,12 @@
 			.extend(
 			/** @scope me.AnimationSheet.prototype */
 			{
+				// count the fps and manage animation change
+				fpscount : 0,
+
+				// animation cyling speed
+				animationspeed : 0,
+
 				/** @private */
 				init : function(x, y, image, spritewidth, spriteheight) {
 					// hold all defined animation
@@ -685,12 +650,18 @@
 
 					// call the constructor
 					this.parent(x, y, image, spritewidth, spriteheight);
-
+					
+					// #sprite per row  
+					this.spritecount = ~~(this.image.width / this.width);
+					
 					// if one single image, disable animation
 					if ((this.image.width == this.width) && (this.image.height == this.height)) {
 						// override setCurrrentSprite with an empty function
 						this.setCurrentSprite = function() {;};
 					} 
+					
+					// default animation speed
+					this.animationspeed = me.sys.fps / 10;
 
 					// create a default animation sequence with all sprites
 					this.addAnimation("default", null);
