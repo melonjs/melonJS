@@ -484,13 +484,6 @@
 					this.currentSprite = 0;
 					this.offset = new me.Vector2d(0, 0);
 			
-					// if one single image, disable animation
-					if (this.image.width == spritewidth) {
-						this.update = function() {
-							return false;
-						}
-					}
-
 				},
 				
 				/**
@@ -694,16 +687,15 @@
 					this.parent(x, y, image, spritewidth, spriteheight);
 
 					// if one single image, disable animation
-					if (this.image.width == spritewidth) {
-						this.update = function() {
-							return false;
-						}
-					} else {
-						// create a default animation sequence with all sprites
-						this.addAnimation("default", null);
-						// set as default
-						this.setCurrentAnimation("default");
-					}
+					if ((this.image.width == this.width) && (this.image.height == this.height)) {
+						// override setCurrrentSprite with an empty function
+						this.setCurrentSprite = function() {;};
+					} 
+
+					// create a default animation sequence with all sprites
+					this.addAnimation("default", null);
+					// set as default
+					this.setCurrentAnimation("default");
 				},
 
 				/**
@@ -790,6 +782,11 @@
 				setCurrentSprite : function(s) {
 					this.current.idx = s;
 					this.offset = this.current.frame[s];
+					
+					// switch animation if we reach the end of the strip
+					// and a callback is defined
+					if ((this.current.idx == 0) && this.resetAnim)
+						this.setCurrentAnimation(this.resetAnim);
 				},
 
 				/**
@@ -800,10 +797,6 @@
 				update : function() {
 					if (this.visible && (this.fpscount++ > this.animationspeed)) {
 						this.setCurrentSprite(++this.current.idx % this.current.length);
-
-						if ((this.current.idx == 0) && this.resetAnim)
-							this.setCurrentAnimation(this.resetAnim);
-
 						this.fpscount = 0;
 						return true;
 					}
