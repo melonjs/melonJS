@@ -134,8 +134,11 @@ var jsApp	=
 			case "3":
 				level = "sewers";
 				break;
-				case "4":
+			case "4":
 				level = "cute";
+				break;
+			case "5":
+				level = "isometric";
 				break;
 			default:
 				return;
