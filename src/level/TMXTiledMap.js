@@ -172,11 +172,11 @@
                this.z = zOrder++;
 
                // check some returned values
-               if (this.orientation != "orthogonal") {
+			   if (this.orientation != "orthogonal") {
                   throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
                }
 
-               // set the map properties (if any)
+			   // set the map properties (if any)
                setTMXProperties(this, map);
 
                // ensure the visible flag is set to false, by default
@@ -246,8 +246,7 @@
                }
                else {
                   // regular layer or collision layer
-                  this.mapLayers.push(new TMXLayer(xmlElements.item(i),
-                                       this.tilesets, zOrder++));
+                  this.mapLayers.push(new TMXLayer(xmlElements.item(i), this.orientation, this.tilesets, zOrder++));
                   zOrder++;
                }
                break;
@@ -417,7 +416,7 @@
 	/*      Manage a tile Layer                                                         */
 	/*                                                                                  */
 	/************************************************************************************/
-	function TMXLayer(layer, tilesets, zOrder) {
+	function TMXLayer(layer, orientation, tilesets, zOrder) {
 		// call the parent
 		me.TiledLayer.call(this, 
                          me.XMLParser.getIntAttribute(layer, TMX_TAG_WIDTH), 
@@ -426,6 +425,7 @@
                          tilesets, zOrder);
       
  		// get invalidated when the viewport is changed
+		this.orientation = orientation;
 		this.layerInvalidated = true;
 		this.name = me.XMLParser.getStringAttribute(layer, TMX_TAG_NAME);
 		this.visible = (me.XMLParser.getIntAttribute(layer, TMX_TAG_VISIBLE, 1) == 1);
@@ -563,11 +563,21 @@
 					}
 				   
 					if (this.visible) {
-					  //draw our tile
-					  this.tileset.drawTile(this.layerSurface, 
-										   x * this.tilewidth, y * this.tileheight,
-										   gid - this.tileset.firstgid, flipx, flipy);
-
+						//draw our tile
+						if (this.orientation == "orthogonal") { 
+							this.tileset.drawTile(this.layerSurface, 
+													x * this.tilewidth, 
+													y * this.tileheight,
+													gid - this.tileset.firstgid, 
+													flipx, flipy);
+						}
+						else { // isometric
+							this.tileset.drawTile(this.layerSurface, 
+													(x - y) * this.tilewidth>>1, 
+													(y + x) * this.tileheight>>2,
+													gid - this.tileset.firstgid, 
+													flipx, flipy);
+						}
 					}
 				}
 			}
