@@ -122,7 +122,7 @@
 				framecount++;
 				framedelta += delta;
 				if (framecount % 10 == 0) {
-					lastfps = ~~((1000 * framecount) / framedelta);
+					var lastfps = ~~((1000 * framecount) / framedelta);
 					// clamp the result and "draw" it
 					draw(lastfps.clamp(0, me.sys.fps));
 					framedelta = 0;

@@ -96,7 +96,7 @@
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textBaseLine = this.align;
-			dim = context.measureText(text);
+			var dim = context.measureText(text);
 			dim.height = this.height;
 
 			return dim;
