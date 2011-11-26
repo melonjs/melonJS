@@ -773,12 +773,14 @@
 				/**		
 				 * set the current animation
 				 * @param {String} name animation id
-				 * @param {String} [onComplete] animation id to switch to when complete
+				 * @param {Object} [onComplete] animation id to switch to when complete, or callback
 				 * @example
 				 * // set "walk" animation
 				 * this.setCurrentAnimation("walk");
 				 * // set "eat" animation, and switch to "walk" when complete
 				 * this.setCurrentAnimation("eat", "walk");
+				 * // set "die" animation, and remove the object when finished
+				 * this.setCurrentAnimation("die", function(){me.game.remove(this)});
 				 **/
 
 				setCurrentAnimation : function(name, resetAnim) {
@@ -811,8 +813,14 @@
 					
 					// switch animation if we reach the end of the strip
 					// and a callback is defined
-					if ((this.current.idx == 0) && this.resetAnim)
-						this.setCurrentAnimation(this.resetAnim);
+					if ((this.current.idx == 0) && this.resetAnim)  {
+						// if string, change to the corresponding animation
+						if (typeof(this.resetAnim) == "String")
+							this.setCurrentAnimation(this.resetAnim);
+						// if function (callback) call it
+						else if (typeof(this.resetAnim) == "function")
+							this.resetAnim();
+					}
 				},
 
 				/**
