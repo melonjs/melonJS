@@ -1260,7 +1260,7 @@
 				updated = obj.update();
 
 				// check if object is visible
-				if (obj.isEntity && !obj.flickering) {
+				if (obj.isEntity) {
 					obj.visible = api.viewport.isVisible(obj.collisionBox);
 				}
 
@@ -1858,7 +1858,7 @@
 			_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
 
 			// cache the new screen object update function
-			_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame;
+			_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame.bind(_screenObject[_state].screen);
 
 			// and start the main loop of the 
 			// new requested state

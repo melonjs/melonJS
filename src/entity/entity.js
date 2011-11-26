@@ -436,6 +436,13 @@
 				// this object is useless here, but low level
 				// function like flipX need to take this in account
 				collisionBox : null,
+				
+				// to manage the flickering effect
+				flickering : false,
+				flickerTimer : -1,
+				flickercb : null,
+				flickerState : false,
+
 
 				// a reference to the game vp 
 				vp : null,
@@ -476,6 +483,38 @@
 					col = (col.charAt(0) == "#") ? col.substring(1, 7) : col;
 					// applyRGB Filter (return a context object)
 					this.image = me.video.applyRGBFilter(this.image, "transparent", col.toUpperCase()).canvas;
+				},
+				
+				/**
+				 * return the flickering state of the object
+				 * @return Boolean
+				 */
+				isFlickering : function() {
+					return this.flickering;
+				},
+
+				
+				/**
+				 * make the object flicker
+				 * @param {Int} duration
+				 * @param {Function} callback
+				 * @example
+				 * // make the object flicker for 60 frame
+				 * // and then remove it
+				 * this.flicker(60, function()
+				 * {
+				 *    me.game.remove(this);
+				 * });
+				 */
+				flicker : function(duration, callback) {
+					this.flickerTimer = duration;
+					if (this.flickerTimer < 0) {
+						this.flickering = false;
+						this.flickercb = null;
+					} else if (!this.flickering) {
+						this.flickercb = callback;
+						this.flickering = true;
+					}
 				},
 
 				
@@ -541,6 +580,16 @@
 				 * @return false
 				 **/
 				update : function() {
+					//update the "flickering" state if necessary
+					if (this.flickering) {
+						this.flickerTimer -= me.timer.tick;
+						if (this.flickerTimer < 0) {
+							if (this.flickercb)
+								this.flickercb();
+							this.flicker(-1);
+						}
+						return true;
+					}
 					return false;
 				},
 
@@ -552,6 +601,12 @@
 				 * @param {Context2d} context 2d Context on which draw our object
 				 **/
 				draw : function(context) {
+					
+					// do nothing if we are flickering
+					if (this.flickering) {
+						this.flickerState = !this.flickerState;
+						if (!this.flickerState) return;
+					}
 					
 					var xpos = this.pos.x - this.vp.pos.x, ypos = this.pos.y - this.vp.pos.y;
 
@@ -766,6 +821,9 @@
 				 * @protected
 				 */
 				update : function() {
+					// call the parent function
+					this.parent();
+					// update animation if necessary
 					if (this.visible && (this.fpscount++ > this.animationspeed)) {
 						this.setCurrentSprite(++this.current.idx % this.current.length);
 						this.fpscount = 0;
@@ -937,18 +995,7 @@
 
 					this.type = settings.type || 0;
 
-					// to manage the flickering effect
-					/**
-					 * equal true if the entity is flickering<br>
-					 * (!) READ ONLY property
-					 * @public
-					 * @type Boolean
-					 * @name me.ObjectEntity#flickering
-					 */
-					this.flickering = false;
-					this.flickerTimer = -1;
-					this.flickercb = null;
-
+					
 					// ref to the collision map
 					this.collisionMap = me.game.collisionMap;
 					
@@ -1343,10 +1390,6 @@
 						}
 					}
 
-					// -- THIS SHOULD NOT BE HERE --//
-					// update the flickering
-					this.updateFlickering();
-
 					// check for other necessary updates
 					if ((this.vel.x != 0) || (this.vel.y != 0)) {
 						// update player position
@@ -1365,56 +1408,9 @@
 					// nothing updated (that happens!)
 					return false;
 
-				},
-
-				/**
-				 * upate the object "flickering"
-				 * @private
-				 */
-
-				updateFlickering : function() {
-					if (this.flickering) {
-						this.flickerTimer -= me.timer.tick; // should be minus elapsed time;
-
-						//console.log(this.flickerTimer);
-
-						if (this.flickerTimer < 0) {
-							if (this.flickercb)
-								this.flickercb();
-							this.flicker(-1);
-						} else {
-							this.visible = !this.visible;
-							return true;
-						}
-					}
-					return false;
-				},
-
-				/**
-				 * make the object flicker
-				 * @param {Int} duration
-				 * @param {Function} callback
-				 * @example
-				 * // make the object flicker for 60 frame
-				 * // and then remove it
-				 * this.flicker(60, function()
-				 * {
-				 *    me.game.remove(this);
-				 * });
-				 */
-				flicker : function(duration, callback) {
-					this.flickerTimer = duration;
-					if (this.flickerTimer < 0) {
-						this.flickering = false;
-						this.visible = true;
-						this.flickercb = null;
-					} else if (!this.flickering) {
-						this.flickercb = callback;
-						this.flickering = true;
-					}
 				}
 
-			});
+	});
 	// expose our object to our scope
 	$.me.ObjectEntity = ObjectEntity;
 	/************************************************************************************/
