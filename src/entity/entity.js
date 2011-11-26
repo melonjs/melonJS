@@ -815,7 +815,7 @@
 					// and a callback is defined
 					if ((this.current.idx == 0) && this.resetAnim)  {
 						// if string, change to the corresponding animation
-						if (typeof(this.resetAnim) == "String")
+						if (typeof(this.resetAnim) == "string")
 							this.setCurrentAnimation(this.resetAnim);
 						// if function (callback) call it
 						else if (typeof(this.resetAnim) == "function")
