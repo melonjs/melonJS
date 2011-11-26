@@ -211,10 +211,10 @@
 			this.pos.x = x + settings.width - settings.spritewidth;
 			this.walkLeft = true;
 
-         // walking & jumping speed
+			// walking & jumping speed
 			this.setVelocity(1, 6);
 			
-         // make it collidable
+			// make it collidable
 			this.collidable = true;
 			this.type = me.game.ENEMY_OBJECT;
 		
@@ -252,7 +252,7 @@
 				// set dead animation
 				this.setCurrentAnimation("dead");
 				// make it flicker and call destroy once timer finished
-				this.flicker(45, function (){me.game.remove(this)});
+				this.flicker(45, function(){me.game.remove(this)});
 				// dead sfx
 				me.audio.play("enemykill", false);
 				
@@ -266,7 +266,7 @@
 		update : function ()
 		{
 			// do nothing if not visible
-			if (!this.visible && !this.flickering)
+			if (!this.visible)
 				return false;
 				
 			if (this.alive)
@@ -289,12 +289,10 @@
 			}
 			// check & update movement
 			updated = this.updateMovement();
-				
-			if (updated)
-			{
-				// update the object animation
-				this.parent();
-			}
+			
+			// call the parent function
+			this.parent();
+			
 			return updated;
 		}
 	});
