@@ -138,8 +138,6 @@
 		// font scale;
 		sSize : null,
 		// first char in the ascii table
-		scale : 1.0,
-		// first char in the ascii table
 		firstChar : 0x20,
 
 		/** @private */
@@ -147,22 +145,25 @@
 			// font name and type
 			this.parent(font, null, null);
 
-			// character size;
-			this.size = new me.Vector2d(size, 0);
-			// font scale;
+			// font characters size;
+			this.size = new me.Vector2d();
+			
+			// font scaled size;
 			this.sSize = new me.Vector2d();
-
-			// first char in the ascii table
-			this.scale = scale || 1.0;
 
 			// first char in the ascii table
 			this.firstChar = firstChar || 0x20;
 
 			// load the font metrics
-			this.loadFontMetrics(font);
+			this.loadFontMetrics(font, size);
 
 			// set a default alignement
 			this.align = this.ALIGN.RIGHT
+			
+			// resize if necessary
+			if (scale) { 
+				this.resize(scale);
+			}
 
 		},
 
@@ -170,31 +171,37 @@
 		 * Load the font metrics
 		 * @private	
 		 */
-		loadFontMetrics : function(font) {
+		loadFontMetrics : function(font, size) {
 			this.font = me.loader.getImage(font);
 
 			// some cheap metrics
-			//this.size.x = passed arguements;
+			this.size.x = size;
 			this.size.y = this.font.height || 0;
-
 			this.sSize.copy(this.size);
-			this.sSize.x *= this.scale;
-			this.sSize.y *= this.scale;
 		},
 
 		/**
 		 * change the font settings
-		 * @param {String} align
-		 * @param {int} scale
+		 * @param {String} align ("left", "center", "right")
+		 * @param {int} [scale]
 		 */
 		set : function(align, scale) {
 			this.align = align;
 			// updated scaled Size
 			if (scale) {
-				this.sSize.copy(this.size);
-				this.sSize.x *= this.scale;
-				this.sSize.y *= this.scale;
+				this.resize(scale);
 			}
+		},
+		
+		/**
+		 * change the font display size
+		 * @param {int} scale ratio
+		 */
+		resize : function(scale) {
+			// updated scaled Size
+			this.sSize.copy(this.size);
+			this.sSize.x *= scale;
+			this.sSize.y *= scale;
 		},
 
 		/**
@@ -229,8 +236,9 @@
 			for ( var i = 0; i < text.length; i++) {
 				context.drawImage(this.font,
 						(text.charCodeAt(i) - this.firstChar) * this.size.x, 0,
-						this.sSize.x, this.sSize.y, ~~x, ~~y, this.size.x,
-						this.size.y);
+						this.size.x, this.size.y, 
+						~~x, ~~y, 
+						this.sSize.x, this.sSize.y);
 				x += this.sSize.x;
 			}
 
