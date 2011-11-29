@@ -53,6 +53,7 @@
 
 				// shake parameters
 				_shake : null,
+				// fade parameters
 				_fadeIn : null,
 				_fadeOut : null,
 
@@ -89,16 +90,16 @@
 					// flash variables
 					this._fadeOut = {
 						color : 0,
-						alpha : 0,
+						alpha : 0.0,
 						duration : 0,
-						onComplete : null
+						tween : null
 					};
 					// fade variables
 					this._fadeIn = {
 						color : 0,
-						alpha : 0,
+						alpha : 1.0,
 						duration : 0,
-						onComplete : null
+						tween : null
 					};
 
 					// set a default deadzone
@@ -280,29 +281,8 @@
 						}
 					}
 
-					// check for fade effect
-					if (this._fadeIn.alpha < 1.0) {
-						this._fadeIn.alpha += me.timer.tick
-								/ this._fadeIn.duration;
-						if (this._fadeIn.alpha >= 1.0) {
-							this._fadeIn.alpha = 1.0;
-							if (this._fadeIn.onComplete)
-								this._fadeIn.onComplete();
-						}
-						// updated!
-						updateTarget = true;
-					}
-
-					// and for flash effect
-					if (this._fadeOut.alpha > 0.0) {
-						this._fadeOut.alpha -= me.timer.tick
-								/ this._fadeOut.duration;
-						if (this._fadeOut.alpha <= 0.0) {
-							this._fadeOut.alpha = 0.0;
-							if (this._fadeOut.onComplete)
-								this._fadeOut.onComplete();
-						}
-						// updated!
+					// check for fade/flash effect
+					if ((this._fadeIn.tween!=null) || (this._fadeOut.tween!=null)) {
 						updateTarget = true;
 					}
 
@@ -349,34 +329,35 @@
 				},
 
 				/**
-				 *	fadeOut(flash) effect<p>
+				 * fadeOut(flash) effect<p>
 				 * screen is filled with the specified color and slowy goes back to normal
-				 * @param {int} color
-				 * @param {int} [duration="30"]
+				 * @param {string} color in #rrggbb format
+				 * @param {Int} [duration="1000"] in ms
 				 * @param {function} [onComplete] callback once effect is over
 				 */
 
 				fadeOut : function(color, duration, onComplete) {
 					this._fadeOut.color = color;
-					this._fadeOut.duration = duration || 30;
+					this._fadeOut.duration = duration || 1000; // convert to ms
 					this._fadeOut.alpha = 1.0;
-					this._fadeOut.onComplete = onComplete || null;
-
+					this._fadeOut.tween = new me.Tween(this._fadeOut).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
+					this._fadeOut.tween.start();
 				},
 
 				/**
-				 *	fadeIn effect <p>
+				 * fadeIn effect <p>
 				 * fade to the specified color
-				 * @param {int} color
-				 * @param {int} [duration="30"]
+				 * @param {string} color in #rrggbb format
+				 * @param {int} [duration="1000"] in ms
 				 * @param {function} [onComplete] callback once effect is over
 				 */
 
 				fadeIn : function(color, duration, onComplete) {
 					this._fadeIn.color = color;
-					this._fadeIn.duration = duration || 30;
+					this._fadeIn.duration = duration || 1000; //convert to ms
 					this._fadeIn.alpha = 0.0;
-					this._fadeIn.onComplete = onComplete || null;
+					this._fadeIn.tween = new me.Tween(this._fadeIn).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
+					this._fadeIn.tween.start();
 				},
 
 				/**
@@ -421,33 +402,37 @@
 				 *	render the camera effects
 				 */
 				draw : function(context) {
+					
 					// fading effect
-					if (this._fadeIn.alpha < 1.0) {
+					if (this._fadeIn.tween) {
 						if (me.sys.enableWebGL) {
 							// don't use global alpha with webgl
-							me.video.clearSurface(context, me.utils.HexToRGB(
-									this._fadeIn.color, this._fadeIn.alpha));
+							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color, this._fadeIn.alpha));
 						} else {
 							context.globalAlpha = this._fadeIn.alpha;
-							me.video.clearSurface(context, me.utils
-									.HexToRGB(this._fadeIn.color));
+							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color));
 							// set back full opacity
 							context.globalAlpha = 1.0;
 						}
+						// remove the tween if over
+						if (this._fadeIn.alpha==1.0)
+							this._fadeIn.tween = null;
 					}
+					
 					// flashing effect
-					if (this._fadeOut.alpha > 0.0) {
+					if (this._fadeOut.tween) {
 						if (me.sys.enableWebGL) {
 							// don't use global alpha with webgl
-							me.video.clearSurface(context, me.utils.HexToRGB(
-									this._fadeOut.color, this._fadeOut.alpha));
+							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color, this._fadeOut.alpha));
 						} else {
 							context.globalAlpha = this._fadeOut.alpha;
-							me.video.clearSurface(context, me.utils
-									.HexToRGB(this._fadeOut.color));
+							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color));
 							// set back full opacity
 							context.globalAlpha = 1.0;
 						}
+						// remove the tween if over
+						if (this._fadeOut.alpha==0.0)
+							this._fadeOut.tween = null;
 					}
 				}
 

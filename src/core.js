@@ -2079,7 +2079,7 @@
 		 * @function
 		 * @param {String} effect (only "fade" is supported for now)
 		 * @param {String} color in RGB format (e.g. "#000000")
-		 * @param {Int}	 duration (e.g. 15) 
+		 * @param {Int} [duration="1000"] in ms
 		 */
 		obj.transition = function(effect, color, duration) {
 			if (effect == "fade") {
