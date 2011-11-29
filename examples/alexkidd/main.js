@@ -48,7 +48,7 @@ var jsApp	=
 		me.state.set(me.state.PLAY, new PlayScreen());
       
 		// set a fade transition effect
-		me.state.transition("fade","#000000", 15);
+		me.state.transition("fade","#000000", 250);
 		
 		// add our player entity in the entity pool
 		me.entityPool.add("playerspawnpoint", PlayerEntity);

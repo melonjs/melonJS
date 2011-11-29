@@ -143,7 +143,7 @@
 				//console.log("ouch");
 				this.flicker(45);
 				// flash the screen
-				me.game.viewport.fadeIn("#FFFFFF", 5);
+				me.game.viewport.fadeIn("#FFFFFF", 75);
 				me.audio.play("die", false);
 			}
 		},

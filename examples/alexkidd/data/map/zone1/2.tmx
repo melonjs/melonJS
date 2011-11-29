@@ -42,7 +42,7 @@
   <object name="me.LevelEntity" type="Portal" x="0" y="176" width="16" height="48">
    <properties>
     <property name="direction" value="left"/>
-    <property name="duration" value="8"/>
+    <property name="duration" value="250"/>
     <property name="fade" value="#000000"/>
     <property name="to" value="zone1/1/p1"/>
    </properties>
@@ -50,7 +50,7 @@
   <object name="me.LevelEntity" type="Portal" x="1495" y="176" width="16" height="48">
    <properties>
     <property name="direction" value="right"/>
-    <property name="duration" value="8"/>
+    <property name="duration" value="250"/>
     <property name="fade" value="#000000"/>
     <property name="to" value="zone1/3/p1"/>
    </properties>

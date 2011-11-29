@@ -81,7 +81,7 @@ var jsApp	=
       me.state.set(me.state.PLAY, new PlayScreen());
       
       // set a global fading transition for the screen
-		me.state.transition("fade", "#FFFFFF", 15);
+		me.state.transition("fade", "#FFFFFF", 250);
       
       // add our Player entity & Coin in the entity pool
       me.entityPool.add("mainPlayer", PlayerEntity);
