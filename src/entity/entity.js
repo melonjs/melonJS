@@ -608,7 +608,7 @@
 						if (!this.flickerState) return;
 					}
 					
-					var xpos = this.pos.x - this.vp.pos.x, ypos = this.pos.y - this.vp.pos.y;
+					var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
 
 					if (this.scaleFlag) {
 						// translate to the middle of the sprite
@@ -624,7 +624,7 @@
 					context.drawImage(this.image, 
 									this.offset.x, this.offset.y,
 									this.width, this.height, 
-									~~xpos, ~~ypos,
+									xpos, ypos,
 									this.width, this.height);
 
 					if (this.scaleFlag) {
@@ -1407,10 +1407,6 @@
 						if ((this.onslope && !this.jumping) || this.onladder) {
 							this.vel.y = 0;
 						}
-
-						// update objet animation
-						//this.update();
-
 						return true;
 					}
 					// nothing updated (that happens!)
