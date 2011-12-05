@@ -43,7 +43,7 @@
 			this.addAnimation ("climb", [4,5,6,7]);
 			
 			// set default one
-			this.setCurrentAnimation("climb");
+			this.setCurrentAnimation("walk");
 			
 		},
 		
@@ -83,51 +83,56 @@
 			{	
 				if (this.doJump()) 
 				{
-				  me.audio.play("jump", false);
+					me.audio.play("jump", false);
 				}
+				
 			}
 			
-			// check & update player movement
-			updated = this.updateMovement();
-					
+			// check for collision with environment
+			var env_res = this.updateMovement();
+			
+			// make sure we have the right animation
+			if (this.onladder)
+			{
+				if ((doClimb || this.jumping) && this.isCurrentAnimation("walk"))
+					this.setCurrentAnimation("climb");
+			} 
+			else if (this.isCurrentAnimation("climb"))
+			{
+				this.setCurrentAnimation("walk");
+			}
+
+							
 			// check for collision with sthg
 			var res = me.game.collide(this);
 			
 			if (res)
-         {
-            if (res.type == me.game.ENEMY_OBJECT)
-            {
-               if ((res.y>0) && !this.jumping)
-               {
-                  this.forceJump();
-               }
-               else
-               {
-                  this.die();
-               }
-            }
-            else if (res.type == "spikeobject")
-            {
-               this.forceJump();
-               this.die();
-            }
+			{
+				if (res.type == me.game.ENEMY_OBJECT)
+				{
+				   if ((res.y>0) && !this.jumping)
+				   {
+					  this.forceJump();
+				   }
+				   else
+				   {
+					  this.die();
+				   }
+				}
+				else if (res.type == "spikeobject")
+				{
+				   this.forceJump();
+				   this.die();
+				}
 			}
 			
-			if (updated)
+			if (this.vel.x!=0 || this.vel.y!=0 || (this.onladder && doClimb) || this.isFlickering())
 			{
-				// update the object animation
-				if (this.onladder & doClimb)
-				{
-					this.setCurrentAnimation("climb");
-				}
-				else
-				{
-					this.setCurrentAnimation("walk");
-				}
 				this.parent();
+				return true;
 				
 			}
-			return updated;
+			return false;
 		},
 
 		

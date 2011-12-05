@@ -71,18 +71,19 @@
 			}
 			
 			// check & update player movement
-			updated = this.updateMovement();
+			this.updateMovement();
 			
 			// check for collision with other entities
 			me.game.collide(this);
 			
 			// update animation
-			if (updated)
+			if (this.vel.x!=0 ||this.vel.y!=0)
 			{
 				// update objet animation
 				this.parent(this);
+				return true;
 			}
-			return updated;
+			return false;
 		}
 
 	});
