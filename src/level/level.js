@@ -202,29 +202,29 @@
 		//var x = (pv.x < 0) ? obj.pos.x + obj.colPos.x + pv.x: obj.pos.x + obj.colPos.x + obj.width  + pv.x- 1;
 		//var y = (pv.y < 0) ? obj.pos.y + obj.colPos.y + pv.y: obj.pos.y + obj.colPos.y + obj.height + pv.y ;
 
-		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x - 1;
+		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
 		var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
 
 		//to return tile collision detection
-		var collide = {
-			x : false, // true if collision on x axis
-			y : false, // true if collision on y axis
-			tile : undefined,
+		var res = {
+			x : 0, // !=0 if collision on x axis
+			y : 0, // !=0 if collision on y axis
 			xprop : {},
 			yprop : {}
 		};
 
 		// test x limits
 		if (x <= 0 || x >= this.realwidth) {
-			collide.x = true;
+			res.x = pv.x;
 		}
 
 		// test y limits
 		if (y <= 0 || y >= this.realheight) {
-			collide.y = true;
+			res.y = pv.y;
 		}
 
-		return collide;
+		// return the collide object if collision
+		return res;
 	};
 
 	/************************************************************************************/
@@ -350,58 +350,49 @@
 		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
 		var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
 		//to return tile collision detection
-		collide = {
-			x : false, // true if collision on x axis
+		var res = {
+			x : 0, // !=0 if collision on x axis
 			xtile : undefined,
 			xprop : {},
-			y : false, // true if collision on y axis
+			y : 0, // !=0 if collision on y axis
 			ytile : undefined,
 			yprop : {}
 		};
 
 		//var tile;
 		if (x <= 0 || x >= this.realwidth) {
-			collide.x = true;
+			res.x = pv.x;
 		} else {
-			//console.log(obj.bottom);
 			// x, bottom corner
-			collide.xtile = this.getTile(x, obj.bottom - 1);// obj.height - 1
-			if (collide.xtile
-					&& this.tileset.isTileCollidable(collide.xtile.tileId)) {
-				collide.x = true;
-				collide.xprop = this.tileset
-						.getTileProperties(collide.xtile.tileId);
+			res.xtile = this.getTile(x, obj.bottom - 1);// obj.height - 1
+			if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+				res.x = pv.x; // reuse pv.x to get a 
+				res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
 			} else {
 				// x, top corner
-				collide.xtile = this.getTile(x, obj.top);
-				if (collide.xtile
-						&& this.tileset.isTileCollidable(collide.xtile.tileId)) {
-					collide.x = true;
-					collide.xprop = this.tileset
-							.getTileProperties(collide.xtile.tileId);
+				res.xtile = this.getTile(x, obj.top);
+				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+					res.x = pv.x;
+					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
 				}
 			}
 		}
 
 		// check for y movement
 		// left, y corner
-		collide.ytile = this.getTile((pv.x < 0) ? obj.left : obj.right, y);// obj.width + 1
-		if (collide.ytile
-				&& this.tileset.isTileCollidable(collide.ytile.tileId)) {
-			collide.y = true;
-			collide.yprop = this.tileset
-					.getTileProperties(collide.ytile.tileId);
+		res.ytile = this.getTile((pv.x < 0) ? obj.left : obj.right, y);// obj.width + 1
+		if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+			res.y = pv.y || 1;
+			res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
 		} else { // right, y corner
-			collide.ytile = this.getTile((pv.x < 0) ? obj.right : obj.left, y);
-			if (collide.ytile
-					&& this.tileset.isTileCollidable(collide.ytile.tileId)) {
-				collide.y = true;
-				collide.yprop = this.tileset
-						.getTileProperties(collide.ytile.tileId);
+			res.ytile = this.getTile((pv.x < 0) ? obj.right : obj.left, y);
+			if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+				res.y = pv.y || 1;
+				res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
 			}
 		}
-
-		return collide;
+		// return the collide object
+		return res;
 	};
 
 	/* -----

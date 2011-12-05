@@ -1281,7 +1281,7 @@
 				
 				/**
 				 * handle the player movement, "trying" to update his position<br>
-				 * @return {Boolean} <b>true<b> if player position has been updated
+				 * @return {me.Vector2d} a collision vector
 				 * @example
 				 * // make the player move
 				 * if (me.input.isKeyPressed('left'))
@@ -1293,7 +1293,31 @@
 				 *     this.vel.x += this.accel.x * me.timer.tick;
 				 * }
 				 * // update player position
-				 * this.updateMovement();
+				 * var res = this.updateMovement();
+				 *
+				 * // check for collision result with the environment
+				 * if (res.x != 0)
+				 * {
+				 *   // x axis
+				 *   if (res.x<0)
+				 *      console.log("x axis : left side !");
+				 *   else
+				 *      console.log("x axis : right side !");
+				 * }
+				 * else if(res.y != 0)
+				 * {
+				 *    // y axis
+				 *    if (res.y<0)
+				 *       console.log("y axis : top side !");
+				 *    else
+				 *       console.log("y axis : bottom side !");		
+				 *		
+				 *	  // display the tile type
+				 *    console.log(res.yprop.type)
+				 * }
+				 *
+				 * // check player status after collision check
+				 * var updated = (this.vel.x!=0 || this.vel.y!=0);
 				 */
 				updateMovement : function() {
 
@@ -1398,19 +1422,18 @@
 						}
 					}
 
-					// check for other necessary updates
-					if ((this.vel.x != 0) || (this.vel.y != 0)) {
-						// update player position
-						this.pos.add(this.vel);
-
-						// once applied cancel cumulative vel.y if onslope and !jumping or on ladder
-						if ((this.onslope && !this.jumping) || this.onladder) {
+					// update player position
+					this.pos.add(this.vel);
+					
+					
+					// once applied cancel cumulative vel.y if onslope and !jumping or on ladder
+					if ((this.onslope && !this.jumping) || this.onladder) {
 							this.vel.y = 0;
-						}
-						return true;
 					}
-					// nothing updated (that happens!)
-					return false;
+					
+
+					// returns the collision "vector"
+					return collision;
 
 				}
 
