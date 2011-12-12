@@ -19,6 +19,8 @@
 			// walking & jumping speed
 			this.setVelocity(2, 13);
 			
+			this.setFriction(0.2,0);
+			
 			// update the hit box
 			this.updateColRect(12,8, -1,0);
 			
@@ -67,7 +69,7 @@
 			}
 			else
 			{
-				this.vel.x = 0;
+				//this.vel.x = 0;
 			}
 					
 			if (me.input.isKeyPressed('up'))
@@ -91,9 +93,12 @@
 			// check for collision with environment
 			var env_res = this.updateMovement();
 			
-			// make sure we have the right animation
 			if (this.onladder)
 			{
+				// cancel residual y vel
+				this.vel.y = 0;
+				
+				// make sure we have the right animation
 				if ((doClimb || this.jumping) && this.isCurrentAnimation("walk"))
 					this.setCurrentAnimation("climb");
 			} 

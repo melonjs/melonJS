@@ -1210,25 +1210,18 @@
 					// first make the object stick to the tile
 					this.pos.y = tile.pos.y - this.height;
 					
-					// normally the check should be on the object center point, but since the collision check is done
-					// on corner, we must do the same thing here
+					// normally the check should be on the object center point, 
+					// but since the collision check is done on corner, we must do the same thing here
 					if (left)
 						this.slopeY = tile.height - (this.collisionBox.right + this.vel.x - tile.pos.x);
 					else
 						this.slopeY = (this.collisionBox.left + this.vel.x - tile.pos.x);
-
-					// some limit check, workaround when entering/exiting slopes tile
-					this.slopeY = this.slopeY.clamp(0, tile.height);
-
-					if (this.vel.x != 0) {
-						// apply it to vel.y
-						this.vel.y = this.slopeY;
-						
-					} else {
-						// apply to pos.y, so we don't indicate we actually change pos
-						this.vel.y = 0;
-						this.pos.y += this.slopeY;
-					}
+					
+					// cancel y vel
+					this.vel.y = 0;
+					// set player position (+ workaround when entering/exiting slopes tile)
+					this.pos.y += this.slopeY.clamp(0, tile.height);
+					
 				},
 				
 				/**
@@ -1318,8 +1311,6 @@
 						// going down,
 						// collision with the floor
 						if (collision.y > 0) {
-							// update the onslope flag
-							//this.onslope = collision.yprop.isSlope
 
 							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (~~this.pos.y	+ this.height <= collision.ytile.pos.y))) {
 								// round pos.y
@@ -1329,13 +1320,8 @@
 								this.falling = false;
 							} else if (collision.yprop.isSlope && !this.jumping) {
 								// we stop falling
-								//this.onslope = true;
-								//console.log("yslope");
 								this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
-								//this.onladder = false;
 								this.falling = false;
-								//this.jumping  = false;
-								//this.onslope  = true;
 							} else if (collision.yprop.isBreakable) {
 								if (this.canBreakTile) {
 									// remove the tile
@@ -1355,7 +1341,6 @@
 						// collision with ceiling
 						else if (collision.y < 0) {
 							if (!collision.yprop.isPlatform	&& !collision.yprop.isLadder) {
-								//this.jumping = false;
 								this.falling = true;
 								// cancel the y velocity
 								this.vel.y = 0;
@@ -1381,21 +1366,12 @@
 									this.vel.x = 0;
 								}
 							}
-							// do we climb the ladder
-							//this.onladder = collision.xprop.isLadder && (this.vel.x != 0);
-
 						}
 					}
 
 					// update player position
 					this.pos.add(this.vel);
 					
-					
-					// once applied cancel cumulative vel.y if onslope and !jumping or on ladder
-					if ((this.onslope && !this.jumping) || this.onladder) {
-							this.vel.y = 0;
-					}
-
 					// returns the collision "vector"
 					return collision;
 
