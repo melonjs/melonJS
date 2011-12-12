@@ -1230,12 +1230,15 @@
 				 */
 				computeVelocity : function(vel) {
 				
-					// apply a constant gravity (if not on a ladder)
-					vel.y += !this.onladder?(this.gravity * me.timer.tick):0;
+					// apply gravity (if any)
+					if (this.gravity) {
+						// apply a constant gravity (if not on a ladder)
+						vel.y += !this.onladder?(this.gravity * me.timer.tick):0;
 
-					// check if falling / jumping
-					this.falling = (vel.y > 0);
-					this.jumping = this.falling?false:this.jumping;
+						// check if falling / jumping
+						this.falling = (vel.y > 0);
+						this.jumping = this.falling?false:this.jumping;
+					}
 					
 					// apply friction
 					if (this.friction.x)
