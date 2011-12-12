@@ -67,10 +67,6 @@
 			{
 				this.doWalk(false);
 			}
-			else
-			{
-				//this.vel.x = 0;
-			}
 					
 			if (me.input.isKeyPressed('up'))
 			{
