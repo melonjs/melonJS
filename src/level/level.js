@@ -639,7 +639,7 @@
 		 */
 		obj.loadLevel = function(level) {
 			if (levels[level] === undefined) {
-				throw ("melonJS: level %s not found" + level);
+				throw ("melonJS: level " + level + " not found");
 				return;
 			}
 
