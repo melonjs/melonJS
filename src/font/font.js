@@ -125,7 +125,7 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {String} font
-	 * @param {int} size
+	 * @param {int/Object} size either an int value, or an object like {x:16,y:16}
 	 * @param {int} [scale="1.0"]
 	 * @param {String} [firstChar="0x20"]
 
@@ -139,6 +139,9 @@
 		sSize : null,
 		// first char in the ascii table
 		firstChar : 0x20,
+		
+		// #char per row
+		charCount : 0,
 
 		/** @private */
 		init : function(font, size, scale, firstChar) {
@@ -175,9 +178,12 @@
 			this.font = me.loader.getImage(font);
 
 			// some cheap metrics
-			this.size.x = size;
-			this.size.y = this.font.height || 0;
+			this.size.x = size.x || size;
+			this.size.y = size.y || this.font.height;
 			this.sSize.copy(this.size);
+			
+			// #char per row  
+			this.charCount = ~~(this.font.width / this.size.x);
 		},
 
 		/**
@@ -232,10 +238,14 @@
 			if (this.align == this.ALIGN.RIGHT) {
 				x -= text.length * this.sSize.x;
 			}
-
+			// draw the text
 			for ( var i = 0; i < text.length; i++) {
+				// calculate the char index
+				var idx = text.charCodeAt(i) - this.firstChar;
+				// draw it
 				context.drawImage(this.font,
-						(text.charCodeAt(i) - this.firstChar) * this.size.x, 0,
+						this.size.x * (idx % this.charCount), 
+						this.size.y * ~~(idx / this.charCount), 
 						this.size.x, this.size.y, 
 						~~x, ~~y, 
 						this.sSize.x, this.sSize.y);
