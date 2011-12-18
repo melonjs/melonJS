@@ -4,10 +4,10 @@
 		
 	------			*/
 
-	/*************************/
-	/*								 */
+/*************************/
+	/*						 */
 	/*		a player entity	 */
-	/*								 */
+	/*						 */
 	/*************************/
 	var PlayerEntity = me.ObjectEntity.extend(
 	{	
@@ -26,7 +26,7 @@
 			// set the walking & jumping speed
 			this.setVelocity(3, 15);
          
-         // adjust the bounding box
+			// adjust the bounding box
 			this.updateColRect(8,48, -1,0);
 			
 			// set the display to follow our position on both axis
@@ -61,14 +61,15 @@
 			
 			// check & update player movement
 			updated = this.updateMovement();
-					
+                 
 			// update animation
-			if (updated)
+			if (this.vel.x!=0 || this.vel.y!=0)
 			{
 				// update objet animation
 				this.parent(this);
+				return true;
 			}
-			return updated;
+			return false;
 		}
 
 	});

@@ -5,9 +5,9 @@
 	------			*/
 
 	/*************************/
-	/*								 */
+	/*						 */
 	/*		a player entity	 */
-	/*								 */
+	/*						 */
 	/*************************/
 	var PlayerEntity = me.ObjectEntity.extend(
 	{	
@@ -26,7 +26,7 @@
 			// set the walking & jumping speed
 			this.setVelocity(3, 15);
          
-         // adjust the bounding box
+			// adjust the bounding box
 			this.updateColRect(8,48, -1,0);
 			
 			// set the display to follow our position on both axis
@@ -57,52 +57,53 @@
 			if (me.input.isKeyPressed('jump'))
 			{	
 				if (this.doJump())
-            {
-               me.audio.play("jump");
-            }
+				{
+					me.audio.play("jump");
+				}
 			}
 			
 			// check & update player movement
-			updated = this.updateMovement();
+			this.updateMovement();
          
-         // check for collision
-         res = me.game.collide(this);
-         
-         if (res)
-         {
-            if (res.type == me.game.ENEMY_OBJECT)
-            {
-               if ((res.y>0) && !this.jumping)
-               {
-                  // bounce
-                   me.audio.play("stomp");
-                  this.forceJump();
-               }
-               else
-               {
-                  // let's flicker in case we touched an enemy
-                  this.flicker(45);
-               }
-            }
-         }
+			// check for collision
+			var res = me.game.collide(this);
+			 
+			if (res)
+			{
+				if (res.type == me.game.ENEMY_OBJECT)
+				{
+				   if ((res.y>0) && !this.jumping)
+				   {
+					  // bounce
+					   me.audio.play("stomp");
+					  this.forceJump();
+				   }
+				   else
+				   {
+					  // let's flicker in case we touched an enemy
+					  this.flicker(45);
+				   }
+				}
+			}
          
 					
 			// update animation
-			if (updated)
+			if (this.vel.x!=0 || this.vel.y!=0)
 			{
 				// update objet animation
 				this.parent(this);
+				return true;
 			}
-			return updated;
+			return false;
 		}
 
 	});
 
    /****************************/
-	/*                          */
-	/*		a Coin entity		    */
-	/*									 */
-	/****************************/
+	/*                         */
+	/*		a Coin entity	   */
+	/*						   */
+	/***************************/
 	var CoinEntity = me.CollectableEntity.extend(
 	{	
 
@@ -124,9 +125,9 @@
 	});
 
 	/************************************************************************************/
-	/*																												*/
-	/*		an enemy Entity																					*/
-	/*																												*/
+	/*																					*/
+	/*		an enemy Entity																*/
+	/*																					*/
 	/************************************************************************************/
 	var EnemyEntity = me.ObjectEntity.extend(
 	{	
@@ -147,10 +148,10 @@
 			this.pos.x = x + settings.width - settings.spritewidth;
 			this.walkLeft = true;
 
-         // walking & jumping speed
+			// walking & jumping speed
 			this.setVelocity(4, 6);
 			
-         // make it collidable
+			// make it collidable
 			this.collidable = true;
 			this.type = me.game.ENEMY_OBJECT;
 			
@@ -177,7 +178,7 @@
 		update : function ()
 		{
 			// do nothing if not visible
-			if (!this.visible && !this.flickering)
+			if (!this.visible)
 				return false;
 				
 			if (this.alive)
@@ -190,29 +191,30 @@
 				{
 					this.walkLeft = true;
 				}
-            this.doWalk(this.walkLeft);
+				this.doWalk(this.walkLeft);
 			}
 			else
 			{
 				this.vel.x = 0;
 			}
 			// check & update movement
-			updated = this.updateMovement();
+			this.updateMovement();
 				
-			if (updated)
+			if (this.vel.x!=0 ||this.vel.y!=0)
 			{
 				// update the object animation
 				this.parent();
+				return true;
 			}
-			return updated;
+			return false;
 		}
 	});
 	
    /****************************/
-	/*                          */
-	/*		a score HUD Item	    */
-	/*									 */
-	/****************************/
+	/*                         */
+	/*		a score HUD Item   */
+	/*						   */
+	/***************************/
 
    
    var ScoreObject = me.HUD_Item.extend(

@@ -96,7 +96,7 @@
         use for the tutorial :
 
         <ul>
-            <li>a copy of melonJS (0.9.1) (/lib)</li>
+            <li>a copy of melonJS (0.9.2) (/lib)</li>
 
             <li>a level tileset and a metatileset for collision
                 (/data/area01_tileset/)
@@ -118,12 +118,9 @@
 </ul>
 
 <p><b>Testing/debugging :</b><br/>
-    Due to the "cross-origin request" security mechanism implemented in Chrome, it's
-    unfortunately not possible to test any local content (at least for now). The browser
-    will complain when trying to load a level map. This means that, except if you have a
-    local server, you can only test your game with Chrome when the game is uploaded to an
-    actual web server. I therefore recommend using Safari or Opera locally, and then
-    check the final result "online" with Chrome.<br/></p>
+    When using Chrome, and due to the "cross-origin request" security mechanism implemented, 
+	you need to use the "--disable-web-security" parameter when launching the browser in order
+	to test any local content, else the browser will complain when trying to load a level map. <br/></p>
 
 <p><b>Additional Credits :</b><br/>
     - <a href=
@@ -137,7 +134,7 @@
 
 <h2>Part 1: Creating a level using Tiled</h2>
 
-<p>melonJS <i>only</i> supports XML and Base64 (uncompressed) encoded tilemaps, so
+<p>melonJS supports Plain, CSV, XML and Base64 <i><b>uncompressed</b></i> encoded tilemaps, so
     before continuing, please check that your settings are correct (Tiled/Preferences). I
     recommend the Base64 encoding, since it produces a smaller file. <img src=
                                                                                   "media/tiled_settings.png"
@@ -394,14 +391,15 @@ var PlayerEntity = me.ObjectEntity.extend({
         }
 
         // check &amp; update player movement
-        updated = this.updateMovement();
+        this.updateMovement();
 
-        // update animation
-        if (updated) {
+        // update animation if necessary
+        if (this.vel.x!=0 || this.vel.y!=0) {
             // update objet animation
             this.parent(this);
+            return true;
         }
-        return updated;
+        return false;
     }
 
 });
@@ -780,14 +778,14 @@ var EnemyEntity = me.ObjectEntity.extend({
         } else {
             this.vel.x = 0;
         }
-        // check &amp; update movement
-        updated = this.updateMovement();
-
-        if (updated) {
-            // update the object animation
-            this.parent();
+        
+        // update animation if necessary
+        if (this.vel.x!=0 || this.vel.y!=0) {
+            // update objet animation
+            this.parent(this);
+            return true;
         }
-        return updated;
+        return false;
     }
 });
     
@@ -838,10 +836,10 @@ update: function() {
     }
 
     // check &amp; update player movement
-    updated = this.updateMovement();
+    this.updateMovement();
 
     // check for collision
-    res = me.game.collide(this);
+    var res = me.game.collide(this);
 
     if (res) {
         // if we collide with an enemy
@@ -857,12 +855,14 @@ update: function() {
         }
     }
 
-    // update animation
-    if (updated) {
+    // update animation if necessary
+    if (this.vel.x!=0 || this.vel.y!=0) {
         // update objet animation
         this.parent(this);
+        return true;
     }
-    return updated;
+    return false;
+
 }
 
 });
@@ -1196,7 +1196,7 @@ onDestroyEvent : function ()
     update function of the mainPlayer :</p><br/>
     <pre class="c2">
 <code>// check for collision
-res = me.game.collide(this);
+var res = me.game.collide(this);
 
 if (res) {
     if (res.type == me.game.ENEMY_OBJECT) {
@@ -1441,7 +1441,7 @@ loaded: function() {
     me.state.set(me.state.PLAY, new PlayScreen());
 
     // set a global fading transition for the screen
-    me.state.transition("fade", "#FFFFFF", 15);
+    me.state.transition("fade", "#FFFFFF", 250);
 
     // add our player entity in the entity pool
     me.entityPool.add("mainPlayer", PlayerEntity);

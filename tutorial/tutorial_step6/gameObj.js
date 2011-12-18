@@ -62,43 +62,44 @@
 			// check & update player movement
 			updated = this.updateMovement();
          
-         // check for collision
-         res = me.game.collide(this);
-         
-         if (res)
-         {
-            if (res.type == me.game.ENEMY_OBJECT)
-            {
-               if ((res.y>0) && !this.jumping)
-               {
-                  // bounce
-                  this.forceJump();
-               }
-               else
-               {
-                  // let's flicker in case we touched an enemy
-                  this.flicker(45);
-               }
-            }
-         }
+        	// check for collision
+			var res = me.game.collide(this);
+			 
+			if (res)
+			{
+				if (res.type == me.game.ENEMY_OBJECT)
+				{
+				   if ((res.y>0) && !this.jumping)
+				   {
+					  // bounce
+					  this.forceJump();
+				   }
+				   else
+				   {
+					  // let's flicker in case we touched an enemy
+					  this.flicker(45);
+				   }
+				}
+			}
          
 					
 			// update animation
-			if (updated)
+			if (this.vel.x!=0 || this.vel.y!=0)
 			{
 				// update objet animation
 				this.parent(this);
+				return true;
 			}
-			return updated;
+			return false;
 		}
 
 	});
 
-   /****************************/
-	/*                          */
-	/*		a Coin entity		    */
-	/*									 */
-	/****************************/
+    /***************************/
+	/*                         */
+	/*		a Coin entity	   */
+	/*						   */
+	/***************************/
 	var CoinEntity = me.CollectableEntity.extend(
 	{	
 
@@ -106,12 +107,6 @@
 		{
 			// call the parent constructor
 			this.parent(x, y , settings);
-
-			// animation speed		
-			//this.animationspeed = 8;
-			
-			// bounding box
-			//this.updateColRect(8,16,16,16);
 		},		
 			
 		onDestroyEvent : function ()
@@ -119,7 +114,6 @@
 			// do something when collide
 			// increase score
 			me.game.HUD.updateItemValue("score", 250);
-			
 		}
 		
 	});
@@ -148,10 +142,10 @@
 			this.pos.x = x + settings.width - settings.spritewidth;
 			this.walkLeft = true;
 
-         // walking & jumping speed
+			// walking & jumping speed
 			this.setVelocity(4, 6);
 			
-         // make it collidable
+			// make it collidable
 			this.collidable = true;
 			this.type = me.game.ENEMY_OBJECT;
 			
@@ -168,20 +162,7 @@
 			// which mean at top position for this one
 			if (this.alive && (res.y > 0) && obj.falling)
 			{
-				// make it dead
-				//this.alive = true;
-				// and not collidable anymore
-				//this.collidable = false;
-				// set dead animation
-				//this.setCurrentAnimation("dead");
-				// make it flicker and call destroy once timer finished
-				//this.flicker(45, this.destroy.bind(this));
-            this.flicker(45);
-				// dead sfx
-				//me.audio.play("enemykill", false);
-				
-				// give some score
-				//me.game.HUD.updateItemValue("score", 150);
+				this.flicker(45);
 			}
 		},
 
@@ -190,7 +171,7 @@
 		update : function ()
 		{
 			// do nothing if not visible
-			if (!this.visible && !this.flickering)
+			if (!this.visible)
 				return false;
 				
 			if (this.alive)
@@ -203,8 +184,6 @@
 				{
 					this.walkLeft = true;
 				}
-				
-				//console.log(this.walkLeft);
 				this.doWalk(this.walkLeft);
 			}
 			else
@@ -212,29 +191,28 @@
 				this.vel.x = 0;
 			}
 			// check & update movement
-			updated = this.updateMovement();
+			this.updateMovement();
 				
-			if (updated)
+			if (this.vel.x!=0 ||this.vel.y!=0)
 			{
 				// update the object animation
 				this.parent();
+				return true;
 			}
-			return updated;
+			return false;
 		}
 	});
 	
-   /****************************/
-	/*                          */
-	/*		a score HUD Item	    */
-	/*									 */
-	/****************************/
-
-   
-   var ScoreObject = me.HUD_Item.extend(
+	/***************************/
+	/*                         */
+	/*		a score HUD Item   */
+	/*						   */
+	/***************************/
+	var ScoreObject = me.HUD_Item.extend(
 	{	
 		init: function(x, y)
 		{
-         // call the parent constructor
+			// call the parent constructor
 			this.parent(x, y);
 			// create a font
 			this.font = new me.BitmapFont("32x32_font", 32);
