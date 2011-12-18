@@ -3,9 +3,8 @@
  * Copyright (C) 2011, Olivier BIOT
  * http://www.melonjs.org
  * 
- * melonJS is licensed under a Creative Commons 
- * Attribution-NonCommercial-ShareAlike 3.0 Unported License. 
- * http://creativecommons.org/licenses/by-nc-sa/3.0/
+ * melonJS is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license.php
  *
  * @author Olivier Biot 2011
  *

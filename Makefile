@@ -3,9 +3,8 @@
 #   Copyright (C) 2011, Olivier BIOT
 #   http://www.melonjs.org
 #
-#   melonJS is licensed under a Creative Commons 
-#   Attribution-NonCommercial-NoDerivs 3.0 Unported License.
-#   http://creativecommons.org/licenses/by-nc-nd/3.0/
+#   melonJS is licensed under the MIT License.
+#   http://www.opensource.org/licenses/mit-license.php
 #
 #   javascript compilation / "minification" makefile
 # 
