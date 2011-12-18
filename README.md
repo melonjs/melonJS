@@ -1,8 +1,8 @@
-
 [melonJS](http://melonjs.org/) - a fresh & lightweight 2D sprite-based engine
 =============================================================================
 
 Copyright (C) 2011, Olivier BIOT
+
 melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
 
@@ -40,32 +40,42 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-* regular flavored build :
-$ cd melonJS
-$ mkdir build
-$ make
-$ make doc
+* Regular flavored build :
+
+`$ cd melonJS`
+
+`$ mkdir build`
+
+`$ make`
+
+Both plain and minified library will be available under the "build" directory
 
 * CoffeeScript flavored build :
-First make sure that you have installed :
- - [node.js](http://nodejs.org/)
- - [npm](http://npmjs.org/)
- - [CofeeScript](http://jashkenas.github.com/coffee-script/)
 
-sudo npm install -g coffee-script
-$ cd melonJS
-$ npm install -d      # Installs the deps from the package.json file
-$ cake build:browser
+First make sure that you have installed :
+
+- [node.js](http://nodejs.org/)
+- [npm](http://npmjs.org/)
+- [CofeeScript](http://jashkenas.github.com/coffee-script/)
+
+`$ sudo npm install -g coffee-script`
+
+`$ cd melonJS`
+
+`$ npm install -d`      # Installs the deps from the package.json file
+
+`$ cake build:browser`
 
 Building the documentation
 -------------------------------------------------------------------------------
-$ cd melonJS
-$ make doc
+
+`cd melonJS`
+
+`make doc`
+
 The generated documentation will be then available under the "docs" directory
 
 Questions, need help ?
 -------------------------------------------------------------------------------
-
 If you need help, or have any questions, please feel free to ask on the
-[melonJS developer forum](http://groups.google.com/group/melonjs),
-or send us an email to contact@melonjs.org
+[melonJS developer forum](http://groups.google.com/group/melonjs), or send us an [email](mailto:contact@melonjs.org).
