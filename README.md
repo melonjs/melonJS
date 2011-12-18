@@ -3,7 +3,7 @@
 =============================================================================
 
 Copyright (C) 2011, Olivier BIOT
-melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php) 
+melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
 
 About melonJS
