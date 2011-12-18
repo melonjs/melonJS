@@ -10,7 +10,7 @@ Version History
 * Core: refactored fading function using Tween objects (API CHANGE, see documentation)
 * Core: added a helper method to know the sign of an number
 * Core: Corrected variables definition (global->local)
-* Core: added a GUID (“Game Unique Identifier”) to objects
+* Core: added a GUID (Game Unique Identifier) to objects
 * Core: getEntityByName now also returns non Entity Object (like layers)
 * Doc: various documentation correction and improvements
 * Entity: added friction management
