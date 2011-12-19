@@ -1751,7 +1751,7 @@
 	 */
 
 	state = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		/*---------------------------------------------
@@ -2109,16 +2109,7 @@
 
 		obj.change = function(state) {
 			switch (state) {
-				case obj.LOADING:
-				case obj.MENU:
-				case obj.PLAY:
-				case obj.READY:
-				case obj.GAMEOVER:
-				case obj.GAME_END:
-				case obj.SCORE:
-				case obj.CREDITS:
-				case obj.SETTINGS: {
-
+				default: {
 					_extraArgs = null;
 					if (arguments.length > 1) {
 						// store extra arguments if any
@@ -2143,11 +2134,6 @@
 						_switchState.defer(state);
 						
 					}
-
-					break;
-				}
-
-				default: {
 					break;
 				}
 			}
