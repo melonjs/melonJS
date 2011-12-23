@@ -896,8 +896,8 @@
 					// set the object entity name
 					this.name = settings.name;
 					
-					// adjust initial coordinates should be bottom left ones
-					this.pos.set(x, y + me.game.currentLevel.tileheight	- this.height);
+					// adjust initial coordinates (should be bottom left ones when in a tiled world)
+					this.pos.set(x, me.game.currentLevel?y + me.game.currentLevel.tileheight - this.height:y);
 
 					/**
 					 * entity current velocity<br>
