@@ -24,7 +24,7 @@
 			this.parent(x, y , settings);
 			
 			// set the walking & jumping speed
-			this.setVelocity(3, 12);
+			this.setVelocity(2.5, 12);
 			
 			// add friction
 			this.setFriction(0.5);
@@ -58,16 +58,18 @@
 				
 			if (me.input.isKeyPressed('left'))
 			{
-				this.doWalk(true);
+				this.vel.x -= this.accel.x * me.timer.tick;
+				this.flipX(true);
 			}
 			else if (me.input.isKeyPressed('right'))
 			{
-				this.doWalk(false);
+				this.vel.x += this.accel.x * me.timer.tick;
+				this.flipX(false);
 			}
 			
 			if (me.input.isKeyPressed('jump'))
 			{	
-				this.doJump();
+				this.vel.y = -this.maxVel.y * me.timer.tick;
 			}
 			
 			// check & update player movement
