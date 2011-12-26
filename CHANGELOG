@@ -12,6 +12,7 @@ Version History
 * Core: Corrected variables definition (global->local)
 * Core: added a GUID (Game Unique Identifier) to objects
 * Core: getEntityByName now also returns non Entity Object (like layers)
+* Core: Fixed state change when using custom state values
 * Doc: various documentation correction and improvements
 * Entity: added friction management
 * Entity: updateMovement function now returns a collision "vector (API CHANGE, see documentation)
@@ -22,6 +23,7 @@ Version History
 * Entity: optimized/refactored SpriteObject
 * Entity: fixed object with 1 single sprite (no animation) not begin updated
 * Entity: Added the possibility to also specify a callback when an animation is over
+* Entity: Fixed an initialization issue when using melonJS without a Tilemap
 * Event: also cancel event bubbling
 * Font: added support for multiline fontsheet
 * HUD: added a setItemValue() function
