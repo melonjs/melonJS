@@ -197,9 +197,11 @@
 			{
 				this.vel.x = 0;
 			}
+			
 			// check & update movement
 			this.updateMovement();
-				
+			
+			//update animation if necessary
 			if (this.vel.x!=0 ||this.vel.y!=0)
 			{
 				// update the object animation

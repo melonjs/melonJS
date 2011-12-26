@@ -27,9 +27,9 @@ var g_ressources= [
                      {name: "32x32_font",          type:"image",	src: "data/sprite/32x32_font.png"},
                      // audio ressources
                      {name: "cling",            type: "audio",    src: "data/audio/",	channel : 2},
-							{name: "stomp",               type: "audio", src: "data/audio/",	channel : 1},
-							{name: "jump",                type: "audio", src: "data/audio/",	channel : 1},
-							{name: "DST-InertExponent",   type: "audio", src: "data/audio/",	channel : 1}
+					 {name: "stomp",               type: "audio", src: "data/audio/",	channel : 1},
+					 {name: "jump",                type: "audio", src: "data/audio/",	channel : 1},
+					 {name: "DST-InertExponent",   type: "audio", src: "data/audio/",	channel : 1}
                   ]; 
 
 
@@ -43,13 +43,13 @@ var jsApp	=
 	onload: function()
 	{
 		
-      //me.debug.renderHitBox = true;
+		//me.debug.renderHitBox = true;
       
-      // init the video
+		// init the video
 		if (!me.video.init('jsapp', 640, 480, false, 1.0))
 		{
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
-         return;
+			return;
 		}
 		
 				
@@ -77,16 +77,16 @@ var jsApp	=
 		// set the "Play/Ingame" Screen Object
 		me.state.set(me.state.PLAY, new PlayScreen());
       
-      // add our player entity in the entity pool
+		// add our player entity in the entity pool
 		me.entityPool.add("mainPlayer", PlayerEntity);
-      me.entityPool.add("CoinEntity", CoinEntity);
-      me.entityPool.add("EnemyEntity", EnemyEntity);
+		me.entityPool.add("CoinEntity", CoinEntity);
+		me.entityPool.add("EnemyEntity", EnemyEntity);
       
 			
 		// enable the keyboard
 		me.input.bindKey(me.input.KEY.LEFT,		"left");
 		me.input.bindKey(me.input.KEY.RIGHT,	"right");
-		me.input.bindKey(me.input.KEY.X,			"jump", true);
+		me.input.bindKey(me.input.KEY.X,		"jump", true);
       
       // start the game 
 		me.state.change(me.state.PLAY);
@@ -98,15 +98,15 @@ var jsApp	=
 var PlayScreen = me.ScreenObject.extend(
 {
 
-   onResetEvent: function()
+	onResetEvent: function()
 	{	
-      // play the audio track
-      me.audio.playTrack("DST-InertExponent");
+		// play the audio track
+		me.audio.playTrack("DST-InertExponent");
       
-      // load a level
+		// load a level
 		me.levelDirector.loadLevel("area01");
       
-      // add a default HUD to the game mngr
+		// add a default HUD to the game mngr
 		me.game.addHUD(0,430,640,60);
 		
 		// add a new HUD item 
@@ -114,8 +114,6 @@ var PlayScreen = me.ScreenObject.extend(
 		
 		// make sure everyhting is in the right order
 		me.game.sort();
-      
-      
 
 	},
 	

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="40" height="15" tilewidth="32" tileheight="32">
-<tileset firstgid="1" name="area01_level_tiles" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="area01_level_tiles" tilewidth="32" tileheight="32">
   <image source="area01_tileset/area01_level_tiles.png" width="640" height="241"/>
  </tileset>
  <tileset firstgid="141" name="metatiles32x32" tilewidth="32" tileheight="32">
@@ -94,7 +94,7 @@
   </object>
   <object name="me.LevelEntity" x="1216" y="32" width="64" height="64">
    <properties>
-    <property name="duration" value="15"/>
+    <property name="duration" value="250"/>
     <property name="fade" value="#000000"/>
     <property name="to" value="area02"/>
    </properties>

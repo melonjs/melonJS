@@ -8,7 +8,7 @@
  **/
 
 // game ressources
-var g_ressources= [  {name: "area01_level_tiles",	 type:"image",	src: "data/area01_tileset/area01_level_tiles.png"},
+var g_ressources= [  {name: "area01_level_tiles",	type:"image",	src: "data/area01_tileset/area01_level_tiles.png"},
                      {name: "area01",               type: "tmx",	src: "data/area01.tmx"}
                   ]; 
 
@@ -23,7 +23,7 @@ var jsApp	=
 	onload: function()
 	{
 		
-      // init the video
+		// init the video
 		if (!me.video.init('jsapp', 640, 480, false, 1.0))
 		{
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");

@@ -47,17 +47,17 @@ var TitleScreen = me.ScreenObject.extend(
 						
 		}
       
-      // reset to default value
-      this.scrollerpos = 640;
+		// reset to default value
+		this.scrollerpos = 640;
 		
 		// a tween to animate the arrow
 		this.scrollertween = new me.Tween(this).to({scrollerpos: -2200 }, 10000).onComplete(this.scrollover.bind(this)).start();
 		
 		// enable the keyboard
-		me.input.bindKey(me.input.KEY.ENTER,	"enter", true);
+		me.input.bindKey(me.input.KEY.ENTER, "enter", true);
       
-      // play something
-      me.audio.play("cling");
+		// play something
+		me.audio.play("cling");
 		
 	},
 	
@@ -80,7 +80,7 @@ var TitleScreen = me.ScreenObject.extend(
 		// enter pressed ?
 		if (me.input.isKeyPressed('enter'))
 		{
-         me.state.change(me.state.PLAY);
+			me.state.change(me.state.PLAY);
 		}
 		return true;
 	},
@@ -108,8 +108,8 @@ var TitleScreen = me.ScreenObject.extend(
 	{
 		me.input.unbindKey(me.input.KEY.ENTER);
 		
-      //just in case
-      this.scrollertween.stop();
+		//just in case
+		this.scrollertween.stop();
    },
 
 });

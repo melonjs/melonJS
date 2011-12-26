@@ -33,9 +33,9 @@ var jsApp	=
 	onload: function()
 	{
 		
-     // me.debug.renderHitBox = true;
+		// me.debug.renderHitBox = true;
       
-      // init the video
+		// init the video
 		if (!me.video.init('jsapp', 640, 480, false, 1.0))
 		{
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
@@ -67,15 +67,15 @@ var jsApp	=
 		// set the "Play/Ingame" Screen Object
 		me.state.set(me.state.PLAY, new PlayScreen());
       
-      // add our player entity in the entity pool
+		// add our player entity in the entity pool
 		me.entityPool.add("mainPlayer", PlayerEntity);
-      me.entityPool.add("CoinEntity", CoinEntity);
+		me.entityPool.add("CoinEntity", CoinEntity);
       
 			
 		// enable the keyboard
 		me.input.bindKey(me.input.KEY.LEFT,		"left");
 		me.input.bindKey(me.input.KEY.RIGHT,	"right");
-		me.input.bindKey(me.input.KEY.X,			"jump", true);
+		me.input.bindKey(me.input.KEY.X,		"jump", true);
       
       // start the game 
 		me.state.change(me.state.PLAY);

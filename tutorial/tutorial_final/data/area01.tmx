@@ -94,7 +94,7 @@
   </object>
   <object name="me.LevelEntity" x="1216" y="32" width="64" height="64">
    <properties>
-    <property name="duration" value="15"/>
+    <property name="duration" value="250"/>
     <property name="fade" value="#FFFFFF"/>
     <property name="to" value="area02"/>
    </properties>

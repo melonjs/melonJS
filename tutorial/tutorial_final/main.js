@@ -45,7 +45,7 @@ var jsApp	=
 	onload: function()
 	{
 		
-      //me.debug.renderHitBox = true;
+		//me.debug.renderHitBox = true;
       
 		// init the video
 		if (!me.video.init('jsapp', 640, 480))

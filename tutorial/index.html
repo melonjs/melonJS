@@ -411,6 +411,28 @@ var PlayerEntity = me.ObjectEntity.extend({
     keys are pressed and manage our player movement. Also, you may notice that I'm
     testing the return value of the <b>updateMovement() function</b>, which allows me to
     control if I want the sprite animation to run or not.</p>
+	
+<p>Note that the functions here above, like <b>doWalk()</b> and <b>doJump()</b>, are 
+   actually <b>helper functions for platform games</b> that basically compute the new player 
+   velocity based on the parameters defined by the <b>setVelocity()</b> function :
+<pre class="c2">
+<code>
+/**
+ * helper function for platform games
+ * make the entity move left of right
+ * @param {Boolean} left will automatically flip horizontally the entity sprite
+ */
+doWalk : function(left) {
+	this.flipX(left);
+	this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
+},
+</code>
+</pre>
+  If you do plan to develop any other type of games (or if have more complex needs),
+  I do <b>not</b> recommend using these function, but to rather directly modify the entity velocity 
+  based on your requirements.
+</p>
+
 
 <p>Then, we have to modify our "main" to actually declare our new Object in the
     EntityPool (that is used by the engine to instantiate object), and finally to map the
@@ -454,6 +476,9 @@ loaded: function ()
     - <b>image</b> with the <b>gripe_run_right</b> value (name of our resource<br/>
     - <b>spritewidth</b> with the value <b>64</b> which is the size of a single sprite in
     the spritesheet<br/>
+    - <b>spriteheight</b> we don't define this value here since we use a single line spritesheet,
+	and since in this case the engine will take the actual image height as a value for it.<br/>
+	<br/>
     These two parameters will be passed as parameters (<b>settings</b> object here above
     used by the constructor) when the object will be created. Now you can either specify
     these fields here in Tiled, or directly in your code (when dealing with multiple
@@ -763,7 +788,7 @@ var EnemyEntity = me.ObjectEntity.extend({
     // manage the enemy movement
     update: function() {
         // do nothing if not visible
-        if (!this.visible &amp;&amp; ! this.flickering)
+        if (!this.visible)
             return false;
 
         if (this.alive) {
@@ -773,7 +798,6 @@ var EnemyEntity = me.ObjectEntity.extend({
                 this.walkLeft = true;
             }
 
-            //console.log(this.walkLeft);
             this.doWalk(this.walkLeft);
         } else {
             this.vel.x = 0;
@@ -1259,7 +1283,7 @@ if (res) {
     property with <b>"area02"</b> for the value. So that when our player will hit the
     Object, the engine will automatically load the "area02" level.<br/>
     Optionally we can also ask the engine to add a fadeOut/fadeIn effect when changing
-    level by adding the <b>"fade"</b> and <b>"duration"</b> property (as in the
+    level by adding the <b>"fade" color</b> and <b>"duration" (in ms)</b> properties (as in the
     image)</p>
 
 <p>click <a href="./tutorial_step8/index.html">here</a> to see the final result.</p>

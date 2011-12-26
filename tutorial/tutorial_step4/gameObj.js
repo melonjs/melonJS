@@ -26,7 +26,7 @@
 			// set the walking & jumping speed
 			this.setVelocity(3, 15);
          
-         // adjust the bounding box
+			// adjust the bounding box
 			this.updateColRect(8,48, -1,0);
 			
 			// set the display to follow our position on both axis
@@ -74,9 +74,9 @@
 	});
 
    /*****************************/
-	/*									  */
-	/*		a Coing entity		    */
-	/*									  */
+	/*							*/
+	/*		a Coin entity		*/
+	/*							*/
 	/*****************************/
 	var CoinEntity = me.CollectableEntity.extend(
 	{	
@@ -85,21 +85,11 @@
 		{
 			// call the parent constructor
 			this.parent(x, y , settings);
-
-			// animation speed		
-			//this.animationspeed = 8;
-			
-			// bounding box
-			//this.updateColRect(8,16,16,16);
 		},		
 			
 		onDestroyEvent : function ()
 		{
-			// do something when collide
-			//me.audio.play("cling", false);
-			// give some score
-			//me.game.HUD.updateItemValue("score", 250);
-			
+			// do something 
 		}
 		
 	});
