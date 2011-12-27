@@ -109,9 +109,7 @@
 		 * @param {y} y
 		 */
 		draw : function(context, x, y) {
-			if (this.updated) {
-				this.updated = false;
-			}
+			;// to be extended
 		}
 	});
 	/*---------------------------------------------------------*/
@@ -152,15 +150,16 @@
 
 	HUD_Object = me.Rect.extend(
 	/** @scope me.HUD_Object.prototype */
-	{
+	{	
+	
 		/**
 		 * @Constructor
 		 * @private
 		 */
 		init : function(x, y, w, h, bg) {
 			// call the parent constructor
-			this.parent(new me.Vector2d(x || 0, y || 0), w
-					|| me.video.getWidth(), h || me.video.getHeight());
+			this.parent(new me.Vector2d(x || 0, y || 0), 
+						w || me.video.getWidth(), h || me.video.getHeight());
 
 			// default background color (if specified)
 			this.bgcolor = bg;
@@ -179,9 +178,8 @@
 			this.HUD_invalidated = true;
 
 			// create a canvas where to draw everything
-			HUDCanvasSurface = me.video.createCanvasSurface(this.width,
-					this.height);
-
+			this.HUDCanvasSurface = me.video.createCanvasSurface(this.width, this.height);
+			
 			// this is a little hack to ensure the HUD is always the first draw
 			this.z = 999;
 
@@ -277,7 +275,7 @@
 				this.HUD_invalidated = true;
 			} else {
 				// reset everything
-				singleton.resetAll();
+				this.resetAll();
 			}
 		},
 
@@ -313,20 +311,23 @@
 		draw : function(context) {
 			if (this.HUD_invalidated) {
 				if (this.bgcolor) {
-					me.video.clearSurface(HUDCanvasSurface,	this.bgcolor);
+					me.video.clearSurface(this.HUDCanvasSurface, this.bgcolor);
 				}
 				else {
-					HUDCanvasSurface.canvas.width = HUDCanvasSurface.canvas.width;
+					this.HUDCanvasSurface.canvas.width = this.HUDCanvasSurface.canvas.width;
 				}
-				for ( var i = this.objCount, obj; i--,
-						obj = this.HUDobj[i];) {
+				for ( var i = this.objCount, obj; i--, obj = this.HUDobj[i];) {
 					if (obj.visible) {
-						obj.draw(HUDCanvasSurface, 0, 0);
+						obj.draw(this.HUDCanvasSurface, 0, 0);
+						// clear the updated flag
+						if (obj.updated) {
+							obj.updated = false;
+						}
 					}
 				}
 			}
 			// draw the HUD
-			context.drawImage(HUDCanvasSurface.canvas, this.pos.x, this.pos.y);
+			context.drawImage(this.HUDCanvasSurface.canvas, this.pos.x, this.pos.y);
 			// reset the flag
 			this.HUD_invalidated = false;
 		}
