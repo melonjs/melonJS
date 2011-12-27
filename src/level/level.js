@@ -640,7 +640,6 @@
 		obj.loadLevel = function(level) {
 			if (levels[level] === undefined) {
 				throw ("melonJS: level " + level + " not found");
-				return;
 			}
 
 			if (levels[level] instanceof me.TMXTileMap) {

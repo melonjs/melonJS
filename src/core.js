@@ -1160,7 +1160,6 @@
 		/**
 		 * add an entity to the game manager
 		 * @name me.game#addEntity
-		 * @public
 		 * @private
 		 * @function
 		 */

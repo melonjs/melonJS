@@ -22,7 +22,7 @@ YUI_OPTION =
 
 # GOOGLE CLOSURE COMPILER
 GCC_VERSION =
-GCC_PATH = tools/google-closure-compiler$(GCC_VERSION)/
+GCC_PATH = tools/closure-compiler$(GCC_VERSION)/
 GCC_COMPRESSOR = ${GCC_PATH}compiler$(GCC_VERSION).jar
 GCC_OPTION = --jscomp_off=internetExplorerChecks 
 #GCC_OPTION = --compilation_level ADVANCED_OPTIMIZATIONS
