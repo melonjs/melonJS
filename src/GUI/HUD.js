@@ -109,9 +109,7 @@
 		 * @param {y} y
 		 */
 		draw : function(context, x, y) {
-			//console.log("call score");
 			if (this.updated) {
-				//console.log("score : " + this.value);
 				this.updated = false;
 			}
 		}
@@ -313,14 +311,13 @@
 		 * @private
 		 */
 		draw : function(context) {
-			//console.log("draw HUD");
 			if (this.HUD_invalidated) {
-				if (this.bgcolor)
-					me.video.clearSurface(HUDCanvasSurface,
-							this.bgcolor);
-				else
+				if (this.bgcolor) {
+					me.video.clearSurface(HUDCanvasSurface,	this.bgcolor);
+				}
+				else {
 					HUDCanvasSurface.canvas.width = HUDCanvasSurface.canvas.width;
-
+				}
 				for ( var i = this.objCount, obj; i--,
 						obj = this.HUDobj[i];) {
 					if (obj.visible) {
@@ -329,8 +326,7 @@
 				}
 			}
 			// draw the HUD
-			context.drawImage(HUDCanvasSurface.canvas, this.pos.x,
-					this.pos.y);
+			context.drawImage(HUDCanvasSurface.canvas, this.pos.x, this.pos.y);
 			// reset the flag
 			this.HUD_invalidated = false;
 		}

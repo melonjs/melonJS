@@ -15,7 +15,7 @@ Version History
 * Core: Fixed state change when using custom state values
 * Doc: various documentation correction and improvements
 * Entity: added friction management
-* Entity: updateMovement function now returns a collision "vector (API CHANGE, see documentation)
+* Entity: updateMovement function now returns a collision "vector" (API CHANGE, see documentation)
 * Entity: refactored/cleaned-up movement/collision function
 * Entity: added support for multiline spritesheet (fixed cell size)
 * Entity: added the possibility to define a specific transparent color for spritesheet
@@ -24,6 +24,8 @@ Version History
 * Entity: fixed object with 1 single sprite (no animation) not begin updated
 * Entity: Added the possibility to also specify a callback when an animation is over
 * Entity: Fixed an initialization issue when using melonJS without a Tilemap
+* GUI: Corrected me.GUI_Object and added missing documentation
+* GUI: marked me.GUI_Object as deprecated, as it will be rewritten in a next release
 * Event: also cancel event bubbling
 * Font: added support for multiline fontsheet
 * HUD: added a setItemValue() function
