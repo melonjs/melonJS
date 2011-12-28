@@ -13,7 +13,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	input = (function() {
+	me.input = (function() {
 
 		// hold public stuff in our singletong
 		var obj = {};
@@ -378,11 +378,6 @@
 		return obj;
 
 	})();
-
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.input = input;
 
 	/*---------------------------------------------------------*/
 	// END END END

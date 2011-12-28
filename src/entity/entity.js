@@ -23,7 +23,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	ObjectSettings = {
+	me.ObjectSettings = {
 		/**
 		 * object entity name<br>
 		 * as defined in the Tiled Object Properties
@@ -93,7 +93,7 @@
 		 */
 		collidable : false
 	};
-	me.ObjectSettings = ObjectSettings;
+
 
 	/************************************************************************************/
 	/*		a pool of entity																					*/
@@ -110,7 +110,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	entityPool = (function() {
+	me.entityPool = (function() {
 		// hold public stuff in our singletong
 		var obj = {};
 
@@ -135,10 +135,10 @@
 
 		obj.init = function() {
 			// add default entity object 
-			obj.add("me.LevelEntity", LevelEntity);
-			obj.add("me.ObjectEntity", ObjectEntity);
-			obj.add("me.CollectableEntity", CollectableEntity);
-			obj.add("me.InvisibleEntity", InvisibleEntity);
+			obj.add("me.LevelEntity", me.LevelEntity);
+			obj.add("me.ObjectEntity", me.ObjectEntity);
+			obj.add("me.CollectableEntity", me.CollectableEntity);
+			obj.add("me.InvisibleEntity", me.InvisibleEntity);
 		};
 
 		/**
@@ -178,8 +178,7 @@
 		return obj;
 
 	})();
-	// expose our object to our scope
-	$.me.entityPool = entityPool;
+
 
 	/************************************************************************/
 	/*      a parallax layer object entity                                  */
@@ -187,7 +186,7 @@
 	/**
 	 * @ignore
 	 */
-	ParallaxLayer = me.Rect.extend({
+	var ParallaxLayer = me.Rect.extend({
 		/**
 		 * @ignore 
 		 */
@@ -242,7 +241,7 @@
 	 * @memberOf me
 	 *	@param {int} [z="0"] z order value for the parallax background
 	 */
-	ParallaxBackgroundEntity = me.Rect
+	me.ParallaxBackgroundEntity = me.Rect
 			.extend({
 				/**
 				 * @ignore 
@@ -372,8 +371,7 @@
 				}
 
 			});
-	// expose our object to me scope
-	$.me.ParallaxBackgroundEntity = ParallaxBackgroundEntity
+
 
 	/**
 	 * A Simple object to display a sprite on screen.
@@ -390,7 +388,7 @@
 	 * // create a static Sprite Object
 	 * mySprite = new SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
 	 */
-	SpriteObject = me.Rect
+	me.SpriteObject = me.Rect
 			.extend(
 			/** @scope me.SpriteObject.prototype */
 			{
@@ -663,8 +661,6 @@
 				}
 
 			});
-	$.me.SpriteObject = SpriteObject;
-
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      a generic object entity                                                     */
@@ -682,7 +678,7 @@
 	 * @param {int} spritewidth width of a single sprite within the spritesheet
 	 * @param {int} [spriteheight] height of a single sprite within the spritesheet (value will be set to the image height if not specified)
 	 */
-	AnimationSheet = me.SpriteObject
+	me.AnimationSheet = me.SpriteObject
 			.extend(
 			/** @scope me.AnimationSheet.prototype */
 			{
@@ -840,7 +836,6 @@
 					return false;
 				}
 			});
-	$.me.AnimationSheet = AnimationSheet;
 
 	/************************************************************************************/
 	/*                                                                                  */
@@ -860,7 +855,7 @@
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="object_properties.png"/>
 	 */
-	ObjectEntity = AnimationSheet
+	me.ObjectEntity = me.AnimationSheet
 			.extend(
 			/** @scope me.ObjectEntity.prototype */
 			{
@@ -1381,8 +1376,7 @@
 				}
 
 	});
-	// expose our object to our scope
-	$.me.ObjectEntity = ObjectEntity;
+
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      a Collectable entity                                                        */
@@ -1397,7 +1391,7 @@
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
-	CollectableEntity = ObjectEntity.extend(
+	me.CollectableEntity = me.ObjectEntity.extend(
 	/** @scope me.CollectableEntity.prototype */
 	{
 		/** @private */
@@ -1411,8 +1405,6 @@
 
 		}
 	});
-	// expose our object to our scope	
-	$.me.CollectableEntity = CollectableEntity;
 
 	/************************************************************************************/
 	/*                                                                                  */
@@ -1428,7 +1420,7 @@
 	 * @param {int} y the y coordinates of the object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
-	InvisibleEntity = me.Rect
+	me.InvisibleEntity = me.Rect
 			.extend(
 			/** @scope me.InvisibleEntity.prototype */
 			{
@@ -1539,8 +1531,6 @@
 
 				}
 			});
-	// expose our object to our scope
-	$.me.InvisibleEntity = InvisibleEntity;
 
 	/************************************************************************************/
 	/*                                                                                  */
@@ -1556,7 +1546,7 @@
 	 * @param {int} y the y coordinates of the object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
-	LevelEntity = InvisibleEntity.extend(
+	me.LevelEntity = me.InvisibleEntity.extend(
 	/** @scope me.LevelEntity.prototype */
 	{
 		/** @private */
@@ -1606,8 +1596,6 @@
 			this.goTo();
 		}
 	});
-	// expose our object to our scope
-	$.me.LevelEntity = LevelEntity;
 
 	/*---------------------------------------------------------*/
 	// END END END

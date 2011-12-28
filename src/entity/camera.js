@@ -25,9 +25,9 @@
 	 * @param {int} [realw] real world width limit
 	 * @param {int} [realh] real world height limit
 	 */
-	ViewportEntity = me.Rect
+	me.Viewport = me.Rect
 			.extend(
-			/** @scope me.ViewportEntity.prototype */
+			/** @scope me.Viewport.prototype */
 			{
 
 				/**
@@ -437,10 +437,7 @@
 				}
 
 			});
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.Viewport = ViewportEntity;
+
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/

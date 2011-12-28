@@ -22,7 +22,7 @@
 	 * @param {int} x x position of the vector
 	 * @param {int} y y position of the vector
 	 */
-	Vector2d = Object.extend(
+	me.Vector2d = Object.extend(
 	/** @scope me.Vector2d.prototype */
 	{
 		/**
@@ -99,7 +99,7 @@
 
 		/** @return {me.Vector2D} */
 		clamp : function(low, high) {
-			return new Vector2d(this.x.clamp(low, high), this.y
+			return new me.Vector2d(this.x.clamp(low, high), this.y
 					.clamp(low, high));
 		},
 
@@ -115,7 +115,7 @@
 
 		/** @return {me.Vector2D} */
 		negate : function() {
-			return new Vector2d(-this.x, -this.y);
+			return new me.Vector2d(-this.x, -this.y);
 		},
 
 		negateSelf : function() {
@@ -158,7 +158,7 @@
 
 		/** @return {me.Vector2d} */
 		clone : function() {
-			return new Vector2d(this.x, this.y);
+			return new me.Vector2d(this.x, this.y);
 		},
 
 		/** @return {String} */
@@ -182,7 +182,7 @@
 	 * @param {int} w width of the rectangle
 	 * @param {int} h height of the rectangle
 	 */
-	Rect = Object
+	me.Rect = Object
 			.extend(
 			/** @scope me.Rect.prototype */
 			{
@@ -276,7 +276,7 @@
 					// allow to reduce the hitbox size
 					// while on keeping the original pos vector
 					// corresponding to the entity
-					this.colPos = new Vector2d();
+					this.colPos = new me.Vector2d();
 
 					this.width = w;
 					this.height = h;
@@ -488,7 +488,7 @@
 				 */
 				collideVsAABB : function(/** {me.Rect} */ rect) {
 					// response vector
-					var p = new Vector2d(0, 0);
+					var p = new me.Vector2d(0, 0);
 
 					// check if both box are overlaping
 					if (this.checkAxisAligned(rect)) {
@@ -525,12 +525,7 @@
 							this.height);
 
 				}
-			});
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.Vector2d = Vector2d;
-	$.me.Rect = Rect;
+	});
 
 	/*---------------------------------------------------------*/
 	// END END END

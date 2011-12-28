@@ -63,13 +63,15 @@
 
 	})();
 
-	/*---
-	
-	 	a collection of utility Function
-	  
-								---*/
+	/**
+	 * a collection of utility Function
+	 * @final
+	 * @memberOf me
+	 * @private
+	 * @constructor Should not be called by the user.
+	 */
 
-	var Utils = (function() {
+	me.utils = (function() {
 		// hold public stuff in our singletong
 		var api = {};
 
@@ -209,11 +211,6 @@
 		return api;
 
 	})();
-
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.utils = Utils;
 
 	/*---------------------------------------------------------*/
 	// END END END

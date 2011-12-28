@@ -17,7 +17,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	timer = (function() {
+	me.timer = (function() {
 		// hold public stuff in our api
 		var api = {};
 
@@ -146,7 +146,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	video = (function() {
+	me.video = (function() {
 		// hold public stuff in our apig
 		var api = {};
 
@@ -492,10 +492,6 @@
 		return api;
 
 	})();
-
-	// expose our stuff to the global scope
-	$.me.timer = timer;
-	$.me.video = video;
 
 	/*---------------------------------------------------------*/
 	// END END END

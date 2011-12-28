@@ -29,9 +29,9 @@
 	 * tween.easing(me.Tween.Easing.Bounce.EaseOut);
 	 * tween.start();
 	 */
-	Tween = function(object) {
+	me.Tween = function(object) {
 
-		var _object = object, _valuesStart = {}, _valuesDelta = {}, _valuesEnd = {}, _duration = 1000, _delayTime = 0, _startTime = null, _easingFunction = Tween.Easing.Linear.EaseNone, _chainedTween = null, _onUpdateCallback = null, _onCompleteCallback = null;
+		var _object = object, _valuesStart = {}, _valuesDelta = {}, _valuesEnd = {}, _duration = 1000, _delayTime = 0, _startTime = null, _easingFunction = me.Tween.Easing.Linear.EaseNone, _chainedTween = null, _onUpdateCallback = null, _onCompleteCallback = null;
 
 		/**
 		 * object properties to be updated and duration
@@ -284,7 +284,7 @@
 	 * @type enum
 	 * @name me.Tween#Easing
 	 */
-	Tween.Easing = {
+	me.Tween.Easing = {
 		Linear : {},
 		Quadratic : {},
 		Cubic : {},
@@ -299,26 +299,26 @@
 	};
 
 	/** @ignore */
-	Tween.Easing.Linear.EaseNone = function(k) {
+	me.Tween.Easing.Linear.EaseNone = function(k) {
 
 		return k;
 
 	};
 
 	/** @ignore */
-	Tween.Easing.Quadratic.EaseIn = function(k) {
+	me.Tween.Easing.Quadratic.EaseIn = function(k) {
 
 		return k * k;
 
 	};
 	/** @ignore */
-	Tween.Easing.Quadratic.EaseOut = function(k) {
+	me.Tween.Easing.Quadratic.EaseOut = function(k) {
 
 		return -k * (k - 2);
 
 	};
 	/** @ignore */
-	Tween.Easing.Quadratic.EaseInOut = function(k) {
+	me.Tween.Easing.Quadratic.EaseInOut = function(k) {
 
 		if ((k *= 2) < 1)
 			return 0.5 * k * k;
@@ -326,19 +326,19 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Cubic.EaseIn = function(k) {
+	me.Tween.Easing.Cubic.EaseIn = function(k) {
 
 		return k * k * k;
 
 	};
 	/** @ignore */
-	Tween.Easing.Cubic.EaseOut = function(k) {
+	me.Tween.Easing.Cubic.EaseOut = function(k) {
 
 		return --k * k * k + 1;
 
 	};
 	/** @ignore */
-	Tween.Easing.Cubic.EaseInOut = function(k) {
+	me.Tween.Easing.Cubic.EaseInOut = function(k) {
 
 		if ((k *= 2) < 1)
 			return 0.5 * k * k * k;
@@ -346,19 +346,19 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Quartic.EaseIn = function(k) {
+	me.Tween.Easing.Quartic.EaseIn = function(k) {
 
 		return k * k * k * k;
 
 	};
 	/** @ignore */
-	Tween.Easing.Quartic.EaseOut = function(k) {
+	me.Tween.Easing.Quartic.EaseOut = function(k) {
 
 		return -(--k * k * k * k - 1);
 
 	}
 	/** @ignore */
-	Tween.Easing.Quartic.EaseInOut = function(k) {
+	me.Tween.Easing.Quartic.EaseInOut = function(k) {
 
 		if ((k *= 2) < 1)
 			return 0.5 * k * k * k * k;
@@ -366,19 +366,19 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Quintic.EaseIn = function(k) {
+	me.Tween.Easing.Quintic.EaseIn = function(k) {
 
 		return k * k * k * k * k;
 
 	};
 	/** @ignore */
-	Tween.Easing.Quintic.EaseOut = function(k) {
+	me.Tween.Easing.Quintic.EaseOut = function(k) {
 
 		return (k = k - 1) * k * k * k * k + 1;
 
 	};
 	/** @ignore */
-	Tween.Easing.Quintic.EaseInOut = function(k) {
+	me.Tween.Easing.Quintic.EaseInOut = function(k) {
 
 		if ((k *= 2) < 1)
 			return 0.5 * k * k * k * k * k;
@@ -386,37 +386,37 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Sinusoidal.EaseIn = function(k) {
+	me.Tween.Easing.Sinusoidal.EaseIn = function(k) {
 
 		return -Math.cos(k * Math.PI / 2) + 1;
 
 	};
 	/** @ignore */
-	Tween.Easing.Sinusoidal.EaseOut = function(k) {
+	me.Tween.Easing.Sinusoidal.EaseOut = function(k) {
 
 		return Math.sin(k * Math.PI / 2);
 
 	};
 	/** @ignore */
-	Tween.Easing.Sinusoidal.EaseInOut = function(k) {
+	me.Tween.Easing.Sinusoidal.EaseInOut = function(k) {
 
 		return -0.5 * (Math.cos(Math.PI * k) - 1);
 
 	};
 	/** @ignore */
-	Tween.Easing.Exponential.EaseIn = function(k) {
+	me.Tween.Easing.Exponential.EaseIn = function(k) {
 
 		return k == 0 ? 0 : Math.pow(2, 10 * (k - 1));
 
 	};
 	/** @ignore */
-	Tween.Easing.Exponential.EaseOut = function(k) {
+	me.Tween.Easing.Exponential.EaseOut = function(k) {
 
 		return k == 1 ? 1 : -Math.pow(2, -10 * k) + 1;
 
 	};
 	/** @ignore */
-	Tween.Easing.Exponential.EaseInOut = function(k) {
+	me.Tween.Easing.Exponential.EaseInOut = function(k) {
 
 		if (k == 0)
 			return 0;
@@ -428,19 +428,19 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Circular.EaseIn = function(k) {
+	me.Tween.Easing.Circular.EaseIn = function(k) {
 
 		return -(Math.sqrt(1 - k * k) - 1);
 
 	};
 	/** @ignore */
-	Tween.Easing.Circular.EaseOut = function(k) {
+	me.Tween.Easing.Circular.EaseOut = function(k) {
 
 		return Math.sqrt(1 - --k * k);
 
 	};
 	/** @ignore */
-	Tween.Easing.Circular.EaseInOut = function(k) {
+	me.Tween.Easing.Circular.EaseInOut = function(k) {
 
 		if ((k /= 0.5) < 1)
 			return -0.5 * (Math.sqrt(1 - k * k) - 1);
@@ -448,7 +448,7 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Elastic.EaseIn = function(k) {
+	me.Tween.Easing.Elastic.EaseIn = function(k) {
 
 		var s, a = 0.1, p = 0.4;
 		if (k == 0)
@@ -467,7 +467,7 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Elastic.EaseOut = function(k) {
+	me.Tween.Easing.Elastic.EaseOut = function(k) {
 
 		var s, a = 0.1, p = 0.4;
 		if (k == 0)
@@ -486,7 +486,7 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Elastic.EaseInOut = function(k) {
+	me.Tween.Easing.Elastic.EaseInOut = function(k) {
 
 		var s, a = 0.1, p = 0.4;
 		if (k == 0)
@@ -509,21 +509,21 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Back.EaseIn = function(k) {
+	me.Tween.Easing.Back.EaseIn = function(k) {
 
 		var s = 1.70158;
 		return k * k * ((s + 1) * k - s);
 
 	};
 	/** @ignore */
-	Tween.Easing.Back.EaseOut = function(k) {
+	me.Tween.Easing.Back.EaseOut = function(k) {
 
 		var s = 1.70158;
 		return (k = k - 1) * k * ((s + 1) * k + s) + 1;
 
 	};
 	/** @ignore */
-	Tween.Easing.Back.EaseInOut = function(k) {
+	me.Tween.Easing.Back.EaseInOut = function(k) {
 
 		var s = 1.70158 * 1.525;
 		if ((k *= 2) < 1)
@@ -532,13 +532,13 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Bounce.EaseIn = function(k) {
+	me.Tween.Easing.Bounce.EaseIn = function(k) {
 
 		return 1 - Tween.Easing.Bounce.EaseOut(1 - k);
 
 	};
 	/** @ignore */
-	Tween.Easing.Bounce.EaseOut = function(k) {
+	me.Tween.Easing.Bounce.EaseOut = function(k) {
 
 		if ((k /= 1) < (1 / 2.75)) {
 
@@ -560,7 +560,7 @@
 
 	};
 	/** @ignore */
-	Tween.Easing.Bounce.EaseInOut = function(k) {
+	me.Tween.Easing.Bounce.EaseInOut = function(k) {
 
 		if (k < 0.5)
 			return Tween.Easing.Bounce.EaseIn(k * 2) * 0.5;
@@ -568,10 +568,6 @@
 
 	};
 
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.Tween = Tween;
 
 	/*---------------------------------------------------------*/
 	// END END END

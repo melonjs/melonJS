@@ -234,7 +234,7 @@
                      setTMXProperties(tprop, xmlElements.item(i));
 
                      // check if we already have a parallax layer
-                     parallax_layer = this.getLayerByName(me.LevelConstants.PARALLAX_MAP);
+                     var parallax_layer = this.getLayerByName(me.LevelConstants.PARALLAX_MAP);
 
                      if (!parallax_layer) {
                         parallax_layer = new me.ParallaxBackgroundEntity(zOrder);
@@ -664,7 +664,7 @@
 		if (this.gid) {
 			
 			// get the corresponding tileset
-			tileset = tilesets.getTilesetByGid(this.gid);
+			var tileset = tilesets.getTilesetByGid(this.gid);
          
 			// set width and height equal to tile size
 			this.width = tileset.tilewidth;
@@ -699,7 +699,7 @@
 	/*------------------------------------------------------*/
 	// expose our stuff to the me scope
 	/*------------------------------------------------------*/
-	$.me.TMXTileMap = TMXTileMap;
+	me.TMXTileMap = TMXTileMap;
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/

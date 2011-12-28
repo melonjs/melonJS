@@ -48,7 +48,7 @@
 	 * // add the "score" HUD item
 	 * me.game.HUD.addItem("score", new ScoreObject(470,10));
 	 */
-	HUD_Item = Object.extend(
+	me.HUD_Item = Object.extend(
 	/** @scope me.HUD_Item.prototype */
 	{
 		init : function(x, y, val) {
@@ -148,7 +148,7 @@
 	 */
 
 
-	HUD_Object = me.Rect.extend(
+	me.HUD_Object = me.Rect.extend(
 	/** @scope me.HUD_Object.prototype */
 	{	
 	
@@ -333,9 +333,6 @@
 		}
 	});
 
-	// expose our stuff to the global scope
-	$.me.HUD_Item = HUD_Item;
-	$.me.HUD_Object = HUD_Object;
 
 	/*---------------------------------------------------------*/
 	// END END END

@@ -24,7 +24,7 @@
 	 * @constructor Should not be called by the user.
 	 */
 
-	audio = (function() {
+	me.audio = (function() {
 		// hold public stuff in our singletong
 		var obj = {};
 
@@ -176,7 +176,7 @@
 			if (sound_channel > 1) {
 				var soundclip = audio_channels[sound_id][0];
 				// clone copy to create multiple channel version
-				for (channel = 1; channel < sound_channel; channel++) {
+				for (var channel = 1; channel < sound_channel; channel++) {
 					// make sure it's a new copy each time
 					var node = soundclip.cloneNode(true);
 					// fix for IE platform not properly
@@ -420,7 +420,7 @@
 		obj.stop = function(sound_id) {
 			if (sound_enable) {
 				var sound = audio_channels[sound_id];
-				for (channel_id = sound.length; channel_id--;) {
+				for (var channel_id = sound.length; channel_id--;) {
 					sound[channel_id].pause();
 					// force rewind to beginning
 					sound[channel_id].currentTime = reset_val;
@@ -443,7 +443,7 @@
 		obj.pause = function(sound_id) {
 			if (sound_enable) {
 				var sound = audio_channels[sound_id];
-				for (channel_id = sound.length; channel_id--;) {
+				for (var channel_id = sound.length; channel_id--;) {
 					sound[channel_id].pause();
 				}
 
@@ -529,9 +529,6 @@
 		return obj;
 
 	})();
-
-	// expose our stuff to the global scope
-	$.me.audio = audio;
 
 	/*---------------------------------------------------------*/
 	// END END END

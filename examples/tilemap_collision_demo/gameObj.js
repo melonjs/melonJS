@@ -294,12 +294,12 @@
 				this.vel.x = 0;
 			}
 			// check & update movement
-			updated = this.updateMovement();
+			this.updateMovement();
 			
 			// call the parent function
 			this.parent();
 			
-			return updated;
+			return (this.vel.x!=0 || this.vel.y!=0);
 		}
 	});
 	

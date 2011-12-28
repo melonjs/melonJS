@@ -64,7 +64,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	gamestat = (function() {
+	me.gamestat = (function() {
 
 		// hold public stuff in our singletong
 		var singleton = {};
@@ -185,9 +185,6 @@
 		return singleton;
 
 	})();
-
-	// expose our stuff to the global scope
-	$.me.gamestat = gamestat;
 
 	/*---------------------------------------------------------*/
 	// END END END

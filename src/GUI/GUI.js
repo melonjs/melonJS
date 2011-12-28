@@ -45,7 +45,7 @@
 	 * me.game.add((new myButton(10,10)),4);
 	 *
 	 */
-	GUI_Object = me.SpriteObject.extend({
+	me.GUI_Object = me.SpriteObject.extend({
 	/** @scope me.GUI_Object.prototype */
 	
 		/**
@@ -113,8 +113,6 @@
 			return this.updated;
 		}
 	});
-	// expose our stuff to the global scope
-	$.me.GUI_Object = GUI_Object;
 
 	/*---------------------------------------------------------*/
 	// END END END

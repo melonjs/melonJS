@@ -653,25 +653,25 @@
 			parseFromString : function(textxml) {
 				// get a reference to the requested corresponding xml file 
 				if ($.DOMParser) {
-					parser = new DOMParser();
-					xmlDoc = parser.parseFromString(textxml, "text/xml");
+					this.parser = new DOMParser();
+					this.xmlDoc = this.parser.parseFromString(textxml, "text/xml");
 				} else // Internet Explorer (untested!)
 				{
-					xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-					xmlDoc.async = "false";
-					xmlDoc.loadXML(textxml);
+					this.xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+					this.xmlDoc.async = "false";
+					this.xmlDoc.loadXML(textxml);
 				}
-				if (xmlDoc == null) {
-					console.log("xml " + xmlDoc + " not found!");
+				if (this.xmlDoc == null) {
+					console.log("xml " + this.xmlDoc + " not found!");
 				}
 			},
 
 			getFirstElementByTagName : function(name) {
-				return xmlDoc ? xmlDoc.getElementsByTagName(name)[0] : null;
+				return this.xmlDoc ? this.xmlDoc.getElementsByTagName(name)[0] : null;
 			},
 
 			getAllTagElements : function() {
-				return xmlDoc ? xmlDoc.getElementsByTagName('*') : null;
+				return this.xmlDoc ? this.xmlDoc.getElementsByTagName('*') : null;
 			},
 
 			getStringAttribute : function(elt, str, val) {
@@ -696,8 +696,8 @@
 
 			// free the allocated parser
 			free : function() {
-				xmlDoc = null;
-				parser = null;
+				this.xmlDoc = null;
+				this.parser = null;
 			}
 		}
 		return parserObj;
@@ -770,8 +770,7 @@
 
 		me_initialized = true;
 
-	}
-	;
+	};
 
 	/******************************************/
 	/*		OBJECT DRAWING MANAGEMENT           */
@@ -783,7 +782,7 @@
 	 * only used by the game manager
 	 * @ignore
 	 */
-	drawManager = (function() {
+	var drawManager = (function() {
 		// hold public stuff in our singletong
 		var api = {};
 
@@ -872,7 +871,7 @@
             // remove the object from the list of obj to draw
             dirtyObjects.splice(dirtyObjects.indexOf(obj), 1);
             // save the visible state of the object
-            wasVisible = obj.visible;
+            var wasVisible = obj.visible;
             // mark the object as not visible
             // so it won't be added (again) in the list object to be draw
             obj.visible = false;
@@ -935,7 +934,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	game = (function() {
+	me.game = (function() {
 		// hold public stuff in our singletong
 		var api = {};
 
@@ -1273,7 +1272,7 @@
 				oldRect = (me.sys.dirtyRegion && obj.isEntity) ? obj.getRect() : null;
             
 				// update our object
-				updated = obj.update();
+				var updated = obj.update();
 
 				// check if object is visible
 				if (obj.isEntity) {
@@ -1552,7 +1551,7 @@
 	 * });
 	 *
 	 */
-	ScreenObject = Object.extend(
+	me.ScreenObject = Object.extend(
 	/** @scope me.ScreenObject.prototype */
 	{
 
@@ -1571,7 +1570,7 @@
 		init : function(addAsObject) {
 			this.addAsObject = addAsObject;
 			this.visible = (addAsObject === true) || false;
-			this.rect = new me.Rect(new Vector2d(0, 0), 0, 0);
+			this.rect = new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
 		/** 
@@ -1703,8 +1702,7 @@
 		}
 
 	});
-	// expose our stuff to the global score
-	$.me.ScreenObject = ScreenObject;
+	
 
 	/************************************************************************************/
 	/*      Game App Manager                                                            */
@@ -1749,7 +1747,7 @@
 	 * @constructor Should not be called by the user.
 	 */
 
-	state = (function() {
+	me.state = (function() {
 		// hold public stuff in our singleton
 		var obj = {};
 
@@ -2061,7 +2059,7 @@
 		/**
 		 * return a reference to the current screen object<br>
 		 * useful to call a object specific method
-		 * @name me.state#set
+		 * @name me.state#current
 		 * @public
 		 * @function
 		 * @return {me.ScreenObject} so
@@ -2155,11 +2153,6 @@
 
 	})();
 
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.state = state;
-	$.me.game = game;
 
 	/*---------------------------------------------------------*/
 	// END END END

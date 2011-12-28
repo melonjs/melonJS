@@ -8,10 +8,13 @@
 
 (function($, undefined) {
 
-	/************************************************************************************/
-	/*            a default loading screen                                              */
-	/************************************************************************************/
-	var DefaultLoadingScreen = me.ScreenObject.extend({
+	/**
+	 * a default loading screen
+	 * @memberOf me
+	 * @private
+	 * @constructor
+	 */
+	me.DefaultLoadingScreen = me.ScreenObject.extend({
 		/*---
 		
 			constructor
@@ -108,7 +111,7 @@
 	 * @constructor Should not be called by the user.
 	 */
 
-	loader = (function() {
+	me.loader = (function() {
 		// hold public stuff in our singletong
 		var obj = {};
 
@@ -196,7 +199,7 @@
 		function preloadXML(xmlData, isTMX) {
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
-				xmlhttp = new XMLHttpRequest();
+				var xmlhttp = new XMLHttpRequest();
 				// to ensure our document is treated as a XML file
 				if (xmlhttp.overrideMimeType)
 					xmlhttp.overrideMimeType('text/xml');
@@ -437,12 +440,6 @@
 		return obj;
 
 	})();
-
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.loader = loader;
-	$.me.DefaultLoadingScreen = DefaultLoadingScreen;
 
 	/*---------------------------------------------------------*/
 	// END END END

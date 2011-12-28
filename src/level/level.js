@@ -7,23 +7,23 @@
 
 (function($, undefined) {
 	// some regexp
-	removepath = /^.*(\\|\/|\:)/;
-	removeext = /\.[^\.]*$/;
+	var removepath = /^.*(\\|\/|\:)/;
+	var removeext = /\.[^\.]*$/;
 
 	// some custom level constants
-	var LevelConstants = {
+	me.LevelConstants = {
 		//# name of the collision map
 		COLLISION_MAP : "collision",
 		PARALLAX_MAP : "parallax",
 	};
 
-	/************************************************************************************/
-	/*                                                                                  */
-	/*      a  Tile object                                                              */
-	/*                                                                                  */
-	/************************************************************************************/
-
-	var Tile = me.Rect.extend({
+	/**
+	 * a basic tile object
+	 * @memberOf me
+	 * @private
+	 * @constructor
+	 */
+	me.Tile = me.Rect.extend({
 		init : function(x, y, w, h, tileId) {
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
 
@@ -70,8 +70,7 @@
 			this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
 		}
 
-	}
-	;
+	};
 
 	/* -----
 
@@ -321,7 +320,7 @@
 			
 		------								*/
 	TiledLayer.prototype.setTile = function(x, y, tileId) {
-		this.layerData[x][y] = new Tile(x, y, this.tilewidth, this.tileheight,
+		this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight,
 				tileId);
 	};
 
@@ -489,7 +488,7 @@
 		;
 
 		// return a fake collision layer if not found
-		if ((name.contains(LevelConstants.COLLISION_MAP)) && (layer == null)) {
+		if ((name.contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
 			layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,
 					me.game.currentLevel.realheight);
 		}
@@ -562,7 +561,7 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-	levelDirector = (function() {
+	me.levelDirector = (function() {
 		// hold public stuff in our singletong
 		var obj = {};
 
@@ -750,12 +749,9 @@
 	/*---------------------------------------------------------*/
 	// expose our stuff to the global scope
 	/*---------------------------------------------------------*/
-	$.me.Tile = Tile;
-	$.me.TileSet = TileSet;
-	$.me.TiledLayer = TiledLayer;
-	$.me.TileMap = TileMap
-	$.me.LevelConstants = LevelConstants;
-	$.me.levelDirector = levelDirector;
+	me.TileSet = TileSet;
+	me.TiledLayer = TiledLayer;
+	me.TileMap = TileMap
 
 	/*---------------------------------------------------------*/
 	// END END END

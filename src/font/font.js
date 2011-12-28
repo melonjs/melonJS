@@ -25,7 +25,7 @@
 	 * @param {String} color
 	 * @param {String} [align="top"]
 	 */
-	Font = Object.extend(
+	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
 	{
 		// alignement constants
@@ -130,7 +130,7 @@
 	 * @param {String} [firstChar="0x20"]
 
 	 */
-	BitmapFont = Font.extend(
+	me.BitmapFont = me.Font.extend(
 	/** @scope me.BitmapFont.prototype */
 	{
 		// character size;
@@ -255,11 +255,6 @@
 		}
 	});
 
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	$.me.Font = Font;
-	$.me.BitmapFont = BitmapFont;
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
