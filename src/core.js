@@ -1251,7 +1251,11 @@
 		 */
 		api.mouseEvent = function(x, y) {
 			for ( var i = registeredMouseEventObj.length; i--;) {
-				registeredMouseEventObj[i].mouseEvent(x, y);
+				if (registeredMouseEventObj[i].mouseEvent(x, y)) {
+					// stop propagating the event
+					// if the object return true
+					break;
+				}
 			}
 		};
 
@@ -1359,6 +1363,11 @@
 			// since we use a reverse loop for the display 
 			gameObjects.sort(function(a, b) {
 				return (b.z - a.z);
+			});
+			
+			// also sort the clickable items per z order
+			registeredMouseEventObj.sort(function(a, b) {
+				return (a.z - b.z);
 			});
 
 			// make sure we redraw everything

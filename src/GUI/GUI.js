@@ -37,7 +37,8 @@
 	 *   clicked:function()
 	 *   {
 	 *      console.log("clicked!");
-	 *      return false;
+	 *      // don't propagate the event
+	 *		return true;
 	 *   }
 	 * });
 	 * 
@@ -87,13 +88,14 @@
 		/**
 		 * function called when the object is clicked <br>
 		 * to be overwritten <br>
-		 * return true if object need to be updated
+		 * return true if we need to stop propagating the event
 		 * @public
 		 * @function
 		 * @deprecated won't survive version 0.9.3
 		 */
 		clicked : function() {
-			return false;
+			// don't propagate mouse event if clicked
+			return true;
 		},
 
 
@@ -102,9 +104,8 @@
 		 * @private
 		 */
 		mouseEvent : function(x, y) {
-			if ((x > this.pos.x) && (x < this.pos.x + this.width)
-					&& (y > this.pos.y)
-					&& (y < this.pos.y + this.height)) {
+			if ((x > this.left) && (x < this.right) && 
+			    (y > this.top) && (y < this.bottom)) {
 				// notify the object we have been clicked :)
 				if (this.isClickable) {
 					this.updated = this.clicked();
