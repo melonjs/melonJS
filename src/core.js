@@ -1389,7 +1389,7 @@
 		 * res = me.game.collide(this);
 		 *
 		 * // check if we collide with an enemy :
-		 * if (res && (res.type == me.game.ENEMY_OBJECT))
+		 * if (res && (res.obj.type == me.game.ENEMY_OBJECT))
 		 * { 	
 		 *   if (res.x != 0)
 		 *   {
@@ -1407,7 +1407,6 @@
 		 *      else
 		 *         console.log("y axis : bottom side !");			
 		 *   }
-		 *		
 		 * }
 
 		 */

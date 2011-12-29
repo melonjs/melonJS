@@ -1045,8 +1045,10 @@
 					if (res.x != 0 || res.y != 0) {
 						// notify the object
 						this.onCollision(res, obj);
-						// return the type 
+						// return the type (deprecated)
 						res.type = this.type;
+						// return a reference of the colliding object
+						res.obj  = this;
 						return res;
 					}
 					return null;
