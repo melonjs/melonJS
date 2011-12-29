@@ -394,7 +394,7 @@
 				 * @return {boolean}
 				 */
 				isVisible : function(rect) {
-					return this.checkAxisAligned(rect);
+					return rect.overlaps(this);
 				},
 
 				/**

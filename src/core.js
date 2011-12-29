@@ -892,7 +892,7 @@
 						obj = dirtyObjects[o];) {
 					// if dirty region enabled, make sure the object is in the area to be refreshed
 					if (me.sys.dirtyRegion && obj.isEntity
-							&& !obj.checkAxisAligned(rect)) {
+							&& !obj.overlaps(rect)) {
 						continue;
 					}
 					// draw the object using the dirty area to be updated

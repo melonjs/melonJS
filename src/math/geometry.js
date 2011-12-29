@@ -331,7 +331,7 @@
 				},
 
 				/**
-				 * return a new Rect with this rectangle coordinates<
+				 * return a new Rect with this rectangle coordinates
 				 * @return {me.Rect} new rectangle	
 				 */
 				getRect : function() {
@@ -445,18 +445,39 @@
 
 				/**
 				 * check if this rectangle is intersecting with the specified one
-				 * @private
 				 * @param  {me.Rect} rect
-				 * @return {boolean} true if intersecting
+				 * @return {boolean} true if overlaps
 				 */
-				checkAxisAligned : function(r) 
-				{
+				overlaps : function(r)	{
 					return (this.left < r.right && 
 							r.left < this.right && 
 							this.top < r.bottom &&
 							r.top < this.bottom);
 				},
-
+				
+				/**
+				 * check if this rectangle is within the specified one
+				 * @param  {me.Rect} rect
+				 * @return {boolean} true if within
+				 */
+				within: function(r) {
+					return (r.left <= this.left && 
+						    r.right >= this.right &&
+						    r.top <= this.top && 
+							r.bottom >= this.bottom);
+                },
+				
+				/**
+				 * check if this rectangle contains the specified one
+				 * @param  {me.Rect} rect
+				 * @return {boolean} true if contains
+				 */
+				contains: function(r) {
+					return (r.left >= this.left && 
+							r.right <= this.right &&
+							r.top >= this.top && 
+							r.bottom <= this.bottom);
+                },
 
 				/**
 				 * AABB vs AABB collission dectection<p>
@@ -491,7 +512,7 @@
 					var p = new me.Vector2d(0, 0);
 
 					// check if both box are overlaping
-					if (this.checkAxisAligned(rect)) {
+					if (this.overlaps(rect)) {
 						// compute delta between this & rect
 						var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
 						var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
