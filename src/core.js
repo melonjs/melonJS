@@ -95,7 +95,7 @@
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		storage : false,
+		localStorage : (typeof($.localStorage) == 'object'),
 		/** 
 		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
 		 * @type {Boolean}
@@ -108,7 +108,7 @@
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		nativeBase64 : false,
+		nativeBase64 : (typeof($.atob) == 'function'),
 
 		// Global settings
 		/** 
@@ -746,9 +746,6 @@
 			//if on mobile device, disable sound for now 
 			me.sys.sound = false;
 		}
-		
-		//check if browser support native b64 decoding
-		me.sys.nativeBase64 = (typeof(window.atob) == 'function');
 		
 		// init the FPS counter if needed
 		me.timer.init();
