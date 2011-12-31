@@ -2,8 +2,9 @@ Version History
 ---------------
 0.9.2
 * General: melonJS is now licensed under the terms of the MIT License
-* General: added some Cake magic, allowing to use melonJS with CofeeScript (by scan)
+* General: added some Cake magic, allowing to use melonJS with CoffeeScript (by scan)
 * General: added melonJS UML Class Diagram in the official repository (by Ben2303)
+* General: melonJS now properly stays in it's own namespace (me)
 * Audio: configurable behavior in case of audio loading error
 * Core: fixed a shaking bug when collision box is not aligned with the sprite box
 * Core: fixed collision detection bug (object being tested again itself)
@@ -13,6 +14,8 @@ Version History
 * Core: added a GUID (Game Unique Identifier) to objects
 * Core: getEntityByName now also returns non Entity Object (like layers)
 * Core: Fixed state change when using custom state values
+* Core: me.game.collide now also returns an object reference in the collision vector
+* Core: renamed and correctly initialize the localStorage flag capability
 * Doc: various documentation correction and improvements
 * Entity: added friction management
 * Entity: updateMovement function now returns a collision "vector" (API CHANGE, see documentation)
@@ -29,6 +32,7 @@ Version History
 * Event: also cancel event bubbling
 * Font: added support for multiline fontsheet
 * HUD: added a setItemValue() function
+* HUD: corrected display issue on Opera
 * Loader: added possibility to add graphics resources after pre-loading (e.g. ingame)
 * TMX: use native Base64 decoding when available
 * Viewport: Object to follow can either be a Object Entity or a position Vector
