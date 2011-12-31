@@ -88,7 +88,7 @@
     </li>
 
     <li>The melonJS <a href="http://www.melonjs.org/docs/index.html">documentation</a>
-        if you need more details
+        for more details
     </li>
 
     <li>
@@ -119,8 +119,9 @@
 
 <p><b>Testing/debugging :</b><br/>
     When using Chrome, and due to the "cross-origin request" security mechanism implemented, 
-	you need to use the "--disable-web-security" parameter when launching the browser in order
-	to test any local content, else the browser will complain when trying to load a level map. <br/></p>
+	you need to use the "--disable-web-security" parameter or better "--allow-file-access-from-files" 
+	when launching the browser in order to test any local content, else the browser will complain 
+	when trying to load a level map. <br/></p>
 
 <p><b>Additional Credits :</b><br/>
     - <a href=
@@ -134,11 +135,10 @@
 
 <h2>Part 1: Creating a level using Tiled</h2>
 
-<p>melonJS supports Plain, CSV, XML and Base64 <i><b>uncompressed</b></i> encoded tilemaps, so
-    before continuing, please check that your settings are correct (Tiled/Preferences). I
-    recommend the Base64 encoding, since it produces a smaller file. <img src=
-                                                                                  "media/tiled_settings.png"
-                                                                          alt="Tiled Settings"/></p>
+<p>melonJS supports only <i><b>uncompressed</b></i> tilemaps, so before continuing, 
+   please check that your settings are correct (Tiled/Preferences). I recommend the 
+   Base64 encoding, since it produces a smaller file, but it's really up to you.
+   <img src= "media/tiled_settings.png" alt="Tiled Settings"/></p>
 
 <p>First let's open Tiled and create a new map : for this tutorial we will we use a
     640x480 canvas, and since we have 32x32 tiles, we must specify at least 20 and 15 for
@@ -246,7 +246,7 @@ window.onReady(function() {
     called, the display and audio is initialized, and all game resources begin loading.
     We also define a callback to be called when everything is ready to be used. Within
     the callback, we define a new state that will be used for the in game stuff, together
-    with a <b>PlayScreen</b> object that we will use to manage the game event (reset,
+    with a <a href="http://www.melonjs.org/docs/symbols/me.ScreenObject.html"> <b>PlayScreen</b> object</a> that we will use to manage the game event (reset,
     etc...).</p>
 
 <p>So in order to load our level, the next thing is to add the resources to be loaded
@@ -319,7 +319,7 @@ var PlayScreen = me.ScreenObject.extend({
 
 <h2>Part 3: Add a main player</h2>
 
-<p>Here we will create a new object by extending the default ObjectEntity, to create
+<p>Here we will create a new object by extending the default <a href="http://www.melonjs.org/docs/symbols/me.ObjectEntity.html"> me.ObjectEntity</a>, to create
     our player. We will use the provided simple spritesheet <b>(gripe_run_right.png)</b>
     to animate our character. It's of course possible to define different animation for
     the same entity, but let's keep things simple first.</p><img src=
@@ -407,10 +407,10 @@ var PlayerEntity = me.ObjectEntity.extend({
 </pre>
 
 <p>I think the above code is quite easy to understand. Basically, we extend the
-    ObjectEntity, configure the default player speed, tweak the camera, and test if some
-    keys are pressed and manage our player movement. Also, you may notice that I'm
-    testing the return value of the <b>updateMovement() function</b>, which allows me to
-    control if I want the sprite animation to run or not.</p>
+    <a href="http://www.melonjs.org/docs/symbols/me.ObjectEntity.html"> ObjectEntity</a>, configure the default player speed, tweak the camera, 
+	test if some keys are pressed and manage our player movement (by setting player speed, and then calling the <a href="http://www.melonjs.org/docs/symbols/me.ObjectEntity.html#updateMovement"> updateMovement</a> function). Also, you may notice that I'm
+    testing the final velocity (this.vel.x and this.vel.y) of my object, which allows me to
+    know if my object actually moved, and control if I want the sprite animation to run or not.</p>
 	
 <p>Note that the functions here above, like <b>doWalk()</b> and <b>doJump()</b>, are 
    actually <b>helper functions for platform games</b> that basically compute the new player 
@@ -435,7 +435,7 @@ doWalk : function(left) {
 
 
 <p>Then, we have to modify our "main" to actually declare our new Object in the
-    EntityPool (that is used by the engine to instantiate object), and finally to map the
+    <a href="http://www.melonjs.org/docs/symbols/me.entityPool.html"> EntityPool</a> (that is used by the engine to instantiate object), and finally to map the
     keys we will use for the player movement. So our <b>loaded()</b> function will become
     :</p>
     <pre class="c2">
@@ -479,7 +479,7 @@ loaded: function ()
     - <b>spriteheight</b> we don't define this value here since we use a single line spritesheet,
 	and since in this case the engine will take the actual image height as a value for it.<br/>
 	<br/>
-    These two parameters will be passed as parameters (<b>settings</b> object here above
+    These two parameters will be passed as parameters (<a href="http://www.melonjs.org/docs/symbols/me.ObjectSettings.html"><b>settings</b> object</a> here above
     used by the constructor) when the object will be created. Now you can either specify
     these fields here in Tiled, or directly in your code (when dealing with multiple
     objects, it can be easier to just specify the name in Tiled, and manage the rest in
@@ -706,7 +706,7 @@ var g_resources = [
 </pre>
 <br/>
 
-<p>The coin itself is pretty easy; we just extend the me.CollectableEntity. Actually,
+<p>The coin itself is pretty easy; we just extend the <a href="http://www.melonjs.org/docs/symbols/me.CollectableEntity.html"> me.CollectableEntity</a>. Actually,
     we could directly use it in Tiled (without needing to create CoinEntity here), but
     since we will add some score and some audio sfx later when the coin is collected,
     let's do it directly this way.</p>
@@ -797,12 +797,14 @@ var EnemyEntity = me.ObjectEntity.extend({
             } else if (!this.walkLeft &amp;&amp; this.pos.x &gt;= this.endX) {
                 this.walkLeft = true;
             }
-
             this.doWalk(this.walkLeft);
         } else {
             this.vel.x = 0;
         }
-        
+		
+        // check and update movement
+        this.updateMovement();
+		
         // update animation if necessary
         if (this.vel.x!=0 || this.vel.y!=0) {
             // update objet animation
@@ -839,7 +841,7 @@ me.entityPool.add("EnemyEntity", EnemyEntity);
                                                                   "media/tutorial_tiled_step5.png" alt="Step 5"/></p>
 
 <p>Before testing, we also need to modify our player to heck for collision with other
-    entities. In order to do this, we add a call to the <b>me.game.collide(this)</b>
+    entities. In order to do this, we add a call to the <a href="http://www.melonjs.org/docs/symbols/me.game.html#collide"> <b>me.game.collide(this)</b></a>
     function in our mainPlayer code, see below :</p>
     <pre class="c2">
 <code>
@@ -867,7 +869,7 @@ update: function() {
 
     if (res) {
         // if we collide with an enemy
-        if (res.type == me.game.ENEMY_OBJECT) {
+        if (res.obj.type == me.game.ENEMY_OBJECT) {
             // check if we jumped on it
             if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
                 // bounce
@@ -960,8 +962,8 @@ var g_resources = [
 </pre>
 <br/>
 
-<p>Let's then define a new Object, that will extend the me.HUD_Item, in which we will
-    draw the object value using our font.</p>
+<p>Let's then define a new Object, that will extend the <a href="http://www.melonjs.org/docs/symbols/me.HUD_Item.html">me.HUD_Item</a>, 
+   in which we will draw the object value using our font.</p>
     <pre class="c2">
 <code>/*-------------- 
 a score HUD Item
@@ -1023,13 +1025,13 @@ var PlayScreen = me.ScreenObject.extend({
 </code>
 </pre>
 
-<p>The <b>me.game.addHUD()</b> function is used to enable a HUD (specifying the HUD
+<p>The <a href="http://www.melonjs.org/docs/symbols/me.game.html#addHUD">me.game.addHUD()</a> function is used to enable a <a href="http://www.melonjs.org/docs/symbols/me.HUD_Object.html">HUD Object</a> (specifying the HUD
     size), and we can then add our previously created score HUD Item by calling the
-    <b>me.game.addItem()</b> function (and specifying its position within the HUD). We
+    <a href="http://www.melonjs.org/docs/symbols/me.HUD_Object.html#addItem">me.game.HUD.addItem()</a> function (and specifying its position within the HUD). We
     also assign the <b>"score"</b> keyword to that item, so that we can later access and
     modify it's value.</p>
 
-<p>Additionally, we also add a call to <b>me.game.disableHUD()</b> in the
+<p>Additionally, we also add a call to <a href="http://www.melonjs.org/docs/symbols/me.game.html#disableHUD">me.game.disableHUD()</a> in the
     <b>onDestroyEvent()</b> function, so that the HUD is removed when exiting the "play"
     state.</p>
 
@@ -1047,7 +1049,7 @@ onDestroyEvent : function ()
 </pre>
 
 <p>As you can see, in the <b>onDestroyEvent function</b>, we just call the
-    <b>me.game.HUD.updateItemValue</b> function, giving the "score" keyword (we
+    <a href="http://www.melonjs.org/docs/symbols/me.HUD_Object.html#updateItemValue">me.game.HUD.updateItemValue</a> function, giving the "score" keyword (we
     previously defined), and the value to be added to the score</p>
 
 <p><br/>
@@ -1153,7 +1155,7 @@ var g_resources = [
     accordingly.</p>
 
 <p>If we take a look back on how we first initialized the audio, you can see that I
-    passed the <b>"mp3,ogg"</b> parameter to the initialization function, asking to try
+    passed the <b>"mp3,ogg"</b> parameter to the <a href="http://www.melonjs.org/docs/symbols/me.audio.html#init">initialization function</a>, asking to try
     to use first the mp3 format, and then ogg as a fallback if mp3 is not supported. This
     also means, in this case, I must provide two versions of my audio files, one as mp3,
     and one as ogg. The engine will then use the right based on your browser
@@ -1177,7 +1179,7 @@ me.audio.init("mp3,ogg");
 </ul>
 
 <p>In the CoinEntity code, where we previously managed our earned points, we just
-    need to add a new call to <b>me.audio.play()</b> and use the <b>"cling"</b> audio
+    need to add a new call to <a href="http://www.melonjs.org/docs/symbols/me.audio.html#play"><b>me.audio.play()</b></a> and use the <b>"cling"</b> audio
     resource. that's all !</p><br/>
     <pre class="c2">
 <code>
@@ -1198,7 +1200,7 @@ onDestroyEvent : function ()
 </ul>
 
 <p>In the <b>update()</b> function of the mainPlayer, we also add a call to
-    <b>me.audio.play()</b> and use the <b>"jump"</b> audio resource. You can also note
+    <a href="http://www.melonjs.org/docs/symbols/me.audio.html#play"><b>me.audio.play()</b></a> and use the <b>"jump"</b> audio resource. You can also note
     that I added a test on the return value of doJump(). doJump can return false in case
     you are not allowed to jump (already jumping, etc..) and in that case there is no
     need to play the sound sfx.</p><br/>
@@ -1223,7 +1225,7 @@ onDestroyEvent : function ()
 var res = me.game.collide(this);
 
 if (res) {
-    if (res.type == me.game.ENEMY_OBJECT) {
+    if (res.obj.type == me.game.ENEMY_OBJECT) {
         if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
             // bounce
             me.audio.play("stomp");
@@ -1243,7 +1245,7 @@ if (res) {
 </ul>
 
 <p>In our main, in the <b>onResetEvent()</b> function, we just add a call to the
-    <b>me.audio.playTrack()</b> function, specify the audio to be used:</p><br/>
+    <a href="http://www.melonjs.org/docs/symbols/me.audio.html#playTrack"><b>me.audio.playTrack()</b></a> function, specifying the audio track to be used:</p><br/>
     <pre class="c2">
 <code>onResetEvent: function() {
     // play the audio track
@@ -1274,7 +1276,7 @@ if (res) {
 <p>You should know how to create a level now. However, here I will show you how to go
     to another level.</p>
 
-<p>To do this, melonJS has an Object call me.LevelEntity, that we will add in Tiled
+<p>To do this, melonJS has an Object call <a href="http://www.melonjs.org/docs/symbols/me.LevelEntity.html">me.LevelEntity</a>, that we will add in Tiled
     and specify what to do when our main player hit it :</p><img src=
                                                                          "media/step8_next_level.png"
                                                                  alt="Creating an object to go to next level"/>
@@ -1295,7 +1297,7 @@ if (res) {
             "Title screen"/> and on top of it we will add some message, and wait for the user
     input to start the game !</p>
 
-<p>First let's declare a new Object, extending me.ScreenObject :</p>
+<p>First let's declare a new Object, extending <a href="http://www.melonjs.org/docs/symbols/me.ScreenObject.html">me.ScreenObject</a> :</p>
     <pre class="c2">
 <code>/*----------------------
 
@@ -1447,7 +1449,7 @@ var TitleScreen = me.ScreenObject.extend({
 
 <p>And of course the very last thing is to indicate to the engine we created a new
     object and associate it to the corresponding state (here, <b>MENU</b>). Also, using
-    the me.state.transition, I'm telling the engine to add a fading effect between state
+    the transition function of <a href="http://www.melonjs.org/docs/symbols/me.state.html">me.state</a>, I'm telling the engine to add a fading effect between state
     changes.<br/>
     Finally, instead of switching to the <b>PLAY</b> state at the end of the loaded
     function, I'm switching now to the <b>MENU</b> state:<br/></p>

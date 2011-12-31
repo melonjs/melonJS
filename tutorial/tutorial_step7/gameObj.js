@@ -70,7 +70,7 @@
 			 
 			if (res)
 			{
-				if (res.type == me.game.ENEMY_OBJECT)
+				if (res.obj.type == me.game.ENEMY_OBJECT)
 				{
 				   if ((res.y>0) && !this.jumping)
 				   {
