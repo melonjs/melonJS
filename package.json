@@ -1,6 +1,6 @@
 {
 	"name": "melonJS",
-	"version": "0.9.2",
+	"version": "0.9.3",
 	"description": "MelonJS Game Engine",
 
 	"homepage": "http://www.melonjs.org/",
@@ -13,14 +13,14 @@
 
 	"licenses": [
 		{
-			"type": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License",
-			"url": "http://creativecommons.org/licenses/by-nc-sa/3.0/"
+			"type": "MIT License",
+			"url": "https://github.com/obiot/melonJS/blob/master/MIT-LICENSE"
 		}
 	],
 
 	"author": {
 		"name": "Olivier Biot",
-		"email": "?"
+		"email": "contact@melonjs.org"
 	},
 
 	"engines": {
