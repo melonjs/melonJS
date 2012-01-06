@@ -1103,9 +1103,13 @@
 			// add ou tile map object to the game mngr
 			api.currentLevel.addTo(me.game);
 
+			if ((api.currentLevel.realwidth < api.viewport.getWidth()) ||
+			    (api.currentLevel.realheight < api.viewport.getHeight())) {
+				throw "melonJS: map size should be at least equal to the defined display size";
+			}
+			
 			// change the viewport limit
-			api.viewport.setBounds(api.currentLevel.realwidth,
-					api.currentLevel.realheight);
+			api.viewport.setBounds(api.currentLevel.realwidth, api.currentLevel.realheight);
 
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
