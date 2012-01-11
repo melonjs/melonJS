@@ -689,7 +689,7 @@
 
 		/**
 		 * reload the current level<br>
-		 * @name me.levelDirector#getCurrentLevelId
+		 * @name me.levelDirector#reloadLevel
 		 * @public
 		 * @function
 		 */

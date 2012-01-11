@@ -685,7 +685,13 @@
 				// count the fps and manage animation change
 				fpscount : 0,
 
-				// animation cyling speed
+				/**
+				 * animation cycling speed<br>
+				 * default value : me.sys.fps / 10;
+				 * @public
+				 * @type Number
+				 * @name me.AnimationSheet#animationspeed
+				 */
 				animationspeed : 0,
 
 				/** @private */
