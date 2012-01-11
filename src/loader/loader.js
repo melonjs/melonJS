@@ -119,6 +119,8 @@
 		var imgList = [];
 		// contains all the xml loaded
 		var xmlList = {};
+		// contains all the xml loaded
+		var binList = {};
 		// flag to check loading status
 		var resourceCount = 0;
 		var loadCount = 0;
@@ -126,11 +128,11 @@
 		// keep track of how much TMX file we are loading
 		var tmxCount = 0;
 
-		/* ---
-		
-			check the loading status
-			
-			---										*/
+
+		/**
+		 * check the loading status
+		 * @private
+		 */
 		function checkLoadStatus() {
 			// remove tmxCount from the total resource to be loaded
 			// as we will after load each TMX into the level director
@@ -157,30 +159,28 @@
 			}
 		};
 
-		/* ---
-		
-			some callback for image loading	
-			 error	
-			---										*/
+		/**
+		 * on error callback for image loading 	
+		 * @private
+		 */
 		function onImageError(e) {
 			// retry mechanism with image loading ???
 			throw "melonJS: Failed loading image resource";
 		};
 
-		/* ---
+		/**
+		 * load Images
+		 *	
+		 *	call example : 
+		 *	
+		 *	preloadImages(
+		 *				 [{name: 'image1', src: 'images/image1.png'},
+		 * 				  {name: 'image2', src: 'images/image2.png'},
+		 *				  {name: 'image3', src: 'images/image3.png'},
+		 *				  {name: 'image4', src: 'images/image4.png'}]);
+		 * @private
+		 */
 		
-			load Images
-			
-			call example : 
-			
-			preloadImages(
-						 [{name: 'image1', src: 'images/image1.png'},
-						  {name: 'image2', src: 'images/image2.png'},
-						  {name: 'image3', src: 'images/image3.png'},
-						  {name: 'image4', src: 'images/image4.png'}]);
-			
-			---										*/
-
 		function preloadImage(img, onload, onerror) {
 			// create new Image object and add to array
 			imgList.push(img.name);
@@ -191,11 +191,10 @@
 			imgList[img.name].src = img.src + me.nocache;
 		};
 
-		/* ---
-		
-			preload XML files
-			---									*/
-
+		/**
+		 * preload XML files
+		 * @private
+		 */
 		function preloadXML(xmlData, isTMX) {
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -205,7 +204,7 @@
 					xmlhttp.overrideMimeType('text/xml');
 			} else {
 				// code for IE6, IE5
-				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
 				// I actually don't give a **** about IE5/IE6...
 			}
 			// load our XML
@@ -226,6 +225,36 @@
 				tmxCount += 1;
 			}
 		};
+			
+		/**
+		 * preload Binary files
+		 * @private
+		 */
+		function preloadBinary(data, onload) {
+			var onloadCB = onload || me.loader.onResourceLoaded;
+			var httpReq = new XMLHttpRequest();
+
+			// load our file
+			httpReq.open("GET", data.src + me.nocache, false);
+			httpReq.responseType = "arraybuffer";
+
+			httpReq.onload = function(event){
+				var arrayBuffer = httpReq.response;
+				if (arrayBuffer) {
+					var byteArray = new Uint8Array(arrayBuffer);
+					var buffer = [];
+					binList[data.name] = new dataType();
+					for (var i = 0; i < byteArray.byteLength; i++) { 
+						buffer[i] = String.fromCharCode(byteArray[i]);
+					}
+					binList[data.name].data = buffer.join("");
+					// callback
+					onloadCB();
+				}
+			};
+			httpReq.send();
+		};
+
 
 		/* ---
 			
@@ -296,9 +325,11 @@
 		 * @function
 		 * @param {Array.<string>} resources
 		 * @example
-		 * var g_resources = [ {name: "tileset-platformer",  type:"image",  src: "data/map/tileset-platformer.png"},
-		 *                     {name: "map1",                type: "tmx",   src: "data/map/map1_slopes.tmx"},
-		 *                     {name: "cling",               type: "audio", src: "data/audio/",	channel : 2}
+		 * var g_resources = [ {name: "tileset-platformer",  type:"image",   src: "data/map/tileset-platformer.png"},
+		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1_slopes.tmx"},
+		 *                     {name: "cling",               type: "audio",  src: "data/audio/",	channel : 2},
+		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
+		 *					
 		 *                    ]; 
 		 * ...
 		 *
@@ -330,10 +361,14 @@
 					preloadXML(res[i], true);
 					resourceCount += 1;
 					break;
+				
+				case "binary":
+					preloadBinary(res[i]);
+					resourceCount += 1;
+					break;
 
 				default:
-					throw "melonJS: me.loader.preload : unknow resource type : %s"
-							+ res[i].type;
+					throw "melonJS: me.loader.preload : unknow resource type : %s" + res[i].type;
 					break;
 				}
 			}
@@ -347,7 +382,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : only "image" supported <br>
+		 * - type    : only "image" & "binary" supported <br>
 		 * - src     : path and file name of the resource<br>
 		 * @name me.loader#load
 		 * @public
@@ -363,11 +398,15 @@
 		obj.load = function(res, onload, onerror) {
 			// check ressource type
 			switch (res.type) {
+				case "binary":
+					// reuse the preloadImage fn
+					preloadBinary(res, onload, onerror);
+					break;
 				case "image":
 					// reuse the preloadImage fn
 					preloadImage(res, onload, onerror);
 					break;
-
+				
 				default:
 					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
 					break;
@@ -392,6 +431,25 @@
 			}
 
 		};
+		
+		/**
+		 * return the specified Binary object
+		 * @name me.loader#getBinary
+		 * @public
+		 * @function
+		 * @param {String} name of the binary object ("ymTrack");
+		 * @return {Object} 
+		 */
+		obj.getBinary = function(elt) {
+			if (binList != null)
+				return binList[elt];
+			else {
+				//console.log ("warning %s resource not yet loaded!",name);
+				return null;
+			}
+
+		};
+
 
 		/**
 		 * return the specified Image Object
