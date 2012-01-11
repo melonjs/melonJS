@@ -195,7 +195,7 @@
 		 * preload XML files
 		 * @private
 		 */
-		function preloadXML(xmlData, isTMX) {
+		function preloadXML(xmlData, isTMX, onload) {
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
 				var xmlhttp = new XMLHttpRequest();
@@ -209,7 +209,7 @@
 			}
 			// load our XML
 			xmlhttp.open("GET", xmlData.src + me.nocache, false);
-			xmlhttp.onload = obj.onResourceLoaded.bind(obj);
+			xmlhttp.onload = onload || obj.onResourceLoaded.bind(obj);
 			xmlhttp.send();
 
 			// set the xmldoc in the array
@@ -382,7 +382,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : only "image" & "binary" supported <br>
+		 * - type    : "binary", "image", "tmx", "audio"
 		 * - src     : path and file name of the resource<br>
 		 * @name me.loader#load
 		 * @public
@@ -406,7 +406,19 @@
 					// reuse the preloadImage fn
 					preloadImage(res, onload, onerror);
 					break;
+					
+				case "tmx":
+					preloadXML(res, true, onload);
+					break;
 				
+				case "audio":
+					me.audio.setLoadCallback(onload);
+					// only load is sound is enable
+					if (me.audio.isAudioEnable()) {
+						me.audio.load(res);
+					}
+					break;
+
 				default:
 					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
 					break;
