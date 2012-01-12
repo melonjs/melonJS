@@ -141,9 +141,8 @@
 				// add all TMX level into the level Director
 				for ( var xmlObj in xmlList) {
 					if (xmlList[xmlObj].isTMX) {
-						//console.log("un TMX!", xmlObj);
+						// load the level into the levelDirector
 						me.levelDirector.addTMXLevel(xmlObj);
-
 						//progress notification
 						obj.onResourceLoaded();
 					}
@@ -186,8 +185,8 @@
 			imgList.push(img.name);
 
 			imgList[img.name] = new Image();
-			imgList[img.name].onload = onload || obj.onResourceLoaded.bind(obj);
-			imgList[img.name].onerror = onerror || onImageError.bind(this);
+			imgList[img.name].onload = onload;
+			imgList[img.name].onerror = onerror;
 			imgList[img.name].src = img.src + me.nocache;
 		};
 
@@ -195,7 +194,8 @@
 		 * preload XML files
 		 * @private
 		 */
-		function preloadXML(xmlData, isTMX, onload) {
+		function preloadXML(xmlData, isTMX, onload, onerror) {
+			var onloadCB = onload;
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
 				var xmlhttp = new XMLHttpRequest();
@@ -209,29 +209,33 @@
 			}
 			// load our XML
 			xmlhttp.open("GET", xmlData.src + me.nocache, false);
-			xmlhttp.onload = onload || obj.onResourceLoaded.bind(obj);
+			xmlhttp.onload = function(event) {
+				// set the xmldoc in the array
+				xmlList[xmlData.name] = {};
+				xmlList[xmlData.name].xml = xmlhttp.responseText;
+				xmlList[xmlData.name].isTMX = isTMX;
+				// callback
+				onloadCB();
+			};
+			// increase the resourceCount by 1
+			// allowing to add the loading of level in the 
+			// levelDirector as part of the loading progress
+			if (isTMX) {
+				// some context issue ? (why this?)
+				this.resourceCount += 1;
+				this.tmxCount += 1;
+			}
+			// send the request
 			xmlhttp.send();
 
-			// set the xmldoc in the array
-			xmlList[xmlData.name] = {};
-			xmlList[xmlData.name].xml = xmlhttp.responseText;
-			xmlList[xmlData.name].isTMX = isTMX || false;
-			// in case we have a TMX file :
-			if (xmlList[xmlData.name].isTMX) {
-				// increase the resourceCount by 1
-				// allowing to add the loading of level in the 
-				// levelDirector as part of the loading progress
-				resourceCount += 1;
-				tmxCount += 1;
-			}
 		};
 			
 		/**
 		 * preload Binary files
 		 * @private
 		 */
-		function preloadBinary(data, onload) {
-			var onloadCB = onload || me.loader.onResourceLoaded;
+		function preloadBinary(data, onload, onerror) {
+			var onloadCB = onload;
 			var httpReq = new XMLHttpRequest();
 
 			// load our file
@@ -336,44 +340,11 @@
 		 * // set all resources to be loaded
 		 * me.loader.preload(g_resources);
 		 */
-
 		obj.preload = function(res) {
-			// set the callback for audio stuff
-			me.audio.setLoadCallback(obj.onResourceLoaded.bind(obj));
-
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
-				switch (res[i].type) {
-				case "image":
-					preloadImage(res[i]);
-					resourceCount += 1;
-					break;
-
-				case "audio":
-					// only load is sound is enable
-					if (me.audio.isAudioEnable()) {
-						me.audio.load(res[i]);
-						resourceCount += 1;
-					}
-					break;
-
-				case "tmx":
-					preloadXML(res[i], true);
-					resourceCount += 1;
-					break;
-				
-				case "binary":
-					preloadBinary(res[i]);
-					resourceCount += 1;
-					break;
-
-				default:
-					throw "melonJS: me.loader.preload : unknow resource type : %s" + res[i].type;
-					break;
-				}
-			}
-			;
-
+				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), null);
+			};
 			// check load status
 			checkLoadStatus();
 		};
@@ -400,22 +371,24 @@
 			switch (res.type) {
 				case "binary":
 					// reuse the preloadImage fn
-					preloadBinary(res, onload, onerror);
-					break;
+					preloadBinary(res, onload, (onerror || onImageError.bind(this)));
+					return 1;
+
 				case "image":
 					// reuse the preloadImage fn
 					preloadImage(res, onload, onerror);
-					break;
-					
+					return 1;
+
 				case "tmx":
-					preloadXML(res, true, onload);
-					break;
+					preloadXML(res, true, onload, onerror);
+					return 1;
 				
 				case "audio":
 					me.audio.setLoadCallback(onload);
 					// only load is sound is enable
 					if (me.audio.isAudioEnable()) {
 						me.audio.load(res);
+						return 1;
 					}
 					break;
 
@@ -423,6 +396,7 @@
 					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
 					break;
 			};
+			return 0;
 		};
 
 
