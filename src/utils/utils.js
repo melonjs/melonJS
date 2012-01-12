@@ -14,7 +14,7 @@
 	 */
 	var Base64 = (function() {
 
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var singleton = {};
 
 		// private property
