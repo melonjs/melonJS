@@ -35,147 +35,116 @@
 		}
 	});
 
-	/************************************************************************************/
-	/*                                                                                  */
-	/*      a  Tileset object                                                           */
-	/*                                                                                  */
-	/************************************************************************************/
-
-	function TileSet(name, tilewidth, tileheight, spacing, margin, imagesrc) {
-		this.name = name;
-		this.tilewidth = tilewidth;
-		this.tileheight = tileheight;
-		this.spacing = spacing;
-		this.margin = margin;
-		this.image = (imagesrc) ? me.loader.getImage(imagesrc.replace(
-				removepath, '').replace(removeext, '')) : null;
-
-		// tile types
-		this.type = {
-			SOLID : "solid",
-			PLATFORM : "platform",
-			L_SLOPE : "lslope",
-			R_SLOPE : "rslope",
-			LADDER : "ladder",
-			BREAKABLE : "breakable"
-		};
-
-		// tile properties
-		// (collidable, etc..)
-		this.TileProperties = [];
-
-		// number of tiles per horizontal line 
-		if (this.image) {
-			this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-			this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-		}
-
-	};
-
-	/* -----
-
-		return the list of property for a tile
-			
-		------								*/
-
-	TileSet.prototype.getPropertyList = function() {
-		return {
-			// collectable tiles
-			//isCollectable	: false,
-			// collidable tiles
-			isCollidable : false,
-			isSolid : false,
-			isPlatform : false,
-			isSlope : false,
-			isLeftSlope : false,
-			isRightSlope : false,
-			isLadder : false,
-			isBreakable : false
-		};
-	};
-
-	/* -----
-
-		return the assiocated property of the specified tile
-		
-		e.g. getTileProperty (gid)		
-		
-		------								*/
-
-	TileSet.prototype.getTileProperties = function(tileId) {
-		return this.TileProperties[tileId];
-	};
-
-	/* -----
-
-		return collidable status of the specifiled tile
-		
-		------								*/
-
-	TileSet.prototype.isTileCollidable = function(tileId) {
-		return this.TileProperties[tileId].isCollidable;
-	};
-
-	/* -----
-
-		return collectable status of the specifiled tile
-		
-		------								*/
-	/*
-	TileSet.prototype.isTileCollectable = function (tileId)
-	{
-		return this.TileProperties[tileId].isCollectable;
-	};
+	/**
+	 * a Tile Set Object
+	 * @memberOf me
+	 * @private
+	 * @constructor
 	 */
+	me.Tileset = Object.extend({
+		// constructor
+		init: function (name, tilewidth, tileheight, spacing, margin, imagesrc) {
+			this.name = name;
+			this.tilewidth = tilewidth;
+			this.tileheight = tileheight;
+			this.spacing = spacing;
+			this.margin = margin;
+			this.image = (imagesrc) ? me.loader.getImage(imagesrc.replace(
+					removepath, '').replace(removeext, '')) : null;
 
-	/* -----
+			// tile types
+			this.type = {
+				SOLID : "solid",
+				PLATFORM : "platform",
+				L_SLOPE : "lslope",
+				R_SLOPE : "rslope",
+				LADDER : "ladder",
+				BREAKABLE : "breakable"
+			};
 
-		return an Image Object with the specified tile
-			
-		------								*/
+			// tile properties
+			// (collidable, etc..)
+			this.TileProperties = [];
 
-	TileSet.prototype.getTileImage = function(tileId) {
-		// create a new image object
-		var image = me.video.createCanvasSurface(this.tilewidth,
-				this.tileheight);
+			// number of tiles per horizontal line 
+			if (this.image) {
+				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+			}
+		},
+		
+		// return the list of property for a tile
+		getPropertyList: function() {
+			return {
+				// collectable tiles
+				//isCollectable	: false,
+				// collidable tiles
+				isCollidable : false,
+				isSolid : false,
+				isPlatform : false,
+				isSlope : false,
+				isLeftSlope : false,
+				isRightSlope : false,
+				isLadder : false,
+				isBreakable : false
+			};
+		},
+		
+		// return the assiocated property of the specified tile
+		// e.g. getTileProperty (gid)	
+		getTileProperties: function(tileId) {
+			return this.TileProperties[tileId];
+		},
+		
+		//return collidable status of the specifiled tile
 
-		this.drawTile(image, 0, 0, tileId);
+		isTileCollidable : function(tileId) {
+			return this.TileProperties[tileId].isCollidable;
+		},
 
-		return image.canvas;
-	};
+		/*
+		//return collectable status of the specifiled tile
+		isTileCollectable : function (tileId) {
+			return this.TileProperties[tileId].isCollectable;
+		},
+		 */
 
-	/* -----
+		//return an Image Object with the specified tile
+		getTileImage : function(tileId) {
+			// create a new image object
+			var image = me.video.createCanvasSurface(this.tilewidth, this.tileheight);
+			this.drawTile(image, 0, 0, tileId);
+			return image.canvas;
+		},
 
-		draw the x,y tile
-			
-		------								*/
-	TileSet.prototype.drawTile = function(context, x, y, tileId, flipx, flipy) {
-		var texturePositionX = this.margin + (this.spacing + this.tilewidth)
-				* (tileId % this.hTileCount);
-		var texturePositionY = this.margin + (this.spacing + this.tileheight)
-				* ~~(tileId / this.hTileCount);
+		// draw the x,y tile
+		drawTile : function(context, x, y, tileId, flipx, flipy) {
+			var texturePositionX = this.margin + (this.spacing + this.tilewidth)
+					* (tileId % this.hTileCount);
+			var texturePositionY = this.margin + (this.spacing + this.tileheight)
+					* ~~(tileId / this.hTileCount);
 
-		if (flipx || flipy) {
-			// "normalize" the flag value
-			flipx = (flipx == 0) ? 1.0 : -1.0;
-			flipy = (flipy == 0) ? 1.0 : -1.0;
+			if (flipx || flipy) {
+				// "normalize" the flag value
+				flipx = (flipx == 0) ? 1.0 : -1.0;
+				flipy = (flipy == 0) ? 1.0 : -1.0;
 
-			context.scale(flipx, flipy);
+				context.scale(flipx, flipy);
 
-			x = (x * flipx) - (flipx < 0 ? this.tilewidth : 0);
-			y = (y * flipy) - (flipy < 0 ? this.tileheight : 0);
+				x = (x * flipx) - (flipx < 0 ? this.tilewidth : 0);
+				y = (y * flipy) - (flipy < 0 ? this.tileheight : 0);
+			}
+
+			context.drawImage(this.image, texturePositionX, texturePositionY,
+					this.tilewidth, this.tileheight, x, y, this.tilewidth,
+					this.tileheight);
+
+			if (flipx || flipy) {
+				// restore the transform matrix to the normal one
+				context.setTransform(1, 0, 0, 1, 0, 0);
+			}
 		}
-
-		context.drawImage(this.image, texturePositionX, texturePositionY,
-				this.tilewidth, this.tileheight, x, y, this.tilewidth,
-				this.tileheight);
-
-		if (flipx || flipy) {
-			// restore the transform matrix to the normal one
-			context.setTransform(1, 0, 0, 1, 0, 0);
-		}
-
-	};
+	});
 
 	/************************************************************************************/
 	/*                                                                                  */
@@ -749,7 +718,6 @@
 	/*---------------------------------------------------------*/
 	// expose our stuff to the global scope
 	/*---------------------------------------------------------*/
-	me.TileSet = TileSet;
 	me.TiledLayer = TiledLayer;
 	me.TileMap = TileMap
 
