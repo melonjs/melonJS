@@ -159,15 +159,6 @@
 		};
 
 		/**
-		 * on error callback for image loading 	
-		 * @private
-		 */
-		function onImageError(e) {
-			// retry mechanism with image loading ???
-			throw "melonJS: Failed loading image resource";
-		};
-
-		/**
 		 * load Images
 		 *	
 		 *	call example : 
@@ -209,6 +200,7 @@
 			}
 			// load our XML
 			xmlhttp.open("GET", xmlData.src + me.nocache, false);
+			xmlhttp.onerror = onerror;
 			xmlhttp.onload = function(event) {
 				// set the xmldoc in the array
 				xmlList[xmlData.name] = {};
@@ -241,7 +233,7 @@
 			// load our file
 			httpReq.open("GET", data.src + me.nocache, false);
 			httpReq.responseType = "arraybuffer";
-
+			xmlhttp.onerror = onerror;
 			httpReq.onload = function(event){
 				var arrayBuffer = httpReq.response;
 				if (arrayBuffer) {
@@ -313,6 +305,15 @@
 				obj.onProgress(obj.getLoadProgress());
 			}
 		};
+		
+		/**
+		 * on error callback for image loading 	
+		 * @private
+		 */
+		obj.onLoadingError = function(res) {
+			throw "melonJS: Failed loading resource " + res.src;
+		};
+
 
 		/**
 		 * set all the specified game resources to be preloaded.<br>
@@ -343,7 +344,7 @@
 		obj.preload = function(res) {
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
-				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), null);
+				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
 			};
 			// check load status
 			checkLoadStatus();
@@ -371,7 +372,7 @@
 			switch (res.type) {
 				case "binary":
 					// reuse the preloadImage fn
-					preloadBinary(res, onload, (onerror || onImageError.bind(this)));
+					preloadBinary(res, onload, onerror);
 					return 1;
 
 				case "image":
