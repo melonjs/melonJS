@@ -60,6 +60,7 @@ MODULE = $(srcdir)core.js\
 	 $(srcdir)level/TMXUtils.js\
 	 $(srcdir)level/TMXObjectGroup.js\
 	 $(srcdir)level/TMXTileset.js\
+	 $(srcdir)level/TMXRenderer.js\
 	 $(srcdir)level/TMXTiledMap.js\
 	 $(srcdir)utils/tween.js
 
@@ -75,10 +76,10 @@ BUILD = $(buildir)melonJS-$(ME_VER)-min.js
 
 .PHONY: js
 
-all: debug
+yui: debug
 	java -jar $(YUI_COMPRESSOR) $(YUI_OPTION) $(DEBUG) >> $(BUILD)
 
-google: debug
+all: debug
 	java -jar $(GCC_COMPRESSOR) $(GCC_OPTION) --js=$(DEBUG) --js_output_file=$(BUILD)
 		
 debug: clean
