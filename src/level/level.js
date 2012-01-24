@@ -51,7 +51,12 @@
 			this.margin = margin;
 			this.image = (imagesrc) ? me.loader.getImage(imagesrc.replace(
 					removepath, '').replace(removeext, '')) : null;
-
+			
+			if (!this.image) {
+				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+			}
+			
+			
 			// tile types
 			this.type = {
 				SOLID : "solid",
@@ -146,377 +151,351 @@
 		}
 	});
 
-	/************************************************************************************/
-	/*                                                                                  */
-	/*      a generic Collision Tile based Layer object                                 */
-	/*                                                                                  */
-	/************************************************************************************/
-	function CollisionTiledLayer(realwidth, realheight) {
-		this.realwidth = realwidth;
-		this.realheight = realheight;
+	/**
+	 * a generic collision tile based layer object
+	 * @memberOf me
+	 * @private
+	 * @constructor
+	 */
+	CollisionTiledLayer = Object.extend({
+		// constructor
+		init: function CollisionTiledLayer(realwidth, realheight) {
+			this.realwidth = realwidth;
+			this.realheight = realheight;
 
-		this.isCollisionMap = true;
+			this.isCollisionMap = true;
 
-	}
-	;
+		},
 
-	/* -----
 
-		test for the world limit
-			
-		------*/
+		/**
+		 * only test for the world limit
+		 * @private
+		 **/
 
-	CollisionTiledLayer.prototype.checkCollision = function(obj, pv) {
-		//var x = (pv.x < 0) ? obj.pos.x + obj.colPos.x + pv.x: obj.pos.x + obj.colPos.x + obj.width  + pv.x- 1;
-		//var y = (pv.y < 0) ? obj.pos.y + obj.colPos.y + pv.y: obj.pos.y + obj.colPos.y + obj.height + pv.y ;
+		checkCollision : function(obj, pv) {
+			var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
+			var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
 
-		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
-		var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
+			//to return tile collision detection
+			var res = {
+				x : 0, // !=0 if collision on x axis
+				y : 0, // !=0 if collision on y axis
+				xprop : {},
+				yprop : {}
+			};
 
-		//to return tile collision detection
-		var res = {
-			x : 0, // !=0 if collision on x axis
-			y : 0, // !=0 if collision on y axis
-			xprop : {},
-			yprop : {}
-		};
-
-		// test x limits
-		if (x <= 0 || x >= this.realwidth) {
-			res.x = pv.x;
-		}
-
-		// test y limits
-		if (y <= 0 || y >= this.realheight) {
-			res.y = pv.y;
-		}
-
-		// return the collide object if collision
-		return res;
-	};
-
-	/************************************************************************************/
-	/*                                                                                  */
-	/*      a generic Tile based Layer object                                           */
-	/*                                                                                  */
-	/************************************************************************************/
-	function TiledLayer(w, h, tilesets, z) {
-		this.width = w;
-		this.height = h;
-
-		// for displaying order
-		this.z = z;
-
-		this.name = null;
-		this.visible = false;
-
-		// data array
-		this.layerData = null;
-
-		// some lookup table to avoid unecessary math operation
-		this.xLUT = {};
-		this.yLUT = {};
-
-		// a reference to the tilesets object
-		this.tilesets = tilesets;
-		// link to the first tileset by default
-		this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
-
-		// tile width & height
-		this.tilewidth  = this.tileset?this.tileset.tilewidth:0;
-		this.tileheight = this.tileset?this.tileset.tileheight:0;
-  
-		// layer "real" size
-		this.realwidth = this.width * this.tilewidth;
-		this.realheight = this.height * this.tileheight;
-	};
-
-	/* -----
-
-		Create all required arrays
-			
-		------								*/
-	TiledLayer.prototype.initArray = function(createLookup) {
-		// initialize the array
-		this.layerData = [];//new Array (this.width);
-		for ( var x = 0; x < this.width + 1; x++) {
-			this.layerData[x] = [];//new Array (this.height);
-			for ( var y = 0; y < this.height + 1; y++) {
-				this.layerData[x][y] = null;
+			// test x limits
+			if (x <= 0 || x >= this.realwidth) {
+				res.x = pv.x;
 			}
+
+			// test y limits
+			if (y <= 0 || y >= this.realheight) {
+				res.y = pv.y;
+			}
+
+			// return the collide object if collision
+			return res;
 		}
+	});
 
-		// create lookup table to speed up the table access
-		// this is only valid for collision layer
-		if (createLookup) {
-			// initialize the lookuptable
-			for ( var x = 0; x < this.width * this.tilewidth; x++)
-				this.xLUT[x] = ~~(x / this.tilewidth);
-
-			for ( var y = 0; y < this.height * this.tileheight; y++)
-				this.yLUT[y] = ~~(y / this.tileheight);
-
-			//console.log(this.xLUT);
-		}
-
-	};
-
-	/* -----
-
-		get the x,y tile
+	/**
+	 * a generic tile based layer object
+	 * @memberOf me
+	 * @private
+	 * @constructor
+	 */
+	me.TiledLayer = Object.extend({
+		// constructor
+		init: function(w, h, tw, th, tilesets, z) {
+			this.width = w;
+			this.height = h;
+			// tile width & height
+			this.tilewidth  = tw;
+			this.tileheight = th;
 			
-		------								*/
-	TiledLayer.prototype.getTileId = function(x, y) {
-		//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
-		var tile = this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
+			// layer "real" size
+			this.realwidth = this.width * this.tilewidth;
+			this.realheight = this.height * this.tileheight;
 
-		return tile ? tile.tileId : null;
-	};
+			// for displaying order
+			this.z = z;
 
-	/* -----
+			this.name = null;
+			this.visible = false;
 
-		get the x,y tile
-			
-		------								*/
-	TiledLayer.prototype.getTile = function(x, y) {
-		//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
-		return this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
-	};
+			// data array
+			this.layerData = null;
 
-	/* -----
+			// some lookup table to avoid unecessary math operation
+			this.xLUT = {};
+			this.yLUT = {};
 
-		set the x,y tile
-			
-		------								*/
-	TiledLayer.prototype.setTile = function(x, y, tileId) {
-		this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight,
-				tileId);
-	};
+			// a reference to the tilesets object
+			this.tilesets = tilesets;
+			// link to the first tileset by default
+			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
+		},
 
-	/* -----
-
-		clear a tile
-			
-		------								*/
-	TiledLayer.prototype.clearTile = function(x, y) {
-		// clearing tile
-		this.layerData[x][y] = null;
-	};
-
-	/* -----
-
-		check for collision 
-		obj - obj
-		pv   - projection vector
-		
-		res : result collision object
-			
-		------*/
-
-	TiledLayer.prototype.checkCollision = function(obj, pv) {
-
-		var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
-		var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
-		//to return tile collision detection
-		var res = {
-			x : 0, // !=0 if collision on x axis
-			xtile : undefined,
-			xprop : {},
-			y : 0, // !=0 if collision on y axis
-			ytile : undefined,
-			yprop : {}
-		};
-
-		//var tile;
-		if (x <= 0 || x >= this.realwidth) {
-			res.x = pv.x;
-		} else {
-			// x, bottom corner
-			res.xtile = this.getTile(x, obj.bottom - 1);// obj.height - 1
-			if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-				res.x = pv.x; // reuse pv.x to get a 
-				res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-			} else {
-				// x, top corner
-				res.xtile = this.getTile(x, obj.top);
-				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-					res.x = pv.x;
-					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
+		/**
+		 * Create all required arrays
+		 * @private
+		 */
+		initArray : function(createLookup) {
+			// initialize the array
+			this.layerData = [];//new Array (this.width);
+			for ( var x = 0; x < this.width + 1; x++) {
+				this.layerData[x] = [];//new Array (this.height);
+				for ( var y = 0; y < this.height + 1; y++) {
+					this.layerData[x][y] = null;
 				}
 			}
-		}
+			// create lookup table to speed up the table access
+			// this is only valid for collision layer
+			if (createLookup) {
+				// initialize the lookuptable
+				for ( var x = 0; x < this.width * this.tilewidth; x++)
+					this.xLUT[x] = ~~(x / this.tilewidth);
 
-		// check for y movement
-		// left, y corner
-		res.ytile = this.getTile((pv.x < 0) ? obj.left : obj.right, y);// obj.width + 1
-		if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-			res.y = pv.y || 1;
-			res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-		} else { // right, y corner
-			res.ytile = this.getTile((pv.x < 0) ? obj.right : obj.left, y);
+				for ( var y = 0; y < this.height * this.tileheight; y++)
+					this.yLUT[y] = ~~(y / this.tileheight);
+
+				//console.log(this.xLUT);
+			}
+		},
+		
+		/**
+		 * get the x,y tile
+		 * @private
+		 */
+		getTileId : function(x, y) {
+			//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+			var tile = this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
+			return tile ? tile.tileId : null;
+		},
+		
+		/**
+		 * get the x,y tile
+		 * @private
+		 */
+		getTile : function(x, y) {
+			//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+			return this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
+		},
+
+		/**
+		 * set the x,y tile
+		 * @private
+		 */
+		setTile : function(x, y, tileId) {
+			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
+		},
+
+		/**
+		 * clear a tile
+		 * @private
+		 */
+		clearTile : function(x, y) {
+			// clearing tile
+			this.layerData[x][y] = null;
+		},
+
+		/**
+		 * check for collision
+		 * obj - obj
+		 * pv   - projection vector
+		 * res : result collision object
+		 * @private
+		 */
+		checkCollision : function(obj, pv) {
+
+			var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
+			var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
+			//to return tile collision detection
+			var res = {
+				x : 0, // !=0 if collision on x axis
+				xtile : undefined,
+				xprop : {},
+				y : 0, // !=0 if collision on y axis
+				ytile : undefined,
+				yprop : {}
+			};
+
+			//var tile;
+			if (x <= 0 || x >= this.realwidth) {
+				res.x = pv.x;
+			} else {
+				// x, bottom corner
+				res.xtile = this.getTile(x, obj.bottom - 1);// obj.height - 1
+				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+					res.x = pv.x; // reuse pv.x to get a 
+					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
+				} else {
+					// x, top corner
+					res.xtile = this.getTile(x, obj.top);
+					if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+						res.x = pv.x;
+						res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
+					}
+				}
+			}
+
+			// check for y movement
+			// left, y corner
+			res.ytile = this.getTile((pv.x < 0) ? obj.left : obj.right, y);// obj.width + 1
 			if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 				res.y = pv.y || 1;
 				res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+			} else { // right, y corner
+				res.ytile = this.getTile((pv.x < 0) ? obj.right : obj.left, y);
+				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+					res.y = pv.y || 1;
+					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+				}
 			}
+			// return the collide object
+			return res;
+		},
+
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		update : function() {
+			return false;
 		}
-		// return the collide object
-		return res;
-	};
+	});
+	
+	/**
+	 * a basic level object skeleton
+	 * @memberOf me
+	 * @private
+	 * @constructor
+	 */
+	me.TileMap = Object.extend({
+		// constructor
+		init: function(x, y) {
+			this.pos = new me.Vector2d(x, y);
+			this.z = 0;
 
-	/* -----
+			// tilemap size
+			this.width = 0;
+			this.height = 0;
 
-		a dummy update function
-			
-		------								*/
-	TiledLayer.prototype.update = function() {
-		return false;
-	};
+			// realwidth (in pixels) of the level
+			this.realwidth = -1;
+			this.realheight = -1;
 
-	/************************************************************************************/
-	/*       a basic level object skeleton                                              */
-	/************************************************************************************/
-	function TileMap(x, y) {
-		this.pos = new me.Vector2d(x, y);
-		this.z = 0;
+			// tile size
+			this.tilewidth = 0;
+			this.tileheight = 0;
 
-		// tilemap size
-		this.width = 0;
-		this.height = 0;
+			// corresponding tileset for this map
+			this.tilesets = null;
 
-		// realwidth (in pixels) of the level
-		this.realwidth = -1;
-		this.realheight = -1;
+			// map layers
+			this.mapLayers = [];
 
-		// tile size
-		this.tilewidth = 0;
-		this.tileheight = 0;
+			// map Object
+			this.objectGroups = [];
 
-		// corresponding tileset for this map
-		this.tilesets = null;
+			// loading flag
+			this.initialized = false;
+		},
 
-		// map layers
-		this.mapLayers = [];
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		reset : function() {
+			this.tilesets = null;
+			this.mapLayers = [];
+			this.objectGroups = [];
+			this.initialized = false;
+		},
 
-		// map Object
-		this.objectGroups = [];
+		/**
+		 * return the specified object group
+		 * @private	
+		 */
+		getObjectGroupByName : function(name) {
+			return this.objectGroups[name];
+		},
 
-		// loading flag
-		this.initialized = false;
+		/**
+		 * return all the object group
+		 * @private		
+		 */
+		getObjectGroups : function() {
+			return this.objectGroups;
+		},
 
-	};
+		/**
+		 * return the specified layer object
+		 * @private		
+		 */
+		getLayerByName : function(name) {
+			var layer = null;
 
-	/* -----
+			// normalize name
+			name = name.trim().toLowerCase();
+			for ( var i = this.mapLayers.length; i--;) {
+				if (this.mapLayers[i].name.contains(name)) {
+					layer = this.mapLayers[i];
+					break;
+				}
+			};
 
-		a dummy update function
-			
-		------								*/
-	TileMap.prototype.reset = function() {
-		this.tilesets = null;
-		this.mapLayers = [];
-		this.objectGroups = [];
-		this.initialized = false;
-	};
-
-	/* -----
-
-		return the specified object group
-			
-		------*/
-
-	TileMap.prototype.getObjectGroupByName = function(name) {
-		return this.objectGroups[name];
-	};
-
-	/* -----
-
-		return all the object group
-			
-		------*/
-
-	TileMap.prototype.getObjectGroups = function() {
-		return this.objectGroups;
-	};
-
-	/* -----
-
-		return the specified layer object
-			
-		------*/
-
-	TileMap.prototype.getLayerByName = function(name) {
-		var layer = null;
-
-		// normalize name
-		name = name.trim().toLowerCase();
-		for ( var i = this.mapLayers.length; i--;) {
-			if (this.mapLayers[i].name.contains(name)) {
-				layer = this.mapLayers[i];
-				break;
+			// return a fake collision layer if not found
+			if ((name.contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
+				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,
+						me.game.currentLevel.realheight);
 			}
-		}
-		;
 
-		// return a fake collision layer if not found
-		if ((name.contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
-			layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,
-					me.game.currentLevel.realheight);
-		}
+			return layer;
+		},
 
-		return layer;
-	};
+		/**
+		 * clear a tile from all layers
+		 * @private
+		 **/
+		clearTile : function(x, y) {
+			// add all layers
+			for ( var i = this.mapLayers.length; i--;) {
+				// that are visible
+				if (this.mapLayers[i].visible || this.mapLayers[i].isCollisionMap) {
+					this.mapLayers[i].clearTile(x, y);
+				}
+			};
+		},
 
-	/*  -----
-		
-		 clear a tile from all layers
-		
-		------				*/
-
-	TileMap.prototype.clearTile = function(x, y) {
-		// add all layers
-		for ( var i = this.mapLayers.length; i--;) {
-			// that are visible
-			if (this.mapLayers[i].visible || this.mapLayers[i].isCollisionMap) {
-				this.mapLayers[i].clearTile(x, y);
+		/**
+		 * add all visible layers to the game mngr
+		 * @private
+		 */
+		addTo : function(gameMngr) {
+			// add ourself (for background color)
+			if (this.visible) {
+				gameMngr.add(this);
 			}
+			// add all layers
+			for ( var i = this.mapLayers.length; i--;) {
+				// that are visible
+				if (this.mapLayers[i].visible) {
+					gameMngr.add(this.mapLayers[i]);
+				}
+			};
+		},
+
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		 update : function() {
+			return false;
 		}
-		;
-	};
-
-	/*  -----
-		
-		 add all visible layers to the game mngr
-		
-		------				*/
-
-	TileMap.prototype.addTo = function(gameMngr) {
-		// add ourself (for background color)
-		if (this.visible) {
-			gameMngr.add(this);
-		}
-
-		// add all layers
-		for ( var i = this.mapLayers.length; i--;) {
-			// that are visible
-			if (this.mapLayers[i].visible) {
-				gameMngr.add(this.mapLayers[i]);
-			}
-		}
-		;
-	};
-
-	/* -----
-
-		a dummy update function
-			
-		------								*/
-	TileMap.prototype.update = function() {
-		return false;
-	};
-
-	// TMX extends sprite object to benefit from some
-	// nice mechanism (sprite Object to be redone)
-	//LevelEntity.prototype = new me.SpriteObject();
-
+	});
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      a level Director                                                            */
@@ -714,13 +693,6 @@
 		return obj;
 
 	})();
-
-	/*---------------------------------------------------------*/
-	// expose our stuff to the global scope
-	/*---------------------------------------------------------*/
-	me.TiledLayer = TiledLayer;
-	me.TileMap = TileMap
-
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/

@@ -20,6 +20,7 @@ files = [
 	'./src/level/TMXUtils.js',
 	'./src/level/TMXObjectGroup.js',	
 	'./src/level/TMXTileset.js',
+	'./src/level/TMXRenderer.js',
 	'./src/level/TMXTiledMap.js',
 	'./src/utils/tween.js']
 

@@ -23,6 +23,7 @@
 	me.TMX_TAG_TRANS               = "trans";
 	me.TMX_TAG_TILEWIDTH           = "tilewidth";
 	me.TMX_TAG_TILEHEIGHT          = "tileheight";
+	me.TMX_TAG_TILEOFFSET          = "tileoffset";
 	me.TMX_TAG_FIRSTGID            = "firstgid";
 	me.TMX_TAG_GID                 = "gid";
 	me.TMX_TAG_TILE                = "tile";
