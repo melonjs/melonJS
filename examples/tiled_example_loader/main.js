@@ -15,15 +15,11 @@ var jsApp	=
 	onload: function()
 	{
 		
-		if (!me.video.init('jsapp', 640, 480, false, 1.0))
+		if (!me.video.init('jsapp', 800, 480))
 		{
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
-         return;
+			return;
 		}
-		
-				
-		// initialize the "sound engine"
-		me.audio.init("mp3,ogg");
 	
 		// set all ressources to be loaded
 		me.loader.onload = this.loaded.bind(this);
@@ -52,8 +48,6 @@ var jsApp	=
 		me.input.bindKey(me.input.KEY.UP,	 "up");
 		me.input.bindKey(me.input.KEY.DOWN,	 "down");
 
-		
-		
 		// start the game
 		me.state.change(me.state.PLAY);
 		
@@ -61,7 +55,7 @@ var jsApp	=
 
 	reset: function()
 	{	
-		
+		me.game.reset();
 		// load a level
 		me.levelDirector.loadLevel("village");		
 	},
@@ -74,7 +68,7 @@ var jsApp	=
 		---										*/
 	onUpdateFrame: function()
 	{
-		
+	
 		// navigate the map :)
 		if (me.input.isKeyPressed('left'))
 		{
@@ -108,10 +102,6 @@ var jsApp	=
 	
 		// draw the rest of the game
 		me.game.draw();
-		
-		// blit our frame !
-		me.video.blitSurface();
-		
 	},
 	
 	/* ---
@@ -122,7 +112,7 @@ var jsApp	=
 		---										*/
 	changelevel: function()
 	{
-		level_id = document.getElementById("level_name").value;
+		var level_id = document.getElementById("level_name").value;
 		switch (level_id)
 		{
 			case "1":
@@ -140,6 +130,9 @@ var jsApp	=
 			case "5":
 				level = "isometric";
 				break;
+			case "6":
+				level = "perspective";
+				break;
 			default:
 				return;
 		};
@@ -150,18 +143,6 @@ var jsApp	=
 		// load the new level
 		me.levelDirector.loadLevel(level);		
 
-
-	},
-
-	
-	
-	/* ---
-	
-		 action to perform when game is finished (state change)
-		
-		---	*/
-	destroy: function()
-	{
 
 	}
 
