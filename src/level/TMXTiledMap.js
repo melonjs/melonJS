@@ -109,14 +109,10 @@
 
 				// get the tileset information
 				case me.TMX_TAG_TILESET: {
-				
 				   // Initialize our object if not yet done
-				   if (!this.tilesets)
-				   {
-					  // make sure tilesets if of the right type
+				   if (!this.tilesets) {
 					  this.tilesets = new me.TMXTilesetGroup();
 				   }
-
 				   // add the new tileset
 				   this.tilesets.add(new me.TMXTileset(xmlElements.item(i)));
 				   break;
@@ -126,13 +122,11 @@
 				// get the layer(s) information
 				case me.TMX_TAG_LAYER: {
 				   // try to identify specific layer type based on the naming convention
-				   var layer_name = me.XMLParser.getStringAttribute(xmlElements
-						 .item(i), me.TMX_TAG_NAME);
+				   var layer_name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
 
 				   // parallax layer
 				   if (layer_name.contains(me.LevelConstants.PARALLAX_MAP)) {
-					  var visible = (me.XMLParser.getIntAttribute(xmlElements
-							.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+					  var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
 
 					  // only add if visible
 					  if (visible) {
@@ -347,19 +341,14 @@
 			var gid;
 
 			// set everything
-			//for ( var y = this.height - 1; y >= 0; y--) {
 			for ( var y = 0 ; y <this.height; y++) {
-				//for ( var x = this.width - 1; x >= 0; x--) {
 				for ( var x = 0; x <this.width; x++) {
 					// get the value of the gid
 					gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
 
-					// check if tile is horizontally flipped
+					// check if tile is horizontally or vertically flipped
 					// (this should be save somewhere!)
 					flipx = (gid & FlipH_Flag);
-
-					// check if tile is vertically flipped
-					// (this should be save somewhere!)
 					flipy = (gid & FlipV_Flag);
 
 					// clear out the flags
@@ -410,15 +399,6 @@
 							rect.width, rect.height,    //sw, sh
 							rect.pos.x, rect.pos.y,     //dx, dy
 							rect.width, rect.height);   //dw, dh
-			
-			/*
-			this.renderer.drawRect(context, 
-								   this.vp.pos.x + rect.pos.x, //sx
-								   this.vp.pos.y + rect.pos.y, //sy
-								   rect.width, rect.height,    //sw, sh
-								   rect.pos.x, rect.pos.y,     //dx, dy
-								   rect.width, rect.height);   //dw, dh
-			*/
 		},
 	});
 	/*---------------------------------------------------------*/

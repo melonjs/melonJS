@@ -18,7 +18,7 @@
 	 * @private
 	 * @constructor
 	 */
-	me.TMXRenderer = Object.extend({
+	TMXRenderer = Object.extend({
 		// constructor
 		init: function(predraw, width, height, tilewidth, tileheight) {
 			this.predraw = predraw; // not implemented (always true)
@@ -30,7 +30,6 @@
 		
 		/**
 		 * draw the a Tile on the map
-		 * this is only called if the background_color or background_image property is defined
 		 * @private
 		 */
 		drawTile : function(context, x, y, gid, tileset, flipX, flipY) {
@@ -40,16 +39,15 @@
 	});
 	
 	/**
-	 * am Orthogonal Map Renderder
+	 * an Orthogonal Map Renderder
 	 * Tile QT 0.7.x format
 	 * @memberOf me
 	 * @private
 	 * @constructor
 	 */
-	me.TMXOrthogonalRenderer = me.TMXRenderer.extend({
+	me.TMXOrthogonalRenderer = TMXRenderer.extend({
 		/**
 		 * draw the tile map
-		 * this is only called if the background_color or background_image property is defined
 		 * @private
 		 */
 		drawTile : function(context, x, y, gid, tileset, flipX, flipY) {
@@ -64,16 +62,15 @@
 	
 	
 	/**
-	 * am Orthogonal Map Renderder
+	 * an Orthogonal Map Renderder
 	 * Tile QT 0.7.x format
 	 * @memberOf me
 	 * @private
 	 * @constructor
 	 */
-	me.TMXIsometricRenderer = me.TMXRenderer.extend({
+	me.TMXIsometricRenderer = TMXRenderer.extend({
 		/**
 		 * draw the tile map
-		 * this is only called if the background_color or background_image property is defined
 		 * @private
 		 */
 		drawTile : function(context, x, y, gid, tileset, flipX, flipY) {
