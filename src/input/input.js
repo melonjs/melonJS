@@ -158,14 +158,13 @@
 			
 			---										*/
 		function onMouseEvent(e) {
-			var x = e.clientX - me.video.getScreenCanvas().offsetLeft;
-			var y = e.clientY - me.video.getScreenCanvas().offsetTop;
+			var canvas = me.video.getScreenCanvas();
+			var x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft - ~~canvas.offsetLeft;
+			var y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop - ~~canvas.offsetTop + 1;
 
 			// propagate the event to the callback with x,y coords
 			mouseEventCB(x, y);
-
-		}
-		;
+		};
 
 		/* ---
 			
