@@ -1,7 +1,7 @@
 [melonJS](http://melonjs.org/) - a fresh & lightweight 2D sprite-based engine
 =============================================================================
 
-Copyright (C) 2011, Olivier BIOT
+Copyright (C) 2012, Olivier BIOT
 
 melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 

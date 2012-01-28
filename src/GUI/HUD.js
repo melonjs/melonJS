@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011, Olivier BIOT
+ * Copyright (C) 2012, Olivier BIOT
  * http://www.melonjs.org
  *
  *
