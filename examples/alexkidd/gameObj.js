@@ -38,11 +38,13 @@
 			// adjust the deadzone
 			me.game.viewport.setDeadzone( me.game.viewport.width/6,  me.game.viewport.height/4);
 			
+			// standing animation
+			this.addAnimation ("stand",  [9]);
 			// walking animation
 			this.addAnimation ("walk",  [1,2,3,0]);
 			
 			// set default one
-			this.setCurrentAnimation("walk");
+			this.setCurrentAnimation("stand");
 
 			
 		},
@@ -56,20 +58,23 @@
 		update : function ()
 		{
 				
-			if (me.input.isKeyPressed('left'))
-			{
+			if (me.input.isKeyPressed('left')) {
 				this.vel.x -= this.accel.x * me.timer.tick;
+				this.setCurrentAnimation("walk");
 				this.flipX(true);
 			}
-			else if (me.input.isKeyPressed('right'))
-			{
+			else if (me.input.isKeyPressed('right')) {
 				this.vel.x += this.accel.x * me.timer.tick;
+				this.setCurrentAnimation("walk");
 				this.flipX(false);
 			}
+			else {
+				this.setCurrentAnimation("stand");
+			}
 			
-			if (me.input.isKeyPressed('jump'))
-			{	
+			if (me.input.isKeyPressed('jump')) {	
 				this.vel.y = -this.maxVel.y * me.timer.tick;
+				this.setCurrentAnimation("walk");
 			}
 			
 			// check & update player movement
