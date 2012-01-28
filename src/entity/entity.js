@@ -160,13 +160,13 @@
 		 */
 
 		obj.newIstanceOf = function(prop) {
-			if (!entityClass[prop.name]) {
+			if (!entityClass[prop.name.toLowerCase()]) {
 				alert("cannot instance entity of type '" + prop.name
 						+ "': Class not found!");
 				return null;
 			}
 			// i should pass the entity ownProperty instead of the object itself
-			return new entityClass[prop.name](prop.x, prop.y, prop);
+			return new entityClass[prop.name.toLowerCase()](prop.x, prop.y, prop);
 		};
 
 		// return our object
@@ -188,10 +188,12 @@
 		init : function(imagesrc, speed, zOrder) {
 			// image..
 			this.image = me.loader.getImage(imagesrc);
-
+			
+			if (this.image==null)
+				throw "melonJS: image " + imagesrc + " for Parallax Layer not found!";
+			
 			// call the parent constructor
-			this.parent(new me.Vector2d(0, 0), this.image.width,
-					this.image.height);
+			this.parent(new me.Vector2d(0, 0), this.image.width, this.image.height);
 
 			// base x offset within the image 
 			this.baseOffset = 0;

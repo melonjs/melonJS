@@ -367,6 +367,8 @@
 		 */
 
 		obj.load = function(res, onload, onerror) {
+			// fore lowercase for the resource name
+			res.name = res.name.toLowerCase();
 			// check ressource type
 			switch (res.type) {
 				case "binary":
@@ -409,6 +411,8 @@
 		 * @return {Xml} 
 		 */
 		obj.getXML = function(elt) {
+			// avoid case issue
+			elt = elt.toLowerCase();
 			if (xmlList != null)
 				return xmlList[elt].xml;
 			else {
@@ -427,6 +431,8 @@
 		 * @return {Object} 
 		 */
 		obj.getBinary = function(elt) {
+			// avoid case issue
+			elt = elt.toLowerCase();
 			if (binList != null)
 				return binList[elt];
 			else {
@@ -447,6 +453,8 @@
 		 */
 
 		obj.getImage = function(elt) {
+			// avoid case issue
+			elt = elt.toLowerCase();
 			if (imgList[elt] != null) {
 				if (me.sys.cacheImage === true) {
 					// build a new canvas

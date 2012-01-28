@@ -674,7 +674,7 @@
 
 			getStringAttribute : function(elt, str, val) {
 				var ret = elt.getAttribute(str);
-				return ret ? ret.trim().toLowerCase() : val;
+				return ret ? ret.trim() : val;
 			},
 
 			getIntAttribute : function(elt, str, val) {

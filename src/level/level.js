@@ -441,16 +441,15 @@
 			// normalize name
 			name = name.trim().toLowerCase();
 			for ( var i = this.mapLayers.length; i--;) {
-				if (this.mapLayers[i].name.contains(name)) {
+				if (this.mapLayers[i].name.toLowerCase().contains(name)) {
 					layer = this.mapLayers[i];
 					break;
 				}
 			};
 
 			// return a fake collision layer if not found
-			if ((name.contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
-				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,
-						me.game.currentLevel.realheight);
+			if ((name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
+				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,	me.game.currentLevel.realheight);
 			}
 
 			return layer;

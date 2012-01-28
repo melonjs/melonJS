@@ -217,7 +217,7 @@
 
 		function _play_audio_enable(sound_id, loop, callback) {
 			// console.log("play!!");
-			var soundclip = get(sound_id);
+			var soundclip = get(sound_id.toLowerCase());
 
 			soundclip.loop = loop || false;
 			soundclip.play();
@@ -419,7 +419,7 @@
 		 */
 		obj.stop = function(sound_id) {
 			if (sound_enable) {
-				var sound = audio_channels[sound_id];
+				var sound = audio_channels[sound_id.toLowerCase()];
 				for (var channel_id = sound.length; channel_id--;) {
 					sound[channel_id].pause();
 					// force rewind to beginning
@@ -442,7 +442,7 @@
 		 */
 		obj.pause = function(sound_id) {
 			if (sound_enable) {
-				var sound = audio_channels[sound_id];
+				var sound = audio_channels[sound_id.toLowerCase()];
 				for (var channel_id = sound.length; channel_id--;) {
 					sound[channel_id].pause();
 				}
@@ -467,7 +467,7 @@
 				if (current_track != null)
 					obj.stopTrack();
 
-				current_track = get(sound_id);
+				current_track = get(sound_id.toLowerCase());
 
 				if (current_track) {
 					current_track.loop = true;

@@ -124,7 +124,7 @@
 				   var layer_name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
 
 				   // parallax layer
-				   if (layer_name.contains(me.LevelConstants.PARALLAX_MAP)) {
+				   if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
 					  var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
 
 					  // only add if visible
@@ -227,7 +227,7 @@
 			me.TMXUtils.setTMXProperties(this, layer);
 
 			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.contains(me.LevelConstants.COLLISION_MAP));
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
 			if (this.isCollisionMap) {
 				// force the layer as invisible
 				this.visible = false;
