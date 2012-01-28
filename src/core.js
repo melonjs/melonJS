@@ -1,12 +1,10 @@
-/*!
- * MelonJS Game Engine
- * Copyright (C) 2011, Olivier BIOT
+/**
+ * @license MelonJS Game Engine
+ * Copyright (C) 2012, Olivier BIOT
  * http://www.melonjs.org
  * 
  * melonJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
- *
- * @author Olivier Biot 2011
  *
  */
 (function($, undefined) {
@@ -320,8 +318,8 @@
 	
 						---*/
 
-	var initializing = false, 
-       fnTest = /xyz/.test(function() {xyz;}) ? /\bparent\b/ : /.*/;
+	var initializing = false,
+		fnTest = /xyz/.test(function() {/**@nosideeffects*/xyz;}) ? /\bparent\b/ : /.*/;
 
 	/**
 	 * JavaScript Inheritance Helper <br>

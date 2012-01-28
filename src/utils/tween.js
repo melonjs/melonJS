@@ -1,7 +1,8 @@
-/*!
- * Tween JS
+/**
+ * @preserve Tween JS
  * https://github.com/sole/Tween.js
- *
+ */
+/**
  * author sole / http://soledadpenades.com
  * author mr.doob / http://mrdoob.com
  * author Robert Eisele / http://www.xarg.org
