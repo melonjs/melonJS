@@ -469,7 +469,10 @@
 
 					// set the default sprite index & offset
 					this.offset = new me.Vector2d(0, 0);
-			
+					
+					// sprite count (line, col)
+					this.spritecount = new me.Vector2d(~~(this.image.width / this.width), 
+													   ~~(this.image.height / this.height));
 				},
 				
 				/**
@@ -708,11 +711,8 @@
 					// call the constructor
 					this.parent(x, y, image, spritewidth, spriteheight);
 					
-					// #sprite per row  
-					this.spritecount = ~~(this.image.width / this.width);
-					
 					// if one single image, disable animation
-					if ((this.image.width == this.width) && (this.image.height == this.height)) {
+					if ((this.spritecount.x * this.spritecount.y) == 1) {
 						// override setCurrrentSprite with an empty function
 						this.setCurrentSprite = function() {;};
 					} 
@@ -749,21 +749,22 @@
 					};
 
 					if (frame == null) {
-						// by default create an animation with all sprites from row #0
-						for ( var i = 0; i < this.spritecount; i++) {
-							// compute and add the offset of each frame
-							this.anim[name].frame[i] = new me.Vector2d(i * this.width, 0);
+						frame = [];
+						// force creation of an animation with all sprites from row #0
+						for ( var i = 0; i < this.spritecount.x; i++) {
+							frame[i] = i;
 						}
 
-					} else {
-						var frameidx = 0;
-						for ( var i = 0; i < frame.length; i++) {
-							// compute and add the offset of each frame
-							this.anim[name].frame[frameidx] = new me.Vector2d(this.width * (frame[i] % this.spritecount), 
-																			  this.height * ~~(frame[i] / this.spritecount));
-							frameidx++;
-						}
+					} 
+					
+					var frameidx = 0;
+					for ( var i = 0; i < frame.length; i++) {
+						// compute and add the offset of each frame
+						this.anim[name].frame[frameidx] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x), 
+																		  this.height * ~~(frame[i] / this.spritecount.x));
+						frameidx++;
 					}
+
 					this.anim[name].name = name;
 					this.anim[name].length = this.anim[name].frame.length;
 
