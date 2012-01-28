@@ -72,9 +72,11 @@
 				this.setCurrentAnimation("stand");
 			}
 			
-			if (me.input.isKeyPressed('jump')) {	
-				this.vel.y = -this.maxVel.y * me.timer.tick;
-				this.setCurrentAnimation("walk");
+			if (me.input.isKeyPressed('jump')) {
+				if (this.vel.y==0) { // on the ground
+					this.vel.y = -this.maxVel.y * me.timer.tick;
+					this.setCurrentAnimation("walk");
+				}
 			}
 			
 			// check & update player movement
