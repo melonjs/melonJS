@@ -739,35 +739,26 @@
 				 */
 				addAnimation : function(name, frame) {
 					this.anim[name] = {
-						name : null,
+						name : name,
 						frame : [],
 						idx : 0,
 						length : 0
 					};
-
+					
 					if (frame == null) {
 						frame = [];
-						// force creation of an animation with all sprites from row #0
-						for ( var i = 0; i < this.spritecount.x; i++) {
+						// create a default animation with all sprites in the spritesheet
+						for ( var i = 0, count = this.spritecount.x * this.spritecount.y; i < count ; i++) {
 							frame[i] = i;
 						}
-
 					} 
 					
-					var frameidx = 0;
-					for ( var i = 0; i < frame.length; i++) {
-						// compute and add the offset of each frame
-						this.anim[name].frame[frameidx] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x), 
-																		  this.height * ~~(frame[i] / this.spritecount.x));
-						frameidx++;
+					// compute and add the offset of each frame
+					for ( var i = 0 , len = frame.length ; i < len; i++) {
+						this.anim[name].frame[i] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x), 
+																   this.height * ~~(frame[i] / this.spritecount.x));
 					}
-
-					this.anim[name].name = name;
 					this.anim[name].length = this.anim[name].frame.length;
-
-					// return the create sequence
-					//return this.anim[name];
-
 				},
 
 				/**		
