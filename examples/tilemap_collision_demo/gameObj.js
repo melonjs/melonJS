@@ -5,9 +5,9 @@
 	------			*/
 
 	/************************************************************************************/
-	/*																												*/
-	/*		a player entity																					*/
-	/*																												*/
+	/*																					*/
+	/*		a player entity																*/
+	/*																					*/
 	/************************************************************************************/
 	var PlayerEntity = me.ObjectEntity.extend(
 	{	
@@ -109,7 +109,7 @@
 			
 			if (res)
 			{
-				if (res.type == me.game.ENEMY_OBJECT)
+				if (res.obj.type == me.game.ENEMY_OBJECT)
 				{
 				   if ((res.y>0) && !this.jumping)
 				   {
@@ -120,7 +120,7 @@
 					  this.die();
 				   }
 				}
-				else if (res.type == "spikeobject")
+				else if (res.obj.type == "spikeObject")
 				{
 				   this.forceJump();
 				   this.die();
