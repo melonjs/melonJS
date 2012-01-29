@@ -1186,8 +1186,8 @@
 				{
 					// the Vector object also implements the same function, but
 					// we have to use here the center of both object
-					var dx = (this.pos.x + (this.width>>1))  - (o.pos.x + (o.width>>1)); 
-					var dy = (this.pos.y + (this.height>>1)) - (o.pos.y + (o.height>>1));
+					var dx = (this.pos.x + this.hWidth)  - (o.pos.x + o.hWidth); 
+					var dy = (this.pos.y + this.hHeight) - (o.pos.y + o.hHeight);
 					return Math.sqrt(dx*dx+dy*dy);
 				},
 
