@@ -480,7 +480,15 @@
 		};
 
 	};
-   
+	
+	if(typeof console === "undefined") {
+		/**
+		 * Dummy console.log to avoid crash
+		 * in case the browser does not support it
+		 * @private
+		 */
+		console = { log: function() {} };
+	}
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
