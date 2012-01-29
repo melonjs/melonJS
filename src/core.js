@@ -1167,6 +1167,7 @@
 		
 		/**
 		 * returns the list of entities with the specified name<br>
+		 * as defined in Tiled (Name field of the Object Properties)<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
 		 * @name me.game#getEntityByName
@@ -1178,6 +1179,7 @@
 		api.getEntityByName = function(entityName)
 		{
 			var objList = [];
+			entityName = entityName.toLowerCase();
 			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
 				if(obj.name == entityName) {
 					objList.push(obj);
