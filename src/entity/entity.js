@@ -1307,11 +1307,11 @@
 						// collision with the floor
 						if (collision.y > 0) {
 
-							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (~~this.pos.y	+ this.height <= collision.ytile.pos.y))) {
+							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom <= collision.ytile.pos.y))) {
 								// round pos.y
 								this.pos.y = ~~this.pos.y;
 								// adjust val to tile pos
-								this.vel.y = (this.falling) ? collision.ytile.pos.y	- this.pos.y - this.height : 0;
+								this.vel.y = (this.falling) ? collision.ytile.pos.y	- ~~this.collisionBox.bottom : 0;
 								this.falling = false;
 							} else if (collision.yprop.isSlope && !this.jumping) {
 								// we stop falling
@@ -1327,7 +1327,7 @@
 									// cancel vel and adjust to tile pos
 									// round pos.y
 									this.pos.y = ~~this.pos.y;
-									this.vel.y = (this.falling) ? collision.ytile.pos.y	- this.pos.y - this.height : 0;
+									this.vel.y = (this.falling) ? collision.ytile.pos.y	- ~~this.collisionBox.bottom : 0;
 									this.falling = false;
 								}
 							}
