@@ -193,9 +193,10 @@
 	});
 	
 	
-	// bitmaks to check for flipped tiles
-	var FlipH_Flag                  = 0x80000000,
-	    FlipV_Flag                  = 0x40000000;
+	// bitmaks to check for flipped & rotated tiles
+	var FlippedHorizontallyFlag		= 0x80000000;
+	var FlippedVerticallyFlag		= 0x40000000;
+	var FlippedAntiDiagonallyFlag   = 0x20000000;
 
 	
 	/**
@@ -336,7 +337,7 @@
 			}
 
 			var idx = 0;
-			var flipx, flipy;
+			var flipx, flipy, flipad;
 			var gid;
 
 			// set everything
@@ -347,11 +348,12 @@
 
 					// check if tile is horizontally or vertically flipped
 					// (this should be save somewhere!)
-					flipx = (gid & FlipH_Flag);
-					flipy = (gid & FlipV_Flag);
+					flipx = (gid & FlippedHorizontallyFlag);
+					flipy = (gid & FlippedVerticallyFlag);
+					flipad = (gid & FlippedAntiDiagonallyFlag);
 
 					// clear out the flags
-					gid &= ~(FlipH_Flag | FlipV_Flag);
+					gid &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
 
 					// fill the array										
 					if (gid > 0) {
@@ -363,7 +365,7 @@
 						}
 					   	// draw the corresponding tile
 						if (this.visible) {
-							this.renderer.drawTile(this.layerSurface, x, y, gid, this.tileset, flipx, flipy);
+							this.renderer.drawTile(this.layerSurface, x, y, gid, this.tileset, flipx, flipy, flipad);
 						}
 					}
 				}

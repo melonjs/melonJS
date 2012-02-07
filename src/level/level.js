@@ -123,28 +123,52 @@
 		},
 
 		// draw the x,y tile
-		drawTile : function(context, x, y, tileId, flipx, flipy) {
-			var texturePositionX = this.margin + (this.spacing + this.tilewidth)
-					* (tileId % this.hTileCount);
-			var texturePositionY = this.margin + (this.spacing + this.tileheight)
-					* ~~(tileId / this.hTileCount);
-
-			if (flipx || flipy) {
-				// "normalize" the flag value
-				flipx = (flipx == 0) ? 1.0 : -1.0;
-				flipy = (flipy == 0) ? 1.0 : -1.0;
-
-				context.scale(flipx, flipy);
-
-				x = (x * flipx) - (flipx < 0 ? this.tilewidth : 0);
-				y = (y * flipy) - (flipy < 0 ? this.tileheight : 0);
+		drawTile : function(context, dx, dy, tileId, flipx, flipy, flipad) {
+			var sx = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			var sy = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+						
+			if (flipx || flipy || flipad) {
+				var m11 = 1; // Horizontal scaling factor
+				var m12 = 0; // Vertical shearing factor
+				var m21 = 0; // Horizontal shearing factor
+				var m22 = 1; // Vertical scaling factor
+				var mx	= dx; 
+				var my	= dy;
+				// set initial value to zero since we use a transform matrix
+				dx = dy = 0;
+				
+				if (flipad){
+					// Use shearing to swap the X/Y axis
+					m11=0;
+					m12=1;
+					m21=1;
+					m22=0;
+					// Compensate for the swap of image dimensions
+					my += this.tileheight - this.tilewidth;
+				}
+				if (flipx){
+					m11 = -m11;
+					m21 = -m21;
+					mx += flipad ? this.tileheight : this.tilewidth;
+					
+				}
+				if (flipy){
+					m12 = -m12;
+					m22 = -m22;
+					my += flipad ? this.tilewidth : this.tileheight;
+				}
+				// set the transform matrix
+				context.setTransform(m11, m12, m21, m22, mx, my);
 			}
+			
+			// draw the tile
+			context.drawImage(this.image, 
+							  sx, sy,
+							  this.tilewidth, this.tileheight, 
+							  dx, dy, 
+							  this.tilewidth, this.tileheight);
 
-			context.drawImage(this.image, texturePositionX, texturePositionY,
-					this.tilewidth, this.tileheight, x, y, this.tilewidth,
-					this.tileheight);
-
-			if (flipx || flipy) {
+			if  (flipx || flipy || flipad)  {
 				// restore the transform matrix to the normal one
 				context.setTransform(1, 0, 0, 1, 0, 0);
 			}
