@@ -70,6 +70,10 @@
 			// tile properties
 			// (collidable, etc..)
 			this.TileProperties = [];
+			
+			// a cache for offset value
+			this.tileXOffset = [];
+			this.tileYOffset = [];
 
 			// number of tiles per horizontal line 
 			if (this.image) {
@@ -121,12 +125,27 @@
 			this.drawTile(image, 0, 0, tileId);
 			return image.canvas;
 		},
+		
+		// return the x offset of the specified tile in the tileset image
+		getTileOffsetX : function(tileId) {
+			if (this.tileXOffset[tileId] == null) {
+				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			}
+			return this.tileXOffset[tileId];
+		},
+		
+		// return the y offset of the specified tile in the tileset image
+		getTileOffsetY : function(tileId) {
+			if (this.tileYOffset[tileId] == null) {
+				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+			}
+			return this.tileYOffset[tileId];
+		},
+		
 
 		// draw the x,y tile
 		drawTile : function(context, dx, dy, tileId, flipx, flipy, flipad) {
-			var sx = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
-			var sy = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
-						
+			// check if any transformation is required
 			if (flipx || flipy || flipad) {
 				var m11 = 1; // Horizontal scaling factor
 				var m12 = 0; // Vertical shearing factor
@@ -163,7 +182,7 @@
 			
 			// draw the tile
 			context.drawImage(this.image, 
-							  sx, sy,
+							  this.getTileOffsetX(tileId), this.getTileOffsetY(tileId),
 							  this.tilewidth, this.tileheight, 
 							  dx, dy, 
 							  this.tilewidth, this.tileheight);
