@@ -477,6 +477,17 @@
 							r.top >= this.top && 
 							r.bottom <= this.bottom);
                 },
+				
+				/**
+				 * check if this rectangle contains the specified point
+				 * @param  {me.Vector2d} point
+				 * @return {boolean} true if contains
+				 */
+				containsPoint: function(v) {
+					return  (v.x >= this.left && v.x <= this.right && 
+							(v.y >= this.top) && v.y <= this.bottom)
+				},
+
 
 				/**
 				 * AABB vs AABB collission dectection<p>
