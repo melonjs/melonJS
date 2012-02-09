@@ -94,25 +94,10 @@
 		 * @deprecated won't survive version 0.9.3
 		 */
 		clicked : function() {
-			// don't propagate mouse event if clicked
+			this.updated = true;
 			return true;
-		},
-
-
-		/**
-		 * mouse event detection
-		 * @private
-		 */
-		mouseEvent : function(x, y) {
-			if ((x > this.left) && (x < this.right) && 
-			    (y > this.top) && (y < this.bottom)) {
-				// notify the object we have been clicked :)
-				if (this.isClickable) {
-					this.updated = this.clicked();
-				}
-			}
-			return this.updated;
 		}
+
 	});
 
 	/*---------------------------------------------------------*/

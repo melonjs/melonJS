@@ -1153,7 +1153,7 @@
 			gameObjects.push(object);
 
 			// TO BE REMOVED
-			if (object.mouseEvent) {
+			if (object.isClickable) {
 				// also add a reference in the object even list
 				registeredMouseEventObj.push(object);
 			}
@@ -1258,12 +1258,14 @@
 		 * propagate mouse event to objects
 		 * @private
 		 */
-		api.mouseEvent = function(x, y) {
-			for ( var i = registeredMouseEventObj.length; i--;) {
-				if (registeredMouseEventObj[i].mouseEvent(x, y)) {
-					// stop propagating the event
-					// if the object return true
-					break;
+		api.mouseEvent = function(v) {
+			for (var i = registeredMouseEventObj.length, obj; i--, obj = registeredMouseEventObj[i];) {
+				if (obj.isClickable && obj.collisionBox.containsPoint(v)) {
+					if (obj.clicked()){
+						// stop propagating the event
+						// if the functin return true
+						break;
+					}
 				}
 			}
 		};

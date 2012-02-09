@@ -150,20 +150,27 @@
 			return true;
 
 		}
-		;
 
+		/* ---
+		
+			 translate Mouse Coordinates
+			
+			---								*/
+		function translateMouseCoords(x, y) {
+			var canvas = me.video.getScreenCanvas();
+			return new me.Vector2d(x + document.body.scrollLeft + document.documentElement.scrollLeft - ~~canvas.offsetLeft,
+								   y + document.body.scrollTop + document.documentElement.scrollTop - ~~canvas.offsetTop + 1);
+		};
+
+		
 		/* ---
 		
 			 mouse event management (click)
 			
 			---										*/
 		function onMouseEvent(e) {
-			var canvas = me.video.getScreenCanvas();
-			var x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft - ~~canvas.offsetLeft;
-			var y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop - ~~canvas.offsetTop + 1;
-
 			// propagate the event to the callback with x,y coords
-			mouseEventCB(x, y);
+			mouseEventCB(translateMouseCoords(e.clientX, e.clientY));
 		};
 
 		/* ---
@@ -347,13 +354,11 @@
 		obj.enableMouseEvent = function(enable, callback) {
 			if (enable) {
 				// add a listener for the mouse
-				me.video.getScreenCanvas().addEventListener('click',
-						onMouseEvent, false);
+				me.video.getScreenCanvas().addEventListener('click', onMouseEvent, false);
 				// set the callback
 				mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
 			} else {
-				me.video.getScreenCanvas().removeEventListener('click',
-						onMouseEvent, false);
+				me.video.getScreenCanvas().removeEventListener('click', onMouseEvent, false);
 			}
 		};
 
