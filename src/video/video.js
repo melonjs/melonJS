@@ -269,6 +269,23 @@
 			return backBufferCanvas.width;
 
 		};
+		
+		/**
+		 * return the relative (to the page) position of the specified Canvas
+		 * @name me.video#getPos
+		 * @function
+		 * @param {Canvas} [canvas] system one if none specified
+		 * @return {me.Vector2d}
+		 */
+		api.getPos = function(c) {
+			var obj = c || canvas;
+			var offset = new me.Vector2d(obj.offsetLeft, obj.offsetTop);
+			while ( obj = obj.offsetParent ) {
+				offset.x += obj.offsetLeft;
+				offset.y += obj.offsetTop;
+			} 
+			return offset;
+		};
 
 		/**
 		 * return the height of the display canvas (before scaling)
