@@ -156,10 +156,10 @@
 			 translate Mouse Coordinates
 			
 			---								*/
-		function updateMouseCoords(x, y) {
-			obj.mouse.pos.set(x,y);
-			obj.mouse.pos.sub(obj.mouse.offset);
-			return obj.mouse.pos;
+		function translateMouseCoords(x, y) {
+			var canvas = me.video.getScreenCanvas();
+			return new me.Vector2d(x + document.body.scrollLeft + document.documentElement.scrollLeft - ~~canvas.offsetLeft,
+								   y + document.body.scrollTop + document.documentElement.scrollTop - ~~canvas.offsetTop + 1);
 		};
 
 		
@@ -168,21 +168,11 @@
 			 mouse event management (click)
 			
 			---										*/
-		function onMouseMove(e) {
-			// update mouse position
-			updateMouseCoords(e.pageX, e.pageY);
-		};
-		
-		/* ---
-		
-			 mouse event management (click)
-			
-			---										*/
 		function onMouseEvent(e) {
 			// propagate the event to the callback with x,y coords
-			mouseEventCB(obj.mouse.pos);
+			mouseEventCB(translateMouseCoords(e.clientX, e.clientY));
 		};
-		
+
 		/* ---
 			
 				 event management (Gyroscopic)
@@ -214,13 +204,7 @@
 			PUBLIC STUFF
 				
 		  ---------------------------------------------*/
-		
-		
-		obj.mouse = {
-			pos : null,
-			offset : null
-		}
-		
+
 		/**
 		 * list of mappable keys :
 		 * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, ESCAPE, [0..9], [A..Z]
@@ -369,18 +353,11 @@
 		 */
 		obj.enableMouseEvent = function(enable, callback) {
 			if (enable) {
-				// initialize mouse pos (0,0)
-				obj.mouse.pos = new me.Vector2d(0,0);
-				// get relative canvas position in the page
-				obj.mouse.offset = me.video.getPos();
 				// add a listener for the mouse
-				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
 				me.video.getScreenCanvas().addEventListener('click', onMouseEvent, false);
-				
 				// set the callback
 				mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
 			} else {
-				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
 				me.video.getScreenCanvas().removeEventListener('click', onMouseEvent, false);
 			}
 		};
