@@ -884,7 +884,7 @@
 					this.GUID = me.utils.createGUID();
 					
 					// set the object entity name
-					this.name = settings.name.toLowerCase();
+					this.name = settings.name?settings.name.toLowerCase():"";
 					
 					// adjust initial coordinates (should be bottom left ones when in a tiled world)
 					this.pos.set(x, me.game.currentLevel?y + me.game.currentLevel.tileheight - this.height:y);
