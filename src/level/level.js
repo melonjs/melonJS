@@ -246,7 +246,6 @@
 	/**
 	 * a generic tile based layer object
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.TiledLayer = Object.extend({
@@ -336,8 +335,9 @@
 		},
 
 		/**
-		 * clear a tile
-		 * @private
+		 * clear the tile at the specified position
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
 		 */
 		clearTile : function(x, y) {
 			// clearing tile
@@ -412,8 +412,8 @@
 	
 	/**
 	 * a basic level object skeleton
+	 * @class
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.TileMap = Object.extend({
@@ -476,7 +476,11 @@
 
 		/**
 		 * return the specified layer object
-		 * @private		
+		 * @name me.TileMap#getLayerByName
+		 * @public
+		 * @function
+		 * @param {String} name Layer Name 
+		 * @return {me.TiledLayer} Layer Object
 		 */
 		getLayerByName : function(name) {
 			var layer = null;
@@ -499,9 +503,13 @@
 		},
 
 		/**
-		 * clear a tile from all layers
-		 * @private
-		 **/
+		 * clear the tile at the specified position from all layers
+		 * @name me.TileMap#clearTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
+		 */
 		clearTile : function(x, y) {
 			// add all layers
 			for ( var i = this.mapLayers.length; i--;) {

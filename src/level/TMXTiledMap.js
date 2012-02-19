@@ -13,8 +13,9 @@
 	/**
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
+	 * @class
+	 * @extends me.TileMap
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.TMXTileMap = me.TileMap.extend({
@@ -203,7 +204,6 @@
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.TMXLayer = me.TiledLayer.extend({
@@ -376,8 +376,12 @@
 		},
 
 		/**
-		 * clear a tile
-		 * @private
+		 * clear the tile at the specified position from all layers
+		 * @name me.TMXLayer#clearTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
 		 */
 		clearTile : function(x, y) {
 			// call the parent function

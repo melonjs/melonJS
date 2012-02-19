@@ -973,7 +973,7 @@
 		/**
 		 * a reference to the game viewport.
 		 * @public
-		 * @type me.ViewportEntity
+		 * @type me.Viewport
 		 * @name me.game#viewport
 		 */
 		api.viewport = null;
