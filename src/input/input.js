@@ -41,12 +41,14 @@
 
 		// some usefull flags
 		var keyboardInitialized = false;
+		var mouseInitialized = false;
 
-		/*---
-			
-			enable keyboard event
-				
-			---*/
+		
+		/**
+		 * enable keyboard event
+		 * @private
+		 */
+
 		function enableKeyboardEvent(enable) {
 			if (enable) {
 				// Event Management
@@ -62,11 +64,11 @@
 			keyboardInitialized = enable;
 		};
 
-		/* ---
-			
-			prevent event propagation
-				
-			---*/
+
+		/**
+		 * prevent event propagation
+		 * @private
+		 */
 		function preventDefault(e) {
 			e.stopPropagation();
 			if (e.preventDefault)
@@ -76,40 +78,13 @@
 			e.cancelBubble = true;
 		};
 
-		/* ---
-			
-			key down event
-				
-			---	*/
-		/*
-		function dispatchEvent (e)
-		{
-			var action = KeyBinding[e.keyCode || e.which];
-			
-			if(action)
-			{
-				console.log(e);
-				if ((e.type === "keydown")&&(!keyLocked[action]))
-				{
-						keyStatus[action] = true;
-						// lock the key if requested
-						keyLocked[action] = keyLock[action];
-				} 
-				else if(e.type === "keyup")
-				{
-					keyStatus[action] = false;
-					keyLocked[action] = false;
-				}
-			}
-			// prevent event propagation
-			preventDefault(event);
-			return false;
-		};
+		/**
+		 * key down event
+		 * @private
 		 */
+		function keydown(e, keyCode) {
 
-		function keydown(e) {
-
-			var action = KeyBinding[e.keyCode || e.which];
+			var action = KeyBinding[keyCode || e.keyCode || e.which];
 
 			if (action) {
 				//console.log(e, action);
@@ -125,17 +100,16 @@
 				return false;
 			}
 			return true;
-		}
-		;
+		};
 
-		/* ---
-			
-			key up event
-				
-			---	*/
-		function keyup(e) {
 
-			var action = KeyBinding[e.keyCode || e.which];
+		/**
+		 * key up event
+		 * @private
+		 */
+		function keyup(e, keyCode) {
+
+			var action = KeyBinding[keyCode || e.keyCode || e.which];
 
 			//console.log(e, action);
 
@@ -151,11 +125,11 @@
 
 		}
 
-		/* ---
 		
-			 translate Mouse Coordinates
-			
-			---								*/
+		/**
+		 * translate Mouse Coordinates
+		 * @private
+		 */
 		function updateMouseCoords(x, y) {
 			obj.mouse.pos.set(x,y);
 			obj.mouse.pos.sub(obj.mouse.offset);
@@ -163,24 +137,32 @@
 		};
 
 		
-		/* ---
-		
-			 mouse event management (click)
-			
-			---										*/
+		/**
+		 * mouse event management (mousemove)
+		 * @private
+		 */
 		function onMouseMove(e) {
 			// update mouse position
 			updateMouseCoords(e.pageX, e.pageY);
+			preventDefault(e);
 		};
 		
-		/* ---
-		
-			 mouse event management (click)
-			
-			---										*/
+		/**
+		 * mouse event management (mousedown, mouseup)
+		 * @private
+		 */
 		function onMouseEvent(e) {
 			// propagate the event to the callback with x,y coords
 			mouseEventCB(obj.mouse.pos);
+			
+			// check if mouse is mapped to a key
+			var keycode = me.input.mouse.bind[event.button];
+			if (keycode) {
+				if (e.type=="mousedown")
+					keydown(e, keycode);
+				else // (e.type=="mouseup")
+					keyup(e, keycode);
+			}
 		};
 		
 		/* ---
@@ -217,8 +199,16 @@
 		
 		
 		obj.mouse = {
+			// mouse position
 			pos : null,
-			offset : null
+			// canvas offset
+			offset : null,
+			// button constants (W3C)
+			LEFT : 0,
+			MIDDLE: 1,
+			RIGHT: 2,
+			// bind list for mouse buttons
+			bind: [3]
 		}
 		
 		/**
@@ -343,7 +333,7 @@
 			keyLocked[action] = false;
 			//console.log(this);
 		};
-
+		
 		/**
 		 * unbind the defined keycode
 		 * @name me.input#unbindKey
@@ -361,6 +351,47 @@
 		};
 
 		/**
+		 * Associate a mouse (button) action to a keycode
+		 * Left button – 0
+		 * Middle button – 1
+		 * Right button – 2
+		 * @name me.input#bindMouse
+		 * @public
+		 * @function
+		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+		 * @param {me.input#KEY} keyCode
+		 * @example
+		 * // enable the keyboard
+		 * me.input.bindKey(me.input.KEY.X, "shoot");
+		 * // map the left button click on the X key
+		 * me.input.bindKey(me.input.mouse.LEFT, me.input.KEY.X);
+		 */
+		obj.bindMouse = function (button, keyCode)
+		{
+			// make sure the mouse is initialized
+			if (!mouseInitialized)
+				obj.enableMouseEvent(true);
+			// throw an exception if no action is defined for the specified keycode
+			if (!KeyBinding[keyCode])
+			  throw "melonJS : no action defined for keycode " + keyCode;
+			// map the mouse button to the keycode
+			me.input.mouse.bind[button] = keyCode;
+		};
+		/**
+		 * unbind the defined keycode
+		 * @name me.input#unbindMouse
+		 * @public
+		 * @function
+		 * @example
+		 * me.input.unbindMouse(me.input.mouse.LEFT);
+		 */
+		obj.unbindMouse = function(button) {
+			// clear the event status
+			me.input.mouse.bind[button] = null;
+		};
+
+
+		/**
 		 * enable mouse event
 		 * @name me.input#enableMouseEvent
 		 * @public
@@ -375,14 +406,18 @@
 				obj.mouse.offset = me.video.getPos();
 				// add a listener for the mouse
 				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().addEventListener('click', onMouseEvent, false);
-				
+				me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
+				me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+
 				// set the callback
 				mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
 			} else {
 				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().removeEventListener('click', onMouseEvent, false);
+				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
+				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
+
 			}
+			mouseInitialized = enable;
 		};
 
 		/**
