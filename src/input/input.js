@@ -364,7 +364,7 @@
 		 * // enable the keyboard
 		 * me.input.bindKey(me.input.KEY.X, "shoot");
 		 * // map the left button click on the X key
-		 * me.input.bindKey(me.input.mouse.LEFT, me.input.KEY.X);
+		 * me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
 		 */
 		obj.bindMouse = function (button, keyCode)
 		{
