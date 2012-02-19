@@ -400,22 +400,22 @@
 		 */
 		obj.enableMouseEvent = function(enable, callback) {
 			if (enable) {
-				// initialize mouse pos (0,0)
-				obj.mouse.pos = new me.Vector2d(0,0);
-				// get relative canvas position in the page
-				obj.mouse.offset = me.video.getPos();
-				// add a listener for the mouse
-				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
-				me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
-
-				// set the callback
-				mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
+				if (!mouseInitialized) {
+					// initialize mouse pos (0,0)
+					obj.mouse.pos = new me.Vector2d(0,0);
+					// get relative canvas position in the page
+					obj.mouse.offset = me.video.getPos();
+					// add a listener for the mouse
+					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
+					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
+					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+					// set the callback
+					mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
+				}
 			} else {
 				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
 				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
 				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
-
 			}
 			mouseInitialized = enable;
 		};
