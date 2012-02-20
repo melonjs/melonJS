@@ -323,6 +323,8 @@
 		 * @name me.input#isKeyPressed
 		 * @public
 		 * @function
+		 * @param {String} action user defined corresponding action
+		 * @return {boolean} true if pressed
 		 * @example
 		 * if (me.input.isKeyPressed('left'))
 		 * {
@@ -352,6 +354,7 @@
 		 * @name me.input#keyStatus
 		 * @public
 		 * @function
+		 * @param {String} action user defined corresponding action
 		 * @return {boolean} down (true) or up(false)
 		 */
 
