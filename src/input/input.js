@@ -66,9 +66,7 @@
 		
 		/**
 		 * enable mouse event
-		 * @name me.input#enableMouseEvent
 		 * @private
-		 * @function
 		 */
 		function enableMouseEvent(enable/*, callback*/) {
 			if (enable) {
@@ -214,11 +212,10 @@
 			}
 		};
 		
-		/* ---
-			
-				 event management (Gyroscopic)
-				
-				---										*/
+		/**
+		 * event management (Gyroscopic)
+		 * @private		
+		 */
 		function onGyroEvent(event) {
 			// http://www.mobilexweb.com/samples/ball.html
 			// http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
@@ -389,6 +386,7 @@
 		 * @name me.input#unbindKey
 		 * @public
 		 * @function
+		 * @param {me.input#KEY} keycode
 		 * @example
 		 * me.input.unbindKey(me.input.KEY.LEFT);
 		 */
@@ -474,8 +472,8 @@
 		};
 		
 		/**
-		 * register on a mouse event
-		 * @name me.input#registerMouseEvent
+		 * release the previously registered mouse event callback
+		 * @name me.input#releaseMouseEvent
 		 * @public
 		 * @function
 		 * @param {String} eventType ('mousemove','mousedown','mouseup')
