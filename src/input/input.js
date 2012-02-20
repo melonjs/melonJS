@@ -159,8 +159,11 @@
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
 				for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-					// call the callback
-					handler();
+					// call the defined handler
+					if (handler() === false) {
+						// stop propagating the event if return false 
+						break;
+					}
 				}
 			}
 
