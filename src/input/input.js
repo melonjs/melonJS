@@ -63,6 +63,34 @@
 			}
 			keyboardInitialized = enable;
 		};
+		
+		/**
+		 * enable mouse event
+		 * @name me.input#enableMouseEvent
+		 * @private
+		 * @function
+		 */
+		function enableMouseEvent(enable/*, callback*/) {
+			if (enable) {
+				if (!mouseInitialized) {
+					// initialize mouse pos (0,0)
+					obj.mouse.pos = new me.Vector2d(0,0);
+					// get relative canvas position in the page
+					obj.mouse.offset = me.video.getPos();
+					// add a listener for the mouse
+					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
+					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
+					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+					// set the callback
+					//mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
+				}
+			} else {
+				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
+				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
+				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
+			}
+			mouseInitialized = enable;
+		};
 
 
 		/**
@@ -124,6 +152,21 @@
 			return true;
 
 		}
+		
+		/**
+		 * propagate mouse event to registed object 
+		 * @private
+		 */
+		function dispatchMouseEvent(e) {
+			var handlers = obj.mouse.handlers[e.type];
+			if (handlers) {
+				for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+					// call the callback
+					handler();
+				}
+			}
+
+		};
 
 		
 		/**
@@ -144,6 +187,9 @@
 		function onMouseMove(e) {
 			// update mouse position
 			updateMouseCoords(e.pageX, e.pageY);
+			// dispatch mouse event to registered object
+			dispatchMouseEvent(e);
+			// prevent default action
 			preventDefault(e);
 		};
 		
@@ -152,9 +198,8 @@
 		 * @private
 		 */
 		function onMouseEvent(e) {
-			// propagate the event to the callback with x,y coords
-			mouseEventCB(obj.mouse.pos);
-			
+			// dispatch mouse event to registered object
+			dispatchMouseEvent(e);		
 			// check if mouse is mapped to a key
 			var keycode = me.input.mouse.bind[event.button];
 			if (keycode) {
@@ -162,6 +207,10 @@
 					keydown(e, keycode);
 				else // (e.type=="mouseup")
 					keyup(e, keycode);
+			}
+			else {
+				// prevent default action
+				preventDefault(e);
 			}
 		};
 		
@@ -208,7 +257,8 @@
 			MIDDLE: 1,
 			RIGHT: 2,
 			// bind list for mouse buttons
-			bind: [3]
+			bind: [3],
+			handlers:{} 
 		}
 		
 		/**
@@ -370,7 +420,7 @@
 		{
 			// make sure the mouse is initialized
 			if (!mouseInitialized)
-				obj.enableMouseEvent(true);
+				enableMouseEvent(true);
 			// throw an exception if no action is defined for the specified keycode
 			if (!KeyBinding[keyCode])
 			  throw "melonJS : no action defined for keycode " + keyCode;
@@ -382,6 +432,7 @@
 		 * @name me.input#unbindMouse
 		 * @public
 		 * @function
+		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
 		 * @example
 		 * me.input.unbindMouse(me.input.mouse.LEFT);
 		 */
@@ -391,34 +442,64 @@
 		};
 
 
+			
 		/**
-		 * enable mouse event
-		 * @name me.input#enableMouseEvent
+		 * register on a mouse event
+		 * @name me.input#registerMouseEvent
 		 * @public
 		 * @function
-		 * @deprecated to be rewritten
+		 * @param {String} eventType ('mousemove','mousedown','mouseup')
+		 * @param {Function} callback
+		 * @example
+		 * // register on the 'mousemove' event
+		 * me.input.registerMouseEvent('mousemove',this.mouseMove.bind(this));
 		 */
-		obj.enableMouseEvent = function(enable, callback) {
-			if (enable) {
-				if (!mouseInitialized) {
-					// initialize mouse pos (0,0)
-					obj.mouse.pos = new me.Vector2d(0,0);
-					// get relative canvas position in the page
-					obj.mouse.offset = me.video.getPos();
-					// add a listener for the mouse
-					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
-					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
-					// set the callback
-					mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
-				}
-			} else {
-				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
-				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
+		obj.registerMouseEvent = function(eventType, callback) {
+			// make sure the mouse is initialized
+			if (!mouseInitialized)
+				enableMouseEvent(true);
+			// register the mouse handler
+			switch (eventType) {
+				case 'mousemove':
+				case 'mousedown':
+				case 'mouseup':
+					if (!obj.mouse.handlers[eventType]) {
+						obj.mouse.handlers[eventType] = [];
+ 					}
+					obj.mouse.handlers[eventType].push(callback);
+					break;
+				default :
+					throw "melonJS : invalid event type : " + eventType;
 			}
-			mouseInitialized = enable;
 		};
+		
+		/**
+		 * register on a mouse event
+		 * @name me.input#registerMouseEvent
+		 * @public
+		 * @function
+		 * @param {String} eventType ('mousemove','mousedown','mouseup')
+		 * @param {Function} callback
+		 * @example
+		 * // register on the 'mousemove' event
+		 * me.input.releaseMouseEvent('mousemove',this.mouseMove.bind(this));
+		 */
+		obj.releaseMouseEvent = function(eventType, callback) {
+			switch (eventType) {
+				case 'mousemove':
+				case 'mousedown':
+				case 'mouseup':
+					if (obj.mouse.handlers[eventType]) {
+						if (obj.mouse.handlers[eventType].length!=0) {
+							obj.mouse.handlers[eventType].splice(obj.mouse.handlers[eventType].indexOf(callback), 1);
+						}
+					}
+					break;
+				default :
+					throw "melonJS : invalid event type : " + eventType;
+			}
+		};
+
 
 		/**
 		 * enable gyroscopic event (not implemented)
