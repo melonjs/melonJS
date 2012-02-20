@@ -960,7 +960,7 @@
 		var initialized = false;
 
 		// to handle mouse event
-		var registeredMouseEventObj = [];
+		//var registeredMouseEventObj = [];
       
 		// to keep track of deferred stuff
 		var pendingDefer = null;
@@ -1152,11 +1152,13 @@
 			// add the object in the game obj list
 			gameObjects.push(object);
 
+			/*
 			// TO BE REMOVED
 			if (object.isClickable) {
 				// also add a reference in the object even list
 				registeredMouseEventObj.push(object);
 			}
+			*/
 
 			// cache the number of object
 			objCount = gameObjects.length;
@@ -1254,10 +1256,12 @@
 			}
 		};
 
+		
 		/**- 
 		 * propagate mouse event to objects
 		 * @private
 		 */
+		/*
 		api.mouseEvent = function(v) {
 			for (var i = registeredMouseEventObj.length, obj; i--, obj = registeredMouseEventObj[i];) {
 				if (obj.isClickable && obj.collisionBox.containsPoint(v)) {
@@ -1269,6 +1273,7 @@
 				}
 			}
 		};
+		*/
 
 		/**
 		 * update all objects of the game manager
@@ -1321,11 +1326,13 @@
 				
 				// remove the object from the object to draw
 				drawManager.remove(obj);
-
+				
+				/*
 				if (obj.mouseEvent) {
 				   // remove object from the mouse event list
 				   registeredMouseEventObj.splice(registeredMouseEventObj.indexOf(obj), 1);
 				}
+				*/
 				
 				// remove the object from the object list
 				/** @private */
@@ -1353,7 +1360,7 @@
 			//empty everything
 			objCount = 0;
 			gameObjects = [];
-			registeredMouseEventObj = [];
+			//registeredMouseEventObj = [];
 
 			// make sure it's empty there as well
 			drawManager.flush();
@@ -1377,9 +1384,11 @@
 			});
 			
 			// also sort the clickable items per z order
+			/*
 			registeredMouseEventObj.sort(function(a, b) {
 				return (a.z - b.z);
 			});
+			*/
 
 			// make sure we redraw everything
 			api.repaint();
