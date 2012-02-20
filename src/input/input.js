@@ -479,7 +479,7 @@
 		 * @param {String} eventType ('mousemove','mousedown','mouseup')
 		 * @param {Function} callback
 		 * @example
-		 * // register on the 'mousemove' event
+		 * // release the registered callback on the 'mousemove' event
 		 * me.input.releaseMouseEvent('mousemove',this.mouseMove.bind(this));
 		 */
 		obj.releaseMouseEvent = function(eventType, callback) {
