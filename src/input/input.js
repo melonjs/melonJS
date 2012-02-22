@@ -76,6 +76,7 @@
 					// get relative canvas position in the page
 					obj.mouse.offset = me.video.getPos();
 					// add a listener for the mouse
+					window.addEventListener('mousewheel', onMouseWheel, false );
 					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
 					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
 					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
@@ -83,6 +84,7 @@
 					//mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
 				}
 			} else {
+				window.removeEventListener('mousewheel', onMouseWheel, false );
 				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
 				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
 				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
@@ -160,7 +162,7 @@
 			if (handlers) {
 				for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 					// call the defined handler
-					if (handler() === false) {
+					if (handler(e) === false) {
 						// stop propagating the event if return false 
 						break;
 					}
@@ -178,6 +180,18 @@
 			obj.mouse.pos.set(x,y);
 			obj.mouse.pos.sub(obj.mouse.offset);
 			return obj.mouse.pos;
+		};
+
+	
+		/**
+		 * mouse event management (mousewheel)
+		 * @private
+		 */
+		function onMouseWheel(e) {
+			// dispatch mouse event to registered object
+			dispatchMouseEvent(e);
+			// prevent default action
+			preventDefault(e);
 		};
 
 		
@@ -253,9 +267,9 @@
 			// canvas offset
 			offset : null,
 			// button constants (W3C)
-			LEFT : 0,
+			LEFT:	0,
 			MIDDLE: 1,
-			RIGHT: 2,
+			RIGHT:	2,
 			// bind list for mouse buttons
 			bind: [3],
 			handlers:{} 
@@ -464,6 +478,7 @@
 				enableMouseEvent(true);
 			// register the mouse handler
 			switch (eventType) {
+				case 'mousewheel':
 				case 'mousemove':
 				case 'mousedown':
 				case 'mouseup':
@@ -490,6 +505,7 @@
 		 */
 		obj.releaseMouseEvent = function(eventType, callback) {
 			switch (eventType) {
+				case 'mousewheel':
 				case 'mousemove':
 				case 'mousedown':
 				case 'mouseup':
