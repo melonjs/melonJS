@@ -49,47 +49,33 @@
 		 * @private
 		 */
 
-		function enableKeyboardEvent(enable) {
-			if (enable) {
-				// Event Management
-				if (!keyboardInitialized) {
-					$.addEventListener('keydown', keydown, false);
-					$.addEventListener('keyup', keyup, false);
-				}
-			} else {
-				// remove the even listeners
-				$.removeEventListener('keydown', keydown, false);
-				$.removeEventListener('keyup', keyup, false);
+		function enableKeyboardEvent() {
+			if (!keyboardInitialized) {
+				$.addEventListener('keydown', keydown, false);
+				$.addEventListener('keyup', keyup, false);
+				keyboardInitialized = true;
 			}
-			keyboardInitialized = enable;
 		};
 		
 		/**
 		 * enable mouse event
 		 * @private
 		 */
-		function enableMouseEvent(enable/*, callback*/) {
-			if (enable) {
-				if (!mouseInitialized) {
-					// initialize mouse pos (0,0)
-					obj.mouse.pos = new me.Vector2d(0,0);
-					// get relative canvas position in the page
-					obj.mouse.offset = me.video.getPos();
-					// add a listener for the mouse
-					window.addEventListener('mousewheel', onMouseWheel, false );
-					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
-					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
-					// set the callback
-					//mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
-				}
-			} else {
-				window.removeEventListener('mousewheel', onMouseWheel, false );
-				me.video.getScreenCanvas().removeEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().removeEventListener('mousedown', onMouseEvent, false );
-				me.video.getScreenCanvas().removeEventListener('mouseup', onMouseEvent, false );
+		function enableMouseEvent(/*callback*/) {
+			if (!mouseInitialized) {
+				// initialize mouse pos (0,0)
+				obj.mouse.pos = new me.Vector2d(0,0);
+				// get relative canvas position in the page
+				obj.mouse.offset = me.video.getPos();
+				// add a listener for the mouse
+				$.addEventListener('mousewheel', onMouseWheel, false );
+				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
+				me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
+				me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+				// set the callback
+				//mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
+				mouseInitialized = true;
 			}
-			mouseInitialized = enable;
 		};
 
 
@@ -391,14 +377,13 @@
 		 * me.input.bindKey(me.input.KEY.X,     "jump", true);
 		 */
 		obj.bindKey = function(keycode, action, lock) {
-			if (!keyboardInitialized)
-				enableKeyboardEvent(true);
+			// make sure the keyboard is enable
+			enableKeyboardEvent();
 
 			KeyBinding[keycode] = action;
 
 			keyLock[action] = lock ? lock : false;
 			keyLocked[action] = false;
-			//console.log(this);
 		};
 		
 		/**
@@ -437,8 +422,8 @@
 		obj.bindMouse = function (button, keyCode)
 		{
 			// make sure the mouse is initialized
-			if (!mouseInitialized)
-				enableMouseEvent(true);
+			enableMouseEvent();
+			
 			// throw an exception if no action is defined for the specified keycode
 			if (!KeyBinding[keyCode])
 			  throw "melonJS : no action defined for keycode " + keyCode;
@@ -474,8 +459,8 @@
 		 */
 		obj.registerMouseEvent = function(eventType, callback) {
 			// make sure the mouse is initialized
-			if (!mouseInitialized)
-				enableMouseEvent(true);
+			enableMouseEvent();
+			
 			// register the mouse handler
 			switch (eventType) {
 				case 'mousewheel':
