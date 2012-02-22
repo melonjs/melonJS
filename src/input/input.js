@@ -202,7 +202,7 @@
 			// dispatch mouse event to registered object
 			dispatchMouseEvent(e);		
 			// check if mouse is mapped to a key
-			var keycode = me.input.mouse.bind[event.button];
+			var keycode = me.input.mouse.bind[e.button];
 			if (keycode) {
 				if (e.type=="mousedown")
 					keydown(e, keycode);
