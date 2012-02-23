@@ -234,10 +234,17 @@
 			if (typeof (text) != 'string')
 				text = text.toString();
 
-			// adjust pos if right alig
-			if (this.align == this.ALIGN.RIGHT) {
-				x -= text.length * this.sSize.x;
-			}
+			// adjust pos based on alignment
+			switch(this.align) {
+				case this.ALIGN.RIGHT:
+					x -= this.measureText(text).width;
+					break;
+
+				case this.ALIGN.CENTER:
+					x -= this.measureText(text).width * 0.5;
+					break;
+			};
+			
 			// draw the text
 			for ( var i = 0; i < text.length; i++) {
 				// calculate the char index
