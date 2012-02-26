@@ -146,11 +146,14 @@
 		function dispatchMouseEvent(e) {
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
+				var pos = obj.mouse.pos;
 				for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 					// call the defined handler
-					if (handler(e) === false) {
-						// stop propagating the event if return false 
-						break;
+					if ((handler.rect === null) || handler.rect.containsPoint(pos)) {
+						if (handler.cb(e) === false) {
+							// stop propagating the event if return false 
+							break;
+						}
 					}
 				}
 			}
@@ -447,17 +450,18 @@
 
 			
 		/**
-		 * register on a mouse event
+		 * register on a mouse event for a given region
 		 * @name me.input#registerMouseEvent
 		 * @public
 		 * @function
 		 * @param {String} eventType ('mousemove','mousedown','mouseup')
+		 * @param [me.Rect] rect (object must inherits from me.Rect)
 		 * @param {Function} callback
 		 * @example
 		 * // register on the 'mousemove' event
-		 * me.input.registerMouseEvent('mousemove',this.mouseMove.bind(this));
+		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
 		 */
-		obj.registerMouseEvent = function(eventType, callback) {
+		obj.registerMouseEvent = function(eventType, rect, callback) {
 			// make sure the mouse is initialized
 			enableMouseEvent();
 			
@@ -470,7 +474,7 @@
 					if (!obj.mouse.handlers[eventType]) {
 						obj.mouse.handlers[eventType] = [];
  					}
-					obj.mouse.handlers[eventType].push(callback);
+					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback});
 					break;
 				default :
 					throw "melonJS : invalid event type : " + eventType;
@@ -483,26 +487,32 @@
 		 * @public
 		 * @function
 		 * @param {String} eventType ('mousemove','mousedown','mouseup')
-		 * @param {Function} callback
+		 * @param [me.Rect] region
 		 * @example
 		 * // release the registered callback on the 'mousemove' event
-		 * me.input.releaseMouseEvent('mousemove',this.mouseMove.bind(this));
+		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
 		 */
-		obj.releaseMouseEvent = function(eventType, callback) {
+		obj.releaseMouseEvent = function(eventType, rect) {
 			switch (eventType) {
 				case 'mousewheel':
 				case 'mousemove':
 				case 'mousedown':
 				case 'mouseup':
-					if (obj.mouse.handlers[eventType]) {
-						if (obj.mouse.handlers[eventType].length!=0) {
-							obj.mouse.handlers[eventType].splice(obj.mouse.handlers[eventType].indexOf(callback), 1);
+					var handlers = obj.mouse.handlers[eventType];
+					if (handlers) {
+						for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+							if (handler.rect === rect) {
+								// make sure all references are null
+								handler.rect = handler.cb = null;
+								obj.mouse.handlers[eventType].splice(i, 1);
+							}
 						}
 					}
 					break;
 				default :
 					throw "melonJS : invalid event type : " + eventType;
 			}
+
 		};
 
 
