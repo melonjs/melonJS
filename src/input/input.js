@@ -101,9 +101,6 @@
 			var action = KeyBinding[keyCode || e.keyCode || e.which];
 
 			if (action) {
-				//console.log(e, action);
-
-				//console.log(action);
 				if (!keyLocked[action]) {
 					keyStatus[action] = true;
 					// lock the key if requested
@@ -124,8 +121,6 @@
 		function keyup(e, keyCode) {
 
 			var action = KeyBinding[keyCode || e.keyCode || e.which];
-
-			//console.log(e, action);
 
 			if (action) {
 
@@ -454,8 +449,8 @@
 		 * @name me.input#registerMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup')
-		 * @param [me.Rect] rect (object must inherits from me.Rect)
+		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel')
+		 * @param {me.Rect} rect (object must inherits from me.Rect)
 		 * @param {Function} callback
 		 * @example
 		 * // register on the 'mousemove' event
@@ -486,8 +481,8 @@
 		 * @name me.input#releaseMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup')
-		 * @param [me.Rect] region
+		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel')
+		 * @param {me.Rect} region
 		 * @example
 		 * // release the registered callback on the 'mousemove' event
 		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
