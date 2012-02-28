@@ -107,6 +107,14 @@
 		 * @memberOf me.sys
 		 */
 		nativeBase64 : (typeof($.atob) == 'function'),
+		
+		/** 
+		 * Touch capabilities <br>
+		 * @type {Boolean}
+		 * @memberOf me.sys
+		 */
+		touch : false,
+
 
 		// Global settings
 		/** 
@@ -752,6 +760,9 @@
 			//if on mobile device, disable sound for now 
 			me.sys.sound = false;
 		}
+		
+		// detect touch capabilities
+		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $);
 		
 		// init the FPS counter if needed
 		me.timer.init();
