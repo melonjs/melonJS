@@ -67,11 +67,19 @@
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
-				// add a listener for the mouse
-				$.addEventListener('mousewheel', onMouseWheel, false );
-				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-				me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
-				me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+				// add listener for touch event if supported
+				if (me.sys.touch) {
+					me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false );
+					me.video.getScreenCanvas().addEventListener('touchstart', onMouseEvent, false );
+					me.video.getScreenCanvas().addEventListener('touchend', onMouseEvent, false );
+				}
+				// add listener for mouse event
+				else {
+					$.addEventListener('mousewheel', onMouseWheel, false );
+					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
+					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
+					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+				}
 				mouseInitialized = true;
 			}
 		};
@@ -182,8 +190,13 @@
 		 * @private
 		 */
 		function onMouseMove(e) {
-			// update mouse position
-			updateMouseCoords(e.pageX, e.pageY);
+			// update position
+			if (e.touches) {
+				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+			}
+			else {
+				updateMouseCoords(e.pageX, e.pageY);
+			}
 			// dispatch mouse event to registered object
 			dispatchMouseEvent(e);
 			// prevent default action
@@ -195,10 +208,17 @@
 		 * @private
 		 */
 		function onMouseEvent(e) {
-			// dispatch mouse event to registered object
+			// update position in case of touch event
+			if (e.type === 'touchstart') {
+				// TODO : add multiple touch handling
+				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+				var keycode = null;
+			}
+			// note : this only work with a mouse
+			var keycode = me.input.mouse.bind[e.button];
+			// dispatch event to registered objects
 			dispatchMouseEvent(e);		
 			// check if mouse is mapped to a key
-			var keycode = me.input.mouse.bind[e.button];
 			if (keycode) {
 				if (e.type=="mousedown")
 					keydown(e, keycode);
@@ -464,6 +484,20 @@
 				case 'mousemove':
 				case 'mousedown':
 				case 'mouseup':
+				case 'touchmove':
+				case 'touchstart':
+				case 'touchend':
+					// convert mouse event to touch event
+					// if on a touch enable device
+					if (me.sys.touch) {
+						// to be optimized
+						if (eventType == 'mousemove')
+							eventType = 'touchmove';
+						if (eventType == 'mousedown')
+							eventType = 'touchstart';
+						if (eventType == 'mouseup')
+							eventType = 'touchend';
+					} 
 					if (!obj.mouse.handlers[eventType]) {
 						obj.mouse.handlers[eventType] = [];
  					}
@@ -491,6 +525,20 @@
 				case 'mousemove':
 				case 'mousedown':
 				case 'mouseup':
+				case 'touchmove':
+				case 'touchstart':
+				case 'touchend':
+					// convert mouse event to touch event
+					// if on a touch enable device
+					if (me.sys.touch) {
+						// to be optimized
+						if (eventType == 'mousemove')
+							eventType = 'touchmove';
+						if (eventType == 'mousedown')
+							eventType = 'touchstart';
+						if (eventType == 'mouseup')
+							eventType = 'touchend';
+					}
 					var handlers = obj.mouse.handlers[eventType];
 					if (handlers) {
 						for (var i = handlers.length, handler; i--, handler = handlers[i];) {
