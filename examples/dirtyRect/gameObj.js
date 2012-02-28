@@ -105,10 +105,14 @@ var CoinEntity = me.CollectableEntity.extend(
       this.parent(x, y , settings);
    },		
       
-   onDestroyEvent : function ()
+   onCollision : function ()
    {
       // give some score
       me.game.HUD.updateItemValue("score", 250);
+	  //avoid further collision and delete it
+	  this.collidable = false;
+	  me.game.remove(this);
+
    }
    
 });

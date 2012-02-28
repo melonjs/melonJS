@@ -183,13 +183,16 @@
 			this.updateColRect(8,16,16,16);
 		},		
 			
-		onDestroyEvent : function ()
+		onCollision : function ()
 		{
 			// do something when collide
 			me.audio.play("cling", false);
 			// give some score
 			me.game.HUD.updateItemValue("score", 250);
 			
+			//avoid further collision and delete it
+			this.collidable = false;
+			me.game.remove(this);
 		}
 		
 	});
@@ -235,13 +238,6 @@
 			
 			// set default one
 			this.setCurrentAnimation("walk");
-		},
-		
-		onDestroyEvent : function ()
-		{
-			// do something when collide
-			//me.audio.play("cling", false);
-				
 		},
 			
 		onCollision : function (res)
