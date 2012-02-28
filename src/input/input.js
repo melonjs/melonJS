@@ -61,7 +61,7 @@
 		 * enable mouse event
 		 * @private
 		 */
-		function enableMouseEvent(/*callback*/) {
+		function enableMouseEvent() {
 			if (!mouseInitialized) {
 				// initialize mouse pos (0,0)
 				obj.mouse.pos = new me.Vector2d(0,0);
@@ -72,8 +72,6 @@
 				me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
 				me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
 				me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
-				// set the callback
-				//mouseEventCB = callback || me.game.mouseEvent.bind(me.game);
 				mouseInitialized = true;
 			}
 		};
