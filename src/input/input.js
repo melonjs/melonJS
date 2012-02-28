@@ -212,17 +212,17 @@
 			if (e.type === 'touchstart') {
 				// TODO : add multiple touch handling
 				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
-				var keycode = null;
+				var keycode = obj.mouse.bind[0];
+			} else {
+				var keycode = obj.mouse.bind[e.button];
 			}
-			// note : this only work with a mouse
-			var keycode = obj.mouse.bind[e.button];
 			// dispatch event to registered objects
 			dispatchMouseEvent(e);		
-			// check if mouse is mapped to a key
+			// check if mapped to a key
 			if (keycode) {
-				if (e.type=="mousedown")
+				if (e.type === 'mousedown' || e.type === 'touchstart')
 					keydown(e, keycode);
-				else // (e.type=="mouseup")
+				else // 'mouseup' or 'touchend'
 					keyup(e, keycode);
 			}
 			else {
