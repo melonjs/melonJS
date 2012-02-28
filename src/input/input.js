@@ -215,7 +215,7 @@
 				var keycode = null;
 			}
 			// note : this only work with a mouse
-			var keycode = me.input.mouse.bind[e.button];
+			var keycode = obj.mouse.bind[e.button];
 			// dispatch event to registered objects
 			dispatchMouseEvent(e);		
 			// check if mouse is mapped to a key
@@ -444,7 +444,7 @@
 			if (!KeyBinding[keyCode])
 			  throw "melonJS : no action defined for keycode " + keyCode;
 			// map the mouse button to the keycode
-			me.input.mouse.bind[button] = keyCode;
+			obj.mouse.bind[button] = keyCode;
 		};
 		/**
 		 * unbind the defined keycode
@@ -457,7 +457,7 @@
 		 */
 		obj.unbindMouse = function(button) {
 			// clear the event status
-			me.input.mouse.bind[button] = null;
+			obj.mouse.bind[button] = null;
 		};
 
 
