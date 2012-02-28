@@ -1318,15 +1318,21 @@
 		 * @public
 		 * @function
 		 */
-
 		api.removeAll = function() {
+			// inform all object they are about to be deleted
+			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+				// force object deletion
+				obj.autodestroy = true; // do i keep this feature?
+				// notify the object
+				if(obj.destroy) {
+					obj.destroy();
+				}
+			}
 			//empty everything
 			objCount = 0;
 			gameObjects = [];
-
 			// make sure it's empty there as well
 			drawManager.flush();
-
 		};
 
 		/**
