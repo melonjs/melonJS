@@ -230,9 +230,8 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
-			// make sure it's a text parameter
-			if (typeof (text) != 'string')
-				text = text.toString();
+			// make sure it's a String object
+			text = new String(text);
 
 			// adjust pos based on alignment
 			switch(this.align) {
@@ -246,7 +245,7 @@
 			};
 			
 			// draw the text
-			for ( var i = 0; i < text.length; i++) {
+			for ( var i = 0,len = text.length; i < len; i++) {
 				// calculate the char index
 				var idx = text.charCodeAt(i) - this.firstChar;
 				// draw it
