@@ -724,8 +724,8 @@ var CoinEntity = me.CollectableEntity.extend({
     },
 
     // this function is called by the engine, when
-    // an object is destroyed (here collected)
-    onDestroyEvent: function() {
+    // an object is touched by something (here collected)
+    onCollision: function() {
         // do something when collected
         }
 
@@ -1039,18 +1039,22 @@ var PlayScreen = me.ScreenObject.extend({
     :</p>
     <pre class="c2">
 <code>
-onDestroyEvent : function ()
+onCollision : function ()
 {
-	// increase score
+	// give some score
 	me.game.HUD.updateItemValue("score", 250);
+	// make sure it cannot be collected "again"
+	this.collidable = false;
+	// remove it
+	me.game.remove(this);
 }
 
 </code>
 </pre>
 
-<p>As you can see, in the <b>onDestroyEvent function</b>, we just call the
+<p>As you can see, in the <b>onCollision function</b>, we just call the
     <a href="http://www.melonjs.org/docs/symbols/me.HUD_Object.html#updateItemValue">me.game.HUD.updateItemValue</a> function, giving the "score" keyword (we
-    previously defined), and the value to be added to the score</p>
+    previously defined), and the value to be added to the score. Then we ensure the object cannot be collected again, and remove the coin</p>
 
 <p><br/>
     We can now check the result, and we should now have our score displayed in the
@@ -1183,12 +1187,16 @@ me.audio.init("mp3,ogg");
     resource. that's all !</p><br/>
     <pre class="c2">
 <code>
-onDestroyEvent : function ()
+onCollision : function ()
 {
 	// do something when collide
 	me.audio.play("cling");
 	// give some score
 	me.game.HUD.updateItemValue("score", 250);
+	// make sure it cannot be collected "again"
+	this.collidable = false;
+	// remove it
+	me.game.remove(this);
 }
 
 </code>

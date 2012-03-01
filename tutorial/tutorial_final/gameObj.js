@@ -113,14 +113,18 @@
 			this.parent(x, y , settings);
 		},		
 			
-		onDestroyEvent : function ()
+		onCollision : function ()
 		{
 			// do something when collide
 			me.audio.play("cling");
 			// give some score
 			me.game.HUD.updateItemValue("score", 250);
-			
+			// make sure it cannot be collected "again"
+			this.collidable = false;
+			// remove it
+			me.game.remove(this);
 		}
+
 		
 	});
 
