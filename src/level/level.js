@@ -14,7 +14,7 @@
 	me.LevelConstants = {
 		//# name of the collision map
 		COLLISION_MAP : "collision",
-		PARALLAX_MAP : "parallax",
+		PARALLAX_MAP : "parallax"
 	};
 
 	/**

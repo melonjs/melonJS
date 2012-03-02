@@ -265,7 +265,7 @@
 			mp3 : false,
 			ogg : false,
 			ma4 : false,
-			wav : false,
+			wav : false
 		};
 
 		/**

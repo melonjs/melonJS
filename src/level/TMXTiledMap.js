@@ -404,7 +404,7 @@
 							rect.width, rect.height,    //sw, sh
 							rect.pos.x, rect.pos.y,     //dx, dy
 							rect.width, rect.height);   //dw, dh
-		},
+		}
 	});
 	/*---------------------------------------------------------*/
 	// END END END

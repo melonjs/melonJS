@@ -94,7 +94,7 @@
 			context.strokeRect(0, y, context.canvas.width, 6);
 			context.fillStyle = "#89b002";
 			context.fillRect(2, y + 2, width - 4, 2);
-		},
+		}
 
 	});
 
