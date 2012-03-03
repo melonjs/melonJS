@@ -1074,7 +1074,7 @@
 
 				setVelocity : function(x, y) {
 					this.accel.x = (x != 0) ? x : this.accel.x;
-					this.accel.y = (x != 0) ? y : this.accel.y;
+					this.accel.y = (y != 0) ? y : this.accel.y;
 					
 					// limit by default to the same max value
 					this.setMaxVelocity(x,y);
