@@ -208,14 +208,16 @@
 		 * @private
 		 */
 		function onMouseEvent(e) {
-			// update position in case of touch event
+			// update position in case of touch event 
+			// note : we should just have touchstart/touchend here
 			if (e.type === 'touchstart') {
 				// TODO : add multiple touch handling
 				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
-				var keycode = obj.mouse.bind[0];
-			} else {
-				var keycode = obj.mouse.bind[e.button];
 			}
+			
+			// in case of touch event button is undefined
+			var keycode = obj.mouse.bind[e.button || 0];
+
 			// dispatch event to registered objects
 			dispatchMouseEvent(e);		
 			// check if mapped to a key
@@ -493,9 +495,9 @@
 						// to be optimized
 						if (eventType == 'mousemove')
 							eventType = 'touchmove';
-						if (eventType == 'mousedown')
+						else if (eventType == 'mousedown')
 							eventType = 'touchstart';
-						if (eventType == 'mouseup')
+						else if (eventType == 'mouseup')
 							eventType = 'touchend';
 					} 
 					if (!obj.mouse.handlers[eventType]) {
@@ -534,9 +536,9 @@
 						// to be optimized
 						if (eventType == 'mousemove')
 							eventType = 'touchmove';
-						if (eventType == 'mousedown')
+						else if (eventType == 'mousedown')
 							eventType = 'touchstart';
-						if (eventType == 'mouseup')
+						else if (eventType == 'mouseup')
 							eventType = 'touchend';
 					}
 					var handlers = obj.mouse.handlers[eventType];
