@@ -461,6 +461,38 @@
 			// clear the event status
 			obj.mouse.bind[button] = null;
 		};
+		
+		/**
+		 * Associate a touch action to a keycode
+		 * @name me.input#bindTouch
+		 * @public
+		 * @function
+		 * @param {me.input#KEY} keyCode
+		 * @example
+		 * // enable the keyboard
+		 * me.input.bindKey(me.input.KEY.X, "shoot");
+		 * // map the touch event on the X key
+		 * me.input.bindTouch(me.input.KEY.X);
+		 */
+		obj.bindTouch = function (keyCode)
+		{	
+			// reuse the mouse emulation stuff
+			// where left mouse button is map to touch event
+			object.bindMouse(me.input.mouse.LEFT,keycode);
+		};
+		
+		/**
+		 * unbind the defined touch binding
+		 * @name me.input#unbindTouch
+		 * @public
+		 * @function
+		 * @example
+		 * me.input.unbindTouch();
+		 */
+		obj.unbindTouch = function() {
+			// clear the key binding
+			obj.unbindMouse(me.input.mouse.LEFT);
+		};
 
 
 			
