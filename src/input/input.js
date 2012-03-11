@@ -35,8 +35,7 @@
 		// actual lock status of each key
 		var keyLocked = [];
 
-		// callback function for mouse & gyro
-		var mouseEventCB = null;
+		// callback function for gyro
 		var gyroEventCB = null;
 
 		// some usefull flags
