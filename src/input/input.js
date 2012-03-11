@@ -35,13 +35,10 @@
 		// actual lock status of each key
 		var keyLocked = [];
 
-		// callback function for gyro
-		var gyroEventCB = null;
-
 		// some usefull flags
 		var keyboardInitialized = false;
 		var mouseInitialized = false;
-
+		var accelInitialized = false;
 		
 		/**
 		 * enable keyboard event
@@ -233,29 +230,15 @@
 		};
 		
 		/**
-		 * event management (Gyroscopic)
+		 * event management (Accelerometer)
+		 * http://www.mobilexweb.com/samples/ball.html
+		 * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
 		 * @private		
 		 */
-		function onGyroEvent(event) {
-			// http://www.mobilexweb.com/samples/ball.html
-			// http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
-			// 
-			// ax = event.accelerationIncludingGravity.x;
-			// ay = event.accelerationIncludingGravity.y;
-
-			// use acceleration instead on iphone4  
-			// event.accelerationIncludingGravity.x
-			// event.accelerationIncludingGravity.y
-			// event.accelerationIncludingGravity.z
-
-			// Gyroscope
-			// window.ondeviceorientation = function(event) {
-			// event.alpha
-			// event.beta
-			// event.gamma
-			//}
-		}
-		;
+		function onDeviceMotion(e) {
+			// Accelerometer information  
+			obj.accel = e.accelerationIncludingGravity;
+		};
 
 		/*---------------------------------------------
 			
@@ -263,8 +246,31 @@
 				
 		  ---------------------------------------------*/
 		
+		/**
+		 * Accelerometer information<br>
+		 * properties : x, y, z
+		 * @public
+		 * @enum {number}
+		 * @name me.input#accel
+		 */
+		obj.accel = {
+			x: 0, 
+			y: 0, 
+			z: 0
+		};
 		
-		obj.mouse = {
+		/**
+		 * Mouse information<br>
+		 * properties : <br>
+		 * pos (me.Vector2d) : pointer position <br>
+		 * LEFT : constant for left button <br>
+		 * MIDDLE : constant for middle button <br>
+		 * RIGHT : constant for right button <br>
+		 * @public
+		 * @enum {number}
+		 * @name me.input#mouse
+		 */		
+		 obj.mouse = {
 			// mouse position
 			pos : null,
 			// canvas offset
@@ -276,7 +282,7 @@
 			// bind list for mouse buttons
 			bind: [3],
 			handlers:{} 
-		}
+		};
 		
 		/**
 		 * list of mappable keys :
@@ -497,10 +503,11 @@
 			
 		/**
 		 * register on a mouse event for a given region
+		 * note : on a touch enabled device mouse event will automatically be converted to touch event
 		 * @name me.input#registerMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel')
+		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
 		 * @param {me.Rect} rect (object must inherits from me.Rect)
 		 * @param {Function} callback
 		 * @example
@@ -543,10 +550,11 @@
 		
 		/**
 		 * release the previously registered mouse event callback
+		 * note : on a touch enabled device mouse event will automatically be converted to touch event
 		 * @name me.input#releaseMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel')
+		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
 		 * @param {me.Rect} region
 		 * @example
 		 * // release the registered callback on the 'mousemove' event
@@ -589,21 +597,37 @@
 
 		};
 
-
 		/**
-		 * enable gyroscopic event (not implemented)
-		 * @name me.input#enableGyroscopicEvent
+		 * watch Accelerator event 
+		 * @name me.input#watchAccelerometer
+		 * @public
+		 * @function
+		 * @return {boolean} false if not supported by the device
+		 */
+		obj.watchAccelerometer = function() {
+			if ($.sys.gyro) {
+				if (!accelInitialized) {
+					// add a listener for the mouse
+					$.addEventListener('devicemotion', onDeviceMotion, false);
+					accelInitialized = true;
+				}
+				return true;
+			}
+			return false;
+		};
+		
+		/**
+		 * unwatch Accelerometor event 
+		 * @name me.input#unwatchAccelerometer
 		 * @public
 		 * @function
 		 */
-		obj.enableGyroscopicEvent = function(enable, callback) {
-			if ($.sys.gyro) {
+		obj.unwatchAccelerometer = function() {
+			if (accelInitialized) {
 				// add a listener for the mouse
-				$.ondevicemotion = enable ? onGyroEvent : null;
-				// set the callback
-				gyroEventCB = enable ? callback : null;
+				$.removeEventListener('devicemotion', onDeviceMotion, false);
+				accelInitialized = false;
 			}
-
 		};
 
 		// return our object
