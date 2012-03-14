@@ -1303,37 +1303,36 @@
 					// y collision
 					if (collision.y) {
 
-						// going down,
-						// collision with the floor
+						// going down, collision with the floor
+						
 						if (collision.y > 0) {
-
-							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom <= collision.ytile.pos.y))) {
-								// round pos.y
+							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y))) {
+								// adjust position to the corresponding tile
 								this.pos.y = ~~this.pos.y;
-								// adjust val to tile pos
-								this.vel.y = (this.falling) ? collision.ytile.pos.y	- ~~this.collisionBox.bottom : 0;
+								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
 								this.falling = false;
-							} else if (collision.yprop.isSlope && !this.jumping) {
+							} 
+							else if (collision.yprop.isSlope && !this.jumping) {
 								// we stop falling
 								this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
 								this.falling = false;
-							} else if (collision.yprop.isBreakable) {
-								if (this.canBreakTile) {
+							} 
+							else if (collision.yprop.isBreakable) {
+								if  (this.canBreakTile) {
 									// remove the tile
 									me.game.currentLevel.clearTile(collision.ytile.row,	collision.ytile.col);
 									if (this.onTileBreak)
 										this.onTileBreak();
-								} else {
-									// cancel vel and adjust to tile pos
-									// round pos.y
+								}
+								else {
+									// adjust position to the corresponding tile
 									this.pos.y = ~~this.pos.y;
-									this.vel.y = (this.falling) ? collision.ytile.pos.y	- ~~this.collisionBox.bottom : 0;
+									this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
 									this.falling = false;
 								}
 							}
 						}
-						// going up
-						// collision with ceiling
+						// going up, collision with ceiling
 						else if (collision.y < 0) {
 							if (!collision.yprop.isPlatform	&& !collision.yprop.isLadder) {
 								this.falling = true;
@@ -1363,7 +1362,7 @@
 							}
 						}
 					}
-
+					
 					// update player position
 					this.pos.add(this.vel);
 					

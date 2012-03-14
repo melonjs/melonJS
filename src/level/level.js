@@ -353,8 +353,8 @@
 		 */
 		checkCollision : function(obj, pv) {
 
-			var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
-			var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
+			var x = (pv.x < 0) ? ~~(obj.left + pv.x) : Math.ceil(obj.right  - 1 + pv.x);
+			var y = (pv.y < 0) ? ~~(obj.top  + pv.y) : Math.ceil(obj.bottom - 1 + pv.y);
 			//to return tile collision detection
 			var res = {
 				x : 0, // !=0 if collision on x axis
@@ -370,13 +370,13 @@
 				res.x = pv.x;
 			} else {
 				// x, bottom corner
-				res.xtile = this.getTile(x, obj.bottom - 1);// obj.height - 1
+				res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
 				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
 					res.x = pv.x; // reuse pv.x to get a 
 					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
 				} else {
 					// x, top corner
-					res.xtile = this.getTile(x, obj.top);
+					res.xtile = this.getTile(x, ~~obj.top);
 					if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
 						res.x = pv.x;
 						res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
@@ -386,12 +386,12 @@
 
 			// check for y movement
 			// left, y corner
-			res.ytile = this.getTile((pv.x < 0) ? obj.left : obj.right, y);// obj.width + 1
+			res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
 			if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 				res.y = pv.y || 1;
 				res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
 			} else { // right, y corner
-				res.ytile = this.getTile((pv.x < 0) ? obj.right : obj.left, y);
+				res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
 				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 					res.y = pv.y || 1;
 					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
