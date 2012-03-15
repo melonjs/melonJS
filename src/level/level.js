@@ -322,8 +322,8 @@
 		 * @private
 		 */
 		getTile : function(x, y) {
-			//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
-			return this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
+			//xLut = x / this.tilewidth, yLut = y / this.tileheight;
+			return this.layerData[this.xLUT[x]][this.yLUT[y]];
 		},
 
 		/**
