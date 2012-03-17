@@ -9,37 +9,35 @@
 	
 	/**
 	 * GUI Object<br>
-	 * A basic object to manage GUI elements <br>
-	 * @deprecated won't survive version 0.9.3
+	 * A very basic object to manage GUI elements <br>
+	 * The object simply register on the "mousedown" <br>
+	 * or "touchstart" event and call the onClicked function" 
 	 * @class
 	 * @extends me.SpriteObject
 	 * @memberOf me
 	 * @example
-	 * // Enable Mouse Event Management
-	 * // should be ideally in the main at initialization
-	 * me.input.enableMouseEvent(true);
 	 *
 	 * // create a basic GUI Object
 	 * var myButton = me.GUI_Object.extend(
 	 * {	
 	 *    init:function(x, y)
-	 *   {
-	 *      settings = {}
-	 *      settings.image = "button";
-	 *      settings.spritewidth = 100;
-	 *      settings.spriteheight = 50;
-	 *      // parent constructor
-	 *      this.parent(x, y, settings);
-	 *   },
+	 *    {
+	 *       settings = {}
+	 *       settings.image = "button";
+	 *       settings.spritewidth = 100;
+	 *       settings.spriteheight = 50;
+	 *       // parent constructor
+	 *       this.parent(x, y, settings);
+	 *    },
 	 *	
-	 *   // output something in the console
-	 *   // when the object is clicked
-	 *   clicked:function()
-	 *   {
-	 *      console.log("clicked!");
-	 *      // don't propagate the event
-	 *		return true;
-	 *   }
+	 *    // output something in the console
+	 *    // when the object is clicked
+	 *    onClicked:function()
+	 *    {
+	 *       console.log("clicked!");
+	 *       // don't propagate the event
+	 *       return true;
+	 *    }
 	 * });
 	 * 
 	 * // add the object at pos (10,10), z index 4
@@ -69,6 +67,11 @@
 						((typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image), 
 						settings.spritewidth, 
 						settings.spriteheight);
+						
+			
+			// register on mouse event
+			me.input.registerMouseEvent('mousedown', this.collisionBox, this.clicked.bind(this));
+
 		},
 
 		/**
@@ -83,19 +86,37 @@
 			}
 			return false;
 		},
-
 		
 		/**
+		 * function callback for the mousedown event
+		 * @private
+		 */
+		clicked : function() {
+			if (this.isClickable) {
+				this.updated = true;
+				return this.onClicked();
+			}
+		},
+	
+		/**
 		 * function called when the object is clicked <br>
-		 * to be overwritten <br>
+		 * to be extended <br>
 		 * return true if we need to stop propagating the event
 		 * @public
 		 * @function
-		 * @deprecated won't survive version 0.9.3
 		 */
-		clicked : function() {
-			this.updated = true;
+		onClicked : function() {
+			
 			return true;
+		},
+		
+		/**
+		 * OnDestroy notification function<br>
+		 * Called by engine before deleting the object<br>
+		 * be sure to call the parent function if overwritten
+		 */
+		onDestroyEvent : function() {
+			me.input.releaseMouseEvent('mousedown', this.collisionBox);
 		}
 
 	});
