@@ -1150,7 +1150,7 @@
 		 * @function
 		 */
 
-		api.loadTMXLevel = function(level, levelID) {
+		api.loadTMXLevel = function(level) {
 			// load our map
 			api.currentLevel = level;
 
@@ -1185,7 +1185,7 @@
 			
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
-				api.onLevelLoaded.apply(api.onLevelLoaded, new Array(levelID))
+				api.onLevelLoaded.apply(api.onLevelLoaded, new Array(level.name))
 			} 
 
 		};

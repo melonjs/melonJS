@@ -606,6 +606,8 @@
 			if (levels[levelId] == null) {
 				//console.log("loading "+ levelId);
 				levels[levelId] = new me.TMXTileMap(levelId, 0, 0);
+				// set the name of the level
+				levels[levelId].name = levelId;
 			}
 			//else console.log("level %s already loaded", levelId);
 
@@ -634,12 +636,12 @@
 		 * // load a level
 		 * me.levelDirector.loadLevel("a4_level1");
 		 */
-		obj.loadLevel = function(level) {
-			if (levels[level] === undefined) {
-				throw ("melonJS: level " + level + " not found");
+		obj.loadLevel = function(levelId) {
+			if (levels[levelId] === undefined) {
+				throw ("melonJS: level " + levelId + " not found");
 			}
 
-			if (levels[level] instanceof me.TMXTileMap) {
+			if (levels[levelId] instanceof me.TMXTileMap) {
 
 				// check the status of the state mngr
 				var isRunning = me.state.isRunning();
@@ -655,16 +657,16 @@
 				
 				// reset the GUID generator
 				// and pass the level id as parameter
-				me.utils.resetGUID(level);
+				me.utils.resetGUID(levelId);
 				
 				// load the level
-				levels[level].reset();
-				levels[level].load();
+				levels[levelId].reset();
+				levels[levelId].load();
 				// set the current level
-				currentLevel = level;
+				currentLevel = levelId;
 				// add the specified level to the game manager
-				me.game.loadTMXLevel(levels[currentLevel], level);
-
+				me.game.loadTMXLevel(levels[currentLevel]);
+				
 				if (isRunning) {
 					// resume the game loop if it was
 					// previously running
