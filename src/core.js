@@ -1065,6 +1065,20 @@
 		 * @name me.game#ACTION_OBJECT
 		 */
 		api.ACTION_OBJECT = 3; // door, etc...
+		
+		/**
+		 * Fired when a level is fully loaded and <br>
+		 * and all entities instantiated. <br>
+		 * Additionnaly the level id will also be passed
+		 * to the called function.
+		 * @public
+		 * @type function
+		 * @name me.game#onLevelLoaded
+		 * @example
+		 * call myFunction() everytime a level is loaded
+		 * me.game.onLevelLoaded = this.myFunction.bind(this);
+		 */
+		 api.onLevelLoaded = null;
 
 		/**
 		 * Initialize the game manager
@@ -1136,7 +1150,7 @@
 		 * @function
 		 */
 
-		api.loadTMXLevel = function(level) {
+		api.loadTMXLevel = function(level, levelID) {
 			// load our map
 			api.currentLevel = level;
 
@@ -1168,6 +1182,11 @@
 
 			// sort all our stuff !!
 			api.sort();
+			
+			// fire the callback if defined
+			if (api.onLevelLoaded) {
+				api.onLevelLoaded.apply(api.onLevelLoaded, new Array(levelID))
+			} 
 
 		};
 

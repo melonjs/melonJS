@@ -663,7 +663,7 @@
 				// set the current level
 				currentLevel = level;
 				// add the specified level to the game manager
-				me.game.loadTMXLevel(levels[currentLevel]);
+				me.game.loadTMXLevel(levels[currentLevel], level);
 
 				if (isRunning) {
 					// resume the game loop if it was
