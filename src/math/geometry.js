@@ -40,16 +40,12 @@
 		y : 0,
 
 		/** @private */
-		init : function(/**Int*/
-		x, /**Int*/
-		y) {
+		init : function(/**Int*/ x, /**Int*/ y) {
 			this.x = x || 0;
 			this.y = y || 0;
 		},
 
-		set : function(/**Int*/
-		x, /**Int*/
-		y) {
+		set : function(/**Int*/ x, /**Int*/ y) {
 			this.x = x;
 			this.y = y;
 		},
@@ -59,32 +55,27 @@
 
 		},
 
-		setV : function(/**me.Vector2d*/
-		v) {
+		setV : function(/**me.Vector2d*/ v) {
 			this.x = v.x;
 			this.y = v.y;
 		},
 
-		add : function(/**me.Vector2d*/
-		v) {
+		add : function(/**me.Vector2d*/ v) {
 			this.x += v.x;
 			this.y += v.y;
 		},
 
-		sub : function(/**me.Vector2d*/
-		v) {
+		sub : function(/**me.Vector2d*/ v) {
 			this.x -= v.x;
 			this.y -= v.y;
 		},
 
-		scale : function(/**me.Vector2d*/
-		v) {
+		scale : function(/**me.Vector2d*/ v) {
 			this.x *= v.x;
 			this.y *= v.y;
 		},
 
-		div : function(/**Int*/
-		n) {
+		div : function(/**Int*/	n) {
 			this.x /= n;
 			this.y /= n;
 		},
@@ -111,8 +102,18 @@
 			this.x = this.x > v.x ? this.x : v.x;
 			this.y = this.y > v.y ? this.y : v.y;
 		},
+		
+		/** @return {me.Vector2D} New Vector2d */
+		floor : function() {
+			return new me.Vector2d(~~this.x, ~~this.y);
+		},
+		
+		/** @return {me.Vector2D} New Vector2d */
+		ceil : function() {
+			return new me.Vector2d(Math.ceil(this.x), Math.ceil(this.y));
+		},
 
-		/** @return {me.Vector2D} */
+		/** @return {me.Vector2D} New Vector2d */
 		negate : function() {
 			return new me.Vector2d(-this.x, -this.y);
 		},

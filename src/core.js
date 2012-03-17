@@ -647,7 +647,39 @@
 	 */
 	Number.prototype.sign = function() {
 		return this < 0 ? -1 : (this > 0 ? 1 : 0);  
-	}
+	};
+	
+	/**
+	 * Converts an angle in degrees to an angle in radians
+	 * @param {Number} [angle="angle"] angle in degrees
+	 * @extends Number
+	 * @return {Number} corresponding angle in radians
+	 * @example
+	 * // convert a specific angle
+	 * Number.prototype.degToRad (60); // return 1.0471...
+	 * // convert object value
+	 * var num = 60
+	 * num.degToRad(); // return 1.0471...
+	 */
+    Number.prototype.degToRad = function (angle) {
+        return (angle||this) / 180.0 * Math.PI;
+    };
+
+	/**
+	 * Converts an angle in radians to an angle in degrees.
+	 * @param {Number} [angle="angle"] angle in radians
+	 * @extends Number
+	 * @return {Number} corresponding angle in degrees
+	 * @example
+	 * // convert a specific angle
+	 * Number.prototype.radToDeg (1.0471975511965976); // return 59.9999...
+	 * // convert object value
+	 * num = 1.0471975511965976
+	 * Math.ceil(num.radToDeg()); // return 60
+	 */
+	Number.prototype.radToDeg = function (angle) {
+        return (angle||this) * (180.0 / Math.PI);
+    };
 
 	/************************************************************************************/
 
