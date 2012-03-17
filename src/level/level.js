@@ -421,7 +421,10 @@
 		init: function(x, y) {
 			this.pos = new me.Vector2d(x, y);
 			this.z = 0;
-
+			
+			// tilemap name
+			this.name = null;
+			
 			// tilemap size
 			this.width = 0;
 			this.height = 0;
