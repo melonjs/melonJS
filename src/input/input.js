@@ -165,6 +165,9 @@
 		function updateMouseCoords(x, y) {
 			obj.mouse.pos.set(x,y);
 			obj.mouse.pos.sub(obj.mouse.offset);
+			if (me.sys.scale != 1.0) {
+				obj.mouse.pos.div(me.sys.scale);
+			}
 			return obj.mouse.pos;
 		};
 
