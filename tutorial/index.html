@@ -24,7 +24,11 @@
 
         //]]>
     </script>
-    <style type="text/css">
+	  <script type="text/javascript" src="SyntaxHighlighter/shCore.js"></script>
+	 <script type="text/javascript" src="SyntaxHighlighter/shBrushJScript.js"></script>
+	 <link href="SyntaxHighlighter/shCore.css" rel="stylesheet" type="text/css" />
+	 <link href="SyntaxHighlighter/shThemeDefault.css" rel="stylesheet" type="text/css" />
+	 <style type="text/css">
             /*<![CDATA[*/
         pre.c2 {
             font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace;
@@ -75,7 +79,6 @@
     </div>
 <div id="content">
 <!-- insert the page content here -->
-
 <h1>A step by step game creation tutorial</h1>
 
 <h2>Introduction:</h2>
@@ -171,8 +174,9 @@
 <h2>Part 2: Loading our level</h2>
 
 <p>First let's have a look at our main.js skeleton :</p>
-    <pre class="c2">
-<code>
+
+<pre class="brush: js">
+
 // game resources
 var g_resources = [];
 
@@ -239,7 +243,7 @@ var PlayScreen = me.ScreenObject.extend({
 window.onReady(function() {
     jsApp.onload();
 });
-</code>
+
 </pre>
 
 <p>This is very simple. Once the page is loaded, the <b>onload()</b> function is
@@ -258,8 +262,8 @@ window.onReady(function() {
 
     <li>our map "area01", a <b>"tmx"</b> object</li>
 </ul>
-    <pre class="c2">
-<code>//game resources
+<pre class="brush: js">
+//game resources
 var g_resources = [{
     name: "area01_level_tiles",
     type: "image",
@@ -270,7 +274,6 @@ var g_resources = [{
     src: "data/area01.tmx"
 }];
 
-</code>
 </pre>
 
 <p>Be sure as well to correctly name the tileset resource name accordingly to the
@@ -279,8 +282,8 @@ var g_resources = [{
 
 <p>Finally, in the <b>onResetEvent()</b> function (which is called on a state
     change), we ask the level director to display our previously preloaded level :</p>
-    <pre class="c2">
-<code>/* the in game stuff*/
+<pre class="brush: js">
+/* the in game stuff*/
 var PlayScreen = me.ScreenObject.extend({
 
     onResetEvent: function() {
@@ -298,8 +301,7 @@ var PlayScreen = me.ScreenObject.extend({
 }
 
 });
-    
-</code>
+
 </pre>
 
 <p><br/>
@@ -328,8 +330,8 @@ var PlayScreen = me.ScreenObject.extend({
 
 <p>First, let's add our spritesheet in the list of the resources to be loaded, just
     after our map :</p>
-    <pre class="c2">
-<code>//game resources
+<pre class="brush: js">
+//game resources
 var g_resources = [{
     name: "area01_level_tiles",
     type: "image",
@@ -343,13 +345,12 @@ var g_resources = [{
     type: "image",
     src: "data/sprite/gripe_run_right.png"
 }];
-</code>
 </pre>
 
 <p>Then it's time to create our entity:<br>
   (Feel free to put this object either in our main.js or in a new file, in my example I use gameObj.js)</p>
-    <pre class="c2">
-<code>/*------------------- 
+<pre class="brush: js">
+/*------------------- 
 a player entity
 -------------------------------- */
 var PlayerEntity = me.ObjectEntity.extend({
@@ -403,7 +404,6 @@ var PlayerEntity = me.ObjectEntity.extend({
     }
 
 });
-</code>
 </pre>
 
 <p>I think the above code is quite easy to understand. Basically, we extend the
@@ -415,8 +415,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 <p>Note that the functions here above, like <b>doWalk()</b> and <b>doJump()</b>, are 
    actually <b>helper functions for platform games</b> that basically compute the new player 
    velocity based on the parameters defined by the <b>setVelocity()</b> function :
-<pre class="c2">
-<code>
+<pre class="brush: js">
 /**
  * helper function for platform games
  * make the entity move left of right
@@ -426,7 +425,7 @@ doWalk : function(left) {
 	this.flipX(left);
 	this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
 },
-</code>
+
 </pre>
   If you do plan to develop any other type of games (or if have more complex needs),
   I do <b>not</b> recommend using these function, but to rather directly modify the entity velocity 
@@ -438,8 +437,8 @@ doWalk : function(left) {
     <a href="http://www.melonjs.org/docs/symbols/me.entityPool.html"> EntityPool</a> (that is used by the engine to instantiate object), and finally to map the
     keys we will use for the player movement. So our <b>loaded()</b> function will become
     :</p>
-    <pre class="c2">
-<code>
+<pre class="brush: js">
+
 /* ---
 
    callback when everything is loaded
@@ -463,8 +462,6 @@ loaded: function ()
    me.state.change(me.state.PLAY);
 }
 
-
-</code>
 </pre>
 <br/>
 
@@ -531,9 +528,8 @@ loaded: function ()
 <p>One last thing - when creating an object, a collision rectangle is automatically
     created to manage collision between objects. For debugging purposes, you can use the
     following debug settings in your main to enable it :</p>
-    <pre class="c2">
-<code>me.debug.renderHitBox = true;
-</code>
+<pre class="brush: js">
+me.debug.renderHitBox = true;
 </pre>
 
 <p>If you reload the game, you will see this:</p><img src="media/step3_hitbox1.png"
@@ -541,8 +537,8 @@ loaded: function ()
 
 <p>As you can see we have a lot of white space on the left and right of our
     character, so let's adjust the collision rectangle to our sprite:</p>
-    <pre class="c2">
-<code>/* -----
+<pre class="brush: js">
+/* -----
 
     constructor
 
@@ -562,7 +558,6 @@ init: function(x, y, settings) {
     me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
 
 },
-</code>
 </pre>
 
 <p>Here we add a horizontal 8 pixel offset, and set it's width to 48 pixels. We don't
@@ -591,8 +586,8 @@ init: function(x, y, settings) {
     layer</p><img src="media/area01_bkg1.png" alt="Parallax background 2"/>
 
 <p>Let's add them in the resource list:</p>
-    <pre class="c2">
-<code>// game resources
+<pre class="brush: js">
+// game resources
 var g_resources = [
 // our level tileset
 {
@@ -622,7 +617,6 @@ var g_resources = [
     type: "image",
     src: "data/area01_parallax/area01_bkg1.png"
 }];
-</code>
 </pre>
 
 <p>Open Tiled, and add two new Tile Layer. These layers <b>MUST contains the keyword
@@ -658,8 +652,8 @@ var g_resources = [
                                                                             alt="Wheelie right sprite"/></p>
 
 <p>As always, add them to the resource list:</p>
-    <pre class="c2">
-<code>// game resources
+<pre class="brush: js">
+// game resources
 var g_resources = [
 // our level tileset
 {
@@ -700,9 +694,7 @@ var g_resources = [
     name: "wheelie_right",
     type: "image",
     src: "data/sprite/wheelie_right.png"
-}, 
-];
-</code>
+}];
 </pre>
 <br/>
 
@@ -711,8 +703,8 @@ var g_resources = [
     since we will add some score and some audio sfx later when the coin is collected,
     let's do it directly this way.</p>
 
-    <pre class="c2">
-<code>/*----------------
+<pre class="brush: js">
+/*----------------
  a Coin entity
 ------------------------ */
 var CoinEntity = me.CollectableEntity.extend({
@@ -727,11 +719,10 @@ var CoinEntity = me.CollectableEntity.extend({
     // an object is touched by something (here collected)
     onCollision: function() {
         // do something when collected
-        }
+	}
 
 });
 
-</code>
 </pre>
 <p>    
     Also, just to be sure it's clear for you that both ways of doing this is possible, 
@@ -743,8 +734,8 @@ var CoinEntity = me.CollectableEntity.extend({
 <br/>
 
 <p>For our enemy, it's a bit longer :</p>
-    <pre class="c2">
-<code>/* --------------------------
+<pre class="brush: js">
+/* --------------------------
 an enemy Entity
 ------------------------ */
 var EnemyEntity = me.ObjectEntity.extend({
@@ -815,7 +806,6 @@ var EnemyEntity = me.ObjectEntity.extend({
     }
 });
     
-</code>
 </pre>
 
 <p>As you can see here, I specified the <b>settings.image</b> and
@@ -827,13 +817,11 @@ var EnemyEntity = me.ObjectEntity.extend({
     something is jumping on top of it.</p>
 
 <p>Then again, we add these new objects in the entityPool</p>
-    <pre class="c2">
-<code>
+<pre class="brush: js">
 // add our object entities in the entity pool
 me.entityPool.add("mainPlayer", PlayerEntity);
 me.entityPool.add("CoinEntity", CoinEntity);
 me.entityPool.add("EnemyEntity", EnemyEntity);
-</code>
 </pre>
 <br/>
 
@@ -843,8 +831,7 @@ me.entityPool.add("EnemyEntity", EnemyEntity);
 <p>Before testing, we also need to modify our player to heck for collision with other
     entities. In order to do this, we add a call to the <a href="http://www.melonjs.org/docs/symbols/me.game.html#collide"> <b>me.game.collide(this)</b></a>
     function in our mainPlayer code, see below :</p>
-    <pre class="c2">
-<code>
+<pre class="brush: js">
 /* -----
 update the player pos
 ------ */
@@ -892,7 +879,6 @@ update: function() {
 }
 
 });
-</code>
 </pre>
 
 <p><br/>
@@ -909,8 +895,8 @@ update: function() {
 
 <p>We will use a bitmap font <b>(data/sprite/32x32_font.png)</b> to display our
     score, as always we need to add it in our list of resources to be loaded :</p>
-    <pre class="c2">
-<code>// game resources
+<pre class="brush: js">
+// game resources
 var g_resources = [
 // our level tileset
 {
@@ -958,14 +944,13 @@ var g_resources = [
     type: "image",
     src: "data/sprite/32x32_font.png"
 }];
-</code>
 </pre>
 <br/>
 
 <p>Let's then define a new Object, that will extend the <a href="http://www.melonjs.org/docs/symbols/me.HUD_Item.html">me.HUD_Item</a>, 
    in which we will draw the object value using our font.</p>
-    <pre class="c2">
-<code>/*-------------- 
+<pre class="brush: js">
+/*-------------- 
 a score HUD Item
 --------------------- */
 
@@ -987,13 +972,12 @@ var ScoreObject = me.HUD_Item.extend({
     }
 
 });
-</code>
 </pre>
 <br/>
 
 <p>And display it when we start a new game :</p>
-    <pre class="c2">
-<code>/* the in game stuff*/
+<pre class="brush: js">
+/* the in game stuff*/
 var PlayScreen = me.ScreenObject.extend({
 
     onResetEvent: function() {
@@ -1022,7 +1006,6 @@ var PlayScreen = me.ScreenObject.extend({
     }
 
 });
-</code>
 </pre>
 
 <p>The <a href="http://www.melonjs.org/docs/symbols/me.game.html#addHUD">me.game.addHUD()</a> function is used to enable a <a href="http://www.melonjs.org/docs/symbols/me.HUD_Object.html">HUD Object</a> (specifying the HUD
@@ -1037,8 +1020,7 @@ var PlayScreen = me.ScreenObject.extend({
 
 <p>Now let's modify our Coin Object, and add some score when a coin is collected
     :</p>
-    <pre class="c2">
-<code>
+<pre class="brush: js">
 onCollision : function ()
 {
 	// give some score
@@ -1048,8 +1030,6 @@ onCollision : function ()
 	// remove it
 	me.game.remove(this);
 }
-
-</code>
 </pre>
 
 <p>As you can see, in the <b>onCollision function</b>, we just call the
@@ -1077,8 +1057,8 @@ onCollision : function ()
 </ul>
 
 <p>Then we will first add them to our resource list:</p>
-    <pre class="c2">
-<code>//game resources
+<pre class="brush: js">
+//game resources
 var g_resources = [
 // our level tileset
 {
@@ -1148,8 +1128,6 @@ var g_resources = [
     src: "data/audio/",
     channel: 1
 }];
-    
-</code>
 </pre>
 
 <p>In case you did not notice yet, we didn't specify any extension when adding the
@@ -1164,10 +1142,9 @@ var g_resources = [
     also means, in this case, I must provide two versions of my audio files, one as mp3,
     and one as ogg. The engine will then use the right based on your browser
     capabilities</p>
-    <pre class="c2">
-<code>// initialize the "audio"
+<pre class="brush: js">
+// initialize the "audio"
 me.audio.init("mp3,ogg");
-</code>
 </pre>
 
 <p>Then finally, still in the resource list, an audio element takes an extra
@@ -1185,8 +1162,7 @@ me.audio.init("mp3,ogg");
 <p>In the CoinEntity code, where we previously managed our earned points, we just
     need to add a new call to <a href="http://www.melonjs.org/docs/symbols/me.audio.html#play"><b>me.audio.play()</b></a> and use the <b>"cling"</b> audio
     resource. that's all !</p><br/>
-    <pre class="c2">
-<code>
+<pre class="brush: js">
 onCollision : function ()
 {
 	// do something when collide
@@ -1198,8 +1174,6 @@ onCollision : function ()
 	// remove it
 	me.game.remove(this);
 }
-
-</code>
 </pre>
 <br/>
 
@@ -1212,13 +1186,12 @@ onCollision : function ()
     that I added a test on the return value of doJump(). doJump can return false in case
     you are not allowed to jump (already jumping, etc..) and in that case there is no
     need to play the sound sfx.</p><br/>
-    <pre class="c2">
-<code>if (me.input.isKeyPressed('jump')) {
+<pre class="brush: js">
+if (me.input.isKeyPressed('jump')) {
     if (this.doJump()) {
         me.audio.play("jump");
     }
 }
-</code>
 </pre>
 <br/>
 
@@ -1228,8 +1201,8 @@ onCollision : function ()
 
 <p>And still the same for this one, but using the "stomp" resource, still in the
     update function of the mainPlayer :</p><br/>
-    <pre class="c2">
-<code>// check for collision
+<pre class="brush: js">
+// check for collision
 var res = me.game.collide(this);
 
 if (res) {
@@ -1244,7 +1217,6 @@ if (res) {
         }
     }
 }
-</code>
 </pre>
 <br/>
 
@@ -1254,26 +1226,24 @@ if (res) {
 
 <p>In our main, in the <b>onResetEvent()</b> function, we just add a call to the
     <a href="http://www.melonjs.org/docs/symbols/me.audio.html#playTrack"><b>me.audio.playTrack()</b></a> function, specifying the audio track to be used:</p><br/>
-    <pre class="c2">
-<code>onResetEvent: function() {
+<pre class="brush: js">
+onResetEvent: function() {
     // play the audio track
     me.audio.playTrack("DST-InertExponent");
 ....
 },
-</code>
 </pre>
 
 <p>And we also need to modify the <b>onDestroyEvent()</b> function to stop the
     current track when exiting the game :</p><br/>
-    <pre class="c2">
-<code>onDestroyEvent: function() {
+<pre class="brush: js">
+onDestroyEvent: function() {
     // remove the HUD
     me.game.disableHUD();
 
     // stop the current audio track
     me.audio.stopTrack();
 }
-</code>
 </pre>
 
 <p>That's all! click <a href="./tutorial_step7/index.html">here</a> to see the final
@@ -1306,8 +1276,8 @@ if (res) {
     input to start the game !</p>
 
 <p>First let's declare a new Object, extending <a href="http://www.melonjs.org/docs/symbols/me.ScreenObject.html">me.ScreenObject</a> :</p>
-    <pre class="c2">
-<code>/*----------------------
+<pre class="brush: js">
+/*----------------------
 
     A title screen
 
@@ -1321,20 +1291,21 @@ var TitleScreen = me.ScreenObject.extend({
 
     // reset function
     onResetEvent: function() {
-},
+	},
 
     // update function
-    update: function() {},
+    update: function() {
+	},
 
     // draw function
     draw: function(context) {
-},
+	},
 
     // destroy function
-    onDestroyEvent: function() {},
+    onDestroyEvent: function() {
+	}
 
     });
-</code>
 </pre>
 
 <p>Note that in this example, when I call the parent constructor, I'm passing the
@@ -1346,8 +1317,8 @@ var TitleScreen = me.ScreenObject.extend({
     - add some text to the center of the screen ("Press enter to play")<br/>
     - wait for user input (pressing enter)<br/>
     Additionally, I also want to add a small scrolling text about this tutorial.</p>
-    <pre class="c2">
-<code>/*----------------------
+<pre class="brush: js">
+/*----------------------
 
     A title screen
 
@@ -1432,10 +1403,9 @@ var TitleScreen = me.ScreenObject.extend({
 
         //just in case
         this.scrollertween.stop();
-    },
+    }
 
-    });
-</code>
+});
 </pre>
 
 <p>What do we have above?<br/>
@@ -1461,8 +1431,8 @@ var TitleScreen = me.ScreenObject.extend({
     changes.<br/>
     Finally, instead of switching to the <b>PLAY</b> state at the end of the loaded
     function, I'm switching now to the <b>MENU</b> state:<br/></p>
-    <pre class="c2">
-<code>/* ---
+<pre class="brush: js">
+/* ---
 
     callback when everything is loaded
 
@@ -1491,7 +1461,6 @@ loaded: function() {
     me.state.change(me.state.MENU);
 }
 
-</code>
 </pre>
 
 <p>.... and ... congratulations! You reached the end of this tutorial, time to test
@@ -1512,6 +1481,11 @@ loaded: function() {
 <p>Never forget that this is all for fun, so have fun!</p>
 </div>
 </div>
+<script type="text/javascript">
+     SyntaxHighlighter.all()
+</script>
+
+
 <div id="content_footer"></div>
 
 <div id="footer">
