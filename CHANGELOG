@@ -1,7 +1,36 @@
 Version History
 ---------------
 0.9.3
-
+* General : Better Error management and reporting
+* General : added a dummy console.log for platforms not supporting it
+* General : melonJS now uses Google Closure for libray minification
+* Core : now properly calls all objects onDestroyEvent function when resetting game
+* Core : added the possibility to define a callback when a level is fully loaded
+* Core : added a couple of utility functions (degToRad, radToDeg)
+* TMX : global rewrite, code optimization and clean-up
+* TMX : added support for isometric map loading and display
+* TMX : added support for perspective map loading and display
+* TMX : relaxed TMX property case sensitive checks
+* TMX : added tile rotation support (Tiled 0.8.0)
+* TMX : fixed level name property not being set, and use it when required
+* Preloader : added binary file support
+* AnimationSheet : the entire spritesheet is now use to create the default animation
+* ObjectEntity: fixed CollisionBox not being properly used on y axis when checking for collision
+* ObjectEntity: fixed CollisionBox issue when dealing with subpixel positioning
+* ObjectEntity: fixed setVelocity not setting y velocity when x velocity is null
+* GUI: rewrote the GUI Object accordingly to the new event management
+* Geometry : added a containsPoint function
+* Geometry: added a floor() and ceil() function to Vector2d
+* BitmapFont : fixed BitmapFont ignoring  'center' alignment
+* BitmapFont : avoid implicit object conversion when rendering a bitmapFont
+* Input : fixed use of numeric keys by using a proper constant value.
+* Input : rewrote mouse event management
+* Input : added touch event management (with mouse event emulation)
+* Input : added Accelerometer event management
+* Documentation : added a lots of missing documation on various API
+* Documentation : Added JS syntax highlighting in the tutorial
+* Documentation : Don't use onDestroyEvent to manage score in the examples
+* Documentation : Exposed more TMX objects and APIs
 
 0.9.2
 * General: melonJS is now licensed under the terms of the MIT License
