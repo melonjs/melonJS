@@ -204,6 +204,25 @@
 		},
 		
 		/**
+		 * remove an item from the me.game.HUD Object
+		 * @name me.HUD_Object#removeItem
+		 * @public
+		 * @function
+		 * @param {String} name name of the item
+		 * @example
+		 * // remove the "score" HUD item
+		 * me.game.HUD.removeItem("score");
+		 */
+		removeItem : function(name) {
+			if (this.HUDItems[name]) {
+				this.HUDobj.splice(this.HUDobj.indexOf(this.HUDItems[name]),1);
+				this.HUDItems[name] = null;
+				this.objCount--;
+				this.HUD_invalidated = true;
+			}
+		},
+		
+		/**
 		 * set the value of the specified item
 		 * @name me.HUD_Object#setItemValue
 		 * @public
