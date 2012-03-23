@@ -18,6 +18,7 @@ Version History
 * ObjectEntity: fixed CollisionBox not being properly used on y axis when checking for collision
 * ObjectEntity: fixed CollisionBox issue when dealing with subpixel positioning
 * ObjectEntity: fixed setVelocity not setting y velocity when x velocity is null
+* HUD: added a removeItem function
 * GUI: rewrote the GUI Object accordingly to the new event management
 * Geometry : added a containsPoint function
 * Geometry: added a floor() and ceil() function to Vector2d
@@ -27,7 +28,7 @@ Version History
 * Input : rewrote mouse event management
 * Input : added touch event management (with mouse event emulation)
 * Input : added Accelerometer event management
-* Documentation : added a lots of missing documation on various API
+* Documentation : added a lots of missing documentation on various API
 * Documentation : Added JS syntax highlighting in the tutorial
 * Documentation : Don't use onDestroyEvent to manage score in the examples
 * Documentation : Exposed more TMX objects and APIs
