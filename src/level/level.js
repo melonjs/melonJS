@@ -43,6 +43,9 @@
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
 			// tileID
 			this.tileId = tileId;
+			// Tile row / col pos
+			this.row = x;
+			this.col = y;
 		}
 	});
 
