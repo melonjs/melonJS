@@ -168,7 +168,6 @@
 			if (me.sys.scale != 1.0) {
 				obj.mouse.pos.div(me.sys.scale);
 			}
-			return obj.mouse.pos;
 		};
 
 	
