@@ -203,6 +203,8 @@
 	/**
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
+	 * @class
+	 * @extends me.TiledLayer
 	 * @memberOf me
 	 * @constructor
 	 */
@@ -376,7 +378,7 @@
 		},
 
 		/**
-		 * clear the tile at the specified position from all layers
+		 * clear the tile at the specified position
 		 * @name me.TMXLayer#clearTile
 		 * @public
 		 * @function

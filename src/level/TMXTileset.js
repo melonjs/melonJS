@@ -17,9 +17,9 @@
 	/**************************************************/
 	
 	/**
-	 * manage a group of Tileset
+	 * an object containing all tileset
+	 * @class
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.TMXTilesetGroup = Object.extend({
@@ -38,7 +38,15 @@
 			return this.tilesets[i];
 		},
 	   
-		// return the tileset corresponding to  the specified gid
+		/**
+		 * return the tileset corresponding to the specified id <br>
+		 * will throw an exception if no matching tileset is found
+		 * @name me.TMXTilesetGroup#getTilesetByGid
+		 * @public
+		 * @function
+		 * @param {Integer} gid 
+		 * @return {me.TMXTileset} corresponding tileset
+		 */
 		getTilesetByGid : function(gid) {
 			var invalidRange = -1;
 			// cycle through all tilesets
@@ -63,12 +71,13 @@
 	});
 	
 	
-	/**
-	 * a tileset object
+    /**
+	 * a TMX Tile Set Object
+	 * @class
+	 * @extends me.Tileset
 	 * @memberOf me
-	 * @private
 	 * @constructor
-	 */	
+	 */
 	 me.TMXTileset = me.Tileset.extend({
 		
 		// constructor
@@ -133,7 +142,14 @@
 			}
 		},
 		
-		// check if the gid belongs to the tileset
+		/**
+		 * return true if the gid belongs to the tileset
+		 * @name me.TMXTileset#contains
+		 * @public
+		 * @function
+		 * @param {Integer} gid 
+		 * @return {boolean}
+		 */
 		contains : function(gid) {
 			return (gid >= this.firstgid && gid <= this.lastgid)
 		}

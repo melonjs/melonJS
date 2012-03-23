@@ -19,26 +19,37 @@
 
 	/**
 	 * a basic tile object
+	 * @class
+	 * @extends me.Rect
 	 * @memberOf me
-	 * @private
 	 * @constructor
+	 * @param {int} x x index of the Tile in the map
+	 * @param {int} y y index of the Tile in the map
+	 * @param {int} w Tile width
+	 * @param {int} h Tile height
+	 * @param {int} tileId tileId>
 	 */
 	me.Tile = me.Rect.extend({
+		 /**
+		  * tileId
+		  * @public
+		  * @type int
+		  * @name me.Tile#tileId
+		  */
+		tileId : null,
+		
+		/** @private */
 		init : function(x, y, w, h, tileId) {
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
-
 			// tileID
 			this.tileId = tileId;
-
-			this.row = x;
-			this.col = y;
 		}
 	});
 
 	/**
 	 * a Tile Set Object
+	 * @class
 	 * @memberOf me
-	 * @private
 	 * @constructor
 	 */
 	me.Tileset = Object.extend({
@@ -99,8 +110,25 @@
 			};
 		},
 		
-		// return the assiocated property of the specified tile
+		// 
 		// e.g. getTileProperty (gid)	
+		/**
+		 * return the properties of the specified tile <br>
+		 * the function will return an object with the following boolean value :<br>
+		 * - isCollidable<br>
+		 * - isSolid<br>
+		 * - isPlatform<br>
+		 * - isSlope <br>
+		 * - isLeftSlope<br>
+		 * - isRightSlope<br>
+		 * - isLadder<br>
+		 * - isBreakable<br>
+		 * @name me.Tileset#getTileProperties
+		 * @public
+		 * @function
+		 * @param {Integer} tileId 
+		 * @return {Object}
+		 */
 		getTileProperties: function(tileId) {
 			return this.TileProperties[tileId];
 		},
@@ -245,6 +273,7 @@
 
 	/**
 	 * a generic tile based layer object
+	 * @class
 	 * @memberOf me
 	 * @constructor
 	 */
@@ -274,9 +303,15 @@
 			this.xLUT = {};
 			this.yLUT = {};
 
-			// a reference to the tilesets object
+			/**
+			 * The Layer corresponding Tilesets
+			 * @public
+			 * @type me.TMXTilesetGroup
+			 * @name me.TiledLayer#tilesets
+			 */
 			this.tilesets = tilesets;
-			// link to the first tileset by default
+
+			// the default tileset
 			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
 		},
 
@@ -308,18 +343,28 @@
 		},
 		
 		/**
-		 * get the x,y tile
-		 * @private
+		 * Return the TileId of the Tile at the specified position
+		 * @name me.TiledLayer#getTileId
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position
+		 * @return {Int} TileId
 		 */
 		getTileId : function(x, y) {
-			//return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
-			var tile = this.layerData[this.xLUT[~~x]][this.yLUT[~~y]];
+			//xLut = x / this.tilewidth, yLut = y / this.tileheight;
+			var tile = this.layerData[this.xLUT[x]][this.yLUT[y]];
 			return tile ? tile.tileId : null;
 		},
 		
 		/**
-		 * get the x,y tile
-		 * @private
+		 * Return the Tile object at the specified position
+		 * @name me.TiledLayer#getTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position
+		 * @return {me.Tile} Tile Object
 		 */
 		getTile : function(x, y) {
 			//xLut = x / this.tilewidth, yLut = y / this.tileheight;
@@ -327,8 +372,13 @@
 		},
 
 		/**
-		 * set the x,y tile
-		 * @private
+		 * Create a new Tile at the specified position
+		 * @name me.TiledLayer#setTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position
+		 * @param {Integer} tileId tileId
 		 */
 		setTile : function(x, y, tileId) {
 			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
@@ -336,6 +386,9 @@
 
 		/**
 		 * clear the tile at the specified position
+		 * @name me.TiledLayer#clearTile
+		 * @public
+		 * @function
 		 * @param {Integer} x x position 
 		 * @param {Integer} y y position 
 		 */
@@ -422,19 +475,60 @@
 			this.pos = new me.Vector2d(x, y);
 			this.z = 0;
 			
-			// tilemap name
+			/**
+			 * name of the tilemap
+			 * @public
+			 * @type String
+			 * @name me.TileMap#name
+			 */
 			this.name = null;
 			
-			// tilemap size
+			/**
+			 * width of the tilemap in Tile
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#width
+			 */
 			this.width = 0;
+			
+			/**
+			 * height of the tilemap in Tile
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#height
+			 */
 			this.height = 0;
 
-			// realwidth (in pixels) of the level
+			/**
+			 * width of the tilemap in pixels
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#realwidth
+			 */
 			this.realwidth = -1;
+			
+			/**
+			 * height of the tilemap in pixels
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#realheight
+			 */
 			this.realheight = -1;
 
-			// tile size
+			/**
+			 * Tile width
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#tilewidth
+			 */
 			this.tilewidth = 0;
+
+			/**
+			 * Tile height
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#tileheight
+			 */
 			this.tileheight = 0;
 
 			// corresponding tileset for this map
