@@ -420,11 +420,11 @@
 				ytile : undefined,
 				yprop : {}
 			};
-
+			
 			//var tile;
 			if (x <= 0 || x >= this.realwidth) {
 				res.x = pv.x;
-			} else {
+			} else if (pv.x != 0 ) {
 				// x, bottom corner
 				res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
 				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
@@ -439,18 +439,20 @@
 					}
 				}
 			}
-
+			
 			// check for y movement
 			// left, y corner
-			res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
-			if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-				res.y = pv.y || 1;
-				res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-			} else { // right, y corner
-				res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+			if ( pv.y != 0 ) {
+				res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
 				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 					res.y = pv.y || 1;
 					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+				} else { // right, y corner
+					res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+					if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+						res.y = pv.y || 1;
+						res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+					}
 				}
 			}
 			// return the collide object
