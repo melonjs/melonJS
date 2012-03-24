@@ -671,15 +671,16 @@
 
 		// our levels
 		var levels = {};
-		// current level
-		var currentLevel = null;
-
+		// level index table
+		var levelIdx = [];
+		// current level index
+		var currentLevelIdx = 0;
+		
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
 				
-			---------------------------------------------*/
-
+  		  ---------------------------------------------*/
 		/**
 		 * reset the level director 
 		 * @private
@@ -708,6 +709,8 @@
 				levels[levelId] = new me.TMXTileMap(levelId, 0, 0);
 				// set the name of the level
 				levels[levelId].name = levelId;
+				// level index
+				levelIdx[levelIdx.length] = levelId;
 			}
 			//else console.log("level %s already loaded", levelId);
 
@@ -762,10 +765,12 @@
 				// load the level
 				levels[levelId].reset();
 				levels[levelId].load();
-				// set the current level
-				currentLevel = levelId;
+			
+				// update current level index
+				currentLevelIdx = levelIdx.indexOf(levelId);
+				
 				// add the specified level to the game manager
-				me.game.loadTMXLevel(levels[currentLevel]);
+				me.game.loadTMXLevel(levels[levelId]);
 				
 				if (isRunning) {
 					// resume the game loop if it was
@@ -774,6 +779,8 @@
 				}
 			} else
 				throw "melonJS: no level loader defined";
+			
+			return true;
 		};
 
 		/**
@@ -784,7 +791,7 @@
 		 * @return {String}
 		 */
 		obj.getCurrentLevelId = function() {
-			return currentLevel;
+			return levelIdx[currentLevelIdx];
 		},
 
 		/**
@@ -796,7 +803,7 @@
 		obj.reloadLevel = function() {
 			// reset the level to initial state
 			//levels[currentLevel].reset();
-			return obj.loadLevel(currentLevel);
+			return obj.loadLevel(obj.getCurrentLevelId());
 		},
 
 		/**
@@ -807,8 +814,8 @@
 		 */
 		obj.nextLevel = function() {
 			//go to the next level 
-			if (currentLevel + 1 < levels.length) {
-				return obj.loadLevel(currentLevel + 1);
+			if (currentLevelIdx + 1 < levelIdx.length) {
+				return obj.loadLevel(levelIdx[currentLevelIdx + 1]);
 			} else {
 				return false;
 			}
@@ -822,24 +829,12 @@
 		 */
 		obj.previousLevel = function() {
 			// go to previous level
-			if (currentLevel - 1 >= 0) {
-				return obj.loadLevel(currentLevel - 1);
+			if (currentLevelIdx - 1 >= 0) {
+				return obj.loadLevel(levelIdx[currentLevelIdx - 1]);
 			} else {
 				return false;
 			}
 		};
-
-		/* -----
-
-			set the specified level  
-		
-			------ 
-		
-		obj.goToLevel = function(level)
-		{
-			obj.loadLevel(level);
-		};
-		 */
 
 		// return our object
 		return obj;
