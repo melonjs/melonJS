@@ -191,7 +191,7 @@
 		// per level / object
 		api.resetGUID = function(base) {
 			// also ensure it's only 8bit ASCII characters
-			GUID_base  = base.toUpperCase().toHex();
+			GUID_base  = base.toString().toUpperCase().toHex();
 			GUID_index = 0;
 		};
       
