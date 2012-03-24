@@ -1470,6 +1470,8 @@
 						this.onCollision(res, obj);
 						// return the type 
 						res.type = this.type;
+						// return a reference of the colliding object
+						res.obj  = this;
 						return res;
 					}
 					return null;
