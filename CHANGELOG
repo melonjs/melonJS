@@ -7,17 +7,22 @@ Version History
 * Core : now properly calls all objects onDestroyEvent function when resetting game
 * Core : added the possibility to define a callback when a level is fully loaded
 * Core : added a couple of utility functions (degToRad, radToDeg)
+* Core : fixed GUID creation when passing a non string parameter
+* Core : only check for collision when the projection vector is set
 * TMX : global rewrite, code optimization and clean-up
 * TMX : added support for isometric map loading and display
 * TMX : added support for perspective map loading and display
 * TMX : relaxed TMX property case sensitive checks
 * TMX : added tile rotation support (Tiled 0.8.0)
 * TMX : fixed level name property not being set, and use it when required
+* LevelDirector : fixed the nextLevel & previousLevel functions
 * Preloader : added binary file support
 * AnimationSheet : the entire spritesheet is now use to create the default animation
 * ObjectEntity: fixed CollisionBox not being properly used on y axis when checking for collision
 * ObjectEntity: fixed CollisionBox issue when dealing with subpixel positioning
 * ObjectEntity: fixed setVelocity not setting y velocity when x velocity is null
+* InvisibleEntity: added missing properties (GUID, name)
+* InvisibleEntity: fixed res.obj not defined
 * HUD: added a removeItem function
 * GUI: rewrote the GUI Object accordingly to the new event management
 * Geometry : added a containsPoint function
