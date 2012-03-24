@@ -1420,6 +1420,15 @@
 			.extend(
 			/** @scope me.InvisibleEntity.prototype */
 			{
+				
+			   /**
+				* Entity "Game Unique Identifier"<br>
+				* @public
+				* @type String
+				* @name me.ObjectEntity#GUID
+				*/
+				GUID : null,
+				
 				// for z ordering
 				z : 0,
 				collisionBox : null,
@@ -1427,13 +1436,17 @@
 				/** @private */
 				init : function(x, y, settings) {
 					// call the parent constructor
-					this.parent(new me.Vector2d(x, y), settings.width,
-							settings.height);
+					this.parent(new me.Vector2d(x, y), settings.width, settings.height);
 
 					// create a a default collision rectangle
-					this.collisionBox = new me.Rect(this.pos, settings.width,
-							settings.height);
-
+					this.collisionBox = new me.Rect(this.pos, settings.width, settings.height);
+					
+					// set the object GUID value
+					this.GUID = me.utils.createGUID();
+					
+					// set the object entity name
+					this.name = settings.name?settings.name.toLowerCase():"";
+					
 					this.visible = true;
 
 					this.collidable = true;
