@@ -742,6 +742,9 @@
 		 * me.levelDirector.loadLevel("a4_level1");
 		 */
 		obj.loadLevel = function(levelId) {
+			// make sure it's a string
+			levelId = levelId.toString();
+			// throw an exception if not existing
 			if (levels[levelId] === undefined) {
 				throw ("melonJS: level " + levelId + " not found");
 			}
