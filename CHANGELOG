@@ -16,13 +16,14 @@ Version History
 * TMX : added tile rotation support (Tiled 0.8.0)
 * TMX : fixed level name property not being set, and use it when required
 * LevelDirector : fixed the nextLevel & previousLevel functions
-* Preloader : added binary file support
+* Loader : added binary file support
+* Loader : added possibily to dynamically load any ressources (i.e. during the game)
 * AnimationSheet : the entire spritesheet is now use to create the default animation
-* ObjectEntity: fixed CollisionBox not being properly used on y axis when checking for collision
-* ObjectEntity: fixed CollisionBox issue when dealing with subpixel positioning
-* ObjectEntity: fixed setVelocity not setting y velocity when x velocity is null
-* InvisibleEntity: added missing properties (GUID, name)
-* InvisibleEntity: fixed res.obj not defined
+* Entity: fixed CollisionBox not being properly used on y axis when checking for collision
+* Entity: fixed CollisionBox issue when dealing with subpixel positioning
+* Entity: fixed setVelocity not setting y velocity when x velocity is null
+* Entity: added missing properties (GUID, name) in InvisibleEntity
+* Entity: fixed res.obj not defined in InvisibleEntity
 * HUD: added a removeItem function
 * GUI: rewrote the GUI Object accordingly to the new event management
 * Geometry : added a containsPoint function
