@@ -743,7 +743,7 @@
 		 */
 		obj.loadLevel = function(levelId) {
 			// make sure it's a string
-			levelId = levelId.toString();
+			levelId = levelId.toString().toLowerCase();
 			// throw an exception if not existing
 			if (levels[levelId] === undefined) {
 				throw ("melonJS: level " + levelId + " not found");
