@@ -137,6 +137,15 @@
 		 * @memberOf me.sys
 		 */
 		scale : 1.0,
+		
+		/** 
+		 * Global gravity settings <br>
+		 * will override entities init value if defined<br>
+		 * default value : undefined
+		 * @type {Number}
+		 * @memberOf me.sys
+		 */
+		gravity : undefined,
 
 		/** 
 		 * Use native "requestAnimFrame" function if supported <br>

@@ -930,7 +930,7 @@
 					 * @type Number
 					 * @name me.ObjectEntity#gravity
 					 */
-					this.gravity = 0.98;
+					this.gravity = (me.sys.gravity!=undefined)?me.sys.gravity:0.98;
 
 					// just to identify our object
 					this.isEntity = true;
