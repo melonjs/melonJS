@@ -86,12 +86,20 @@
 		 * @private
 		 */
 		function preventDefault(e) {
-			e.stopPropagation();
-			if (e.preventDefault)
+			// stop event propagation
+			if (e.stopPropagation) {
+				e.stopPropagation();
+			}
+			else {
+				e.cancelBubble = true; 
+			}
+			// stop event default processing
+			if (e.preventDefault)  {
 				e.preventDefault();
-			e.returnValue = false;
-			// this is apprently needed on some platforms
-			e.cancelBubble = true;
+			}
+			else  {
+				e.returnValue = false;
+			}
 		};
 
 		/**
@@ -387,6 +395,29 @@
 			return (keyLocked[action] === true) ? true : keyStatus[action];
 		};
 
+		
+		/**
+		 * change the status of the specified key<br>
+		 * @name me.input#updateKey
+		 * @public
+		 * @function
+		 * @param {me.input#KEY} keycode
+		 * @param {boolean} true to simulate a key press, or false for key release
+		 * @example
+		 * // simulate a key press
+		 * me.input.updateKey(me.input.KEY.LEFT, true);
+		 */
+
+		obj.updateKey = function(keycode, status) {
+			if (status) {
+				keydown({}, keycode);
+			}
+			else {
+				keyup({}, keycode);
+			}
+		};
+
+		
 		/**
 		 * associate a user defined action to a keycode
 		 * @name me.input#bindKey
