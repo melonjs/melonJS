@@ -231,7 +231,7 @@
 			for ( var fn = 0; fn < readyList.length; fn++) {
 				readyList[fn].call($, []);
 			}
-			readyList = [];
+			readyList.length = 0;
 		}
 	}
 	;
@@ -860,8 +860,8 @@
 		 */
 		api.reset = function() {
 			// make sure it's empty
-			dirtyRects = [];
-			dirtyObjects = [];
+			dirtyRects.length = 0;
+			dirtyObjects.length = 0;
 
 			// set our cached rect to the actual screen size
 			fullscreen_rect = me.game.viewport.getRect();
@@ -909,7 +909,7 @@
 		 */
 		api.makeAllDirty = function() {
 			//empty the dirty rect list
-			dirtyRects = [];
+			dirtyRects.length = 0;
 			//and add a dirty region with the screen area size
 			dirtyRects.push(fullscreen_rect);
 			// make sure it's dirty
@@ -967,10 +967,10 @@
 			// only empty dirty area list if dirtyRec feature is enable
 			// allows to keep the viewport area as a default dirty rect
 			if (me.sys.dirtyRegion) {
-				dirtyRects = [];
+				dirtyRects.length = 0;
 			}
 			// empty the dirty object list
-			dirtyObjects = [];
+			dirtyObjects.length = 0;
 
 			// clear the flag
 			api.isDirty = false;
@@ -1401,7 +1401,7 @@
 			}
 			//empty everything
 			objCount = 0;
-			gameObjects = [];
+			gameObjects.length = 0;
 			// make sure it's empty there as well
 			drawManager.flush();
 		};
