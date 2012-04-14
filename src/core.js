@@ -1924,27 +1924,29 @@
 					_screenObject[_state].screen.destroy();
 			}
 			
-			
-			// set the global variable
-			_state = state;
-			
-			// call the reset function with _extraArgs as arguments
-			_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
+			if (_screenObject[state])
+			{
+				// set the global variable
+				_state = state;
+				
+				// call the reset function with _extraArgs as arguments
+				_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
 
-			// cache the new screen object update function
-			_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame.bind(_screenObject[_state].screen);
+				// cache the new screen object update function
+				_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame.bind(_screenObject[_state].screen);
 
-			// and start the main loop of the 
-			// new requested state
-			_startRunLoop();
+				// and start the main loop of the 
+				// new requested state
+				_startRunLoop();
 
-			// execute callback if defined
-			if (_onSwitchComplete) {
-				_onSwitchComplete();
-			}
-			
-			// force repaint
-			me.game.repaint();
+				// execute callback if defined
+				if (_onSwitchComplete) {
+					_onSwitchComplete();
+				}
+				
+				// force repaint
+				me.game.repaint();
+			 }
 		};
 
 		/*---------------------------------------------
