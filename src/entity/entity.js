@@ -1243,8 +1243,6 @@
 						vel.y = vel.y.clamp(-this.maxVel.y,this.maxVel.y);
 					if (vel.x !=0)
 						vel.x = vel.x.clamp(-this.maxVel.x,this.maxVel.x);
-					
-					return vel;
 				},
 
 				
@@ -1291,7 +1289,7 @@
 				 */
 				updateMovement : function() {
 
-					this.vel = this.computeVelocity(this.vel);
+					this.computeVelocity(this.vel);
 					
 					// check for collision
 					var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
