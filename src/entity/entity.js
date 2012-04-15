@@ -1295,13 +1295,17 @@
 					var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
 
 					// update some flags
-					this.onladder = collision.xprop.isLadder;
 					this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
+					// clear the ladder flag
+					this.onladder = false;
+
+					
 
 					// y collision
 					if (collision.y) {
 
 						// going down, collision with the floor
+						this.onladder = collision.yprop.isLadder;
 						
 						if (collision.y > 0) {
 							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y))) {
@@ -1339,9 +1343,12 @@
 							}
 						}
 					}
-
+					
 					// x collision
 					if (collision.x) {
+						
+						this.onladder = collision.xprop.isLadder ;
+						
 						if (collision.xprop.isSlope && !this.jumping) {
 							this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
 							this.falling = false;
@@ -1360,6 +1367,7 @@
 							}
 						}
 					}
+
 					
 					// update player position
 					this.pos.add(this.vel);
