@@ -37,16 +37,14 @@
 		// define some step with some margin
 		var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?
 
-		/* ---
-		
-			update the fps counter
-			
-			---*/
+		/**
+		 * draw the fps counter
+		 * @private
+		 */
 		function draw(fps) {
 			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/"
 					+ me.sys.fps + " fps)"), htmlCounter.firstChild);
-		}
-		;
+		};
 
 		/*---------------------------------------------
 			
