@@ -8,6 +8,9 @@
  * author Robert Eisele / http://www.xarg.org
  * author Philippe / http://philippe.elsass.me
  * author Robert Penner / http://www.robertpenner.com/easing_terms_of_use.html
+ * author Paul Lewis / http://www.aerotwist.com/
+ * author lechecacharro
+ * author Josh Faul / http://jocafa.com/
  */
 
 (function($, undefined) {
@@ -196,8 +199,10 @@
 
 			}
 
-			elapsed = (time - _startTime) / _duration;
-			elapsed = elapsed > 1 ? 1 : elapsed;
+			if ( ( elapsed = ( time - _startTime ) / _duration ) >= 1) {
+			
+					elapsed = 1;
+			}
 
 			value = _easingFunction(elapsed);
 
@@ -214,7 +219,7 @@
 
 			}
 
-			if (elapsed == 1) {
+			if (elapsed === 1) {
 
 				// remove the tween from the object pool
 				me.game.remove(this);
@@ -316,7 +321,7 @@
 	/** @ignore */
 	me.Tween.Easing.Quadratic.EaseOut = function(k) {
 
-		return -k * (k - 2);
+		return k * ( 2 - k );
 
 	};
 	/** @ignore */
@@ -356,7 +361,7 @@
 	/** @ignore */
 	me.Tween.Easing.Quartic.EaseOut = function(k) {
 
-		return -(--k * k * k * k - 1);
+		return 1 - --k * k * k * k;
 
 	}
 	/** @ignore */
@@ -376,7 +381,7 @@
 	/** @ignore */
 	me.Tween.Easing.Quintic.EaseOut = function(k) {
 
-		return (k = k - 1) * k * k * k * k + 1;
+		return --k * k * k * k * k + 1;
 
 	};
 	/** @ignore */
@@ -390,7 +395,7 @@
 	/** @ignore */
 	me.Tween.Easing.Sinusoidal.EaseIn = function(k) {
 
-		return -Math.cos(k * Math.PI / 2) + 1;
+		return 1 - Math.cos( k * Math.PI / 2 );
 
 	};
 	/** @ignore */
@@ -402,37 +407,34 @@
 	/** @ignore */
 	me.Tween.Easing.Sinusoidal.EaseInOut = function(k) {
 
-		return -0.5 * (Math.cos(Math.PI * k) - 1);
+		return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Exponential.EaseIn = function(k) {
 
-		return k == 0 ? 0 : Math.pow(2, 10 * (k - 1));
+		return k === 0 ? 0 : Math.pow( 1024, k - 1 );
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Exponential.EaseOut = function(k) {
 
-		return k == 1 ? 1 : -Math.pow(2, -10 * k) + 1;
+		return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Exponential.EaseInOut = function(k) {
 
-		if (k == 0)
-			return 0;
-		if (k == 1)
-			return 1;
-		if ((k *= 2) < 1)
-			return 0.5 * Math.pow(2, 10 * (k - 1));
+		if ( k === 0 ) return 0;
+		if ( k === 1 ) return 1;
+		if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
 		return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Circular.EaseIn = function(k) {
 
-		return -(Math.sqrt(1 - k * k) - 1);
+		return 1 - Math.sqrt( 1 - k * k );
 
 	};
 	/** @ignore */
@@ -444,8 +446,7 @@
 	/** @ignore */
 	me.Tween.Easing.Circular.EaseInOut = function(k) {
 
-		if ((k /= 0.5) < 1)
-			return -0.5 * (Math.sqrt(1 - k * k) - 1);
+		if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
 		return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
 
 	};
@@ -453,61 +454,34 @@
 	me.Tween.Easing.Elastic.EaseIn = function(k) {
 
 		var s, a = 0.1, p = 0.4;
-		if (k == 0)
-			return 0;
-		if (k == 1)
-			return 1;
-		if (!p)
-			p = 0.3;
-		if (!a || a < 1) {
-			a = 1;
-			s = p / 4;
-		} else
-			s = p / (2 * Math.PI) * Math.asin(1 / a);
-		return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s)
-				* (2 * Math.PI) / p));
+		if ( k === 0 ) return 0;
+		if ( k === 1 ) return 1;
+		if ( !a || a < 1 ) { a = 1; s = p / 4; }
+		else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+		return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Elastic.EaseOut = function(k) {
 
 		var s, a = 0.1, p = 0.4;
-		if (k == 0)
-			return 0;
-		if (k == 1)
-			return 1;
-		if (!p)
-			p = 0.3;
-		if (!a || a < 1) {
-			a = 1;
-			s = p / 4;
-		} else
-			s = p / (2 * Math.PI) * Math.asin(1 / a);
-		return (a * Math.pow(2, -10 * k)
-				* Math.sin((k - s) * (2 * Math.PI) / p) + 1);
+		if ( k === 0 ) return 0;
+		if ( k === 1 ) return 1;
+		if ( !a || a < 1 ) { a = 1; s = p / 4; }
+		else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+		return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
 
 	};
 	/** @ignore */
 	me.Tween.Easing.Elastic.EaseInOut = function(k) {
 
 		var s, a = 0.1, p = 0.4;
-		if (k == 0)
-			return 0;
-		if (k == 1)
-			return 1;
-		if (!p)
-			p = 0.3;
-		if (!a || a < 1) {
-			a = 1;
-			s = p / 4;
-		} else
-			s = p / (2 * Math.PI) * Math.asin(1 / a);
-		if ((k *= 2) < 1)
-			return -0.5
-					* (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s)
-							* (2 * Math.PI) / p));
-		return a * Math.pow(2, -10 * (k -= 1))
-				* Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+		if ( k === 0 ) return 0;
+		if ( k === 1 ) return 1;
+		if ( !a || a < 1 ) { a = 1; s = p / 4; }
+		else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+		if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+		return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
 
 	};
 	/** @ignore */
@@ -521,7 +495,7 @@
 	me.Tween.Easing.Back.EaseOut = function(k) {
 
 		var s = 1.70158;
-		return (k = k - 1) * k * ((s + 1) * k + s) + 1;
+		return --k * k * ( ( s + 1 ) * k + s ) + 1;
 
 	};
 	/** @ignore */
@@ -542,7 +516,7 @@
 	/** @ignore */
 	me.Tween.Easing.Bounce.EaseOut = function(k) {
 
-		if ((k /= 1) < (1 / 2.75)) {
+		if ( k < ( 1 / 2.75 ) ) {
 
 			return 7.5625 * k * k;
 
