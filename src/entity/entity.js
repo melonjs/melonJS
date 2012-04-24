@@ -710,8 +710,8 @@
 					
 					// if one single image, disable animation
 					if ((this.spritecount.x * this.spritecount.y) == 1) {
-						// override setCurrrentSprite with an empty function
-						this.setCurrentSprite = function() {;};
+						// override setAnimationFrame with an empty function
+						this.setAnimationFrame = function() {;};
 					} 
 					
 					// default animation speed
@@ -777,7 +777,7 @@
 				setCurrentAnimation : function(name, resetAnim) {
 					this.current = this.anim[name];
 					this.resetAnim = resetAnim || null;
-					this.offset = this.current.frame[this.current.idx];
+					this.setAnimationFrame(this.current.idx); // or 0 ?
 				},
 
 				/**
@@ -794,24 +794,15 @@
 				},
 
 				/**
-				 * set the current sprite
-				 * @private
+				 * force the current animation frame index.
+				 * @param {int} [index=0]
+				 * @example
+				 * //reset the current animation to the first frame
+				 * this.setAnimationFrame();
 				 */
-
-				setCurrentSprite : function(s) {
-					this.current.idx = s;
-					this.offset = this.current.frame[s];
-					
-					// switch animation if we reach the end of the strip
-					// and a callback is defined
-					if ((this.current.idx == 0) && this.resetAnim)  {
-						// if string, change to the corresponding animation
-						if (typeof(this.resetAnim) == "string")
-							this.setCurrentAnimation(this.resetAnim);
-						// if function (callback) call it
-						else if (typeof(this.resetAnim) == "function")
-							this.resetAnim();
-					}
+				setAnimationFrame : function(idx) {
+					this.current.idx = (idx || 0) % this.current.length;
+					this.offset = this.current.frame[this.current.idx];
 				},
 
 				/**
@@ -824,8 +815,19 @@
 					this.parent();
 					// update animation if necessary
 					if (this.visible && (this.fpscount++ > this.animationspeed)) {
-						this.setCurrentSprite(++this.current.idx % this.current.length);
+						this.setAnimationFrame(++this.current.idx);
 						this.fpscount = 0;
+						
+						// switch animation if we reach the end of the strip
+						// and a callback is defined
+						if ((this.current.idx == 0) && this.resetAnim)  {
+							// if string, change to the corresponding animation
+							if (typeof(this.resetAnim) == "string")
+								this.setCurrentAnimation(this.resetAnim);
+							// if function (callback) call it
+							else if (typeof(this.resetAnim) == "function")
+								this.resetAnim();
+						}
 						return true;
 					}
 					return false;
