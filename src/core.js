@@ -923,17 +923,20 @@
 		 * remove an object
 		 */
 		api.remove = function(obj) {
-            // remove the object from the list of obj to draw
-            dirtyObjects.splice(dirtyObjects.indexOf(obj), 1);
-            // save the visible state of the object
-            var wasVisible = obj.visible;
-            // mark the object as not visible
-            // so it won't be added (again) in the list object to be draw
-            obj.visible = false;
-            // and flag the area as dirty
-            api.makeDirty(obj, true);
-            // restore visible state, this is needed for "persistent" object like screenObject
-            obj.visible = wasVisible;
+			var idx = dirtyObjects.indexOf(obj);
+			if (idx != -1) {
+				// remove the object from the list of obj to draw
+				dirtyObjects.splice(idx, 1);
+				// save the visible state of the object
+				var wasVisible = obj.visible;
+				// mark the object as not visible
+				// so it won't be added (again) in the list object to be draw
+				obj.visible = false;
+				// and flag the area as dirty
+				api.makeDirty(obj, true);
+				// restore visible state, this is needed for "persistent" object like screenObject
+				obj.visible = wasVisible;
+			}
  		};
 
 		/**
