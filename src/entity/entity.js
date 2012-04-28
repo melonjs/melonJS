@@ -1021,7 +1021,6 @@
 				 * specify the size of the hit box for collision detection<br>
 				 * (allow to have a specific size for each object)<br>
 				 * e.g. : object with resized collision box :<br>
-				 * note : bottom of both rectangle MUST always be aligned !<br>
 				 * <img src="me.Rect.colpos.png"/>
 				 * @param {int} x x offset (specify -1 to not change the width)
 				 * @param {int} w width of the hit box
@@ -1468,7 +1467,6 @@
 				 * specify the size of the hit box for collision detection<br>
 				 * (allow to have a specific size for each object)<br>
 				 * e.g. : object with resized collision box :<br>
-				 * note : bottom of both rectangle MUST always be aligned !<br>
 				 * <img src="me.Rect.colpos.png"/>
 				 * @param {int} x x offset (specify -1 to not change the width)
 				 * @param {int} w width of the hit box
