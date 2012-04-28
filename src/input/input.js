@@ -418,18 +418,18 @@
 
 		
 		/**
-		 * change the status of the specified key<br>
-		 * @name me.input#updateKey
+		 * trigger the specified key (simulated) event <br>
+		 * @name me.input#triggerKeyEvent
 		 * @public
 		 * @function
 		 * @param {me.input#KEY} keycode
-		 * @param {boolean} true to simulate a key press, or false for key release
+		 * @param {boolean} true to trigger a key press, or false for key release
 		 * @example
-		 * // simulate a key press
-		 * me.input.updateKey(me.input.KEY.LEFT, true);
+		 * // trigger a key press
+		 * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
 		 */
 
-		obj.updateKey = function(keycode, status) {
+		obj.triggerKeyEvent = function(keycode, status) {
 			if (status) {
 				keydown({}, keycode);
 			}
