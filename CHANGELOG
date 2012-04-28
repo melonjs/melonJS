@@ -34,6 +34,7 @@ Version History
 * Input : fixed use of numeric keys by using a proper constant value.
 * Input : rewrote mouse event management
 * Input : added touch event management (with mouse event emulation)
+* Input : (beta) multitouch support
 * Input : added Accelerometer event management
 * Documentation : added a lots of missing documentation on various API
 * Documentation : Added JS syntax highlighting in the tutorial

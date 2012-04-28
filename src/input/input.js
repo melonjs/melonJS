@@ -40,6 +40,9 @@
 		var mouseInitialized = false;
 		var accelInitialized = false;
 		
+		// cache touch information
+		var touches = [];
+		
 		/**
 		 * enable keyboard event
 		 * @private
@@ -60,6 +63,7 @@
 		function enableMouseEvent() {
 			if (!mouseInitialized) {
 				// initialize mouse pos (0,0)
+				touches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
@@ -151,16 +155,17 @@
 		function dispatchMouseEvent(e) {
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
-				var pos = obj.mouse.pos;
-				for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-					// call the defined handler
-					if ((handler.rect === null) || handler.rect.containsPoint(pos)) {
-						if (handler.cb(e) === false) {
-							// stop propagating the event if return false 
-							break;
+				for(var t=0, l=touches.length; t<l; t++) {
+					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+						// call the defined handler
+						if ((handler.rect === null) || handler.rect.containsPoint({x:touches[t].x,y:touches[t].y})) {
+							if (handler.cb(e) === false) {
+								// stop propagating the event if return false 
+								break;
+							}
 						}
 					}
-				}
+				} 
 			}
 
 		};
@@ -170,12 +175,34 @@
 		 * translate Mouse Coordinates
 		 * @private
 		 */
-		function updateMouseCoords(x, y) {
-			obj.mouse.pos.set(x,y);
-			obj.mouse.pos.sub(obj.mouse.offset);
-			if (me.sys.scale != 1.0) {
-				obj.mouse.pos.div(me.sys.scale);
+		function updateCoordFromEvent(e) {
+			var x, y;
+			
+			// reset the touch array cache
+			touches.length=0;
+			// non touch event (mouse)
+			if (!e.touches) {
+				x = e.pageX - obj.mouse.offset.x;
+				y = e.pageY - obj.mouse.offset.y;
+				if (me.sys.scale != 1.0) {
+					x/=me.sys.scale;
+					y/=me.sys.scale;
+				}
+				touches.push({ x: x, y: y });
 			}
+			// touch event
+			else {
+				for(var t=0, l=e.touches.length; t<l; t++) {
+					x = e.touches[t].clientX - obj.mouse.offset.x;
+					y = e.touches[t].clientY - obj.mouse.offset.y;
+					if (me.sys.scale != 1.0) {
+						x/=me.sys.scale;
+						y/=me.sys.scale;
+					}
+					touches.push({ x: x, y: y });
+				}
+			}
+			obj.mouse.pos.set(touches[0].x,touches[0].y);
 		};
 
 	
@@ -197,12 +224,7 @@
 		 */
 		function onMouseMove(e) {
 			// update position
-			if (e.touches) {
-				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
-			}
-			else {
-				updateMouseCoords(e.pageX, e.pageY);
-			}
+			updateCoordFromEvent(e);
 			// dispatch mouse event to registered object
 			dispatchMouseEvent(e);
 			// prevent default action
@@ -217,8 +239,7 @@
 			// update position in case of touch event 
 			// note : we should just have touchstart/touchend here
 			if (e.type === 'touchstart') {
-				// TODO : add multiple touch handling
-				updateMouseCoords(e.touches[0].clientX, e.touches[0].clientY);
+				updateCoordFromEvent(e);
 			}
 			
 			// in case of touch event button is undefined
