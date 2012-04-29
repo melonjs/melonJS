@@ -69,8 +69,8 @@
 				// add listener for touch event if supported
 				if (me.sys.touch) {
 					me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false );
-					me.video.getScreenCanvas().addEventListener('touchstart', onMouseEvent, false );
-					me.video.getScreenCanvas().addEventListener('touchend', onMouseEvent, false );
+					me.video.getScreenCanvas().addEventListener('touchstart', onTouchEvent, false );
+					me.video.getScreenCanvas().addEventListener('touchend', onTouchEvent, false );
 				}
 				// add listener for mouse event
 				else {
@@ -191,9 +191,9 @@
 			}
 			// touch event
 			else {
-				for(var t=0, l=e.touches.length; t<l; t++) {
-					x = e.touches[t].clientX - obj.mouse.offset.x;
-					y = e.touches[t].clientY - obj.mouse.offset.y;
+				for(var t=0, l=e.changedTouches.length; t<l; t++) {
+					x = e.changedTouches[t].clientX - obj.mouse.offset.x;
+					y = e.changedTouches[t].clientY - obj.mouse.offset.y;
 					if (me.sys.scale != 1.0) {
 						x/=me.sys.scale;
 						y/=me.sys.scale;
@@ -235,12 +235,6 @@
 		 * @private
 		 */
 		function onMouseEvent(e) {
-			// update position in case of touch event 
-			// note : we should just have touchstart/touchend here
-			if (e.type === 'touchstart') {
-				updateCoordFromEvent(e);
-			}
-			
 			// in case of touch event button is undefined
 			var keycode = obj.mouse.bind[e.button || 0];
 
@@ -259,6 +253,16 @@
 			}
 		};
 		
+		/**
+		 * mouse event management (mousedown, mouseup)
+		 * @private
+		 */
+		function onTouchEvent(e) {
+			// update the new touch position
+			updateCoordFromEvent(e);
+			// reuse the mouse event function
+			onMouseEvent(e);
+		};
 		/**
 		 * event management (Accelerometer)
 		 * http://www.mobilexweb.com/samples/ball.html
