@@ -40,8 +40,7 @@
 		var mouseInitialized = false;
 		var accelInitialized = false;
 		
-		// cache touch information
-		var touches = [];
+	
 		
 		/**
 		 * enable keyboard event
@@ -63,7 +62,7 @@
 		function enableMouseEvent() {
 			if (!mouseInitialized) {
 				// initialize mouse pos (0,0)
-				touches.push({ x: 0, y: 0 });
+				obj.touches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
@@ -155,10 +154,10 @@
 		function dispatchMouseEvent(e) {
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
-				for(var t=0, l=touches.length; t<l; t++) {
+				for(var t=0, l=obj.touches.length; t<l; t++) {
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						// call the defined handler
-						if ((handler.rect === null) || handler.rect.containsPoint({x:touches[t].x,y:touches[t].y})) {
+						if ((handler.rect === null) || handler.rect.containsPoint({x:obj.touches[t].x,y:obj.touches[t].y})) {
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
 								break;
@@ -179,7 +178,7 @@
 			var x, y;
 			
 			// reset the touch array cache
-			touches.length=0;
+			obj.touches.length=0;
 			// non touch event (mouse)
 			if (!e.touches) {
 				x = e.pageX - obj.mouse.offset.x;
@@ -188,7 +187,7 @@
 					x/=me.sys.scale;
 					y/=me.sys.scale;
 				}
-				touches.push({ x: x, y: y });
+				obj.touches.push({ x: x, y: y });
 			}
 			// touch event
 			else {
@@ -199,10 +198,10 @@
 						x/=me.sys.scale;
 						y/=me.sys.scale;
 					}
-					touches.push({ x: x, y: y });
+					obj.touches.push({ x: x, y: y });
 				}
 			}
-			obj.mouse.pos.set(touches[0].x,touches[0].y);
+			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
 		};
 
 	
@@ -314,6 +313,17 @@
 			bind: [3],
 			handlers:{} 
 		};
+		
+		/**
+		 * Array of object containing touch information<br>
+		 * properties : <br>
+		 * x : x position of the touch event in the canvas<br>
+		 * y : y position of the touch event in the canvas<br>
+		 * @public
+		 * @type {Array}
+		 * @name me.input#touches
+		 */		
+		obj.touches = [];
 		
 		/**
 		 * list of mappable keys :
