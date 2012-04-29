@@ -172,7 +172,7 @@
 		 * return false if initialization failed (canvas not supported)
 		 * @name me.video#init
 		 * @function
-		 * @param {String} wrapper the "div" element id to hold the canvas in the HTML file
+		 * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
 		 * @param {Int} width game width
 		 * @param {Int} height game height
 		 * @param {Boolean} [double_buffering] enable/disable double buffering
@@ -186,8 +186,7 @@
 		 *    return;
 		 * }
 		 */
-		api.init = function(wrapperid, game_width, game_height,
-				doublebuffering, scale) {
+		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale) {
 			double_buffering = doublebuffering || false;
 
 			// zoom only work with the double buffering since we 
@@ -197,8 +196,6 @@
 			game_width_zoom = game_width * me.sys.scale;
 			game_height_zoom = game_height * me.sys.scale;
 
-			wrapper = document.getElementById(wrapperid);
-
 			canvas = document.createElement("canvas");
 
 			canvas.setAttribute("width", (game_width_zoom) + "px");
@@ -206,8 +203,17 @@
 			canvas.setAttribute("border", "0px solid black");
 
 			// add our canvas
+			if (wrapperid) {
+				wrapper = document.getElementById(wrapperid);
+			}
+			else {
+				// if wrapperid is not defined (null)
+				// add the canvas to document.body
+				wrapper = document.body;
+			}
 			wrapper.appendChild(canvas);
 
+			
 			// check if WebGL feature is supported & required
 			if (me.sys.enableWebGL && window.WebGLRenderingContext) {
 				// in case the library is not loaded
