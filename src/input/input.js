@@ -175,30 +175,30 @@
 		 * @private
 		 */
 		function updateCoordFromEvent(e) {
-			var x, y;
-			
+
 			// reset the touch array cache
 			obj.touches.length=0;
 			// non touch event (mouse)
 			if (!e.touches) {
-				x = e.pageX - obj.mouse.offset.x;
-				y = e.pageY - obj.mouse.offset.y;
+				var x = e.pageX - obj.mouse.offset.x;
+				var y = e.pageY - obj.mouse.offset.y;
 				if (me.sys.scale != 1.0) {
 					x/=me.sys.scale;
 					y/=me.sys.scale;
 				}
-				obj.touches.push({ x: x, y: y });
+				obj.touches.push({ x: x, y: y, id: 0});
 			}
 			// touch event
 			else {
-				for(var t=0, l=e.changedTouches.length; t<l; t++) {
-					x = e.changedTouches[t].clientX - obj.mouse.offset.x;
-					y = e.changedTouches[t].clientY - obj.mouse.offset.y;
+				for(var i=0, l=e.changedTouches.length; i<l; i++) {
+					var t = e.changedTouches[i];
+					var x = t.clientX - obj.mouse.offset.x;
+					var y = t.clientY - obj.mouse.offset.y;
 					if (me.sys.scale != 1.0) {
 						x/=me.sys.scale;
 						y/=me.sys.scale;
 					}
-					obj.touches.push({ x: x, y: y });
+					obj.touches.push({ x: x, y: y, id: t.identifier });
 				}
 			}
 			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
@@ -323,6 +323,7 @@
 		 * properties : <br>
 		 * x : x position of the touch event in the canvas<br>
 		 * y : y position of the touch event in the canvas<br>
+		 * id : unique finger identifier<br>
 		 * @public
 		 * @type {Array}
 		 * @name me.input#touches
