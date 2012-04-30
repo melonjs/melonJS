@@ -768,7 +768,9 @@
 				me.utils.resetGUID(levelId);
 				
 				// load the level
-				levels[levelId].reset();
+				if (levels[currentLevelIdx]) {
+					levels[currentLevelIdx].reset();
+				}
 				levels[levelId].load();
 			
 				// update current level index

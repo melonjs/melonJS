@@ -36,14 +36,34 @@
 			// map type (only orthogonal format supported)
 			this.orientation = "";
 
-			// a canvas where to draw our map(s)
-			this.tileMapCanvas = null;
-		  
 			// tileset(s)
 			this.tilesets = null;
 			
 		},
-
+		
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		reset : function() {
+			// free background_image
+			this.background_image = null;
+			
+			// reset/clear all layers
+			for ( var i = this.mapLayers.length; i--;) {
+				this.mapLayers[i].layerSurface = null;
+				this.mapLayers[i].layerCanvas = null;
+				this.mapLayers[i].layerData = null;
+				this.mapLayers[i].xLUT = this.yLUT = null
+				this.mapLayers[i].tilesets = this.tileset = null;
+				this.mapLayers[i].objectGroups = null;
+				this.mapLayers[i] = null;
+			};
+			this.initialized = false
+			// call parent reset fct
+			this.parent();
+		},
+		
 		/**
 		 * Load & initialize the Tile Map
 		 * @private
