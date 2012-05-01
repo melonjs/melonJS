@@ -89,16 +89,24 @@
 		 * @name me.gamestat#add
 		 * @public
 		 * @function
-		 * @param {String} name name of the item
+		 * @param {String||Object} name name of the item or hash of items
 		 * @param {int} [val="0"] default value
 		 * @example
 		 * // add a "stars" item
 		 * me.gamestat.add("stars", 0);
 		 */
 		singleton.add = function(name, val) {
-			items[name] = new Stat_Item(val);
-			obj.push(items[name]);
-			objCount++;
+                  var addStat = function(k, v) {
+                    items[k] = new Stat_Item(v);
+                    obj.push(items[k]);
+                    objCount++;
+                  };
+                  if (name.constructor === Object) {
+                    for (var key in name) {
+                      addStat(key, name[key]);
+                    }
+                  }
+                  else { addStat(name, val); }
 		};
 
 		/**
@@ -106,15 +114,22 @@
 		 * @name me.gamestat#updateValue
 		 * @public
 		 * @function
-		 * @param {String} name name of the item
+		 * @param {String||Object} name name of the item or hash of items
 		 * @param {int} val value to be added
 		 * @example
 		 * // update the "stars" item
 		 * me.gamestat.updateValue("stars", 1);
 		 */
 		singleton.updateValue = function(name, value) {
-			if (items[name])
-				items[name].update(value);
+                  var updateStat = function(k, v) {
+                    items[k].update(v);
+                  };
+                  if (name.constructor === Object) {
+                    for (var key in name) {
+                      if (items[key]) { updateStat(key, name[key]); }
+                    }
+                  }
+                  else if (items[name]) { updateStat(name, value); }
 		};
 		
 		/** 
@@ -122,16 +137,23 @@
 		 * @name me.gamestat#setValue 
 		 * @public 
 		 * @function 
-		 * @param {String} name name of the item 
+		 * @param {String||Object} name name of the item or hash of items
 		 * @param {int} val value to be set 
 		 * @example 
 		 * // set the"stars" item 
 		 * me.gamestat.setValue("stars", 1); 
 		 */ 
 		singleton.setValue = function(name, value) { 
-			if (items[name]) 
-				items[name].set(value); 
-		}; 
+                  var setStat = function(k, v) {
+                    items[k].set(v);
+                  };
+                  if (name.constructor === Object) {
+                    for (var key in name) {
+                      if (items[key]) { setStat(key, name[key]); }
+                    }
+                  }
+                  else if (items[name]) { setStat(name, value); }
+		};
 
 		
 		/**
