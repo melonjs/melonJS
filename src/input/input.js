@@ -15,7 +15,7 @@
 	 */
 	me.input = (function() {
 
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		/*---------------------------------------------

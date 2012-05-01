@@ -3,7 +3,7 @@ Version History
 0.9.3
 * General : Better Error management and reporting
 * General : added a dummy console.log for platforms not supporting it
-* General : melonJS now uses Google Closure for libray minification
+* General : melonJS now uses Google Closure for library minification
 * General : Added a global gravity setting that will override entities default value if defined
 * Core : now properly calls all objects onDestroyEvent function when resetting game
 * Core : added the possibility to define a callback when a level is fully loaded
@@ -18,10 +18,10 @@ Version History
 * TMX : fixed level name property not being set, and use it when required
 * LevelDirector : fixed the nextLevel & previousLevel functions
 * Loader : added binary file support
-* Loader : added possibily to dynamically load any ressources (i.e. during the game)
-* AnimationSheet : the entire spritesheet is now use to create the default animation
+* Loader : added possibility to dynamically load any resources (i.e. during the game)
+* AnimationSheet : the entire sprite-sheet is now use to create the default animation
 * Entity: fixed CollisionBox not being properly used on y axis when checking for collision
-* Entity: fixed CollisionBox issue when dealing with subpixel positioning
+* Entity: fixed CollisionBox issue when dealing with sub-pixel positioning
 * Entity: fixed setVelocity not setting y velocity when x velocity is null
 * Entity: added missing properties (GUID, name) in InvisibleEntity
 * Entity: fixed res.obj not defined in InvisibleEntity
