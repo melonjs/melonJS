@@ -1,5 +1,7 @@
 Version History
 ---------------
+0.9.4
+
 0.9.3
 * General : Better Error management and reporting
 * General : added a dummy console.log for platforms not supporting it
