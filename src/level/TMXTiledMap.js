@@ -9,7 +9,10 @@
  */
 
 (function($, undefined) {
-		
+	// some regexp
+	var removepath = /^.*(\\|\/|\:)/;
+	var removeext = /\.[^\.]*$/;
+	
 	/**
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
@@ -137,13 +140,19 @@
 				   this.tilesets.add(new me.TMXTileset(xmlElements.item(i)));
 				   break;
 				}
-				   
-
+				
+				// get image layer information
+				case me.TMX_TAG_IMAGE_LAYER: {
+				    this.mapLayers.push(new me.TMXImageLayer(xmlElements.item(i), zOrder++));
+					break;
+				}
+				
+				
 				// get the layer(s) information
 				case me.TMX_TAG_LAYER: {
 				   // try to identify specific layer type based on the naming convention
 				   var layer_name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
-
+				
 				   // parallax layer
 				   if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
 					  var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
@@ -172,7 +181,7 @@
 				   }
 				   break;
 				}
-				   
+				
 
 				// get the object groups information
 				case me.TMX_TAG_OBJECTGROUP: {
@@ -219,7 +228,6 @@
 	var FlippedVerticallyFlag		= 0x40000000;
 	var FlippedAntiDiagonallyFlag   = 0x20000000;
 
-	
 	/**
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
@@ -426,6 +434,77 @@
 							rect.width, rect.height,    //sw, sh
 							rect.pos.x, rect.pos.y,     //dx, dy
 							rect.width, rect.height);   //dw, dh
+		}
+	});
+	
+	/**
+	 * a TMX Tile Map Object
+	 * Tile QT 0.7.x format
+	 * @class
+	 * @extends me.TiledLayer
+	 * @memberOf me
+	 * @constructor
+	 */
+	me.TMXImageLayer = Object.extend({
+		// constructor
+		init: function(layer, zOrder) {
+			// call the parent
+			this.width = me.XMLParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
+			this.height = me.XMLParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			
+			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
+			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0);
+			
+			this.imagesrc = layer.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
+			
+			this.image = (this.imagesrc) ? me.loader.getImage(this.imagesrc.replace(removepath, '').replace(removeext, '')) : null;
+			
+			if (!this.image) {
+				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
+			}
+			
+			// for displaying order
+			this.z = zOrder;
+					
+			// check if we have any properties 
+			me.TMXUtils.setTMXProperties(this, layer);
+	
+		},
+		
+		/**
+		 * update function
+		 * @private
+		 * @function
+		 */
+		update : function() {
+			return false;
+		},
+		
+		/**
+		 * clear the tile at the specified position
+		 * @private
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
+		 */
+		clearTile : function(x, y) {
+			// do nothing
+		},
+
+		/**
+		 * draw a image layer
+		 * @private
+		 */
+		draw : function(context, rect) {
+			
+			context.drawImage(this.image, 
+							0, //sx
+							0, //sy
+							this.image.width, this.image.height,    //sw, sh
+							0, //dx
+							0, //dy
+							this.image.width, this.image.height);   //dw, dh
 		}
 	});
 	/*---------------------------------------------------------*/
