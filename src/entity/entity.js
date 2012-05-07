@@ -288,13 +288,7 @@
 					}
 				},
 
-				/**
-				 * @private
-				 */
-				clearTile : function(x, y) {
-					;// do nothing !
-				},
-
+		
 				/**
 				 * this method is called by the @see me.game object
 				 * @protected

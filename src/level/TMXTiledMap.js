@@ -481,16 +481,6 @@
 			return false;
 		},
 		
-		/**
-		 * clear the tile at the specified position
-		 * @private
-		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position 
-		 */
-		clearTile : function(x, y) {
-			// do nothing
-		},
 
 		/**
 		 * draw a image layer
