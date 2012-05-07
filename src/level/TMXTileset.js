@@ -17,59 +17,213 @@
 	/**************************************************/
 	
 	/**
-	 * an object containing all tileset
+	 * a basic tile object
+	 * @class
+	 * @extends me.Rect
+	 * @memberOf me
+	 * @constructor
+	 * @param {int} x x index of the Tile in the map
+	 * @param {int} y y index of the Tile in the map
+	 * @param {int} w Tile width
+	 * @param {int} h Tile height
+	 * @param {int} tileId tileId>
+	 */
+	me.Tile = me.Rect.extend({
+		 /**
+		  * tileId
+		  * @public
+		  * @type int
+		  * @name me.Tile#tileId
+		  */
+		tileId : null,
+		
+		/** @private */
+		init : function(x, y, w, h, tileId) {
+			this.parent(new me.Vector2d(x * w, y * h), w, h);
+			// tileID
+			this.tileId = tileId;
+			// Tile row / col pos
+			this.row = x;
+			this.col = y;
+		}
+	});
+
+	/**
+	 * a Tile Set Object
 	 * @class
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXTilesetGroup = Object.extend({
+	me.Tileset = Object.extend({
 		// constructor
-		init: function () {
-			this.tilesets = [];
+		init: function (name, tilewidth, tileheight, spacing, margin, imagesrc) {
+			this.name = name;
+			this.tilewidth = tilewidth;
+			this.tileheight = tileheight;
+			this.spacing = spacing;
+			this.margin = margin;
+			this.image = (imagesrc) ? me.loader.getImage(me.utils.getFilename(imagesrc)) : null;
+			
+			if (!this.image) {
+				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+			}
+			
+			
+			// tile types
+			this.type = {
+				SOLID : "solid",
+				PLATFORM : "platform",
+				L_SLOPE : "lslope",
+				R_SLOPE : "rslope",
+				LADDER : "ladder",
+				BREAKABLE : "breakable"
+			};
+
+			// tile properties
+			// (collidable, etc..)
+			this.TileProperties = [];
+			
+			// a cache for offset value
+			this.tileXOffset = [];
+			this.tileYOffset = [];
+
+			// number of tiles per horizontal line 
+			if (this.image) {
+				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+			}
 		},
 		
-		//add a tileset to the tileset group
-		add : function(tileset) {
-			this.tilesets.push(tileset);
+		// return the list of property for a tile
+		getPropertyList: function() {
+			return {
+				// collectable tiles
+				//isCollectable	: false,
+				// collidable tiles
+				isCollidable : false,
+				isSolid : false,
+				isPlatform : false,
+				isSlope : false,
+				isLeftSlope : false,
+				isRightSlope : false,
+				isLadder : false,
+				isBreakable : false
+			};
 		},
-
-		//return the tileset at the specified index
-		getTilesetByIndex : function(i) {
-			return this.tilesets[i];
-		},
-	   
+		
+		// 
+		// e.g. getTileProperty (gid)	
 		/**
-		 * return the tileset corresponding to the specified id <br>
-		 * will throw an exception if no matching tileset is found
-		 * @name me.TMXTilesetGroup#getTilesetByGid
+		 * return the properties of the specified tile <br>
+		 * the function will return an object with the following boolean value :<br>
+		 * - isCollidable<br>
+		 * - isSolid<br>
+		 * - isPlatform<br>
+		 * - isSlope <br>
+		 * - isLeftSlope<br>
+		 * - isRightSlope<br>
+		 * - isLadder<br>
+		 * - isBreakable<br>
+		 * @name me.Tileset#getTileProperties
 		 * @public
 		 * @function
-		 * @param {Integer} gid 
-		 * @return {me.TMXTileset} corresponding tileset
+		 * @param {Integer} tileId 
+		 * @return {Object}
 		 */
-		getTilesetByGid : function(gid) {
-			var invalidRange = -1;
-			// cycle through all tilesets
-			for ( var i = 0, len = this.tilesets.length; i < len; i++) {
-				// return the corresponding tileset if matching
-				if (this.tilesets[i].contains(gid))
-					return this.tilesets[i];
-				// typically indicates a layer with no asset loaded (collision?)
-				if (this.tilesets[i].firstgid == this.tilesets[i].lastgid) {
-					if (gid >= this.tilesets[i].firstgid)
-					// store the id if the [firstgid .. lastgid] is invalid
-					invalidRange = i;
-				}
-			}
-			// return the tileset with the invalid range
-			if (invalidRange!=-1)
-				return this.tilesets[invalidRange];
-			else
-			throw "no matching tileset found for gid " + gid;
-		}
+		getTileProperties: function(tileId) {
+			return this.TileProperties[tileId];
+		},
 		
+		//return collidable status of the specifiled tile
+
+		isTileCollidable : function(tileId) {
+			return this.TileProperties[tileId].isCollidable;
+		},
+
+		/*
+		//return collectable status of the specifiled tile
+		isTileCollectable : function (tileId) {
+			return this.TileProperties[tileId].isCollectable;
+		},
+		 */
+
+		//return an Image Object with the specified tile
+		getTileImage : function(tileId) {
+			// create a new image object
+			var image = me.video.createCanvasSurface(this.tilewidth, this.tileheight);
+			this.drawTile(image, 0, 0, tileId);
+			return image.canvas;
+		},
+		
+		// return the x offset of the specified tile in the tileset image
+		getTileOffsetX : function(tileId) {
+			if (this.tileXOffset[tileId] == null) {
+				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			}
+			return this.tileXOffset[tileId];
+		},
+		
+		// return the y offset of the specified tile in the tileset image
+		getTileOffsetY : function(tileId) {
+			if (this.tileYOffset[tileId] == null) {
+				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+			}
+			return this.tileYOffset[tileId];
+		},
+		
+
+		// draw the x,y tile
+		drawTile : function(context, dx, dy, tileId, flipx, flipy, flipad) {
+			// check if any transformation is required
+			if (flipx || flipy || flipad) {
+				var m11 = 1; // Horizontal scaling factor
+				var m12 = 0; // Vertical shearing factor
+				var m21 = 0; // Horizontal shearing factor
+				var m22 = 1; // Vertical scaling factor
+				var mx	= dx; 
+				var my	= dy;
+				// set initial value to zero since we use a transform matrix
+				dx = dy = 0;
+				
+				if (flipad){
+					// Use shearing to swap the X/Y axis
+					m11=0;
+					m12=1;
+					m21=1;
+					m22=0;
+					// Compensate for the swap of image dimensions
+					my += this.tileheight - this.tilewidth;
+				}
+				if (flipx){
+					m11 = -m11;
+					m21 = -m21;
+					mx += flipad ? this.tileheight : this.tilewidth;
+					
+				}
+				if (flipy){
+					m12 = -m12;
+					m22 = -m22;
+					my += flipad ? this.tilewidth : this.tileheight;
+				}
+				// set the transform matrix
+				context.setTransform(m11, m12, m21, m22, mx, my);
+			}
+			
+			// draw the tile
+			context.drawImage(this.image, 
+							  this.getTileOffsetX(tileId), this.getTileOffsetY(tileId),
+							  this.tilewidth, this.tileheight, 
+							  dx, dy, 
+							  this.tilewidth, this.tileheight);
+
+			if  (flipx || flipy || flipad)  {
+				// restore the transform matrix to the normal one
+				context.setTransform(1, 0, 0, 1, 0, 0);
+			}
+		}
 	});
 	
+
 	
     /**
 	 * a TMX Tile Set Object
@@ -155,6 +309,61 @@
 		}
 
 	});
+	
+	/**
+	 * an object containing all tileset
+	 * @class
+	 * @memberOf me
+	 * @constructor
+	 */
+	me.TMXTilesetGroup = Object.extend({
+		// constructor
+		init: function () {
+			this.tilesets = [];
+		},
+		
+		//add a tileset to the tileset group
+		add : function(tileset) {
+			this.tilesets.push(tileset);
+		},
+
+		//return the tileset at the specified index
+		getTilesetByIndex : function(i) {
+			return this.tilesets[i];
+		},
+	   
+		/**
+		 * return the tileset corresponding to the specified id <br>
+		 * will throw an exception if no matching tileset is found
+		 * @name me.TMXTilesetGroup#getTilesetByGid
+		 * @public
+		 * @function
+		 * @param {Integer} gid 
+		 * @return {me.TMXTileset} corresponding tileset
+		 */
+		getTilesetByGid : function(gid) {
+			var invalidRange = -1;
+			// cycle through all tilesets
+			for ( var i = 0, len = this.tilesets.length; i < len; i++) {
+				// return the corresponding tileset if matching
+				if (this.tilesets[i].contains(gid))
+					return this.tilesets[i];
+				// typically indicates a layer with no asset loaded (collision?)
+				if (this.tilesets[i].firstgid == this.tilesets[i].lastgid) {
+					if (gid >= this.tilesets[i].firstgid)
+					// store the id if the [firstgid .. lastgid] is invalid
+					invalidRange = i;
+				}
+			}
+			// return the tileset with the invalid range
+			if (invalidRange!=-1)
+				return this.tilesets[invalidRange];
+			else
+			throw "no matching tileset found for gid " + gid;
+		}
+		
+	});
+	
 	
 	/*---------------------------------------------------------*/
 	// END END END

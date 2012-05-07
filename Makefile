@@ -55,13 +55,14 @@ MODULE = $(srcdir)core.js\
 	 $(srcdir)input/input.js\
 	 $(srcdir)utils/utils.js\
 	 $(srcdir)utils/stat.js\
-	 $(srcdir)level/level.js\
 	 $(srcdir)level/TMXConstants.js\
 	 $(srcdir)level/TMXUtils.js\
 	 $(srcdir)level/TMXObjectGroup.js\
 	 $(srcdir)level/TMXTileset.js\
 	 $(srcdir)level/TMXRenderer.js\
+	 $(srcdir)level/TMXLayer.js\
 	 $(srcdir)level/TMXTiledMap.js\
+	 $(srcdir)level/LevelDirector.js\
 	 $(srcdir)utils/tween.js
 
 # Debug Target name

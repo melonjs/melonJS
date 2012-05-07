@@ -10,6 +10,179 @@
 
 (function($, undefined) {
 	
+	
+	/**
+	 * a basic level object skeleton
+	 * @class
+	 * @memberOf me
+	 * @constructor
+	 */
+	me.TileMap = Object.extend({
+		// constructor
+		init: function(x, y) {
+			this.pos = new me.Vector2d(x, y);
+			this.z = 0;
+			
+			/**
+			 * name of the tilemap
+			 * @public
+			 * @type String
+			 * @name me.TileMap#name
+			 */
+			this.name = null;
+			
+			/**
+			 * width of the tilemap in Tile
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#width
+			 */
+			this.width = 0;
+			
+			/**
+			 * height of the tilemap in Tile
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#height
+			 */
+			this.height = 0;
+
+			/**
+			 * width of the tilemap in pixels
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#realwidth
+			 */
+			this.realwidth = -1;
+			
+			/**
+			 * height of the tilemap in pixels
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#realheight
+			 */
+			this.realheight = -1;
+
+			/**
+			 * Tile width
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#tilewidth
+			 */
+			this.tilewidth = 0;
+
+			/**
+			 * Tile height
+			 * @public
+			 * @type Int
+			 * @name me.TileMap#tileheight
+			 */
+			this.tileheight = 0;
+
+			// corresponding tileset for this map
+			this.tilesets = null;
+
+			// map layers
+			this.mapLayers = [];
+
+			// map Object
+			this.objectGroups = [];
+
+			// loading flag
+			this.initialized = false;
+		},
+
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		reset : function() {
+			this.tilesets = null;
+			this.mapLayers.length = 0;
+			this.objectGroups.length = 0;
+			this.initialized = false;
+		},
+
+		/**
+		 * return the specified object group
+		 * @private	
+		 */
+		getObjectGroupByName : function(name) {
+			return this.objectGroups[name];
+		},
+
+		/**
+		 * return all the object group
+		 * @private		
+		 */
+		getObjectGroups : function() {
+			return this.objectGroups;
+		},
+
+		/**
+		 * return the specified layer object
+		 * @name me.TileMap#getLayerByName
+		 * @public
+		 * @function
+		 * @param {String} name Layer Name 
+		 * @return {me.TiledLayer} Layer Object
+		 */
+		getLayerByName : function(name) {
+			var layer = null;
+
+			// normalize name
+			name = name.trim().toLowerCase();
+			for ( var i = this.mapLayers.length; i--;) {
+				if (this.mapLayers[i].name.toLowerCase().contains(name)) {
+					layer = this.mapLayers[i];
+					break;
+				}
+			};
+
+			// return a fake collision layer if not found
+			if ((name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
+				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,	me.game.currentLevel.realheight);
+			}
+
+			return layer;
+		},
+
+		/**
+		 * clear the tile at the specified position from all layers
+		 * @name me.TileMap#clearTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
+		 */
+		clearTile : function(x, y) {
+			// add all layers
+			for ( var i = this.mapLayers.length; i--;) {
+				// that are visible
+				if (this.mapLayers[i].visible && (this.mapLayers[i] instanceof me.TiledLayer ) ) {
+					this.mapLayers[i].clearTile(x, y);
+				}
+			};
+		},
+
+		/**
+		 * add all visible layers to the game mngr
+		 * @private
+		 */
+		addTo : function(gameMngr) {
+			// add all layers
+			for ( var i = this.mapLayers.length; i--;) {
+				// that are visible
+				if (this.mapLayers[i].visible) {
+					gameMngr.add(this.mapLayers[i]);
+				}
+			};
+		}
+
+	});
+
+	
+	
 	/**
 	 * a TMX Tile Map Object
 	 * Tile QT 0.7.x format
@@ -212,222 +385,7 @@
 		}
 
 	});
-	
-	
-	// bitmaks to check for flipped & rotated tiles
-	var FlippedHorizontallyFlag		= 0x80000000;
-	var FlippedVerticallyFlag		= 0x40000000;
-	var FlippedAntiDiagonallyFlag   = 0x20000000;
-
-	/**
-	 * a TMX Tile Map Object
-	 * Tile QT 0.7.x format
-	 * @class
-	 * @extends me.TiledLayer
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.TMXLayer = me.TiledLayer.extend({
-		// constructor
-		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
-			// call the parent
-			this.parent(me.XMLParser.getIntAttribute(layer, me.TMX_TAG_WIDTH), 
-						me.XMLParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT),
-						tilewidth, 
-						tileheight,
-						// tilesets should exist here !
-						tilesets, 
-						zOrder);
-			// get invalidated when the viewport is changed
-			this.orientation = orientation;
-			this.layerInvalidated = true;
-			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0);
-				
-			// check if we have any properties 
-			me.TMXUtils.setTMXProperties(this, layer);
-
-			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
-			if (this.isCollisionMap) {
-				// force the layer as invisible
-				this.visible = false;
-			}
-
-			// link to the gameviewport;
-			this.vp = me.game.viewport;
-
-			// store the data information
-			var xmldata = layer.getElementsByTagName(me.TMX_TAG_DATA)[0];
-			var encoding = me.XMLParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
-			var compression = me.XMLParser.getStringAttribute(xmldata, me.TMX_TAG_COMPRESSION, null);
-
-			// make sure this is not happening
-			if (encoding == '')
-				encoding = null;
-			if (compression == '')
-				compression = null;
-
-			// create a canvas where to draw our layer
-			if (this.visible) {
-				// set the right renderer
-				switch (this.orientation)
-				{
-					case "orthogonal": {
-					  this.renderer = new me.TMXOrthogonalRenderer(true, this.width, this.height, this.tilewidth, this.tileheight);
-					  break;
-					}
-					case "isometric": {
-					  this.renderer = new me.TMXIsometricRenderer(true, this.width, this.height , this.tilewidth, this.tileheight);
-					  break;
-					}
-			
-					// if none found, throw an exception
-					default : {
-						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
-					}
-				}
-
-				this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
-				this.layerCanvas = this.layerSurface.canvas;
-
-				// set alpha value for this layer
-				if (this.opacity > 0.0 && this.opacity < 1.0) {
-					this.layerSurface.globalAlpha = this.opacity;
-				}
-			}
-
-			if (this.visible || this.isCollisionMap) {
-				// initialize the layer lookup table (only in case of collision map)
-				this.initArray(this.isCollisionMap);
-
-				// populate our level with some data
-				this.fillArray(xmldata, encoding, compression);
-			}
-		},
 		
-		/**
-		 * Build the tiled layer
-		 * @private
-		 */
-		fillArray : function(xmldata, encoding, compression) {
-			// check if data is compressed
-			switch (compression) {
-			 
-			 // no compression
-			 case null: {
-				// decode data based on encoding type
-				switch (encoding) {
-				// XML encoding
-				   case null: {
-					  var data = xmldata.getElementsByTagName(me.TMX_TAG_TILE);
-					  break;
-				   }
-				   // CSV encoding
-				   case me.TMX_TAG_CSV:
-					  // Base 64 encoding
-				   case me.TMX_TAG_ATTR_BASE64: {
-					  // Merge all childNodes[].nodeValue into a single one
-					  var nodeValue = '';
-					  for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
-						 nodeValue += xmldata.childNodes[i].nodeValue;
-					  }
-					  // and then decode them
-					  if (encoding == me.TMX_TAG_ATTR_BASE64)
-						 var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-					  else
-						 var data = me.utils.decodeCSV(nodeValue, this.width);
-
-					  // ensure nodeValue is deallocated
-					  nodeValue = null;
-					  break;
-				   }
-					  
-				   default:
-					  throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-					  break;
-				}
-				
-			 break;
-			 }
-				
-			 default:
-				throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
-				break;
-			}
-
-			var idx = 0;
-			var flipx, flipy, flipad;
-			var gid;
-
-			// set everything
-			for ( var y = 0 ; y <this.height; y++) {
-				for ( var x = 0; x <this.width; x++) {
-					// get the value of the gid
-					gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
-
-					// check if tile is horizontally or vertically flipped
-					// (this should be save somewhere!)
-					flipx = (gid & FlippedHorizontallyFlag);
-					flipy = (gid & FlippedVerticallyFlag);
-					flipad = (gid & FlippedAntiDiagonallyFlag);
-
-					// clear out the flags
-					gid &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
-
-					// fill the array										
-					if (gid > 0) {
-						// set the tile in the data array
-						this.setTile(x, y, gid);
-						// switch to the right tileset
-						if (!this.tileset.contains(gid)) {
-							this.tileset = this.tilesets.getTilesetByGid(gid);
-						}
-					   	// draw the corresponding tile
-						if (this.visible) {
-							this.renderer.drawTile(this.layerSurface, x, y, gid, this.tileset, flipx, flipy, flipad);
-						}
-					}
-				}
-			}
-
-			// make sure data is deallocated :)
-			data = null;
-		},
-
-		/**
-		 * clear the tile at the specified position
-		 * @name me.TMXLayer#clearTile
-		 * @public
-		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position 
-		 */
-		clearTile : function(x, y) {
-			// call the parent function
-			this.parent(x, y);
-			// erase the corresponding area in the canvas
-			if (this.visible) {
-				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
-			}
-		},
-
-		/**
-		 * draw a tileset layer
-		 * @private
-		 */
-		draw : function(context, rect) {
-			
-			context.drawImage(this.layerCanvas, 
-							this.vp.pos.x + rect.pos.x, //sx
-							this.vp.pos.y + rect.pos.y, //sy
-							rect.width, rect.height,    //sw, sh
-							rect.pos.x, rect.pos.y,     //dx, dy
-							rect.width, rect.height);   //dw, dh
-		}
-	});
-	
 
 	/*---------------------------------------------------------*/
 	// END END END

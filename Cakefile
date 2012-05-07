@@ -15,13 +15,14 @@ files = [
 	'./src/input/input.js',
 	'./src/utils/utils.js',
 	'./src/utils/stat.js',
-	'./src/level/level.js',
 	'./src/level/TMXConstants.js',
 	'./src/level/TMXUtils.js',
 	'./src/level/TMXObjectGroup.js',	
 	'./src/level/TMXTileset.js',
 	'./src/level/TMXRenderer.js',
+	'./src/level/TMXLayer.js',
 	'./src/level/TMXTiledMap.js',
+	'./src/level/LevelDirector.js',
 	'./src/utils/tween.js']
 
 version = require './src/version.js'
