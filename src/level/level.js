@@ -269,7 +269,56 @@
 			return res;
 		}
 	});
+	
+	/**
+	 * a generic Image Layer Object
+	 * @class
+	 * @memberOf me
+	 * @constructor
+	 */
+	 me.ImageLayer = Object.extend({
+		// constructor
+		init: function(name, width, height, imagesrc, zOrder) {
+			this.width = width;
+			this.height = height;
+			
+			this.name = name;
+			this.visible = true;
+			this.opacity = 1.0;
+			
+			this.image = (imagesrc) ? me.loader.getImage(me.utils.getFilename(imagesrc)) : null;
+			
+			if (!this.image) {
+				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
+			}
+			
+			// for displaying order
+			this.z = zOrder;
+		},
+		
+		/**
+		 * update function
+		 * @private
+		 * @function
+		 */
+		update : function() {
+			return false;
+		},
+		
 
+		/**
+		 * draw the image layer
+		 * @private
+		 */
+		draw : function(context, rect) {
+			context.drawImage(this.image, 
+							  rect.left, rect.top,		//sx, sy
+							  rect.width, rect.height,	//sw, sh
+							  rect.left, rect.top,		//dx, dy
+							  rect.width, rect.height);	//dw, dh
+		}
+	});	
+	
 	/**
 	 * a generic tile based layer object
 	 * @class

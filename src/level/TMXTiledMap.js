@@ -113,16 +113,18 @@
 				   if (this.background_color) {
 					  this.visible = true;
 					  // convert to a rgb string (needed for Opera)
-					  this.background_color = me.utils
-							.HexToRGB(this.background_color);
+					  this.background_color = me.utils.HexToRGB(this.background_color);
 				   }
 
 				   // check if a backgroud image is defined
 				   if (this.background_image) {
-					  this.visible = true;
-					  // retrieve the corresponding image ressource
-					  this.background_image = me.loader.getImage(this.background_image);
+						// add a new image layer
+						this.mapLayers.push(new me.ImageLayer("background_image", 
+															  this.width, this.height, 
+															  this.background_image, 
+															  zOrder++));
 				   }
+				   
 				   break;
 				}
 				   
@@ -140,7 +142,25 @@
 				
 				// get image layer information
 				case me.TMX_TAG_IMAGE_LAYER: {
-				    this.mapLayers.push(new me.TMXImageLayer(xmlElements.item(i), zOrder++));
+					
+					// extract layer information
+					var iln = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
+					var ilw = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
+					var ilh = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
+					var ilsrc = xmlElements.item(i).getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
+					
+					// create the layer
+					var ilayer = new me.ImageLayer(iln, ilw, ilh, ilsrc, zOrder++);
+				    
+					// set some additional flags
+					ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+					ilayer.opacity = me.XMLParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
+					
+					// check if we have any properties 
+					me.TMXUtils.setTMXProperties(ilayer, xmlElements.item(i));
+	
+					// add the new layer
+					this.mapLayers.push(ilayer);
 					break;
 				}
 				
@@ -209,12 +229,6 @@
 				context.fillStyle = this.background_color;
 				// clear the specified rect
 				context.fillRect(rect.left, rect.top, rect.width, rect.height);
-			}
-			if (this.background_image) {
-				context.drawImage(this.background_image, rect.left, rect.top,
-						rect.width, rect.height, rect.left, rect.top, rect.width,
-						rect.height);
-
 			}
 		}
 	});
@@ -434,66 +448,7 @@
 		}
 	});
 	
-	/**
-	 * a TMX Tile Map Object
-	 * Tile QT 0.7.x format
-	 * @class
-	 * @extends me.TiledLayer
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.TMXImageLayer = Object.extend({
-		// constructor
-		init: function(layer, zOrder) {
-			// call the parent
-			this.width = me.XMLParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
-			this.height = me.XMLParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
-			
-			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0);
-			
-			this.imagesrc = layer.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
-			
-			this.image = (this.imagesrc) ? me.loader.getImage(me.utils.getFilename(this.imagesrc)) : null;
-			
-			if (!this.image) {
-				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
-			}
-			
-			// for displaying order
-			this.z = zOrder;
-					
-			// check if we have any properties 
-			me.TMXUtils.setTMXProperties(this, layer);
-	
-		},
-		
-		/**
-		 * update function
-		 * @private
-		 * @function
-		 */
-		update : function() {
-			return false;
-		},
-		
 
-		/**
-		 * draw a image layer
-		 * @private
-		 */
-		draw : function(context, rect) {
-			
-			context.drawImage(this.image, 
-							0, //sx
-							0, //sy
-							this.image.width, this.image.height,    //sw, sh
-							0, //dx
-							0, //dy
-							this.image.width, this.image.height);   //dw, dh
-		}
-	});
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
