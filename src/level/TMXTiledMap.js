@@ -9,9 +9,6 @@
  */
 
 (function($, undefined) {
-	// some regexp
-	var removepath = /^.*(\\|\/|\:)/;
-	var removeext = /\.[^\.]*$/;
 	
 	/**
 	 * a TMX Tile Map Object
@@ -458,7 +455,7 @@
 			
 			this.imagesrc = layer.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
 			
-			this.image = (this.imagesrc) ? me.loader.getImage(this.imagesrc.replace(removepath, '').replace(removeext, '')) : null;
+			this.image = (this.imagesrc) ? me.loader.getImage(me.utils.getFilename(this.imagesrc)) : null;
 			
 			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");

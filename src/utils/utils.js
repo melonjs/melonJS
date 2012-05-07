@@ -73,7 +73,8 @@
 	me.utils = (function() {
 		// hold public stuff in our singletong
 		var api = {};
-
+		
+		
 		/*---------------------------------------------
 			
 		   PRIVATE STUFF
@@ -86,7 +87,10 @@
 		// guid default value
 		var GUID_base  = "";
 		var GUID_index = 0;
-
+		
+		// regexp to deal with file name & path
+		var removepath = /^.*(\\|\/|\:)/;
+		var removeext = /\.[^\.]*$/;
 
 		/*---------------------------------------------
 			
@@ -144,7 +148,18 @@
 			}
 			return result;
 		};
+		
+		/**
+		 * return the filename portion of the path without the extension<br>
+		 *
+		 * @param  {String} path Full path containing the filename
+		 * @return {String} Filename
+		 */
+		api.getFilename = function(path) {
+			return path.replace(removepath, '').replace(removeext, '');
+		};
 
+		
 		/* ---
 		 
 			enable the nocache mechanism

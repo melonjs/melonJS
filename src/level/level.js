@@ -6,9 +6,6 @@
  */
 
 (function($, undefined) {
-	// some regexp
-	var removepath = /^.*(\\|\/|\:)/;
-	var removeext = /\.[^\.]*$/;
 
 	// some custom level constants
 	me.LevelConstants = {
@@ -63,8 +60,7 @@
 			this.tileheight = tileheight;
 			this.spacing = spacing;
 			this.margin = margin;
-			this.image = (imagesrc) ? me.loader.getImage(imagesrc.replace(
-					removepath, '').replace(removeext, '')) : null;
+			this.image = (imagesrc) ? me.loader.getImage(me.utils.getFilename(imagesrc)) : null;
 			
 			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
