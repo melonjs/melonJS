@@ -271,6 +271,45 @@
 	});
 	
 	/**
+	 * a generic Color Layer Object
+	 * @class
+	 * @memberOf me
+	 * @constructor
+	 */
+	 me.ColorLayer = Object.extend({
+		// constructor
+		init: function(name, color, zOrder) {
+			this.name = name;
+			this.color = me.utils.HexToRGB(color);
+			// for displaying order
+			this.z = zOrder;
+			
+			this.visible = true;
+			this.opacity = 1.0;
+		},
+		
+		/**
+		 * update function
+		 * @private
+		 * @function
+		 */
+		update : function() {
+			return false;
+		},
+
+		/**
+		 * draw the color layer
+		 * @private
+		 */
+		draw : function(context, rect) {
+			context.fillStyle = this.color;
+			// clear the specified rect
+			context.fillRect(rect.left, rect.top, rect.width, rect.height);
+		}
+	});	
+
+	
+	/**
 	 * a generic Image Layer Object
 	 * @class
 	 * @memberOf me
@@ -672,10 +711,6 @@
 		 * @private
 		 */
 		addTo : function(gameMngr) {
-			// add ourself (for background color)
-			if (this.visible) {
-				gameMngr.add(this);
-			}
 			// add all layers
 			for ( var i = this.mapLayers.length; i--;) {
 				// that are visible
@@ -683,15 +718,8 @@
 					gameMngr.add(this.mapLayers[i]);
 				}
 			};
-		},
-
-		/**
-		 * a dummy update function
-		 * @private
-		 */
-		 update : function() {
-			return false;
 		}
+
 	});
 	/************************************************************************************/
 	/*                                                                                  */

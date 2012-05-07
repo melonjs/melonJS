@@ -46,9 +46,6 @@
 		 * @private
 		 */
 		reset : function() {
-			// free background_image
-			this.background_image = null;
-			
 			// reset/clear all layers
 			for ( var i = this.mapLayers.length; i--;) {
 				this.mapLayers[i].layerSurface = null;
@@ -106,17 +103,14 @@
 				   // set the map properties (if any)
 				   me.TMXUtils.setTMXProperties(this, map);
 
-				   // ensure the visible flag is set to false, by default
-				   this.visible = false;
-
-				   // check if a backgroud color is defined  
+				   // check if a background color is defined  
 				   if (this.background_color) {
-					  this.visible = true;
-					  // convert to a rgb string (needed for Opera)
-					  this.background_color = me.utils.HexToRGB(this.background_color);
+					  this.mapLayers.push(new me.ColorLayer("background_color", 
+															this.background_color, 
+															zOrder++));
 				   }
 
-				   // check if a backgroud image is defined
+				   // check if a background image is defined
 				   if (this.background_image) {
 						// add a new image layer
 						this.mapLayers.push(new me.ImageLayer("background_image", 
@@ -124,7 +118,6 @@
 															  this.background_image, 
 															  zOrder++));
 				   }
-				   
 				   break;
 				}
 				   
@@ -216,21 +209,8 @@
 			// flag as loaded
 			this.initialized = true;
 
-		},
-
-		/**
-		 * draw the tile map
-		 * this is only called if the background_color or background_image property is defined
-		 * @private
-		 */
-		draw : function(context, rect) {
-			if (this.background_color) {
-				// set the background color
-				context.fillStyle = this.background_color;
-				// clear the specified rect
-				context.fillRect(rect.left, rect.top, rect.width, rect.height);
-			}
 		}
+
 	});
 	
 	
