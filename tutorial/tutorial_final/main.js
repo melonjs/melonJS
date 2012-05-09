@@ -29,7 +29,7 @@ var g_resources= [
 	{name: "cling",               type: "audio", src: "data/audio/",	channel : 2},
 	{name: "stomp",               type: "audio", src: "data/audio/",	channel : 1},
 	{name: "jump",                type: "audio", src: "data/audio/",	channel : 1},
-	{name: "DST-InertExponent",   type: "audio", src: "data/audio/",	channel : 1},
+	{name: "dst-inertexponent",   type: "audio", src: "data/audio/",	channel : 1},
 	 // title screen
 	{name: "title_screen",        type:"image",	src: "data/GUI/title_screen.png"},
 ]; 
