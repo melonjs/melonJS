@@ -1077,7 +1077,6 @@
 				
 				/**
 				 * cap the entity velocity to the specified value<br>
-				 * (!) this will only cap the y velocity for now(!)
 				 * @param {Int} x max velocity on x axis
 				 * @param {Int} y max velocity on y axis
 				 * @protected
