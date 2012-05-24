@@ -417,6 +417,25 @@
 				 * @name me.SpriteObject#visible
 				 */
 				visible : true,
+				
+				/**
+				 * Set the angle (in Radians) of a sprite to rotate it <br>
+				 * WARNING: rotating sprites decreases performances
+				 * @public
+				 * @type Number
+				 * @name me.SpriteObject#angle
+				 */
+				angle: 0,
+
+				/**
+				 * Define the sprite anchor point<br>
+				 * This is used when using rotation, or sprite flipping<br>
+				 * with the default anchor point being the center of the sprite
+				 * @public
+				 * @type me.Vector2d
+				 * @name me.SpriteObject#anchorPoint
+				 */
+				anchorPoint: null,
 
 				// image reference
 				image : null,
@@ -460,6 +479,9 @@
 
 					// set the default sprite index & offset
 					this.offset = new me.Vector2d(0, 0);
+					
+					// set the default anchor point (middle of the sprite)
+					this.anchorPoint = new me.Vector2d(0.5, 0.5);
 					
 					// sprite count (line, col)
 					this.spritecount = new me.Vector2d(~~(this.image.width / this.width), 
@@ -602,13 +624,16 @@
 					
 					var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
 
-					if (this.scaleFlag) {
+					if ((this.scaleFlag) || (this.angle!==0)) {
 						// translate to the middle of the sprite
-						context.translate(xpos + this.hWidth, ypos + this.hHeight);
+						context.translate(xpos + (this.width * this.anchorPoint.x), ypos + (this.height * this.anchorPoint.y));
 						// scale
-						context.scale(this.scale.x, this.scale.y);
+						if (this.scaleFlag)
+							context.scale(this.scale.x, this.scale.y);
+						if (this.angle!==0)
+							context.rotate(this.angle);
 						// translate back to upper left coordinates
-						context.translate(-this.hWidth, -this.hHeight);
+						context.translate(-(this.width * this.anchorPoint.x), -(this.height * this.anchorPoint.y));
 						// reset coordinates
 						xpos = ypos = 0;
 					}
@@ -619,7 +644,7 @@
 									xpos, ypos,
 									this.width, this.height);
 
-					if (this.scaleFlag) {
+					if ((this.scaleFlag) || (this.angle!==0)) {
 						// restore the transform matrix to the normal one
 						context.setTransform(1, 0, 0, 1, 0, 0);
 					}
