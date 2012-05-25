@@ -625,17 +625,18 @@
 					var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
 
 					if ((this.scaleFlag) || (this.angle!==0)) {
-						// translate to the middle of the sprite
-						context.translate(xpos + (this.width * this.anchorPoint.x), ypos + (this.height * this.anchorPoint.y));
+						// calculate pixel pos of the anchor point
+						var ax = this.width * this.anchorPoint.x, ay = this.height * this.anchorPoint.y;
+						// translate to the defined anchor point
+						context.translate(xpos + ax, ypos + ay);
 						// scale
 						if (this.scaleFlag)
 							context.scale(this.scale.x, this.scale.y);
 						if (this.angle!==0)
 							context.rotate(this.angle);
-						// translate back to upper left coordinates
-						context.translate(-(this.width * this.anchorPoint.x), -(this.height * this.anchorPoint.y));
-						// reset coordinates
-						xpos = ypos = 0;
+						// reset coordinates back to upper left coordinates
+						xpos = -ax;
+						ypos = -ay;
 					}
 					
 					context.drawImage(this.image, 
