@@ -128,6 +128,11 @@
 			this.x = v.x;
 			this.y = v.y;
 		},
+		
+		// return true if two vectors are the same
+		equal : function(/**me.Vector2d*/ v) {
+			return ((this.x === v.x) && (this.y === v.y));
+		},
 
 		/** @return {int} */
 		length : function() {
