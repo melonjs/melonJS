@@ -271,16 +271,18 @@
 				   this.tileheight = me.XMLParser.getIntAttribute(map, me.TMX_TAG_TILEHEIGHT);
 				   this.realwidth = this.width * this.tilewidth;
 				   this.realheight = this.height * this.tileheight;
+				   this.backgroundcolor = me.XMLParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
 				   this.z = zOrder++;
 
 				   // set the map properties (if any)
 				   me.TMXUtils.setTMXProperties(this, map);
-
-				   // check if a background color is defined  
+					
+				   // check if a user-defined background color is defined  
+				   this.background_color = this.backgroundcolor ? this.backgroundcolor : this.background_color;
 				   if (this.background_color) {
-					  this.mapLayers.push(new me.ColorLayer("background_color", 
-															this.background_color, 
-															zOrder++));
+						this.mapLayers.push(new me.ColorLayer("background_color", 
+															  this.background_color, 
+															  zOrder++));
 				   }
 
 				   // check if a background image is defined

@@ -55,6 +55,7 @@
 	me.TMX_TAG_Y                   = "y";
 	me.TMX_TAG_WIDTH               = "width";
 	me.TMX_TAG_HEIGHT              = "height";
+	me.TMX_BACKGROUND_COLOR        = "backgroundcolor";
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
