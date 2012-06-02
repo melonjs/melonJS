@@ -191,7 +191,15 @@
 		 * @type {Boolean}
 		 * @memberOf me.sys 
 		 */
-		stopOnAudioError : true
+		stopOnAudioError : true,
+		
+		/**
+		 * Specify either to pause the game when losing focus or not<br>
+		 * default value : true<br>
+		 * @type {Boolean}
+		 * @memberOf me.sys 
+		 */
+		pauseOnBlur : true
 	};
 
 	// add me to the global window variable
@@ -2032,33 +2040,31 @@
 		obj.init = function() {
 			// set the embedded loading screen
 			obj.set(obj.LOADING, me.loadingScreen);
-
+			
 			// set pause action on losing focus
 			$.addEventListener("blur", function() {
 				// only in case we are not loading stuff
-				if (_state != obj.LOADING) {
+				if (!me.sys.useNativeAnimFrame && me.sys.pauseOnBlur && (_state != obj.LOADING)) {
 					obj.pause(true);
-
-					// callback?
-					if (obj.onPause)
-						obj.onPause();
-
 				}
+				// callback?
+				if (obj.onPause)
+					obj.onPause();
+
 			}, false);
 			// set play action on gaining focus
 			$.addEventListener("focus", function() {
 				// only in case we are not loading stuff
-				if (_state != obj.LOADING) {
+				if (!me.sys.useNativeAnimFrame && me.sys.pauseOnBlur && (_state != obj.LOADING)) {
 					obj.resume(true);
-
-					// callback?
-					if (obj.onResume)
-						obj.onResume();
 
 					// force repaint
 					me.game.repaint();
-
 				}
+				// callback?
+				if (obj.onResume)
+					obj.onResume();
+
 			}, false);
 
 			// cache the FPS information
