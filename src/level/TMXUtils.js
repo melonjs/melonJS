@@ -42,7 +42,7 @@
 					}
 					// check if numeric
 					else if (value.isNumeric()) {
-						value = parseInt(value);
+						value = Number(value);
 					}
 					// add the new prop to the object prop list
 					obj[propname] = value;
