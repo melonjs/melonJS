@@ -120,7 +120,7 @@
 			}
 			else {
 				// parallax / scrolling image
-				if (!this.lastpos.equal(this.viewport.pos)) {
+				if (!this.lastpos.equals(this.viewport.pos)) {
 					// viewport changed
 					this.offset.x = (this.imagewidth + this.offset.x + ((this.viewport.pos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
 					this.offset.y = (this.imageheight + this.offset.y + ((this.viewport.pos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
