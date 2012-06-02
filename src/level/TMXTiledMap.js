@@ -343,7 +343,6 @@
 						// extract layer information
 						var ilw = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
 						var ilh = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
-						var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
 						
 						// get the layer properties
 						var properties = {};
@@ -357,13 +356,16 @@
 						// create the layer				
 						var ilayer = new me.ImageLayer(layer_name, ilw, ilh, properties.imagesrc, zOrder++, lratio );
 						
-						// apply other mandatory properties
+						// apply default TMX properties
 						ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
 						ilayer.opacity = me.XMLParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
 						
+						// apply other user defined properties
+						me.TMXUtils.mergeProperties(ilayer, properties, false);
+												
 						// default increment for next layer
 						lratio += lratio * lratio;
-						
+
 						// add the new layer
 						this.mapLayers.push(ilayer);
 					}

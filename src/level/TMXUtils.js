@@ -52,6 +52,18 @@
 
 		};
 		
+		/**
+		 * basic function to merge object properties
+		 * @private
+		 */
+		api.mergeProperties = function(dest, src, overwrite) {
+			for(var p in src){
+				if(overwrite || dest[p]===undefined) dest[p]= src[p];
+			}
+			return dest;
+		};
+
+		
 		// return our object
 		return api;
 
