@@ -1334,8 +1334,7 @@
 		 * @function
 		 */
 		api.update = function() {
-			// update the Frame counter
-			me.timer.update();
+			
 			// previous rect (if any)
 			var oldRect = null;
 			// loop through our objects
@@ -1719,7 +1718,10 @@
 		 * @private
 		 */
 		onUpdateFrame : function() {
-			// update the game object
+			// update the frame counter
+			me.timer.update();
+			
+			// update all games object
 			me.game.update();
 
 			// draw the game objects
