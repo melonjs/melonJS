@@ -19,14 +19,17 @@
 	 * @class
 	 * @memberOf me
 	 * @constructor
+	 * @param {name}    name    layer name
+	 * @param {String}  color   in hexadecimal "RRGGBB" format
+	 * @param {int}     z       z position
 	 */
 	 me.ColorLayer = Object.extend({
 		// constructor
-		init: function(name, color, zOrder) {
+		init: function(name, color, z) {
 			this.name = name;
 			this.color = me.utils.HexToRGB(color);
 			// for displaying order
-			this.z = zOrder;
+			this.z = z;
 			
 			this.visible = true;
 			this.opacity = 1.0;
@@ -58,25 +61,51 @@
 	 * @class
 	 * @memberOf me
 	 * @constructor
+	 * @param {name}   name        layer name
+	 * @param {int}    width       layer width (not used)
+	 * @param {int}    height      layer height (not used)
+	 * @param {String} image       image name (as defined in the asset list)
+	 * @param {int}    z           z position
+	 * @param {float}  [ratio=0]   scrolling ratio to be applied (apply by multiplying the viewport delta position by the defined ratio)
 	 */
 	 me.ImageLayer = Object.extend({
 		// constructor
-		init: function(name, width, height, imagesrc, zOrder) {
-			this.width = width;
-			this.height = height;
-			
+		init: function(name, width, height, imagesrc, z, ratio) {
+			// layer name
 			this.name = name;
-			this.visible = true;
-			this.opacity = 1.0;
-			
+						
+			// get the corresponding image (throw an exception if not found)
 			this.image = (imagesrc) ? me.loader.getImage(me.utils.getFilename(imagesrc)) : null;
-			
 			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
 			}
 			
-			// for displaying order
-			this.z = zOrder;
+			// width & height (are the ones passed as parameter usefull?)
+			this.width = width;
+			this.height = height;
+			
+			
+			this.imagewidth = this.image.width;
+			this.imageheight = this.image.height;
+			
+			// displaying order
+			this.z = z;
+			
+			// if ratio !=0 scrolling image
+			this.ratio = ratio || 0;
+			// reference to the viewport
+			this.viewport = me.game.viewport;
+			// last position of the viewport
+			this.lastpos = this.viewport.pos.clone();
+			// current base offset when drawing the image
+			this.offset = new me.Vector2d(0,0);
+			
+			// make it visible
+			this.visible = true;
+			
+			// default opacity
+			this.opacity = 1.0;
+			
 		},
 		
 		/**
@@ -85,7 +114,21 @@
 		 * @function
 		 */
 		update : function() {
-			return false;
+			if (this.ratio===0) {
+				// static image
+				return false;
+			}
+			else {
+				// parallax / scrolling image
+				if (!this.lastpos.equal(this.viewport.pos)) {
+					// viewport changed
+					this.offset.x = (this.imagewidth + this.offset.x + ((this.viewport.pos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
+					this.offset.y = (this.imageheight + this.offset.y + ((this.viewport.pos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
+					this.lastpos.setV(this.viewport.pos);
+					return true;
+				}
+				return false
+			}
 		},
 		
 
@@ -94,11 +137,48 @@
 		 * @private
 		 */
 		draw : function(context, rect) {
-			context.drawImage(this.image, 
-							  rect.left, rect.top,		//sx, sy
-							  rect.width, rect.height,	//sw, sh
-							  rect.left, rect.top,		//dx, dy
-							  rect.width, rect.height);	//dw, dh
+			
+			// check if transparency
+			if (this.opacity < 1.0) {
+				context.globalAlpha = this.opacity;
+			}
+			
+			// if not scrolling ratio define, static image
+			if (this.ratio===0) {
+				// static image
+				sw = Math.min(rect.width, this.imagewidth);
+				sh = Math.min(rect.height, this.imageheight);
+				
+				context.drawImage(this.image, 
+								  rect.left, rect.top,		//sx, sy
+								  sw,		 sh,			//sw, sh
+								  rect.left, rect.top,		//dx, dy
+								  sw,		 sh);			//dw, dh
+			}
+			// parallax / scrolling image
+			else {
+				// TODO : REWRITE + VERTICAL SCROLLING
+				var dx = 0;
+				var sx = ~~this.offset.x;
+				var sw = this.imagewidth - ~~this.offset.x;
+				do {
+					context.drawImage(this.image, 
+									  sx, 0, 		// sx, sy
+									  sw, this.imageheight,
+									  dx, 0, 		// dx, dy
+									  sw, this.imageheight);
+
+					
+					dx += sw;
+					//dw += sw;
+					sx = 0; // x_offset
+					sw = Math.min(this.imagewidth, this.viewport.width - dx);
+				} while ((dx < this.viewport.width));
+			}
+			
+			// restore default alpha value
+			context.globalAlpha = 1.0;
+			
 		}
 	});	
 	

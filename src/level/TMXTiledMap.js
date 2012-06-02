@@ -244,9 +244,9 @@
 				return;
 
 			// to automatically increment z index
-			var zOrder = 0,
-			// and parallax layer speed
-			pLayer = 1;
+			var zOrder = 0;
+			// default layer scrolling ratio
+			var lratio = 0.25; // 1/4 
 
 			// init the parser
 			me.XMLParser.parseFromString(this.xmlMap);
@@ -333,34 +333,43 @@
 				
 				// get the layer(s) information
 				case me.TMX_TAG_LAYER: {
-				   // try to identify specific layer type based on the naming convention
-				   var layer_name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
+					// try to identify specific layer type based on the naming convention
+					var layer_name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
 				
-				   // parallax layer
-				   if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
-					  var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+					// keep this for now for backward-compatibility
+					if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
+						
+						
+						// extract layer information
+						var ilw = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
+						var ilh = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
+						var visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+						
+						// get the layer properties
+						var properties = {};
+						me.TMXUtils.setTMXProperties(properties, xmlElements.item(i));
 
-					  // only add if visible
-					  if (visible) {
-						 // check the object properties 
-						 var tprop = {};
-						 me.TMXUtils.setTMXProperties(tprop, xmlElements.item(i));
-
-						 // check if we already have a parallax layer
-						 var parallax_layer = this.getLayerByName(me.LevelConstants.PARALLAX_MAP);
-
-						 if (!parallax_layer) {
-							parallax_layer = new me.ParallaxBackgroundEntity(zOrder);
-							this.mapLayers.push(parallax_layer);
-						 }
-						 // add the new parallax layer
-						 parallax_layer.addLayer(tprop.imagesrc, pLayer++, zOrder++);
-					  }
-				   }
-				   else {
+						// cherck if a ratio property is defined
+						if (properties.ratio) {
+							lratio = properties.ratio;
+						}
+						
+						// create the layer				
+						var ilayer = new me.ImageLayer(layer_name, ilw, ilh, properties.imagesrc, zOrder++, lratio );
+						
+						// apply other mandatory properties
+						ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+						ilayer.opacity = me.XMLParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
+						
+						// default increment for next layer
+						lratio += lratio * lratio;
+						
+						// add the new layer
+						this.mapLayers.push(ilayer);
+					}
+					else {
 					  // regular layer or collision layer
 					  this.mapLayers.push(new me.TMXLayer(xmlElements.item(i), this.tilewidth, this.tileheight, this.orientation, this.tilesets, zOrder++));
-					  zOrder++;
 				   }
 				   break;
 				}
