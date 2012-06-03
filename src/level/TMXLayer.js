@@ -157,23 +157,34 @@
 			}
 			// parallax / scrolling image
 			else {
-				// TODO : REWRITE + VERTICAL SCROLLING
-				var dx = 0;
 				var sx = ~~this.offset.x;
-				var sw = this.imagewidth - ~~this.offset.x;
+				var sy = ~~this.offset.y;
+				
+				var dx = 0;
+				var dy = 0;				
+				
+				var sw = Math.min(this.imagewidth - ~~this.offset.x, this.viewport.width);
+				var sh = Math.min(this.imageheight - ~~this.offset.y, this.viewport.height);
+				  
 				do {
-					context.drawImage(this.image, 
-									  sx, 0, 		// sx, sy
-									  sw, this.imageheight,
-									  dx, 0, 		// dx, dy
-									  sw, this.imageheight);
-
-					
+					do {
+						context.drawImage(this.image, 
+										  sx, sy, 		// sx, sy
+										  sw, sh,
+										  dx, dy,		// dx, dy
+										  sw, sh);
+						
+						sy = 0;
+						dy += sh;
+						sh = Math.min(this.imageheight, this.viewport.height - dy);
+					} while( dy < this.viewport.height);
+					sx = 0;
 					dx += sw;
-					//dw += sw;
-					sx = 0; // x_offset
 					sw = Math.min(this.imagewidth, this.viewport.width - dx);
-				} while ((dx < this.viewport.width));
+					sy = ~~this.offset.y;
+					dy = 0;
+					sh = Math.min(this.imageheight - ~~this.offset.y, this.viewport.height);
+				} while( dx < this.viewport.width);
 			}
 			
 			// restore default alpha value
