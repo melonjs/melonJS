@@ -22,19 +22,21 @@ and currently features :
 - A basic set of Object Entities (to be extended)
 - Basic animation management
 - A state manager (to easily manage loading, menu, options, in-game state)
-- Tiled map format version 0.7.x integration for easy level design
+- Tiled map format version +0.7.x integration for easy level design
 	- Uncompressed Plain, Base64 and CSV encoded XML tilemap loading
-	- Orthogonal tilemap
+	- Orthogonal tilemap with built-in collision management
+	- Isometric, Perspective tilemap support
 	- Multiple layers (multiple background/Foreground, collision and "Parallax" layers)
 	- Multiple Tileset support
 	- Tileset Transparency settings
 	- Layers Alpha settings
 	- Tiled Objects
-	- Flipped Tiles
+	- Flipped & rotated Tiles
 	- Dynamic Layer and Object/Group ordering
-	- Dynamic Entity loading 
+	- Dynamic Entity loading
 	- Solid, Platform, Slope and Breakable Tiles
 - System & bitmap fonts
+- Mouse and Touch device support (with mouse emulation)
 - some basic GUI elements
 - a customizable loader, etc
 
