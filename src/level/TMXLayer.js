@@ -178,13 +178,18 @@
 						dy += sh;
 						sh = Math.min(this.imageheight, this.height - dy);
 					} while( dy < this.height);
-					sx = 0;
 					dx += sw;
+					if (dx >= this.width ) {
+						// done ("end" of the viewport)
+						break;
+					}
+					// else update required var for next iteration
+					sx = 0;
 					sw = Math.min(this.imagewidth, this.width - dx);
 					sy = ~~this.offset.y;
 					dy = 0;
 					sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
-				} while( dx < this.width);
+				} while( true );
 			}
 			
 			// restore default alpha value
