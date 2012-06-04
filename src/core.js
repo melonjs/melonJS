@@ -1180,23 +1180,28 @@
 				alert("WARNING : no collision map detected");
 			}
 
-			// add ou tile map object to the game mngr
-			api.currentLevel.addTo(me.game);
-
+			
 			if ((api.currentLevel.realwidth < api.viewport.getWidth()) ||
 			    (api.currentLevel.realheight < api.viewport.getHeight())) {
 				throw "melonJS: map size should be at least equal to the defined display size";
 			}
-			
 			// change the viewport limit
 			api.viewport.setBounds(api.currentLevel.realwidth, api.currentLevel.realheight);
+			
+			// add all defined layers
+			var layers = api.currentLevel.getLayers();
+			for ( var i = layers.length; i--;) {
+				if (layers[i].visible) {
+					// only if visible
+					api.add(layers[i]);
+				}
+			};
 
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
 			for ( var group = 0; group < objectGroups.length; group++) {
 				for ( var entity = 0; entity < objectGroups[group].objects.length; entity++) {
-					api.addEntity(objectGroups[group].objects[entity],
-							objectGroups[group].z);
+					api.addEntity(objectGroups[group].objects[entity], objectGroups[group].z);
 				}
 			}
 

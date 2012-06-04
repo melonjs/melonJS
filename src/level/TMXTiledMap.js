@@ -118,6 +118,17 @@
 		getObjectGroups : function() {
 			return this.objectGroups;
 		},
+		
+		/**
+		 * return all the existing layers
+		 * @name me.TileMap#getLayers
+		 * @public
+		 * @function
+		 * @return {me.TiledLayer[]} Array of Layers
+		 */
+		getLayers : function() {
+			return this.mapLayers;
+		},
 
 		/**
 		 * return the specified layer object
@@ -163,22 +174,8 @@
 					this.mapLayers[i].clearTile(x, y);
 				}
 			};
-		},
-
-		/**
-		 * add all visible layers to the game mngr
-		 * @private
-		 */
-		addTo : function(gameMngr) {
-			// add all layers
-			for ( var i = this.mapLayers.length; i--;) {
-				// that are visible
-				if (this.mapLayers[i].visible) {
-					gameMngr.add(this.mapLayers[i]);
-				}
-			};
 		}
-
+	
 	});
 
 	
