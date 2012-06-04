@@ -122,9 +122,9 @@
 				// and pass the level id as parameter
 				me.utils.resetGUID(levelId);
 				
-				// load the level
-				if (levels[currentLevelIdx]) {
-					levels[currentLevelIdx].reset();
+				// reset the current (previous) level
+				if (levels[obj.getCurrentLevelId()]) {
+					levels[obj.getCurrentLevelId()].reset();
 				}
 				levels[levelId].load();
 			

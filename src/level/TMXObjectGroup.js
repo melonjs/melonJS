@@ -68,6 +68,16 @@
 			}
 		},
 		
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			// clear all allocated objects
+			this.objects = null;
+		},
+		
 		getObjectCount : function() {
 			return this.objects.length;
 		},

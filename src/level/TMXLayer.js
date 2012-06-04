@@ -34,7 +34,16 @@
 			this.visible = true;
 			this.opacity = 1.0;
 		},
-		
+
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			;// nothing to do here
+		},
+
 		/**
 		 * update function
 		 * @private
@@ -106,6 +115,19 @@
 			// default opacity
 			this.opacity = 1.0;
 			
+		},
+		
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			// clear all allocated objects
+			this.image = null;
+			this.lastpos = null;
+			this.viewport = null;
+			this.offset = null;
 		},
 		
 		/**
@@ -214,7 +236,15 @@
 			this.isCollisionMap = true;
 
 		},
-
+	
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			; // nothing to do here
+		},
 
 		/**
 		 * only test for the world limit
@@ -290,6 +320,19 @@
 
 			// the default tileset
 			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
+		},
+		
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			// clear all allocated objects
+			this.layerData = null;
+			this.xLUT = this.yLUT = null
+			this.tileset = null;
+			this.tilesets = null;
 		},
 
 		/**
@@ -528,6 +571,21 @@
 				// populate our level with some data
 				this.fillArray(xmldata, encoding, compression);
 			}
+		},
+		
+		/**
+		 * reset function
+		 * @private
+		 * @function
+		 */
+		reset : function() {
+			// clear all allocated objects
+			this.layerCanvas = null;
+			this.layerSurface = null;
+			this.renderer = null;
+			this.vp = null;
+			// call the parent reset function
+			this.parent();
 		},
 		
 		/**

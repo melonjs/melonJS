@@ -219,19 +219,22 @@
 		 * @private
 		 */
 		reset : function() {
-			// reset/clear all layers
-			for ( var i = this.mapLayers.length; i--;) {
-				this.mapLayers[i].layerSurface = null;
-				this.mapLayers[i].layerCanvas = null;
-				this.mapLayers[i].layerData = null;
-				this.mapLayers[i].xLUT = this.yLUT = null
-				this.mapLayers[i].tilesets = this.tileset = null;
-				this.mapLayers[i].objectGroups = null;
-				this.mapLayers[i] = null;
-			};
-			this.initialized = false
-			// call parent reset fct
-			this.parent();
+			if (this.initialized === true) {
+				// reset/clear all layers
+				for ( var i = this.mapLayers.length; i--;) {
+					this.mapLayers[i].reset();
+					this.mapLayers[i] = null;
+				};
+				// reset object groups
+				for ( var i = this.objectGroups.length; i--;) {
+					this.objectGroups[i].reset();
+					this.objectGroups[i] = null;
+				};
+				// call parent reset function
+				this.parent();
+				// set back as not initialized
+				this.initialized = false;
+			}
 		},
 		
 		/**
