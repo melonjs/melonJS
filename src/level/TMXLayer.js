@@ -80,11 +80,6 @@
 				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
 			}
 			
-			// width & height (are the ones passed as parameter usefull?)
-			this.width = width;
-			this.height = height;
-			
-			
 			this.imagewidth = this.image.width;
 			this.imageheight = this.image.height;
 			
@@ -99,6 +94,11 @@
 			this.lastpos = this.viewport.pos.clone();
 			// current base offset when drawing the image
 			this.offset = new me.Vector2d(0,0);
+			
+			// set layer width & height to the viewport size
+			// (are the ones passed as parameter usefull?)
+			this.width = me.game.viewport.width;
+			this.height = me.game.viewport.height;
 			
 			// make it visible
 			this.visible = true;
@@ -163,8 +163,8 @@
 				var dx = 0;
 				var dy = 0;				
 				
-				var sw = Math.min(this.imagewidth - ~~this.offset.x, this.viewport.width);
-				var sh = Math.min(this.imageheight - ~~this.offset.y, this.viewport.height);
+				var sw = Math.min(this.imagewidth - ~~this.offset.x, this.width);
+				var sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
 				  
 				do {
 					do {
@@ -176,15 +176,15 @@
 						
 						sy = 0;
 						dy += sh;
-						sh = Math.min(this.imageheight, this.viewport.height - dy);
-					} while( dy < this.viewport.height);
+						sh = Math.min(this.imageheight, this.height - dy);
+					} while( dy < this.height);
 					sx = 0;
 					dx += sw;
-					sw = Math.min(this.imagewidth, this.viewport.width - dx);
+					sw = Math.min(this.imagewidth, this.width - dx);
 					sy = ~~this.offset.y;
 					dy = 0;
-					sh = Math.min(this.imageheight - ~~this.offset.y, this.viewport.height);
-				} while( dx < this.viewport.width);
+					sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
+				} while( dx < this.width);
 			}
 			
 			// restore default alpha value
