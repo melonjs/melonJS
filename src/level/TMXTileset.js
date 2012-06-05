@@ -9,12 +9,19 @@
  */
 
 (function($, undefined) {
-		
+	
+	
 	/**************************************************/
 	/*                                                */
 	/*      Tileset Management                        */
 	/*                                                */
 	/**************************************************/
+	
+	// bitmask constants to check for flipped & rotated tiles
+	var FlippedHorizontallyFlag    = 0x80000000;
+	var FlippedVerticallyFlag      = 0x40000000;
+	var FlippedAntiDiagonallyFlag  = 0x20000000;
+
 	
 	/**
 	 * a basic tile object
@@ -40,11 +47,38 @@
 		/** @private */
 		init : function(x, y, w, h, tileId) {
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
-			// tileID
-			this.tileId = tileId;
+			
 			// Tile row / col pos
 			this.row = x;
 			this.col = y;
+			
+			/**
+			 * True if the tile is flipped horizontally<br>
+			 * @public
+			 * @type Boolean
+			 * @name me.Tile#flipX
+			 */
+			this.flipX  = (tileId & FlippedHorizontallyFlag);
+			
+			/**
+			 * True if the tile is flipped vertically<br>
+			 * @public
+			 * @type Boolean
+			 * @name me.Tile#flipY
+			 */
+			this.flipY  = (tileId & FlippedVerticallyFlag);
+			
+			/**
+			 * True if the tile is flipped anti-diagonally<br>
+			 * @public
+			 * @type Boolean
+			 * @name me.Tile#flipAD
+			 */
+			this.flipAD = (tileId & FlippedAntiDiagonallyFlag);
+			
+			// clear out the flags and set the tileId
+			this.tileId = tileId & ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
+
 		}
 	});
 

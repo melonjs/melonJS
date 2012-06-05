@@ -6,13 +6,6 @@
  */
 
 (function($, undefined) {
-
-	
-	// bitmaks to check for flipped & rotated tiles
-	var FlippedHorizontallyFlag		= 0x80000000;
-	var FlippedVerticallyFlag		= 0x40000000;
-	var FlippedAntiDiagonallyFlag   = 0x20000000;
-
 	
 	/**
 	 * a generic Color Layer Object
@@ -639,35 +632,24 @@
 			}
 
 			var idx = 0;
-			var flipx, flipy, flipad;
-			var gid;
-
 			// set everything
 			for ( var y = 0 ; y <this.height; y++) {
 				for ( var x = 0; x <this.width; x++) {
 					// get the value of the gid
-					gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
-
-					// check if tile is horizontally or vertically flipped
-					// (this should be save somewhere!)
-					flipx = (gid & FlippedHorizontallyFlag);
-					flipy = (gid & FlippedVerticallyFlag);
-					flipad = (gid & FlippedAntiDiagonallyFlag);
-
-					// clear out the flags
-					gid &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
-
+					var gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
 					// fill the array										
 					if (gid > 0) {
+						// create a new tile object
+						var tmxTile = new me.Tile(x, y, this.tilewidth, this.tileheight, gid);
 						// set the tile in the data array
-						this.setTile(x, y, gid);
+						this.layerData[x][y] = tmxTile;
 						// switch to the right tileset
-						if (!this.tileset.contains(gid)) {
-							this.tileset = this.tilesets.getTilesetByGid(gid);
+						if (!this.tileset.contains(tmxTile.tileId)) {
+							this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
 						}
 					   	// draw the corresponding tile
 						if (this.visible) {
-							this.renderer.drawTile(this.layerSurface, x, y, gid, this.tileset, flipx, flipy, flipad);
+							this.renderer.drawTile(this.layerSurface, x, y, tmxTile, this.tileset);
 						}
 					}
 				}

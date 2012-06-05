@@ -31,7 +31,7 @@
 		 * draw the a Tile on the map
 		 * @private
 		 */
-		drawTile : function(context, x, y, gid, tileset, flipX, flipY) {
+		drawTile : function(context, x, y, tile, tileset) {
 			// do nothing
 		}
 		
@@ -49,13 +49,13 @@
 		 * draw the tile map
 		 * @private
 		 */
-		drawTile : function(context, x, y, gid, tileset, flipX, flipY, flipad) {
+		drawTile : function(context, x, y, tile, tileset) {
 			// draw the tile
 			tileset.drawTile(context, 
 							 tileset.tileoffset.x + x * this.tilewidth,
 							 tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
-							 gid - tileset.firstgid, 
-							 flipX, flipY, flipad);
+							 tile.tileId - tileset.firstgid, 
+							 tile.flipX, tile.flipY, tile.flipAD);
 		}
 	});
 	
@@ -72,13 +72,13 @@
 		 * draw the tile map
 		 * @private
 		 */
-		drawTile : function(context, x, y, gid, tileset, flipX, flipY, flipad) {
+		drawTile : function(context, x, y, tile, tileset) {
 			// draw the tile
 			tileset.drawTile(context, 
 							 ((this.width-1) * tileset.tilewidth + (x-y) * tileset.tilewidth>>1), 
 							 (-tileset.tilewidth + (x+y) * tileset.tileheight>>2),
-							 gid - tileset.firstgid, 
-							 flipX, flipY, flipad);
+							 tile.tileId  - tileset.firstgid, 
+							 tile.flipX, tile.flipY, tile.flipAD);
 		}
 	});
 
