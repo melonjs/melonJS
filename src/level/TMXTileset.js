@@ -45,12 +45,14 @@
 		tileId : null,
 		
 		/** @private */
-		init : function(x, y, w, h, tileId) {
+		init : function(x, y, w, h, gid) {
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
 			
 			// Tile row / col pos
 			this.row = x;
 			this.col = y;
+			
+			this.tileId = gid;
 			
 			/**
 			 * True if the tile is flipped horizontally<br>
@@ -58,7 +60,7 @@
 			 * @type Boolean
 			 * @name me.Tile#flipX
 			 */
-			this.flipX  = (tileId & FlippedHorizontallyFlag);
+			this.flipX  = (this.tileId & FlippedHorizontallyFlag);
 			
 			/**
 			 * True if the tile is flipped vertically<br>
@@ -66,7 +68,7 @@
 			 * @type Boolean
 			 * @name me.Tile#flipY
 			 */
-			this.flipY  = (tileId & FlippedVerticallyFlag);
+			this.flipY  = (this.tileId & FlippedVerticallyFlag);
 			
 			/**
 			 * True if the tile is flipped anti-diagonally<br>
@@ -74,10 +76,18 @@
 			 * @type Boolean
 			 * @name me.Tile#flipAD
 			 */
-			this.flipAD = (tileId & FlippedAntiDiagonallyFlag);
+			this.flipAD = (this.tileId & FlippedAntiDiagonallyFlag);
+			
+			/**
+			 * Global flag that indicates if the tile is flipped<br>
+			 * @public
+			 * @type Boolean
+			 * @name me.Tile#flipped
+			 */
+			this.flipped = this.flipX || this.flipY || this.flipAD;
 			
 			// clear out the flags and set the tileId
-			this.tileId = tileId & ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
+			this.tileId &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
 
 		}
 	});
@@ -180,14 +190,6 @@
 			return this.TileProperties[tileId].isCollectable;
 		},
 		 */
-
-		//return an Image Object with the specified tile
-		getTileImage : function(tileId) {
-			// create a new image object
-			var image = me.video.createCanvasSurface(this.tilewidth, this.tileheight);
-			this.drawTile(image, 0, 0, tileId);
-			return image.canvas;
-		},
 		
 		// return the x offset of the specified tile in the tileset image
 		getTileOffsetX : function(tileId) {
@@ -203,58 +205,8 @@
 				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
 			}
 			return this.tileYOffset[tileId];
-		},
-		
-
-		// draw the x,y tile
-		drawTile : function(context, dx, dy, tileId, flipx, flipy, flipad) {
-			// check if any transformation is required
-			if (flipx || flipy || flipad) {
-				var m11 = 1; // Horizontal scaling factor
-				var m12 = 0; // Vertical shearing factor
-				var m21 = 0; // Horizontal shearing factor
-				var m22 = 1; // Vertical scaling factor
-				var mx	= dx; 
-				var my	= dy;
-				// set initial value to zero since we use a transform matrix
-				dx = dy = 0;
-				
-				if (flipad){
-					// Use shearing to swap the X/Y axis
-					m11=0;
-					m12=1;
-					m21=1;
-					m22=0;
-					// Compensate for the swap of image dimensions
-					my += this.tileheight - this.tilewidth;
-				}
-				if (flipx){
-					m11 = -m11;
-					m21 = -m21;
-					mx += flipad ? this.tileheight : this.tilewidth;
-					
-				}
-				if (flipy){
-					m12 = -m12;
-					m22 = -m22;
-					my += flipad ? this.tilewidth : this.tileheight;
-				}
-				// set the transform matrix
-				context.setTransform(m11, m12, m21, m22, mx, my);
-			}
-			
-			// draw the tile
-			context.drawImage(this.image, 
-							  this.getTileOffsetX(tileId), this.getTileOffsetY(tileId),
-							  this.tilewidth, this.tileheight, 
-							  dx, dy, 
-							  this.tilewidth, this.tileheight);
-
-			if  (flipx || flipy || flipad)  {
-				// restore the transform matrix to the normal one
-				context.setTransform(1, 0, 0, 1, 0, 0);
-			}
 		}
+
 	});
 	
 
@@ -340,7 +292,69 @@
 		 */
 		contains : function(gid) {
 			return (gid >= this.firstgid && gid <= this.lastgid)
+		},
+		
+		//return an Image Object with the specified tile
+		getTileImage : function(tmxTile) {
+			// create a new image object
+			var image = me.video.createCanvasSurface(this.tilewidth, this.tileheight);
+			this.drawTile(image, 0, 0, tmxTile);
+			return image.canvas;
+		},
+
+		// draw the x,y tile
+		drawTile : function(context, dx, dy, tmxTile) {
+			// check if any transformation is required
+			if (tmxTile.flipped) {
+				var m11 = 1; // Horizontal scaling factor
+				var m12 = 0; // Vertical shearing factor
+				var m21 = 0; // Horizontal shearing factor
+				var m22 = 1; // Vertical scaling factor
+				var mx	= dx; 
+				var my	= dy;
+				// set initial value to zero since we use a transform matrix
+				dx = dy = 0;
+				
+				if (tmxTile.flipAD){
+					// Use shearing to swap the X/Y axis
+					m11=0;
+					m12=1;
+					m21=1;
+					m22=0;
+					// Compensate for the swap of image dimensions
+					my += this.tileheight - this.tilewidth;
+				}
+				if (tmxTile.flipX){
+					m11 = -m11;
+					m21 = -m21;
+					mx += tmxTile.flipAD ? this.tileheight : this.tilewidth;
+					
+				}
+				if (tmxTile.flipY){
+					m12 = -m12;
+					m22 = -m22;
+					my += tmxTile.flipAD ? this.tilewidth : this.tileheight;
+				}
+				// set the transform matrix
+				context.setTransform(m11, m12, m21, m22, mx, my);
+			}
+			
+			// get the local tileset id
+			var tileid = tmxTile.tileId - this.firstgid;
+			
+			// draw the tile
+			context.drawImage(this.image, 
+							  this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
+							  this.tilewidth, this.tileheight, 
+							  dx, dy, 
+							  this.tilewidth, this.tileheight);
+
+			if  (tmxTile.flipped)  {
+				// restore the transform matrix to the normal one
+				context.setTransform(1, 0, 0, 1, 0, 0);
+			}
 		}
+
 
 	});
 	

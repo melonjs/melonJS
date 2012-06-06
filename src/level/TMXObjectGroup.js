@@ -120,8 +120,11 @@
 				// adjust y coordinates (bug in tile 0.6.2?)
 				this.y -= this.height;
 
+				// the object corresponding tile 
+				var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
+
 				// get the corresponding tile into our object
-				this.image = tileset.getTileImage(this.gid - tileset.firstgid);
+				this.image = tileset.getTileImage(tmxTile);
 			} 
 			else {
 				this.width = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);

@@ -497,14 +497,14 @@
 						// tilesets should exist here !
 						tilesets, 
 						zOrder);
-			// get invalidated when the viewport is changed
+						
+			// additional TMX flags
 			this.orientation = orientation;
-			this.layerInvalidated = true;
 			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
 			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0);
 				
-			// check if we have any properties 
+			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
 
 			// detect if the layer is a collision map
