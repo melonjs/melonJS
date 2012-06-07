@@ -212,42 +212,6 @@
 				colPos : null,
 
 				/**
-				 * left coordinate of the Rectange<br>
-				 * takes in account the adjusted size of the rectangle (if set)
-				 * @public
-				 * @type Int
-				 * @name me.Rect#left
-				 */
-				left : null,
-
-				/**
-				 * right coordinate of the Rectange<br>
-				 * takes in account the adjusted size of the rectangle (if set)
-				 * @public
-				 * @type Int
-				 * @name me.Rect#right
-				 */
-				right : null,
-
-				/**
-				 * top coordinate of the Rectange<br>
-				 * takes in account the adjusted size of the rectangle (if set)
-				 * @public
-				 * @type Int
-				 * @name me.Rect#top
-				 */
-				top : null,
-
-				/**
-				 * bottom coordinate of the Rectange<br>
-				 * takes in account the adjusted size of the rectangle (if set)
-				 * @public
-				 * @type Int
-				 * @name me.Rect#bottom
-				 */
-				bottom : null,
-
-				/**
 				 * width of the Rectange
 				 * @public
 				 * @type Int
@@ -292,24 +256,52 @@
 
 					
 					// some properties to ease my life when getting the rectangle coordinates /**
+					/**
+					 * left coordinate of the Rectange<br>
+					 * takes in account the adjusted size of the rectangle (if set)
+					 * @public
+					 * @type Int
+					 * @name me.Rect#left
+					 */
 					Object.defineProperty(this, "left", {
 						get : function() {
 							return this.pos.x;
 						},
 						configurable : true
 					});
+					/**
+					 * right coordinate of the Rectange<br>
+					 * takes in account the adjusted size of the rectangle (if set)
+					 * @public
+					 * @type Int
+					 * @name me.Rect#right
+					 */
 					Object.defineProperty(this, "right", {
 						get : function() {
 							return this.pos.x + this.width;
 						},
 						configurable : true
 					});
+					/**
+					 * top coordinate of the Rectange<br>
+					 * takes in account the adjusted size of the rectangle (if set)
+					 * @public
+					 * @type Int
+					 * @name me.Rect#top
+					 */
 					Object.defineProperty(this, "top", {
 						get : function() {
 							return this.pos.y;
 						},
 						configurable : true
 					});
+					/**
+					 * bottom coordinate of the Rectange<br>
+					 * takes in account the adjusted size of the rectangle (if set)
+					 * @public
+					 * @type Int
+					 * @name me.Rect#bottom
+					 */
 					Object.defineProperty(this, "bottom", {
 						get : function() {
 							return this.pos.y + this.height;
