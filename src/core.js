@@ -710,14 +710,13 @@
 	function _TinyXMLParser() {
 		var parserObj = {
 			xmlDoc : null,
-			parser : null,
-
+	
 			// parse a xml from a string (xmlhttpObj.responseText)
 			parseFromString : function(textxml) {
 				// get a reference to the requested corresponding xml file 
 				if ($.DOMParser) {
-					this.parser = new DOMParser();
-					this.xmlDoc = this.parser.parseFromString(textxml, "text/xml");
+					var parser = new DOMParser();
+					this.xmlDoc = parser.parseFromString(textxml, "text/xml");
 				} else // Internet Explorer (untested!)
 				{
 					this.xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
@@ -760,7 +759,6 @@
 			// free the allocated parser
 			free : function() {
 				this.xmlDoc = null;
-				this.parser = null;
 			}
 		}
 		return parserObj;
