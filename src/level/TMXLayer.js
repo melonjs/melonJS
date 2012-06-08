@@ -502,7 +502,7 @@
 			this.orientation = orientation;
 			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
 			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0);
+			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 				
 			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
@@ -556,12 +556,11 @@
 				if (this.preRender) {
 					this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
 					this.layerCanvas = this.layerSurface.canvas;
-				}
-				
-				// set alpha value for this layer
-				if (this.opacity > 0.0 && this.opacity < 1.0) {
+					
+					// set alpha value for this layer
 					this.layerSurface.globalAlpha = this.opacity;
 				}
+				
 			}
 
 			if (this.visible || this.isCollisionMap) {
@@ -580,8 +579,10 @@
 		 */
 		reset : function() {
 			// clear all allocated objects
-			this.layerCanvas = null;
-			this.layerSurface = null;
+			if (this.preRender) {
+				this.layerCanvas = null;
+				this.layerSurface = null;
+			}
 			this.renderer = null;
 			this.vp = null;
 			// call the parent reset function
@@ -699,6 +700,12 @@
 								rect.width, rect.height);   //dw, dh
 			}
 			else {
+			
+				// check if transparency
+				if (this.opacity < 1.0) {
+					context.globalAlpha = this.opacity;
+				}
+				
 				// translate pixel coordinates to tile coordinates
 				var startX = this.vp.pos.x + rect.pos.x; // divide by tilewidth later
 				var endX = Math.ceil((startX + rect.width) / this.tilewidth);
@@ -724,6 +731,9 @@
 				
 				// restore context to initial state
 				context.setTransform(1, 0, 0, 1, 0, 0);
+				
+				// restore default alpha value
+				context.globalAlpha = 1.0;
 				
 			}
 		}
