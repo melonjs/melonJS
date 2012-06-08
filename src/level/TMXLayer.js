@@ -706,7 +706,7 @@
 				var endY = Math.ceil((startY + rect.height) / this.tileheight);
 			
 				// translate the display as we want to have per pixel scrolling
-				context.translate( -startX, -startY);
+				context.translate( -startX + rect.pos.x, -startY + rect.pos.y);
 				
 				// main drawing loop			
 				for ( var y = ~~(startY / this.tileheight) ; y < endY; y++) {
