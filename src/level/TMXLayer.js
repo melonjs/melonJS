@@ -506,6 +506,10 @@
 				
 			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
+			
+			// check for the correct rendering method
+			if (this.preRender === undefined)
+				this.preRender = me.sys.preRender
 
 			// detect if the layer is a collision map
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
@@ -534,11 +538,11 @@
 				switch (this.orientation)
 				{
 					case "orthogonal": {
-					  this.renderer = new me.TMXOrthogonalRenderer(true, this.width, this.height, this.tilewidth, this.tileheight);
+					  this.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
 					  break;
 					}
 					case "isometric": {
-					  this.renderer = new me.TMXIsometricRenderer(true, this.width, this.height , this.tilewidth, this.tileheight);
+					  this.renderer = new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
 					  break;
 					}
 			
@@ -547,10 +551,13 @@
 						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
 					}
 				}
-
-				this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
-				this.layerCanvas = this.layerSurface.canvas;
-
+				
+				// if pre-rendering method is use, create the offline canvas
+				if (this.preRender) {
+					this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
+					this.layerCanvas = this.layerSurface.canvas;
+				}
+				
 				// set alpha value for this layer
 				if (this.opacity > 0.0 && this.opacity < 1.0) {
 					this.layerSurface.globalAlpha = this.opacity;
@@ -648,7 +655,7 @@
 							this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
 						}
 					   	// draw the corresponding tile
-						if (this.visible) {
+						if (this.visible && this.preRender) {
 							this.renderer.drawTile(this.layerSurface, x, y, tmxTile, this.tileset);
 						}
 					}
@@ -671,7 +678,7 @@
 			// call the parent function
 			this.parent(x, y);
 			// erase the corresponding area in the canvas
-			if (this.visible) {
+			if (this.visible && this.preRender) {
 				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
 			}
 		},
@@ -682,12 +689,43 @@
 		 */
 		draw : function(context, rect) {
 			
-			context.drawImage(this.layerCanvas, 
-							this.vp.pos.x + rect.pos.x, //sx
-							this.vp.pos.y + rect.pos.y, //sy
-							rect.width, rect.height,    //sw, sh
-							rect.pos.x, rect.pos.y,     //dx, dy
-							rect.width, rect.height);   //dw, dh
+			if (this.preRender) {
+				// draw using the cached canvas
+				context.drawImage(this.layerCanvas, 
+								this.vp.pos.x + rect.pos.x, //sx
+								this.vp.pos.y + rect.pos.y, //sy
+								rect.width, rect.height,    //sw, sh
+								rect.pos.x, rect.pos.y,     //dx, dy
+								rect.width, rect.height);   //dw, dh
+			}
+			else {
+				// translate pixel coordinates to tile coordinates
+				var startX = this.vp.pos.x + rect.pos.x; // divide by tilewidth later
+				var endX = Math.ceil((startX + rect.width) / this.tilewidth);
+				var startY = this.vp.pos.y + rect.pos.y; // divide by tileheight later
+				var endY = Math.ceil((startY + rect.height) / this.tileheight);
+			
+				// translate the display as we want to have per pixel scrolling
+				context.translate( -startX, -startY);
+				
+				// main drawing loop			
+				for ( var y = ~~(startY / this.tileheight) ; y < endY; y++) {
+					for ( var x = ~~(startX / this.tilewidth); x < endX; x++) {
+						
+						var tmxTile = this.layerData[x][y];
+						if (tmxTile) {
+							if (!this.tileset.contains(tmxTile.tileId)) {
+								this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
+							}
+							this.renderer.drawTile(context, x, y, tmxTile, this.tileset);
+						}
+					}
+				}
+				
+				// restore context to initial state
+				context.setTransform(1, 0, 0, 1, 0, 0);
+				
+			}
 		}
 	});
 

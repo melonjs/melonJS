@@ -199,7 +199,16 @@
 		 * @type {Boolean}
 		 * @memberOf me.sys 
 		 */
-		pauseOnBlur : true
+		pauseOnBlur : true,
+
+		/**
+		 * Specify the rendering method for layers <br>
+		 * if false, visbile part of the layers are rendered dynamically<br>
+		 * if true, the entire layers are rendered into a cached canvas<br>
+		 * @type {Boolean}
+		 * @memberOf me.sys
+		 */
+		preRender : false
 	};
 
 	// add me to the global window variable

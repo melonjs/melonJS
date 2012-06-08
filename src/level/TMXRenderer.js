@@ -19,8 +19,7 @@
 	 */
 	TMXRenderer = Object.extend({
 		// constructor
-		init: function(predraw, width, height, tilewidth, tileheight) {
-			this.predraw = predraw; // not implemented (always true)
+		init: function(width, height, tilewidth, tileheight) {
 			this.width = width;
 			this.height = height;
 			this.tilewidth = tilewidth;
