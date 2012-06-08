@@ -1,6 +1,20 @@
 Version History
 ---------------
 0.9.4
+* Core : added a flag to enable/disable automatic pause on loosing/gaining focus
+* Documentation : corrected and added missing documentation
+* Entity : added an anchor point for renderables (through SpriteObject)
+* Entity : added rotation support (through SpriteObject)
+* General : Fixed & enhanced object/memory deallocation when switching levels
+* General : rewrote the parallax code using the new Generic Image Layer Object
+* General : added support for vertical parallax layer
+* Geometry : added a function to test for vector "equality"
+* Loader : fix a case issue between filename and asset name
+* TMX : added dynamic layer rendering (configurable globally or per layer through Tiled)
+* TMX : added Image Layer Support (Tiled 0.9.0 ?)
+* TMX : added support for the new map background property (Tiled 0.9.0 ?)
+* TMX : added a Color Layer (used when a background color is defined)
+* TMX : another round of clean-up and various bug fixing
 
 0.9.3
 * General : Better Error management and reporting
