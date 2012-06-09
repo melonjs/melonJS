@@ -68,9 +68,6 @@
 					// viewport coordinates
 					this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
-					// keep track of camera update
-					this.last = new me.Vector2d(-1, -1);
-
 					// real worl limits
 					this.limits = new me.Vector2d(realw||this.width, realh||this.height);
 
@@ -110,20 +107,28 @@
 
 				/** @private */
 				_followH : function(target) {
-					if ((target.x - this.pos.x) > (this._deadwidth))
-						this.pos.x = ~~MIN((target.x) - (this._deadwidth),
-								this._limitwidth);
-					else if ((target.x - this.pos.x) < (this.deadzone.x))
+					if ((target.x - this.pos.x) > (this._deadwidth)) {
+						this.pos.x = ~~MIN((target.x) - (this._deadwidth), this._limitwidth);
+						return true;
+					}
+					else if ((target.x - this.pos.x) < (this.deadzone.x)) {
 						this.pos.x = ~~MAX((target.x) - this.deadzone.x, 0);
+						return true;
+					}
+					return false;
 				},
 
 				/** @private */
 				_followV : function(target) {
-					if ((target.y - this.pos.y) > (this._deadheight))
-						this.pos.y = ~~MIN((target.y) - (this._deadheight),
-								this._limitheight);
-					else if ((target.y - this.pos.y) < (this.deadzone.y))
+					if ((target.y - this.pos.y) > (this._deadheight)) {
+						this.pos.y = ~~MIN((target.y) - (this._deadheight),	this._limitheight);
+						return true;
+					}
+					else if ((target.y - this.pos.y) < (this.deadzone.y)) {
 						this.pos.y = ~~MAX((target.y) - this.deadzone.y, 0);
+						return true;
+					}
+					return false;
 				},
 
 				// -- public function ---
@@ -137,9 +142,6 @@
 					// reset the initial viewport position to 0,0
 					this.pos.x = x || 0;
 					this.pos.y = y || 0;
-
-					// reset our position "tracker"
-					this.last.set(-1, -1);
 
 					// reset the target
 					this.target = null;
@@ -200,7 +202,7 @@
 				},
 
 				/**
-				 *	move the viewport to the specified coordinates
+				 * move the viewport to the specified coordinates
 				 * @param {int} x
 				 * @param {int} y
 				 */
@@ -208,16 +210,14 @@
 				move : function(x, y) {
 					var newx = ~~(this.pos.x + x);
 					var newy = ~~(this.pos.y + y);
-
-					if ((newx >= 0) && (newx <= this._limitwidth))
-						this.pos.x = newx;
-
-					if ((newy >= 0) && (newy <= this._limitheight))
-						this.pos.y = newy;
+					
+					this.pos.x = newx.clamp(0,this._limitwidth);
+					this.pos.y = newy.clamp(0,this._limitheight);
 				},
 
 				/** @private */
 				update : function(updateTarget) {
+
 					if (this.target && updateTarget) {
 						switch (this.follow_axis) {
 						case this.AXIS.NONE:
@@ -225,30 +225,21 @@
 							break;
 
 						case this.AXIS.HORIZONTAL:
-							this._followH(this.target,
-									(this._shake.duration > 0));
+							updateTarget = this._followH(this.target);
 							break;
 
 						case this.AXIS.VERTICAL:
-							this._followV(this.target,
-									(this._shake.duration > 0));
+							updateTarget = this._followV(this.target);
 							break;
 
 						case this.AXIS.BOTH:
-							this._followH(this.target,
-									(this._shake.duration > 0));
-							this._followV(this.target,
-									(this._shake.duration > 0));
+							updateTarget = this._followH(this.target);
+							updateTarget = this._followV(this.target) || updateTarget;
 							break;
 
 						default:
 							break;
 						}
-						// check if the viewport position has changed (scrolling level)
-						updateTarget = (this.last.x != this.pos.x)
-								|| (this.last.y != this.pos.y)
-						// and keep track of last position for the next update
-						this.last.copy(this.pos);
 					}
 
 					if (this._shake.duration > 0) {
@@ -293,7 +284,7 @@
 				},
 
 				/**
-				 *	shake the camera 
+				 * shake the camera 
 				 * @param {int} intensity maximum offset that the screen can be moved while shaking
 				 * @param {int} duration expressed in frame
 				 * @param {axis} axis specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
