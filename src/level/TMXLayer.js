@@ -706,31 +706,8 @@
 					context.globalAlpha = this.opacity;
 				}
 				
-				// translate pixel coordinates to tile coordinates
-				var startX = this.vp.pos.x + rect.pos.x; // divide by tilewidth later
-				var endX = Math.ceil((startX + rect.width) / this.tilewidth);
-				var startY = this.vp.pos.y + rect.pos.y; // divide by tileheight later
-				var endY = Math.ceil((startY + rect.height) / this.tileheight);
-			
-				// translate the display as we want to have per pixel scrolling
-				context.translate( -startX + rect.pos.x, -startY + rect.pos.y);
-				
-				// main drawing loop			
-				for ( var y = ~~(startY / this.tileheight) ; y < endY; y++) {
-					for ( var x = ~~(startX / this.tilewidth); x < endX; x++) {
-						
-						var tmxTile = this.layerData[x][y];
-						if (tmxTile) {
-							if (!this.tileset.contains(tmxTile.tileId)) {
-								this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
-							}
-							this.renderer.drawTile(context, x, y, tmxTile, this.tileset);
-						}
-					}
-				}
-				
-				// restore context to initial state
-				context.setTransform(1, 0, 0, 1, 0, 0);
+				// draw the layer
+				this.renderer.drawTileLayer(context, this, this.vp.pos, rect);
 				
 				// restore default alpha value
 				context.globalAlpha = 1.0;
