@@ -709,7 +709,7 @@
 				}
 				
 				// translate the display as we want to have per pixel scrolling				
-				context.translate( -viewport.x, -viewport.y);
+				context.translate( -vpos.x, -vpos.y);
 				
 				// draw the layer
 				this.renderer.drawTileLayer(context, this, vpos, rect);
