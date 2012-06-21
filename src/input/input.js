@@ -155,9 +155,18 @@
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
 				for(var t=0, l=obj.touches.length; t<l; t++) {
+					// cache the x/y coordinates
+					var x = obj.touches[t].x;
+					var y = obj.touches[t].y;
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+						// adjust to world coordinates if not a floating object
+						if (!handler.floating) {
+							x += me.game.viewport.pos.x;
+							y += me.game.viewport.pos.y;
+						}
 						// call the defined handler
-						if ((handler.rect === null) || handler.rect.containsPoint({x:obj.touches[t].x,y:obj.touches[t].y})) {
+						if ((handler.rect === null) || handler.rect.containsPoint({x:x,y:y})) {
+							// trigger the corresponding callback
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
 								break;
@@ -296,7 +305,7 @@
 		/**
 		 * Mouse information<br>
 		 * properties : <br>
-		 * pos (me.Vector2d) : pointer position <br>
+		 * pos (me.Vector2d) : pointer position (in screen coordinates) <br>
 		 * LEFT : constant for left button <br>
 		 * MIDDLE : constant for middle button <br>
 		 * RIGHT : constant for right button <br>
@@ -321,8 +330,8 @@
 		/**
 		 * Array of object containing touch information<br>
 		 * properties : <br>
-		 * x : x position of the touch event in the canvas<br>
-		 * y : y position of the touch event in the canvas<br>
+		 * x : x position of the touch event in the canvas (screen coordinates)<br>
+		 * y : y position of the touch event in the canvas (screen coordinates)<br>
 		 * id : unique finger identifier<br>
 		 * @public
 		 * @type {Array}
@@ -579,11 +588,12 @@
 		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
 		 * @param {me.Rect} rect (object must inherits from me.Rect)
 		 * @param {Function} callback
+		 * @param {Boolean} [floating=true] specify if the object is a floating object (if yes, screen coordinates are used, if not mouse/touch coordinates will be converted to world coordinates)
 		 * @example
 		 * // register on the 'mousemove' event
 		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
 		 */
-		obj.registerMouseEvent = function(eventType, rect, callback) {
+		obj.registerMouseEvent = function(eventType, rect, callback, floating) {
 			// make sure the mouse is initialized
 			enableMouseEvent();
 			
@@ -610,7 +620,7 @@
 					if (!obj.mouse.handlers[eventType]) {
 						obj.mouse.handlers[eventType] = [];
  					}
-					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback});
+					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:floating===false?false:true});
 					break;
 				default :
 					throw "melonJS : invalid event type : " + eventType;
@@ -654,7 +664,7 @@
 						for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 							if (handler.rect === rect) {
 								// make sure all references are null
-								handler.rect = handler.cb = null;
+								handler.rect = handler.cb = handler.floating = null;
 								obj.mouse.handlers[eventType].splice(i, 1);
 							}
 						}
