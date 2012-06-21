@@ -90,13 +90,10 @@
 		drawTileLayer : function(context, layer, viewport, rect) {
 			// get top-left and bottom-right tile position
 			var start = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-												viewport.y + rect.pos.y).floor();
+											   viewport.y + rect.pos.y).floor();
 				
 			var end = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width, 
 											  viewport.y + rect.pos.y + rect.height).ceil();
-				
-			// translate the display as we want to have per pixel scrolling				
-			context.translate( -viewport.x, -viewport.y);
 				
 			// main drawing loop			
 			for ( var y = start.y ; y < end.y; y++) {
@@ -111,8 +108,7 @@
 				}
 			}
 			
-			// restore context to initial state
-			context.setTransform(1, 0, 0, 1, 0, 0);
+			
 		}
 		
 		
@@ -186,9 +182,6 @@
 			startPos.y += this.tileheight;
 		
 			
-			// translate the display as we want to have per pixel scrolling
-			context.translate( -viewport.x, -viewport.y);
-			
 			
 			/* Determine in which half of the tile the top-left corner of the area we
 			 * need to draw is. If we're in the upper half, we need to start one row
@@ -247,9 +240,6 @@
 					shifted = false;
 				}
 			}
-			
-			// restore context to initial state
-			context.setTransform(1, 0, 0, 1, 0, 0);
 		}
 
 	});

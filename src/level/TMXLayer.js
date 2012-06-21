@@ -518,9 +518,6 @@
 				this.visible = false;
 			}
 
-			// link to the gameviewport;
-			this.vp = me.game.viewport;
-
 			// store the data information
 			var xmldata = layer.getElementsByTagName(me.TMX_TAG_DATA)[0];
 			var encoding = me.XMLParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
@@ -584,7 +581,6 @@
 				this.layerSurface = null;
 			}
 			this.renderer = null;
-			this.vp = null;
 			// call the parent reset function
 			this.parent();
 		},
@@ -690,15 +686,21 @@
 		 */
 		draw : function(context, rect) {
 			
+			// get a reference to the viewport
+			var vpos = me.game.viewport.pos;
+			
+			// use the offscreen canvas
 			if (this.preRender) {
+			
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 
-								this.vp.pos.x + rect.pos.x, //sx
-								this.vp.pos.y + rect.pos.y, //sy
-								rect.width, rect.height,    //sw, sh
-								rect.pos.x, rect.pos.y,     //dx, dy
-								rect.width, rect.height);   //dw, dh
+								  vpos.x + rect.pos.x, //sx
+								  vpos.y + rect.pos.y, //sy
+								  rect.width, rect.height,    //sw, sh
+								  rect.pos.x, rect.pos.y,     //dx, dy
+								  rect.width, rect.height);   //dw, dh
 			}
+			// dynamically render the layer
 			else {
 			
 				// check if transparency
@@ -706,9 +708,15 @@
 					context.globalAlpha = this.opacity;
 				}
 				
-				// draw the layer
-				this.renderer.drawTileLayer(context, this, this.vp.pos, rect);
+				// translate the display as we want to have per pixel scrolling				
+				context.translate( -viewport.x, -viewport.y);
 				
+				// draw the layer
+				this.renderer.drawTileLayer(context, this, vpos, rect);
+				
+				// restore context to initial state
+				context.setTransform(1, 0, 0, 1, 0, 0);
+			
 				// restore default alpha value
 				context.globalAlpha = 1.0;
 				
