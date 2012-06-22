@@ -9,40 +9,6 @@
  */
 
 (function($, undefined) {
-		
-	/**
-	 * a Generic Map Renderder
-	 * Tile QT 0.7.x format
-	 * @memberOf me
-	 * @private
-	 * @constructor
-	 */
-	TMXRenderer = Object.extend({
-		// constructor
-		init: function(width, height, tilewidth, tileheight) {
-			this.width = width;
-			this.height = height;
-			this.tilewidth = tilewidth;
-			this.tileheight = tileheight;
-		},
-		
-		/**
-		 * return the tile position corresponding to the specified pixel
-		 * @private
-		 */
-		pixelToTileCoords : function(x, y) {
-			// do nothing
-		},
-		
-		/**
-		 * draw the a Tile on the map
-		 * @private
-		 */
-		drawTile : function(context, x, y, tile, tileset) {
-			// do nothing
-		}
-		
-	});
 	
 	/**
 	 * an Orthogonal Map Renderder
@@ -51,8 +17,14 @@
 	 * @private
 	 * @constructor
 	 */
-	me.TMXOrthogonalRenderer = TMXRenderer.extend({
-		
+	me.TMXOrthogonalRenderer = Object.extend({
+		// constructor
+		init: function(width, height, tilewidth, tileheight) {
+			this.width = width;
+			this.height = height;
+			this.tilewidth = tilewidth;
+			this.tileheight = tileheight;
+		},
 		/**
 		 * return the tile position corresponding to the specified pixel
 		 * @private
@@ -116,14 +88,20 @@
 	
 	
 	/**
-	 * an Orthogonal Map Renderder
+	 * an Isometric Map Renderder
 	 * Tile QT 0.7.x format
 	 * @memberOf me
 	 * @private
 	 * @constructor
 	 */
-	me.TMXIsometricRenderer = TMXRenderer.extend({
-		
+	me.TMXIsometricRenderer = Object.extend({
+		// constructor
+		init: function(width, height, tilewidth, tileheight) {
+			this.width = width;
+			this.height = height;
+			this.tilewidth = tilewidth;
+			this.tileheight = tileheight;
+		},
 		/**
 		 * return the tile position corresponding to the specified pixel
 		 * @private
