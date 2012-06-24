@@ -152,6 +152,7 @@
 		 * @private
 		 */
 		function dispatchMouseEvent(e) {
+			var vpos = me.game.viewport.pos;
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
 				for(var t=0, l=obj.touches.length; t<l; t++) {
@@ -160,12 +161,14 @@
 					var y = obj.touches[t].y;
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						// adjust to world coordinates if not a floating object
-						if (!handler.floating) {
-							x += me.game.viewport.pos.x;
-							y += me.game.viewport.pos.y;
+						if (handler.floating===false) {
+							var v = {x: x + vpos.x, y: y + vpos.y};
+						}
+						else {
+							var v = {x: x, y: y};
 						}
 						// call the defined handler
-						if ((handler.rect === null) || handler.rect.containsPoint({x:x,y:y})) {
+						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
 							// trigger the corresponding callback
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
