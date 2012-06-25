@@ -90,10 +90,9 @@
 			
 			// if ratio !=0 scrolling image
 			this.ratio = ratio || 0;
-			// reference to the viewport
-			this.viewport = me.game.viewport;
+			
 			// last position of the viewport
-			this.lastpos = this.viewport.pos.clone();
+			this.lastpos = me.game.viewport.pos.clone();
 			// current base offset when drawing the image
 			this.offset = new me.Vector2d(0,0);
 			
@@ -134,12 +133,14 @@
 				return false;
 			}
 			else {
+				// reference to the viewport
+				var vpos = me.game.viewport.pos;
 				// parallax / scrolling image
-				if (!this.lastpos.equals(this.viewport.pos)) {
+				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
-					this.offset.x = (this.imagewidth + this.offset.x + ((this.viewport.pos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
-					this.offset.y = (this.imageheight + this.offset.y + ((this.viewport.pos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
-					this.lastpos.setV(this.viewport.pos);
+					this.offset.x = (this.imagewidth + this.offset.x + ((vpos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
+					this.offset.y = (this.imageheight + this.offset.y + ((vpos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
+					this.lastpos.setV(vpos);
 					return true;
 				}
 				return false
