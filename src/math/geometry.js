@@ -230,11 +230,6 @@
 				hWidth : 0,
 				hHeight : 0,
 				
-				// flags to check if we
-				// already redefined properties
-				hProp : false,
-				vProp : false,
-
 				
 				/** @private */
 				init : function(v, w, h) {
@@ -374,7 +369,7 @@
 						this.hWidth = ~~(this.width / 2);
 						
 						// avoid Property definition if not necessary
-						if (!this.hProp) {
+						if (this.left !== this.pos.x + this.colPos.x) {
 							// redefine our properties taking colPos into account
 							Object.defineProperty(this, "left", {
 								get : function() {
@@ -382,13 +377,14 @@
 								},
 								configurable : true
 							});
+						}
+						if (this.right !== this.pos.x + this.colPos.x + this.width) {
 							Object.defineProperty(this, "right", {
 								get : function() {
 									return this.pos.x + this.colPos.x + this.width;
 								},
 								configurable : true
 							});
-							this.hProp = true;
 						}
 					}
 					if (y != -1) {
@@ -397,7 +393,7 @@
 						this.hHeight = ~~(this.height / 2);
 						
 						// avoid Property definition if not necessary
-						if (!this.vProp) {
+						if (this.top !== this.pos.y + this.colPos.y) {
 							// redefine our properties taking colPos into account
 							Object.defineProperty(this, "top", {
 								get : function() {
@@ -405,13 +401,14 @@
 								},
 								configurable : true
 							});
+						}
+						if (this.bottom !== this.pos.y + this.colPos.y + this.height) {
 							Object.defineProperty(this, "bottom", {
 								get : function() {
 									return this.pos.y + this.colPos.y + this.height;
 								},
 								configurable : true
 							});
-							this.vProp = true;
 						}
 					}
 				},
