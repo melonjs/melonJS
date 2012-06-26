@@ -86,10 +86,10 @@
 		},
 
 		/**
-		 * measure the given test width
+		 * measure the given text size in pixels
 		 * @param {Context} context 2D Context
 		 * @param {String} text
-		 * @return {int} width
+		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
 		 */
 		measureText : function(context, text) {
 			// draw the text
@@ -211,9 +211,10 @@
 		},
 
 		/**
-		 * measure the given test width
+		 * measure the given text size in pixels
+		 * @param {Context} context 2D Context
 		 * @param {String} text
-		 * @return {int} width
+		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
 		 */
 		measureText : function(text) {
 			return {
