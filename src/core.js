@@ -7,13 +7,20 @@
  * http://www.opensource.org/licenses/mit-license.php
  *
  */
+
+/**
+ * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside of this namespace.<p>
+ * You generally should not add new properties to this namespace as it may be overwritten in future versions. 
+ * @namespace
+ */
+var me = me || {};
+ 
 (function($, undefined) {
 	// Use the correct document accordingly to window argument
 	var document = $.document;
 
 	/**
-	 * (<b>m</b>)elon (<b>e</b>)ngine : All melonJS functions are defined inside of this namespace.<p>
-	 * You generally should not add new properties to this namespace as it may be overwritten in future versions. 
+	 * me global references
 	 * @namespace
 	 */
 	me = {
@@ -322,7 +329,7 @@
 	 *    jsApp.onload();
 	 * });
 	 */
-	onReady = function(fn) {
+	$.onReady = function(fn) {
 		// Attach the listeners
 		bindReady();
 
@@ -449,7 +456,7 @@
 		// Enforce the constructor to be what we expect
 		Class.constructor = Class;
 		// And make this class extendable
-		Class.extend = arguments.callee;
+		Class.extend = Object.extend;//arguments.callee;
 
 		return Class;
 	};
@@ -790,7 +797,7 @@
 		var a = document.createElement('audio');
 
 		// enable/disable the cache
-		me.utils.setNocache(document.location.href.match(/\?nocache/));
+		me.utils.setNocache(document.location.href.match(/\?nocache/)||false);
 
 		if (a.canPlayType) {
 			me.audio.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg"))
