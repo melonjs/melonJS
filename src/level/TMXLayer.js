@@ -300,10 +300,6 @@
 			// data array
 			this.layerData = null;
 
-			// some lookup table to avoid unecessary math operation
-			this.xLUT = {};
-			this.yLUT = {};
-
 			/**
 			 * The Layer corresponding Tilesets
 			 * @public
@@ -324,7 +320,6 @@
 		reset : function() {
 			// clear all allocated objects
 			this.layerData = null;
-			this.xLUT = this.yLUT = null
 			this.tileset = null;
 			this.tilesets = null;
 		},
@@ -342,18 +337,6 @@
 					this.layerData[x][y] = null;
 				}
 			}
-			// create lookup table to speed up the table access
-			// this is only valid for collision layer
-			if (createLookup) {
-				// initialize the lookuptable
-				for ( var x = 0; x < this.width * this.tilewidth; x++)
-					this.xLUT[x] = ~~(x / this.tilewidth);
-
-				for ( var y = 0; y < this.height * this.tileheight; y++)
-					this.yLUT[y] = ~~(y / this.tileheight);
-
-				//console.log(this.xLUT);
-			}
 		},
 		
 		/**
@@ -366,8 +349,7 @@
 		 * @return {Int} TileId
 		 */
 		getTileId : function(x, y) {
-			//xLut = x / this.tilewidth, yLut = y / this.tileheight;
-			var tile = this.layerData[this.xLUT[x]][this.yLUT[y]];
+			var tile = this.getTile(x,y);
 			return tile ? tile.tileId : null;
 		},
 		
@@ -381,8 +363,7 @@
 		 * @return {me.Tile} Tile Object
 		 */
 		getTile : function(x, y) {
-			//xLut = x / this.tilewidth, yLut = y / this.tileheight;
-			return this.layerData[this.xLUT[x]][this.yLUT[y]];
+			return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
 		},
 
 		/**
