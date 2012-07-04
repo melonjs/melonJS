@@ -103,21 +103,17 @@
 			this.tileheight = tileheight;
 			this.hTilewidth = tilewidth / 2;
 			this.hTileheight = tileheight / 2;
+			this.ratio = this.tilewidth / this.tileheight;
+			this.originX = this.height * this.hTilewidth;
 		},
 		/**
 		 * return the tile position corresponding to the specified pixel
 		 * @private
 		 */
 		pixelToTileCoords : function(x, y) {
-		
-			var ratio = this.tilewidth / this.tileheight;
-
-			x -= this.height * this.hTilewidth;
-			var mx = y + (x / ratio);
-			var my = y - (x / ratio);
-			
-			return new me.Vector2d(mx / this.tileheight,
-								   my / this.tileheight);
+			x -=  this.originX;
+			return new me.Vector2d((y + (x / this.ratio)) / this.tileheight,
+								   (y - (x / this.ratio)) / this.tileheight);
 		},
 		
 		/**
@@ -125,10 +121,7 @@
 		 * @private
 		 */
 		tileToPixelCoords : function(x, y) {
-		
-			var originX = this.height * this.hTilewidth;
-
-			return new me.Vector2d((x - y) * this.hTilewidth + originX,
+			return new me.Vector2d((x - y) * this.hTilewidth + this.originX,
 								   (x + y) * this.hTileheight);
 		},
 
@@ -184,7 +177,11 @@
 			
 			 // Determine whether the current row is shifted half a tile to the right
 			var shifted = inUpperHalf ^ inLeftHalf;
-				
+			
+			// cache a couple of useful references
+			var tileset = layer.tileset;
+			var offset  = tileset.tileoffset;
+							
 			// main drawing loop			
 			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
 				var columnItr = rowItr.clone();
@@ -194,10 +191,11 @@
 					{
 						var tmxTile = layer.layerData[columnItr.x][columnItr.y];
 						if (tmxTile) {
-							if (!layer.tileset.contains(tmxTile.tileId)) {
-								layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+							if (!tileset.contains(tmxTile.tileId)) {
+								tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
 							}
-							this.drawTile(context, columnItr.x, columnItr.y, tmxTile, layer.tileset);
+							// draw our tile
+							tileset.drawTile(context, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
 						}
 					}
 					// Advance to the next column
