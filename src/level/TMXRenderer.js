@@ -148,73 +148,25 @@
 		 * @private
 		 */
 		drawTileLayer : function(context, layer, viewport, rect) {
-			
-			// get the tiles for the four points of the dirtyRect
-			var p1 = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											viewport.y + rect.pos.y).ceil();
-			var p2 = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width, 
-											viewport.y + rect.pos.y).ceil();
-			var p3 = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											viewport.y + rect.pos.y + rect.height).ceil();
-			var p4 = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width, 
-											viewport.y + rect.pos.y + rect.height).ceil();
-				
-			
-			// Determine the tile coordinates to start and end the loop
-			// A big Isometric Rectangle that covers the whole dirtyRect
-			var startPos = new me.Vector2d(p1.x, p2.y);
-			var endPos   = new me.Vector2d(p4.x, p3.y);
 		
-			var absoluteDirtyRect = new me.Rect(new me.Vector2d(rect.pos.x + viewport.x, rect.pos.y + viewport.y), rect.width, rect.height);
-			
-			// main drawing loop			
-			for (var y = startPos.y; y < endPos.y; y++) {
-				   
-				   for (var x = (startPos.x > 0 ? startPos.x : 0); x < endPos.x; x ++) {
-				   
-						var tmxTile = layer.layerData[x][y];
-						if (tmxTile) {
-							//check if the tile overlaps with the dirtyRect
-							var tilePos = this.tileToPixelCoords(x,y);
-							tilePos.x -= this.tilewidth/2;
-							var tileBoundingBox = new me.Rect(tilePos, this.tilewidth, this.tileheight);
-													
-							if (tileBoundingBox.overlaps(absoluteDirtyRect)) {
-								// make sure we use the right tileset
-								if (!layer.tileset.contains(tmxTile.tileId)) {
-									layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
-								}
-								// draw the tile
-								this.drawTile(context, x, y, tmxTile, layer.tileset);
-							}
-						}
-				}	
-			}
-			
-			
-			//// Keep the old non-working one for reference (for now)
-			
-			/*
 			// get top-left and bottom-right tile position
 			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x, 
 											    viewport.y + rect.pos.y).floor();
 			var rectEnd = new me.Vector2d(viewport.x + rect.pos.x + rect.width, 
-										  viewport.y + rect.pos.y + rect.height)
+										  viewport.y + rect.pos.y + rect.height).floor();
 			
 			// Determine the tile and pixel coordinates to start at
 			var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y);
 			startPos.x -= this.tilewidth / 2;
 			startPos.y += this.tileheight;
 		
-			
-			
 			/* Determine in which half of the tile the top-left corner of the area we
 			 * need to draw is. If we're in the upper half, we need to start one row
 			 * up due to those tiles being visible as well. How we go up one row
 			 * depends on whether we're in the left or right half of the tile.
-			 *
-			var inUpperHalf = startPos.y - rect.pos.y + viewport.y > this.tileheight / 2;
-			var inLeftHalf = viewport.x + rect.pos.x - startPos.x < this.tilewidth / 2;
+			 */
+			var inUpperHalf = startPos.y - rect.pos.y + viewport.x > this.tileheight / 2;
+			var inLeftHalf  = rect.pos.x + viewport.x - startPos.x < this.tilewidth / 2;
 
 			if (inUpperHalf) {
 				if (inLeftHalf) {
@@ -233,28 +185,25 @@
 				
 			// main drawing loop			
 			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.tileheight / 2) {
-					
-				   var columnItr = rowItr.clone();
-				   console.log(columnItr);
-				   
-				   for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-				   
+				var columnItr = rowItr.clone();
+				for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
+					//check if it's valid tile, if so render
+					if ((columnItr.x >= 0) && (columnItr.y >= 0) && (columnItr.x < this.width) && (columnItr.y < this.height))
+					{
 						var tmxTile = layer.layerData[columnItr.x][columnItr.y];
 						if (tmxTile) {
 							if (!layer.tileset.contains(tmxTile.tileId)) {
 								layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
 							}
-							//this.drawTile(context, columnItr.x, columnItr.y, tmxTile, layer.tileset);
-							// draw the tile
-							layer.tileset.drawTile(context, columnItr.x, columnItr.y,  tmxTile);
+							this.drawTile(context, columnItr.x, columnItr.y, tmxTile, layer.tileset);
 						}
-					
-						// Advance to the next column
-						rowItr.x++;
-						rowItr.y--;
+					}
+					// Advance to the next column
+					columnItr.x++;
+					columnItr.y--;
 				}
 				
-				 // Advance to the next row
+				// Advance to the next row
 				if (!shifted) {
 					rowItr.x++;
 					startPos.x += this.tilewidth / 2;
@@ -264,8 +213,7 @@
 					startPos.x -= this.tilewidth / 2;
 					shifted = false;
 				}
-			}
-			*/
+			}	
 		}
 
 	});
