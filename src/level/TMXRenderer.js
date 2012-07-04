@@ -101,6 +101,8 @@
 			this.height = height;
 			this.tilewidth = tilewidth;
 			this.tileheight = tileheight;
+			this.hTilewidth = tilewidth / 2;
+			this.hTileheight = tileheight / 2;
 		},
 		/**
 		 * return the tile position corresponding to the specified pixel
@@ -110,7 +112,7 @@
 		
 			var ratio = this.tilewidth / this.tileheight;
 
-			x -= this.height * this.tilewidth / 2;
+			x -= this.height * this.hTilewidth;
 			var mx = y + (x / ratio);
 			var my = y - (x / ratio);
 			
@@ -124,10 +126,10 @@
 		 */
 		tileToPixelCoords : function(x, y) {
 		
-			var originX = this.height * this.tilewidth / 2;
+			var originX = this.height * this.hTilewidth;
 
-			return new me.Vector2d((x - y) * this.tilewidth / 2 + originX,
-								   (x + y) * this.tileheight / 2);
+			return new me.Vector2d((x - y) * this.hTilewidth + originX,
+								   (x + y) * this.hTileheight);
 		},
 
 		
@@ -157,7 +159,7 @@
 			
 			// Determine the tile and pixel coordinates to start at
 			var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y);
-			startPos.x -= this.tilewidth / 2;
+			startPos.x -= this.hTilewidth;
 			startPos.y += this.tileheight;
 		
 			/* Determine in which half of the tile the top-left corner of the area we
@@ -165,18 +167,18 @@
 			 * up due to those tiles being visible as well. How we go up one row
 			 * depends on whether we're in the left or right half of the tile.
 			 */
-			var inUpperHalf = startPos.y - rect.pos.y + viewport.x > this.tileheight / 2;
-			var inLeftHalf  = rect.pos.x + viewport.x - startPos.x < this.tilewidth / 2;
+			var inUpperHalf = startPos.y - rect.pos.y + viewport.x > this.hTileheight;
+			var inLeftHalf  = rect.pos.x + viewport.x - startPos.x < this.hTilewidth;
 
 			if (inUpperHalf) {
 				if (inLeftHalf) {
 					rowItr.x--;
-					startPos.x -= this.tilewidth / 2;
+					startPos.x -= this.hTilewidth;
 				} else {
 					rowItr.y--;
-					startPos.x += this.tilewidth / 2;
+					startPos.x += this.hTilewidth;
 				}
-				startPos.y -= this.tileheight / 2;
+				startPos.y -= this.hTileheight;
 			}
 			
 			
@@ -184,7 +186,7 @@
 			var shifted = inUpperHalf ^ inLeftHalf;
 				
 			// main drawing loop			
-			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.tileheight / 2) {
+			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
 				var columnItr = rowItr.clone();
 				for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
 					//check if it's valid tile, if so render
@@ -206,11 +208,11 @@
 				// Advance to the next row
 				if (!shifted) {
 					rowItr.x++;
-					startPos.x += this.tilewidth / 2;
+					startPos.x += this.hTilewidth;
 					shifted = true;
 				} else {
 					rowItr.y++;
-					startPos.x -= this.tilewidth / 2;
+					startPos.x -= this.hTilewidth;
 					shifted = false;
 				}
 			}	
