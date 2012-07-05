@@ -148,7 +148,7 @@
 			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x, 
 											    viewport.y + rect.pos.y).floor();
 			var rectEnd = new me.Vector2d(viewport.x + rect.pos.x + rect.width, 
-										  viewport.y + rect.pos.y + rect.height).floor();
+										  viewport.y + rect.pos.y + rect.height).ceil();
 			
 			// Determine the tile and pixel coordinates to start at
 			var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y);
@@ -160,7 +160,7 @@
 			 * up due to those tiles being visible as well. How we go up one row
 			 * depends on whether we're in the left or right half of the tile.
 			 */
-			var inUpperHalf = startPos.y - rect.pos.y + viewport.x > this.hTileheight;
+			var inUpperHalf = startPos.y - rect.pos.y + viewport.y > this.hTileheight;
 			var inLeftHalf  = rect.pos.x + viewport.x - startPos.x < this.hTilewidth;
 
 			if (inUpperHalf) {
@@ -192,7 +192,9 @@
 						var tmxTile = layer.layerData[columnItr.x][columnItr.y];
 						if (tmxTile) {
 							if (!tileset.contains(tmxTile.tileId)) {
-								tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+								tileset = layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+								// offset could be different per tileset
+								offset  = tileset.tileoffset;
 							}
 							// draw our tile
 							tileset.drawTile(context, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
