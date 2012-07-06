@@ -716,7 +716,7 @@
 					this.name = settings.name?settings.name.toLowerCase():"";
 					
 					// adjust initial coordinates (should be bottom left ones when in a tiled world)
-					this.pos.set(x, me.game.currentLevel?y + me.game.currentLevel.tileheight - this.height:y);
+					this.pos.set(x, me.game.currentLevel?y + settings.height - this.height:y);
 
 					/**
 					 * entity current velocity<br>
