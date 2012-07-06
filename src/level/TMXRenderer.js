@@ -146,9 +146,11 @@
 		
 			// get top-left and bottom-right tile position
 			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											    viewport.y + rect.pos.y).floor();
-			var rectEnd = new me.Vector2d(viewport.x + rect.pos.x + rect.width, 
-										  viewport.y + rect.pos.y + rect.height).ceil();
+											    viewport.y + rect.pos.y - layer.tileset.tileheight).floor();
+			var TileEnd = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width , 
+												 viewport.y + rect.pos.y + rect.height + layer.tileset.tileheight).ceil();
+			
+			var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y);
 			
 			// Determine the tile and pixel coordinates to start at
 			var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y);
