@@ -213,38 +213,14 @@
 			}
 			wrapper.appendChild(canvas);
 
-			
-			// check if WebGL feature is supported & required
-			if (me.sys.enableWebGL && window.WebGLRenderingContext) {
-				// in case the library is not loaded
-				try {
-					// try to enable WebGL
-					WebGL2D.enable(canvas);
-					context2D = canvas.getContext('webgl-2d');
-					// enable cacheImage feature, so that we use
-					// canvas and not Image for assets.
-					me.sys.cacheImage = true;
-				} catch (e) {
-					// just to be sure
-					context2D = null;
-				}
-			}
-
-			// if context2D not initialized, 
-			if (context2D == null) {
-				// make sure it's disabled
-				me.sys.enableWebGL = false;
-
-				if (!canvas.getContext)
-					return false;
-
-				context2D = canvas.getContext('2d');
-			}
+			// stop here if not supported
+			if (!canvas.getContext)
+				return false;
+			context2D = canvas.getContext('2d');
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
-				backBufferContext2D = api.createCanvasSurface(game_width,
-						game_height);
+				backBufferContext2D = api.createCanvasSurface(game_width, game_height);
 				backBufferCanvas = backBufferContext2D.canvas;
 			} else {
 				backBufferContext2D = context2D;
@@ -315,17 +291,7 @@
 			privateCanvas.width = width || backBufferCanvas.width;
 			privateCanvas.height = height || backBufferCanvas.height;
 
-			/* !! this should be working, no ?
-			if (me.sys.enableWebGL)
-			{   
-			   WebGL2D.enable(privateCanvas);
-			   return privateCanvas.getContext('webgl-2d');
-			}
-			else
-			{ 
-			 */
 			return privateCanvas.getContext('2d');
-			//}
 		};
 
 		/**

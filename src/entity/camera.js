@@ -396,15 +396,10 @@
 					
 					// fading effect
 					if (this._fadeIn.tween) {
-						if (me.sys.enableWebGL) {
-							// don't use global alpha with webgl
-							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color, this._fadeIn.alpha));
-						} else {
-							context.globalAlpha = this._fadeIn.alpha;
-							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color));
-							// set back full opacity
-							context.globalAlpha = 1.0;
-						}
+						context.globalAlpha = this._fadeIn.alpha;
+						me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color));
+						// set back full opacity
+						context.globalAlpha = 1.0;
 						// remove the tween if over
 						if (this._fadeIn.alpha==1.0)
 							this._fadeIn.tween = null;
@@ -412,15 +407,10 @@
 					
 					// flashing effect
 					if (this._fadeOut.tween) {
-						if (me.sys.enableWebGL) {
-							// don't use global alpha with webgl
-							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color, this._fadeOut.alpha));
-						} else {
-							context.globalAlpha = this._fadeOut.alpha;
-							me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color));
-							// set back full opacity
-							context.globalAlpha = 1.0;
-						}
+						context.globalAlpha = this._fadeOut.alpha;
+						me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color));
+						// set back full opacity
+						context.globalAlpha = 1.0;
 						// remove the tween if over
 						if (this._fadeOut.alpha==0.0)
 							this._fadeOut.tween = null;

@@ -180,16 +180,6 @@ var me = me || {};
 		 */
 		dirtyRegion : false,
 
-		/** 
-		 * Experimental WebGl support <br>
-		 * https://github.com/corbanbrook/webgl-2d<br>
-		 * Be sure to also load the WebGL library (webgl-2d.js) before melonJS<br>
-		 * default value : false
-		 * @type {Boolean}
-		 * @memberOf me.sys
-		 */
-		enableWebGL : false,
-		
 		/**
 		 * Specify either to stop on audio loading error or not<br>
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
