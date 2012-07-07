@@ -716,7 +716,8 @@
 					this.name = settings.name?settings.name.toLowerCase():"";
 					
 					// adjust initial coordinates (should be bottom left ones when in a tiled world)
-					this.pos.set(x, me.game.currentLevel?y + settings.height - this.height:y);
+					// TODO: better and take in account isometric map and corresponding position
+					this.pos.set(x, me.game.currentLevel?y + (settings.height||0) - this.height:y);
 
 					/**
 					 * entity current velocity<br>
