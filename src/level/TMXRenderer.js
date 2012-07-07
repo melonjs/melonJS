@@ -64,8 +64,8 @@
 			var start = this.pixelToTileCoords(viewport.x + rect.pos.x, 
 											   viewport.y + rect.pos.y).floor();
 				
-			var end = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width, 
-											  viewport.y + rect.pos.y + rect.height).ceil();
+			var end = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + this.tilewidth, 
+											 viewport.y + rect.pos.y + rect.height + this.tileheight).ceil();
 				
 			// main drawing loop			
 			for ( var y = start.y ; y < end.y; y++) {
@@ -144,11 +144,15 @@
 		 */
 		drawTileLayer : function(context, layer, viewport, rect) {
 		
+			// cache a couple of useful references
+			var tileset = layer.tileset;
+			var offset  = tileset.tileoffset;
+
 			// get top-left and bottom-right tile position
-			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											    viewport.y + rect.pos.y - layer.tileset.tileheight).floor();
-			var TileEnd = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width , 
-												 viewport.y + rect.pos.y + rect.height + layer.tileset.tileheight).ceil();
+			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x - tileset.tilewidth, 
+											    viewport.y + rect.pos.y - tileset.tileheight).floor();
+			var TileEnd = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + tileset.tilewidth, 
+												 viewport.y + rect.pos.y + rect.height + tileset.tileheight).ceil();
 			
 			var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y);
 			
@@ -180,10 +184,6 @@
 			 // Determine whether the current row is shifted half a tile to the right
 			var shifted = inUpperHalf ^ inLeftHalf;
 			
-			// cache a couple of useful references
-			var tileset = layer.tileset;
-			var offset  = tileset.tileoffset;
-							
 			// main drawing loop			
 			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
 				var columnItr = rowItr.clone();
