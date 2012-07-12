@@ -78,12 +78,15 @@ BUILD = $(buildir)melonJS-$(ME_VER)-min.js
 .PHONY: js
 
 yui: debug
+	mkdir -p $(buildir)
 	java -jar $(YUI_COMPRESSOR) $(YUI_OPTION) $(DEBUG) >> $(BUILD)
 
 all: debug
+	mkdir -p $(buildir)
 	java -jar $(GCC_COMPRESSOR) $(GCC_OPTION) --js=$(DEBUG) --js_output_file=$(BUILD)
 		
 debug: clean
+	mkdir -p $(buildir)
 	cat $(MODULE) >> $(DEBUG)
 
 clean:
@@ -92,6 +95,7 @@ clean:
 	rm -Rf $(docdir)
 
 doc:
+	mkdir -p $(docdir)
 	java -jar $(JSDOC_PATH)/jsrun.jar $(JSDOC_PATH)/app/run.js -a -t=$(JSDOC_PATH)/templates/melonjs $(DEBUG) $(JSDOC_OPTION) 
 	
 
