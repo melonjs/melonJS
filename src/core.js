@@ -1907,7 +1907,7 @@ var me = me || {};
 			_activeUpdateFrame();
 			// we already checked it was supported earlier
 			// so no need to do it again here
-			window.requestAnimFrame(_renderFrame);
+			_animFrameId = window.requestAnimFrame(_renderFrame);
 		}
 		;
 
@@ -2055,7 +2055,7 @@ var me = me || {};
 			// set pause action on losing focus
 			$.addEventListener("blur", function() {
 				// only in case we are not loading stuff
-				if (!me.sys.useNativeAnimFrame && me.sys.pauseOnBlur && (_state != obj.LOADING)) {
+				if (me.sys.pauseOnBlur && (_state != obj.LOADING)) {
 					obj.pause(true);
 				}
 				// callback?
@@ -2066,7 +2066,7 @@ var me = me || {};
 			// set play action on gaining focus
 			$.addEventListener("focus", function() {
 				// only in case we are not loading stuff
-				if (!me.sys.useNativeAnimFrame && me.sys.pauseOnBlur && (_state != obj.LOADING)) {
+				if (me.sys.pauseOnBlur && (_state != obj.LOADING)) {
 					obj.resume(true);
 
 					// force repaint
