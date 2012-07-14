@@ -527,7 +527,11 @@ var me = me || {};
 		 * in case the browser does not support it
 		 * @private
 		 */
-		console = { log: function() {} };
+		console = { 
+			log: function() {},
+			info: function() {},
+			error: function() {alert(Array.prototype.slice.call(arguments).join(", "));}
+		};
 	}
 
 	/**
@@ -1190,7 +1194,7 @@ var me = me || {};
 			// get the collision map
 			api.collisionMap = api.currentLevel.getLayerByName("collision");
 			if (!api.collisionMap || !api.collisionMap.isCollisionMap) {
-				alert("WARNING : no collision map detected");
+				console.error("WARNING : no collision map detected");
 			}
 
 			

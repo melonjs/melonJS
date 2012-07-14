@@ -151,7 +151,7 @@
 				if (obj.onload) {
 					timerId = setTimeout(obj.onload, 300);
 				} else
-					alert("no load callback defined");
+					console.error("no load callback defined");
 			} else {
 				timerId = setTimeout(checkLoadStatus, 100);
 			}

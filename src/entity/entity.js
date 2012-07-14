@@ -157,7 +157,7 @@
 
 		obj.newIstanceOf = function(prop) {
 			if (!entityClass[prop.name.toLowerCase()]) {
-				alert("cannot instance entity of type '" + prop.name
+				console.error("cannot instance entity of type '" + prop.name
 						+ "': Class not found!");
 				return null;
 			}
