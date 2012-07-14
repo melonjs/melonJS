@@ -58,6 +58,7 @@ var me = me || {};
 		 * @memberOf me.debug 
 		 */
 		displayFPS : false,
+
 		/**
 		 * render object Rectangle & Collision Box<br>
 		 * default value : false
@@ -65,6 +66,14 @@ var me = me || {};
 		 * @memberOf me.debug 
 		 */
 		renderHitBox : false,
+
+		/**
+		 * render Collision Map layer<br>
+		 * default value : false
+		 * @type {Boolean}
+		 * @memberOf me.debug
+		 */
+		renderCollisionMap : false,
 
 		/**
 		 * render dirty region/rectangle<br>
