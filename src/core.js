@@ -2200,36 +2200,30 @@ var me = me || {};
 		 */
 
 		obj.change = function(state) {
-			switch (state) {
-				default: {
-					_extraArgs = null;
-					if (arguments.length > 1) {
-						// store extra arguments if any
-						_extraArgs = Array.prototype.slice.call(arguments, 1);
-					}
-					// if fading effect
-					if (_fade.duration && _screenObject[state].transition) {
-						/** @private */
-						_onSwitchComplete = function() {
-							me.game.viewport.fadeOut(_fade.color, _fade.duration);
-						};
-						me.game.viewport.fadeIn(_fade.color, _fade.duration,
-								function() {
-									_switchState(state);
-								});
-
-					}
-					// else just switch without any effects
-					else {
-						// wait for the last frame to be
-						// "finished" before switching
-						_switchState.defer(state);
-						
-					}
-					break;
-				}
+			_extraArgs = null;
+			if (arguments.length > 1) {
+				// store extra arguments if any
+				_extraArgs = Array.prototype.slice.call(arguments, 1);
 			}
+			// if fading effect
+			if (_fade.duration && _screenObject[state].transition) {
+				/** @private */
+				_onSwitchComplete = function() {
+					me.game.viewport.fadeOut(_fade.color, _fade.duration);
+				};
+				me.game.viewport.fadeIn(_fade.color, _fade.duration,
+										function() {
+											_switchState(state);
+										});
 
+			}
+			// else just switch without any effects
+			else {
+				// wait for the last frame to be
+				// "finished" before switching
+				_switchState.defer(state);
+				
+			}
 		};
 
 		/**
