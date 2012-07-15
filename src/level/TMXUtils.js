@@ -27,10 +27,10 @@
 		 * @private
 		 */
 		api.setTMXProperties = function(obj, xmldata) {
-			var layer_properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
+			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
 
-			if (layer_properties) {
-				var oProp = layer_properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
+			if (properties) {
+				var oProp = properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
 
 				for ( var i = 0; i < oProp.length; i++) {
 					var propname = me.XMLParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
