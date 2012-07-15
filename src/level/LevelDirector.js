@@ -68,12 +68,18 @@
 				levels[levelId].name = levelId;
 				// level index
 				levelIdx[levelIdx.length] = levelId;
+			} 
+			else  {
+				//console.log("level %s already loaded", levelId);
+				return false;
 			}
-			//else console.log("level %s already loaded", levelId);
-
+			
 			// call the callback if defined
 			if (callback)
 				callback();
+			
+			// true if level loaded
+			return true;
 		};
 
 		/**

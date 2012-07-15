@@ -118,7 +118,7 @@
 		var imgList = [];
 		// contains all the xml loaded
 		var xmlList = {};
-		// contains all the xml loaded
+		// contains all the binary files loaded
 		var binList = {};
 		// flag to check loading status
 		var resourceCount = 0;
@@ -141,15 +141,21 @@
 				for ( var xmlObj in xmlList) {
 					if (xmlList[xmlObj].isTMX) {
 						// load the level into the levelDirector
-						me.levelDirector.addTMXLevel(xmlObj);
-						//progress notification
-						obj.onResourceLoaded();
+						if (me.levelDirector.addTMXLevel(xmlObj)) {
+							//progress notification
+							obj.onResourceLoaded();
+						}
 					}
 				}
 
 				// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
 				if (obj.onload) {
-					timerId = setTimeout(obj.onload, 300);
+					// make sure we clear the timer
+					clearTimeout(timerId);
+					// trigger the onload callback
+					setTimeout(obj.onload, 300);
+					// reset tmxcount for next time
+					tmxCount = 0;
 				} else
 					console.error("no load callback defined");
 			} else {
