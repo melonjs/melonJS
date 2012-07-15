@@ -13,16 +13,9 @@
 # 
 #######################################################################
 
-# YUICOMPRESSOR
-YUI_VERSION = 2.4.6
-YUI_PATH = tools/yuicompressor-$(YUI_VERSION)/build/
-YUI_COMPRESSOR = ${YUI_PATH}yuicompressor-$(YUI_VERSION).jar
-YUI_OPTION =
-#YUI_OPTION = --verbose
-
 # GOOGLE CLOSURE COMPILER
-GCC_VERSION =
-GCC_PATH = tools/closure-compiler$(GCC_VERSION)/
+GCC_VERSION = 2079
+GCC_PATH = tools/closure-compiler/
 GCC_COMPRESSOR = ${GCC_PATH}compiler$(GCC_VERSION).jar
 GCC_OPTION = --jscomp_off=internetExplorerChecks 
 #GCC_OPTION = --compilation_level ADVANCED_OPTIMIZATIONS
@@ -76,10 +69,6 @@ BUILD = $(buildir)melonJS-$(ME_VER)-min.js
 .DEFAULT_GOAL := all
 
 .PHONY: js
-
-yui: debug
-	mkdir -p $(buildir)
-	java -jar $(YUI_COMPRESSOR) $(YUI_OPTION) $(DEBUG) >> $(BUILD)
 
 all: debug
 	mkdir -p $(buildir)
