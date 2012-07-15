@@ -9,39 +9,7 @@
  */
 
 (function($, undefined) {
-		
-	/* -----
-
-		check if properties are defined for the given objet
-			
-		------									*/
-
-	function setTMXProperties(obj, xmldata) {
-		var layer_properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
-
-		if (layer_properties) {
-			var oProp = layer_properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
-
-			for ( var i = 0; i < oProp.length; i++) {
-				var propname = me.XMLParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
-				var value = me.XMLParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
-				
-				// if value not defined or boolean
-				if (!value || value.isBoolean()) {
-					value = value ? (value == "true") : true;
-				}
-				// check if numeric
-				else if (value.isNumeric()) {
-					value = parseInt(value);
-				}
-				// add the new prop to the object prop list
-				obj[propname] = value;
-						
-			}
-		}
-
-	};
-
+	
 	/**
 	 * TMX Group Object
 	 * @class
