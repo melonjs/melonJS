@@ -17,7 +17,7 @@
 GCC_VERSION = 2079
 GCC_PATH = tools/closure-compiler/
 GCC_COMPRESSOR = ${GCC_PATH}compiler$(GCC_VERSION).jar
-GCC_OPTION = --jscomp_off=internetExplorerChecks 
+GCC_OPTION =
 #GCC_OPTION = --compilation_level ADVANCED_OPTIMIZATIONS
 
 # JSDOC
