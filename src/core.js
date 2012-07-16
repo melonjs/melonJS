@@ -1265,7 +1265,10 @@ var me = me || {};
 		 * @function
 		 */
 		api.addEntity = function(entityType, zOrder) {
-			api.add(me.entityPool.newIstanceOf(entityType), zOrder);
+			var obj = me.entityPool.newIstanceOf(entityType);
+			if (obj) {
+				api.add(obj, zOrder);
+			}
 		};
 		
 		/**

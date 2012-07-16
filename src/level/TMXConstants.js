@@ -55,6 +55,9 @@
 	me.TMX_TAG_Y                   = "y";
 	me.TMX_TAG_WIDTH               = "width";
 	me.TMX_TAG_HEIGHT              = "height";
+	me.TMX_TAG_POLYGON             = "polygon";
+	me.TMX_TAG_POLYLINE            = "polyline";
+	me.TMX_TAG_POINTS              = "points";
 	me.TMX_BACKGROUND_COLOR        = "backgroundcolor";
 	/*---------------------------------------------------------*/
 	// END END END
