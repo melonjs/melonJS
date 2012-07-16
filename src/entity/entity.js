@@ -157,7 +157,7 @@
 
 		obj.newIstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
-				if (!name) {
+			if (!name) {
 				return null;
 			}
 

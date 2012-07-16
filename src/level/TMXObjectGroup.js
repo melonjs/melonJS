@@ -110,7 +110,7 @@
 					var point = points.split(" ");
 					for (var i = 0, v; i < point.length; i++) {
 						v = point[i].split(",");
-						this.points[i] = new me.Vector2d(v[0], v[1]);
+						this.points[i] = new me.Vector2d(+v[0], +v[1]);
 					}
 				}
 			}
