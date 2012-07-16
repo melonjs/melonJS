@@ -72,6 +72,8 @@
 			this.y = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
 			this.z = z;
 
+			this.width = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
+			this.height = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
 			this.gid = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
 			// check if the object has an associated gid	
 			if (this.gid) {
@@ -95,8 +97,22 @@
 				this.image = tileset.getTileImage(tmxTile);
 			} 
 			else {
-				this.width = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
-				this.height = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
+				var polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
+				this.isPolygon = true;
+				if (!polygon.length) {
+					polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
+					this.isPolygon = false;
+				}
+
+				if (polygon.length) {
+					this.points = [];
+					var points = me.XMLParser.getStringAttribute(polygon[0], me.TMX_TAG_POINTS);
+					var point = points.split(" ");
+					for (var i = 0, v; i < point.length; i++) {
+						v = point[i].split(",");
+						this.points[i] = new me.Vector2d(+v[0], +v[1]);
+					}
+				}
 			}
 			// set the object properties
 			me.TMXUtils.setTMXProperties(this, tmxObj);
