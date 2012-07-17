@@ -83,6 +83,9 @@
 			}
 		};
 
+		var shiftKey = false;
+		var altKey = false;
+		var ctrlKey = false;
 
 		/**
 		 * prevent event propagation
@@ -111,7 +114,10 @@
 		 */
 		function keydown(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+			var action = KeyBinding[keyCode || e.key || e.keyCode || e.which];
+			shiftKey = e.shiftKey;
+			altKey = e.altKey;
+			ctrlKey = e.ctrlKey;
 
 			if (action) {
 				if (!keyLocked[action]) {
@@ -133,7 +139,10 @@
 		 */
 		function keyup(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+			var action = KeyBinding[keyCode || e.key || e.keyCode || e.which];
+			shiftKey = e.shiftKey;
+			altKey = e.altKey;
+			ctrlKey = e.ctrlKey;
 
 			if (action) {
 
@@ -428,6 +437,42 @@
 				return true;
 			}
 			return false;
+		};
+
+		/**
+		 * return the key status of the shift key
+		 * @name me.input#isShiftPressed
+		 * @public
+		 * @function
+		 * @return {boolean} yes (true) or no (false)
+		 */
+
+		obj.isShiftPressed = function () {
+			return shiftKey;
+		};
+
+		/**
+		 * return the key status of the alt key
+		 * @name me.input#isAltPressed
+		 * @public
+		 * @function
+		 * @return {boolean} yes (true) or no (false)
+		 */
+
+		obj.isAltPressed = function () {
+			return altKey;
+		};
+
+		/**
+		 * return the key status of the ctrl key
+		 * @name me.input#isCtrlPressed
+		 * @public
+		 * @function
+		 * @return {boolean} yes (true) or no (false)
+		 */
+
+		obj.isCtrlPressed = function () {
+			return ctrlKey;
 		};
 
 		/**
