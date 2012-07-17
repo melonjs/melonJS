@@ -32,7 +32,7 @@
 
 						
 			// check if we have any user-defined properties 
-			if (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES)  {
+			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
 				me.TMXUtils.setTMXProperties(this, tmxObjGroup);
 			}
 			
