@@ -492,7 +492,7 @@
 			// check for the correct rendering method
 			if (this.preRender === undefined)
 				this.preRender = me.sys.preRender
-
+				
 			// detect if the layer is a collision map
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
@@ -624,7 +624,7 @@
 					// get the value of the gid
 					var gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
 					// fill the array										
-					if (gid > 0) {
+					if (gid !== 0) {
 						// create a new tile object
 						var tmxTile = new me.Tile(x, y, this.tilewidth, this.tileheight, gid);
 						// set the tile in the data array
