@@ -28,8 +28,14 @@
 			this.width  = me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height = me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
 			this.visible = (me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.z      = z;
+			this.z       = z;
 
+						
+			// check if we have any user-defined properties 
+			if (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES)  {
+				me.TMXUtils.setTMXProperties(this, tmxObjGroup);
+			}
+			
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
 			for ( var i = 0; i < data.length; i++) {
