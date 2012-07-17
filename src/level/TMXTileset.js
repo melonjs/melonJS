@@ -60,7 +60,7 @@
 			 * @type Boolean
 			 * @name me.Tile#flipX
 			 */
-			this.flipX  = (this.tileId & FlippedHorizontallyFlag) > 0;
+			this.flipX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
 			
 			/**
 			 * True if the tile is flipped vertically<br>
@@ -68,7 +68,7 @@
 			 * @type Boolean
 			 * @name me.Tile#flipY
 			 */
-			this.flipY  = (this.tileId & FlippedVerticallyFlag) > 0;
+			this.flipY  = (this.tileId & FlippedVerticallyFlag) !== 0;
 			
 			/**
 			 * True if the tile is flipped anti-diagonally<br>
@@ -76,7 +76,7 @@
 			 * @type Boolean
 			 * @name me.Tile#flipAD
 			 */
-			this.flipAD = (this.tileId & FlippedAntiDiagonallyFlag) > 0;
+			this.flipAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
 			
 			/**
 			 * Global flag that indicates if the tile is flipped<br>
