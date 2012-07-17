@@ -27,6 +27,7 @@
 			this.name   = name;
 			this.width  = me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height = me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
+			this.visible = (me.XMLParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.z      = z;
 
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);

@@ -1217,8 +1217,11 @@ var me = me || {};
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
 			for ( var group = 0; group < objectGroups.length; group++) {
-				for ( var entity = 0; entity < objectGroups[group].objects.length; entity++) {
-					api.addEntity(objectGroups[group].objects[entity], objectGroups[group].z);
+				// only add corresponding objects it the group is visible
+				if (objectGroups[group].visible) {
+					for ( var entity = 0; entity < objectGroups[group].objects.length; entity++) {
+						api.addEntity(objectGroups[group].objects[entity], objectGroups[group].z);
+					}
 				}
 			}
 
