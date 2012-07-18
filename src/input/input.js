@@ -25,15 +25,15 @@
 		  ---------------------------------------------*/
 
 		// list of binded keys
-		var KeyBinding = [];
+		var KeyBinding = {};
 
 		// corresponding actions
-		var keyStatus = [];
+		var keyStatus = {};
 
 		// lock enable flag for keys
-		var keyLock = [];
+		var keyLock = {};
 		// actual lock status of each key
-		var keyLocked = [];
+		var keyLocked = {};
 
 		// some usefull flags
 		var keyboardInitialized = false;
@@ -486,6 +486,7 @@
 
 			KeyBinding[keycode] = action;
 
+			keyStatus[action] = false;
 			keyLock[action] = lock ? lock : false;
 			keyLocked[action] = false;
 		};
