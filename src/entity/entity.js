@@ -518,6 +518,15 @@
 				fpscount : 0,
 
 				/**
+				 * pause and resume animation<br>
+				 * default value : false;
+				 * @public
+				 * @type Boolean
+				 * @name me.AnimationSheet#animationpause
+				 */
+				animationpause : false,
+
+				/**
 				 * animation cycling speed<br>
 				 * default value : me.sys.fps / 10;
 				 * @public
@@ -646,7 +655,7 @@
 					// call the parent function
 					this.parent();
 					// update animation if necessary
-					if (this.visible && (this.fpscount++ > this.animationspeed)) {
+					if (this.visible && !this.animationpause && (this.fpscount++ > this.animationspeed)) {
 						this.setAnimationFrame(++this.current.idx);
 						this.fpscount = 0;
 						
