@@ -20,7 +20,7 @@
 		// constructor
 		init: function(name, color, z) {
 			this.name = name;
-			this.color = me.utils.HexToRGB(color);
+			this.color = color;
 			// for displaying order
 			this.z = z;
 			
