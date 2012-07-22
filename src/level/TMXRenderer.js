@@ -69,7 +69,7 @@
 			
 			//ensure we are in the valid tile range
 			end.x = end.x > this.width ? this.width : end.x;
-			end.y = end.y > this.width ? this.height : end.y;
+			end.y = end.y > this.height ? this.height : end.y;
 			
 			// main drawing loop			
 			for ( var y = start.y ; y < end.y; y++) {
