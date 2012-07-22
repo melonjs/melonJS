@@ -150,12 +150,12 @@
 		};
 		
 		/**
-		 * return the filename portion of the path without the extension<br>
+		 * return the base name of the file without path info.<br>
 		 *
-		 * @param  {String} path Full path containing the filename
-		 * @return {String} Filename
+		 * @param  {String} path path containing the filename
+		 * @return {String} basename returns the base name without path information.
 		 */
-		api.getFilename = function(path) {
+		api.getBasename = function(path) {
 			return path.replace(removepath, '').replace(removeext, '');
 		};
 
