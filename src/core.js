@@ -1445,21 +1445,36 @@ var me = me || {};
 		};
 
 		/**
-		 * <p>Sort all objects (using object z property value).</p>
+		 * <p>Sort all the game objects.</p>
 		 * <p>Normally all objects loaded through the LevelDirector are automatically sorted.
-		 * this function is however usefull if you create and add object during the game.</p>
+		 * this function is however usefull if you create and add object during the game,
+		 * or need a specific sorting algorithm.<p>
 		 * @name me.game#sort
 		 * @public
 		 * @function
+		 * @param {Function} [sort_func="sorted on z property value"] sort function
+		 * @example
+		 * // user defined sort funtion (Z sort based on Y value)
+		 * function mySort(a, b) {
+		 *    var result = (b.z - a.z);
+		 *    return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
+		 * } </p>
+		 * // call me.game.sort with our sorting function
+		 * me.game.sort(mySort);
 		 */
 
-		api.sort = function() {
-			// sort order is inverted, 
-			// since we use a reverse loop for the display 
-			gameObjects.sort(function(a, b) {
-				return (b.z - a.z);
-			});
-
+		api.sort = function(sort_func) {
+			if (typeof(sort_func) !== "function") {
+				// sort order is inverted, 
+				// since we use a reverse loop for the display 
+				gameObjects.sort(function(a, b) {
+					return (b.z - a.z);
+				});
+			}
+			else {
+				// user defined sort
+				gameObjects.sort(sort_func);
+			}
 			// make sure we redraw everything
 			api.repaint();
 		};
