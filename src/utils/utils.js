@@ -171,17 +171,31 @@
 
 		// a Hex to RGB color function
 		api.HexToRGB = function(h, a) {
-			// remove the # if present
-			h = (h.charAt(0) == "#") ? h.substring(1, 7) : h;
+			if (h.charAt(0) !== "#") {
+				// this is not a hexadecimal string
+				return h;
+			}
+			// remove the # 
+			h = h.substring(1, h.length);
+
 			// check if we already have the converted value cached
 			if (rgbCache[h] == null) {
 				// else add it (format : "r,g,b")
-				rgbCache[h] = parseInt(h.substring(0, 2), 16) + ","
-						+ parseInt(h.substring(2, 4), 16) + ","
-						+ parseInt(h.substring(4, 6), 16);
+				if (h.length < 6)  {
+					// 3 char shortcut is used, double each char
+					var h1 = h.charAt(0)+h.charAt(0);
+					var h2 = h.charAt(1)+h.charAt(1);
+					var h3 = h.charAt(2)+h.charAt(2);
+				}
+				else {
+					var h1 = h.substring(0, 2);
+					var h2 = h.substring(2, 4);
+					var h3 = h.substring(4, 6);
+				}
+				// set the value in our cache
+				rgbCache[h] = parseInt(h1, 16) + "," + parseInt(h2, 16) + "," + parseInt(h3, 16);
 			}
-			return (a ? "rgba(" : "rgb(") + rgbCache[h]
-					+ (a ? "," + a + ")" : ")");
+			return (a ? "rgba(" : "rgb(") + rgbCache[h] + (a ? "," + a + ")" : ")");
 		};
 
 		// a Hex to RGB color function
