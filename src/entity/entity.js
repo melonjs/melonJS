@@ -437,6 +437,8 @@
 					var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
 
 					if ((this.scaleFlag) || (this.angle!==0)) {
+						// restore the context
+						context.save();
 						// calculate pixel pos of the anchor point
 						var ax = this.width * this.anchorPoint.x, ay = this.height * this.anchorPoint.y;
 						// translate to the defined anchor point
@@ -458,8 +460,8 @@
 									this.width, this.height);
 
 					if ((this.scaleFlag) || (this.angle!==0)) {
-						// restore the transform matrix to the normal one
-						context.setTransform(1, 0, 0, 1, 0, 0);
+						// restore the context
+						context.restore();
 					}
 
 					if (me.debug.renderHitBox) {

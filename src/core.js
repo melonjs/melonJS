@@ -1177,6 +1177,9 @@ var me = me || {};
 
 			// also reset the draw manager
 			drawManager.reset();
+			
+			// reset the transform matrix to the normal one
+			me.video.getScreenFrameBuffer().setTransform(1, 0, 0, 1, 0, 0);
 
 		};
 
