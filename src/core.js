@@ -1210,7 +1210,18 @@ var me = me || {};
 			};
 			
 			// change the viewport limit
-			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width), Math.max(api.currentLevel.realheight, api.viewport.height));
+			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width), 
+								   Math.max(api.currentLevel.realheight, api.viewport.height));
+			
+			// center the map if smaller than the current viewport
+			if ((api.currentLevel.realwidth < api.viewport.getWidth()) || 
+			    (api.currentLevel.realheight < api.viewport.getHeight())) {
+				var shiftX =  ~~( (api.viewport.getWidth() - api.currentLevel.realwidth) / 2);
+				var shiftY =  ~~( (api.viewport.getHeight() - api.currentLevel.realheight) / 2);
+				// translate the global context
+				me.video.getScreenFrameBuffer().translate( shiftX > 0 ? shiftX : 0 , shiftY > 0 ? shiftY : 0 );
+			
+			}
 
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
