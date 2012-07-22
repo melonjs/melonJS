@@ -214,14 +214,7 @@
 				// callback
 				onloadCB();
 			};
-			// increase the resourceCount by 1
-			// allowing to add the loading of level in the 
-			// levelDirector as part of the loading progress
-			if (isTMX) {
-				// some context issue ? (why this?)
-				this.resourceCount += 1;
-				this.tmxCount += 1;
-			}
+		
 			// send the request
 			xmlhttp.send();
 
@@ -379,17 +372,21 @@
 			switch (res.type) {
 				case "binary":
 					// reuse the preloadImage fn
-					preloadBinary(res, onload, onerror);
+					preloadBinary.apply(this, [res, onload, onerror]);
 					return 1;
 
 				case "image":
 					// reuse the preloadImage fn
-					preloadImage(res, onload, onerror);
+					preloadImage.apply(this, [res, onload, onerror]);
 					return 1;
 
 				case "tmx":
-					preloadXML(res, true, onload, onerror);
-					return 1;
+					preloadXML.apply(this, [res, true, onload, onerror]);
+					// increase the resourceCount by 1
+					// allowing to add the loading of level in the 
+					// levelDirector as part of the loading progress
+					tmxCount += 1;
+					return 2;
 				
 				case "audio":
 					me.audio.setLoadCallback(onload);
