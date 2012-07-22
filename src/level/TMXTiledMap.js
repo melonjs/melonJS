@@ -318,7 +318,7 @@
 					var ilsrc = xmlElements.item(i).getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
 					
 					// create the layer
-					var ilayer = new me.ImageLayer(iln, ilw, ilh, ilsrc, zOrder++);
+					var ilayer = new me.ImageLayer(iln, ilw * this.tilewidth, ilh * this.tileheight, ilsrc, zOrder++);
 				    
 					// set some additional flags
 					ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
@@ -356,7 +356,7 @@
 						}
 						
 						// create the layer				
-						var ilayer = new me.ImageLayer(layer_name, ilw, ilh, properties.imagesrc, zOrder++, lratio );
+						var ilayer = new me.ImageLayer(layer_name, ilw * this.tilewidth, ilh * this.tileheight, properties.imagesrc, zOrder++, lratio );
 						
 						// apply default TMX properties
 						ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);

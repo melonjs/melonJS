@@ -1197,14 +1197,6 @@ var me = me || {};
 				console.error("WARNING : no collision map detected");
 			}
 
-			
-			if ((api.currentLevel.realwidth < api.viewport.getWidth()) ||
-			    (api.currentLevel.realheight < api.viewport.getHeight())) {
-				throw "melonJS: map size should be at least equal to the defined display size";
-			}
-			// change the viewport limit
-			api.viewport.setBounds(api.currentLevel.realwidth, api.currentLevel.realheight);
-			
 			// add all defined layers
 			var layers = api.currentLevel.getLayers();
 			for ( var i = layers.length; i--;) {
@@ -1213,6 +1205,9 @@ var me = me || {};
 					api.add(layers[i]);
 				}
 			};
+			
+			// change the viewport limit
+			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width), Math.max(api.currentLevel.realheight, api.viewport.height));
 
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();

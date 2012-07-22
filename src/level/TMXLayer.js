@@ -64,8 +64,8 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {name}   name        layer name
-	 * @param {int}    width       layer width (not used)
-	 * @param {int}    height      layer height (not used)
+	 * @param {int}    width       layer width in pixels 
+	 * @param {int}    height      layer height in pixels
 	 * @param {String} image       image name (as defined in the asset list)
 	 * @param {int}    z           z position
 	 * @param {float}  [ratio=0]   scrolling ratio to be applied (apply by multiplying the viewport delta position by the defined ratio)
@@ -96,10 +96,9 @@
 			// current base offset when drawing the image
 			this.offset = new me.Vector2d(0,0);
 			
-			// set layer width & height to the viewport size
-			// (are the ones passed as parameter usefull?)
-			this.width = me.game.viewport.width;
-			this.height = me.game.viewport.height;
+			// set layer width & height 
+			this.width  = width ? Math.min(me.game.viewport.width, width)   : me.game.viewport.width;
+			this.height = height? Math.min(me.game.viewport.height, height) : me.game.viewport.height;
 			
 			// make it visible
 			this.visible = true;
@@ -328,12 +327,12 @@
 		 * Create all required arrays
 		 * @private
 		 */
-		initArray : function(createLookup) {
+		initArray : function() {
 			// initialize the array
-			this.layerData = [];//new Array (this.width);
-			for ( var x = 0; x < this.width + 1; x++) {
-				this.layerData[x] = [];//new Array (this.height);
-				for ( var y = 0; y < this.height + 1; y++) {
+			this.layerData = [];
+			for ( var x = 0; x < this.width; x++) {
+				this.layerData[x] = [];
+				for ( var y = 0; y < this.height; y++) {
 					this.layerData[x][y] = null;
 				}
 			}
@@ -544,7 +543,7 @@
 
 			if (this.visible || this.isCollisionMap) {
 				// initialize the layer lookup table (only in case of collision map)
-				this.initArray(this.isCollisionMap);
+				this.initArray();
 
 				// populate our level with some data
 				this.fillArray(xmldata, encoding, compression);
@@ -674,13 +673,16 @@
 			// use the offscreen canvas
 			if (this.preRender) {
 			
+				width = Math.min(rect.width, this.realwidth);
+				height = Math.min(rect.height, this.realheight);
+			
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 
 								  vpos.x + rect.pos.x, //sx
 								  vpos.y + rect.pos.y, //sy
-								  rect.width, rect.height,    //sw, sh
+								  width, height,    //sw, sh
 								  rect.pos.x, rect.pos.y,     //dx, dy
-								  rect.width, rect.height);   //dw, dh
+								  width, height);   //dw, dh
 			}
 			// dynamically render the layer
 			else {
