@@ -370,16 +370,16 @@
 			switch (res.type) {
 				case "binary":
 					// reuse the preloadImage fn
-					preloadBinary.apply(this, [res, onload, onerror]);
+					preloadBinary.call(this, res, onload, onerror);
 					return 1;
 
 				case "image":
 					// reuse the preloadImage fn
-					preloadImage.apply(this, [res, onload, onerror]);
+					preloadImage.call(this, res, onload, onerror);
 					return 1;
 
 				case "tmx":
-					preloadXML.apply(this, [res, true, onload, onerror]);
+					preloadXML.call(this, res, true, onload, onerror);
 					// increase the resourceCount by 1
 					// allowing to add the loading of level in the 
 					// levelDirector as part of the loading progress
