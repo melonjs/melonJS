@@ -2,7 +2,7 @@
  * @license MelonJS Game Engine
  * Copyright (C) 2012, Olivier BIOT
  * http://www.melonjs.org
- * 
+ *
  * melonJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
  *
@@ -10,11 +10,11 @@
 
 /**
  * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside of this namespace.<p>
- * You generally should not add new properties to this namespace as it may be overwritten in future versions. 
+ * You generally should not add new properties to this namespace as it may be overwritten in future versions.
  * @namespace
  */
 var me = me || {};
- 
+
 (function($, undefined) {
 	// Use the correct document accordingly to window argument
 	var document = $.document;
@@ -55,7 +55,7 @@ var me = me || {};
 		 * this flag is automatically set <br>
 		 * upon detection of a "framecounter" element <br>
 		 * in the HTML file holding the cancas.
-		 * @memberOf me.debug 
+		 * @memberOf me.debug
 		 */
 		displayFPS : false,
 
@@ -63,7 +63,7 @@ var me = me || {};
 		 * render object Rectangle & Collision Box<br>
 		 * default value : false
 		 * @type {Boolean}
-		 * @memberOf me.debug 
+		 * @memberOf me.debug
 		 */
 		renderHitBox : false,
 
@@ -80,7 +80,7 @@ var me = me || {};
 		 * default value : false<br>
 		 * (feature must be enabled through the me.sys.dirtyRegion flag)
 		 * @type {Boolean}
-		 * @memberOf me.debug 
+		 * @memberOf me.debug
 		 */
 		renderDirty : false
 
@@ -92,39 +92,39 @@ var me = me || {};
 	 */
 	me.sys = {
 		// Browser capabilities
-		/** 
+		/**
 		 * Browser User Agent (read-only)
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		ua : navigator.userAgent.toLowerCase(),
-		/** 
+		/**
 		 * Browser Audio capabilities (read-only) <br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		sound : false,
-		/** 
+		/**
 		 * Browser Local Storage capabilities (read-only) <br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		localStorage : (typeof($.localStorage) == 'object'),
-		/** 
+		/**
 		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		gyro : ($.DeviceMotionEvent !== undefined),
-		
-		/** 
+
+		/**
 		 * Browser Base64 decoding capability (read-only) <br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		nativeBase64 : (typeof($.atob) == 'function'),
-		
-		/** 
+
+		/**
 		 * Touch capabilities <br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
@@ -133,28 +133,28 @@ var me = me || {};
 
 
 		// Global settings
-		/** 
+		/**
 		 * Game FPS (default 60)
 		 * @type {Int}
 		 * @memberOf me.sys
 		 */
 		fps : 60,
 
-		/** 
+		/**
 		 * enable/disable frame interpolation (default disable)<br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
 		interpolation : false,
 
-		/** 
+		/**
 		 * Global scaling factor(default 1.0)
 		 * @type {int}
 		 * @memberOf me.sys
 		 */
 		scale : 1.0,
-		
-		/** 
+
+		/**
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
 		 * default value : undefined
@@ -163,7 +163,7 @@ var me = me || {};
 		 */
 		gravity : undefined,
 
-		/** 
+		/**
 		 * Use native "requestAnimFrame" function if supported <br>
 		 * fallback to clearInterval if not supported by the browser<br>
 		 * @type {Boolean}
@@ -176,11 +176,11 @@ var me = me || {};
 		 * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
 		 * default value : false
 		 * @type {Boolean}
-		 * @memberOf me.sys 
+		 * @memberOf me.sys
 		 */
 		cacheImage : false,
 
-		/** 
+		/**
 		 * Enable dirtyRegion Feature <br>
 		 * default value : false<br>
 		 * (!) not fully implemented/supported (!)
@@ -195,15 +195,15 @@ var me = me || {};
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
 		 * default value : true<br>
 		 * @type {Boolean}
-		 * @memberOf me.sys 
+		 * @memberOf me.sys
 		 */
 		stopOnAudioError : true,
-		
+
 		/**
 		 * Specify either to pause the game when losing focus or not<br>
 		 * default value : true<br>
 		 * @type {Boolean}
-		 * @memberOf me.sys 
+		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
 
@@ -225,9 +225,9 @@ var me = me || {};
 	var me_initialized = false;
 
 	/*---
-	 	
+
 		DOM loading stuff
-		
+
 				---*/
 
 	var readyBound = false, isReady = false, readyList = [];
@@ -285,8 +285,8 @@ var me = me || {};
 	 * @param {Function} handler A function to execute after the DOM is ready.
 	 * @example
 	 * // small main skeleton
-	 * var jsApp	= 
-	 * {	
+	 * var jsApp	=
+	 * {
 	 *    // Initialize the jsApp
 	 *    // called by the window.onReady function
 	 *    onload: function()
@@ -316,14 +316,14 @@ var me = me || {};
 	 *    {
 	 *       // define stuff
 	 *       // ....
-	 *       
+	 *
 	 *       // change to the menu screen
 	 *       me.state.change(me.state.MENU);
 	 *    }
 	 * }; // jsApp
 	 *
 	 * // "bootstrap"
-	 * window.onReady(function() 
+	 * window.onReady(function()
 	 * {
 	 *    jsApp.onload();
 	 * });
@@ -353,9 +353,9 @@ var me = me || {};
 	/************************************************************************************/
 
 	/*---
-	
+
 	 	some "Javascript API" patch & enhancement
-	
+
 						---*/
 
 	var initializing = false,
@@ -379,20 +379,20 @@ var me = me || {};
 	 *       return this.dancing;
 	 *    }
 	 * });
-	 *  
+	 *
 	 * var Ninja = Person.extend(
 	 * {
 	 *    init: function()
 	 *    {
 	 *       this.parent( false );
 	 *    },
-	 *    
+	 *
 	 *    dance: function()
 	 *    {
 	 *       // Call the inherited version of dance()
 	 *       return this.parent();
 	 *    },
-	 *    
+	 *
 	 *    swingSword: function()
 	 *    {
 	 *       return true;
@@ -492,20 +492,20 @@ var me = me || {};
 		 * @param {Array.<string>} [args] Optional additional arguments to curry for the function.
 		 * @example
 		 * // A typical use of Function bind is to ensure that a callback
-		 * // (event handler, etc.) that is an object method gets called with 
+		 * // (event handler, etc.) that is an object method gets called with
 		 * // the correct object as its context (this value):
 		 *
 		 * // -> WRONG
 		 * myObject.onComplete(this.callback);
 		 *
-		 * // -> RIGHT 
+		 * // -> RIGHT
 		 * myObject.onComplete(this.callback.bind(this));
 		 */
 		/*
-		Function.prototype.bind = function(scope) 
+		Function.prototype.bind = function(scope)
 		{
-			var _function = this; 
-			return function() 
+			var _function = this;
+			return function()
 			{
 				return _function.apply(scope, arguments);
 			}
@@ -520,14 +520,14 @@ var me = me || {};
 		};
 
 	};
-	
+
 	if(typeof console === "undefined") {
 		/**
 		 * Dummy console.log to avoid crash
 		 * in case the browser does not support it
 		 * @private
 		 */
-		console = { 
+		console = {
 			log: function() {},
 			info: function() {},
 			error: function() {alert(Array.prototype.slice.call(arguments).join(", "));}
@@ -549,7 +549,7 @@ var me = me || {};
 			return fn.apply(fn, args);
 		}, 0.01);
 	};
-   
+
 	if (!Object.defineProperty) {
 		/**
 		 * simple defineProperty function definition (if not supported by the browser)<br>
@@ -574,8 +574,8 @@ var me = me || {};
 		}
 	};
 
-	/** 
-	 * add trim fn to the string object 
+	/**
+	 * add trim fn to the string object
 	 * @extends String
 	 * @return {String} trimmed string
 	 */
@@ -584,7 +584,7 @@ var me = me || {};
 	};
 
 	/**
-	 * add isNumeric fn to the string object 
+	 * add isNumeric fn to the string object
 	 * @extends String
 	 * @return {Boolean} true if string contains only digits
 	 */
@@ -593,7 +593,7 @@ var me = me || {};
 	};
 
 	/**
-	 * add a isBoolean fn to the string object 
+	 * add a isBoolean fn to the string object
 	 * @extends String
 	 * @return {Boolean} true if the string is either true or false
 	 */
@@ -605,16 +605,16 @@ var me = me || {};
 	/**
 	 * add a contains fn to the string object
 	 * @extends String
-	 * @return {Boolean} 
+	 * @return {Boolean}
 	 */
 	String.prototype.contains = function(word) {
 		return this.indexOf(word) > -1;
 	};
-	
+
    /**
 	 * convert the string to hex value
 	 * @extends String
-	 * @return {String} 
+	 * @return {String}
 	 */
 	String.prototype.toHex = function() {
       var res = "", c = 0;
@@ -675,16 +675,16 @@ var me = me || {};
 		return "0123456789ABCDEF".charAt((this - this % 16) >> 4)
 				+ "0123456789ABCDEF".charAt(this % 16);
 	};
-	
+
 	/**
 	 * Returns a value indicating the sign of a number<br>
 	 * @extends Number
 	 * @return {Number} sign of a the number
 	 */
 	Number.prototype.sign = function() {
-		return this < 0 ? -1 : (this > 0 ? 1 : 0);  
+		return this < 0 ? -1 : (this > 0 ? 1 : 0);
 	};
-	
+
 	/**
 	 * Converts an angle in degrees to an angle in radians
 	 * @param {Number} [angle="angle"] angle in degrees
@@ -729,10 +729,10 @@ var me = me || {};
 	function _TinyXMLParser() {
 		var parserObj = {
 			xmlDoc : null,
-	
+
 			// parse a xml from a string (xmlhttpObj.responseText)
 			parseFromString : function(textxml) {
-				// get a reference to the requested corresponding xml file 
+				// get a reference to the requested corresponding xml file
 				if ($.DOMParser) {
 					var parser = new DOMParser();
 					this.xmlDoc = parser.parseFromString(textxml, "text/xml");
@@ -796,7 +796,7 @@ var me = me || {};
 		if (me_initialized)
 			return;
 
-		// init some audio variables		
+		// init some audio variables
 		var a = document.createElement('audio');
 
 		// enable/disable the cache
@@ -813,8 +813,8 @@ var me = me || {};
 					&& ("" != a.canPlayType('audio/wav; codecs="1"'));
 
 			// enable sound if any of the audio format is supported
-			me.sys.sound = me.audio.capabilities.mp3 || 
-                        me.audio.capabilities.ogg || 
+			me.sys.sound = me.audio.capabilities.mp3 ||
+                        me.audio.capabilities.ogg ||
                         me.audio.capabilities.wav;
 
 		}
@@ -823,13 +823,13 @@ var me = me || {};
 				|| (me.sys.ua.search("ipod") > -1)
 				|| (me.sys.ua.search("ipad") > -1)
 				|| (me.sys.ua.search("android") > -1)) {
-			//if on mobile device, disable sound for now 
+			//if on mobile device, disable sound for now
 			me.sys.sound = false;
 		}
-		
+
 		// detect touch capabilities
 		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $);
-		
+
 		// init the FPS counter if needed
 		me.timer.init();
 
@@ -970,7 +970,7 @@ var me = me || {};
 		api.draw = function(context) {
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
-				// parse all objects 
+				// parse all objects
 				for ( var o = dirtyObjects.length, obj; o--,
 						obj = dirtyObjects[o];) {
 					// if dirty region enabled, make sure the object is in the area to be refreshed
@@ -1022,28 +1022,28 @@ var me = me || {};
 		var api = {};
 
 		/*---------------------------------------------
-			
+
 			PRIVATE STUFF
-				
+
 			---------------------------------------------*/
 
 		// ref to the "system" context
 		var frameBuffer = null;
 
-		// hold all the objects							
+		// hold all the objects
 		var gameObjects = [];
 
 		// hold number of object in the array
 		var objCount = 0;
 
-		// flag to redraw the sprites 
+		// flag to redraw the sprites
 		var initialized = false;
 
 		// to keep track of deferred stuff
 		var pendingDefer = null;
-      
+
 		/*---------------------------------------------
-			
+
 			PUBLIC STUFF
 
 			---------------------------------------------*/
@@ -1102,7 +1102,7 @@ var me = me || {};
 		 * @name me.game#ACTION_OBJECT
 		 */
 		api.ACTION_OBJECT = 3; // door, etc...
-		
+
 		/**
 		 * Fired when a level is fully loaded and <br>
 		 * and all entities instantiated. <br>
@@ -1151,14 +1151,14 @@ var me = me || {};
 		 * @function
 		 */
 		api.reset = function() {
-			
+
 			//cancel any pending task
 			if (pendingDefer)
 			{
 				clearTimeout(pendingDefer);
 			}
 			pendingDefer = null;
-         
+
 			// initialized the object if not yet done
 			if (!initialized)
 				api.init();
@@ -1177,7 +1177,7 @@ var me = me || {};
 
 			// also reset the draw manager
 			drawManager.reset();
-			
+
 			// reset the transform matrix to the normal one
 			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -1208,11 +1208,11 @@ var me = me || {};
 					api.add(layers[i]);
 				}
 			};
-			
+
 			// change the viewport limit
-			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width), 
+			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width),
 								   Math.max(api.currentLevel.realheight, api.viewport.height));
-			
+
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
 			for ( var group = 0; group < objectGroups.length; group++) {
@@ -1223,20 +1223,20 @@ var me = me || {};
 					}
 				}
 			}
-			
-			// check if the map has different default (0,0) screen coordinates 
+
+			// check if the map has different default (0,0) screen coordinates
 			if (api.currentLevel.pos.x != api.currentLevel.pos.y) {
 				// translate the display accordingly
 				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
 			}
-			
+
 			// sort all our stuff !!
 			api.sort();
-			
+
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
 				api.onLevelLoaded.apply(api.onLevelLoaded, new Array(level.name))
-			} 
+			}
 
 		};
 
@@ -1273,12 +1273,12 @@ var me = me || {};
 		 * @function
 		 */
 		api.addEntity = function(entityType, zOrder) {
-			var obj = me.entityPool.newIstanceOf(entityType);
+			var obj = me.entityPool.newInstanceOf(entityType);
 			if (obj) {
 				api.add(obj, zOrder);
 			}
 		};
-		
+
 		/**
 		 * returns the list of entities with the specified name<br>
 		 * as defined in Tiled (Name field of the Object Properties)<br>
@@ -1301,7 +1301,7 @@ var me = me || {};
 			}
 			return objList;
 		};
-		
+
 		/**
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
@@ -1321,7 +1321,7 @@ var me = me || {};
 			}
 			return null;
 		};
-		
+
 		/**
 		 * add a HUD obj to the game manager
 		 * @name me.game#addHUD
@@ -1367,14 +1367,14 @@ var me = me || {};
 		 * @function
 		 */
 		api.update = function() {
-			
+
 			// previous rect (if any)
 			var oldRect = null;
 			// loop through our objects
 			for ( var i = objCount, obj; i--, obj = gameObjects[i];) {
 				// check for previous rect before position change
 				oldRect = (me.sys.dirtyRegion && obj.isEntity) ? obj.getRect() : null;
-            
+
 				// update our object
 				var updated = obj.update();
 
@@ -1407,13 +1407,13 @@ var me = me || {};
 				// ensure it won't be turn back to visible later
 				// PS: may be use obj.alive instead ?
 				obj.isEntity = false;
-				
+
 				// remove the object from the object to draw
 				drawManager.remove(obj);
-				
+
 				// remove the object from the object list
 				/** @private */
-				pendingDefer = (function (obj) 
+				pendingDefer = (function (obj)
 				{
 				   var idx = gameObjects.indexOf(obj);
 				   if (idx!=-1) {
@@ -1470,8 +1470,8 @@ var me = me || {};
 
 		api.sort = function(sort_func) {
 			if (typeof(sort_func) !== "function") {
-				// sort order is inverted, 
-				// since we use a reverse loop for the display 
+				// sort order is inverted,
+				// since we use a reverse loop for the display
 				gameObjects.sort(function(a, b) {
 					return (b.z - a.z);
 				});
@@ -1500,7 +1500,7 @@ var me = me || {};
 		 *
 		 * // check if we collide with an enemy :
 		 * if (res && (res.obj.type == me.game.ENEMY_OBJECT))
-		 * { 	
+		 * {
 		 *   if (res.x != 0)
 		 *   {
 		 *      // x axis
@@ -1515,7 +1515,7 @@ var me = me || {};
 		 *      if (res.y<0)
 		 *         console.log("y axis : top side !");
 		 *      else
-		 *         console.log("y axis : bottom side !");			
+		 *         console.log("y axis : bottom side !");
 		 *   }
 		 * }
 
@@ -1581,7 +1581,7 @@ var me = me || {};
 	/* -----
 
 		Screen object object
-			
+
 		------	*/
 	/**
 	 * A class skeleton for "Screen" Object <br>
@@ -1619,9 +1619,9 @@ var me = me || {};
 	 *       this.loadPercent = progress;
 	 *       this.invalidate = true;
 	 *    },
-	 * 
-	 *   
-	 *    // make sure the screen is only refreshed on load progress 
+	 *
+	 *
+	 *    // make sure the screen is only refreshed on load progress
 	 *    update: function()
 	 *    {
 	 *       if (this.invalidate===true)
@@ -1634,7 +1634,7 @@ var me = me || {};
 	 *       // else return false
 	 *       return false;
 	 *    },
-	 * 
+	 *
 	 *    // on destroy event
 	 *    onDestroyEvent : function ()
 	 *    {
@@ -1652,14 +1652,14 @@ var me = me || {};
 	 *       logo_width = this.logo.measureText(context,"awesome loading screen").width;
 	 *
 	 *       // draw our text somewhere in the middle
-	 *       this.logo.draw(context, 
-	 *                      "awesome loading screen", 
-	 *                      ((context.canvas.width - logo_width) / 2), 
+	 *       this.logo.draw(context,
+	 *                      "awesome loading screen",
+	 *                      ((context.canvas.width - logo_width) / 2),
 	 *                      (context.canvas.height + 60) / 2);
-	 *   
+	 *
 	 *       // display a progressive loading bar
 	 *       var width = Math.floor(this.loadPercent * context.canvas.width);
-	 *     
+	 *
 	 *       // draw the progress bar
 	 *       context.strokeStyle = "silver";
 	 *       context.strokeRect(0, (context.canvas.height / 2) + 40, context.canvas.width, 6);
@@ -1675,13 +1675,13 @@ var me = me || {};
 
 		visible : true,
 		addAsObject : false,
-		
+
 
 		rect : null,
 
 		/**
 		 *	initialization function
-		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br> 
+		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
 		 * allowing to override the update & draw function to add specific treatment.
 		 */
 
@@ -1691,7 +1691,7 @@ var me = me || {};
 			this.rect = new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
-		/** 
+		/**
 		 *	Object reset function
 		 * @private
 		 */
@@ -1742,7 +1742,7 @@ var me = me || {};
 		 * optional empty function<br>
 		 * only used by the engine if the object has been initialized using addAsObject parameter set to true<br>
 		 * @example
-		 * // define a Title Screen 
+		 * // define a Title Screen
 		 * var TitleScreen = me.ScreenObject.extend(
 		 * {
 		 *    // override the default constructor
@@ -1768,7 +1768,7 @@ var me = me || {};
 		onUpdateFrame : function() {
 			// update the frame counter
 			me.timer.update();
-			
+
 			// update all games object
 			me.game.update();
 
@@ -1784,7 +1784,7 @@ var me = me || {};
 		 * optional empty function<br>
 		 * only used by the engine if the object has been initialized using addAsObject parameter set to true<br>
 		 * @example
-		 * // define a Title Screen 
+		 * // define a Title Screen
 		 * var TitleScreen = me.ScreenObject.extend(
 		 * {
 		 *    // override the default constructor
@@ -1823,7 +1823,7 @@ var me = me || {};
 		}
 
 	});
-	
+
 
 	/************************************************************************************/
 	/*      Game App Manager                                                            */
@@ -1831,7 +1831,7 @@ var me = me || {};
 	/************************************************************************************/
 
 	/*---
-	
+
 	 	cross browser requestAnimationFrame/cancelRequestAnimFrame.
 
 		---*/
@@ -1858,7 +1858,7 @@ var me = me || {};
 	/* -----
 
 		the game State Manager (state machine)
-			
+
 		------	*/
 	/**
 	 * a State Manager (state machine)<p>
@@ -1873,9 +1873,9 @@ var me = me || {};
 		var obj = {};
 
 		/*---------------------------------------------
-			
+
 			PRIVATE STUFF
-				
+
 			---------------------------------------------*/
 
 		// current state
@@ -1984,19 +1984,19 @@ var me = me || {};
 				else
 					_screenObject[_state].screen.destroy();
 			}
-			
+
 			if (_screenObject[state])
 			{
 				// set the global variable
 				_state = state;
-				
+
 				// call the reset function with _extraArgs as arguments
 				_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
 
 				// cache the new screen object update function
 				_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame.bind(_screenObject[_state].screen);
 
-				// and start the main loop of the 
+				// and start the main loop of the
 				// new requested state
 				_startRunLoop();
 
@@ -2004,16 +2004,16 @@ var me = me || {};
 				if (_onSwitchComplete) {
 					_onSwitchComplete();
 				}
-				
+
 				// force repaint
 				me.game.repaint();
 			 }
 		};
 
 		/*---------------------------------------------
-			
+
 			PUBLIC STUFF
-				
+
 			---------------------------------------------*/
 		/**
 		 * default state value for Loading Screen
@@ -2090,7 +2090,7 @@ var me = me || {};
 		obj.init = function() {
 			// set the embedded loading screen
 			obj.set(obj.LOADING, me.loadingScreen);
-			
+
 			// set pause action on losing focus
 			$.addEventListener("blur", function() {
 				// only in case we are not loading stuff
@@ -2248,7 +2248,7 @@ var me = me || {};
 				// wait for the last frame to be
 				// "finished" before switching
 				_switchState.defer(state);
-				
+
 			}
 		};
 

@@ -37,7 +37,7 @@
 		 * @name me.ObjectSettings#image
 		 */
 		image : null,
-		
+
 		/**
 		 * specify a transparent color for the image in rgb format (rrggb or #rrggb)<br>
 		 * OPTIONAL<br>
@@ -47,7 +47,7 @@
 		 * @name me.ObjectSettings#transparent_color
 		 */
 		transparent_color : null,
-		
+
 		/**
 		 * width of a single sprite in the spritesheet<br>
 		 * MANDATORY<br>
@@ -57,7 +57,7 @@
 		 * @name me.ObjectSettings#spritewidth
 		 */
 		spritewidth : null,
-		
+
 		/**
 		 * height of a single sprite in the spritesheet<br>
 		 * OPTIONAL<br>
@@ -106,26 +106,26 @@
 		var obj = {};
 
 		/*---------------------------------------------
-			
+
 			PRIVATE STUFF
-				
+
 		---------------------------------------------*/
 		var entityClass = {};
 
 		/*---------------------------------------------
-			
+
 			PUBLIC STUFF
-				
+
 		---------------------------------------------*/
 
 		/*---
-		
+
 			init
-			
+
 			---*/
 
 		obj.init = function() {
-			// add default entity object 
+			// add default entity object
 			obj.add("me.LevelEntity", me.LevelEntity);
 			obj.add("me.ObjectEntity", me.ObjectEntity);
 			obj.add("me.CollectableEntity", me.CollectableEntity);
@@ -152,10 +152,10 @@
 
 		/**
 		 *	return a new instance of the requested object
-		 * @private	
+		 * @private
 		 */
 
-		obj.newIstanceOf = function(prop) {
+		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
 			if (!name) {
 				return null;
@@ -229,7 +229,7 @@
 				 * @name me.SpriteObject#visible
 				 */
 				visible : true,
-				
+
 				/**
 				 * Set the angle (in Radians) of a sprite to rotate it <br>
 				 * WARNING: rotating sprites decreases performances
@@ -256,7 +256,7 @@
 				// this object is useless here, but low level
 				// function like flipX need to take this in account
 				collisionBox : null,
-				
+
 				// to manage the flickering effect
 				flickering : false,
 				flickerTimer : -1,
@@ -264,17 +264,17 @@
 				flickerState : false,
 
 
-				// a reference to the game vp 
+				// a reference to the game vp
 				vp : null,
 
 				/**
-				 * @ignore 
+				 * @ignore
 				 */
 				init : function(x, y, image, spritewidth, spriteheight) {
 
 					// call the parent constructor
-					this.parent(new me.Vector2d(x, y), 
-								spritewidth  || image.width, 
+					this.parent(new me.Vector2d(x, y),
+								spritewidth  || image.width,
 								spriteheight || image.height);
 
 					// cache image reference
@@ -291,15 +291,15 @@
 
 					// set the default sprite index & offset
 					this.offset = new me.Vector2d(0, 0);
-					
+
 					// set the default anchor point (middle of the sprite)
 					this.anchorPoint = new me.Vector2d(0.5, 0.5);
-					
+
 					// sprite count (line, col)
-					this.spritecount = new me.Vector2d(~~(this.image.width / this.width), 
+					this.spritecount = new me.Vector2d(~~(this.image.width / this.width),
 													   ~~(this.image.height / this.height));
 				},
-				
+
 				/**
 				 *	specify a transparent color
 				 *	@param {String} color color key in rgb format (rrggb or #rrggb)
@@ -310,7 +310,7 @@
 					// applyRGB Filter (return a context object)
 					this.image = me.video.applyRGBFilter(this.image, "transparent", col.toUpperCase()).canvas;
 				},
-				
+
 				/**
 				 * return the flickering state of the object
 				 * @return Boolean
@@ -319,7 +319,7 @@
 					return this.flickering;
 				},
 
-				
+
 				/**
 				 * make the object flicker
 				 * @param {Int} duration
@@ -343,7 +343,7 @@
 					}
 				},
 
-				
+
 				/**
 				 *	Flip object on horizontal axis
 				 *	@param {Boolean} flip enable/disable flip
@@ -389,7 +389,7 @@
 				 *	@param {Boolean} ratio scaling ratio
 				 */
 				resize : function(ratio)
-				{	
+				{
 					if (ratio > 0) {
 						this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
 						this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
@@ -427,13 +427,13 @@
 				 * @param {Context2d} context 2d Context on which draw our object
 				 **/
 				draw : function(context) {
-					
+
 					// do nothing if we are flickering
 					if (this.flickering) {
 						this.flickerState = !this.flickerState;
 						if (!this.flickerState) return;
 					}
-					
+
 					var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
 
 					if ((this.scaleFlag) || (this.angle!==0)) {
@@ -452,10 +452,10 @@
 						xpos = -ax;
 						ypos = -ay;
 					}
-					
-					context.drawImage(this.image, 
+
+					context.drawImage(this.image,
 									this.offset.x, this.offset.y,
-									this.width, this.height, 
+									this.width, this.height,
 									xpos, ypos,
 									this.width, this.height);
 
@@ -550,13 +550,13 @@
 
 					// call the constructor
 					this.parent(x, y, image, spritewidth, spriteheight);
-					
+
 					// if one single image, disable animation
 					if ((this.spritecount.x * this.spritecount.y) == 1) {
 						// override setAnimationFrame with an empty function
 						this.setAnimationFrame = function() {;};
-					} 
-					
+					}
+
 					// default animation speed
 					this.animationspeed = me.sys.fps / 10;
 
@@ -587,24 +587,24 @@
 						idx : 0,
 						length : 0
 					};
-					
+
 					if (frame == null) {
 						frame = [];
 						// create a default animation with all sprites in the spritesheet
 						for ( var i = 0, count = this.spritecount.x * this.spritecount.y; i < count ; i++) {
 							frame[i] = i;
 						}
-					} 
-					
+					}
+
 					// compute and add the offset of each frame
 					for ( var i = 0 , len = frame.length ; i < len; i++) {
-						this.anim[name].frame[i] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x), 
+						this.anim[name].frame[i] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x),
 																   this.height * ~~(frame[i] / this.spritecount.x));
 					}
 					this.anim[name].length = this.anim[name].frame.length;
 				},
 
-				/**		
+				/**
 				 * set the current animation
 				 * @param {String} name animation id
 				 * @param {Object} [onComplete] animation id to switch to when complete, or callback
@@ -660,7 +660,7 @@
 					if (this.visible && !this.animationpause && (this.fpscount++ > this.animationspeed)) {
 						this.setAnimationFrame(++this.current.idx);
 						this.fpscount = 0;
-						
+
 						// switch animation if we reach the end of the strip
 						// and a callback is defined
 						if ((this.current.idx == 0) && this.resetAnim)  {
@@ -684,9 +684,9 @@
 	/************************************************************************************/
 	/**
 	 * a Generic Object Entity<br>
-	 * Object Properties (settings) are to be defined in Tiled, <br> 
+	 * Object Properties (settings) are to be defined in Tiled, <br>
 	 * or when calling the parent constructor
-	 * 
+	 *
 	 * @class
 	 * @extends me.AnimationSheet
 	 * @memberOf me
@@ -706,7 +706,7 @@
 				* @name me.ObjectEntity#GUID
 				*/
 				GUID : null,
-			
+
 				// default type of the object (null)
 				type : 0,
 
@@ -715,22 +715,22 @@
 
 				/** @private */
 				init : function(x, y, settings) {
-					this.parent(x, y, 
-								(typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image, 
-								settings.spritewidth, 
+					this.parent(x, y,
+								(typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image,
+								settings.spritewidth,
 								settings.spriteheight);
-					
+
 					// check for user defined transparent color
 					if (settings.transparent_color) {
 						this.setTransparency(settings.transparent_color);
 					}
-					
+
 					// set the object GUID value
 					this.GUID = me.utils.createGUID();
-					
+
 					// set the object entity name
 					this.name = settings.name?settings.name.toLowerCase():"";
-					
+
 					// adjust initial coordinates (should be bottom left ones when in a tiled world)
 					// TODO: better and take in account isometric map and corresponding position
 					this.pos.set(x, me.game.currentLevel?y + (settings.height||0) - this.height:y);
@@ -750,7 +750,7 @@
 					 * @name me.ObjectEntity#accel
 					 */
 					this.accel = new me.Vector2d();
-					
+
 					/**
 					 * entity current friction<br>
 					 * @public
@@ -758,7 +758,7 @@
 					 * @name me.ObjectEntity#friction
 					 */
 					this.friction = new me.Vector2d();
-					
+
 					/**
 					 * max velocity (to limit entity velocity)<br>
 					 * @public
@@ -792,7 +792,7 @@
 					this.alive = true;
 
 					// some usefull variable
-					
+
 					/**
 					 * falling state of the object<br>
 					 * true if the object is falling<br>
@@ -838,10 +838,10 @@
 
 					this.type = settings.type || 0;
 
-					
+
 					// ref to the collision map
 					this.collisionMap = me.game.collisionMap;
-					
+
 					// to know if our object can break tiles
 					/**
 					 * Define if an entity can go through breakable tiles<br>
@@ -851,7 +851,7 @@
 					 * @name me.ObjectEntity#canBreakTile
 					 */
 					this.canBreakTile = false;
-					
+
 					/**
 					 * a callback when an entity break a tile<br>
 					 * @public
@@ -877,7 +877,7 @@
 
 				/**
 				 * collision detection
-				 * @private	 
+				 * @private
 				 */
 				checkCollision : function(obj) {
 					var res = this.collisionBox.collideVsAABB(obj.collisionBox);
@@ -920,11 +920,11 @@
 				setVelocity : function(x, y) {
 					this.accel.x = (x != 0) ? x : this.accel.x;
 					this.accel.y = (y != 0) ? y : this.accel.y;
-					
+
 					// limit by default to the same max value
 					this.setMaxVelocity(x,y);
 				},
-				
+
 				/**
 				 * cap the entity velocity to the specified value<br>
 				 * @param {Int} x max velocity on x axis
@@ -947,7 +947,7 @@
 					this.friction.y = y || 0;
 				},
 
-				
+
 				/**
 				 * helper function for platform games: <br>
 				 * make the entity move left of right<br>
@@ -993,8 +993,8 @@
 					}
 					return false;
 				},
-				
-								
+
+
 				/**
 				 * helper function for platform games: <br>
 				 * make the entity jump<br>
@@ -1019,53 +1019,53 @@
 					this.jumping = this.falling = false;
 					this.doJump();
 				},
-				
-				
+
+
 				/**
 				 * return the distance to the specified entity
-				 * @param {me.ObjectEntity} entity Entity 
+				 * @param {me.ObjectEntity} entity Entity
 				 * @return {float} distance
 				 */
-				distanceTo: function(o) 
+				distanceTo: function(o)
 				{
 					// the Vector object also implements the same function, but
 					// we have to use here the center of both object
-					var dx = (this.pos.x + this.hWidth)  - (o.pos.x + o.hWidth); 
+					var dx = (this.pos.x + this.hWidth)  - (o.pos.x + o.hWidth);
 					var dy = (this.pos.y + this.hHeight) - (o.pos.y + o.hHeight);
 					return Math.sqrt(dx*dx+dy*dy);
 				},
 
-				
-				/** 
+
+				/**
 				 * handle the player movement on a slope
 				 * and update vel value
 				 * @private
 				 */
 				checkSlope : function(tile, left) {
-										
+
 					// first make the object stick to the tile
 					this.pos.y = tile.pos.y - this.height;
-					
-					// normally the check should be on the object center point, 
+
+					// normally the check should be on the object center point,
 					// but since the collision check is done on corner, we must do the same thing here
 					if (left)
 						this.slopeY = tile.height - (this.collisionBox.right + this.vel.x - tile.pos.x);
 					else
 						this.slopeY = (this.collisionBox.left + this.vel.x - tile.pos.x);
-					
+
 					// cancel y vel
 					this.vel.y = 0;
 					// set player position (+ workaround when entering/exiting slopes tile)
 					this.pos.y += this.slopeY.clamp(0, tile.height);
-					
+
 				},
-				
+
 				/**
 				 * compute the new velocity value
 				 * @private
 				 */
 				computeVelocity : function(vel) {
-				
+
 					// apply gravity (if any)
 					if (this.gravity) {
 						// apply a constant gravity (if not on a ladder)
@@ -1075,13 +1075,13 @@
 						this.falling = (vel.y > 0);
 						this.jumping = this.falling?false:this.jumping;
 					}
-					
+
 					// apply friction
 					if (this.friction.x)
 						vel.x = me.utils.applyFriction(vel.x,this.friction.x);
 					if (this.friction.y)
 						vel.y = me.utils.applyFriction(vel.y,this.friction.y);
-					
+
 					// cap velocity
 					if (vel.y !=0)
 						vel.y = vel.y.clamp(-this.maxVel.y,this.maxVel.y);
@@ -1089,8 +1089,8 @@
 						vel.x = vel.x.clamp(-this.maxVel.x,this.maxVel.x);
 				},
 
-				
-				
+
+
 				/**
 				 * handle the player movement, "trying" to update his position<br>
 				 * @return {me.Vector2d} a collision vector
@@ -1122,8 +1122,8 @@
 				 *    if (res.y<0)
 				 *       console.log("y axis : top side !");
 				 *    else
-				 *       console.log("y axis : bottom side !");		
-				 *		
+				 *       console.log("y axis : bottom side !");
+				 *
 				 *	  // display the tile type
 				 *    console.log(res.yprop.type)
 				 * }
@@ -1134,7 +1134,7 @@
 				updateMovement : function() {
 
 					this.computeVelocity(this.vel);
-					
+
 					// check for collision
 					var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
 
@@ -1143,26 +1143,26 @@
 					// clear the ladder flag
 					this.onladder = false;
 
-					
+
 
 					// y collision
 					if (collision.y) {
 
 						// going down, collision with the floor
 						this.onladder = collision.yprop.isLadder;
-						
+
 						if (collision.y > 0) {
 							if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y))) {
 								// adjust position to the corresponding tile
 								this.pos.y = ~~this.pos.y;
 								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
 								this.falling = false;
-							} 
+							}
 							else if (collision.yprop.isSlope && !this.jumping) {
 								// we stop falling
 								this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
 								this.falling = false;
-							} 
+							}
 							else if (collision.yprop.isBreakable) {
 								if  (this.canBreakTile) {
 									// remove the tile
@@ -1187,12 +1187,12 @@
 							}
 						}
 					}
-					
+
 					// x collision
 					if (collision.x) {
-						
+
 						this.onladder = collision.xprop.isLadder ;
-						
+
 						if (collision.xprop.isSlope && !this.jumping) {
 							this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
 							this.falling = false;
@@ -1212,10 +1212,10 @@
 						}
 					}
 
-					
+
 					// update player position
 					this.pos.add(this.vel);
-					
+
 					// returns the collision "vector"
 					return collision;
 
@@ -1270,7 +1270,7 @@
 			.extend(
 			/** @scope me.InvisibleEntity.prototype */
 			{
-				
+
 			   /**
 				* Entity "Game Unique Identifier"<br>
 				* @public
@@ -1278,7 +1278,7 @@
 				* @name me.ObjectEntity#GUID
 				*/
 				GUID : null,
-				
+
 				// for z ordering
 				z : 0,
 				collisionBox : null,
@@ -1290,13 +1290,13 @@
 
 					// create a a default collision rectangle
 					this.collisionBox = new me.Rect(this.pos, settings.width, settings.height);
-					
+
 					// set the object GUID value
 					this.GUID = me.utils.createGUID();
-					
+
 					// set the object entity name
 					this.name = settings.name?settings.name.toLowerCase():"";
-					
+
 					this.visible = true;
 
 					this.collidable = true;
@@ -1322,7 +1322,7 @@
 
 				/**
 				 * collision detection
-				 * @private	 
+				 * @private
 				 */
 				checkCollision : function(obj) {
 					var res = this.collisionBox.collideVsAABB(obj.collisionBox);
@@ -1330,7 +1330,7 @@
 					if (res.x != 0 || res.y != 0) {
 						// notify the object
 						this.onCollision(res, obj);
-						// return the type 
+						// return the type
 						res.type = this.type;
 						// return a reference of the colliding object
 						res.obj  = this;
