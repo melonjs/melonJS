@@ -217,9 +217,6 @@ var me = me || {};
 		preRender : false
 	};
 
-	// add me to the global window variable
-	$.me = me;
-
 	// a flag to know if melonJS
 	// is initialized
 	var me_initialized = false;
