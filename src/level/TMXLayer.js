@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($, game) {
 	
 	/**
 	 * a generic Color Layer Object
@@ -54,7 +54,7 @@
 			context.fillStyle = this.color;
 			// correct the rect size is the map is not at the default screen position
 			// (fixme : this might not work with dirtyRect)
-			var shift = me.game.currentLevel.pos;
+			var shift = game.currentLevel.pos;
 			// clear the specified rect
 			context.fillRect(rect.left - shift.x, rect.top - shift.y, rect.width, rect.height);
 		}
@@ -95,13 +95,13 @@
 			this.ratio = ratio || 0;
 			
 			// last position of the viewport
-			this.lastpos = me.game.viewport.pos.clone();
+			this.lastpos = game.viewport.pos.clone();
 			// current base offset when drawing the image
 			this.offset = new me.Vector2d(0,0);
 			
 			// set layer width & height 
-			this.width  = width ? Math.min(me.game.viewport.width, width)   : me.game.viewport.width;
-			this.height = height? Math.min(me.game.viewport.height, height) : me.game.viewport.height;
+			this.width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
+			this.height = height? Math.min(game.viewport.height, height) : game.viewport.height;
 			
 			// make it visible
 			this.visible = true;
@@ -136,7 +136,7 @@
 			}
 			else {
 				// reference to the viewport
-				var vpos = me.game.viewport.pos;
+				var vpos = game.viewport.pos;
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
@@ -671,7 +671,7 @@
 		draw : function(context, rect) {
 			
 			// get a reference to the viewport
-			var vpos = me.game.viewport.pos;
+			var vpos = game.viewport.pos;
 			
 			// use the offscreen canvas
 			if (this.preRender) {
@@ -717,4 +717,4 @@
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
-})(window);
+})(window, me.game);
