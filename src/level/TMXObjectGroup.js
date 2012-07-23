@@ -39,7 +39,7 @@
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
 			for ( var i = 0; i < data.length; i++) {
-				this.objects.push(new TMXOBject(data[i], tilesets, z));
+				this.objects.push(new me.TMXOBject(data[i], tilesets, z));
 			}
 		},
 		
@@ -71,7 +71,7 @@
 	 * @private
 	 */
 
-	TMXOBject = Object.extend(
+	me.TMXOBject = Object.extend(
 	{
 		init :  function(tmxObj, tilesets, z) {
 			this.name = me.XMLParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
