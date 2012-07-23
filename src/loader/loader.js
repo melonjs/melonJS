@@ -22,8 +22,8 @@
 		init : function() {
 			this.parent(true);
 			// melonJS logo
-			this.logo1 = new me.Font('century gothic', 32, 'white');
-			this.logo2 = new me.Font('century gothic', 32, '#89b002');
+			this.logo1 = new me.Font('century gothic', 32, 'white', 'bottom');
+			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'bottom');
 			this.logo2.bold();
 
 			// flag to know if we need to refresh the display
@@ -79,12 +79,10 @@
 			// draw the melonJS logo
 			this.logo1.draw(context, 'melon',
 					((context.canvas.width - logo_width) / 2),
-					(context.canvas.height + 60) / 2);
+					(context.canvas.height / 2));
 			this.logo2.draw(context, 'JS',
 					((context.canvas.width - logo_width) / 2) + logo1_width,
-					(context.canvas.height + 60) / 2);
-			// add the height of the logo
-			y += 40;
+					(context.canvas.height / 2));
 
 			// display a progressive loading bar
 			var width = Math.floor(this.loadPercent * context.canvas.width);
