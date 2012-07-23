@@ -95,7 +95,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textBaseLine = this.align;
+			context.textBaseline = this.align;
 			var dim = context.measureText(text);
 			dim.height = this.height;
 
@@ -113,7 +113,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textBaseLine = this.align;
+			context.textBaseline = this.align;
 			context.fillText(text, ~~x, ~~y);
 		}
 	});
