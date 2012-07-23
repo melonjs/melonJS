@@ -1179,7 +1179,7 @@ var me = me || {};
 			drawManager.reset();
 			
 			// reset the transform matrix to the normal one
-			me.video.getScreenFrameBuffer().setTransform(1, 0, 0, 1, 0, 0);
+			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
 
 		};
 
@@ -1227,7 +1227,7 @@ var me = me || {};
 			// check if the map has different default (0,0) screen coordinates 
 			if (api.currentLevel.pos.x != api.currentLevel.pos.y) {
 				// translate the display accordingly
-				me.video.getScreenFrameBuffer().translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
+				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
 			}
 			
 			// sort all our stuff !!
