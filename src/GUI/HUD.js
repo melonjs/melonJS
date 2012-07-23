@@ -345,8 +345,10 @@
 					}
 				}
 			}
+			// make sure we keep the HUD at the default origin 0,0 screen position 
+			var map_pos = me.game.currentLevel.pos;
 			// draw the HUD
-			context.drawImage(this.HUDCanvasSurface.canvas, this.pos.x, this.pos.y);
+			context.drawImage(this.HUDCanvasSurface.canvas, this.pos.x -map_pos.x, this.pos.y -map_pos.y);
 			// reset the flag
 			this.HUD_invalidated = false;
 		}

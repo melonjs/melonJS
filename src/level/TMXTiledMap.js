@@ -20,7 +20,10 @@
 	me.TileMap = Object.extend({
 		// constructor
 		init: function(x, y) {
+			// map default position
 			this.pos = new me.Vector2d(x, y);
+						
+			// map default z order
 			this.z = 0;
 			
 			/**
@@ -90,6 +93,7 @@
 
 			// loading flag
 			this.initialized = false;
+			
 		},
 
 		/**
@@ -273,6 +277,15 @@
 				   this.realheight = this.height * this.tileheight;
 				   this.backgroundcolor = me.XMLParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
 				   this.z = zOrder++;
+
+				   // center the map if smaller than the current viewport
+				   if ((this.realwidth < me.game.viewport.width) || 
+					   (this.realheight < me.game.viewport.height)) {
+						var shiftX =  ~~( (me.game.viewport.width - this.realwidth) / 2);
+						var shiftY =  ~~( (me.game.viewport.height - this.realheight) / 2);
+						// update the map default screen position
+						this.pos.add({x:shiftX > 0 ? shiftX : 0 , y:shiftY > 0 ? shiftY : 0} );
+				   }
 
 				   // set the map properties (if any)
 				   me.TMXUtils.setTMXProperties(this, map);

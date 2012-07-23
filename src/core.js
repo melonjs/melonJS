@@ -1213,16 +1213,6 @@ var me = me || {};
 			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width), 
 								   Math.max(api.currentLevel.realheight, api.viewport.height));
 			
-			// center the map if smaller than the current viewport
-			if ((api.currentLevel.realwidth < api.viewport.getWidth()) || 
-			    (api.currentLevel.realheight < api.viewport.getHeight())) {
-				var shiftX =  ~~( (api.viewport.getWidth() - api.currentLevel.realwidth) / 2);
-				var shiftY =  ~~( (api.viewport.getHeight() - api.currentLevel.realheight) / 2);
-				// translate the global context
-				me.video.getScreenFrameBuffer().translate( shiftX > 0 ? shiftX : 0 , shiftY > 0 ? shiftY : 0 );
-			
-			}
-
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
 			for ( var group = 0; group < objectGroups.length; group++) {
@@ -1233,7 +1223,13 @@ var me = me || {};
 					}
 				}
 			}
-
+			
+			// check if the map has different default (0,0) screen coordinates 
+			if (api.currentLevel.pos.x != api.currentLevel.pos.y) {
+				// translate the display accordingly
+				me.video.getScreenFrameBuffer().translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
+			}
+			
 			// sort all our stuff !!
 			api.sort();
 			

@@ -352,8 +352,11 @@
 		 * @param {Color} col
 		 */
 		api.clearSurface = function(context, col) {
+			context.save();
+			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.fillStyle = col;
 			context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+			context.restore();
 		};
 
 		/**
@@ -365,11 +368,9 @@
 		 * @param {scale} scale
 		 */
 		api.scale = function(context, scale) {
-			context
-					.translate(
+			context.translate(
 							-(((context.canvas.width * scale) - context.canvas.width) >> 1),
 							-(((context.canvas.height * scale) - context.canvas.height) >> 1));
-
 			context.scale(scale, scale);
 
 		};

@@ -52,8 +52,11 @@
 		 */
 		draw : function(context, rect) {
 			context.fillStyle = this.color;
+			// correct the rect size is the map is not at the default screen position
+			// (fixme : this might not work with dirtyRect)
+			var shift = me.game.currentLevel.pos;
 			// clear the specified rect
-			context.fillRect(rect.left, rect.top, rect.width, rect.height);
+			context.fillRect(rect.left - shift.x, rect.top - shift.y, rect.width, rect.height);
 		}
 	});	
 
