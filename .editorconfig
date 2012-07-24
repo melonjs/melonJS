@@ -1,0 +1,9 @@
+; EditorConfig file format for defining coding styles 
+; enabling editors to adhere to the project defined style. 
+; Visit http://EditorConfig.org for more details.
+
+root = true
+
+; All JavaScript files should use tabs unless specified otherwise
+[**.js]
+indent_style = tab
