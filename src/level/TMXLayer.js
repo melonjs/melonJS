@@ -676,8 +676,8 @@
 			// use the offscreen canvas
 			if (this.preRender) {
 			
-				width = Math.min(rect.width, this.realwidth);
-				height = Math.min(rect.height, this.realheight);
+				var width = Math.min(rect.width, this.realwidth);
+				var height = Math.min(rect.height, this.realheight);
 			
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 
