@@ -62,10 +62,10 @@
 		drawTileLayer : function(context, layer, viewport, rect) {
 			// get top-left and bottom-right tile position
 			var start = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											   viewport.y + rect.pos.y).floor();
+											   viewport.y + rect.pos.y).floorSelf();
 				
 			var end = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + this.tilewidth, 
-											 viewport.y + rect.pos.y + rect.height + this.tileheight).ceil();
+											 viewport.y + rect.pos.y + rect.height + this.tileheight).ceilSelf();
 			
 			//ensure we are in the valid tile range
 			end.x = end.x > this.width ? this.width : end.x;
@@ -154,9 +154,9 @@
 
 			// get top-left and bottom-right tile position
 			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x - tileset.tilewidth, 
-											    viewport.y + rect.pos.y - tileset.tileheight).floor();
+											    viewport.y + rect.pos.y - tileset.tileheight).floorSelf();
 			var TileEnd = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + tileset.tilewidth, 
-												 viewport.y + rect.pos.y + rect.height + tileset.tileheight).ceil();
+												 viewport.y + rect.pos.y + rect.height + tileset.tileheight).ceilSelf();
 			
 			var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y);
 			
@@ -188,9 +188,12 @@
 			 // Determine whether the current row is shifted half a tile to the right
 			var shifted = inUpperHalf ^ inLeftHalf;
 			
+			// initialize the columItr vector
+			var columnItr = rowItr.clone();
+			
 			// main drawing loop			
 			for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
-				var columnItr = rowItr.clone();
+				columnItr.setV(rowItr);
 				for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
 					//check if it's valid tile, if so render
 					if ((columnItr.x >= 0) && (columnItr.y >= 0) && (columnItr.x < this.width) && (columnItr.y < this.height))
