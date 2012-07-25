@@ -1670,9 +1670,9 @@ var me = me || {};
 	/** @scope me.ScreenObject.prototype */
 	{
 
-		visible : true,
+		visible		: true,
 		addAsObject : false,
-
+		z			: 999,
 
 		rect : null,
 
@@ -1697,6 +1697,9 @@ var me = me || {};
 			// reset the game manager
 			me.game.reset();
 
+			// call the onReset Function
+			this.onResetEvent.apply(this, arguments);
+
 			// add our object to the GameObject Manager
 			// allowing to benefit from the keyboard event stuff
 			if (this.addAsObject) {
@@ -1705,11 +1708,9 @@ var me = me || {};
 				// update the rect size if added as an object
 				this.rect = me.game.viewport.getRect();
 				// add ourself !
-				me.game.add(this, 999);
+				me.game.add(this, this.z);
 			}
-			// call the onReset Function
-			this.onResetEvent.apply(this, arguments);
-
+			
 			// sort the object pool
 			me.game.sort();
 
