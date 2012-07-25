@@ -89,8 +89,13 @@
 
 		/** @return {me.Vector2D} */
 		clamp : function(low, high) {
-			return new me.Vector2d(this.x.clamp(low, high), this.y
-					.clamp(low, high));
+			return new me.Vector2d(this.x.clamp(low, high), this.y.clamp(low, high));
+		},
+		
+		clampSelf : function(low, high) {
+			this.x = this.x.clamp(low, high);
+			this.y = this.y.clamp(low, high);
+			return this;
 		},
 
 		minV : function(/**me.Vector2d*/ v) {
@@ -109,8 +114,22 @@
 		},
 		
 		/** @return {me.Vector2D} New Vector2d */
+		floorSelf : function() {
+			this.x = ~~this.x;
+			this.y = ~~this.y;
+			return this;
+		},
+		
+		/** @return {me.Vector2D} New Vector2d */
 		ceil : function() {
 			return new me.Vector2d(Math.ceil(this.x), Math.ceil(this.y));
+		},
+		
+		/** @return {me.Vector2D} New Vector2d */
+		ceilSelf : function() {
+			this.x = Math.ceil(this.x);
+			this.y = Math.ceil(this.y);
+			return this;
 		},
 
 		/** @return {me.Vector2D} New Vector2d */
@@ -121,6 +140,7 @@
 		negateSelf : function() {
 			this.x = -this.x;
 			this.y = -this.y;
+			return this;
 		},
 
 		//copy() copies the x,y values of another instance to this
