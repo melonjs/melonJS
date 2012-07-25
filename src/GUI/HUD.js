@@ -182,6 +182,9 @@
 			
 			// this is a little hack to ensure the HUD is always the first draw
 			this.z = 999;
+			
+			// ensure me.game.removeAll() will not remove the HUD
+			this.persist = true;
 
 		},
 

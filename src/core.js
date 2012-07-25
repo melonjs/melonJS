@@ -713,7 +713,19 @@ var me = me || {};
 	Number.prototype.radToDeg = function (angle) {
         return (angle||this) * (180.0 / Math.PI);
     };
-
+	
+	/**
+	 * Remove the specified object from the Array<br>
+	 * @param {Object} object to be removed
+	 * @extends Array
+	 */
+	Array.prototype.remove = function(obj) {
+		var i = Array.prototype.indexOf.call(this, obj);
+		if( i !== -1 ) {
+			Array.prototype.splice.call(this, i, 1);
+		}
+		return this;
+	};
 	/************************************************************************************/
 
 	/**
@@ -1030,9 +1042,6 @@ var me = me || {};
 		// hold all the objects
 		var gameObjects = [];
 
-		// hold number of object in the array
-		var objCount = 0;
-
 		// flag to redraw the sprites
 		var initialized = false;
 
@@ -1167,11 +1176,6 @@ var me = me || {};
 			if (api.viewport)
 				api.viewport.reset();
 
-			// re-add the HUD if defined
-			if (api.HUD != null) {
-				api.add(api.HUD);
-			}
-
 			// also reset the draw manager
 			drawManager.reset();
 
@@ -1258,9 +1262,6 @@ var me = me || {};
 			// add the object in the game obj list
 			gameObjects.push(object);
 
-			// cache the number of object
-			objCount = gameObjects.length;
-
 		};
 
 		/**
@@ -1291,7 +1292,7 @@ var me = me || {};
 		{
 			var objList = [];
 			entityName = entityName.toLowerCase();
-			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				if(obj.name == entityName) {
 					objList.push(obj);
 				}
@@ -1311,7 +1312,7 @@ var me = me || {};
 		 */
 		api.getEntityByGUID = function(guid)
 		{
-			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				if(obj.isEntity && obj.GUID == guid) {
 					return obj;
 				}
@@ -1368,7 +1369,7 @@ var me = me || {};
 			// previous rect (if any)
 			var oldRect = null;
 			// loop through our objects
-			for ( var i = objCount, obj; i--, obj = gameObjects[i];) {
+			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				// check for previous rect before position change
 				oldRect = (me.sys.dirtyRegion && obj.isEntity) ? obj.getRect() : null;
 
@@ -1396,30 +1397,33 @@ var me = me || {};
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be removed
 		 */
-		api.remove = function(obj) {
+		api.remove = function(obj, force) {
 			// check if object can be destroy
 			if (!obj.destroy || obj.destroy()) {
 				// make it invisible (this is bad...)
 				obj.visible = false
 				// ensure it won't be turn back to visible later
 				// PS: may be use obj.alive instead ?
-				obj.isEntity = false;
+				if (obj.isEntity) {
+					obj.isEntity = false;
+				}
 
 				// remove the object from the object to draw
 				drawManager.remove(obj);
-
+				
+				
 				// remove the object from the object list
-				/** @private */
-				pendingDefer = (function (obj)
-				{
-				   var idx = gameObjects.indexOf(obj);
-				   if (idx!=-1) {
-					  gameObjects.splice(idx, 1);
-					  // update the number of object
-					  objCount = gameObjects.length;
-				   }
-				   pendingDefer = null;
-				}).defer(obj);
+				if (force) {
+					// force immediate object deletion
+					gameObjects.remove(obj);	
+				} else {
+					// else wait the end of the current loop
+					/** @private */
+					pendingDefer = (function (obj) {
+						gameObjects.remove(obj);
+						pendingDefer = null;
+					}).defer(obj);
+				}
 			}
       };
 
@@ -1431,17 +1435,19 @@ var me = me || {};
 		 */
 		api.removeAll = function() {
 			// inform all object they are about to be deleted
-			for (var i = objCount, obj; i--, obj = gameObjects[i];) {
+			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+				if (obj.persist) {
+                   continue;
+				}
 				// force object deletion
 				obj.autodestroy = true; // do i keep this feature?
 				// notify the object
 				if(obj.destroy) {
 					obj.destroy();
 				}
+				// remove the object
+				gameObjects.splice(i, 1);
 			}
-			//empty everything
-			objCount = 0;
-			gameObjects.length = 0;
 			// make sure it's empty there as well
 			drawManager.flush();
 		};
@@ -1521,7 +1527,7 @@ var me = me || {};
 			var result = null;
 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = objCount, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
+			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
 				if (obj.visible && obj.collidable && obj.isEntity && (obj!=objB))
 				{
@@ -1670,21 +1676,22 @@ var me = me || {};
 	/** @scope me.ScreenObject.prototype */
 	{
 
-		visible		: true,
+		visible		: false,
 		addAsObject : false,
+		persist		: false,
 		z			: 999,
-
-		rect : null,
+		rect		: null,
 
 		/**
 		 *	initialization function
 		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
+		 * @param {Boolean} [persist] persist make the screen persistent overt level changes<br>
 		 * allowing to override the update & draw function to add specific treatment.
 		 */
 
-		init : function(addAsObject) {
-			this.addAsObject = addAsObject;
-			this.visible = (addAsObject === true) || false;
+		init : function(addAsObject, persist) {
+			this.addAsObject = this.visible = (addAsObject === true) || false;
+			this.persist = (this.visible && (persist === true)) || false;
 			this.rect = new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
@@ -1703,7 +1710,7 @@ var me = me || {};
 			// add our object to the GameObject Manager
 			// allowing to benefit from the keyboard event stuff
 			if (this.addAsObject) {
-				// make sure it's visible
+				// make sure we are visible upon reset
 				this.visible = true;
 				// update the rect size if added as an object
 				this.rect = me.game.viewport.getRect();
@@ -1977,10 +1984,13 @@ var me = me || {};
 
 			// call the screen object destroy method
 			if (_screenObject[_state]) {
-				if (_screenObject[_state].screen.visible)
-					me.game.remove(_screenObject[_state].screen);
-				else
-					_screenObject[_state].screen.destroy();
+				if (_screenObject[_state].screen.visible) {
+					// persistent or not, make sure we remove it
+					// from the current object list
+					me.game.remove.call(me.game, _screenObject[_state].screen, true);
+				}
+				// notify the object
+				_screenObject[_state].screen.destroy();
 			}
 
 			if (_screenObject[state])
