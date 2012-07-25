@@ -22,8 +22,8 @@
 		init : function() {
 			this.parent(true);
 			// melonJS logo
-			this.logo1 = new me.Font('century gothic', 32, 'white', 'bottom');
-			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'bottom');
+			this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
+			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'middle');
 			this.logo2.bold();
 
 			// flag to know if we need to refresh the display
@@ -69,35 +69,34 @@
 		draw : function(context) {
 			
 			// measure the logo size
-			var y = context.canvas.height / 2;
 			var logo1_width = this.logo1.measureText(context, "melon").width;
-			var logo_width = logo1_width + this.logo2.measureText(context, "JS").width;
-			
+			var xpos = (context.canvas.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
+			var ypos = context.canvas.height / 2;
+				
 			// clear surface
 			me.video.clearSurface(context, "black");
 			
 			// draw the melonJS logo
-			this.logo1.draw(context, 'melon',
-					((context.canvas.width - logo_width) / 2),
-					(context.canvas.height / 2));
-			this.logo2.draw(context, 'JS',
-					((context.canvas.width - logo_width) / 2) + logo1_width,
-					(context.canvas.height / 2));
+			this.logo1.draw(context, 'melon', xpos , ypos);
+			xpos += logo1_width;
+			this.logo2.draw(context, 'JS', xpos, ypos);
+			
+			ypos += this.logo1.measureText(context, "melon").height / 2;
 
 			// display a progressive loading bar
-			var width = Math.floor(this.loadPercent * context.canvas.width);
+			var progress = Math.floor(this.loadPercent * context.canvas.width);
 
 			// draw the progress bar
 			context.strokeStyle = "silver";
-			context.strokeRect(0, y, context.canvas.width, 6);
+			context.strokeRect(0, ypos, context.canvas.width, 6);
 			context.fillStyle = "#89b002";
-			context.fillRect(2, y + 2, width - 4, 2);
+			context.fillRect(2, ypos + 2, progress - 4, 2);
 		}
 
 	});
 
 	/************************************************************************************/
-	/*			PRELOADER SINGLETON																			*/
+	/*			PRELOADER SINGLETON														*/
 	/************************************************************************************/
 
 	/**
