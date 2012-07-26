@@ -1,20 +1,39 @@
 Version History
 ---------------
 0.9.4
+* General : melonJS now only using Google Closure (removed YUI compressor)
+* General : melonJS is now ES5 strict mode compliant
+* General : added a .editorconfig file to provide basic rules to editors
 * Core : added a flag to enable/disable automatic pause on loosing/gaining focus
-* Documentation : corrected and added missing documentation
+* Core : fixed rendering loop when using requestAnimFrame (parasyte)
+* Core : added a renderCollisionMap debug setting (parasyte)
+* Core : use console.error instead of console.alert 
+* Core : added the possibility to specify a user-defined sort function
+* Core : fixed mixing screenObject added as object, and TMX level loading
 * Entity : added an anchor point for renderables (through SpriteObject)
 * Entity : added rotation support (through SpriteObject)
+* Entity : added the possibility to pause an animation (parasyte)
 * General : Fixed & enhanced object/memory deallocation when switching levels
 * General : rewrote the parallax code using the new Generic Image Layer Object
 * General : added support for vertical parallax layer
 * Geometry : added a function to test for vector "equality"
+* Geometry : added a couple of Self function (to help avoid object creation)
 * Loader : fix a case issue between filename and asset name
+* Input : added the possibility to check for mouse event based on world or screen coordinates
+* Input : fixed a false-positive issue at initialization, and usage of special keys (parasyte)
 * TMX : added dynamic layer rendering (configurable globally or per layer through Tiled)
-* TMX : added Image Layer Support (Tiled 0.9.0 ?)
-* TMX : added support for the new map background property (Tiled 0.9.0 ?)
+* TMX : added Image Layer Support (Tiled daily builds only)
+* TMX : added support for the new map background property (Tiled daily builds only)
 * TMX : added a Color Layer (used when a background color is defined)
 * TMX : another round of clean-up and various bug fixing
+* TMX : added support for TMX Object without name (parasyte)
+* TMX : added primilary support for polygon and polyline objects (parasyte)
+* TMX : fixed visible flag nd user-defined properties not being applied to ObjectGroup
+* TMX : fixed rendering issue with transformed tiles (AD, H, V)
+* TMX : fixed diplay of map being smaller than the viewport
+* TMX : fixed TMXObject not being declared correctly under the "me" namespace
+* Utils : fixed the the HexToRGB function and added support for the 3 char format (#hhh)
+* Documentation : Corrected and added missing documentation
 
 0.9.3
 * General : Better Error management and reporting
