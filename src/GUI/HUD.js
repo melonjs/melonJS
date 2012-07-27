@@ -184,7 +184,7 @@
 			this.z = 999;
 			
 			// ensure me.game.removeAll() will not remove the HUD
-			this.persist = true;
+			this.isPersistent = true;
 
 		},
 

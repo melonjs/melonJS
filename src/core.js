@@ -1436,7 +1436,7 @@ var me = me || {};
 		api.removeAll = function() {
 			// inform all object they are about to be deleted
 			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				if (obj.persist) {
+				if (obj.isPersistent) {
                    continue;
 				}
 				// force object deletion
@@ -1676,22 +1676,22 @@ var me = me || {};
 	/** @scope me.ScreenObject.prototype */
 	{
 
-		visible		: false,
-		addAsObject : false,
-		persist		: false,
-		z			: 999,
-		rect		: null,
+		visible		 : false,
+		addAsObject  : false,
+		isPersistent : false,
+		z			 : 999,
+		rect		 : null,
 
 		/**
 		 *	initialization function
 		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
-		 * @param {Boolean} [persist] persist make the screen persistent overt level changes<br>
+		 * @param {Boolean} [isPersistent] isPersistent make the screen persistent overt level changes<br>
 		 * allowing to override the update & draw function to add specific treatment.
 		 */
 
-		init : function(addAsObject, persist) {
+		init : function(addAsObject, isPersistent) {
 			this.addAsObject = this.visible = (addAsObject === true) || false;
-			this.persist = (this.visible && (persist === true)) || false;
+			this.isPersistent = (this.visible && (isPersistent === true)) || false;
 			this.rect = new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
