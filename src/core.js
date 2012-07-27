@@ -1396,10 +1396,23 @@ var me = me || {};
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be removed
+		 * @param {Boolean} force force immediate deletion
 		 */
 		api.remove = function(obj, force) {
-			// check if object can be destroy
-			if (!obj.destroy || obj.destroy()) {
+			
+			// notify the object it will be destroyed
+			if (obj.destroy) {
+				obj.destroy();
+			}
+			
+			// remove the object from the object to draw
+			drawManager.remove(obj);
+			
+			// remove the object from the object list
+			if (force===true) {
+				// force immediate object deletion
+				gameObjects.remove(obj);	
+			} else {
 				// make it invisible (this is bad...)
 				obj.visible = false
 				// ensure it won't be turn back to visible later
@@ -1407,23 +1420,12 @@ var me = me || {};
 				if (obj.isEntity) {
 					obj.isEntity = false;
 				}
-
-				// remove the object from the object to draw
-				drawManager.remove(obj);
-				
-				
-				// remove the object from the object list
-				if (force) {
-					// force immediate object deletion
-					gameObjects.remove(obj);	
-				} else {
-					// else wait the end of the current loop
-					/** @private */
-					pendingDefer = (function (obj) {
-						gameObjects.remove(obj);
-						pendingDefer = null;
-					}).defer(obj);
-				}
+				// else wait the end of the current loop
+				/** @private */
+				pendingDefer = (function (obj) {
+					gameObjects.remove(obj);
+					pendingDefer = null;
+				}).defer(obj);
 			}
       };
 
@@ -1435,18 +1437,13 @@ var me = me || {};
 		 */
 		api.removeAll = function() {
 			// inform all object they are about to be deleted
-			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				if (obj.isPersistent) {
+			for (var i = gameObjects.length ; i-- ;) {
+				if (gameObjects[i].isPersistent) {
                    // don't remove persistent objects
 				   continue;
 				}
-
-				// notify the object
-				if(obj.destroy) {
-					obj.destroy();
-				}
-				// remove the object
-				gameObjects.splice(i, 1);
+				// remove the entity
+				api.remove(gameObjects[i], true);
 			}
 			// make sure it's empty there as well
 			drawManager.flush();
