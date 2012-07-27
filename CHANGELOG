@@ -7,7 +7,7 @@ Version History
 * Core : added a flag to enable/disable automatic pause on loosing/gaining focus
 * Core : fixed rendering loop when using requestAnimFrame (parasyte)
 * Core : added a renderCollisionMap debug setting (parasyte)
-* Core : use console.error instead of console.alert 
+* Core : use console.error instead of window.alert 
 * Core : added the possibility to specify a user-defined sort function
 * Core : fixed mixing screenObject added as object, and TMX level loading
 * Entity : added an anchor point for renderables (through SpriteObject)
@@ -27,12 +27,12 @@ Version History
 * TMX : added a Color Layer (used when a background color is defined)
 * TMX : another round of clean-up and various bug fixing
 * TMX : added support for TMX Object without name (parasyte)
-* TMX : added primilary support for polygon and polyline objects (parasyte)
-* TMX : fixed visible flag nd user-defined properties not being applied to ObjectGroup
+* TMX : added preliminary support for polygon and polyline objects (parasyte)
+* TMX : fixed visible flag and user-defined properties not being applied to ObjectGroup
 * TMX : fixed rendering issue with transformed tiles (AD, H, V)
-* TMX : fixed diplay of map being smaller than the viewport
+* TMX : fixed display of map being smaller than the viewport
 * TMX : fixed TMXObject not being declared correctly under the "me" namespace
-* Utils : fixed the the HexToRGB function and added support for the 3 char format (#hhh)
+* Utils : fixed the HexToRGB function and added support for the 3 char format (#hhh)
 * Documentation : Corrected and added missing documentation
 
 0.9.3
