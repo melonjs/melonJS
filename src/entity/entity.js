@@ -1353,17 +1353,13 @@
 
 				/**
 				 * onCollision Event function<br>
-				 * called by the game manager when the object collide with shtg<br>
-				 * by default, if the object type is Collectable, the destroy function is called
+				 * called by the game manager when the object collide with shtg
 				 * @param {me.Vector2d} res collision vector
 				 * @param {me.ObjectEntity} obj the other object that hit this object
 				 * @protected
 				 */
 				onCollision : function(res, obj) {
-					// destroy the object if collectable
-					if (this.collidable
-							&& (this.type == me.game.COLLECTABLE_OBJECT))
-						me.game.remove(this);
+					;// to be extended			
 				},
 
 				/**
