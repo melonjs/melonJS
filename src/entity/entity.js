@@ -212,16 +212,6 @@
 				offset : null,
 
 				/**
-				 * a flag that can prevent the object to be destroyed<br>
-				 * if set to false, the objet won't be destroy when calling me.game.remove(obj)<br>
-				 * default value : true
-				 * @public
-				 * @type Boolean
-				 * @name me.SpriteObject#autodestroy
-				 */
-				autodestroy : true,
-
-				/**
 				 * the visible state of the object<br>
 				 * default value : true
 				 * @public
@@ -474,16 +464,10 @@
 
 				/**
 				 * Destroy function<br>
-				 * object is only removed if the autodestroy flag is set (to be removed, useless)
 				 * @private
 				 */
 				destroy : function() {
-					// if object can be destroyed
-					if (this.autodestroy) {
-						// call the destroy notification function
-						this.onDestroyEvent();
-					}
-					return this.autodestroy;
+					this.onDestroyEvent.apply(this, arguments);
 				},
 
 				/**
@@ -1368,8 +1352,7 @@
 				 */
 				destroy : function() {
 					// call the destroy notification function
-					this.onDestroyEvent();
-					return true;
+					this.onDestroyEvent.apply(this, arguments);
 				},
 
 				/**

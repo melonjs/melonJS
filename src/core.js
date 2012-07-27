@@ -1437,10 +1437,10 @@ var me = me || {};
 			// inform all object they are about to be deleted
 			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				if (obj.isPersistent) {
-                   continue;
+                   // don't remove persistent objects
+				   continue;
 				}
-				// force object deletion
-				obj.autodestroy = true; // do i keep this feature?
+
 				// notify the object
 				if(obj.destroy) {
 					obj.destroy();
@@ -1738,8 +1738,6 @@ var me = me || {};
 		destroy : function() {
 			// notify the object
 			this.onDestroyEvent.apply(this, arguments);
-			// object can be destroyed
-			return true;
 		},
 
 		/**
