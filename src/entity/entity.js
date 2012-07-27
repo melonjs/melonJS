@@ -707,10 +707,22 @@
 				*/
 				GUID : null,
 
-				// default type of the object (null)
+				/**
+				 * define the type of the object<br>
+				 * default value : none<br>
+				 * @public
+				 * @type {Object}
+				 * @name me.ObjectEntity#type
+				 */
 				type : 0,
 
-				// flag to enable/disable collision detection on this object
+				/**
+				 * flag to enable collision detection for this object<br>
+				 * default value : false<br>
+				 * @public
+				 * @type {Boolean}
+				 * @name me.ObjectEntity#collidable
+				 */
 				collidable : false,
 
 				/** @private */
