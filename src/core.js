@@ -517,6 +517,16 @@ var me = me || {};
 		};
 
 	};
+	
+	
+	if (typeof Date.now == "undefined") {
+		/**
+		 * provide a replacement for browser not
+		 * supporting Date.now (JS 1.5)
+		 * @private
+		 */
+		Date.now = function(){return new Date().getTime()};
+	}
 
 	if(typeof console === "undefined") {
 		/**

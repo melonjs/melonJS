@@ -82,7 +82,7 @@
 		 */
 		api.reset = function() {
 			// set to "now"
-			now = last = new Date().getTime();
+			now = last = Date.now();
 			// reset delta counting variables
 			framedelta = 0;
 			framecount = 0;
@@ -107,7 +107,7 @@
 			---                           */
 		api.update = function() {
 			last = now;
-			now = new Date().getTime();
+			now = Date.now();
 
 			delta = (now - last);
 
