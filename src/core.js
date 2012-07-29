@@ -519,7 +519,7 @@ var me = me || {};
 	};
 	
 	
-	if (typeof Date.now == "undefined") {
+	if (typeof Date.now === "undefined") {
 		/**
 		 * provide a replacement for browser not
 		 * supporting Date.now (JS 1.5)
