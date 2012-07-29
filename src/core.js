@@ -944,7 +944,7 @@ var me = me || {};
 			if (obj.visible) {
 				// add obj at index 0, so that we can keep
 				// our inverted loop later
-				dirtyObjects.splice(0, 0, obj);
+				dirtyObjects.unshift(obj);
 			}
 		};
 
