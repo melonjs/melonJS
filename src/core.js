@@ -1246,7 +1246,7 @@ var me = me || {};
 
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
-				api.onLevelLoaded.apply(api.onLevelLoaded, new Array(level.name))
+				api.onLevelLoaded.call(api.onLevelLoaded, level.name)
 			}
 
 		};
