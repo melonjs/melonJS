@@ -510,7 +510,7 @@
 	/** @ignore */
 	me.Tween.Easing.Bounce.EaseIn = function(k) {
 
-		return 1 - Tween.Easing.Bounce.EaseOut(1 - k);
+		return 1 - me.Tween.Easing.Bounce.EaseOut(1 - k);
 
 	};
 	/** @ignore */
@@ -539,8 +539,8 @@
 	me.Tween.Easing.Bounce.EaseInOut = function(k) {
 
 		if (k < 0.5)
-			return Tween.Easing.Bounce.EaseIn(k * 2) * 0.5;
-		return Tween.Easing.Bounce.EaseOut(k * 2 - 1) * 0.5 + 0.5;
+			return me.Tween.Easing.Bounce.EaseIn(k * 2) * 0.5;
+		return me.Tween.Easing.Bounce.EaseOut(k * 2 - 1) * 0.5 + 0.5;
 
 	};
 

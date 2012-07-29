@@ -638,7 +638,7 @@ var me = me || {};
 	 * @return {Number} clamped value
 	 */
 	Number.prototype.clamp = function(low, high) {
-		return this < low ? low : this > high ? high : this;
+		return this < low ? low : this > high ? high : +this;
 	};
 
 	/**
