@@ -265,7 +265,7 @@ var me = me || {};
 
 		// directly call domReady if document is already "ready"
 		if (document.readyState === "complete") {
-			return util.domReady();
+			return domReady();
 		} else {
 			if (document.addEventListener) {
 				// Use the handy event callback
