@@ -338,7 +338,7 @@
 					my += tmxTile.flipAD ? this.tilewidth : this.tileheight;
 				}
 				// set the transform matrix
-				context.setTransform(m11, m12, m21, m22, mx, my);
+				context.transform(m11, m12, m21, m22, mx, my);
 			}
 			
 			// get the local tileset id
