@@ -690,14 +690,14 @@
 			// dynamically render the layer
 			else {
 			
+				// save the context 
+				context.save();
+				
 				// check if transparency
 				if (this.opacity < 1.0) {
 					context.globalAlpha = this.opacity;
 				}
-				
-				// save the context 
-				context.save();
-				
+
 				// translate the display as we want to have per pixel scrolling				
 				context.translate( -vpos.x, -vpos.y);
 				
@@ -706,10 +706,6 @@
 				
 				// restore context to initial state
 				context.restore();
-			
-				// restore default alpha value
-				context.globalAlpha = 1.0;
-				
 			}
 		}
 	});
