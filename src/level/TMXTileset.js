@@ -306,12 +306,14 @@
 		drawTile : function(context, dx, dy, tmxTile) {
 			// check if any transformation is required
 			if (tmxTile.flipped) {
+				var map_pos = me.game.currentLevel.pos;
+				var viewport_pos = me.game.viewport.pos;
 				var m11 = 1; // Horizontal scaling factor
 				var m12 = 0; // Vertical shearing factor
 				var m21 = 0; // Horizontal shearing factor
 				var m22 = 1; // Vertical scaling factor
-				var mx	= dx; 
-				var my	= dy;
+				var mx	= dx + map_pos.x - viewport_pos.x;
+				var my	= dy + map_pos.y - viewport_pos.y;
 				// set initial value to zero since we use a transform matrix
 				dx = dy = 0;
 				
