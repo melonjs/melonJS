@@ -2082,6 +2082,18 @@ var me = me || {};
 		 * @name me.state#SETTINGS
 		 */
 		obj.SETTINGS = 8;
+		
+		/**
+		 * default state value for user defined constants<br>
+		 * @constant
+		 * @name me.state#USER
+		 * @example
+		 * var STATE_INFO = me.state.USER + 0;
+		 * var STATE_WARN = me.state.USER + 1;
+		 * var STATE_ERROR = me.state.USER + 2;
+		 * var STATE_CUTSCENE = me.state.USER + 3;
+		 */
+		obj.USER = 100;
 
 		/**
 		 * onPause callback
