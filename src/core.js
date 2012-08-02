@@ -581,15 +581,18 @@ var me = me || {};
 		}
 	};
 
-	/**
-	 * add trim fn to the string object
-	 * @extends String
-	 * @return {String} trimmed string
-	 */
-	String.prototype.trim = function() {
-		return (this.replace(/^\s+/, '')).replace(/\s+$/, '');
-	};
 
+	if(!String.prototype.trim) {  
+		/**
+		 * returns the string stripped of whitespace from both ends
+		 * @extends String
+		 * @return {String} trimmed string
+		 */
+		String.prototype.trim = function () {  
+			return (this.replace(/^\s+/, '')).replace(/\s+$/, ''); 
+		};  
+	}; 
+	
 	/**
 	 * add isNumeric fn to the string object
 	 * @extends String
