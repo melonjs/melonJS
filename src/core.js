@@ -1839,40 +1839,10 @@ var me = me || {};
 
 
 	/************************************************************************************/
-	/*      Game App Manager                                                            */
+	/*      Game State Manager                                                          */
 	/*      Manage the basic logic of a game/app                                        */
 	/************************************************************************************/
-
-	/*---
-
-	 	cross browser requestAnimationFrame/cancelRequestAnimFrame.
-
-		---*/
-	window.requestAnimFrame = (function() {
-		return window.requestAnimationFrame
-				|| window.webkitRequestAnimationFrame
-				|| window.mozRequestAnimationFrame
-				|| window.oRequestAnimationFrame
-				|| window.msRequestAnimationFrame || function() {
-					return -1;
-				} // return -1 if unsupported
-	})();
-
-	window.cancelRequestAnimFrame = (function() {
-		return window.cancelAnimationFrame
-				|| window.webkitCancelRequestAnimationFrame
-				|| window.mozCancelRequestAnimationFrame
-				|| window.oCancelRequestAnimationFrame
-				|| window.msCancelRequestAnimationFrame || function() {
-					return -1;
-				} // return -1 if unsupported
-	})();
-
-	/* -----
-
-		the game State Manager (state machine)
-
-		------	*/
+	
 	/**
 	 * a State Manager (state machine)<p>
 	 * There is no constructor function for me.state.
@@ -1882,6 +1852,33 @@ var me = me || {};
 	 */
 
 	me.state = (function() {
+		
+		// list of vendors prefix (note : last modernizr version has
+		// a getPrefix function that makes this cleaner and more generic
+		var vendors = ['ms', 'moz', 'webkit', 'o'];
+		
+		// polyfill for RequestAnimationFrame (based on Erik Möller polyfill)
+		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+		};
+		
+		if (!window.requestAnimationFrame) {
+			window.requestAnimationFrame = function(callback, element) {
+				// TODO : allow to run at a lower rate than 60fps with requestAnimationFrame by skipping frame
+				// TODO : integrate setInterval directly here as a fallback
+				// (for next version, I plan to review the whole main loop mechanism, so I don't do it now) 
+				// in melonJS if this returns -1 clearInterval is used
+				return -1;
+			};
+        };
+		
+		if (!window.cancelAnimationFrame) {
+			window.cancelAnimationFrame = function() {
+				return -1;
+			};
+		};
+		
 		// hold public stuff in our singleton
 		var obj = {};
 
@@ -1933,7 +1930,7 @@ var me = me || {};
 				// start the main loop
 				if (me.sys.useNativeAnimFrame) {
 					// attempt to setup the game loop using requestAnimationFrame
-					_animFrameId = window.requestAnimFrame(_renderFrame);
+					_animFrameId = window.requestAnimationFrame(_renderFrame);
 
 					if (_animFrameId != -1) {
 						return;
@@ -1948,8 +1945,7 @@ var me = me || {};
 				// setup the game loop using setInterval
 				_intervalId = setInterval(_activeUpdateFrame, _fps);
 			}
-		}
-		;
+		};
 
 		/**
 		 * @ignore
@@ -1959,9 +1955,8 @@ var me = me || {};
 			_activeUpdateFrame();
 			// we already checked it was supported earlier
 			// so no need to do it again here
-			_animFrameId = window.requestAnimFrame(_renderFrame);
-		}
-		;
+			_animFrameId = window.requestAnimationFrame(_renderFrame);
+		};
 
 		/**
 		 * stop the SO main loop
@@ -1975,12 +1970,11 @@ var me = me || {};
 			}
 			// cancel any previous animationRequestFrame
 			if (_animFrameId != -1) {
-				cancelRequestAnimFrame(_animFrameId);
+				window.cancelAnimationFrame(_animFrameId);
 				_animFrameId = -1;
 			}
 
-		}
-		;
+		};
 
 		/**
 		 * start the SO main loop
