@@ -43,7 +43,7 @@
     <property name="to" value="zone1/2/p1"/>
    </properties>
   </object>
-  <object name="playerspawnpoint" x="16" y="208" width="16" height="16"/>
+  <object name="playerspawnpoint" x="16" y="192" width="16" height="32"/>
   <object name="me.LevelEntity" x="1568" y="1136" width="32" height="48">
    <properties>
     <property name="direction" value="right"/>
