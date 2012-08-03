@@ -5,15 +5,18 @@ Version History
 * General : melonJS is now ES5 strict mode compliant
 * General : added a .editorconfig file to provide basic rules to editors
 * Core : added a flag to enable/disable automatic pause on loosing/gaining focus
-* Core : fixed rendering loop when using requestAnimFrame (parasyte)
+* Core : fixed rendering loop when using requestAnimationFrame (parasyte)
 * Core : added a renderCollisionMap debug setting (parasyte)
 * Core : use console.error instead of window.alert 
 * Core : added the possibility to specify a user-defined sort function
 * Core : fixed mixing screenObject added as object, and TMX level loading
+* Core : fixed screenObject when extending update & draw function 
 * Entity : added an anchor point for renderables (through SpriteObject)
 * Entity : added rotation support (through SpriteObject)
 * Entity : added the possibility to pause an animation (parasyte)
-* General : Fixed & enhanced object/memory deallocation when switching levels
+* Entity : fixed default position by using top-left coordinates as in Tiled
+* Entity : fixed invisible entities being removed when colliding
+* General : dixed & enhanced object/memory deallocation when switching levels
 * General : rewrote the parallax code using the new Generic Image Layer Object
 * General : added support for vertical parallax layer
 * Geometry : added a function to test for vector "equality"
@@ -33,6 +36,7 @@ Version History
 * TMX : fixed display of map being smaller than the viewport
 * TMX : fixed TMXObject not being declared correctly under the "me" namespace
 * Utils : fixed the HexToRGB function and added support for the 3 char format (#hhh)
+* Tween : fixed exception in the tween library (parasyte)
 * Documentation : Corrected and added missing documentation
 
 0.9.3
