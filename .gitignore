@@ -6,8 +6,9 @@ Desktop.ini
 # project specific ignore
 add-on/
 node_modules/
-build/
-docs/
+build/*
+docs/*
+!.placeholder
 
 # Vim swap files
 *.sw*
