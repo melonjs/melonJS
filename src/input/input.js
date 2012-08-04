@@ -153,6 +153,7 @@
 		 */
 		function dispatchMouseEvent(e) {
 			var vpos = me.game.viewport.pos;
+			var map_pos = me.game.currentLevel.pos;
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
 				for(var t=0, l=obj.touches.length; t<l; t++) {
@@ -162,9 +163,8 @@
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						// adjust to world coordinates if not a floating object
 						if (handler.floating===false) {
-							var v = {x: x + vpos.x, y: y + vpos.y};
-						}
-						else {
+							var v = {x: x + vpos.x - map_pos.x, y: y + vpos.y - map_pos.y };
+						} else {
 							var v = {x: x, y: y};
 						}
 						// call the defined handler
@@ -192,8 +192,9 @@
 			obj.touches.length=0;
 			// non touch event (mouse)
 			if (!e.touches) {
-				var x = e.pageX - obj.mouse.offset.x;
-				var y = e.pageY - obj.mouse.offset.y;
+				var offset = obj.mouse.offset;
+				var x = e.pageX - offset.x;
+				var y = e.pageY - offset.y;
 				if (me.sys.scale != 1.0) {
 					x/=me.sys.scale;
 					y/=me.sys.scale;
@@ -202,10 +203,11 @@
 			}
 			// touch event
 			else {
+				var offset = obj.mouse.offset;
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
 					var t = e.changedTouches[i];
-					var x = t.clientX - obj.mouse.offset.x;
-					var y = t.clientY - obj.mouse.offset.y;
+					var x = t.clientX - offset.x;
+					var y = t.clientY - offset.y;
 					if (me.sys.scale != 1.0) {
 						x/=me.sys.scale;
 						y/=me.sys.scale;
@@ -624,7 +626,7 @@
 					if (!obj.mouse.handlers[eventType]) {
 						obj.mouse.handlers[eventType] = [];
  					}
-					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:floating===false?false:true});
+					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:floating===true?true:false});
 					break;
 				default :
 					throw "melonJS : invalid event type : " + eventType;
