@@ -1195,6 +1195,8 @@ var me = me || {};
 			// reset the transform matrix to the normal one
 			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
 
+			// dummy current level
+			api.currentLevel = {pos:{x:0,y:0}};
 		};
 
 		/**
