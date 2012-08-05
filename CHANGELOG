@@ -1,7 +1,7 @@
 Version History
 ---------------
 0.9.4
-* General : melonJS now only using Google Closure (removed YUI compressor)
+* General : melonJS is now only using Google Closure (removed YUI compressor)
 * General : melonJS is now ES5 strict mode compliant
 * General : added a .editorconfig file to provide basic rules to editors
 * Core : added a flag to enable/disable automatic pause on loosing/gaining focus
@@ -16,12 +16,12 @@ Version History
 * Entity : added the possibility to pause an animation (parasyte)
 * Entity : fixed default position by using top-left coordinates as in Tiled
 * Entity : fixed invisible entities being removed when colliding
-* General : dixed & enhanced object/memory deallocation when switching levels
+* General : fixed & enhanced object/memory deallocation when switching levels
 * General : rewrote the parallax code using the new Generic Image Layer Object
 * General : added support for vertical parallax layer
 * Geometry : added a function to test for vector "equality"
 * Geometry : added a couple of Self function (to help avoid object creation)
-* Loader : fix a case issue between filename and asset name
+* Loader : fixed a case issue between filename and asset name
 * Input : added the possibility to check for mouse event based on world or screen coordinates
 * Input : fixed a false-positive issue at initialization, and usage of special keys (parasyte)
 * TMX : added dynamic layer rendering (configurable globally or per layer through Tiled)
