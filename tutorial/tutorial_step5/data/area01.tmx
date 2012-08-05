@@ -38,7 +38,7 @@
   </data>
  </layer>
  <objectgroup color="#00ff00" name="Entities" width="40" height="15">
-  <object name="mainPlayer" x="128" y="256" width="32" height="32">
+  <object name="mainPlayer" x="128" y="224" width="32" height="64">
    <properties>
     <property name="image" value="gripe_run_right"/>
     <property name="spritewidth" value="64"/>
@@ -100,7 +100,7 @@
   </object>
  </objectgroup>
  <objectgroup color="#ff0000" name="EnemyEntities" width="40" height="15">
-  <object name="EnemyEntity" x="288" y="352" width="352" height="32">
+  <object name="EnemyEntity" x="288" y="320" width="352" height="64">
    <properties>
     <property name="image" value="spinning_coin_gold"/>
     <property name="spritewidth" value="32"/>

@@ -4,7 +4,8 @@
   <image source="area01_tileset/area01_level_tiles.png" width="640" height="241"/>
  </tileset>
  <tileset firstgid="141" name="metatiles32x32" tilewidth="32" tileheight="32">
-  <image source="area01_tileset/metatiles32x32.png" width="160" height="32"/>  <tile id="0">
+  <image source="area01_tileset/metatiles32x32.png" width="160" height="32"/>
+  <tile id="0">
    <properties>
     <property name="type" value="solid"/>
    </properties>
@@ -37,7 +38,7 @@
   </data>
  </layer>
  <objectgroup color="#ff0000" name="EnemyEntities" width="40" height="15">
-  <object name="EnemyEntity" x="384" y="192" width="256" height="32">
+  <object name="EnemyEntity" x="384" y="160" width="256" height="64">
    <properties>
     <property name="image" value="spinning_coin_gold"/>
     <property name="spritewidth" value="32"/>
@@ -45,7 +46,7 @@
   </object>
  </objectgroup>
  <objectgroup color="#00ff00" name="Entities" width="40" height="15">
-  <object name="mainPlayer" x="32" y="64" width="32" height="32">
+  <object name="mainPlayer" x="32" y="32" width="32" height="64">
    <properties>
     <property name="image" value="gripe_run_right"/>
     <property name="spritewidth" value="64"/>

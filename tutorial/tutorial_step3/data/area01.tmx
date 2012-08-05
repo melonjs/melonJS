@@ -3,7 +3,7 @@
  <properties>
   <property name="background_color" value="#00C0FF"/>
  </properties>
-<tileset firstgid="1" name="area01_level_tiles" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="area01_level_tiles" tilewidth="32" tileheight="32">
   <image source="area01_tileset/area01_level_tiles.png" width="640" height="241"/>
  </tileset>
  <tileset firstgid="141" name="metatiles32x32" tilewidth="32" tileheight="32">
@@ -25,7 +25,7 @@
   </data>
  </layer>
  <objectgroup color="#00ff00" name="Entities" width="40" height="15">
-  <object name="mainPlayer" x="128" y="256" width="32" height="32">
+  <object name="mainPlayer" x="128" y="224" width="32" height="64">
    <properties>
     <property name="image" value="gripe_run_right"/>
     <property name="spritewidth" value="64"/>
