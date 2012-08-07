@@ -72,9 +72,9 @@
         <h3>Useful Links</h3>
 
         <ul>
+            <li><a href="http://www.melonjs.org/">melonJS Homepage</a></li>
             <li><a href="http://www.mapeditor.org/">Tiled Homepage</a></li>
-
-            <li><a href="http://www.tapjs.com/">TapJS Homepage</a></li>
+            <li><a href="http://http://www.melonjs.org/docs/">melonJS online documentation</a></li>
         </ul>
     </div>
 <div id="content">
@@ -86,8 +86,8 @@
 <p class="c1">Prerequisites :</p>
 
 <ul>
-    <li><a href="http://www.mapeditor.org/">Tiled</a> version 0.7.x, installed
-        and running
+    <li>The <a href="http://www.mapeditor.org/">Tiled Map Editor</a>, installed
+        and running (0.7.1 or later)
     </li>
 
     <li>The melonJS <a href="http://www.melonjs.org/docs/index.html">documentation</a>
@@ -99,7 +99,7 @@
         use for the tutorial :
 
         <ul>
-            <li>a copy of melonJS (0.9.3) (/lib)</li>
+            <li>a copy of melonJS (0.9.4) (/lib)</li>
 
             <li>a level tileset and a metatileset for collision
                 (/data/area01_tileset/)
@@ -134,7 +134,7 @@
 
 <p>Feel free to modify whatever you want. We also assume here, that you are already
     familiar with Tiled; if you need more help with the tool, you can check the Tiled
-    homepage and wiki for further help</p>
+    homepage and <a href="https://github.com/bjorn/tiled/wiki">wiki</a> for further help.</p>
 
 <h2>Part 1: Creating a level using Tiled</h2>
 
@@ -348,7 +348,7 @@ var g_resources = [{
 </pre>
 
 <p>Then it's time to create our entity:<br>
-  (Feel free to put this object either in our main.js or in a new file, in my example I use gameObj.js)</p>
+  (Feel free to put this object either in our main.js or in a new file, in my example I use entities.js)</p>
 <pre class="brush: js">
 /*------------------- 
 a player entity
@@ -365,7 +365,7 @@ var PlayerEntity = me.ObjectEntity.extend({
         // call the constructor
         this.parent(x, y, settings);
 
-        // set the walking &amp; jumping speed
+		// set the default horizontal &amp; vertical speed (accel vector)
         this.setVelocity(3, 15);
 
         // set the display to follow our position on both axis
@@ -381,14 +381,28 @@ var PlayerEntity = me.ObjectEntity.extend({
     update: function() {
 
         if (me.input.isKeyPressed('left')) {
-            this.doWalk(true);
+            // flip the sprite on horizontal axis
+			this.flipX(true);
+			// update the entity velocity
+			this.vel.x -= this.accel.x * me.timer.tick;
         } else if (me.input.isKeyPressed('right')) {
-            this.doWalk(false);
+            // unflip the sprite
+			this.flipX(false);
+			// update the entity velocity
+			this.vel.x += this.accel.x * me.timer.tick;
         } else {
             this.vel.x = 0;
         }
         if (me.input.isKeyPressed('jump')) {
-            this.doJump();
+			// make sure we are not already jumping or falling
+            if (!this.jumping &amp;&amp; !this.falling) {
+				// set current vel to the maximum defined value
+				// gravity will then do the rest
+				this.vel.y = -this.maxVel.y * me.timer.tick;
+				// set the jumping flag
+				this.jumping = true;
+			}
+
         }
 
         // check &amp; update player movement
@@ -400,6 +414,9 @@ var PlayerEntity = me.ObjectEntity.extend({
             this.parent(this);
             return true;
         }
+		
+		// else inform the engine we did not perform
+		// any update (e.g. position, animation)
         return false;
     }
 
@@ -411,27 +428,6 @@ var PlayerEntity = me.ObjectEntity.extend({
 	test if some keys are pressed and manage our player movement (by setting player speed, and then calling the <a href="http://www.melonjs.org/docs/symbols/me.ObjectEntity.html#updateMovement"> updateMovement</a> function). Also, you may notice that I'm
     testing the final velocity (this.vel.x and this.vel.y) of my object, which allows me to
     know if my object actually moved, and control if I want the sprite animation to run or not.</p>
-	
-<p>Note that the functions here above, like <b>doWalk()</b> and <b>doJump()</b>, are 
-   actually <b>helper functions for platform games</b> that basically compute the new player 
-   velocity based on the parameters defined by the <b>setVelocity()</b> function :
-<pre class="brush: js">
-/**
- * helper function for platform games
- * make the entity move left of right
- * @param {Boolean} left will automatically flip horizontally the entity sprite
- */
-doWalk : function(left) {
-	this.flipX(left);
-	this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
-},
-
-</pre>
-  If you do plan to develop any other type of games (or if have more complex needs),
-  I do <b>not</b> recommend using these function, but to rather directly modify the entity velocity 
-  based on your requirements.
-</p>
-
 
 <p>Then, we have to modify our "main" to actually declare our new Object in the
     <a href="http://www.melonjs.org/docs/symbols/me.entityPool.html"> EntityPool</a> (that is used by the engine to instantiate object), and finally to map the
@@ -483,9 +479,14 @@ loaded: function ()
     the constructor directly).<br/>
     <br/>
     Note: You also free to add as many properties as you want, they will all be available
-    in the settings object passed to your constructor.</p><img src=
-                                                                       "media/step3_addEntity.png"
-                                                               alt="Adding an entity"/>
+    in the settings object passed to your constructor.
+</p><img src="media/step3_addEntity.png" alt="Adding an entity"/><br><br>
+
+
+<p> Once the object is created just positionate your entity in the level, and as in the below example
+make sure you are also resizing the object rectangle in Tiled to match with your actual sprite size.
+<img src="media/step3_object_position.png"alt="positioning an entity"/></p>
+
 
 <p>We are almost done! The last step is to define the collision layer, for this we
     will use the other tileset we previously added into Tiled, and specify for each tile
@@ -785,7 +786,10 @@ var EnemyEntity = me.ObjectEntity.extend({
             } else if (!this.walkLeft &amp;&amp; this.pos.x &gt;= this.endX) {
                 this.walkLeft = true;
             }
-            this.doWalk(this.walkLeft);
+            // make it walk
+			this.flipX(this.walkLeft);
+			this.vel.x += (this.walkLeft) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
+				
         } else {
             this.vel.x = 0;
         }
@@ -834,16 +838,36 @@ update the player pos
 ------ */
 update: function() {
 
-    if (me.input.isKeyPressed('left')) {
-        this.doWalk(true);
-    } else if (me.input.isKeyPressed('right')) {
-        this.doWalk(false);
-    } else {
-        this.vel.x = 0;
-    }
-    if (me.input.isKeyPressed('jump')) {
-        this.doJump();
-    }
+    if (me.input.isKeyPressed('left'))
+	{
+		// flip the sprite on horizontal axis
+		this.flipX(true);
+		// update the entity velocity
+		this.vel.x -= this.accel.x * me.timer.tick;
+	}
+	else if (me.input.isKeyPressed('right'))
+	{
+		// unflip the sprite
+		this.flipX(false);
+		// update the entity velocity
+		this.vel.x += this.accel.x * me.timer.tick;
+	}
+	else
+	{
+		this.vel.x = 0;
+	}
+	if (me.input.isKeyPressed('jump'))
+	{	
+		if (!this.jumping && !this.falling) 
+		{
+			// set current vel to the maximum defined value
+			// gravity will then do the rest
+			this.vel.y = -this.maxVel.y * me.timer.tick;
+			// set the jumping flag
+			this.jumping = true;
+		}
+	}
+
 
     // check &amp; update player movement
     this.updateMovement();
@@ -856,8 +880,12 @@ update: function() {
         if (res.obj.type == me.game.ENEMY_OBJECT) {
             // check if we jumped on it
             if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
-                // bounce
-                this.forceJump();
+                // bounce (force jump)
+				this.falling = false;
+				this.vel.y = -this.maxVel.y * me.timer.tick;
+				// set the jumping flag
+				this.jumping = true;
+
             } else {
                 // let's flicker in case we touched an enemy
                 this.flicker(45);
@@ -871,7 +899,9 @@ update: function() {
         this.parent(this);
         return true;
     }
-    return false;
+    // else inform the engine we did not perform
+	// any update (e.g. position, animation)
+	return false;		
 
 }
 
@@ -1185,9 +1215,16 @@ onCollision : function ()
     need to play the sound sfx.</p><br/>
 <pre class="brush: js">
 if (me.input.isKeyPressed('jump')) {
-    if (this.doJump()) {
-        me.audio.play("jump");
-    }
+   if (!this.jumping &amp;&amp; !this.falling) 
+   {
+      // set current vel to the maximum defined value
+      // gravity will then do the rest
+      this.vel.y = -this.maxVel.y * me.timer.tick;
+      // set the jumping flag
+      this.jumping = true;
+      // play some audio 
+      me.audio.play("jump");
+   }
 }
 </pre>
 <br/>
@@ -1205,9 +1242,13 @@ var res = me.game.collide(this);
 if (res) {
     if (res.obj.type == me.game.ENEMY_OBJECT) {
         if ((res.y &gt; 0) &amp;&amp; ! this.jumping) {
-            // bounce
-            me.audio.play("stomp");
-            this.forceJump();
+            // bounce (force jump)
+			this.falling = false;
+			this.vel.y = -this.maxVel.y * me.timer.tick;
+			// set the jumping flag
+			this.jumping = true;
+			// play some audio
+			me.audio.play("stomp");
         } else {
             // let's flicker in case we touched an enemy
             this.flicker(45);
@@ -1302,7 +1343,7 @@ var TitleScreen = me.ScreenObject.extend({
     onDestroyEvent: function() {
 	}
 
-    });
+});
 </pre>
 
 <p>Note that in this example, when I call the parent constructor, I'm passing the

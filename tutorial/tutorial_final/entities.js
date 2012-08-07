@@ -1,6 +1,6 @@
 /* -----
 
-	game object
+	game entities
 		
 	------			*/
 
@@ -23,7 +23,7 @@
 			// call the constructor
 			this.parent(x, y , settings);
 			
-			// set the walking & jumping speed
+			// set the default horizontal & vertical speed (accel vector)
 			this.setVelocity(3, 15);
          
 			// adjust the bounding box
@@ -44,11 +44,17 @@
 				
 			if (me.input.isKeyPressed('left'))
 			{
-				this.doWalk(true);
+				// flip the sprite on horizontal axis
+				this.flipX(true);
+				// update the entity velocity
+				this.vel.x -= this.accel.x * me.timer.tick;
 			}
 			else if (me.input.isKeyPressed('right'))
 			{
-				this.doWalk(false);
+				// unflip the sprite
+				this.flipX(false);
+				// update the entity velocity
+				this.vel.x += this.accel.x * me.timer.tick;
 			}
 			else
 			{
@@ -56,8 +62,14 @@
 			}
 			if (me.input.isKeyPressed('jump'))
 			{	
-				if (this.doJump())
+				if (!this.jumping && !this.falling) 
 				{
+					// set current vel to the maximum defined value
+					// gravity will then do the rest
+					this.vel.y = -this.maxVel.y * me.timer.tick;
+					// set the jumping flag
+					this.jumping = true;
+					// play some audio 
 					me.audio.play("jump");
 				}
 			}
@@ -74,9 +86,13 @@
 				{
 				   if ((res.y>0) && !this.jumping)
 				   {
-					  // bounce
-					   me.audio.play("stomp");
-					  this.forceJump();
+					  // bounce (force jump)
+					  this.falling = false;
+					  this.vel.y = -this.maxVel.y * me.timer.tick;
+					  // set the jumping flag
+					  this.jumping = true;
+					  // play some audio
+					  me.audio.play("stomp");
 				   }
 				   else
 				   {
@@ -94,6 +110,9 @@
 				this.parent(this);
 				return true;
 			}
+			
+			// else inform the engine we did not perform
+			// any update (e.g. position, animation)
 			return false;
 		}
 
@@ -195,7 +214,9 @@
 				{
 					this.walkLeft = true;
 				}
-				this.doWalk(this.walkLeft);
+				
+				this.flipX(this.walkLeft);
+				this.vel.x += (this.walkLeft) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
 			}
 			else
 			{
@@ -219,9 +240,7 @@
 	/*		a score HUD Item   */
 	/*						   */
 	/***************************/
-
-   
-   var ScoreObject = me.HUD_Item.extend(
+	var ScoreObject = me.HUD_Item.extend(
 	{	
 		init: function(x, y)
 		{
@@ -241,5 +260,3 @@
 		}
 	
 	});
-
-

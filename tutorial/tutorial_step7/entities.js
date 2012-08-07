@@ -1,6 +1,6 @@
 /* -----
 
-	game object
+	game entities
 		
 	------			*/
 
@@ -23,14 +23,14 @@
 			// call the constructor
 			this.parent(x, y , settings);
 			
-			// set the walking & jumping speed
+			// set the default horizontal & vertical speed (accel vector)
 			this.setVelocity(3, 15);
          
 			// adjust the bounding box
 			this.updateColRect(8,48, -1,0);
 			
 			// set the display to follow our position on both axis
-			me.game.viewport.follow(this.pos, me.game.viewport.AXIS.HORIZONTAL);
+			me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
 			
 		},
 	
@@ -42,13 +42,19 @@
 		update : function ()
 		{
 				
-			if (me.input.isKeyPressed('left'))
+		if (me.input.isKeyPressed('left'))
 			{
-				this.doWalk(true);
+				// flip the sprite on horizontal axis
+				this.flipX(true);
+				// update the entity velocity
+				this.vel.x -= this.accel.x * me.timer.tick;
 			}
 			else if (me.input.isKeyPressed('right'))
 			{
-				this.doWalk(false);
+				// unflip the sprite
+				this.flipX(false);
+				// update the entity velocity
+				this.vel.x += this.accel.x * me.timer.tick;
 			}
 			else
 			{
@@ -56,16 +62,22 @@
 			}
 			if (me.input.isKeyPressed('jump'))
 			{	
-				if (this.doJump())
+				if (!this.jumping && !this.falling) 
 				{
+					// set current vel to the maximum defined value
+					// gravity will then do the rest
+					this.vel.y = -this.maxVel.y * me.timer.tick;
+					// set the jumping flag
+					this.jumping = true;
+					// play some audio 
 					me.audio.play("jump");
 				}
 			}
 			
 			// check & update player movement
-			this.updateMovement();
+			updated = this.updateMovement();
          
-			// check for collision
+        	// check for collision
 			var res = me.game.collide(this);
 			 
 			if (res)
@@ -74,9 +86,14 @@
 				{
 				   if ((res.y>0) && !this.jumping)
 				   {
-					  // bounce
-					   me.audio.play("stomp");
-					  this.forceJump();
+					  // bounce (force jump)
+					  this.falling = false;
+					  this.vel.y = -this.maxVel.y * me.timer.tick;
+					  // set the jumping flag
+					  this.jumping = true;
+					  // play some audio
+					  me.audio.play("stomp");
+
 				   }
 				   else
 				   {
@@ -94,12 +111,14 @@
 				this.parent(this);
 				return true;
 			}
-			return false;
-		}
+			
+			// else inform the engine we did not perform
+			// any update (e.g. position, animation)
+			return false;		}
 
 	});
 
-   /****************************/
+    /***************************/
 	/*                         */
 	/*		a Coin entity	   */
 	/*						   */
@@ -111,8 +130,8 @@
 		{
 			// call the parent constructor
 			this.parent(x, y , settings);
-		},		
-			
+		},
+		
 		onCollision : function ()
 		{
 			// do something when collide
@@ -124,6 +143,7 @@
 			// remove it
 			me.game.remove(this);
 		}
+
 		
 	});
 
@@ -159,7 +179,7 @@
 			this.type = me.game.ENEMY_OBJECT;
 			
 			// bounding box
-			this.updateColRect(4,56,8,56);
+			//this.updateColRect(-1,0,4,20);
 			
 		},
 		
@@ -171,7 +191,6 @@
 			// which mean at top position for this one
 			if (this.alive && (res.y > 0) && obj.falling)
 			{
-				// make it flicker
 				this.flicker(45);
 			}
 		},
@@ -194,7 +213,10 @@
 				{
 					this.walkLeft = true;
 				}
-				this.doWalk(this.walkLeft);
+				
+				this.flipX(this.walkLeft);
+				this.vel.x += (this.walkLeft) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
+
 			}
 			else
 			{
@@ -212,19 +234,17 @@
 			return false;
 		}
 	});
-	
-   /****************************/
+
+	/***************************/
 	/*                         */
 	/*		a score HUD Item   */
 	/*						   */
 	/***************************/
-
-   
-   var ScoreObject = me.HUD_Item.extend(
+	var ScoreObject = me.HUD_Item.extend(
 	{	
 		init: function(x, y)
 		{
-         // call the parent constructor
+			// call the parent constructor
 			this.parent(x, y);
 			// create a font
 			this.font = new me.BitmapFont("32x32_font", 32);

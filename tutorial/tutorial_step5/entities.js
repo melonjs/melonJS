@@ -1,6 +1,6 @@
 /* -----
 
-	game object
+	game entities
 		
 	------			*/
 
@@ -23,7 +23,7 @@
 			// call the constructor
 			this.parent(x, y , settings);
 			
-			// set the walking & jumping speed
+			// set the default horizontal & vertical speed (accel vector)
 			this.setVelocity(3, 15);
          
 			// adjust the bounding box
@@ -42,13 +42,19 @@
 		update : function ()
 		{
 				
-			if (me.input.isKeyPressed('left'))
+		if (me.input.isKeyPressed('left'))
 			{
-				this.doWalk(true);
+				// flip the sprite on horizontal axis
+				this.flipX(true);
+				// update the entity velocity
+				this.vel.x -= this.accel.x * me.timer.tick;
 			}
 			else if (me.input.isKeyPressed('right'))
 			{
-				this.doWalk(false);
+				// unflip the sprite
+				this.flipX(false);
+				// update the entity velocity
+				this.vel.x += this.accel.x * me.timer.tick;
 			}
 			else
 			{
@@ -56,7 +62,14 @@
 			}
 			if (me.input.isKeyPressed('jump'))
 			{	
-				this.doJump();
+				if (!this.jumping && !this.falling) 
+				{
+					// set current vel to the maximum defined value
+					// gravity will then do the rest
+					this.vel.y = -this.maxVel.y * me.timer.tick;
+					// set the jumping flag
+					this.jumping = true;
+				}
 			}
 			
 			// check & update player movement
@@ -71,8 +84,11 @@
 				{
 				   if ((res.y>0) && !this.jumping)
 				   {
-					  // bounce
-					  this.forceJump();
+					  // bounce (force jump)
+					  this.falling = false;
+					  this.vel.y = -this.maxVel.y * me.timer.tick;
+					  // set the jumping flag
+					  this.jumping = true;
 				   }
 				   else
 				   {
@@ -90,8 +106,10 @@
 				this.parent(this);
 				return true;
 			}
-			return false;
-		}
+			
+			// else inform the engine we did not perform
+			// any update (e.g. position, animation)
+			return false;		}
 
 	});
 
@@ -177,7 +195,10 @@
 				{
 					this.walkLeft = true;
 				}
-				this.doWalk(this.walkLeft);
+				
+				this.flipX(this.walkLeft);
+				this.vel.x += (this.walkLeft) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
+
 			}
 			else
 			{
