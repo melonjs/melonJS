@@ -260,7 +260,7 @@ window.onReady(function() {
 <ul>
     <li>the tileset itself, an image</li>
 
-    <li>our map "area01", a <b>"tmx"</b> object</li>
+    <li>our map "area01", a <a href="https://github.com/bjorn/tiled/wiki/TMX-Map-Format">TMX</a> object</li>
 </ul>
 <pre class="brush: js">
 //game resources
@@ -280,8 +280,8 @@ var g_resources = [{
     filename, else the level loader will not be able to find the tileset and will
     fail.</p>
 
-<p>Finally, in the <b>onResetEvent()</b> function (which is called on a state
-    change), we ask the level director to display our previously preloaded level :</p>
+<p>Finally, in the <a href="http://www.melonjs.org/docs/symbols/me.ScreenObject.html#onResetEvent">onResetEvent()</a> function (which is called on a state
+    change), we ask the <a href="http://www.melonjs.org/docs/symbols/me.levelDirector.html">level director</a> to display our previously preloaded level :</p>
 <pre class="brush: js">
 /* the in game stuff*/
 var PlayScreen = me.ScreenObject.extend({
