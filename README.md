@@ -55,8 +55,6 @@ On Linux/BSD users should use their appropriate package managers to install make
 
 `$ cd melonJS`
 
-`$ mkdir build`
-
 `$ make`
 
 Both plain and minified library will be available under the "build" directory
