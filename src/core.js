@@ -209,8 +209,11 @@ var me = me || {};
 
 		/**
 		 * Specify the rendering method for layers <br>
-		 * if false, visbile part of the layers are rendered dynamically<br>
-		 * if true, the entire layers are rendered into a cached canvas<br>
+		 * if false, visible part of the layers are rendered dynamically (default)<br>
+		 * if true, the entire layers are first rendered into an offscreen canvas<br>
+		 * the "best" rendering method depends of your game<br>
+		 * (amount of layer, layer size, amount of tiles per layer, etc…)<br>
+		 * note : rendering method is also configurable per layer by adding this property to your layer (in Tiled)<br>
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
