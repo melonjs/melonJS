@@ -13,7 +13,7 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {name}    name    layer name
-	 * @param {String}  color   in hexadecimal "RRGGBB" format
+	 * @param {String}  color   in hexadecimal "#RRGGBB" format
 	 * @param {int}     z       z position
 	 */
 	 me.ColorLayer = Object.extend({

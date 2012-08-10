@@ -33,7 +33,7 @@
 	 * @param {int} y y index of the Tile in the map
 	 * @param {int} w Tile width
 	 * @param {int} h Tile height
-	 * @param {int} tileId tileId>
+	 * @param {int} tileId tileId
 	 */
 	me.Tile = me.Rect.extend({
 		 /**

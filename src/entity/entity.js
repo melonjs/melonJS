@@ -39,7 +39,7 @@
 		image : null,
 
 		/**
-		 * specify a transparent color for the image in rgb format (rrggb or #rrggb)<br>
+		 * specify a transparent color for the image in rgb format (#rrggb)<br>
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
