@@ -480,42 +480,21 @@ var me = me || {};
 
 	if (!Function.bind) {
 		/**
-		 * ensure bind is properly supported<br>
-		 * (c) <a href="http://www.prototypejs.org/">Prototype.js</a><p>
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
 		 * Also optionally curries arguments for the function.
 		 * @param {Object} context the object to bind to.
 		 * @param {Array.<string>} [args] Optional additional arguments to curry for the function.
 		 * @example
-		 * // A typical use of Function bind is to ensure that a callback
-		 * // (event handler, etc.) that is an object method gets called with
-		 * // the correct object as its context (this value):
-		 *
-		 * // -> WRONG
-		 * myObject.onComplete(this.callback);
-		 *
-		 * // -> RIGHT
+		 * // Ensure that our callback is triggered with the right object context (this):
 		 * myObject.onComplete(this.callback.bind(this));
 		 */
-		/*
-		Function.prototype.bind = function(scope)
-		{
-			var _function = this;
-			return function()
-			{
-				return _function.apply(scope, arguments);
-			}
-		};
-		 */
-
 		Function.prototype.bind = function() {
 			var fn = this, args = Array.prototype.slice.call(arguments), object = args.shift();
 			return function() {
 				return fn.apply(object, args.concat(Array.prototype.slice.call(arguments)));
 			};
 		};
-
 	};
 	
 	
