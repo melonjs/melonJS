@@ -567,7 +567,7 @@
 		{	
 			// reuse the mouse emulation stuff
 			// where left mouse button is map to touch event
-			object.bindMouse(me.input.mouse.LEFT,keycode);
+			obj.bindMouse(me.input.mouse.LEFT, keyCode);
 		};
 		
 		/**
