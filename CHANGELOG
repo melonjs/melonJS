@@ -1,5 +1,7 @@
 Version History
 ---------------
+0.9.5
+
 0.9.4
 * General : melonJS is now only using Google Closure (removed YUI compressor)
 * General : melonJS is now ES5 strict mode compliant
