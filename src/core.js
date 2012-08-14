@@ -1235,6 +1235,8 @@ var me = me || {};
 			if (api.onLevelLoaded) {
 				api.onLevelLoaded.call(api.onLevelLoaded, level.name)
 			}
+			//publish the corresponding message
+			me.publish("me.game.onLevelLoaded", [level.name]);
 
 		};
 
