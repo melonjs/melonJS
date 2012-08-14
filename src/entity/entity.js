@@ -538,6 +538,7 @@
 					// if one single image, disable animation
 					if ((this.spritecount.x * this.spritecount.y) == 1) {
 						// override setAnimationFrame with an empty function
+						/** @private */
 						this.setAnimationFrame = function() {;};
 					}
 
@@ -1267,7 +1268,7 @@
 				* Entity "Game Unique Identifier"<br>
 				* @public
 				* @type String
-				* @name me.ObjectEntity#GUID
+				* @name me.InvisibleEntity#GUID
 				*/
 				GUID : null,
 
