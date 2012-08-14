@@ -6,6 +6,7 @@ files = [
 	'./src/loader/loader.js',
 	'./src/math/geometry.js',
 	'./src/entity/camera.js',
+	'./src/entity/sprite.js',
 	'./src/entity/entity.js',
 	'./src/font/font.js',
 	'./src/GUI/GUI.js',
