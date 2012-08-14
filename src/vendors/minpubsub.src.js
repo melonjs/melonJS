@@ -10,7 +10,7 @@
 (function(d) {
 
 	/**
-	 * the topic/subscription hash
+	 * the channel/subscription hash
 	 * @private
 	 */
 	var cache = d.c_ || {}; //check for "c_" cache for unit testing
@@ -19,18 +19,18 @@
 	 * Publish some data on a channel
 	 * @public
 	 * @function
-	 * @param {String} topic The topic to publish on
+	 * @param {String} channel The channel to publish on
 	 * @param {Array} arguments The data to publish
 	 *
-	 * @example Publish stuff on '/some/topic'.
+	 * @example Publish stuff on '/some/channel'.
 	 * Anything subscribed will be called with a function
 	 * signature like: function(a,b,c){ ... }
 	 *
-	 * me.publish("/some/topic", ["a","b","c"]);
+	 * me.publish("/some/channel", ["a","b","c"]);
 	 * 
 	 */
-	me.publish = function(topic, args){
-		var subs = cache[topic],
+	me.publish = function(channel, args){
+		var subs = cache[channel],
 			len = subs ? subs.length : 0;
 
 		//can change loop or reverse array if the order matters
@@ -40,7 +40,7 @@
 	};
 
 	/**
-	 * Register a callback on a named topic.
+	 * Register a callback on a named channel.
 	 * @public
 	 * @function
 	 * @param {String} channel The channel to subscribe to
@@ -50,19 +50,19 @@
 	 * @return {Array} A handle which can be used to unsubscribe this
 	 * particular subscription
 	 * @example
-	 * me.subscribe("/some/topic", function(a, b, c){ doSomething(); });
+	 * me.subscribe("/some/channel", function(a, b, c){ doSomething(); });
 	 */
 
-	me.subscribe = function(topic, callback){
-		if(!cache[topic]){
-			cache[topic] = [];
+	me.subscribe = function(channel, callback){
+		if(!cache[channel]){
+			cache[channel] = [];
 		}
-		cache[topic].push(callback);
-		return [topic, callback]; // Array
+		cache[channel].push(callback);
+		return [channel, callback]; // Array
 	};
 	
 	/**
-	 * Disconnect a subscribed function for a topic.
+	 * Disconnect a subscribed function for a channel.
 	 * @public
 	 * @function
 	 * @param {Array} handle The return value from a subscribe call or the
