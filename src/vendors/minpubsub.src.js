@@ -1,15 +1,21 @@
-/*!
-* MinPubSub
-* Copyright(c) 2011 Daniel Lamb <daniellmb.com>
-* MIT Licensed
-*/
+/**
+ * @preserve MinPubSub
+ * a micro publish/subscribe messaging framework
+ * @see https://github.com/daniellmb/MinPubSub 
+ * @author Daniel Lamb <daniellmb.com>
+ *
+ * Released under the MIT License
+ */
 
-(function(d){
+(function(d) {
 
-	// the topic/subscription hash
+	/**
+	 * the topic/subscription hash
+	 * @private
+	 */
 	var cache = d.c_ || {}; //check for "c_" cache for unit testing
 	
-	/*
+	/**
 	 * Publish some data on a channel
 	 * @public
 	 * @function
@@ -33,7 +39,7 @@
 		}
 	};
 
-	/*
+	/**
 	 * Register a callback on a named topic.
 	 * @public
 	 * @function
@@ -41,7 +47,7 @@
 	 * @param {Function} callback The event handler, any time something is
 	 * published on a subscribed channel, the callback will be called
 	 * with the published array as ordered arguments
-	 * @return Array A handle which can be used to unsubscribe this
+	 * @return {Array} A handle which can be used to unsubscribe this
 	 * particular subscription
 	 * @example
 	 * me.subscribe("/some/topic", function(a, b, c){ doSomething(); });
@@ -55,7 +61,7 @@
 		return [topic, callback]; // Array
 	};
 	
-	/*
+	/**
 	 * Disconnect a subscribed function for a topic.
 	 * @public
 	 * @function
