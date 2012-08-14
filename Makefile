@@ -56,7 +56,7 @@ MODULE = $(srcdir)/core.js\
 	 $(srcdir)/level/TMXLayer.js\
 	 $(srcdir)/level/TMXTiledMap.js\
 	 $(srcdir)/level/LevelDirector.js\
-	 $(srcdir)/utils/tween.js
+	 $(srcdir)/vendors/tween.js
 
 # Debug Target name
 DEBUG = $(buildir)/melonJS-$(ME_VER).js

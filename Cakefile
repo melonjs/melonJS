@@ -23,7 +23,7 @@ files = [
 	'./src/level/TMXLayer.js',
 	'./src/level/TMXTiledMap.js',
 	'./src/level/LevelDirector.js',
-	'./src/utils/tween.js']
+	'./src/vendors/tween.js']
 
 version = require './src/version.js'
 
