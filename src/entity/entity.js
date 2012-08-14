@@ -242,11 +242,6 @@
 				// image reference
 				image : null,
 
-				// create a a default collision rectangle
-				// this object is useless here, but low level
-				// function like flipX need to take this in account
-				collisionBox : null,
-
 				// to manage the flickering effect
 				flickering : false,
 				flickerTimer : -1,
@@ -272,9 +267,6 @@
 
 					// scale factor of the object
 					this.scale = new me.Vector2d(1.0, 1.0);
-
-					// create a a default collision rectangle
-					this.collisionBox = new me.Rect(this.pos, this.width, this.height);
 
 					// get a reference to the current viewport
 					this.vp = me.game.viewport;
@@ -347,9 +339,6 @@
 
 						// set the scaleFlag
 						this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
-
-						// flip the collision box
-						this.collisionBox.flipX(this.width);
 					}
 				},
 
@@ -366,16 +355,11 @@
 
 						// set the scaleFlag
 						this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
-
-						// flip the collision box
-						this.collisionBox.flipY(this.height);
-
 					}
 				},
 
 				/**
-				 *	Resize the object around his center<br>
-				 *  Note : This won't resize the corresponding collision box
+				 *	Resize the sprite around his center<br>
 				 *	@param {Boolean} ratio scaling ratio
 				 */
 				resize : function(ratio)
@@ -457,8 +441,6 @@
 					if (me.debug.renderHitBox) {
 						// draw the sprite rectangle
 						this.parent(context, "blue");
-						// draw the collisionBox
-						this.collisionBox.draw(context, "red");
 					}
 				},
 
@@ -709,6 +691,15 @@
 				 * @name me.ObjectEntity#collidable
 				 */
 				collidable : false,
+				
+				
+				/**
+				 * Entity collision Box<br>
+				 * @public
+				 * @type {me.Rect}
+				 * @name me.ObjectEntity#collisionBox
+				 */
+				collisionBox : null,
 
 				/** @private */
 				init : function(x, y, settings) {
@@ -830,11 +821,14 @@
 					//this.collectable = false;
 
 					this.type = settings.type || 0;
-
+					
 
 					// ref to the collision map
 					this.collisionMap = me.game.collisionMap;
-
+					
+					// create a a default collision rectangle
+					this.collisionBox = new me.Rect(this.pos, this.width, this.height);
+					
 					// to know if our object can break tiles
 					/**
 					 * Define if an entity can go through breakable tiles<br>
@@ -938,6 +932,34 @@
 				setFriction : function(x, y) {
 					this.friction.x = x || 0;
 					this.friction.y = y || 0;
+				},
+				
+				/**
+				 *	Flip object on horizontal axis
+				 *	@param {Boolean} flip enable/disable flip
+				 */
+				flipX : function(flip) {
+					if (flip != this.lastflipX) {
+						// call the parent function
+						this.parent(flip);
+
+						// flip the collision box
+						this.collisionBox.flipX(this.width);
+					}
+				},
+
+				/**
+				 *	Flip object on vertical axis
+				 *	@param {Boolean} flip enable/disable flip
+				 */
+				flipY : function(flip) {
+					if (flip != this.lastflipY) {
+						// call the parent function
+						this.parent(flip);
+
+						// flip the collision box
+						this.collisionBox.flipY(this.height);
+					}
 				},
 
 
@@ -1212,7 +1234,26 @@
 					// returns the collision "vector"
 					return collision;
 
+				},
+				
+				/**
+				 * object draw<br>
+				 * not to be called by the end user<br>
+				 * called by the game manager on each game loop
+				 * @protected
+				 * @param {Context2d} context 2d Context on which draw our object
+				 **/
+				draw : function(context) {
+					// call parent function
+					this.parent(context);
+					
+					// check if debug mode is enabled
+					if (me.debug.renderHitBox) {
+						// draw the collisionBox
+						this.collisionBox.draw(context, "red");
+					}
 				}
+
 
 	});
 
