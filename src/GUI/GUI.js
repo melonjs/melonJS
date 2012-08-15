@@ -70,7 +70,7 @@
 						
 			
 			// register on mouse event
-			me.input.registerMouseEvent('mousedown', this.collisionBox, this.clicked.bind(this));
+			me.input.registerMouseEvent('mousedown', this, this.clicked.bind(this));
 
 		},
 
@@ -116,7 +116,7 @@
 		 * be sure to call the parent function if overwritten
 		 */
 		onDestroyEvent : function() {
-			me.input.releaseMouseEvent('mousedown', this.collisionBox);
+			me.input.releaseMouseEvent('mousedown', this);
 		}
 
 	});
