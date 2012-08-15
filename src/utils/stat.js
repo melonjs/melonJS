@@ -177,7 +177,6 @@
 		 * @public
 		 * @function
 		 * @param {String} [name="all"] name of the item
-		 * @example
 		 */
 		singleton.reset = function(name) {
 			if (name != undefined) {

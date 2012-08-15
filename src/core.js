@@ -724,11 +724,10 @@ var me = me || {};
 	/************************************************************************************/
 
 	/**
+	 * a basic XML Parser
 	 * @class
 	 * @constructor
 	 * @ignore
-	 *	a basic XML Parser
-	 *
 	 **/
 	function _TinyXMLParser() {
 		var parserObj = {
@@ -1934,8 +1933,8 @@ var me = me || {};
 		};
 
 		/**
-		 * @ignore
 		 * this is only called when using requestAnimFrame stuff
+		 * @ignore
 		 */
 		function _renderFrame() {
 			_activeUpdateFrame();

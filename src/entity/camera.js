@@ -33,7 +33,7 @@
 				/**
 				 *	Axis constant
 				 * @public
-				 * type enum
+				 * @type enum
 				 */
 				AXIS : {
 					NONE : 0,
@@ -389,8 +389,8 @@
 				},
 
 				/**
-				 * @private
 				 *	render the camera effects
+				 * @private
 				 */
 				draw : function(context) {
 					

@@ -560,8 +560,8 @@
 				},
 
 				/**
-				 * @private
 				 * debug purpose
+				 * @private
 				 */
 				draw : function(context, color) {
 					// draw the rectangle
