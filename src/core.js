@@ -1138,6 +1138,9 @@ var me = me || {};
 				// get a ref to the screen buffer
 				frameBuffer = me.video.getScreenFrameBuffer();
 
+				// publish init notification
+				me.publish("me.game.onInit");
+
 				initialized = true;
 			}
 		};
@@ -1376,7 +1379,7 @@ var me = me || {};
 
 				// check if object is visible
 				if (obj.isEntity) {
-					obj.visible = api.viewport.isVisible(obj.collisionBox);
+					obj.visible = api.viewport.isVisible(obj);
 				}
 
 				// add it to the draw manager
@@ -2108,6 +2111,9 @@ var me = me || {};
 				if (obj.onPause)
 					obj.onPause();
 
+				// publish the pause notification
+				me.publish("me.state.onPause");
+
 			}, false);
 			// set play action on gaining focus
 			$.addEventListener("focus", function() {
@@ -2121,6 +2127,9 @@ var me = me || {};
 				// callback?
 				if (obj.onResume)
 					obj.onResume();
+
+				// publish the resume notification
+				me.publish("me.state.onResume");
 
 			}, false);
 
