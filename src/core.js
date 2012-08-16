@@ -1138,6 +1138,9 @@ var me = me || {};
 				// get a ref to the screen buffer
 				frameBuffer = me.video.getScreenFrameBuffer();
 
+				// publish init notification
+				me.publish("me.game.onInit");
+
 				initialized = true;
 			}
 		};
