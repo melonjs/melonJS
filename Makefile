@@ -80,8 +80,7 @@ debug: clean
 	cat $(MODULE) >> $(DEBUG)
 
 clean:
-	rm -f $(BUILD)
-	rm -f $(DEBUG)
+	rm -Rf $(buildir)/*
 	rm -Rf $(docdir)/*
 
 doc:
