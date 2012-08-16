@@ -781,16 +781,6 @@
 					if (me.debug.renderHitBox) {
 						// draw the collisionBox
 						this.collisionBox.draw(context, "red");
-						
-						// draw entity current velocity
-						var x =  ~~(this.pos.x + this.hWidth - this.vp.pos.x);
-						var y =  ~~(this.pos.y + this.hHeight - this.vp.pos.y);
-						
-						context.lineWidth = 1;
-						context.beginPath();
-						context.moveTo(x , y);
-						context.lineTo(x +  ~~(this.vel.x * this.hWidth), y + ~~(this.vel.y * this.hHeight));
-						context.stroke();
 					}
 				}
 
