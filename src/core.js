@@ -2108,6 +2108,9 @@ var me = me || {};
 				if (obj.onPause)
 					obj.onPause();
 
+				// publish the pause notification
+				me.publish("me.state.onPause");
+
 			}, false);
 			// set play action on gaining focus
 			$.addEventListener("focus", function() {
@@ -2121,6 +2124,9 @@ var me = me || {};
 				// callback?
 				if (obj.onResume)
 					obj.onResume();
+
+				// publish the resume notification
+				me.publish("me.state.onResume");
 
 			}, false);
 
