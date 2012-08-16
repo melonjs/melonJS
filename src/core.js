@@ -1376,7 +1376,7 @@ var me = me || {};
 
 				// check if object is visible
 				if (obj.isEntity) {
-					obj.visible = api.viewport.isVisible(obj.collisionBox);
+					obj.visible = api.viewport.isVisible(obj);
 				}
 
 				// add it to the draw manager
