@@ -58,7 +58,7 @@
 		obj.GAME_INIT= "me.game.onInit";
 		
 		/**
-		 * Channel Constant for when the game manager is initialized <br>
+		 * Channel Constant for when a level is loaded <br>
 		 * Data passed : {String} Level Name
 		 * @public
 		 * @type {String}
