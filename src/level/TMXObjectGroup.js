@@ -39,7 +39,7 @@
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
 			for ( var i = 0; i < data.length; i++) {
-				this.objects.push(new me.TMXOBject(data[i], tilesets, z), mapSettings);
+				this.objects.push(new me.TMXOBject(data[i], tilesets, z, mapSettings));
 			}
 		},
 		

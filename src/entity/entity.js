@@ -156,8 +156,14 @@
 		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
 			if (!name || !entityClass[name]) {
-				 return new me.ObjectEntity(prop.x, prop.y, prop);
+				if(prop.image === undefined)
+					console.error("cannot instance entity of type '" + name
+							+ "': Class not found!");
+				else 
+					return new me.ObjectEntity(prop.x, prop.y, prop);
+					
 			}
+				
 			// i should pass the entity ownProperty instead of the object itself
 			return new entityClass[name](prop.x, prop.y, prop);
 		};

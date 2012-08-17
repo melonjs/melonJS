@@ -404,7 +404,7 @@
 				// get the object groups information
 				case me.TMX_TAG_OBJECTGROUP: {
 				   var name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
-				   this.objectGroups.push(new me.TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++, mapSettings));
+				   this.objectGroups.push(new me.TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++, this.mapSettings));
 				   break;
 				}
 					
