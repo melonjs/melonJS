@@ -21,7 +21,7 @@
 	me.TMXOBjectGroup = Object.extend(
 	{
 		// constructor
-		init : function(name, tmxObjGroup, tilesets, z) {
+		init : function(name, tmxObjGroup, tilesets, z, mapSettings) {
 			this.objects = [];
 
 			this.name   = name;
@@ -39,7 +39,7 @@
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
 			for ( var i = 0; i < data.length; i++) {
-				this.objects.push(new me.TMXOBject(data[i], tilesets, z));
+				this.objects.push(new me.TMXOBject(data[i], tilesets, z, mapSettings));
 			}
 		},
 		
@@ -73,7 +73,7 @@
 
 	me.TMXOBject = Object.extend(
 	{
-		init :  function(tmxObj, tilesets, z) {
+		init :  function(tmxObj, tilesets, z, mapSettings) {
 			this.name = me.XMLParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
 			this.x = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
 			this.y = me.XMLParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
@@ -94,8 +94,40 @@
 
 				// force spritewidth size
 				this.spritewidth = this.width;
-				// adjust y coordinates (bug in tile 0.6.2?)
-				this.y -= this.height;
+				// adjust coordinates to match Tiled
+				switch (mapSettings.orientation)
+				{
+					case "orthogonal": {
+					  this.y -= this.height;
+					  break;
+					}
+					case "isometric": {
+						
+						var orthoRenderer = new me.TMXOrthogonalRenderer(mapSettings.width, mapSettings.height, mapSettings.tilewidth/2, mapSettings.tileheight);
+						var isoRenderer = new me.TMXIsometricRenderer(mapSettings.width, mapSettings.height, mapSettings.tilewidth, mapSettings.tileheight);
+						
+						//Tiled saves the Object position of isometric maps 
+						//just like they were Ortogonal coords
+						//First we change them to the tile position
+						var oTileCoords = orthoRenderer.pixelToTileCoords(this.x, this.y);
+						//Translate to Isometric pixel coords
+						var iPixelCoords = isoRenderer.tileToPixelCoords(oTileCoords.x, oTileCoords.y);
+						
+						this.x = iPixelCoords.x;
+						this.y = iPixelCoords.y;
+						
+						//In tiled the coords are set by the botom center point
+						this.x -= this.width/2;
+						this.y -= this.height;
+						
+						break;
+					}
+			
+					// if none found, throw an exception
+					default : {
+						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
+					}
+				}
 
 				// the object corresponding tile 
 				var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
