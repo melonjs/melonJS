@@ -71,38 +71,31 @@
 
 		function getSupportedAudioFormat() {
 
-			var extIdx = 0;
+			var result = "";
+			var ext = "";
+			var rx = null;
+			var i = 0;
+			var len = supportedFormat.length;
 
 			// check for sound support by the browser
-			if (!me.sys.sound) {
+			if (me.sys.sound) {
+				for (; i < len; i++) {
+					ext = supportedFormat[i];
+					rx = new RegExp(ext, "i");
+					if ((requestedFormat.search(rx) != -1) && obj.capabilities[ext]) {
+						result = ext;
+						break;
+					}
+				}
+			}
+
+			if (result === "") {
+				// deactivate sound
 				sound_enable = false;
-				return;
 			}
 
-			// check for MP3
-			if ((requestedFormat.search(/mp3/i) != -1) && obj.capabilities.mp3) {
-				// console.log("mp3 audio supported");
-				return supportedFormat[extIdx];
-			}
-
-			// check for OGG/Vorbis
-			if ((requestedFormat.search(/ogg/i) != -1) && obj.capabilities.ogg) {
-				// console.log("ogg audio supported");
-				return supportedFormat[++extIdx];
-			}
-
-			// check for WAV
-			if ((requestedFormat.search(/wav/i) != -1) && obj.capabilities.wav) {
-				// console.log("wav audio supported");
-				return supportedFormat[++extIdx];
-			}
-
-			// deactivate sound
-			sound_enable = false;
-
-			return -1;
+			return result;
 		}
-		;
 
 		/*
 		 * ---
