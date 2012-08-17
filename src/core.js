@@ -1139,7 +1139,7 @@ var me = me || {};
 				frameBuffer = me.video.getScreenFrameBuffer();
 
 				// publish init notification
-				me.publish("me.game.onInit");
+				me.event.publish(me.event.GAME_INIT);
 
 				initialized = true;
 			}
@@ -1238,7 +1238,7 @@ var me = me || {};
 				api.onLevelLoaded.call(api.onLevelLoaded, level.name)
 			}
 			//publish the corresponding message
-			me.publish("me.game.onLevelLoaded", [level.name]);
+			me.event.publish(me.event.LEVEL_LOADED, [level.name]);
 
 		};
 
@@ -2112,7 +2112,7 @@ var me = me || {};
 					obj.onPause();
 
 				// publish the pause notification
-				me.publish("me.state.onPause");
+				me.event.publish(me.event.STATE_PAUSE);
 
 			}, false);
 			// set play action on gaining focus
@@ -2129,7 +2129,7 @@ var me = me || {};
 					obj.onResume();
 
 				// publish the resume notification
-				me.publish("me.state.onResume");
+				me.event.publish(me.event.STATE_RESUME);
 
 			}, false);
 

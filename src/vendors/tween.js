@@ -146,7 +146,7 @@
 		 * Calculate delta to pause the tween
 		 * @private
 		 */
-		me.subscribe("me.state.onPause", function onPause() {
+		me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
 			if (_startTime) {
 				_pauseTime = me.timer.getTime();
 			}
@@ -156,7 +156,7 @@
 		 * Calculate delta to resume the tween
 		 * @private
 		 */
-		me.subscribe("me.state.onResume", function onResume() {
+		me.event.subscribe(me.event.STATE_RESUME, function onResume() {
 			if (_startTime && _pauseTime) {
 				_startTime += me.timer.getTime() - _pauseTime;
 			}
