@@ -1,3 +1,8 @@
+#eclipse files
+.project
+.settings
+
+
 # temp files
 .DS_Store
 Thumbs.db
