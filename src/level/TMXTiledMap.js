@@ -278,6 +278,14 @@
 				   this.realheight = this.height * this.tileheight;
 				   this.backgroundcolor = me.XMLParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
 				   this.z = zOrder++;
+				   
+				   this.mapSettings = {
+						   orientation: this.orientation, 
+						   width: this.width, 
+						   height: this.height, 
+						   tilewidth: this.tilewidth, 
+						   tileheight:this.tileheight
+				   };
 
 				   // center the map if smaller than the current viewport
 				   if ((this.realwidth < me.game.viewport.width) || 
@@ -396,7 +404,7 @@
 				// get the object groups information
 				case me.TMX_TAG_OBJECTGROUP: {
 				   var name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
-				   this.objectGroups.push(new me.TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++));
+				   this.objectGroups.push(new me.TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++, mapSettings));
 				   break;
 				}
 					

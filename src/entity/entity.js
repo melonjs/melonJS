@@ -155,14 +155,8 @@
 
 		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
-			if (!name) {
-				return null;
-			}
-
-			if (!entityClass[name]) {
-				console.error("cannot instance entity of type '" + name
-						+ "': Class not found!");
-				return null;
+			if (!name || !entityClass[name]) {
+				 return new me.ObjectEntity(prop.x, prop.y, prop);
 			}
 			// i should pass the entity ownProperty instead of the object itself
 			return new entityClass[name](prop.x, prop.y, prop);
