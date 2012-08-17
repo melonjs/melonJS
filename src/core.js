@@ -652,8 +652,8 @@ var me = me || {};
 	 */
 	Number.prototype.round = function() {
 		// if only one argument use the object value
-		var num = (arguments.length == 1) ? this : arguments[0];
-		var powres = Math.pow(10, arguments[1] || arguments[0]);
+		var num = (arguments.length < 2) ? this : arguments[0];
+		var powres = Math.pow(10, arguments[1] || arguments[0] || 0);
 		return (Math.round(num * powres) / powres);
 	};
 
