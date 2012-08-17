@@ -13,7 +13,7 @@
  * author Josh Faul / http://jocafa.com/
  */
 
-(function($, undefined) {
+(function() {
 	/**
 	 * Javascript Tweening Engine<p>
 	 * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
@@ -35,7 +35,18 @@
 	 */
 	me.Tween = function(object) {
 
-		var _object = object, _valuesStart = {}, _valuesDelta = {}, _valuesEnd = {}, _duration = 1000, _delayTime = 0, _startTime = null, _easingFunction = me.Tween.Easing.Linear.EaseNone, _chainedTween = null, _onUpdateCallback = null, _onCompleteCallback = null;
+		var _object = object,
+			_valuesStart = {},
+			_valuesDelta = {},
+			_valuesEnd = {},
+			_duration = 1000,
+			_delayTime = 0,
+			_startTime = null,
+			_pauseTime = 0,
+			_easingFunction = me.Tween.Easing.Linear.EaseNone,
+			_chainedTween = null,
+			_onUpdateCallback = null,
+			_onCompleteCallback = null;
 
 		/**
 		 * object properties to be updated and duration
@@ -84,6 +95,7 @@
 			me.game.add(this, 999);
 
 			_startTime = me.timer.getTime() + _delayTime;
+			_pauseTime = 0;
 
 			for ( var property in _valuesEnd) {
 
@@ -129,6 +141,26 @@
 			return this;
 
 		};
+
+		/**
+		 * Calculate delta to pause the tween
+		 * @private
+		 */
+		me.subscribe("me.state.onPause", function onPause() {
+			if (_startTime) {
+				_pauseTime = me.timer.getTime();
+			}
+		});
+
+		/**
+		 * Calculate delta to resume the tween
+		 * @private
+		 */
+		me.subscribe("me.state.onResume", function onResume() {
+			if (_startTime && _pauseTime) {
+				_startTime += me.timer.getTime() - _pauseTime;
+			}
+		});
 
 		/**
 		 * set the easing function
@@ -548,4 +580,4 @@
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
-})(window);
+})();
