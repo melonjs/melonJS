@@ -8,7 +8,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 	
 	/**
 	 * an Orthogonal Map Renderder

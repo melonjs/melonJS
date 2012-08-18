@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * There is no constructor function for me.input.

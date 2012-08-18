@@ -8,7 +8,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 	
 	/**
 	 * TMX Group Object

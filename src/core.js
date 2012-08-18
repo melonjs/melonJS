@@ -15,7 +15,7 @@
  */
 var me = me || {};
 
-(function($, undefined) {
+(function($) {
 	// Use the correct document accordingly to window argument
 	var document = $.document;
 
@@ -27,6 +27,7 @@ var me = me || {};
 		// settings & configuration
 		// library name & version
 		mod : "melonJS",
+		version : "@VERSION",
 		nocache : '',
 
 		// Public Object (To be completed)
@@ -217,7 +218,40 @@ var me = me || {};
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		preRender : false
+		preRender : false,
+
+		// System methods
+		/**
+		 * Compare two version strings
+		 * @name me.sys#version
+		 * @public
+		 * @function
+		 * @param {String} First version string to compare
+		 * @param {String} Optional Second version string to compare. Default: "@VERSION"
+		 * @example
+		 * if (me.sys.version("0.9.5") > 0) {
+		 *     console.error(
+		 *         "melonJS is too old. Expected: 0.9.5, Got: " +
+		 *         me.version
+		 *     );
+		 * }
+		 */
+		version : function (first, second) {
+			second = second || me.version;
+
+			var a = first.split(".");
+			var b = second.split(".");
+			var len = Math.min(a.length, b.length);
+			var result = 0;
+
+			for (var i = 0; i < len; i++) {
+				if (result = +a[i] - +b[i]) {
+					break;
+				}
+			}
+
+			return result ? result : a.length - b.length;
+		}
 	};
 
 	// a flag to know if melonJS
@@ -603,17 +637,17 @@ var me = me || {};
 		return this.indexOf(word) > -1;
 	};
 
-   /**
+	/**
 	 * convert the string to hex value
 	 * @extends String
 	 * @return {String}
 	 */
 	String.prototype.toHex = function() {
-      var res = "", c = 0;
-      while(c<this.length){
-         res += this.charCodeAt(c++).toString(16);
-      }
-      return res;
+		var res = "", c = 0;
+		while(c<this.length){
+			res += this.charCodeAt(c++).toString(16);
+		}
+		return res;
 	};
 
 
@@ -652,8 +686,8 @@ var me = me || {};
 	 */
 	Number.prototype.round = function() {
 		// if only one argument use the object value
-		var num = (arguments.length == 1) ? this : arguments[0];
-		var powres = Math.pow(10, arguments[1] || arguments[0]);
+		var num = (arguments.length < 2) ? this : arguments[0];
+		var powres = Math.pow(10, arguments[1] || arguments[0] || 0);
 		return (Math.round(num * powres) / powres);
 	};
 
@@ -689,9 +723,9 @@ var me = me || {};
 	 * var num = 60
 	 * num.degToRad(); // return 1.0471...
 	 */
-    Number.prototype.degToRad = function (angle) {
-        return (angle||this) / 180.0 * Math.PI;
-    };
+	Number.prototype.degToRad = function (angle) {
+		return (angle||this) / 180.0 * Math.PI;
+	};
 
 	/**
 	 * Converts an angle in radians to an angle in degrees.
@@ -706,8 +740,8 @@ var me = me || {};
 	 * Math.ceil(num.radToDeg()); // return 60
 	 */
 	Number.prototype.radToDeg = function (angle) {
-        return (angle||this) * (180.0 / Math.PI);
-    };
+		return (angle||this) * (180.0 / Math.PI);
+	};
 	
 	/**
 	 * Remove the specified object from the Array<br>
@@ -789,6 +823,12 @@ var me = me || {};
 	/************************************************************************************/
 
 	/************************************************************************************/
+
+	Object.defineProperty(me, "initialized", {
+		get : function get() {
+			return me_initialized;
+		}
+	});
 
 	/*---
 	 	ME init stuff

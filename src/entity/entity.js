@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * me.ObjectSettings contains the object attributes defined in Tiled<br>
