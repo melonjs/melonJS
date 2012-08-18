@@ -27,6 +27,7 @@ var me = me || {};
 		// settings & configuration
 		// library name & version
 		mod : "melonJS",
+		version : "@VERSION",
 		nocache : '',
 
 		// Public Object (To be completed)
