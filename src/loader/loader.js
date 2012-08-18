@@ -29,18 +29,29 @@
 			// flag to know if we need to refresh the display
 			this.invalidate = false;
 
+			// handle for the susbcribe function
+			this.handle = null;
+			
 			// load progress in percent
 			this.loadPercent = 0;
-
-			// setup a callback
-			me.loader.onProgress = this.onProgressUpdate.bind(this);
-
+			
 		},
 
+		// call when the loader is resetted
+		onResetEvent : function() {
+			// setup a callback
+			this.handle = me.event.subscribe(me.event.LOADER_PROGRESS, this.onProgressUpdate.bind(this));
+		},
+		
 		// destroy object at end of loading
 		onDestroyEvent : function() {
 			// "nullify" all fonts
 			this.logo1 = this.logo2 = null;
+			// cancel the callback
+			if (this.handle)  {
+				me.event.unsubscribe(this.handle);
+				this.handle = null;
+			}
 		},
 
 		// make sure the screen is refreshed every frame 
