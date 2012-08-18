@@ -223,20 +223,20 @@ var me = me || {};
 		// System methods
 		/**
 		 * Compare two version strings
-		 * @name me.sys#version
 		 * @public
 		 * @function
 		 * @param {String} First version string to compare
-		 * @param {String} Optional Second version string to compare. Default: "@VERSION"
+		 * @param [String="@VERSION"] Second version string to compare 
+		 * @return {Integer} comparaison result
 		 * @example
-		 * if (me.sys.version("0.9.5") > 0) {
+		 * if (me.sys.checkVersion("0.9.5") > 0) {
 		 *     console.error(
 		 *         "melonJS is too old. Expected: 0.9.5, Got: " +
 		 *         me.version
 		 *     );
 		 * }
 		 */
-		version : function (first, second) {
+		checkVersion : function (first, second) {
 			second = second || me.version;
 
 			var a = first.split(".");
