@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	
 	/**

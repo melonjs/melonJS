@@ -5,7 +5,7 @@
  *
  */
  
-(function($, undefined) {
+(function($) {
 
 	/**
 	 *  Base64 decoding

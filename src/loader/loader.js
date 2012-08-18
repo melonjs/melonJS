@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * a default loading screen

@@ -12,7 +12,7 @@
  * -> first char " " 32d (0x20);
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * a generic system font object.

@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * A Simple object to display a sprite on screen.

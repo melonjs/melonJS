@@ -5,7 +5,8 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
+
 	/**
 	 * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
 	 * There is no constructor function for me.timer
