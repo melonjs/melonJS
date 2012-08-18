@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * a default loading screen
@@ -150,7 +150,10 @@
 					// make sure we clear the timer
 					clearTimeout(timerId);
 					// trigger the onload callback
-					setTimeout(obj.onload, 300);
+					setTimeout(function () {
+						obj.onload();
+						me.event.publish(me.event.LOADER_COMPLETE);
+					}, 300);
 					// reset tmxcount for next time
 					tmxCount = 0;
 				} else
@@ -295,10 +298,12 @@
 			loadCount++;
 
 			// callback ?
+			var progress = obj.getLoadProgress();
 			if (obj.onProgress) {
 				// pass the load progress in percent, as parameter
-				obj.onProgress(obj.getLoadProgress());
+				obj.onProgress(progress);
 			}
+			me.event.publish(me.event.LOADER_PROGRESS, [progress]);
 		};
 		
 		/**

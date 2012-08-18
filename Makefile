@@ -32,7 +32,7 @@ docdir = docs
 
 # CURRENT BUILD VERSION
 ME_VER=$(shell cat $(srcdir)/version.js | sed "s/^.*[^0-9]\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/")
-VERSION=sed "s/@VERSION/${VERSION}/"
+VERSION=sed "s/@VERSION/${ME_VER}/"
 
 # list of module to compile
 MODULE = $(srcdir)/core.js\
@@ -77,7 +77,7 @@ all: debug
 	java -jar $(GCC_COMPRESSOR) $(GCC_OPTION) --js=$(DEBUG) --js_output_file=$(BUILD)
 		
 debug: clean
-	cat $(MODULE) >> $(DEBUG)
+	cat $(MODULE) | $(VERSION) >> $(DEBUG)
 
 clean:
 	rm -Rf $(buildir)/*
