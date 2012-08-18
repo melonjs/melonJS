@@ -790,6 +790,12 @@ var me = me || {};
 
 	/************************************************************************************/
 
+	Object.defineProperty(me, "initialized", {
+		get : function get() {
+			return me_initialized;
+		}
+	});
+
 	/*---
 	 	ME init stuff
 						---*/

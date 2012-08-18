@@ -278,6 +278,11 @@
 		 *          Opera the loader will however load audio.ogg files
 		 */
 		obj.init = function(audioFormat) {
+			if (!me.initialized) {
+				console.error("melonJS: me.audio.init() called before engine initialization.");
+				return false;
+			}
+
 			if (audioFormat)
 				requestedFormat = new String(audioFormat);
 			else

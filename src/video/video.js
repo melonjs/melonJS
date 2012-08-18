@@ -187,6 +187,11 @@
 		 * }
 		 */
 		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale) {
+			if (!me.initialized) {
+				console.error("melonJS: me.video.init() called before engine initialization.");
+				return false;
+			}
+
 			double_buffering = doublebuffering || false;
 
 			// zoom only work with the double buffering since we 
