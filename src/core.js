@@ -218,7 +218,40 @@ var me = me || {};
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		preRender : false
+		preRender : false,
+
+		// System methods
+		/**
+		 * Compare two version strings
+		 * @name me.sys#version
+		 * @public
+		 * @function
+		 * @param {String} First version string to compare
+		 * @param {String} Optional Second version string to compare. Default: "@VERSION"
+		 * @example
+		 * if (me.sys.version("0.9.5") > 0) {
+		 *     console.error(
+		 *         "melonJS is too old. Expected: 0.9.5, Got: " +
+		 *         me.version
+		 *     );
+		 * }
+		 */
+		version : function (first, second) {
+			second = second || me.version;
+
+			var a = first.split(".");
+			var b = second.split(".");
+			var len = Math.min(a.length, b.length);
+			var result = 0;
+
+			for (var i = 0; i < len; i++) {
+				if (result = +a[i] - +b[i]) {
+					break;
+				}
+			}
+
+			return result ? result : a.length - b.length;
+		}
 	};
 
 	// a flag to know if melonJS
