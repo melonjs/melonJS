@@ -83,7 +83,7 @@ clean:
 	rm -Rf $(buildir)/*
 	rm -Rf $(docdir)/*
 
-doc:
+doc: debug
 	java -jar $(JSDOC_PATH)/jsrun.jar $(JSDOC_PATH)/app/run.js -a -t=$(JSDOC_PATH)/templates/melonjs $(DEBUG) $(JSDOC_OPTION) 
 	
 
