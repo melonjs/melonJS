@@ -223,17 +223,14 @@ var me = me || {};
 		// System methods
 		/**
 		 * Compare two version strings
-		 * @name me.sys#version
 		 * @public
 		 * @function
-		 * @param {String} First version string to compare
-		 * @param {String} Optional Second version string to compare. Default: "@VERSION"
+		 * @param {String} first First version string to compare
+		 * @param {String} second Optional second version string to compare. Default: "@VERSION"
+		 * @return {Number} <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
 		 * @example
 		 * if (me.sys.version("0.9.5") > 0) {
-		 *     console.error(
-		 *         "melonJS is too old. Expected: 0.9.5, Got: " +
-		 *         me.version
-		 *     );
+		 *     console.error("melonJS is too old. Expected: 0.9.5, Got: " + me.version);
 		 * }
 		 */
 		version : function (first, second) {
