@@ -15,7 +15,7 @@
  */
 var me = me || {};
 
-(function($, undefined) {
+(function($) {
 	// Use the correct document accordingly to window argument
 	var document = $.document;
 
@@ -603,17 +603,17 @@ var me = me || {};
 		return this.indexOf(word) > -1;
 	};
 
-   /**
+	/**
 	 * convert the string to hex value
 	 * @extends String
 	 * @return {String}
 	 */
 	String.prototype.toHex = function() {
-      var res = "", c = 0;
-      while(c<this.length){
-         res += this.charCodeAt(c++).toString(16);
-      }
-      return res;
+		var res = "", c = 0;
+		while(c<this.length){
+			res += this.charCodeAt(c++).toString(16);
+		}
+		return res;
 	};
 
 
@@ -689,9 +689,9 @@ var me = me || {};
 	 * var num = 60
 	 * num.degToRad(); // return 1.0471...
 	 */
-    Number.prototype.degToRad = function (angle) {
-        return (angle||this) / 180.0 * Math.PI;
-    };
+	Number.prototype.degToRad = function (angle) {
+		return (angle||this) / 180.0 * Math.PI;
+	};
 
 	/**
 	 * Converts an angle in radians to an angle in degrees.
@@ -706,8 +706,8 @@ var me = me || {};
 	 * Math.ceil(num.radToDeg()); // return 60
 	 */
 	Number.prototype.radToDeg = function (angle) {
-        return (angle||this) * (180.0 / Math.PI);
-    };
+		return (angle||this) * (180.0 / Math.PI);
+	};
 	
 	/**
 	 * Remove the specified object from the Array<br>
