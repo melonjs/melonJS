@@ -156,11 +156,12 @@
 		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
 			if (!name || !entityClass[name]) {
-				if(prop.image === undefined)
+				if(!prop.image){
 					console.error("cannot instance entity of type '" + name
 							+ "': Class not found!");
-				else 
-					return new me.ObjectEntity(prop.x, prop.y, prop);
+					return null;
+				} else 
+					return new me.SpriteObject(prop.x, prop.y, prop.image);
 					
 			}
 				
