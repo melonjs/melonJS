@@ -594,7 +594,7 @@
 		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
 		 * @param {me.Rect} rect (object must inherits from me.Rect)
 		 * @param {Function} callback
-		 * @param {Boolean} [floating=true] specify if the object is a floating object (if yes, screen coordinates are used, if not mouse/touch coordinates will be converted to world coordinates)
+		 * @param {Boolean} [floating="floating property of the given object"] specify if the object is a floating object (if yes, screen coordinates are used, if not mouse/touch coordinates will be converted to world coordinates)
 		 * @example
 		 * // register on the 'mousemove' event
 		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
@@ -626,7 +626,16 @@
 					if (!obj.mouse.handlers[eventType]) {
 						obj.mouse.handlers[eventType] = [];
  					}
-					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:floating===true?true:false});
+					
+					// check if this is a floating object or not
+					var _float = rect.floating===true?true:false;
+					// check if there is a given parameter
+					if (floating) {
+						// ovveride the previous value
+						_float = floating===true?true:false;
+					}
+					// initialize the handler
+					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:_float});
 					break;
 				default :
 					throw "melonJS : invalid event type : " + eventType;

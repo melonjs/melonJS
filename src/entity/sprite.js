@@ -68,6 +68,16 @@
 		 * @name me.SpriteObject#anchorPoint
 		 */
 		anchorPoint: null,
+		
+		/**
+		 * Define if a renderable follows screen coordinates (floating)<br>
+		 * or the world coordinates (not floating)<br>
+		 * default value : false
+		 * @public
+		 * @type Boolean
+		 * @name me.SpriteObject#floating
+		 */
+		floating: false,
 
 		// image reference
 		image : null,
