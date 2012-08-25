@@ -118,6 +118,9 @@
 					keyStatus[action] = true;
 					// lock the key if requested
 					keyLocked[action] = keyLock[action];
+
+					// publish a message for keydown event
+					me.event.publish(me.event.KEYDOWN, [ action ]);
 				}
 				// prevent event propagation
 				preventDefault(e);
@@ -139,6 +142,10 @@
 
 				keyStatus[action] = false;
 				keyLocked[action] = false;
+
+				// publish message for keyup event
+				me.event.publish(me.event.KEYUP, [ action ]);
+
 				// prevent the event propagation
 				preventDefault(e);
 				return false;
