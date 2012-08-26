@@ -83,8 +83,26 @@
 		 * @name me.event#LOADER_PROGRESS
 		 */
 		obj.LOADER_PROGRESS = "me.loader.onProgress";
-		
-		
+
+		/**
+		 * Channel Constant for pressing a binded key <br>
+		 * Data passed : {String} user-defined action <br>
+		 * @public
+		 * @type {String}
+		 * @name me.event#KEYDOWN
+		 */
+		obj.KEYDOWN = "me.input.keydown";
+
+		/**
+		 * Channel Constant for releasing a binded key <br>
+		 * Data passed : {Number} user-defined action <br>
+		 * @public
+		 * @type {String}
+		 * @name me.event#KEYUP
+		 */
+		obj.KEYUP = "me.input.keyup";
+
+
 		/**
 		 * Publish some data on a channel
 		 * @name me.event#publish
