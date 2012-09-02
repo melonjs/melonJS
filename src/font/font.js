@@ -71,7 +71,7 @@
 		 */
 		set : function(font, size, color, align) {
 			// font name and type
-			this.font = "" + size + "px " + font;
+			this.font = "" + size + "px " + "'" + font + "'";
 			this.height = size;
 			this.color = color;
 			this.align = align || "top";
