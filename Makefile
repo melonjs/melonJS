@@ -38,6 +38,7 @@ VERSION=sed "s/@VERSION/${ME_VER}/"
 MODULE = $(srcdir)/core.js\
 	 $(srcdir)/loader/loader.js\
 	 $(srcdir)/math/geometry.js\
+	 $(srcdir)/debug/debug.js\
 	 $(srcdir)/entity/camera.js\
 	 $(srcdir)/entity/sprite.js\
 	 $(srcdir)/entity/entity.js\

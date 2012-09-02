@@ -48,46 +48,6 @@ var me = me || {};
 	};
 
 	/**
-	 * debug stuff.
-	 * @namespace
-	 */
-	me.debug = {
-		/**
-		 * this flag is automatically set <br>
-		 * upon detection of a "framecounter" element <br>
-		 * in the HTML file holding the cancas.
-		 * @memberOf me.debug
-		 */
-		displayFPS : false,
-
-		/**
-		 * render object Rectangle & Collision Box<br>
-		 * default value : false
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderHitBox : false,
-
-		/**
-		 * render Collision Map layer<br>
-		 * default value : false
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderCollisionMap : false,
-
-		/**
-		 * render dirty region/rectangle<br>
-		 * default value : false<br>
-		 * (feature must be enabled through the me.sys.dirtyRegion flag)
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderDirty : false
-
-	};
-
-	/**
 	 * global system settings and browser capabilities
 	 * @namespace
 	 */
@@ -916,6 +876,8 @@ var me = me || {};
 		// list of object to redraw
 		// only valid for visible and update object
 		var dirtyObjects = [];
+		
+		var drawCount = 0;
 
 		// a flag indicating if we need a redraw
 		api.isDirty = false;
@@ -1005,9 +967,17 @@ var me = me || {};
  		};
 
 		/**
+		 * return the amount of draw object per frame
+		 */
+		api.getDrawCount = function() {
+			return drawCount;
+ 		};
+
+		/**
 		 * draw all dirty objects/regions
 		 */
 		api.draw = function(context) {
+			drawCount = 0;
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
 				// parse all objects
@@ -1020,6 +990,7 @@ var me = me || {};
 					}
 					// draw the object using the dirty area to be updated
 					obj.draw(context, rect);
+					drawCount++;
 				}
 				// some debug stuff
 				if (me.debug.renderDirty) {
@@ -1338,6 +1309,31 @@ var me = me || {};
 			return objList;
 		};
 
+		/**
+		 * returns the amount of existing entities<br>
+		 * @name me.game#getEntityCount
+		 * @protected
+		 * @function
+		 * @return {Number} the amount of object entities
+		 */
+		api.getObjectCount = function()
+		{
+			return gameObjects.length;
+		};
+
+		/**
+		 * returns the amount of object being draw per frame<br>
+		 * @name me.game#getEntityCount
+		 * @protected
+		 * @function
+		 * @return {Number} the amount of object entities
+		 */
+		api.getDrawCount = function()
+		{
+			return drawManager.getDrawCount();
+		};
+
+		
 		/**
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since

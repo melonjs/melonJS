@@ -61,15 +61,25 @@
 		 */
 		api.tick = 1.0;
 
+		/**
+		 * last measured fps rate
+		 * @public
+		 * @type {Int}
+		 * @name me.timer#fps
+		 */
+		api.fps = 0;
+		
 		/* ---
 		
 			init our time stuff
 			
 			---							*/
 		api.init = function() {
-			// check if we have a framecounter display in the HTML
+			// check if we have a fps counter display in the HTML
 			htmlCounter = document.getElementById("framecounter");
-			debug = (htmlCounter !== null);
+			if (htmlCounter !== null) {
+				me.debug.displayFPS = true;
+			}
 
 			// reset variables to initial state
 			api.reset();
@@ -113,15 +123,17 @@
 			delta = (now - last);
 
 			// only draw the FPS on in the HTML page 
-			if (debug) {
+			if (me.debug.displayFPS) {
 				framecount++;
 				framedelta += delta;
 				if (framecount % 10 == 0) {
-					var lastfps = ~~((1000 * framecount) / framedelta);
-					// clamp the result and "draw" it
-					draw(lastfps.clamp(0, me.sys.fps));
+					this.fps = (~~((1000 * framecount) / framedelta)).clamp(0, me.sys.fps);
 					framedelta = 0;
 					framecount = 0;
+				}
+				// set the element in the HTML
+				if (htmlCounter !== null) {
+					draw(this.fps);
 				}
 			}
 			// get the game tick
