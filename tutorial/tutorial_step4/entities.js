@@ -79,8 +79,8 @@
 			// update animation
 			if (this.vel.x!=0 || this.vel.y!=0)
 			{
-				// update objet animation
-				this.parent(this);
+				// update object animation
+				this.parent();
 				return true;
 			}
 			
