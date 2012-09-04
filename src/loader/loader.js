@@ -201,8 +201,7 @@
 		 * preload XML files
 		 * @private
 		 */
-		function preloadXML(xmlData, isTMX, onload, onerror) {
-			var onloadCB = onload;
+		function preloadXML(xmlData, onload, onerror) {
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
 				var xmlhttp = new XMLHttpRequest();
@@ -219,11 +218,12 @@
 			xmlhttp.onerror = onerror;
 			xmlhttp.onload = function(event) {
 				// set the xmldoc in the array
-				xmlList[xmlData.name] = {};
-				xmlList[xmlData.name].xml = xmlhttp.responseText;
-				xmlList[xmlData.name].isTMX = isTMX;
+				xmlList[xmlData.name] = {
+					xml: xmlhttp.responseText,
+					isTMX: (xmlData.type === "tmx")
+				};
 				// callback
-				onloadCB();
+				onload();
 			};
 		
 			// send the request
@@ -236,7 +236,6 @@
 		 * @private
 		 */
 		function preloadBinary(data, onload, onerror) {
-			var onloadCB = onload;
 			var httpReq = new XMLHttpRequest();
 
 			// load our file
@@ -254,7 +253,7 @@
 					}
 					binList[data.name].data = buffer.join("");
 					// callback
-					onloadCB();
+					onload();
 				}
 			};
 			httpReq.send();
@@ -394,13 +393,17 @@
 					return 1;
 
 				case "tmx":
-					preloadXML.call(this, res, true, onload, onerror);
+					preloadXML.call(this, res, onload, onerror);
 					// increase the resourceCount by 1
 					// allowing to add the loading of level in the 
 					// levelDirector as part of the loading progress
 					tmxCount += 1;
 					return 2;
-				
+
+				case "tsx":
+					preloadXML.call(this, res, onload, onerror);
+					return 1;
+
 				case "audio":
 					me.audio.setLoadCallback(onload);
 					// only load is sound is enable
@@ -429,7 +432,7 @@
 		obj.getXML = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (xmlList != null)
+			if ((xmlList != null) && (elt in xmlList))
 				return xmlList[elt].xml;
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);

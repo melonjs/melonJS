@@ -225,7 +225,23 @@
 
 			// first gid
 			this.firstgid = me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
-			
+
+			var src = me.XMLParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
+			if (src) {
+				// load TSX
+				src = me.utils.getBasename(src);
+				xmltileset = me.loader.getXML(src);
+
+				if (!xmltileset) {
+					throw "melonJS:" + src + " TSX tileset not found";
+				}
+
+				// FIXME: This is ok for now, but it wipes out the
+				// XML currently loaded into the global `me.XMLParser`
+				me.XMLParser.parseFromString(xmltileset);
+				xmltileset = me.XMLParser.getFirstElementByTagName("tileset");
+			}
+
 			this.parent(me.XMLParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME),
 						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH),
 						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT),
