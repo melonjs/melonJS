@@ -29,8 +29,8 @@
 		// hold public stuff in our singletong
 		var obj = {};
 
-		// audio channel array
-		var audio_channels = [];
+		// audio channel list
+		var audio_channels = {};
 
 		// supported Audio Format
 		var supportedFormat = [ "mp3", "ogg", "wav" ];
@@ -45,6 +45,7 @@
 		var load_cb = null;
 
 		// current music
+		var current_track_id = null;
 		var current_track = null;
 
 		// enable/disable flag
@@ -466,9 +467,11 @@
 				if (current_track != null)
 					obj.stopTrack();
 
-				current_track = get(sound_id.toLowerCase());
+				sound_id = sound_id.toLowerCase();
+				current_track = get(sound_id);
 
 				if (current_track) {
+					current_track_id = sound_id;
 					current_track.loop = true;
 					current_track.play();
 				}
@@ -488,6 +491,7 @@
 		obj.stopTrack = function() {
 			if (sound_enable && current_track) {
 				current_track.pause();
+				current_track_id = null;
 				current_track = null;
 			}
 		};
@@ -521,6 +525,47 @@
 		obj.resumeTrack = function() {
 			if (sound_enable && current_track) {
 				current_track.play();
+			}
+		};
+
+		/**
+		 * unload specified audio track to free memory
+		 *
+		 * @name me.audio#unload
+		 * @public
+		 * @function
+		 * @param {String} sound_id audio track id
+		 * @return {boolean} true if unloaded
+		 * @example me.audio.unload("awesome_music");
+		 */
+		obj.unload = function(sound_id) {
+			sound_id = sound_id.toLowerCase();
+			if (!(sound_id in audio_channels))
+				return false;
+
+			if (current_track_id === sound_id) {
+				obj.stopTrack();
+			}
+			else {
+				obj.stop(sound_id);
+			}
+
+			delete audio_channels[sound_id];
+
+			return true;
+		};
+
+		/**
+		 * unload all audio to free memory
+		 *
+		 * @name me.audio#unloadAll
+		 * @public
+		 * @function
+		 * @example me.audio.unloadAll();
+		 */
+		obj.unloadAll = function() {
+			for (var sound_id in audio_channels) {
+				obj.unload(sound_id);
 			}
 		};
 

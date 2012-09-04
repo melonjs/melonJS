@@ -418,6 +418,74 @@
 			return 0;
 		};
 
+		/**
+		 * unload specified resource to free memory
+		 * @name me.loader#unload
+		 * @public
+		 * @function
+		 * @param {Object} resource
+		 * @return {boolean} true if unloaded
+		 * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+		 */
+		obj.unload = function(res) {
+			res.name = res.name.toLowerCase();
+			switch (res.type) {
+				case "binary":
+					if (!(res.name in binList))
+						return false;
+
+					delete binList[res.name];
+					return true;
+
+				case "image":
+					if (!(res.name in imgList))
+						return false;
+
+					delete imgList[res.name];
+					return true;
+
+				case "tmx":
+				case "tsx":
+					if (!(res.name in xmlList))
+						return false;
+
+					delete xmlList[res.name];
+					return true;
+
+				case "audio":
+					return me.audio.unload(res.name);
+
+				default:
+					throw "melonJS: me.loader.unload : unknown or invalid resource type : " + res.type;
+			}
+		};
+
+		/**
+		 * unload all resources to free memory
+		 * @name me.loader#unloadAll
+		 * @public
+		 * @function
+		 * @example me.loader.unloadAll();
+		 */
+		obj.unloadAll = function() {
+			var name;
+
+			// unload all binary resources
+			for (name in binList)
+				obj.unload(name);
+
+			// unload all image resources
+			for (name in imgList)
+				obj.unload(name);
+
+			// unload all xml resources
+			for (name in xmlList)
+				obj.unload(name);
+
+			// unload all audio resources
+			me.audio.unloadAll();
+		};
+
 
 		/**
 		 * return the specified XML object
