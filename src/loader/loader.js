@@ -123,7 +123,7 @@
 		var obj = {};
 
 		// contains all the images loaded
-		var imgList = [];
+		var imgList = {};
 		// contains all the xml loaded
 		var xmlList = {};
 		// contains all the binary files loaded
@@ -188,9 +188,7 @@
 		 */
 		
 		function preloadImage(img, onload, onerror) {
-			// create new Image object and add to array
-			imgList.push(img.name);
-
+			// create new Image object and add to list
 			imgList[img.name] = new Image();
 			imgList[img.name].onload = onload;
 			imgList[img.name].onerror = onerror;
@@ -432,7 +430,7 @@
 		obj.getXML = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if ((xmlList != null) && (elt in xmlList))
+			if (elt in xmlList)
 				return xmlList[elt].xml;
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
@@ -452,7 +450,7 @@
 		obj.getBinary = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (binList != null)
+			if (elt in binList)
 				return binList[elt];
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
@@ -474,7 +472,7 @@
 		obj.getImage = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (imgList[elt] != null) {
+			if (elt in imgList) {
 				if (me.sys.cacheImage === true) {
 					// build a new canvas
 					var tempCanvas = me.video.createCanvasSurface(
