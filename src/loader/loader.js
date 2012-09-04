@@ -329,7 +329,7 @@
 		 * set all the specified game resources to be preloaded.<br>
 		 * each resource item must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "image", "tmx", "audio"<br>
+		 * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
@@ -341,7 +341,8 @@
 		 * @param {Array.<string>} resources
 		 * @example
 		 * var g_resources = [ {name: "tileset-platformer",  type:"image",   src: "data/map/tileset-platformer.png"},
-		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1_slopes.tmx"},
+		 *                     {name: "meta_tiles",          type: "tsx",    src: "data/tilesets/meta_tiles.tsx"},
+		 *                     {name: "map1_slopes",         type: "tmx",    src: "data/map/map1_slopes.tmx"},
 		 *                     {name: "cling",               type: "audio",  src: "data/audio/",	channel : 2},
 		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
 		 *					
@@ -364,7 +365,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "binary", "image", "tmx", "audio"
+		 * - type    : "binary", "image", "tmx", "tsx", "audio"
 		 * - src     : path and file name of the resource<br>
 		 * @name me.loader#load
 		 * @public
