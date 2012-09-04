@@ -411,7 +411,7 @@
 					break;
 
 				default:
-					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
+					throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
 					break;
 			};
 			return 0;
