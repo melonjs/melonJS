@@ -51,6 +51,16 @@
 		visible : true,
 
 		/**
+		 * Whether the object is visible and within the viewport<br>
+		 * default value : false
+		 * @public
+		 * @readonly
+		 * @type Boolean
+		 * @name me.SpriteObject#inViewport
+		 */
+		inViewport : false,
+
+		/**
 		 * Set the angle (in Radians) of a sprite to rotate it <br>
 		 * WARNING: rotating sprites decreases performances
 		 * @public
