@@ -1411,7 +1411,7 @@ var me = me || {};
 				var updated = obj.update();
 
 				// check if object is visible
-				if (obj.isEntity) {
+				if (obj.isSprite) {
 					obj.visible = api.viewport.isVisible(obj);
 				}
 

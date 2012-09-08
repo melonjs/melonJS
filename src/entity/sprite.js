@@ -97,6 +97,10 @@
 		 */
 		init : function(x, y, image, spritewidth, spriteheight) {
 
+			// Used by the game engine to adjust visibility as the
+			// sprite moves in and out of the viewport
+			this.isSprite = true;
+
 			// call the parent constructor
 			this.parent(new me.Vector2d(x, y),
 						spritewidth  || image.width,
