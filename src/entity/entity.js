@@ -166,8 +166,9 @@
 				return new me.SpriteObject(prop.x, prop.y, prop.image);
 			}
 
-			console.error("Cannot instantiate entity of type '" + name 
-						  + "': Class not found!");
+			if (name) {
+				console.error("Cannot instantiate entity of type '" + name + "': Class not found!");
+			}
 			return null;
 		};
 
