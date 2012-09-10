@@ -180,6 +180,8 @@
 			{
 				this.hide();
 			}
+
+			return true;
 		},
 		
 		/** @private */
