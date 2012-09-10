@@ -975,7 +975,6 @@ var me = me || {};
 		 * draw all dirty objects/regions
 		 */
 		api.draw = function(context) {
-			drawCount = 0;
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
 				// parse all objects
@@ -1011,6 +1010,9 @@ var me = me || {};
 
 			// clear the flag
 			api.isDirty = false;
+
+			// reset draw count for debug panel
+			drawCount = 0;
 		};
 
 		return api;
