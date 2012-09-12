@@ -96,7 +96,7 @@
 
 		// for z ordering
 		// make it ridiculously high
-		z : 99999,
+		z : Infinity,
 		
 		// visibility flag
 		visible : false,
