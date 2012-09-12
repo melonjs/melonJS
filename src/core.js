@@ -712,6 +712,19 @@ var me = me || {};
 		}
 		return this;
 	};
+
+	if (!Array.prototype.forEach) {
+		/**
+		 * provide a replacement for browsers that don't
+		 * support Array.prototype.forEach (JS 1.6)
+		 * @private
+		 */
+		Array.prototype.forEach = function (callback, scope) {
+			for (var i = 0, j = this.length; j--; i++) {
+				callback.call(scope || this, this[i], i, this);
+			}
+		};
+	}
 	/************************************************************************************/
 
 	/**
