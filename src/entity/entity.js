@@ -155,20 +155,7 @@
 
 		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
-<<<<<<< HEAD
-			if (!name || !entityClass[name]) {
-				if(!prop.image){
-					console.error("cannot instance entity of type '" + name
-							+ "': Class not found!");
-					return null;
-				} else 
-					return new me.SpriteObject(prop.x, prop.y, prop.image);
-					
-			}
-				
-			// i should pass the entity ownProperty instead of the object itself
-			return new entityClass[name](prop.x, prop.y, prop);
-=======
+
 			if (name && entityClass[name]) {
 				// FIXME: I should pass the entity ownProperty instead of the object itself
 				return new entityClass[name](prop.x, prop.y, prop);
@@ -184,7 +171,7 @@
 				console.error("Cannot instantiate entity of type '" + name + "': Class not found!");
 			}
 			return null;
->>>>>>> upstream/master
+
 		};
 
 		// return our object
