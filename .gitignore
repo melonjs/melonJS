@@ -1,13 +1,7 @@
 #eclipse files
-<<<<<<< HEAD
-.settings
-
-
-=======
 .project
 .settings
 
->>>>>>> upstream/master
 # temp files
 .DS_Store
 Thumbs.db
