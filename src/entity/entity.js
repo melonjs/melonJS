@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * me.ObjectSettings contains the object attributes defined in Tiled<br>
@@ -155,6 +155,7 @@
 
 		obj.newInstanceOf = function(prop) {
 			var name = prop.name ? prop.name.toLowerCase() : undefined;
+<<<<<<< HEAD
 			if (!name || !entityClass[name]) {
 				if(!prop.image){
 					console.error("cannot instance entity of type '" + name
@@ -167,6 +168,23 @@
 				
 			// i should pass the entity ownProperty instead of the object itself
 			return new entityClass[name](prop.x, prop.y, prop);
+=======
+			if (name && entityClass[name]) {
+				// FIXME: I should pass the entity ownProperty instead of the object itself
+				return new entityClass[name](prop.x, prop.y, prop);
+			}
+
+			// Tile objects can be created with a GID attribute;
+			// The TMX parser will use it to create the image property.
+			if (prop.image) {
+				return new me.SpriteObject(prop.x, prop.y, prop.image);
+			}
+
+			if (name) {
+				console.error("Cannot instantiate entity of type '" + name + "': Class not found!");
+			}
+			return null;
+>>>>>>> upstream/master
 		};
 
 		// return our object
