@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 	
 	/**
 	 * GUI Object<br>
@@ -67,7 +67,9 @@
 						((typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image), 
 						settings.spritewidth, 
 						settings.spriteheight);
-						
+			
+			// GUI items use screen coordinates
+			this.floating = true;
 			
 			// register on mouse event
 			me.input.registerMouseEvent('mousedown', this, this.clicked.bind(this));

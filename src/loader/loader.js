@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * a default loading screen
@@ -29,18 +29,29 @@
 			// flag to know if we need to refresh the display
 			this.invalidate = false;
 
+			// handle for the susbcribe function
+			this.handle = null;
+			
 			// load progress in percent
 			this.loadPercent = 0;
-
-			// setup a callback
-			me.loader.onProgress = this.onProgressUpdate.bind(this);
-
+			
 		},
 
+		// call when the loader is resetted
+		onResetEvent : function() {
+			// setup a callback
+			this.handle = me.event.subscribe(me.event.LOADER_PROGRESS, this.onProgressUpdate.bind(this));
+		},
+		
 		// destroy object at end of loading
 		onDestroyEvent : function() {
 			// "nullify" all fonts
 			this.logo1 = this.logo2 = null;
+			// cancel the callback
+			if (this.handle)  {
+				me.event.unsubscribe(this.handle);
+				this.handle = null;
+			}
 		},
 
 		// make sure the screen is refreshed every frame 
@@ -112,7 +123,7 @@
 		var obj = {};
 
 		// contains all the images loaded
-		var imgList = [];
+		var imgList = {};
 		// contains all the xml loaded
 		var xmlList = {};
 		// contains all the binary files loaded
@@ -150,7 +161,10 @@
 					// make sure we clear the timer
 					clearTimeout(timerId);
 					// trigger the onload callback
-					setTimeout(obj.onload, 300);
+					setTimeout(function () {
+						obj.onload();
+						me.event.publish(me.event.LOADER_COMPLETE);
+					}, 300);
 					// reset tmxcount for next time
 					tmxCount = 0;
 				} else
@@ -174,9 +188,7 @@
 		 */
 		
 		function preloadImage(img, onload, onerror) {
-			// create new Image object and add to array
-			imgList.push(img.name);
-
+			// create new Image object and add to list
 			imgList[img.name] = new Image();
 			imgList[img.name].onload = onload;
 			imgList[img.name].onerror = onerror;
@@ -187,8 +199,7 @@
 		 * preload XML files
 		 * @private
 		 */
-		function preloadXML(xmlData, isTMX, onload, onerror) {
-			var onloadCB = onload;
+		function preloadXML(xmlData, onload, onerror) {
 			if ($.XMLHttpRequest) {
 				// code for IE7+, Firefox, Chrome, Opera, Safari
 				var xmlhttp = new XMLHttpRequest();
@@ -205,11 +216,12 @@
 			xmlhttp.onerror = onerror;
 			xmlhttp.onload = function(event) {
 				// set the xmldoc in the array
-				xmlList[xmlData.name] = {};
-				xmlList[xmlData.name].xml = xmlhttp.responseText;
-				xmlList[xmlData.name].isTMX = isTMX;
+				xmlList[xmlData.name] = {
+					xml: xmlhttp.responseText,
+					isTMX: (xmlData.type === "tmx")
+				};
 				// callback
-				onloadCB();
+				onload();
 			};
 		
 			// send the request
@@ -222,7 +234,6 @@
 		 * @private
 		 */
 		function preloadBinary(data, onload, onerror) {
-			var onloadCB = onload;
 			var httpReq = new XMLHttpRequest();
 
 			// load our file
@@ -240,7 +251,7 @@
 					}
 					binList[data.name].data = buffer.join("");
 					// callback
-					onloadCB();
+					onload();
 				}
 			};
 			httpReq.send();
@@ -295,10 +306,12 @@
 			loadCount++;
 
 			// callback ?
+			var progress = obj.getLoadProgress();
 			if (obj.onProgress) {
 				// pass the load progress in percent, as parameter
-				obj.onProgress(obj.getLoadProgress());
+				obj.onProgress(progress);
 			}
+			me.event.publish(me.event.LOADER_PROGRESS, [progress]);
 		};
 		
 		/**
@@ -314,7 +327,7 @@
 		 * set all the specified game resources to be preloaded.<br>
 		 * each resource item must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "image", "tmx", "audio"<br>
+		 * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
@@ -325,12 +338,12 @@
 		 * @function
 		 * @param {Array.<string>} resources
 		 * @example
-		 * var g_resources = [ {name: "tileset-platformer",  type:"image",   src: "data/map/tileset-platformer.png"},
-		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1_slopes.tmx"},
-		 *                     {name: "cling",               type: "audio",  src: "data/audio/",	channel : 2},
+		 * var g_resources = [ {name: "tileset-platformer",  type: "image",  src: "data/map/tileset-platformer.png"},
+		 *                     {name: "meta_tiles",          type: "tsx",    src: "data/map/meta_tiles.tsx"},
+		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1.tmx"},
+		 *                     {name: "cling",               type: "audio",  src: "data/audio/",        channel: 2},
 		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
-		 *					
-		 *                    ]; 
+		 *                    ];
 		 * ...
 		 *
 		 * // set all resources to be loaded
@@ -349,7 +362,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "binary", "image", "tmx", "audio"
+		 * - type    : "binary", "image", "tmx", "tsx", "audio"
 		 * - src     : path and file name of the resource<br>
 		 * @name me.loader#load
 		 * @public
@@ -378,13 +391,17 @@
 					return 1;
 
 				case "tmx":
-					preloadXML.call(this, res, true, onload, onerror);
+					preloadXML.call(this, res, onload, onerror);
 					// increase the resourceCount by 1
 					// allowing to add the loading of level in the 
 					// levelDirector as part of the loading progress
 					tmxCount += 1;
 					return 2;
-				
+
+				case "tsx":
+					preloadXML.call(this, res, onload, onerror);
+					return 1;
+
 				case "audio":
 					me.audio.setLoadCallback(onload);
 					// only load is sound is enable
@@ -395,10 +412,78 @@
 					break;
 
 				default:
-					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
+					throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
 					break;
 			};
 			return 0;
+		};
+
+		/**
+		 * unload specified resource to free memory
+		 * @name me.loader#unload
+		 * @public
+		 * @function
+		 * @param {Object} resource
+		 * @return {boolean} true if unloaded
+		 * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+		 */
+		obj.unload = function(res) {
+			res.name = res.name.toLowerCase();
+			switch (res.type) {
+				case "binary":
+					if (!(res.name in binList))
+						return false;
+
+					delete binList[res.name];
+					return true;
+
+				case "image":
+					if (!(res.name in imgList))
+						return false;
+
+					delete imgList[res.name];
+					return true;
+
+				case "tmx":
+				case "tsx":
+					if (!(res.name in xmlList))
+						return false;
+
+					delete xmlList[res.name];
+					return true;
+
+				case "audio":
+					return me.audio.unload(res.name);
+
+				default:
+					throw "melonJS: me.loader.unload : unknown or invalid resource type : " + res.type;
+			}
+		};
+
+		/**
+		 * unload all resources to free memory
+		 * @name me.loader#unloadAll
+		 * @public
+		 * @function
+		 * @example me.loader.unloadAll();
+		 */
+		obj.unloadAll = function() {
+			var name;
+
+			// unload all binary resources
+			for (name in binList)
+				obj.unload(name);
+
+			// unload all image resources
+			for (name in imgList)
+				obj.unload(name);
+
+			// unload all xml resources
+			for (name in xmlList)
+				obj.unload(name);
+
+			// unload all audio resources
+			me.audio.unloadAll();
 		};
 
 
@@ -413,7 +498,7 @@
 		obj.getXML = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (xmlList != null)
+			if (elt in xmlList)
 				return xmlList[elt].xml;
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
@@ -433,7 +518,7 @@
 		obj.getBinary = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (binList != null)
+			if (elt in binList)
 				return binList[elt];
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
@@ -455,7 +540,7 @@
 		obj.getImage = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (imgList[elt] != null) {
+			if (elt in imgList) {
 				if (me.sys.cacheImage === true) {
 					// build a new canvas
 					var tempCanvas = me.video.createCanvasSurface(

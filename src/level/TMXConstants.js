@@ -8,7 +8,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 	
 	// some custom level constants
 	me.LevelConstants = {

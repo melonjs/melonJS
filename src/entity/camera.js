@@ -5,7 +5,8 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
+
 	// some ref shortcut
 	var MIN = Math.min, MAX = Math.max;
 

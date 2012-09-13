@@ -6,7 +6,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/************************************************************************************/
 	/*      HUD FUNCTIONS :                                                             */
@@ -152,6 +152,7 @@
 	/** @scope me.HUD_Object.prototype */
 	{	
 	
+		
 		/**
 		 * @Constructor
 		 * @private
@@ -173,6 +174,9 @@
 
 			// visible or not...	
 			this.visible = true;
+			
+			// use screen coordinates
+			this.floating = true;
 
 			// state of HUD (to trigger redraw);
 			this.HUD_invalidated = true;

@@ -12,7 +12,7 @@
  * -> first char " " 32d (0x20);
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * a generic system font object.
@@ -71,7 +71,7 @@
 		 */
 		set : function(font, size, color, align) {
 			// font name and type
-			this.font = "" + size + "px " + font;
+			this.font = "" + size + "px " + "'" + font + "'";
 			this.height = size;
 			this.color = color;
 			this.align = align || "top";

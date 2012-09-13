@@ -5,7 +5,7 @@
  *
  */
 
-(function($, undefined) {
+(function($) {
 
 	/**
 	 * A Simple object to display a sprite on screen.
@@ -51,6 +51,16 @@
 		visible : true,
 
 		/**
+		 * Whether the object is visible and within the viewport<br>
+		 * default value : false
+		 * @public
+		 * @readonly
+		 * @type Boolean
+		 * @name me.SpriteObject#inViewport
+		 */
+		inViewport : false,
+
+		/**
 		 * Set the angle (in Radians) of a sprite to rotate it <br>
 		 * WARNING: rotating sprites decreases performances
 		 * @public
@@ -68,6 +78,16 @@
 		 * @name me.SpriteObject#anchorPoint
 		 */
 		anchorPoint: null,
+		
+		/**
+		 * Define if a renderable follows screen coordinates (floating)<br>
+		 * or the world coordinates (not floating)<br>
+		 * default value : false
+		 * @public
+		 * @type Boolean
+		 * @name me.SpriteObject#floating
+		 */
+		floating: false,
 
 		// image reference
 		image : null,
@@ -86,6 +106,10 @@
 		 * @ignore
 		 */
 		init : function(x, y, image, spritewidth, spriteheight) {
+
+			// Used by the game engine to adjust visibility as the
+			// sprite moves in and out of the viewport
+			this.isSprite = true;
 
 			// call the parent constructor
 			this.parent(new me.Vector2d(x, y),

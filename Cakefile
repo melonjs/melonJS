@@ -3,6 +3,7 @@ util = require 'util'
 
 files = [
 	'./src/core.js',
+	'./src/debug/debug.js',
 	'./src/loader/loader.js',
 	'./src/math/geometry.js',
 	'./src/entity/camera.js',

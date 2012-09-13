@@ -410,8 +410,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 
         // update animation if necessary
         if (this.vel.x!=0 || this.vel.y!=0) {
-            // update objet animation
-            this.parent(this);
+            // update object animation
+            this.parent();
             return true;
         }
 		
@@ -799,8 +799,8 @@ var EnemyEntity = me.ObjectEntity.extend({
 		
         // update animation if necessary
         if (this.vel.x!=0 || this.vel.y!=0) {
-            // update objet animation
-            this.parent(this);
+            // update object animation
+            this.parent();
             return true;
         }
         return false;
@@ -829,7 +829,7 @@ me.entityPool.add("EnemyEntity", EnemyEntity);
 <p>And we are ready to complete our level in Tiled. Create a new object layer, and use the Insert Object tool to add coins and enemies where you want. Right-click on each object and make sure to set their name to either CoinEntity or EnemyEntity. <img src=
                                                                   "media/tutorial_tiled_step5.png" alt="Step 5"/></p>
 
-<p>Before testing, we also need to modify our player to heck for collision with other
+<p>Before testing, we also need to modify our player to check for collision with other
     entities. In order to do this, we add a call to the <a href="http://www.melonjs.org/docs/symbols/me.game.html#collide"> <b>me.game.collide(this)</b></a>
     function in our mainPlayer code, see below :</p>
 <pre class="brush: js">
@@ -895,8 +895,8 @@ update: function() {
 
     // update animation if necessary
     if (this.vel.x!=0 || this.vel.y!=0) {
-        // update objet animation
-        this.parent(this);
+        // update object animation
+        this.parent();
         return true;
     }
     // else inform the engine we did not perform

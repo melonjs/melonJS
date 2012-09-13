@@ -15,7 +15,7 @@
  */
 var me = me || {};
 
-(function($, undefined) {
+(function($) {
 	// Use the correct document accordingly to window argument
 	var document = $.document;
 
@@ -27,6 +27,7 @@ var me = me || {};
 		// settings & configuration
 		// library name & version
 		mod : "melonJS",
+		version : "@VERSION",
 		nocache : '',
 
 		// Public Object (To be completed)
@@ -43,46 +44,6 @@ var me = me || {};
 		loadingScreen : null,
 		// TMX Stuff
 		TMXTileMap : null
-
-	};
-
-	/**
-	 * debug stuff.
-	 * @namespace
-	 */
-	me.debug = {
-		/**
-		 * this flag is automatically set <br>
-		 * upon detection of a "framecounter" element <br>
-		 * in the HTML file holding the cancas.
-		 * @memberOf me.debug
-		 */
-		displayFPS : false,
-
-		/**
-		 * render object Rectangle & Collision Box<br>
-		 * default value : false
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderHitBox : false,
-
-		/**
-		 * render Collision Map layer<br>
-		 * default value : false
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderCollisionMap : false,
-
-		/**
-		 * render dirty region/rectangle<br>
-		 * default value : false<br>
-		 * (feature must be enabled through the me.sys.dirtyRegion flag)
-		 * @type {Boolean}
-		 * @memberOf me.debug
-		 */
-		renderDirty : false
 
 	};
 
@@ -217,7 +178,37 @@ var me = me || {};
 		 * @type {Boolean}
 		 * @memberOf me.sys
 		 */
-		preRender : false
+		preRender : false,
+
+		// System methods
+		/**
+		 * Compare two version strings
+		 * @public
+		 * @function
+		 * @param {String} first First version string to compare
+		 * @param {String} [second="@VERSION"] Second version string to compare 
+		 * @return {Integer} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
+		 * @example
+		 * if (me.sys.checkVersion("0.9.5") > 0) {
+		 *     console.error("melonJS is too old. Expected: 0.9.5, Got: " + me.version);
+		 * }
+		 */
+		checkVersion : function (first, second) {
+			second = second || me.version;
+
+			var a = first.split(".");
+			var b = second.split(".");
+			var len = Math.min(a.length, b.length);
+			var result = 0;
+
+			for (var i = 0; i < len; i++) {
+				if (result = +a[i] - +b[i]) {
+					break;
+				}
+			}
+
+			return result ? result : a.length - b.length;
+		}
 	};
 
 	// a flag to know if melonJS
@@ -603,17 +594,17 @@ var me = me || {};
 		return this.indexOf(word) > -1;
 	};
 
-   /**
+	/**
 	 * convert the string to hex value
 	 * @extends String
 	 * @return {String}
 	 */
 	String.prototype.toHex = function() {
-      var res = "", c = 0;
-      while(c<this.length){
-         res += this.charCodeAt(c++).toString(16);
-      }
-      return res;
+		var res = "", c = 0;
+		while(c<this.length){
+			res += this.charCodeAt(c++).toString(16);
+		}
+		return res;
 	};
 
 
@@ -652,8 +643,8 @@ var me = me || {};
 	 */
 	Number.prototype.round = function() {
 		// if only one argument use the object value
-		var num = (arguments.length == 1) ? this : arguments[0];
-		var powres = Math.pow(10, arguments[1] || arguments[0]);
+		var num = (arguments.length < 2) ? this : arguments[0];
+		var powres = Math.pow(10, arguments[1] || arguments[0] || 0);
 		return (Math.round(num * powres) / powres);
 	};
 
@@ -689,9 +680,9 @@ var me = me || {};
 	 * var num = 60
 	 * num.degToRad(); // return 1.0471...
 	 */
-    Number.prototype.degToRad = function (angle) {
-        return (angle||this) / 180.0 * Math.PI;
-    };
+	Number.prototype.degToRad = function (angle) {
+		return (angle||this) / 180.0 * Math.PI;
+	};
 
 	/**
 	 * Converts an angle in radians to an angle in degrees.
@@ -706,8 +697,8 @@ var me = me || {};
 	 * Math.ceil(num.radToDeg()); // return 60
 	 */
 	Number.prototype.radToDeg = function (angle) {
-        return (angle||this) * (180.0 / Math.PI);
-    };
+		return (angle||this) * (180.0 / Math.PI);
+	};
 	
 	/**
 	 * Remove the specified object from the Array<br>
@@ -721,6 +712,19 @@ var me = me || {};
 		}
 		return this;
 	};
+
+	if (!Array.prototype.forEach) {
+		/**
+		 * provide a replacement for browsers that don't
+		 * support Array.prototype.forEach (JS 1.6)
+		 * @private
+		 */
+		Array.prototype.forEach = function (callback, scope) {
+			for (var i = 0, j = this.length; j--; i++) {
+				callback.call(scope || this, this[i], i, this);
+			}
+		};
+	}
 	/************************************************************************************/
 
 	/**
@@ -789,6 +793,12 @@ var me = me || {};
 	/************************************************************************************/
 
 	/************************************************************************************/
+
+	Object.defineProperty(me, "initialized", {
+		get : function get() {
+			return me_initialized;
+		}
+	});
 
 	/*---
 	 	ME init stuff
@@ -879,6 +889,8 @@ var me = me || {};
 		// list of object to redraw
 		// only valid for visible and update object
 		var dirtyObjects = [];
+		
+		var drawCount = 0;
 
 		// a flag indicating if we need a redraw
 		api.isDirty = false;
@@ -924,8 +936,8 @@ var me = me || {};
 				}
 			}
 
-			// if obj is visible add it to the list of obj to draw
-			if (obj.visible) {
+			// if obj is in the viewport add it to the list of obj to draw
+			if (obj.inViewport) {
 				// add obj at index 0, so that we can keep
 				// our inverted loop later
 				dirtyObjects.unshift(obj);
@@ -955,16 +967,21 @@ var me = me || {};
 			if (idx != -1) {
 				// remove the object from the list of obj to draw
 				dirtyObjects.splice(idx, 1);
-				// save the visible state of the object
-				var wasVisible = obj.visible;
-				// mark the object as not visible
+
+				// mark the object as not within the viewport
 				// so it won't be added (again) in the list object to be draw
-				obj.visible = false;
+				obj.inViewport = false;
+
 				// and flag the area as dirty
 				api.makeDirty(obj, true);
-				// restore visible state, this is needed for "persistent" object like screenObject
-				obj.visible = wasVisible;
 			}
+ 		};
+
+		/**
+		 * return the amount of draw object per frame
+		 */
+		api.getDrawCount = function() {
+			return drawCount;
  		};
 
 		/**
@@ -977,12 +994,13 @@ var me = me || {};
 				for ( var o = dirtyObjects.length, obj; o--,
 						obj = dirtyObjects[o];) {
 					// if dirty region enabled, make sure the object is in the area to be refreshed
-					if (me.sys.dirtyRegion && obj.isEntity
+					if (me.sys.dirtyRegion && obj.isSprite
 							&& !obj.overlaps(rect)) {
 						continue;
 					}
 					// draw the object using the dirty area to be updated
 					obj.draw(context, rect);
+					drawCount++;
 				}
 				// some debug stuff
 				if (me.debug.renderDirty) {
@@ -1005,6 +1023,9 @@ var me = me || {};
 
 			// clear the flag
 			api.isDirty = false;
+
+			// reset draw count for debug panel
+			drawCount = 0;
 		};
 
 		return api;
@@ -1302,6 +1323,31 @@ var me = me || {};
 		};
 
 		/**
+		 * returns the amount of existing entities<br>
+		 * @name me.game#getEntityCount
+		 * @protected
+		 * @function
+		 * @return {Number} the amount of object entities
+		 */
+		api.getObjectCount = function()
+		{
+			return gameObjects.length;
+		};
+
+		/**
+		 * returns the amount of object being draw per frame<br>
+		 * @name me.game#getEntityCount
+		 * @protected
+		 * @function
+		 * @return {Number} the amount of object entities
+		 */
+		api.getDrawCount = function()
+		{
+			return drawManager.getDrawCount();
+		};
+
+		
+		/**
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
@@ -1372,14 +1418,14 @@ var me = me || {};
 			// loop through our objects
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				// check for previous rect before position change
-				oldRect = (me.sys.dirtyRegion && obj.isEntity) ? obj.getRect() : null;
+				oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
 				// update our object
 				var updated = obj.update();
 
 				// check if object is visible
-				if (obj.isEntity) {
-					obj.visible = api.viewport.isVisible(obj);
+				if (obj.visible) {
+					obj.inViewport = (!obj.isSprite || obj.floating) ? true : api.viewport.isVisible(obj);
 				}
 
 				// add it to the draw manager
@@ -1412,15 +1458,10 @@ var me = me || {};
 			// remove the object from the object list
 			if (force===true) {
 				// force immediate object deletion
-				gameObjects.remove(obj);	
+				gameObjects.remove(obj);
 			} else {
 				// make it invisible (this is bad...)
 				obj.visible = false
-				// ensure it won't be turn back to visible later
-				// PS: may be use obj.alive instead ?
-				if (obj.isEntity) {
-					obj.isEntity = false;
-				}
 				// else wait the end of the current loop
 				/** @private */
 				pendingDefer = (function (obj) {
@@ -1428,7 +1469,7 @@ var me = me || {};
 					pendingDefer = null;
 				}).defer(obj);
 			}
-      };
+		};
 
 		/**
 		 * remove all objects
@@ -1674,11 +1715,12 @@ var me = me || {};
 	/** @scope me.ScreenObject.prototype */
 	{
 
-		visible		 : false,
-		addAsObject  : false,
-		isPersistent : false,
-		z			 : 999,
-		rect		 : null,
+		inViewport		: false,
+		visible			: false,
+		addAsObject		: false,
+		isPersistent	: false,
+		z				: 999,
+		rect			: null,
 
 		/**
 		 *	initialization function
