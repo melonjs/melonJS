@@ -1062,6 +1062,16 @@ var me = me || {};
 
 		// to keep track of deferred stuff
 		var pendingDefer = null;
+		
+		/**
+		 * a default sort function
+		 * @private
+		 */
+		var default_sort_func = function(a, b) {
+			// sort order is inverted,
+			// since we use a reverse loop for the display
+			return (b.z - a.z);
+		};
 
 		/*---------------------------------------------
 
@@ -1512,11 +1522,8 @@ var me = me || {};
 
 		api.sort = function(sort_func) {
 			if (typeof(sort_func) !== "function") {
-				// sort order is inverted,
-				// since we use a reverse loop for the display
-				gameObjects.sort(function(a, b) {
-					return (b.z - a.z);
-				});
+				// default sort function
+				gameObjects.sort(default_sort_func);
 			}
 			else {
 				// user defined sort
