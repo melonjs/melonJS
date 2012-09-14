@@ -255,7 +255,7 @@
 		 * @param {int} val value to be set 
 		 * @example
 		 * // add 10 to the current "score" item value
-		 * me.game.HUD.setItemValue("score", 10);
+		 * me.game.HUD.updateItemValue("score", 10);
 		 */
 		updateItemValue : function(name, value) {
 			if (this.HUDItems[name] && (this.HUDItems[name].update(value) == true))
