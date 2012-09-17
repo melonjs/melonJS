@@ -715,7 +715,7 @@
 							else if (collision.yprop.isBreakable) {
 								if  (this.canBreakTile) {
 									// remove the tile
-									me.game.currentLevel.clearTile(collision.ytile.row,	collision.ytile.col);
+									me.game.currentLevel.clearTile(collision.ytile.col, collision.ytile.row);
 									if (this.onTileBreak)
 										this.onTileBreak();
 								}
@@ -750,7 +750,7 @@
 							if (!collision.xprop.isPlatform && !collision.xprop.isLadder) {
 								if (collision.xprop.isBreakable	&& this.canBreakTile) {
 									// remove the tile
-									me.game.currentLevel.clearTile(collision.xtile.row,	collision.xtile.col);
+									me.game.currentLevel.clearTile(collision.xtile.col, collision.xtile.row);
 									if (this.onTileBreak) {
 										this.onTileBreak();
 									}

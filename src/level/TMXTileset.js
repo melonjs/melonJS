@@ -48,9 +48,9 @@
 		init : function(x, y, w, h, gid) {
 			this.parent(new me.Vector2d(x * w, y * h), w, h);
 			
-			// Tile row / col pos
-			this.row = x;
-			this.col = y;
+			// Tile col / row pos
+			this.col = x;
+			this.row = y;
 			
 			this.tileId = gid;
 			
