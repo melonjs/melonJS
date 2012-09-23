@@ -229,8 +229,7 @@
 		 *	Resize the sprite around his center<br>
 		 *	@param {Boolean} ratio scaling ratio
 		 */
-		resize : function(ratio)
-		{
+		resize : function(ratio) {
 			if (ratio > 0) {
 				this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
 				this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
@@ -243,17 +242,15 @@
 		 *	get the sprite alpha channel value<br>
 		 *  @return current opacity value between 0 and 1
 		 */
-		getOpacity : function(alpha)
-		{
-			this.alpha = alpha.clamp(0.0,1.0);
+		getOpacity : function() {
+			return this.alpha;
 		},
 		
 		/**
 		 *	set the sprite alpha channel value<br>
 		 *	@param {alpha} alpha opacity value between 0 and 1
 		 */
-		setOpacity : function(alpha)
-		{
+		setOpacity : function(alpha) {
 			if (alpha) {
 				this.alpha = alpha.clamp(0.0,1.0);
 			}
