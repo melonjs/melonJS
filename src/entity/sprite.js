@@ -80,6 +80,16 @@
 		anchorPoint: null,
 		
 		/**
+		 * Define the sprite opacity<br>
+		 * @see me.SpriteObject#setOpacity
+		 * @see me.SpriteObject#getOpacity 
+		 * @public
+		 * @type me.Vector2d
+		 * @name me.SpriteObject#alpha
+		 */
+		alpha: 1.0,
+		
+		/**
 		 * Define if a renderable follows screen coordinates (floating)<br>
 		 * or the world coordinates (not floating)<br>
 		 * default value : false
@@ -131,6 +141,9 @@
 			// set the default anchor point (middle of the sprite)
 			this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
+			// ensure it's fully opaque by default
+			this.alpha = 1.0;
+			
 			// sprite count (line, col)
 			this.spritecount = new me.Vector2d(~~(this.image.width / this.width),
 											   ~~(this.image.height / this.height));
@@ -227,6 +240,26 @@
 		},
 
 		/**
+		 *	get the sprite alpha channel value<br>
+		 *  @return current opacity value between 0 and 1
+		 */
+		getOpacity : function(alpha)
+		{
+			this.alpha = alpha.clamp(0.0,1.0);
+		},
+		
+		/**
+		 *	set the sprite alpha channel value<br>
+		 *	@param {alpha} alpha opacity value between 0 and 1
+		 */
+		setOpacity : function(alpha)
+		{
+			if (alpha) {
+				this.alpha = alpha.clamp(0.0,1.0);
+			}
+		},
+
+		/**
 		 * sprite update<br>
 		 * not to be called by the end user<br>
 		 * called by the game manager on each game loop
@@ -262,11 +295,16 @@
 				if (!this.flickerState) return;
 			}
 
-			var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
+			// save the current the context
+			context.save();
+			
+			// sprite alpha value
+			context.globalAlpha = this.alpha;
 
+			// translate to screen coordinates
+			var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
+			
 			if ((this.scaleFlag) || (this.angle!==0)) {
-				// restore the context
-				context.save();
 				// calculate pixel pos of the anchor point
 				var ax = this.width * this.anchorPoint.x, ay = this.height * this.anchorPoint.y;
 				// translate to the defined anchor point
@@ -287,11 +325,10 @@
 							xpos, ypos,
 							this.width, this.height);
 
-			if ((this.scaleFlag) || (this.angle!==0)) {
-				// restore the context
-				context.restore();
-			}
-
+			
+			// restore the context
+			context.restore();
+				
 			if (me.debug.renderHitBox) {
 				// draw the sprite rectangle
 				this.parent(context, "blue");
