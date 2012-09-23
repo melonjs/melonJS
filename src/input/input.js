@@ -335,7 +335,7 @@
 			MIDDLE: 1,
 			RIGHT:	2,
 			// bind list for mouse buttons
-			bind: [3],
+			bind: [ 0, 0, 0 ],
 			handlers:{} 
 		};
 		
