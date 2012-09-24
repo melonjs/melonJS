@@ -179,9 +179,9 @@
 						// call the defined handler
 						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
 							// trigger the corresponding callback
-							handled = true;
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
+								handled = true;
 								break;
 							}
 						}
