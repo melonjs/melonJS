@@ -14,7 +14,7 @@
 #######################################################################
 
 # GOOGLE CLOSURE COMPILER
-GCC_VERSION = 2079
+GCC_VERSION = 2180
 GCC_PATH = tools/closure-compiler/
 GCC_COMPRESSOR = ${GCC_PATH}compiler$(GCC_VERSION).jar
 GCC_OPTION =
