@@ -53,7 +53,7 @@
 				$.addEventListener('keyup', keyup, false);
 				keyboardInitialized = true;
 			}
-		};
+		}
 		
 		/**
 		 * enable mouse event
@@ -81,7 +81,7 @@
 				}
 				mouseInitialized = true;
 			}
-		};
+		}
 
 
 		/**
@@ -297,7 +297,8 @@
 			updateCoordFromEvent(e);
 			// reuse the mouse event function
 			return onMouseEvent(e);
-		};
+		}
+
 		/**
 		 * event management (Accelerometer)
 		 * http://www.mobilexweb.com/samples/ball.html
@@ -307,7 +308,7 @@
 		function onDeviceMotion(e) {
 			// Accelerometer information  
 			obj.accel = e.accelerationIncludingGravity;
-		};
+		}
 
 		/*---------------------------------------------
 			
