@@ -103,7 +103,9 @@
 			else  {
 				e.returnValue = false;
 			}
-		};
+
+			return false;
+		}
 
 		/**
 		 * key down event
@@ -123,11 +125,11 @@
 					me.event.publish(me.event.KEYDOWN, [ action ]);
 				}
 				// prevent event propagation
-				preventDefault(e);
-				return false;
+				return preventDefault(e);
 			}
+
 			return true;
-		};
+		}
 
 
 		/**
@@ -147,11 +149,10 @@
 				me.event.publish(me.event.KEYUP, [ action ]);
 
 				// prevent the event propagation
-				preventDefault(e);
-				return false;
+				return preventDefault(e);
 			}
-			return true;
 
+			return true;
 		}
 		
 		/**
@@ -159,6 +160,7 @@
 		 * @private
 		 */
 		function dispatchMouseEvent(e) {
+			var handled = false;
 			var vpos = me.game.viewport.pos;
 			var map_pos = me.game.currentLevel.pos;
 			var handlers = obj.mouse.handlers[e.type];
@@ -177,6 +179,7 @@
 						// call the defined handler
 						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
 							// trigger the corresponding callback
+							handled = true;
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
 								break;
@@ -186,7 +189,8 @@
 				} 
 			}
 
-		};
+			return handled;
+		}
 
 		
 		/**
@@ -223,7 +227,7 @@
 				}
 			}
 			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
-		};
+		}
 
 	
 		/**
@@ -231,11 +235,16 @@
 		 * @private
 		 */
 		function onMouseWheel(e) {
-			// dispatch mouse event to registered object
-			dispatchMouseEvent(e);
-			// prevent default action
-			preventDefault(e);
-		};
+			if (e.target == me.video.getScreenCanvas()) {
+				// dispatch mouse event to registered object
+				if (dispatchMouseEvent(e)) {
+					// prevent default action
+					return preventDefault(e);
+				}
+			}
+
+			return true;
+		}
 
 		
 		/**
@@ -246,43 +255,48 @@
 			// update position
 			updateCoordFromEvent(e);
 			// dispatch mouse event to registered object
-			dispatchMouseEvent(e);
-			// prevent default action
-			preventDefault(e);
-		};
+			if (dispatchMouseEvent(e)) {
+				// prevent default action
+				return preventDefault(e);
+			}
+
+			return true;
+		}
 		
 		/**
 		 * mouse event management (mousedown, mouseup)
 		 * @private
 		 */
 		function onMouseEvent(e) {
+			// dispatch event to registered objects
+			if (dispatchMouseEvent(e)) {
+				// prevent default action
+				return preventDefault(e);
+			}
+
 			// in case of touch event button is undefined
 			var keycode = obj.mouse.bind[e.button || 0];
 
-			// dispatch event to registered objects
-			dispatchMouseEvent(e);		
 			// check if mapped to a key
 			if (keycode) {
 				if (e.type === 'mousedown' || e.type === 'touchstart')
-					keydown(e, keycode);
+					return keydown(e, keycode);
 				else // 'mouseup' or 'touchend'
-					keyup(e, keycode);
+					return keyup(e, keycode);
 			}
-			else {
-				// prevent default action
-				preventDefault(e);
-			}
-		};
+
+			return true;
+		}
 		
 		/**
-		 * mouse event management (mousedown, mouseup)
+		 * mouse event management (touchstart, touchend)
 		 * @private
 		 */
 		function onTouchEvent(e) {
 			// update the new touch position
 			updateCoordFromEvent(e);
 			// reuse the mouse event function
-			onMouseEvent(e);
+			return onMouseEvent(e);
 		};
 		/**
 		 * event management (Accelerometer)
