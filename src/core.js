@@ -2211,7 +2211,7 @@ var me = me || {};
 		 */
 		obj.resume = function(music) {
 			// start the main loop
-			_startRunLoop(_state);
+			_startRunLoop();
 			// current music stop
 			if (music)
 				me.audio.resumeTrack();
