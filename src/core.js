@@ -2304,7 +2304,7 @@ var me = me || {};
 				};
 				me.game.viewport.fadeIn(_fade.color, _fade.duration,
 										function() {
-											_switchState(state);
+											_switchState.defer(state);
 										});
 
 			}
