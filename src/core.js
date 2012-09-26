@@ -998,8 +998,22 @@ var me = me || {};
 							&& !obj.overlaps(rect)) {
 						continue;
 					}
+
+					if (!obj.floating) {
+						// translate object position to world coordinates
+						var pos = me.game.viewport.pos;
+
+						context.save();
+						context.translate(-pos.x, -pos.y);
+					}
+
 					// draw the object using the dirty area to be updated
 					obj.draw(context, rect);
+
+					if (!obj.floating) {
+						context.restore();
+					}
+
 					drawCount++;
 				}
 				// some debug stuff

@@ -566,9 +566,7 @@
 				draw : function(context, color) {
 					// draw the rectangle
 					context.strokeStyle = color || "red";
-					context.strokeRect(this.left - me.game.viewport.pos.x,
-							this.top - me.game.viewport.pos.y, this.width,
-							this.height);
+					context.strokeRect(this.left, this.top, this.width, this.height);
 
 				}
 	});

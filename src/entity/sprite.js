@@ -298,8 +298,8 @@
 			// sprite alpha value
 			context.globalAlpha = this.alpha;
 
-			// translate to screen coordinates
-			var xpos = ~~(this.pos.x - this.vp.pos.x), ypos = ~~(this.pos.y - this.vp.pos.y);
+			// clamp position vector to pixel grid
+			var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
 			
 			if ((this.scaleFlag) || (this.angle!==0)) {
 				// calculate pixel pos of the anchor point

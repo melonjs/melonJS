@@ -955,9 +955,7 @@
 					if (me.debug.renderHitBox) {
 						// draw the sprite rectangle
 						context.strokeStyle = "blue";
-						context.strokeRect(this.pos.x - me.game.viewport.pos.x,
-								this.pos.y - me.game.viewport.pos.y,
-								this.width, this.height);
+						context.strokeRect(this.pos.x, this.pos.y, this.width, this.height);
 
 						this.collisionBox.draw(context);
 					}
