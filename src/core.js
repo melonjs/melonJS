@@ -988,6 +988,10 @@ var me = me || {};
 		 * draw all dirty objects/regions
 		 */
 		api.draw = function(context) {
+			// cache viewport position vector
+			var posx = -me.game.viewport.pos.x;
+			var posy = -me.game.viewport.pos.y;
+
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
 				// parse all objects
@@ -1001,10 +1005,8 @@ var me = me || {};
 
 					if (!obj.floating) {
 						// translate object position to world coordinates
-						var pos = me.game.viewport.pos;
-
 						context.save();
-						context.translate(-pos.x, -pos.y);
+						context.translate(posx, posy);
 					}
 
 					// draw the object using the dirty area to be updated
