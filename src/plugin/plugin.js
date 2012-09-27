@@ -39,6 +39,7 @@
 		 * });
 		 */
 		singleton.plug = function(proto, name, fn){
+			var parent = {};
 			// use the object prototype if possible
 			if (proto.prototype!==undefined) {
 				var proto = proto.prototype;
