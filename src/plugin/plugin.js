@@ -22,10 +22,13 @@
 		  --------------*/
 
 		/**
-		 * override a melonJS function  
+		 * override a melonJS function
 		 * @name me.plugin#plug
 		 * @public
 		 * @function
+		 * @param {Object} object target object
+		 * @param {name} name target function
+		 * @param {Function} fn function
 		 * @example 
 		 * // redefine the me.game.update function with a new one
 		 * me.plugin.plug (me.game, "update", function () { 
@@ -40,7 +43,7 @@
 			if (proto.prototype!==undefined) {
 				var proto = proto.prototype;
 			}
-			// reuse the logic behing Object.extend
+			// reuse the logic behind Object.extend
 			if (typeof(proto[name]) == "function") {
 				// save the original function
 				parent[name] = proto[name];
@@ -56,7 +59,7 @@
 				})( name, fn );
 			}
 			else {
-				console.error(name + " is not a defined function");
+				console.error(name + " is not an existing function");
 			}
 		};
 
