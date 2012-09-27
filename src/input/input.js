@@ -161,10 +161,10 @@
 		 */
 		function dispatchMouseEvent(e) {
 			var handled = false;
-			var vpos = me.game.viewport.pos;
-			var map_pos = me.game.currentLevel.pos;
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
+				var vpos = me.game.viewport.pos;
+				var map_pos = me.game.currentLevel.pos;
 				for(var t=0, l=obj.touches.length; t<l; t++) {
 					// cache the x/y coordinates
 					var x = obj.touches[t].x;
