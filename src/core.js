@@ -1951,9 +1951,6 @@ var me = me || {};
 		// cache reference to the active screen update frame
 		var _activeUpdateFrame = null;
 
-		// cache reference to the active screen update frame
-		var _fps = null;
-
 		/**
 		 * @ignore
 		 */
@@ -1980,7 +1977,7 @@ var me = me || {};
 				}
 
 				// setup the game loop using setInterval
-				_intervalId = setInterval(_activeUpdateFrame, _fps);
+				_intervalId = setInterval(_activeUpdateFrame, ~~(1000 / me.sys.fps));
 			}
 		};
 
@@ -2182,8 +2179,6 @@ var me = me || {};
 
 			}, false);
 
-			// cache the FPS information
-			_fps = ~~(1000 / me.sys.fps);
 		};
 
 		/**
