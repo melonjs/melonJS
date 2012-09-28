@@ -25,9 +25,9 @@
 		  --------------*/
 		
 		/**
-		* a base Object for pluging <br>
-		* plugin should instantiated/installed using the register function
-		* @see me.plugin#register
+		* a base Object for plugin <br>
+		* plugin must be installed using the register function
+		* @see me.plugin#Base
 		* @class
 		* @extends Object
 		* @memberOf me
@@ -50,9 +50,9 @@
 			init : function() {
 				// compatibility testing
 				if (this.version === undefined) {
-					console.error("Plugin : version not defined !");
+					throw "melonJS: Plugin version not defined !";
 				} else if (me.sys.checkVersion(this.version) > 0) {
-					console.error("Plugin : version mismatch, expected: "+ this.version +", Got: " + me.version);
+					throw ("melonJS: Plugin version mismatch, expected: "+ this.version +", got: " + me.version);
 				}
 			}
 		});
@@ -76,7 +76,6 @@
 		 * });
 		 */
 		singleton.plug = function(proto, name, fn){
-			var parent = {};
 			// use the object prototype if possible
 			if (proto.prototype!==undefined) {
 				var proto = proto.prototype;
@@ -84,12 +83,12 @@
 			// reuse the logic behind Object.extend
 			if (typeof(proto[name]) == "function") {
 				// save the original function
-				parent[name] = proto[name];
+				var _parent = proto[name];
 				// override the function with the new one
 				proto[name] = (function(name, fn){
 					return function() {
 						var tmp = this.parent;
-						this.parent = parent[name];
+						this.parent = _parent;
 						var ret = fn.apply(this, arguments);			 
 						this.parent = tmp;
 						return ret;
@@ -117,7 +116,6 @@
 			if (_plugins[name]) {
 				console.error ("plugin " + name + " already registered");
 			}
-			
 			// instantiate the plugin
 			_plugins[name] = new plugin();
 		};
