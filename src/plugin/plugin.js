@@ -17,9 +17,46 @@
 		// hold public stuff inside the singleton
 		var singleton = {};
 		
+		// list of registered plugins
+		var _plugins = {};
+		
 		/*--------------
 			PUBLIC 
 		  --------------*/
+		
+		/**
+		* a base Object for pluging <br>
+		* plugin should instantiated/installed using the register function
+		* @see me.plugin#register
+		* @class
+		* @extends Object
+		* @memberOf me
+		* @constructor
+		*/
+		singleton.Base = Object.extend(
+		/** @scope me.plugin.Base.prototype */
+		{
+			/**
+			 * define the minimum required <br>
+			 * version of melonJS  <br>
+			 * this need to be defined by the plugin
+			 * @public
+			 * @type String
+			 * @name me.plugin.Base#version
+			 */
+			version : undefined,
+			
+			/** @private */
+			init : function() {
+				// compatibility testing
+				if (this.version === undefined) {
+					console.error("Plugin : version not defined !");
+				} else if (me.sys.checkVersion(this.version) > 0) {
+					console.error("Plugin : version mismatch, expected: "+ this.version +", Got: " + me.version);
+				}
+			}
+		});
+
 
 		/**
 		 * override a melonJS function
@@ -67,14 +104,23 @@
 		/**
 		 * Register a plugin.
 		 * @name me.plugin#register
+		 * @see me.plugin#Base
 		 * @public
 		 * @function
+		 * @param {me.plugin.Base} plugin Plugin to instiantiate and register
+		 * @param {String} name
 		 */
 
-		singleton.register = function(){
-			;
+		singleton.register = function(plugin, name){
+			
+			// ensure the plugin is not yet installed
+			if (_plugins[name]) {
+				console.error ("plugin " + name + " already registered");
+			}
+			
+			// instantiate the plugin
+			_plugins[name] = new plugin();
 		};
-		
 		
 		// return our singleton
 		return singleton;
