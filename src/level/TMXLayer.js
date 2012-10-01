@@ -412,8 +412,8 @@
 		 * @name me.TiledLayer#getTileId
 		 * @public
 		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position
+		 * @param {Integer} x x coordinate in pixel 
+		 * @param {Integer} y y coordinate in pixel
 		 * @return {Int} TileId
 		 */
 		getTileId : function(x, y) {
@@ -426,8 +426,8 @@
 		 * @name me.TiledLayer#getTile
 		 * @public
 		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position
+		 * @param {Integer} x x coordinate in pixel 
+		 * @param {Integer} y y coordinate in pixel
 		 * @return {me.Tile} Tile Object
 		 */
 		getTile : function(x, y) {
@@ -439,8 +439,8 @@
 		 * @name me.TiledLayer#setTile
 		 * @public
 		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position
+		 * @param {Integer} x x coordinate in tile 
+		 * @param {Integer} y y coordinate in tile
 		 * @param {Integer} tileId tileId
 		 */
 		setTile : function(x, y, tileId) {
@@ -452,8 +452,8 @@
 		 * @name me.TiledLayer#clearTile
 		 * @public
 		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position 
+		 * @param {Integer} x x coordinate in tile 
+		 * @param {Integer} y y coordinate in tile 
 		 */
 		clearTile : function(x, y) {
 			// clearing tile
