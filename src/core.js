@@ -1186,13 +1186,6 @@ var me = me || {};
 		 */
 		api.reset = function() {
 
-			//cancel any pending task
-			if (pendingDefer)
-			{
-				clearTimeout(pendingDefer);
-			}
-			pendingDefer = null;
-
 			// initialized the object if not yet done
 			if (!initialized)
 				api.init();
@@ -1488,6 +1481,11 @@ var me = me || {};
 		 * @function
 		 */
 		api.removeAll = function() {
+			//cancel any pending task
+			if (pendingDefer) {
+				clearTimeout(pendingDefer);
+				pendingDefer = null;
+			}
 			// inform all object they are about to be deleted
 			for (var i = gameObjects.length ; i-- ;) {
 				if (gameObjects[i].isPersistent) {
