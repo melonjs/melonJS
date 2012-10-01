@@ -17,9 +17,6 @@
 		// hold public stuff inside the singleton
 		var singleton = {};
 		
-		// list of registered plugins
-		var _plugins = {};
-		
 		/*--------------
 			PUBLIC 
 		  --------------*/
@@ -59,8 +56,8 @@
 
 
 		/**
-		 * override a melonJS function
-		 * @name me.plugin#plug
+		 * patch a melonJS function
+		 * @name me.plugin#patch
 		 * @public
 		 * @function
 		 * @param {Object} object target object
@@ -68,14 +65,14 @@
 		 * @param {Function} fn function
 		 * @example 
 		 * // redefine the me.game.update function with a new one
-		 * me.plugin.plug (me.game, "update", function () { 
+		 * me.plugin.patch(me.game, "update", function () { 
 		 * 	 // display something in the console
 		 *   console.log("duh");
 		 *   // call the original me.game.update function
 		 *	 this.parent();
 		 * });
 		 */
-		singleton.plug = function(proto, name, fn){
+		singleton.patch = function(proto, name, fn){
 			// use the object prototype if possible
 			if (proto.prototype!==undefined) {
 				var proto = proto.prototype;
@@ -108,21 +105,30 @@
 		 * @function
 		 * @param {me.plugin.Base} plugin Plugin to instiantiate and register
 		 * @param {String} name
+		 * @example
+		 * // register a new plugin
+		 * me.plugin.register(TestPlugin, "testPlugin");
+		 * // the plugin then also become available
+		 * // under then me.plugin namespace
+ 		 * me.plugin.testPlugin.myFunction();
 		 */
-
 		singleton.register = function(plugin, name){
-			
-			// ensure the plugin is not yet installed
-			if (_plugins[name]) {
+			// ensure me.plugin[name] is not already "used"
+			if (me.plugin[name]) {
 				console.error ("plugin " + name + " already registered");
 			}
-			// instantiate the plugin
-			_plugins[name] = new plugin();
+			
+			// try to instantiate the plugin
+			me.plugin[name] = new plugin();
+			
+			// inheritance check
+			if (!(me.plugin[name] instanceof me.plugin.Base)) {
+				throw "melonJS: Plugin should extend the me.plugin.Base Class !";
+			}
 		};
 		
 		// return our singleton
 		return singleton;
 
 	})();
-
 })();
