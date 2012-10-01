@@ -32,7 +32,7 @@
 	 *	
 	 *    // output something in the console
 	 *    // when the object is clicked
-	 *    onClicked:function()
+	 *    onClick:function()
 	 *    {
 	 *       console.log("clicked!");
 	 *       // don't propagate the event
@@ -96,7 +96,7 @@
 		clicked : function() {
 			if (this.isClickable) {
 				this.updated = true;
-				return this.onClicked();
+				return this.onClick();
 			}
 		},
 	
@@ -107,7 +107,7 @@
 		 * @public
 		 * @function
 		 */
-		onClicked : function() {
+		onClick : function() {
 			
 			return true;
 		},
