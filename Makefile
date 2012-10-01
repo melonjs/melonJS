@@ -59,7 +59,8 @@ MODULE = $(srcdir)/core.js\
 	 $(srcdir)/level/TMXTiledMap.js\
 	 $(srcdir)/level/LevelDirector.js\
 	 $(srcdir)/vendors/tween.js\
-	 $(srcdir)/vendors/minpubsub.src.js
+	 $(srcdir)/vendors/minpubsub.src.js\
+	 $(srcdir)/plugin/plugin.js
 
 
 # Debug Target name
