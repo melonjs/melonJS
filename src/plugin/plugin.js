@@ -45,12 +45,7 @@
 			
 			/** @private */
 			init : function() {
-				// compatibility testing
-				if (this.version === undefined) {
-					throw "melonJS: Plugin version not defined !";
-				} else if (me.sys.checkVersion(this.version) > 0) {
-					throw ("melonJS: Plugin version mismatch, expected: "+ this.version +", got: " + me.version);
-				}
+				; //empty for now !
 			}
 		});
 
@@ -116,6 +111,13 @@
 			// ensure me.plugin[name] is not already "used"
 			if (me.plugin[name]) {
 				console.error ("plugin " + name + " already registered");
+			}
+			
+			// compatibility testing
+			if (plugin.prototype.version === undefined) {
+				throw "melonJS: Plugin version not defined !";
+			} else if (me.sys.checkVersion(plugin.prototype.version) > 0) {
+				throw ("melonJS: Plugin version mismatch, expected: "+ plugin.prototype.version +", got: " + me.version);
 			}
 			
 			// try to instantiate the plugin
