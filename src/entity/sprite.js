@@ -132,9 +132,6 @@
 			// scale factor of the object
 			this.scale = new me.Vector2d(1.0, 1.0);
 
-			// get a reference to the current viewport
-			this.vp = me.game.viewport;
-
 			// set the default sprite index & offset
 			this.offset = new me.Vector2d(0, 0);
 

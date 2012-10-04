@@ -787,8 +787,8 @@
 						this.collisionBox.draw(context, "red");
 						
 						// draw entity current velocity
-						var x =  ~~(this.pos.x + this.hWidth - this.vp.pos.x);
-						var y =  ~~(this.pos.y + this.hHeight - this.vp.pos.y);
+						var x =  ~~(this.pos.x + this.hWidth);
+						var y =  ~~(this.pos.y + this.hHeight);
 						
 						context.lineWidth = 1;
 						context.beginPath();
