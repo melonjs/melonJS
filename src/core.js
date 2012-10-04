@@ -1061,7 +1061,8 @@ var me = me || {};
 		var initialized = false;
 
 		// to keep track of deferred stuff
-		var pendingDefer = null;
+		var pendingRemove = null;
+		var pendingSort = null;
 		
 		/**
 		 * a default sort function
@@ -1415,7 +1416,7 @@ var me = me || {};
 		 * @function
 		 */
 		api.update = function() {
-
+			
 			// previous rect (if any)
 			var oldRect = null;
 			// loop through our objects
@@ -1438,6 +1439,7 @@ var me = me || {};
 			if (api.viewport.update(drawManager.isDirty)) {
 				drawManager.makeAllDirty();
 			}
+			
 		};
 
 		/**
@@ -1467,9 +1469,9 @@ var me = me || {};
 				obj.visible = false
 				// else wait the end of the current loop
 				/** @private */
-				pendingDefer = (function (obj) {
+				pendingRemove = (function (obj) {
 					gameObjects.remove(obj);
-					pendingDefer = null;
+					pendingRemove = null;
 				}).defer(obj);
 			}
 		};
@@ -1481,11 +1483,16 @@ var me = me || {};
 		 * @function
 		 */
 		api.removeAll = function() {
-			//cancel any pending task
-			if (pendingDefer) {
-				clearTimeout(pendingDefer);
-				pendingDefer = null;
+			//cancel any pending tasks
+			if (pendingRemove) {
+				clearTimeout(pendingRemove);
+				pendingRemove = null;
 			}
+			if (pendingSort) {
+				clearTimeout(pendingSort);
+				pendingSort = null;
+			}
+			
 			// inform all object they are about to be deleted
 			for (var i = gameObjects.length ; i-- ;) {
 				if (gameObjects[i].isPersistent) {
@@ -1519,16 +1526,23 @@ var me = me || {};
 		 */
 
 		api.sort = function(sort_func) {
-			if (typeof(sort_func) !== "function") {
-				// default sort function
-				gameObjects.sort(default_sort_func);
-			}
-			else {
-				// user defined sort
-				gameObjects.sort(sort_func);
-			}
-			// make sure we redraw everything
-			api.repaint();
+			// do nothing if there is already 
+			// a previous pending sort
+			if (pendingSort === null) {
+				// use the default sort function if
+				// the specified one is not valid
+				if (typeof(sort_func) !== "function") {
+					sort_func = default_sort_func;
+				}
+				pendingSort = (function (sort_func) {
+					// sort everything
+					gameObjects.sort(sort_func);
+					// clear the defer id
+					pendingSort = null;
+					// make sure we redraw everything
+					me.game.repaint();
+				}).defer(sort_func);
+			};
 		};
 
 		/**
