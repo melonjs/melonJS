@@ -136,6 +136,9 @@
 			// default opacity
 			this.opacity = 1.0;
 			
+			// ?
+			this.floating = true;
+			
 		},
 		
 		/**
@@ -778,9 +781,6 @@
 					context.globalAlpha = this.opacity;
 				}
 
-				// translate the display as we want to have per pixel scrolling				
-				context.translate( -vpos.x, -vpos.y);
-				
 				// draw the layer
 				this.renderer.drawTileLayer(context, this, vpos, rect);
 				
