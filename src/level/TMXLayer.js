@@ -772,20 +772,15 @@
 			}
 			// dynamically render the layer
 			else {
-			
-				// save the context 
-				context.save();
-				
-				// check if transparency
-				if (this.opacity < 1.0) {
-					context.globalAlpha = this.opacity;
-				}
+				// set the layer alpha value
+				var _alpha = context.globalAlpha
+				context.globalAlpha = this.opacity;
 
 				// draw the layer
 				this.renderer.drawTileLayer(context, this, vpos, rect);
 				
 				// restore context to initial state
-				context.restore();
+				context.globalAlpha = _alpha;
 			}
 		}
 	});
