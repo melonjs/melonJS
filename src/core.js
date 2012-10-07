@@ -1447,6 +1447,9 @@ var me = me || {};
 				if (obj.visible) {
 					obj.inViewport = (!obj.isSprite || obj.floating) ? true : api.viewport.isVisible(obj);
 				}
+				else {
+					obj.inViewport = false;
+				}
 
 				// add it to the draw manager
 				drawManager.makeDirty(obj, updated, updated ? oldRect : null);
