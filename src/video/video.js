@@ -199,14 +199,47 @@
 		 *    return;
 		 * }
 		 */
-		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale) {
+		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, autozoom, autoresize) {
 			if (!me.initialized) {
 				console.error("melonJS: me.video.init() called before engine initialization.");
 				return false;
 			}
-
+			
+			// callback on window resize event
+			/* TODO : don't we need some polyfill here ?*/
+			window.onresize = function(event){
+				if (me.sys.autozoom) {
+					var designRatio = game_width / game_height;
+					var screenRatio = window.innerWidth / window.innerHeight;
+ 
+					if (screenRatio < designRatio)
+						scale = window.innerWidth / game_width;
+					else
+						scale = window.innerHeight / game_height;
+ 
+					me.sys.scale = scale;
+					me.video.updateDisplaySize(scale);
+				}
+				/* TODO : autoresize should be a specific value of scale ("auto")*/
+				if (me.sys.autoresize) {
+					me.video.updateCanvasSize(window.innerWidth,window.innerHeight);
+				}
+			}
+			
 			double_buffering = doublebuffering || false;
-
+			
+			me.sys.autozoom  = autozoom || false;
+			me.sys.autoresize = autoresize || false;
+			if(me.sys.autozoom){
+				var designRatio = game_width / game_height;
+				var screenRatio = window.innerWidth / window.innerHeight;
+				if(screenRatio < designRatio)
+					scale = window.innerWidth / game_width;
+				else
+					scale = window.innerHeight / game_height;
+			}
+      
+			
 			// zoom only work with the double buffering since we 
 			// actually zoom the backbuffer before rendering it
 			me.sys.scale = double_buffering === true ? scale || 1.0 : 1.0;
@@ -214,11 +247,19 @@
 			game_width_zoom = game_width * me.sys.scale;
 			game_height_zoom = game_height * me.sys.scale;
 
+			if(me.sys.autoresize){
+				game_width_zoom = window.innerWidth;
+				game_height_zoom = window.innerHeight;
+				game_width = game_width_zoom / me.sys.scale;
+				game_height = game_height_zoom / me.sys.scale;
+			}
+			
 			canvas = document.createElement("canvas");
 
 			canvas.setAttribute("width", (game_width_zoom) + "px");
 			canvas.setAttribute("height", (game_height_zoom) + "px");
 			canvas.setAttribute("border", "0px solid black");
+			canvas.setAttribute("display", "block"); // ??
 
 			// add our canvas
 			if (wrapperid) {
@@ -360,6 +401,27 @@
 				canvas.height = game_height_zoom; // in pixels
 
 			}
+		};
+		
+		/**
+		 * change the canvas size for autoresize
+		 * @name me.video#updateCanvasSize
+		 * @function
+		 * @param {width} width for the canvas
+		 * @param {height} height for the canvas
+		 */
+		api.updateCanvasSize = function(width, height) {
+			/* TODO : redundant with the updateDisplaySize function */
+			canvas.width = width; // in pixels
+			canvas.height = height; // in pixels
+			game_width_zoom = width;
+			game_height_zoom = height;
+ 
+			if (double_buffering) {
+				backBufferCanvas.width = width / me.sys.scale;
+				backBufferCanvas.height = height / me.sys.scale;
+			}
+			me.game.resizeViewport(width / me.sys.scale, height / me.sys.scale);
 		};
 
 		/**
