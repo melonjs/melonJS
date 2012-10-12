@@ -231,7 +231,7 @@
 					// update the global scaling value
 					me.sys.scale.set(scale,scale);
 					// update the display size
-					me.video.updateDisplaySize(scale);
+					me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
 				}
 
 				if (me.sys.autoresize) {
@@ -393,37 +393,26 @@
 		 * change the display scaling factor
 		 * @name me.video#updateDisplaySize
 		 * @function
-		 * @param {Number} scale scaling value
+		 * @param {Number} scale X scaling value
+		 * @param {Number} scale Y scaling value
 		 */
-		api.updateDisplaySize = function(scale) {
-			// TODO : should take in account the global me.sys.scale vector
-			// for the autoresize feature to work
-			if (double_buffering) {
-				if (scale)
-					me.sys.scale.set(scale,scale);
-				else
-					// to be changed by something else :)
-					scale = document.getElementById("screen size").value;
-					me.sys.scale.set(scale, scale);
-
-				game_width_zoom = backBufferCanvas.width * me.sys.scale.x;
-				game_height_zoom = backBufferCanvas.height * me.sys.scale.y;
-			}
+		api.updateDisplaySize = function(scaleX, scaleY) {
+			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
+			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
 		};
 		
 		/**
 		 * change the canvas size for autoresize
 		 * @name me.video#updateCanvasSize
 		 * @function
-		 * @param {width} width for the canvas
-		 * @param {height} height for the canvas
+		 * @param {Number} width width for the canvas
+		 * @param {Number} height height for the canvas
 		 */
 		api.updateCanvasSize = function(width, height) {
-			game_width_zoom = width;
-			game_height_zoom = height;
+			canvas.width = game_width_zoom = width;
+			canvas.height = game_height_zoom = height;
 			me.sys.scale.x = game_width_zoom / backBufferCanvas.width;
 			me.sys.scale.y = game_height_zoom / backBufferCanvas.height;
-			me.game.repaint();
 		};
 
 		/**
