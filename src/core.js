@@ -110,11 +110,11 @@ var me = me || {};
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type {int}
+		 * @type {me.Vector2d}
 		 * @memberOf me.sys
 		 */
-		scale : 1.0,
-	
+		scale : null, //initialized by me.video.init
+ 	
 		/**
 		 * Autozoom property (default false)
 		 * @type {Boolean}
@@ -1237,18 +1237,6 @@ var me = me || {};
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
 		};
-
-		/*
-		 * Update the viewport
-		 * to match the new size of the canvas
-		 * TODO : add a resize function to the viewport object
-		 */
-		api.resizeViewport = function(w, h){
-			api.viewport.width = w;
-			api.viewport.height = h;
-			/*TODO : update the camera limits*/
-			drawManager.updateFullscreenRect(api.viewport.getRect());
-		};
 	
 		/**
 		 * Load a TMX level
@@ -1485,15 +1473,6 @@ var me = me || {};
 				drawManager.makeAllDirty();
 			}
 			
-		};
-
-		/**
-		 * updates the fullscreen_rect to match the newly resized viewport
-		 * TODO : clean the way the fullscreen rect is managed in the draw manager
-		 */
-		api.updateFullscreenRect = function(rect) {
-			fullscreen_rect.width = rect.width;
-			fullscreen_rect.height = rect.height;
 		};
 		
 		

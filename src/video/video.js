@@ -189,7 +189,8 @@
 		 * @param {Int} width game width
 		 * @param {Int} height game height
 		 * @param {Boolean} [double_buffering] enable/disable double buffering
-		 * @param {Number} [scale] enable scaling of the canvas (note : if scale is used, double_buffering must be enabled)
+		 * @param {Number} [scale] enable scaling of the canvas ('auto' for autozoom)
+		 * @param {Boolean} [autoresize] enable resizing of the canvas to fit with the window size (will not maintain aspect ratio)
 		 * @return {Boolean}
 		 * @example
 		 * // init the video with a 480x320 canvas
@@ -199,11 +200,21 @@
 		 *    return;
 		 * }
 		 */
-		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, autozoom, autoresize) {
-			if (!me.initialized) {
-				console.error("melonJS: me.video.init() called before engine initialization.");
-				return false;
+		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, autoresize) {
+			// check given parameters
+			double_buffering = doublebuffering || false;
+			me.sys.autozoom  = (scale==='auto') || false;
+			me.sys.autoresize = autoresize || false;
+			
+			// normalize scale
+			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0
+			me.sys.scale = new me.Vector2d(scale, scale);
+			
+			// force double buffering if scaling is required
+			if (me.sys.autozoom || me.sys.autoresize || (scale !== 1.0)) {
+				double_buffering = true;
 			}
+
 			
 			// callback on window resize event
 			/* TODO : don't we need some polyfill here ?*/
@@ -213,23 +224,23 @@
 					var screenRatio = window.innerWidth / window.innerHeight;
  
 					if (screenRatio < designRatio)
-						scale = window.innerWidth / game_width;
+						var scale = window.innerWidth / game_width;
 					else
-						scale = window.innerHeight / game_height;
- 
-					me.sys.scale = scale;
+						var scale = window.innerHeight / game_height;
+					
+					// update the global scaling value
+					me.sys.scale.set(scale,scale);
+					// update the display size
 					me.video.updateDisplaySize(scale);
 				}
-				/* TODO : autoresize should be a specific value of scale ("auto")*/
+
 				if (me.sys.autoresize) {
+					// TODO ; to be verified
 					me.video.updateCanvasSize(window.innerWidth,window.innerHeight);
 				}
 			}
 			
-			double_buffering = doublebuffering || false;
-			
-			me.sys.autozoom  = autozoom || false;
-			me.sys.autoresize = autoresize || false;
+			// autozoom setup
 			if(me.sys.autozoom){
 				var designRatio = game_width / game_height;
 				var screenRatio = window.innerWidth / window.innerHeight;
@@ -237,22 +248,21 @@
 					scale = window.innerWidth / game_width;
 				else
 					scale = window.innerHeight / game_height;
+				// set scaling accordingly
+				me.sys.scale.set(scale, scale);
 			}
       
-			
-			// zoom only work with the double buffering since we 
-			// actually zoom the backbuffer before rendering it
-			me.sys.scale = double_buffering === true ? scale || 1.0 : 1.0;
-
-			game_width_zoom = game_width * me.sys.scale;
-			game_height_zoom = game_height * me.sys.scale;
-
+			// autoresize setup
 			if(me.sys.autoresize){
 				game_width_zoom = window.innerWidth;
 				game_height_zoom = window.innerHeight;
-				game_width = game_width_zoom / me.sys.scale;
-				game_height = game_height_zoom / me.sys.scale;
+				me.sys.scale.x = game_width_zoom / game_width;
+				me.sys.scale.y = game_height_zoom / game_height;
+			} else {
+				game_width_zoom = game_width * me.sys.scale.x;
+				game_height_zoom = game_height * me.sys.scale.y;
 			}
+
 			
 			canvas = document.createElement("canvas");
 
@@ -360,7 +370,6 @@
 		 * @return {Canvas}
 		 */
 		api.getScreenCanvas = function() {
-			//console.log(VideoMngr._canvas);
 			return canvas;
 		};
 
@@ -387,19 +396,18 @@
 		 * @param {Number} scale scaling value
 		 */
 		api.updateDisplaySize = function(scale) {
+			// TODO : should take in account the global me.sys.scale vector
+			// for the autoresize feature to work
 			if (double_buffering) {
 				if (scale)
-					me.sys.scale = scale;
+					me.sys.scale.set(scale,scale);
 				else
 					// to be changed by something else :)
-					me.sys.scale = document.getElementById("screen size").value;
+					scale = document.getElementById("screen size").value;
+					me.sys.scale.set(scale, scale);
 
-				game_width_zoom = backBufferCanvas.width * me.sys.scale;
-				game_height_zoom = backBufferCanvas.height * me.sys.scale;
-
-				canvas.width = game_width_zoom; // in pixels
-				canvas.height = game_height_zoom; // in pixels
-
+				game_width_zoom = backBufferCanvas.width * me.sys.scale.x;
+				game_height_zoom = backBufferCanvas.height * me.sys.scale.y;
 			}
 		};
 		
@@ -411,17 +419,11 @@
 		 * @param {height} height for the canvas
 		 */
 		api.updateCanvasSize = function(width, height) {
-			/* TODO : redundant with the updateDisplaySize function */
-			canvas.width = width; // in pixels
-			canvas.height = height; // in pixels
 			game_width_zoom = width;
 			game_height_zoom = height;
- 
-			if (double_buffering) {
-				backBufferCanvas.width = width / me.sys.scale;
-				backBufferCanvas.height = height / me.sys.scale;
-			}
-			me.game.resizeViewport(width / me.sys.scale, height / me.sys.scale);
+			me.sys.scale.x = game_width_zoom / backBufferCanvas.width;
+			me.sys.scale.y = game_height_zoom / backBufferCanvas.height;
+			me.game.repaint();
 		};
 
 		/**
