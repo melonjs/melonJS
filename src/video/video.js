@@ -219,7 +219,15 @@
 			// callback on window resize event
 			/* TODO : don't we need some polyfill here ?*/
 			window.onresize = function(event){
-				if (me.sys.autozoom) {
+				if (me.sys.autoresize) {
+					// update the global scaling factor
+					me.sys.scale.set (
+						window.innerWidth / me.video.getWidth(),
+						window.innerHeight / me.video.getHeight()
+					);
+					// update the "front" canvas size
+					me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
+				} else if (me.sys.autozoom) {
 					var designRatio = game_width / game_height;
 					var screenRatio = window.innerWidth / window.innerHeight;
  
@@ -230,13 +238,8 @@
 					
 					// update the global scaling value
 					me.sys.scale.set(scale,scale);
-					// update the display size
+					// update the "front" canvas size
 					me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
-				}
-
-				if (me.sys.autoresize) {
-					// TODO ; to be verified
-					me.video.updateCanvasSize(window.innerWidth,window.innerHeight);
 				}
 			}
 			
@@ -263,9 +266,8 @@
 				game_height_zoom = game_height * me.sys.scale.y;
 			}
 
-			
+			// create the main canvas
 			canvas = document.createElement("canvas");
-
 			canvas.setAttribute("width", (game_width_zoom) + "px");
 			canvas.setAttribute("height", (game_height_zoom) + "px");
 			canvas.setAttribute("border", "0px solid black");
@@ -285,6 +287,8 @@
 			// stop here if not supported
 			if (!canvas.getContext)
 				return false;
+				
+			// get the 2D context
 			context2D = canvas.getContext('2d');
 
 			// create the back buffer if we use double buffering
@@ -383,14 +387,9 @@
 			return backBufferContext2D;
 		};
 
-		/* ---
-		
-			Update the display size (zoom ratio change)
-			if no parameter called from the outside (select box)
-			---								*/
 
 		/**
-		 * change the display scaling factor
+		 * Mofidy the "front" canvas size
 		 * @name me.video#updateDisplaySize
 		 * @function
 		 * @param {Number} scale X scaling value
@@ -401,20 +400,6 @@
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
 		};
 		
-		/**
-		 * change the canvas size for autoresize
-		 * @name me.video#updateCanvasSize
-		 * @function
-		 * @param {Number} width width for the canvas
-		 * @param {Number} height height for the canvas
-		 */
-		api.updateCanvasSize = function(width, height) {
-			canvas.width = game_width_zoom = width;
-			canvas.height = game_height_zoom = height;
-			me.sys.scale.x = game_width_zoom / backBufferCanvas.width;
-			me.sys.scale.y = game_height_zoom / backBufferCanvas.height;
-		};
-
 		/**
 		 * Clear the specified context with the given color
 		 * @name me.video#clearSurface
