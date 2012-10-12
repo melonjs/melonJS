@@ -214,58 +214,14 @@
 			if (me.sys.autozoom || me.sys.autoresize || (scale !== 1.0)) {
 				double_buffering = true;
 			}
-
 			
-			// callback on window resize event
-			/* TODO : don't we need some polyfill here ?*/
-			window.onresize = function(event){
-				if (me.sys.autoresize) {
-					// update the global scaling factor
-					me.sys.scale.set (
-						window.innerWidth / me.video.getWidth(),
-						window.innerHeight / me.video.getHeight()
-					);
-					// update the "front" canvas size
-					me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
-				} else if (me.sys.autozoom) {
-					var designRatio = game_width / game_height;
-					var screenRatio = window.innerWidth / window.innerHeight;
- 
-					if (screenRatio < designRatio)
-						var scale = window.innerWidth / game_width;
-					else
-						var scale = window.innerHeight / game_height;
-					
-					// update the global scaling value
-					me.sys.scale.set(scale,scale);
-					// update the "front" canvas size
-					me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
-				}
-			}
+			// default scaled size value
+			game_width_zoom = game_width * me.sys.scale.x;
+			game_height_zoom = game_height * me.sys.scale.y;
 			
-			// autozoom setup
-			if(me.sys.autozoom){
-				var designRatio = game_width / game_height;
-				var screenRatio = window.innerWidth / window.innerHeight;
-				if(screenRatio < designRatio)
-					scale = window.innerWidth / game_width;
-				else
-					scale = window.innerHeight / game_height;
-				// set scaling accordingly
-				me.sys.scale.set(scale, scale);
-			}
-      
-			// autoresize setup
-			if(me.sys.autoresize){
-				game_width_zoom = window.innerWidth;
-				game_height_zoom = window.innerHeight;
-				me.sys.scale.x = game_width_zoom / game_width;
-				me.sys.scale.y = game_height_zoom / game_height;
-			} else {
-				game_width_zoom = game_width * me.sys.scale.x;
-				game_height_zoom = game_height * me.sys.scale.y;
-			}
-
+			// setup a callback on window resize event
+			window.onresize = me.video.onresize.bind(me.video);
+			
 			// create the main canvas
 			canvas = document.createElement("canvas");
 			canvas.setAttribute("width", (game_width_zoom) + "px");
@@ -299,6 +255,12 @@
 				backBufferContext2D = context2D;
 				backBufferCanvas = context2D.canvas;
 			}
+			
+			// trigger an initial resize();
+			if (me.sys.autozoom || me.sys.autoresize) {
+				me.video.onresize(null);
+			}
+			
 			return true;
 		};
 
@@ -386,8 +348,35 @@
 		api.getScreenFrameBuffer = function() {
 			return backBufferContext2D;
 		};
-
-
+		
+		/**
+		 * callback for window resize event
+		 * @private
+		 */
+		api.onresize = function(event){
+			if (me.sys.autoresize) {
+				// update the global scaling factor
+				me.sys.scale.set (
+					window.innerWidth / me.video.getWidth(),
+					window.innerHeight / me.video.getHeight()
+				);
+				// update the "front" canvas size
+				me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
+			} else if (me.sys.autozoom) {
+				var designRatio = me.video.getWidth() / me.video.getHeight();
+				var screenRatio = window.innerWidth / window.innerHeight;
+ 				if (screenRatio < designRatio)
+					var scale = window.innerWidth / me.video.getWidth();
+				else
+					var scale = window.innerHeight / me.video.getHeight();
+				
+				// update the global scaling value
+				me.sys.scale.set(scale,scale);
+				// update the "front" canvas size
+				me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
+			}
+		}
+		
 		/**
 		 * Mofidy the "front" canvas size
 		 * @name me.video#updateDisplaySize
