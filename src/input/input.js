@@ -206,10 +206,10 @@
 				var offset = obj.mouse.offset;
 				var x = e.pageX - offset.x;
 				var y = e.pageY - offset.y;
-				// fix me (me.sys.scale is now a vector)
-				if (me.sys.scale != 1.0) {
-					x/=me.sys.scale;
-					y/=me.sys.scale;
+				var scale = me.sys.scale;
+				if (scale.x != 1.0 || scale.y != 1.0) {
+					x/=scale.x;
+					y/=scale.y;
 				}
 				obj.touches.push({ x: x, y: y, id: 0});
 			}
@@ -220,10 +220,10 @@
 					var t = e.changedTouches[i];
 					var x = t.clientX - offset.x;
 					var y = t.clientY - offset.y;
-					// fix me (me.sys.scale is now a vector)
-					if (me.sys.scale != 1.0) {
-						x/=me.sys.scale; 
-						y/=me.sys.scale;
+					var scale = me.sys.scale;
+					if (scale.x != 1.0 || scale.y != 1.0) {
+						x/=scale.x; 
+						y/=scale.y;
 					}
 					obj.touches.push({ x: x, y: y, id: t.identifier });
 				}
