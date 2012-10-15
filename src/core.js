@@ -989,30 +989,33 @@ var me = me || {};
 		 */
 		api.draw = function(context) {
 			// cache viewport position vector
-			var posx = -me.game.viewport.pos.x;
-			var posy = -me.game.viewport.pos.y;
+			var posx = me.game.viewport.pos.x;
+			var posy = me.game.viewport.pos.y;
+						
+			// save the current context
+			context.save();
+			// translate by default to screen coordinates
+			context.translate(-posx, -posy);
 
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
 				// parse all objects
-				for ( var o = dirtyObjects.length, obj; o--,
-						obj = dirtyObjects[o];) {
+				for ( var o = dirtyObjects.length, obj; o--, obj = dirtyObjects[o];) {
 					// if dirty region enabled, make sure the object is in the area to be refreshed
-					if (me.sys.dirtyRegion && obj.isSprite
-							&& !obj.overlaps(rect)) {
+					if (me.sys.dirtyRegion && obj.isSprite && !obj.overlaps(rect)) {
 						continue;
 					}
 
-					if (!obj.floating) {
-						// translate object position to world coordinates
+					if (obj.floating===true) {
 						context.save();
+						// cancel the previous translate
 						context.translate(posx, posy);
 					}
 
 					// draw the object using the dirty area to be updated
 					obj.draw(context, rect);
 
-					if (!obj.floating) {
+					if (obj.floating===true) {
 						context.restore();
 					}
 
@@ -1023,6 +1026,9 @@ var me = me || {};
 					rect.draw(context, "white");
 				}
 			}
+			
+			// restore initial context
+			context.restore();
 		};
 
 		/**
@@ -1223,7 +1229,7 @@ var me = me || {};
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
 		};
-
+	
 		/**
 		 * Load a TMX level
 		 * @name me.game#loadTMXLevel
@@ -1264,7 +1270,7 @@ var me = me || {};
 					}
 				}
 			}
-
+			
 			// check if the map has different default (0,0) screen coordinates
 			if (api.currentLevel.pos.x != api.currentLevel.pos.y) {
 				// translate the display accordingly
@@ -1460,7 +1466,8 @@ var me = me || {};
 			}
 			
 		};
-
+		
+		
 		/**
 		 * remove an object
 		 * @name me.game#remove
