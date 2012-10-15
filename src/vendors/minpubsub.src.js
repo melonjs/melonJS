@@ -102,7 +102,15 @@
 		 */
 		obj.KEYUP = "me.input.keyup";
 
-
+		/**
+		 * Channel Constant for when the (browser) window is resized <br>
+		 * Data passed : {Event} Event object <br>
+		 * @public
+		 * @type {String}
+		 * @name me.event#KEYUP
+		 */
+		obj.WINDOW_ONRESIZE = "window.onresize";
+		
 		/**
 		 * Publish some data on a channel
 		 * @name me.event#publish

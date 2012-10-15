@@ -116,20 +116,6 @@ var me = me || {};
 		scale : null, //initialized by me.video.init
  	
 		/**
-		 * Autozoom property (default false)
-		 * @type {Boolean}
-		 * @memberOf me.sys
-		 */
-		autozoom : false,
-
-		/**
-		 * AutoResize property (default false)
-		 * @type {Boolean}
-		 * @memberOf me.sys
-		 */
-		autoresize : false,
-		
-		/**
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
 		 * default value : undefined

@@ -167,6 +167,8 @@
 		var double_buffering = false;
 		var game_width_zoom = 0;
 		var game_height_zoom = 0;
+		var auto_zoom = false;
+		var auto_resize = false;
 
 		/*---------------------------------------------
 			
@@ -203,15 +205,15 @@
 		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, autoresize) {
 			// check given parameters
 			double_buffering = doublebuffering || false;
-			me.sys.autozoom  = (scale==='auto') || false;
-			me.sys.autoresize = autoresize || false;
+			auto_zoom  = (scale==='auto') || false;
+			auto_resize = autoresize || false;
 			
 			// normalize scale
 			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0
 			me.sys.scale = new me.Vector2d(scale, scale);
 			
 			// force double buffering if scaling is required
-			if (me.sys.autozoom || me.sys.autoresize || (scale !== 1.0)) {
+			if (auto_zoom || auto_resize || (scale !== 1.0)) {
 				double_buffering = true;
 			}
 			
@@ -219,8 +221,11 @@
 			game_width_zoom = game_width * me.sys.scale.x;
 			game_height_zoom = game_height * me.sys.scale.y;
 			
-			// setup a callback on window resize event
-			window.onresize = me.video.onresize.bind(me.video);
+			//add a channel for the onresize event
+			window.onresize = function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event])};
+			
+			// register to the channel
+			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			
 			// create the main canvas
 			canvas = document.createElement("canvas");
@@ -257,7 +262,7 @@
 			}
 			
 			// trigger an initial resize();
-			if (me.sys.autozoom || me.sys.autoresize) {
+			if (auto_zoom || auto_resize) {
 				me.video.onresize(null);
 			}
 			
@@ -354,26 +359,22 @@
 		 * @private
 		 */
 		api.onresize = function(event){
-			if (me.sys.autoresize) {
-				// update the global scaling factor
-				me.sys.scale.set (
+			if (auto_resize) {
+				// update the "front" canvas size
+				me.video.updateDisplaySize( 
 					window.innerWidth / me.video.getWidth(),
 					window.innerHeight / me.video.getHeight()
 				);
-				// update the "front" canvas size
-				me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
-			} else if (me.sys.autozoom) {
+			} else if (auto_zoom) {
 				var designRatio = me.video.getWidth() / me.video.getHeight();
 				var screenRatio = window.innerWidth / window.innerHeight;
  				if (screenRatio < designRatio)
 					var scale = window.innerWidth / me.video.getWidth();
 				else
 					var scale = window.innerHeight / me.video.getHeight();
-				
-				// update the global scaling value
-				me.sys.scale.set(scale,scale);
+	
 				// update the "front" canvas size
-				me.video.updateDisplaySize(me.sys.scale.x, me.sys.scale.y);
+				me.video.updateDisplaySize(scale,scale);
 			}
 		}
 		
@@ -385,6 +386,9 @@
 		 * @param {Number} scale Y scaling value
 		 */
 		api.updateDisplaySize = function(scaleX, scaleY) {
+			// update the global scale variable
+			me.sys.scale.set(scaleX,scaleY);
+			// apply the new value
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
 		};
