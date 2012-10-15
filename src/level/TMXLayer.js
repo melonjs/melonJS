@@ -206,7 +206,8 @@
 			
 			// check if transparency
 			if (this.opacity < 1.0) {
-				context.save();
+				// set the layer alpha value
+				var _alpha = context.globalAlpha
 				context.globalAlpha = this.opacity;
 			}
 			
@@ -261,7 +262,7 @@
 			
 			// restore context state
 			if (this.opacity < 1.0) {
-				context.restore();
+				context.globalAlpha = _alpha;
 			}
 		}
 	});	
