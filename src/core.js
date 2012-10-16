@@ -995,8 +995,12 @@ var me = me || {};
 			// save the current context
 			context.save();
 			// translate by default to screen coordinates
-			context.translate(-posx, -posy);
-
+			context.translate(-posx, -posy)
+			
+			// substract the map offset to current the current pos
+			posx -= me.game.currentLevel.pos.x;
+			posy -= me.game.currentLevel.pos.y;
+			
 			// if feature disable, we only have one dirty rect (the viewport area)
 			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
 				// parse all objects
