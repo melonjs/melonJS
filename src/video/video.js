@@ -359,19 +359,23 @@
 		 * @private
 		 */
 		api.onresize = function(event){
+			var parent = me.video.getScreenCanvas().parentNode;
+			var max_width = parent.width || window.innerWidth;
+			var max_height = parent.height || window.innerHeight;
+			
 			if (auto_resize) {
 				// update the "front" canvas size
 				me.video.updateDisplaySize( 
-					window.innerWidth / me.video.getWidth(),
-					window.innerHeight / me.video.getHeight()
+					max_width / me.video.getWidth(),
+					max_height / me.video.getHeight()
 				);
 			} else if (auto_zoom) {
 				var designRatio = me.video.getWidth() / me.video.getHeight();
-				var screenRatio = window.innerWidth / window.innerHeight;
+				var screenRatio = max_width / max_height;
  				if (screenRatio < designRatio)
-					var scale = window.innerWidth / me.video.getWidth();
+					var scale = max_width / me.video.getWidth();
 				else
-					var scale = window.innerHeight / me.video.getHeight();
+					var scale = max_height / me.video.getHeight();
 	
 				// update the "front" canvas size
 				me.video.updateDisplaySize(scale,scale);
