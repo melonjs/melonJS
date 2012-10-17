@@ -119,7 +119,7 @@
 			this.z = z;
 			
 			// if ratio !=0 scrolling image
-			this.ratio = ratio || 1;
+			this.ratio = ratio || 0;
 			
 			// last position of the viewport
 			this.lastpos = game.viewport.pos.clone();
