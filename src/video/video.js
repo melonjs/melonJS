@@ -167,8 +167,8 @@
 		var double_buffering = false;
 		var game_width_zoom = 0;
 		var game_height_zoom = 0;
-		var auto_zoom = false;
-		var auto_resize = false;
+		var auto_scale = false;
+		var maintainAspectRatio = true;
 
 		/*---------------------------------------------
 			
@@ -191,8 +191,8 @@
 		 * @param {Int} width game width
 		 * @param {Int} height game height
 		 * @param {Boolean} [double_buffering] enable/disable double buffering
-		 * @param {Number} [scale] enable scaling of the canvas ('auto' for autozoom)
-		 * @param {Boolean} [autoresize] enable resizing of the canvas to fit with the window size (will not maintain aspect ratio)
+		 * @param {Number} [scale] enable scaling of the canvas ('auto' for automatic scaling)
+		 * @param {Boolean} [maintainAspectRatio] maintainAspectRatio when scaling the display
 		 * @return {Boolean}
 		 * @example
 		 * // init the video with a 480x320 canvas
@@ -202,18 +202,18 @@
 		 *    return;
 		 * }
 		 */
-		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, autoresize) {
+		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, aspectRatio) {
 			// check given parameters
 			double_buffering = doublebuffering || false;
-			auto_zoom  = (scale==='auto') || false;
-			auto_resize = autoresize || false;
+			auto_scale  = (scale==='auto') || false;
+			maintainAspectRatio = (aspectRatio !== undefined) ? aspectRatio : true;
 			
 			// normalize scale
 			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0
 			me.sys.scale = new me.Vector2d(scale, scale);
 			
 			// force double buffering if scaling is required
-			if (auto_zoom || auto_resize || (scale !== 1.0)) {
+			if (auto_scale || (scale !== 1.0)) {
 				double_buffering = true;
 			}
 			
@@ -262,7 +262,7 @@
 			}
 			
 			// trigger an initial resize();
-			if (auto_zoom || auto_resize) {
+			if (auto_scale) {
 				me.video.onresize(null);
 			}
 			
@@ -359,31 +359,35 @@
 		 * @private
 		 */
 		api.onresize = function(event){
-			var parent = me.video.getScreenCanvas().parentNode;
-			var max_width = parent.width || window.innerWidth;
-			var max_height = parent.height || window.innerHeight;
-			
-			if (auto_resize) {
-				// update the "front" canvas size
-				me.video.updateDisplaySize( 
-					max_width / me.video.getWidth(),
-					max_height / me.video.getHeight()
-				);
-			} else if (auto_zoom) {
-				var designRatio = me.video.getWidth() / me.video.getHeight();
-				var screenRatio = max_width / max_height;
- 				if (screenRatio < designRatio)
-					var scale = max_width / me.video.getWidth();
-				else
-					var scale = max_height / me.video.getHeight();
-	
-				// update the "front" canvas size
-				me.video.updateDisplaySize(scale,scale);
+			if (auto_scale) {
+				// get the parent container max size
+				var parent = me.video.getScreenCanvas().parentNode;
+				var max_width = parent.width || window.innerWidth;
+				var max_height = parent.height || window.innerHeight;
+				
+				if (maintainAspectRatio) {
+					// make sure we maintain the original aspect ratio
+					var designRatio = me.video.getWidth() / me.video.getHeight();
+					var screenRatio = max_width / max_height;
+					if (screenRatio < designRatio)
+						var scale = max_width / me.video.getWidth();
+					else
+						var scale = max_height / me.video.getHeight();
+		
+					// update the "front" canvas size
+					me.video.updateDisplaySize(scale,scale);
+				} else {
+					// scale the display canvas to fit with the parent container
+					me.video.updateDisplaySize( 
+						max_width / me.video.getWidth(),
+						max_height / me.video.getHeight()
+					);
+				}
 			}
-		}
+		};
 		
 		/**
-		 * Mofidy the "front" canvas size
+		 * Modify the "displayed" canvas size
 		 * @name me.video#updateDisplaySize
 		 * @function
 		 * @param {Number} scale X scaling value
