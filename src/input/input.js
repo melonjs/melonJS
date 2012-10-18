@@ -174,7 +174,7 @@
 						if (handler.floating===false) {
 							var v = {x: x + vpos.x - map_pos.x, y: y + vpos.y - map_pos.y };
 						} else {
-							var v = {x: x - map_pos.x, y: y - map_pos.y};
+							var v = {x: x, y: y};
 						}
 						// call the defined handler
 						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
