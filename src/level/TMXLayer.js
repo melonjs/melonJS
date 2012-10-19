@@ -26,6 +26,8 @@
 			
 			this.visible = true;
 			this.opacity = 1.0;
+			
+			this.floating = true;
 		},
 
 		/**
