@@ -103,7 +103,26 @@
 	 * @param {float}  [ratio=0]   scrolling ratio to be applied (apply by multiplying the viewport delta position by the defined ratio)
 	 */
 	 me.ImageLayer = Object.extend({
-		// constructor
+		
+		/**
+		 * Define if and how an Image Layer should be repeated.<br>
+		 * By default, an Image Layer is repeated both vertically and horizontally.<br>
+		 * Property values : <br>
+		 * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
+		 * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+		 * * 'repeat-y' - The background image will be repeated only vertically.<br>
+		 * * 'no-repeat' - The background-image will not be repeated.<br>
+		 * @public
+		 * @type String
+		 * @name me.ImageLayer#repeat
+		 */
+		repeat: 'repeat',
+	 
+		/**
+		 * constructor
+		 * @private
+		 * @function
+		 */
 		init: function(name, width, height, imagesrc, z, ratio) {
 			// layer name
 			this.name = name;
@@ -138,8 +157,11 @@
 			// default opacity
 			this.opacity = 1.0;
 			
-			// ?
+			// Image Layer is considered as a floating object
 			this.floating = true;
+			
+			// default value for repeat
+			repeat = 'repeat';
 			
 		},
 		
