@@ -384,6 +384,9 @@
 					);
 				}
 			}
+			
+			// make sure we have the correct relative canvas position cached
+			me.input.mouse.offset = me.video.getPos();
 		};
 		
 		/**
