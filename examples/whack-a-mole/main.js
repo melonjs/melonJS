@@ -84,7 +84,7 @@ var jsApp	=
 		//me.debug.renderHitBox = true;
 		
 		// initialize the video
-		if (!me.video.init('jsapp', 1024, 768, true ,'auto', false))
+		if (!me.video.init('jsapp', 1024, 768, true ,'auto'))
 		{
 			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
 			return;
