@@ -1353,11 +1353,11 @@ var me = me || {};
 		};
 
 		/**
-		 * returns the amount of existing entities<br>
-		 * @name me.game#getEntityCount
+		 * returns the amount of existing objects<br>
+		 * @name me.game#getObjectCount
 		 * @protected
 		 * @function
-		 * @return {Number} the amount of object entities
+		 * @return {Number} the amount of object
 		 */
 		api.getObjectCount = function()
 		{
@@ -1365,11 +1365,11 @@ var me = me || {};
 		};
 
 		/**
-		 * returns the amount of object being draw per frame<br>
-		 * @name me.game#getEntityCount
+		 * returns the amount of object being drawn per frame<br>
+		 * @name me.game#getDrawCount
 		 * @protected
 		 * @function
-		 * @return {Number} the amount of object entities
+		 * @return {Number} the amount of object draws
 		 */
 		api.getDrawCount = function()
 		{
