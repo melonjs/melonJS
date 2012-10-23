@@ -617,18 +617,20 @@ var g_resources = [
 }];
 </pre>
 
-<p>Open Tiled, and add two new Tile Layer. These layers <b>MUST contains the keyword
-    "parallax"</b> for the engine to recognize it as a parallax layers. Be sure as well
-    to adjust correctly the layer order (the display order being from bottom to
-    top)</p><img src="media/step4_layer.png" alt="Layering parallax layers"/>
+<p>Open Tiled, and add two new Image Tile Layer, name them (here I used "parallax1" and "parallax2") 
+and make sure to adjust correctly the layer order (the display order being from bottom to top)
+</p><img src="media/step4_layer.png" alt="Layering parallax layers"/>
 
-<p>Now right-click the layers to define their properties and add the following
+<p>Now right-click the layers to define their properties and set the following
     property<br/>
-    - <b>imagesrc</b> property with the <b>area01_bkg0</b> value for the first layer
-    (<b>parallax_layer1</b> in my example), and <b>area01_bkg1</b> value for the second
-    one (<b>parallax_layer2</b> in my example)<br/></p>
+    - Click the <b>browse</b> button and select the <b>area01_bkg0</b> image for the first layer
+    (<b>parallax1</b> in my example), and <b>area01_bkg1</b> value for the second
+    one (<b>parallax2</b> in my example)<br/></p>
+	- Add a <b>ratio</b> property to sepcify the scrolling speed of each layer : we will specify the <b>0.25</b> value for the first layer
+    <b>parallax1</b> and the <b>0.35</b> value for the second.
+ <br/></p>
 
-<p><img src="media/step4_layer_property.png" alt=
+<p><img src="media/step4_Imagelayer_property.png" alt=
         "Configuring parallax properties"/></p>
 
 <p><br/>
