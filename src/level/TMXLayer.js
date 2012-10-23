@@ -100,7 +100,7 @@
 	 * @param {int}    height      layer height in pixels
 	 * @param {String} image       image name (as defined in the asset list)
 	 * @param {int}    z           z position
-	 * @param {float}  [ratio=0]   scrolling ratio to be applied (apply by multiplying the viewport delta position by the defined ratio)
+	 * @param {float}  [ratio=1.0]   scrolling ratio to be applied
 	 */
 	 me.ImageLayer = Object.extend({
 		
@@ -117,6 +117,16 @@
 		 * @name me.ImageLayer#repeat
 		 */
 		repeat: 'repeat',
+		
+		/**
+		 * Define the image scrolling ratio<br>
+		 * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
+		 * Default value : 1.0 <br>
+		 * @public
+		 * @type float
+		 * @name me.ImageLayer#ratio
+		 */
+		ratio: 1.0,
 	 
 		/**
 		 * constructor
@@ -140,7 +150,7 @@
 			this.z = z;
 			
 			// if ratio !=0 scrolling image
-			this.ratio = ratio || 1;
+			this.ratio = ratio || 1.0;
 			
 			// last position of the viewport
 			this.lastpos = game.viewport.pos.clone();
