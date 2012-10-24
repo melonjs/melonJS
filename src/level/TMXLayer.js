@@ -171,7 +171,7 @@
 			this.floating = true;
 			
 			// default value for repeat
-			repeat = 'repeat';
+			this.repeat = 'repeat';
 			
 		},
 		
