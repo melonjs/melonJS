@@ -203,6 +203,10 @@
 		 * }
 		 */
 		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, aspectRatio) {
+			// ensure melonjs has been properly initialized
+			if (!me.initialized) {
+				throw "melonJS: me.video.init() called before engine initialization.";
+			}
 			// check given parameters
 			double_buffering = doublebuffering || false;
 			auto_scale  = (scale==='auto') || false;
