@@ -617,21 +617,25 @@ var g_resources = [
 }];
 </pre>
 
-<p>Open Tiled, and add two new Image Tile Layer, name them (here I used "parallax1" and "parallax2") 
+<p>Open Tiled, and add two new <a href="http://www.melonjs.org/docs/symbols/me.ImageLayer.html"> <b>Image Layers</b></a>, name them to whatever you like 
 and make sure to adjust correctly the layer order (the display order being from bottom to top)
 </p><img src="media/step4_layer.png" alt="Layering parallax layers"/>
 
-<p>Now right-click the layers to define their properties and set the following
-    property<br/>
+<p>Now right-click the layers to define their properties and set the following property : <br/>
     - Click the <b>browse</b> button and select the <b>area01_bkg0</b> image for the first layer
-    (<b>parallax1</b> in my example), and <b>area01_bkg1</b> value for the second
-    one (<b>parallax2</b> in my example)<br/></p>
-	- Add a <b>ratio</b> property to sepcify the scrolling speed of each layer : we will specify the <b>0.25</b> value for the first layer
-    <b>parallax1</b> and the <b>0.35</b> value for the second.
- <br/></p>
+    (<b>Parallax_layer1</b> on the picture), and <b>area01_bkg1</b> value for the second
+    one (<b>Parallax_layer2</b> also on the picture)<br/></p>
 
 <p><img src="media/step4_Imagelayer_property.png" alt=
-        "Configuring parallax properties"/></p>
+        "Configuring Image Layer properties"/></p>
+		
+	- And finally add a <a href="http://www.melonjs.org/docs/symbols/me.ImageLayer.html#ratio"> <b>ratio</b></a> property to specify the scrolling speed of each layer : we will specify the <b>0.25</b> value for the first layer
+     (<b>Parallax_layer1</b> on the picture) and the <b>0.35</b> value for the second (keep in mind that the smaller the ratio is, the slower the scrolling speed will be).
+ <br/></p>
+
+<p>Note that default behavior for Image Layer is to be automatically <a href="http://www.melonjs.org/docs/symbols/me.ImageLayer.html#repeat"> <b>repeated</b></a> on both x and y axis, which is exactly what we want here to create the parallax effect.
+</p>
+ 
 
 <p><br/>
     "Et voila!". If you now open you index.html, you should see:<br/>
