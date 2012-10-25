@@ -380,10 +380,10 @@
 						var scale = max_height / me.video.getHeight();
 		
 					// update the "front" canvas size
-					me.video.updateDisplaySize(scale,scale);
+					me.video.updateDisplaySize.defer(scale,scale);
 				} else {
 					// scale the display canvas to fit with the parent container
-					me.video.updateDisplaySize( 
+					me.video.updateDisplaySize.defer( 
 						max_width / me.video.getWidth(),
 						max_height / me.video.getHeight()
 					);
@@ -407,6 +407,9 @@
 			// apply the new value
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
+			
+			// force a canvas repaint
+			api.blitSurface();
 		};
 		
 		/**
