@@ -104,6 +104,7 @@
 
 		/**
 		 * Channel Constant for when the (browser) window is resized <br>
+		 * note the `orientationchange` event will also trigger this channel<br>
 		 * Data passed : {Event} Event object <br>
 		 * @public
 		 * @type {String}
