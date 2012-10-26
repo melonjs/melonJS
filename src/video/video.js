@@ -372,6 +372,11 @@
 				var max_width = parent.width || window.innerWidth;
 				var max_height = parent.height || window.innerHeight;
 				
+				if (deferResizeId) {
+					// cancel any previous pending resize
+					clearTimeout(deferResizeId);
+				}
+
 				if (maintainAspectRatio) {
 					// make sure we maintain the original aspect ratio
 					var designRatio = me.video.getWidth() / me.video.getHeight();
@@ -382,15 +387,9 @@
 						var scale = max_height / me.video.getHeight();
 		
 					// update the "front" canvas size
-					if (deferResizeId) {
-						clearTimeout(deferResizeId);
-					}
 					deferResizeId = me.video.updateDisplaySize.defer(scale,scale);
 				} else {
 					// scale the display canvas to fit with the parent container
-					if (deferResizeId) {
-						clearTimeout(deferResizeId);
-					}
 					deferResizeId = me.video.updateDisplaySize.defer( 
 						max_width / me.video.getWidth(),
 						max_height / me.video.getHeight()
