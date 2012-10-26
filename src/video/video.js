@@ -163,6 +163,8 @@
 		var backBufferCanvas = null;
 		var backBufferContext2D = null;
 		var wrapper = null;
+		
+		var deferResizeId = -1;
 
 		var double_buffering = false;
 		var game_width_zoom = 0;
@@ -380,10 +382,16 @@
 						var scale = max_height / me.video.getHeight();
 		
 					// update the "front" canvas size
-					me.video.updateDisplaySize.defer(scale,scale);
+					if (deferResizeId) {
+						clearTimeout(deferResizeId);
+					}
+					deferResizeId = me.video.updateDisplaySize.defer(scale,scale);
 				} else {
 					// scale the display canvas to fit with the parent container
-					me.video.updateDisplaySize.defer( 
+					if (deferResizeId) {
+						clearTimeout(deferResizeId);
+					}
+					deferResizeId = me.video.updateDisplaySize.defer( 
 						max_width / me.video.getWidth(),
 						max_height / me.video.getHeight()
 					);
@@ -410,6 +418,9 @@
 			
 			// force a canvas repaint
 			api.blitSurface();
+			
+			// clear the timeout id
+			deferResizeId = -1;
 		};
 		
 		/**
