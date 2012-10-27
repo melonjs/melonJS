@@ -110,11 +110,11 @@ var me = me || {};
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type {int}
+		 * @type {me.Vector2d}
 		 * @memberOf me.sys
 		 */
-		scale : 1.0,
-
+		scale : null, //initialized by me.video.init
+ 	
 		/**
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
