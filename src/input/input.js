@@ -41,8 +41,8 @@
 		var accelInitialized = false;
 		
 		// list of supported mouse & touch events
-		var mouseEventList = ['mousewheel', 'mousemove', 'mousedown',  'mouseup'];
-		var touchEventList = [ undefined,   'touchmove', 'touchstart', 'touchend'];
+		var mouseEventList = ['mousewheel', 'mousemove', 'mousedown',  'mouseup', 'click', 'dblclick'];
+		var touchEventList = [ undefined,   'touchmove', 'touchstart', 'touchend', 'tap' , 'dbltap'];
 		
 		
 		/**
@@ -665,7 +665,7 @@
 		 * @name me.input#releaseMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
+		 * @param {String} eventType ('mousemove', 'mousedown', 'mouseup', 'mousewheel', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap')
 		 * @param {me.Rect} region
 		 * @example
 		 * // release the registered callback on the 'mousemove' event
