@@ -395,8 +395,8 @@
 						max_height / me.video.getHeight()
 					);
 				}
+				return;
 			}
-			
 			// make sure we have the correct relative canvas position cached
 			me.input.mouse.offset = me.video.getPos();
 		};
@@ -415,6 +415,9 @@
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
 			
+			// make sure we have the correct relative canvas position cached
+			me.input.mouse.offset = me.video.getPos();
+
 			// force a canvas repaint
 			api.blitSurface();
 			
