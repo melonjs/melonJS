@@ -55,7 +55,8 @@
 		renderVelocity : false,
 		
 		/**
-		 * show the debug Panel
+		 * show the debug Panel <br>
+		 * Heap Memory information is available using Chrome when using the "--enable-memory-info" parameter<br>
 		 * @public
 		 * @function
 		 */
@@ -127,7 +128,6 @@
 			this.area.renderDirty = new me.Rect(new me.Vector2d(270,5),15,15);
 			this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,25),15,15);
 			
-			
 			// some internal string/length
 			this.help_str	  = "(s)how/(h)ide";
 			this.help_str_len = this.font.measureText(me.video.getScreenFrameBuffer(), this.help_str).width;
@@ -137,6 +137,9 @@
 			me.input.bindKey(me.input.KEY.S, "show");
 			me.input.bindKey(me.input.KEY.H, "hide");
 			
+			// memory heap sample points
+			this.samples = [];
+
 			// make it visible
 			this.show();
 		},
@@ -180,7 +183,7 @@
 			{
 				this.hide();
 			}
-
+			
 			return true;
 		},
 		
@@ -216,6 +219,36 @@
 			// force repaint
 			me.game.repaint();
 		}, 
+		
+		/** @private */
+		drawMemoryGraph : function (context, startX, endX) {
+			if (window.performance && window.performance.memory) {
+				var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
+				var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
+				
+				var len = endX - startX;
+				
+				// remove the first item
+				this.samples.shift();
+				// add a new sample (25 is the height of the graph)
+				this.samples[len] = (usedHeap / totalHeap)  * 25;
+				
+				// draw rhe graph
+				for (var x = len;x--;) {
+					var where = endX - (len - x);
+					context.beginPath();		
+					context.strokeStyle = "lightgreen";			
+					context.moveTo(where, 30);
+					context.lineTo(where, 30 - (this.samples[x] || 0));
+					context.stroke();
+				}
+				// display the current value
+				this.font.draw(context, usedHeap + '/' + totalHeap + ' MB', startX, 5);
+			} else {
+				// Heap Memory information not available
+				this.font.draw(context, "??/?? MB", startX, 5);
+			}
+		},
 
 		/** @private */
 		draw : function(context) {
@@ -241,7 +274,9 @@
 			this.font.draw(context, "?dirtyRect  ["+ (me.debug.renderDirty?"x":" ") +"]", 		200, 5);
 			this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 20);
 
-
+			// draw the memory heap usage 
+			this.drawMemoryGraph(context, 300, this.width - this.help_str_len - 15);
+			
 			// some help string
 			this.font.draw(context, this.help_str, this.width - this.help_str_len - 5, 20);
 			
