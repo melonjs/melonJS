@@ -116,7 +116,7 @@
 		 * @type String
 		 * @name me.ImageLayer#repeat
 		 */
-		repeat: 'repeat',
+		//repeat: 'repeat', (define through getter/setter
 		
 		/**
 		 * Define the image scrolling ratio<br>
@@ -171,7 +171,38 @@
 			this.floating = true;
 			
 			// default value for repeat
-			this.repeat = 'repeat';
+			this._repeat = 'repeat';
+			
+			this.repeatX = true;
+			this.repeatY = true;
+			
+			Object.defineProperty(this, "repeat", {
+				get : function get() {
+					return this._repeat;
+				},
+				set : function set(val) {
+					this._repeat = val;
+					switch (this._repeat) {
+						case "no-repeat" :
+							this.repeatX = false;
+							this.repeatY = false;
+							break;
+						case "repeat-x" :
+							this.repeatX = true;
+							this.repeatY = false;
+							break;
+						case "repeat-y" :
+							this.repeatX = false;
+							this.repeatY = true;
+							break;
+						default : // "repeat"
+							this.repeatX = true;
+							this.repeatY = true;
+							break;
+					}
+				}
+			});
+
 			
 		},
 		
@@ -258,6 +289,7 @@
 								  sw,		 sh);			//dw, dh
 			}
 			// parallax / scrolling image
+			// todo ; broken with dirtyRect enabled
 			else {
 				var sx = ~~this.offset.x;
 				var sy = ~~this.offset.y;
@@ -265,8 +297,8 @@
 				var dx = 0;
 				var dy = 0;				
 				
-				var sw = Math.min(this.imagewidth - ~~this.offset.x, this.width);
-				var sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
+				var sw = Math.min(this.imagewidth - sx, this.width);
+				var sh = Math.min(this.imageheight - sy, this.height);
 				  
 				do {
 					do {
@@ -279,9 +311,9 @@
 						sy = 0;
 						dy += sh;
 						sh = Math.min(this.imageheight, this.height - dy);
-					} while( dy < this.height);
+					} while( this.repeatY && (dy < this.height));
 					dx += sw;
-					if (dx >= this.width ) {
+					if (!this.repeatX || (dx >= this.width) ) {
 						// done ("end" of the viewport)
 						break;
 					}
