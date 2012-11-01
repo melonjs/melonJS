@@ -1611,22 +1611,26 @@ var me = me || {};
 		 * }
 
 		 */
-		api.collide = function(objB) {
-			var result = null;
-
+		api.collide = function(objA) {
+			var res = null;
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.visible && obj.collidable && obj.isEntity && (obj!=objB))
+				if (obj.inViewport && obj.visible && obj.collidable && obj.isEntity && (obj!=objA))
 				{
-					// if return value != null, we have a collision
-					if (result = obj.checkCollision(objB))
-						// stop the loop return the value
-						break;
+					res = obj.collisionBox.collideVsAABB.call(obj, objA);
+					if (res.x != 0 || res.y != 0) {
+						// notify the object
+						obj.onCollision.call(obj, res, objA);
+						// return the type (deprecated)
+						res.type = obj.type;
+						// return a reference of the colliding object
+						res.obj  = obj;
+						return res;
+					}
 				}
 			}
-			return result;
-
+			return null;
 		};
 
 		/**

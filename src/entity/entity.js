@@ -397,25 +397,6 @@
 				},
 
 				/**
-				 * collision detection
-				 * @private
-				 */
-				checkCollision : function(obj) {
-					var res = this.collisionBox.collideVsAABB(obj.collisionBox);
-
-					if (res.x != 0 || res.y != 0) {
-						// notify the object
-						this.onCollision(res, obj);
-						// return the type (deprecated)
-						res.type = this.type;
-						// return a reference of the colliding object
-						res.obj  = this;
-						return res;
-					}
-					return null;
-				},
-
-				/**
 				 * onCollision Event function<br>
 				 * called by the game manager when the object collide with shtg<br>
 				 * by default, if the object type is Collectable, the destroy function is called
@@ -896,25 +877,6 @@
 				 */
 				updateColRect : function(x, w, y, h) {
 					this.collisionBox.adjustSize(x, w, y, h);
-				},
-
-				/**
-				 * collision detection
-				 * @private
-				 */
-				checkCollision : function(obj) {
-					var res = this.collisionBox.collideVsAABB(obj.collisionBox);
-
-					if (res.x != 0 || res.y != 0) {
-						// notify the object
-						this.onCollision(res, obj);
-						// return the type
-						res.type = this.type;
-						// return a reference of the colliding object
-						res.obj  = this;
-						return res;
-					}
-					return null;
 				},
 
 				/**
