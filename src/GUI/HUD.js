@@ -182,7 +182,8 @@
 			this.HUD_invalidated = true;
 
 			// create a canvas where to draw everything
-			this.HUDCanvasSurface = me.video.createCanvasSurface(this.width, this.height);
+			this.HUDCanvas = me.video.createCanvas(this.width, this.height);
+			this.HUDCanvasSurface = this.HUDCanvas.getContext('2d');
 			
 			// this is a little hack to ensure the HUD is always the first draw
 			this.z = 999;
@@ -340,7 +341,7 @@
 					me.video.clearSurface(this.HUDCanvasSurface, this.bgcolor);
 				}
 				else {
-					this.HUDCanvasSurface.canvas.width = this.HUDCanvasSurface.canvas.width;
+					this.HUDCanvas.width = this.HUDCanvas.width;
 				}
 				for ( var i = this.objCount, obj; i--, obj = this.HUDobj[i];) {
 					if (obj.visible) {
@@ -353,7 +354,7 @@
 				}
 			}
 			// draw the HUD
-			context.drawImage(this.HUDCanvasSurface.canvas, this.pos.x, this.pos.y);
+			context.drawImage(this.HUDCanvas, this.pos.x, this.pos.y);
 			// reset the flag
 			this.HUD_invalidated = false;
 		}

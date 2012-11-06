@@ -81,8 +81,8 @@
 			
 			// measure the logo size
 			var logo1_width = this.logo1.measureText(context, "melon").width;
-			var xpos = (context.canvas.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
-			var ypos = context.canvas.height / 2;
+			var xpos = (me.video.getWidth() - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
+			var ypos = me.video.getHeight() / 2;
 				
 			// clear surface
 			me.video.clearSurface(context, "black");
@@ -95,11 +95,11 @@
 			ypos += this.logo1.measureText(context, "melon").height / 2;
 
 			// display a progressive loading bar
-			var progress = Math.floor(this.loadPercent * context.canvas.width);
+			var progress = Math.floor(this.loadPercent * me.video.getWidth());
 
 			// draw the progress bar
 			context.strokeStyle = "silver";
-			context.strokeRect(0, ypos, context.canvas.width, 6);
+			context.strokeRect(0, ypos, me.video.getWidth(), 6);
 			context.fillStyle = "#89b002";
 			context.fillRect(2, ypos + 2, progress - 4, 2);
 		}

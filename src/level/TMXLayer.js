@@ -71,21 +71,18 @@
 		 * @private
 		 */
 		draw : function(context, rect) {
-			// save context state
-			context.save();
 			// set layer opacity
+			var _alpha = context.globalAlpha
 			context.globalAlpha = this.opacity;
+			
 			// set layer color
 			context.fillStyle = this.color;
 
-			// correct the rect size is the map is not at the default screen position
-			// (fixme : this might not work with dirtyRect)
-			var shift = game.currentLevel.pos;
 			// clear the specified rect
-			context.fillRect(rect.left - shift.x, rect.top - shift.y, rect.width, rect.height);
+			context.fillRect(rect.left, rect.top, rect.width, rect.height);
 
-			// restore context state
-			context.restore();
+			// restore context alpha value
+			context.globalAlpha = _alpha;
 		}
 	});	
 
@@ -671,8 +668,8 @@
 				
 				// if pre-rendering method is use, create the offline canvas
 				if (this.preRender) {
-					this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
-					this.layerCanvas = this.layerSurface.canvas;
+					this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+					this.layerSurface = this.layerCanvas.getContext('2d');
 					
 					// set alpha value for this layer
 					this.layerSurface.globalAlpha = this.opacity;

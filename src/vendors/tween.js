@@ -58,7 +58,7 @@
 		 */
 		this.to = function(properties, duration) {
 
-			if (duration !== null) {
+			if (duration !== undefined) {
 
 				_duration = duration;
 
@@ -393,7 +393,7 @@
 	/** @ignore */
 	me.Tween.Easing.Quartic.EaseOut = function(k) {
 
-		return 1 - --k * k * k * k;
+		return 1 - (--k * k * k * k);
 
 	}
 	/** @ignore */
@@ -472,7 +472,7 @@
 	/** @ignore */
 	me.Tween.Easing.Circular.EaseOut = function(k) {
 
-		return Math.sqrt(1 - --k * k);
+		return Math.sqrt(1 - (--k * k));
 
 	};
 	/** @ignore */

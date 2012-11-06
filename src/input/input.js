@@ -40,7 +40,10 @@
 		var mouseInitialized = false;
 		var accelInitialized = false;
 		
-	
+		// list of supported mouse & touch events
+		var mouseEventList = ['mousewheel', 'mousemove', 'mousedown',  'mouseup', 'click', 'dblclick'];
+		var touchEventList = [ undefined,   'touchmove', 'touchstart', 'touchend', 'tap' , 'dbltap'];
+		
 		
 		/**
 		 * enable keyboard event
@@ -66,18 +69,19 @@
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
-				// add listener for touch event if supported
+				
+				// add event listener for mouse & touch event
 				if (me.sys.touch) {
 					me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false );
-					me.video.getScreenCanvas().addEventListener('touchstart', onTouchEvent, false );
-					me.video.getScreenCanvas().addEventListener('touchend', onTouchEvent, false );
-				}
-				// add listener for mouse event
-				else {
-					$.addEventListener('mousewheel', onMouseWheel, false );
+					for (var x = 2; x < touchEventList.length;++x) {
+						me.video.getScreenCanvas().addEventListener(touchEventList[x], onTouchEvent, false );
+					}
+				} else {
 					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-					me.video.getScreenCanvas().addEventListener('mousedown', onMouseEvent, false );
-					me.video.getScreenCanvas().addEventListener('mouseup', onMouseEvent, false );
+					$.addEventListener('mousewheel', onMouseWheel, false );
+					for (var x = 2; x < mouseEventList.length;++x) {
+						me.video.getScreenCanvas().addEventListener(mouseEventList[x], onMouseEvent, false );
+					}
 				}
 				mouseInitialized = true;
 			}
@@ -206,9 +210,10 @@
 				var offset = obj.mouse.offset;
 				var x = e.pageX - offset.x;
 				var y = e.pageY - offset.y;
-				if (me.sys.scale != 1.0) {
-					x/=me.sys.scale;
-					y/=me.sys.scale;
+				var scale = me.sys.scale;
+				if (scale.x != 1.0 || scale.y != 1.0) {
+					x/=scale.x;
+					y/=scale.y;
 				}
 				obj.touches.push({ x: x, y: y, id: 0});
 			}
@@ -219,9 +224,10 @@
 					var t = e.changedTouches[i];
 					var x = t.clientX - offset.x;
 					var y = t.clientY - offset.y;
-					if (me.sys.scale != 1.0) {
-						x/=me.sys.scale;
-						y/=me.sys.scale;
+					var scale = me.sys.scale;
+					if (scale.x != 1.0 || scale.y != 1.0) {
+						x/=scale.x; 
+						y/=scale.y;
 					}
 					obj.touches.push({ x: x, y: y, id: t.identifier });
 				}
@@ -625,43 +631,32 @@
 			// make sure the mouse is initialized
 			enableMouseEvent();
 			
-			// register the mouse handler
-			switch (eventType) {
-				case 'mousewheel':
-				case 'mousemove':
-				case 'mousedown':
-				case 'mouseup':
-				case 'touchmove':
-				case 'touchstart':
-				case 'touchend':
-					// convert mouse event to touch event
-					// if on a touch enable device
-					if (me.sys.touch) {
-						// to be optimized
-						if (eventType == 'mousemove')
-							eventType = 'touchmove';
-						else if (eventType == 'mousedown')
-							eventType = 'touchstart';
-						else if (eventType == 'mouseup')
-							eventType = 'touchend';
-					} 
-					if (!obj.mouse.handlers[eventType]) {
-						obj.mouse.handlers[eventType] = [];
- 					}
-					
-					// check if this is a floating object or not
-					var _float = rect.floating===true?true:false;
-					// check if there is a given parameter
-					if (floating) {
-						// ovveride the previous value
-						_float = floating===true?true:false;
-					}
-					// initialize the handler
-					obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:_float});
-					break;
-				default :
-					throw "melonJS : invalid event type : " + eventType;
+			// convert the mouse event into a touch event 
+			// if we are on a touch device
+			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
+				eventType = touchEventList[mouseEventList.indexOf(eventType)];
 			}
+			
+			// check if this is supported event
+			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
+				(touchEventList.indexOf(eventType) !== -1))) {
+				
+				// register the event
+				if (!obj.mouse.handlers[eventType]) {
+					obj.mouse.handlers[eventType] = [];
+ 				}
+				// check if this is a floating object or not
+				var _float = rect.floating===true?true:false;
+				// check if there is a given parameter
+				if (floating) {
+					// ovveride the previous value
+					_float = floating===true?true:false;
+				}
+				// initialize the handler
+				obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:_float});
+				return;
+			}
+			throw "melonJS : invalid event type : " + eventType;
 		};
 		
 		/**
@@ -670,47 +665,39 @@
 		 * @name me.input#releaseMouseEvent
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
+		 * @param {String} eventType ('mousemove', 'mousedown', 'mouseup', 'mousewheel', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap')
 		 * @param {me.Rect} region
 		 * @example
 		 * // release the registered callback on the 'mousemove' event
 		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
 		 */
 		obj.releaseMouseEvent = function(eventType, rect) {
-			switch (eventType) {
-				case 'mousewheel':
-				case 'mousemove':
-				case 'mousedown':
-				case 'mouseup':
-				case 'touchmove':
-				case 'touchstart':
-				case 'touchend':
-					// convert mouse event to touch event
-					// if on a touch enable device
-					if (me.sys.touch) {
-						// to be optimized
-						if (eventType == 'mousemove')
-							eventType = 'touchmove';
-						else if (eventType == 'mousedown')
-							eventType = 'touchstart';
-						else if (eventType == 'mouseup')
-							eventType = 'touchend';
-					}
-					var handlers = obj.mouse.handlers[eventType];
-					if (handlers) {
-						for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-							if (handler.rect === rect) {
-								// make sure all references are null
-								handler.rect = handler.cb = handler.floating = null;
-								obj.mouse.handlers[eventType].splice(i, 1);
-							}
+			// convert the mouse event into a touch event 
+			// if we are on a touch device
+			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
+				eventType = touchEventList[mouseEventList.indexOf(eventType)];
+			}			
+			// check if this is supported event
+			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
+				(touchEventList.indexOf(eventType) !== -1))) {
+				
+				// unregister the event
+				if (!obj.mouse.handlers[eventType]) {
+					obj.mouse.handlers[eventType] = [];
+ 				}
+				var handlers = obj.mouse.handlers[eventType];
+				if (handlers) {
+					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+						if (handler.rect === rect) {
+							// make sure all references are null
+							handler.rect = handler.cb = handler.floating = null;
+							obj.mouse.handlers[eventType].splice(i, 1);
 						}
 					}
-					break;
-				default :
-					throw "melonJS : invalid event type : " + eventType;
+				}
+				return;
 			}
-
+			throw "melonJS : invalid event type : " + eventType;
 		};
 
 		/**

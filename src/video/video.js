@@ -163,10 +163,14 @@
 		var backBufferCanvas = null;
 		var backBufferContext2D = null;
 		var wrapper = null;
+		
+		var deferResizeId = -1;
 
 		var double_buffering = false;
 		var game_width_zoom = 0;
 		var game_height_zoom = 0;
+		var auto_scale = false;
+		var maintainAspectRatio = true;
 
 		/*---------------------------------------------
 			
@@ -189,7 +193,8 @@
 		 * @param {Int} width game width
 		 * @param {Int} height game height
 		 * @param {Boolean} [double_buffering] enable/disable double buffering
-		 * @param {Number} [scale] enable scaling of the canvas (note : if scale is used, double_buffering must be enabled)
+		 * @param {Number} [scale] enable scaling of the canvas ('auto' for automatic scaling)
+		 * @param {Boolean} [maintainAspectRatio] maintainAspectRatio when scaling the display
 		 * @return {Boolean}
 		 * @example
 		 * // init the video with a 480x320 canvas
@@ -199,33 +204,45 @@
 		 *    return;
 		 * }
 		 */
-		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale) {
+		api.init = function(wrapperid, game_width, game_height,	doublebuffering, scale, aspectRatio) {
+			// ensure melonjs has been properly initialized
 			if (!me.initialized) {
-				console.error("melonJS: me.video.init() called before engine initialization.");
-				return false;
+				throw "melonJS: me.video.init() called before engine initialization.";
 			}
-
+			// check given parameters
 			double_buffering = doublebuffering || false;
-
-			// zoom only work with the double buffering since we 
-			// actually zoom the backbuffer before rendering it
-			me.sys.scale = double_buffering === true ? scale || 1.0 : 1.0;
-
-			game_width_zoom = game_width * me.sys.scale;
-			game_height_zoom = game_height * me.sys.scale;
-
-			canvas = document.createElement("canvas");
-
-			canvas.setAttribute("width", (game_width_zoom) + "px");
-			canvas.setAttribute("height", (game_height_zoom) + "px");
-			canvas.setAttribute("border", "0px solid black");
+			auto_scale  = (scale==='auto') || false;
+			maintainAspectRatio = (aspectRatio !== undefined) ? aspectRatio : true;
+			
+			// normalize scale
+			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0
+			me.sys.scale = new me.Vector2d(scale, scale);
+			
+			// force double buffering if scaling is required
+			if (auto_scale || (scale !== 1.0)) {
+				double_buffering = true;
+			}
+			
+			// default scaled size value
+			game_width_zoom = game_width * me.sys.scale.x;
+			game_height_zoom = game_height * me.sys.scale.y;
+			
+			//add a channel for the onresize/onorientationchange event
+			window.addEventListener('resize', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event])}, false);
+			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event])}, false);
+			
+			// register to the channel
+			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
+			
+			// create the main canvas
+			canvas = api.createCanvas(game_width_zoom, game_height_zoom);
 
 			// add our canvas
 			if (wrapperid) {
 				wrapper = document.getElementById(wrapperid);
 			}
-			else {
-				// if wrapperid is not defined (null)
+			// if wrapperid is not defined (null)
+			if (!wrapper) {
 				// add the canvas to document.body
 				wrapper = document.body;
 			}
@@ -234,16 +251,24 @@
 			// stop here if not supported
 			if (!canvas.getContext)
 				return false;
+				
+			// get the 2D context
 			context2D = canvas.getContext('2d');
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
-				backBufferContext2D = api.createCanvasSurface(game_width, game_height);
-				backBufferCanvas = backBufferContext2D.canvas;
+				backBufferCanvas = api.createCanvas(game_width, game_height);
+				backBufferContext2D = backBufferCanvas.getContext('2d');
 			} else {
+				backBufferCanvas = canvas;
 				backBufferContext2D = context2D;
-				backBufferCanvas = context2D.canvas;
 			}
+			
+			// trigger an initial resize();
+			if (auto_scale) {
+				me.video.onresize(null);
+			}
+			
 			return true;
 		};
 
@@ -296,20 +321,33 @@
 		};
 
 		/**
-		 * allocate and return a new Canvas 2D surface
+		 * Create and return a new Canvas
+		 * @name me.video#createCanvas
+		 * @function
+		 * @param {Int} width width
+		 * @param {Int} height height
+		 * @return {Canvas}
+		 */
+		api.createCanvas = function(width, height) {
+			var _canvas = document.createElement("canvas");
+
+			_canvas.width = width || backBufferCanvas.width;
+			_canvas.height = height || backBufferCanvas.height;
+
+			return _canvas;
+		};
+
+		/**
+		 * Create and return a new 2D Context
 		 * @name me.video#createCanvasSurface
 		 * @function
-		 * @param {Int} width canvas width
-		 * @param {Int} height canvas height
+		 * @deprecated
+		 * @param {Int} width width
+		 * @param {Int} height height
 		 * @return {Context2D}
 		 */
 		api.createCanvasSurface = function(width, height) {
-			var privateCanvas = document.createElement("canvas");
-
-			privateCanvas.width = width || backBufferCanvas.width;
-			privateCanvas.height = height || backBufferCanvas.height;
-
-			return privateCanvas.getContext('2d');
+			return api.createCanvas(width, height).getContext('2d');
 		};
 
 		/**
@@ -319,7 +357,6 @@
 		 * @return {Canvas}
 		 */
 		api.getScreenCanvas = function() {
-			//console.log(VideoMngr._canvas);
 			return canvas;
 		};
 
@@ -332,36 +369,71 @@
 		api.getScreenFrameBuffer = function() {
 			return backBufferContext2D;
 		};
-
-		/* ---
 		
-			Update the display size (zoom ratio change)
-			if no parameter called from the outside (select box)
-			---								*/
-
 		/**
-		 * change the display scaling factor
+		 * callback for window resize event
+		 * @private
+		 */
+		api.onresize = function(event){
+			if (auto_scale) {
+				// get the parent container max size
+				var parent = me.video.getScreenCanvas().parentNode;
+				var max_width = parent.width || window.innerWidth;
+				var max_height = parent.height || window.innerHeight;
+				
+				if (deferResizeId) {
+					// cancel any previous pending resize
+					clearTimeout(deferResizeId);
+				}
+
+				if (maintainAspectRatio) {
+					// make sure we maintain the original aspect ratio
+					var designRatio = me.video.getWidth() / me.video.getHeight();
+					var screenRatio = max_width / max_height;
+					if (screenRatio < designRatio)
+						var scale = max_width / me.video.getWidth();
+					else
+						var scale = max_height / me.video.getHeight();
+		
+					// update the "front" canvas size
+					deferResizeId = me.video.updateDisplaySize.defer(scale,scale);
+				} else {
+					// scale the display canvas to fit with the parent container
+					deferResizeId = me.video.updateDisplaySize.defer( 
+						max_width / me.video.getWidth(),
+						max_height / me.video.getHeight()
+					);
+				}
+				return;
+			}
+			// make sure we have the correct relative canvas position cached
+			me.input.mouse.offset = me.video.getPos();
+		};
+		
+		/**
+		 * Modify the "displayed" canvas size
 		 * @name me.video#updateDisplaySize
 		 * @function
-		 * @param {Number} scale scaling value
+		 * @param {Number} scale X scaling value
+		 * @param {Number} scale Y scaling value
 		 */
-		api.updateDisplaySize = function(scale) {
-			if (double_buffering) {
-				if (scale)
-					me.sys.scale = scale;
-				else
-					// to be changed by something else :)
-					me.sys.scale = document.getElementById("screen size").value;
+		api.updateDisplaySize = function(scaleX, scaleY) {
+			// update the global scale variable
+			me.sys.scale.set(scaleX,scaleY);
+			// apply the new value
+			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
+			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
+			
+			// make sure we have the correct relative canvas position cached
+			me.input.mouse.offset = me.video.getPos();
 
-				game_width_zoom = backBufferCanvas.width * me.sys.scale;
-				game_height_zoom = backBufferCanvas.height * me.sys.scale;
-
-				canvas.width = game_width_zoom; // in pixels
-				canvas.height = game_height_zoom; // in pixels
-
-			}
+			// force a canvas repaint
+			api.blitSurface();
+			
+			// clear the timeout id
+			deferResizeId = -1;
 		};
-
+		
 		/**
 		 * Clear the specified context with the given color
 		 * @name me.video#clearSurface
@@ -373,7 +445,7 @@
 			context.save();
 			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.fillStyle = col;
-			context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+			context.fillRect(0, 0, api.getWidth(),api.getHeight());
 			context.restore();
 		};
 

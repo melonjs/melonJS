@@ -110,11 +110,11 @@ var me = me || {};
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type {int}
+		 * @type {me.Vector2d}
 		 * @memberOf me.sys
 		 */
-		scale : 1.0,
-
+		scale : null, //initialized by me.video.init
+ 	
 		/**
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
@@ -1353,11 +1353,11 @@ var me = me || {};
 		};
 
 		/**
-		 * returns the amount of existing entities<br>
-		 * @name me.game#getEntityCount
+		 * returns the amount of existing objects<br>
+		 * @name me.game#getObjectCount
 		 * @protected
 		 * @function
-		 * @return {Number} the amount of object entities
+		 * @return {Number} the amount of object
 		 */
 		api.getObjectCount = function()
 		{
@@ -1365,11 +1365,11 @@ var me = me || {};
 		};
 
 		/**
-		 * returns the amount of object being draw per frame<br>
-		 * @name me.game#getEntityCount
+		 * returns the amount of object being drawn per frame<br>
+		 * @name me.game#getDrawCount
 		 * @protected
 		 * @function
-		 * @return {Number} the amount of object entities
+		 * @return {Number} the amount of object draws
 		 */
 		api.getDrawCount = function()
 		{
@@ -1611,22 +1611,26 @@ var me = me || {};
 		 * }
 
 		 */
-		api.collide = function(objB) {
-			var result = null;
-
+		api.collide = function(objA) {
+			var res = null;
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.visible && obj.collidable && obj.isEntity && (obj!=objB))
+				if (obj.inViewport && obj.visible && obj.collidable && obj.isEntity && (obj!=objA))
 				{
-					// if return value != null, we have a collision
-					if (result = obj.checkCollision(objB))
-						// stop the loop return the value
-						break;
+					res = obj.collisionBox.collideVsAABB.call(obj, objA);
+					if (res.x != 0 || res.y != 0) {
+						// notify the object
+						obj.onCollision.call(obj, res, objA);
+						// return the type (deprecated)
+						res.type = obj.type;
+						// return a reference of the colliding object
+						res.obj  = obj;
+						return res;
+					}
 				}
 			}
-			return result;
-
+			return null;
 		};
 
 		/**
@@ -1745,17 +1749,17 @@ var me = me || {};
 	 *       // draw our text somewhere in the middle
 	 *       this.logo.draw(context,
 	 *                      "awesome loading screen",
-	 *                      ((context.canvas.width - logo_width) / 2),
-	 *                      (context.canvas.height + 60) / 2);
+	 *                      ((me.video.getWidth() - logo_width) / 2),
+	 *                      (me.video.getHeight() + 60) / 2);
 	 *
 	 *       // display a progressive loading bar
-	 *       var width = Math.floor(this.loadPercent * context.canvas.width);
+	 *       var width = Math.floor(this.loadPercent * me.video.getWidth());
 	 *
 	 *       // draw the progress bar
 	 *       context.strokeStyle = "silver";
-	 *       context.strokeRect(0, (context.canvas.height / 2) + 40, context.canvas.width, 6);
+	 *       context.strokeRect(0, (me.video.getHeight() / 2) + 40, me.video.getWidth(), 6);
 	 *       context.fillStyle = "#89b002";
-	 *       context.fillRect(2, (context.canvas.height / 2) + 42, width-4, 2);
+	 *       context.fillRect(2, (me.video.getHeight() / 2) + 42, width-4, 2);
 	 *    },
 	 * });
 	 *

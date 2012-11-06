@@ -281,8 +281,7 @@
 		 */
 		obj.init = function(audioFormat) {
 			if (!me.initialized) {
-				console.error("melonJS: me.audio.init() called before engine initialization.");
-				return false;
+				throw "melonJS: me.audio.init() called before engine initialization.";
 			}
 
 			if (audioFormat)
