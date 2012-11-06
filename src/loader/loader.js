@@ -200,33 +200,27 @@
 		 * @private
 		 */
 		function preloadXML(xmlData, onload, onerror) {
-			if ($.XMLHttpRequest) {
-				// code for IE7+, Firefox, Chrome, Opera, Safari
-				var xmlhttp = new XMLHttpRequest();
-				// to ensure our document is treated as a XML file
-				if (xmlhttp.overrideMimeType)
-					xmlhttp.overrideMimeType('text/xml');
-			} else {
-				// code for IE6, IE5
-				var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				// I actually don't give a **** about IE5/IE6...
-			}
-			// load our XML
-			xmlhttp.open("GET", xmlData.src + me.nocache, false);
+			var xmlhttp = new XMLHttpRequest();
+			// to ensure our document is treated as a XML file
+			if (xmlhttp.overrideMimeType)
+				xmlhttp.overrideMimeType('text/xml');
+				
+			// set the callbacks
 			xmlhttp.onerror = onerror;
-			xmlhttp.onload = function(event) {
-				// set the xmldoc in the array
-				xmlList[xmlData.name] = {
-					xml: xmlhttp.responseText,
-					isTMX: (xmlData.type === "tmx")
-				};
-				// callback
-				onload();
-			};
-		
-			// send the request
-			xmlhttp.send();
 
+			// send the request
+			xmlhttp.open("GET", xmlData.src + me.nocache, false);
+			xmlhttp.send();
+			
+			// get the TMX content
+			xmlList[xmlData.name] = {
+				xml: xmlhttp.responseText,
+				isTMX: (xmlData.type === "tmx")
+			};
+
+			// fire the callback
+			onload();
+		
 		};
 			
 		/**
