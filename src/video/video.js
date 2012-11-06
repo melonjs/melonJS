@@ -235,18 +235,14 @@
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			
 			// create the main canvas
-			canvas = document.createElement("canvas");
-			canvas.setAttribute("width", (game_width_zoom) + "px");
-			canvas.setAttribute("height", (game_height_zoom) + "px");
-			canvas.setAttribute("border", "0px solid black");
-			canvas.setAttribute("display", "block"); // ??
+			canvas = api.createCanvas(game_width_zoom, game_height_zoom);
 
 			// add our canvas
 			if (wrapperid) {
 				wrapper = document.getElementById(wrapperid);
 			}
-			else {
-				// if wrapperid is not defined (null)
+			// if wrapperid is not defined (null)
+			if (!wrapper) {
 				// add the canvas to document.body
 				wrapper = document.body;
 			}
@@ -261,11 +257,11 @@
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
-				backBufferContext2D = api.createCanvasSurface(game_width, game_height);
-				backBufferCanvas = backBufferContext2D.canvas;
+				backBufferCanvas = api.createCanvas(game_width, game_height);
+				backBufferContext2D = backBufferCanvas.getContext('2d');
 			} else {
+				backBufferCanvas = canvas;
 				backBufferContext2D = context2D;
-				backBufferCanvas = context2D.canvas;
 			}
 			
 			// trigger an initial resize();
@@ -325,20 +321,33 @@
 		};
 
 		/**
-		 * allocate and return a new Canvas 2D surface
+		 * Create and return a new Canvas
+		 * @name me.video#createCanvas
+		 * @function
+		 * @param {Int} width width
+		 * @param {Int} height height
+		 * @return {Canvas}
+		 */
+		api.createCanvas = function(width, height) {
+			var _canvas = document.createElement("canvas");
+
+			_canvas.width = width || backBufferCanvas.width;
+			_canvas.height = height || backBufferCanvas.height;
+
+			return _canvas;
+		};
+
+		/**
+		 * Create and return a new 2D Context
 		 * @name me.video#createCanvasSurface
 		 * @function
-		 * @param {Int} width canvas width
-		 * @param {Int} height canvas height
+		 * @deprecated
+		 * @param {Int} width width
+		 * @param {Int} height height
 		 * @return {Context2D}
 		 */
 		api.createCanvasSurface = function(width, height) {
-			var privateCanvas = document.createElement("canvas");
-
-			privateCanvas.width = width || backBufferCanvas.width;
-			privateCanvas.height = height || backBufferCanvas.height;
-
-			return privateCanvas.getContext('2d');
+			return api.createCanvas(width, height).getContext('2d');
 		};
 
 		/**
@@ -436,7 +445,7 @@
 			context.save();
 			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.fillStyle = col;
-			context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+			context.fillRect(0, 0, api.getWidth(),api.getHeight());
 			context.restore();
 		};
 

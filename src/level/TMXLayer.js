@@ -604,8 +604,8 @@
 				
 				// if pre-rendering method is use, create the offline canvas
 				if (this.preRender) {
-					this.layerSurface = me.video.createCanvasSurface(this.width	* this.tilewidth, this.height * this.tileheight);
-					this.layerCanvas = this.layerSurface.canvas;
+					this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+					this.layerSurface = this.layerCanvas.getContext('2d');
 					
 					// set alpha value for this layer
 					this.layerSurface.globalAlpha = this.opacity;

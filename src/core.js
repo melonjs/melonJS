@@ -1749,17 +1749,17 @@ var me = me || {};
 	 *       // draw our text somewhere in the middle
 	 *       this.logo.draw(context,
 	 *                      "awesome loading screen",
-	 *                      ((context.canvas.width - logo_width) / 2),
-	 *                      (context.canvas.height + 60) / 2);
+	 *                      ((me.video.getWidth() - logo_width) / 2),
+	 *                      (me.video.getHeight() + 60) / 2);
 	 *
 	 *       // display a progressive loading bar
-	 *       var width = Math.floor(this.loadPercent * context.canvas.width);
+	 *       var width = Math.floor(this.loadPercent * me.video.getWidth());
 	 *
 	 *       // draw the progress bar
 	 *       context.strokeStyle = "silver";
-	 *       context.strokeRect(0, (context.canvas.height / 2) + 40, context.canvas.width, 6);
+	 *       context.strokeRect(0, (me.video.getHeight() / 2) + 40, me.video.getWidth(), 6);
 	 *       context.fillStyle = "#89b002";
-	 *       context.fillRect(2, (context.canvas.height / 2) + 42, width-4, 2);
+	 *       context.fillRect(2, (me.video.getHeight() / 2) + 42, width-4, 2);
 	 *    },
 	 * });
 	 *
