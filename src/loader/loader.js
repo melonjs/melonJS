@@ -204,23 +204,34 @@
 			// to ensure our document is treated as a XML file
 			if (xmlhttp.overrideMimeType)
 				xmlhttp.overrideMimeType('text/xml');
-				
-			// set the callbacks
-			xmlhttp.onerror = onerror;
-
-			// send the request
-			xmlhttp.open("GET", xmlData.src + me.nocache, false);
-			xmlhttp.send();
 			
-			// get the TMX content
-			xmlList[xmlData.name] = {
-				xml: xmlhttp.responseText,
-				isTMX: (xmlData.type === "tmx")
-			};
-
-			// fire the callback
-			onload();
+			xmlhttp.open("GET", xmlData.src + me.nocache, true);
+						
+			// set the callbacks
+			xmlhttp.ontimeout = onerror;
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState==4) {
+					// status = 0 when file protocol is used, or cross-domain origin,
+					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
+					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+						// get the TMX content
+						xmlList[xmlData.name] = {
+							xml: xmlhttp.responseText,
+							isTMX: (xmlData.type === "tmx")
+						};
+						// fire the callback
+						onload();
 		
+					} else {
+						onerror();
+					}
+				}
+			};
+			
+			// send the request
+			xmlhttp.send(null);
+			
+			
 		};
 			
 		/**
