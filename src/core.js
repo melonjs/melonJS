@@ -841,7 +841,7 @@ var me = me || {};
 		}
 
 		// detect touch capabilities
-		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $);
+		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || (navigator.isCocoonJS);
 
 		// init the FPS counter if needed
 		me.timer.init();
