@@ -33,7 +33,7 @@
 		var audio_channels = {};
 
 		// supported Audio Format
-		var supportedFormat = [ "mp3", "ogg", "wav" ];
+		var supportedFormat = [  "m4a", "mp3", "ogg", "wav"];
 
 		// Request format by the app/game
 		var requestedFormat = null;
@@ -172,15 +172,9 @@
 				var soundclip = audio_channels[sound_id][0];
 				// clone copy to create multiple channel version
 				for (var channel = 1; channel < sound_channel; channel++) {
-					// make sure it's a new copy each time
-					var node = soundclip.cloneNode(true);
-					// fix for IE platform not properly
-					// initializating everything when using cloneNode
-					if (node.currentSrc.length == 0) {
-						node.src = soundclip.src;
-					}
-					// allocate the new channel
-					audio_channels[sound_id][channel] = node;
+					// allocate the new additional channels
+					audio_channels[sound_id][channel] = new Audio( soundclip.src );
+					audio_channels[sound_id][channel].preload = "auto";
 					audio_channels[sound_id][channel].load();
 				}
 			}
@@ -259,8 +253,47 @@
 		obj.capabilities = {
 			mp3 : false,
 			ogg : false,
-			ma4 : false,
+			m4a : false,
 			wav : false
+		};
+		
+		/**
+		 * @private
+		 */
+		obj.detectCapabilities = function () {
+		
+			// init some audio variables
+			var a = document.createElement('audio');
+
+			if (a.canPlayType) {
+				obj.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg")) 
+									&& ("" != a.canPlayType("audio/mpeg"));
+
+				obj.capabilities.ogg = ("no" != a.canPlayType('audio/ogg; codecs="vorbis"'))
+									&& ("" != a.canPlayType('audio/ogg; codecs="vorbis"'));
+
+				obj.capabilities.wav = ("no" != a.canPlayType('audio/wav; codecs="1"'))
+									&& ("" != a.canPlayType('audio/wav; codecs="1"'));
+				
+				obj.capabilities.m4a = ("no" != a.canPlayType('audio/mp4; codecs="mp4a.40.2"'))
+									&& ("" != a.canPlayType('audio/mp4; codecs="mp4a.40.2"'));
+
+				// enable sound if any of the audio format is supported
+				me.sys.sound = obj.capabilities.mp3 ||
+							   obj.capabilities.ogg ||
+							   obj.capabilities.wav || 
+							   obj.capabilities.m4a;
+			}
+			
+			// check for specific platform
+			if ((me.sys.ua.search("iphone") > -1) || (me.sys.ua.search("ipod") > -1) || 
+				(me.sys.ua.search("ipad") > -1) || (me.sys.ua.search("android") > -1)) {
+				// if on mobile device, without a specific HTML5 acceleration framework
+				if (!navigator.isCocoonJS) {
+					// disable sound for now
+					me.sys.sound = false;
+				}
+			}
 		};
 
 		/**

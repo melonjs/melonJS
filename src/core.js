@@ -809,37 +809,12 @@ var me = me || {};
 		if (me_initialized)
 			return;
 
-		// init some audio variables
-		var a = document.createElement('audio');
-
 		// enable/disable the cache
 		me.utils.setNocache(document.location.href.match(/\?nocache/)||false);
-
-		if (a.canPlayType) {
-			me.audio.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg"))
-					&& ("" != a.canPlayType("audio/mpeg"));
-
-			me.audio.capabilities.ogg = ("no" != a.canPlayType('audio/ogg; codecs="vorbis"'))
-					&& ("" != a.canPlayType('audio/ogg; codecs="vorbis"'));
-
-			me.audio.capabilities.wav = ("no" != a.canPlayType('audio/wav; codecs="1"'))
-					&& ("" != a.canPlayType('audio/wav; codecs="1"'));
-
-			// enable sound if any of the audio format is supported
-			me.sys.sound = me.audio.capabilities.mp3 ||
-                        me.audio.capabilities.ogg ||
-                        me.audio.capabilities.wav;
-
-		}
-		// hack, check for specific platform
-		if ((me.sys.ua.search("iphone") > -1)
-				|| (me.sys.ua.search("ipod") > -1)
-				|| (me.sys.ua.search("ipad") > -1)
-				|| (me.sys.ua.search("android") > -1)) {
-			//if on mobile device, disable sound for now
-			me.sys.sound = false;
-		}
-
+	
+		// detect audio capabilities
+		me.audio.detectCapabilities();
+		
 		// detect touch capabilities
 		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || (navigator.isCocoonJS);
 
