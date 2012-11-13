@@ -717,7 +717,12 @@ var CoinEntity = me.CollectableEntity.extend({
     // an object is touched by something (here collected)
     onCollision: function() {
         // do something when collected
-	}
+
+        // make sure it cannot be collected "again"
+        this.collidable = false;
+        // remove it
+        me.game.remove(this);
+    }
 
 });
 
@@ -1050,12 +1055,15 @@ var PlayScreen = me.ScreenObject.extend({
 <pre class="brush: js">
 onCollision : function ()
 {
-	// give some score
-	me.game.HUD.updateItemValue("score", 250);
-	// make sure it cannot be collected "again"
-	this.collidable = false;
-	// remove it
-	me.game.remove(this);
+    // do something when collected
+
+    // give some score
+    me.game.HUD.updateItemValue("score", 250);
+
+    // make sure it cannot be collected "again"
+    this.collidable = false;
+    // remove it
+    me.game.remove(this);
 }
 </pre>
 
@@ -1192,14 +1200,18 @@ me.audio.init("mp3,ogg");
 <pre class="brush: js">
 onCollision : function ()
 {
-	// do something when collide
-	me.audio.play("cling");
-	// give some score
-	me.game.HUD.updateItemValue("score", 250);
-	// make sure it cannot be collected "again"
-	this.collidable = false;
-	// remove it
-	me.game.remove(this);
+    // do something when collected
+
+    // play a "coin collected" sound
+    me.audio.play("cling");
+
+    // give some score
+    me.game.HUD.updateItemValue("score", 250);
+
+    // make sure it cannot be collected "again"
+    this.collidable = false;
+    // remove it
+    me.game.remove(this);
 }
 </pre>
 <br/>
