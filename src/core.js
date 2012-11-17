@@ -1593,7 +1593,7 @@ var me = me || {};
 			{
 				if (obj.inViewport && obj.visible && obj.collidable && obj.isEntity && (obj!=objA))
 				{
-					res = obj.collisionBox.collideVsAABB.call(obj, objA);
+					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
 					if (res.x != 0 || res.y != 0) {
 						// notify the object
 						obj.onCollision.call(obj, res, objA);
