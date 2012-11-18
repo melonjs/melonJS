@@ -124,8 +124,8 @@
 
 		// contains all the images loaded
 		var imgList = {};
-		// contains all the xml loaded
-		var xmlList = {};
+		// contains all the TMX loaded
+		var tmxList = {};
 		// contains all the binary files loaded
 		var binList = {};
 		// flag to check loading status
@@ -146,10 +146,10 @@
 			if (loadCount == (resourceCount - tmxCount)) {
 
 				// add all TMX level into the level Director
-				for ( var xmlObj in xmlList) {
-					if (xmlList[xmlObj].isTMX) {
+				for ( var tmxObj in tmxList) {
+					if (tmxList[tmxObj].isTMX) {
 						// load the level into the levelDirector
-						if (me.levelDirector.addTMXLevel(xmlObj)) {
+						if (me.levelDirector.addTMXLevel(tmxObj)) {
 							//progress notification
 							obj.onResourceLoaded();
 						}
@@ -196,16 +196,19 @@
 		};
 
 		/**
-		 * preload XML files
+		 * preload TMX files
 		 * @private
 		 */
-		function preloadXML(xmlData, onload, onerror) {
+		function preloadTMX(tmxData, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
-			// to ensure our document is treated as a XML file
-			if (xmlhttp.overrideMimeType)
-				xmlhttp.overrideMimeType('text/xml');
 			
-			xmlhttp.open("GET", xmlData.src + me.nocache, true);
+			if (me.utils.getFileExtension(tmxData.src).toLowerCase() !== 'json') {
+				// to ensure our document is treated as a XML file
+				if (xmlhttp.overrideMimeType)
+					xmlhttp.overrideMimeType('text/xml');
+			}
+			
+			xmlhttp.open("GET", tmxData.src + me.nocache, true);
 						
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
@@ -215,13 +218,14 @@
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
 						// get the TMX content
-						xmlList[xmlData.name] = {
-							xml: xmlhttp.responseText,
-							isTMX: (xmlData.type === "tmx")
+						tmxList[tmxData.name] = {
+							data: xmlhttp.responseText,
+							isTMX: (tmxData.type === "tmx"),
+							// Sore the data format ('tmx', 'json')
+							type : me.utils.getFileExtension(tmxData.src).toLowerCase()
 						};
 						// fire the callback
 						onload();
-		
 					} else {
 						onerror();
 					}
@@ -396,7 +400,7 @@
 					return 1;
 
 				case "tmx":
-					preloadXML.call(this, res, onload, onerror);
+					preloadTMX.call(this, res, onload, onerror);
 					// increase the resourceCount by 1
 					// allowing to add the loading of level in the 
 					// levelDirector as part of the loading progress
@@ -404,7 +408,7 @@
 					return 2;
 
 				case "tsx":
-					preloadXML.call(this, res, onload, onerror);
+					preloadTMX.call(this, res, onload, onerror);
 					return 1;
 
 				case "audio":
@@ -451,10 +455,10 @@
 
 				case "tmx":
 				case "tsx":
-					if (!(res.name in xmlList))
+					if (!(res.name in tmxList))
 						return false;
 
-					delete xmlList[res.name];
+					delete tmxList[res.name];
 					return true;
 
 				case "audio":
@@ -483,33 +487,50 @@
 			for (name in imgList)
 				obj.unload(name);
 
-			// unload all xml resources
-			for (name in xmlList)
+			// unload all tmx resources
+			for (name in tmxList)
 				obj.unload(name);
 
 			// unload all audio resources
 			me.audio.unloadAll();
 		};
 
-
 		/**
-		 * return the specified XML object
-		 * @name me.loader#getXML
+		 * return the specified TMX object storing type
+		 * @name me.loader#getTMXFormat
 		 * @public
 		 * @function
-		 * @param {String} xmlfile name of the xml element ("map1");
-		 * @return {Xml} 
+		 * @param {String} tmx name of the tmx/tsx element ("map1");
+		 * @return {String} 'tmx' or 'json'
 		 */
-		obj.getXML = function(elt) {
+		obj.getTMXFormat = function(elt) {
 			// avoid case issue
 			elt = elt.toLowerCase();
-			if (elt in xmlList)
-				return xmlList[elt].xml;
+			if (elt in tmxList)
+				return tmxList[elt].type;
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
 				return null;
 			}
 
+		};
+		/**
+		 * return the specified TMX/TSX object
+		 * @name me.loader#getTMX
+		 * @public
+		 * @function
+		 * @param {String} tmx name of the tmx/tsx element ("map1");
+		 * @return {TMx} 
+		 */
+		obj.getTMX = function(elt) {
+			// avoid case issue
+			elt = elt.toLowerCase();
+			if (elt in tmxList)
+				return tmxList[elt].data;
+			else {
+				//console.log ("warning %s resource not yet loaded!",name);
+				return null;
+			}
 		};
 		
 		/**

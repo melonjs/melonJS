@@ -543,8 +543,8 @@
 		// constructor
 		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
 			// call the parent
-			this.parent(me.XMLParser.getIntAttribute(layer, me.TMX_TAG_WIDTH), 
-						me.XMLParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT),
+			this.parent(me.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH), 
+						me.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT),
 						tilewidth, 
 						tileheight,
 						// tilesets should exist here !
@@ -553,9 +553,9 @@
 						
 			// additional TMX flags
 			this.orientation = orientation;
-			this.name = me.XMLParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.visible = (me.XMLParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.opacity = me.XMLParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
+			this.name = me.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
+			this.visible = (me.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.opacity = me.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 				
 			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
@@ -573,8 +573,8 @@
 
 			// store the data information
 			var xmldata = layer.getElementsByTagName(me.TMX_TAG_DATA)[0];
-			var encoding = me.XMLParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
-			var compression = me.XMLParser.getStringAttribute(xmldata, me.TMX_TAG_COMPRESSION, null);
+			var encoding = me.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
+			var compression = me.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_COMPRESSION, null);
 
 			// make sure this is not happening
 			if (encoding == '')
@@ -693,7 +693,7 @@
 			for ( var y = 0 ; y <this.height; y++) {
 				for ( var x = 0; x <this.width; x++) {
 					// get the value of the gid
-					var gid = (encoding == null) ? me.XMLParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
+					var gid = (encoding == null) ? me.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
 					// fill the array										
 					if (gid !== 0) {
 						// create a new tile object

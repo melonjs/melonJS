@@ -159,6 +159,15 @@
 			return path.replace(removepath, '').replace(removeext, '');
 		};
 
+		/**
+		 * return the extension of the file in the given path <br>
+		 *
+		 * @param  {String} path path containing the filename
+		 * @return {String} filename extension.
+		 */
+		api.getFileExtension = function(path) {
+			return path.substring(path.lastIndexOf(".") + 1, path.length);
+		};
 		
 		/* ---
 		 

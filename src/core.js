@@ -40,7 +40,7 @@ var me = me || {};
 		entityPool : null,
 		levelDirector : null,
 		// System Object (instances)
-		XMLParser : null,
+		TMXParser : null,
 		loadingScreen : null,
 		// TMX Stuff
 		TMXTileMap : null
@@ -728,38 +728,46 @@ var me = me || {};
 	/************************************************************************************/
 
 	/**
-	 * a basic XML Parser
+	 * a basic TMX/TSX Parser
 	 * @class
 	 * @constructor
 	 * @ignore
 	 **/
-	function _TinyXMLParser() {
+	function _TinyTMXParser() {
 		var parserObj = {
-			xmlDoc : null,
+			tmxDoc : null,
+			isJSON : false,
 
-			// parse a xml from a string (xmlhttpObj.responseText)
-			parseFromString : function(textxml) {
-				// get a reference to the requested corresponding xml file
-				if ($.DOMParser) {
-					var parser = new DOMParser();
-					this.xmlDoc = parser.parseFromString(textxml, "text/xml");
-				} else // Internet Explorer (untested!)
-				{
-					this.xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-					this.xmlDoc.async = "false";
-					this.xmlDoc.loadXML(textxml);
-				}
-				if (this.xmlDoc == null) {
-					console.log("xml " + this.xmlDoc + " not found!");
+			// parse a TMX/TSX from a string (xmlhttpObj.responseText)
+			parseFromString : function(data, isJSON) {
+				this.isJSON = isJSON || false;
+				
+				if (this.isJSON) {
+					this.tmxDoc = JSON.parse(data);
+					// this won't work !
+				} else {
+					// get a reference to the requested corresponding xml file
+					if ($.DOMParser) {
+						var parser = new DOMParser();
+						this.tmxDoc = parser.parseFromString(data, "text/xml");
+					} else // Internet Explorer (untested!)
+					{
+						this.tmxDoc = new ActiveXObject("Microsoft.XMLDOM");
+						this.tmxDoc.async = "false";
+						this.tmxDoc.loadXML(data);
+					}
+					if (this.tmxDoc == null) {
+						console.log("tmx/tsx " + this.tmxDoc + " not found!");
+					}
 				}
 			},
 
 			getFirstElementByTagName : function(name) {
-				return this.xmlDoc ? this.xmlDoc.getElementsByTagName(name)[0] : null;
+				return this.tmxDoc ? this.tmxDoc.getElementsByTagName(name)[0] : null;
 			},
 
 			getAllTagElements : function() {
-				return this.xmlDoc ? this.xmlDoc.getElementsByTagName('*') : null;
+				return this.tmxDoc ? this.tmxDoc.getElementsByTagName('*') : null;
 			},
 
 			getStringAttribute : function(elt, str, val) {
@@ -784,7 +792,7 @@ var me = me || {};
 
 			// free the allocated parser
 			free : function() {
-				this.xmlDoc = null;
+				this.tmxDoc = null;
 			}
 		}
 		return parserObj;
@@ -821,8 +829,8 @@ var me = me || {};
 		// init the FPS counter if needed
 		me.timer.init();
 
-		// create an instance of the XML parser
-		me.XMLParser = new _TinyXMLParser();
+		// create an instance of the TMX parser
+		me.TMXParser = new _TinyTMXParser();
 
 		// create a default loading screen
 		me.loadingScreen = new me.DefaultLoadingScreen();

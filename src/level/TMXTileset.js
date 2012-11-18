@@ -224,29 +224,29 @@
 		init: function (xmltileset) {
 
 			// first gid
-			this.firstgid = me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
+			this.firstgid = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
 
-			var src = me.XMLParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
+			var src = me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
 			if (src) {
 				// load TSX
 				src = me.utils.getBasename(src);
-				xmltileset = me.loader.getXML(src);
+				xmltileset = me.loader.getTMX(src);
 
 				if (!xmltileset) {
 					throw "melonJS:" + src + " TSX tileset not found";
 				}
 
 				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.XMLParser`
-				me.XMLParser.parseFromString(xmltileset);
-				xmltileset = me.XMLParser.getFirstElementByTagName("tileset");
+				// XML currently loaded into the global `me.TMXParser`
+				me.TMXParser.parseFromString(xmltileset);
+				xmltileset = me.TMXParser.getFirstElementByTagName("tileset");
 			}
 
-			this.parent(me.XMLParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME),
-						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH),
-						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT),
-						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0), 
-						me.XMLParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0), 
+			this.parent(me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME),
+						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH),
+						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT),
+						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0), 
+						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0), 
 						xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE));
 			
 			// compute the last gid value in the tileset
@@ -265,14 +265,14 @@
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
 			if (offset.length>0) {
-				this.tileoffset.x = me.XMLParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.XMLParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
+				this.tileoffset.x = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
+				this.tileoffset.y = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
 			}
 
 			// set tile properties, if any
 			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
 			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.XMLParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
+				var tileID = me.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
 
 				this.TileProperties[tileID] = {};
 
