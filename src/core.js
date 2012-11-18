@@ -1177,7 +1177,7 @@ var me = me || {};
 				api.viewport = new me.Viewport(0, 0, width, height);
 
 				// get a ref to the screen buffer
-				frameBuffer = me.video.getScreenFrameBuffer();
+				frameBuffer = me.video.getSystemContext();
 
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);

@@ -130,8 +130,8 @@
 			
 			// some internal string/length
 			this.help_str	  = "(s)how/(h)ide";
-			this.help_str_len = this.font.measureText(me.video.getScreenFrameBuffer(), this.help_str).width;
-			this.fps_str_len = this.font.measureText(me.video.getScreenFrameBuffer(), "00/00 fps").width;
+			this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
+			this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
 			
 			// bind the "S" and "H" keys
 			me.input.bindKey(me.input.KEY.S, "show");

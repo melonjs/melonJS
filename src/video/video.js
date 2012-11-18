@@ -351,22 +351,31 @@
 		};
 
 		/**
-		 * return a reference of the display canvas
-		 * @name me.video#getScreenCanvas
-		 * @function
-		 * @return {Canvas}
+		 * return a reference of the screen canvas
+		 * (this is only useful when checking size/mouse event)
+		 * @private
 		 */
 		api.getScreenCanvas = function() {
 			return canvas;
 		};
 
 		/**
-		 * return a reference to the screen framebuffer
-		 * @name me.video#getScreenFrameBuffer
+		 * return a reference to the system canvas
+		 * @name me.video#backBufferCanvas
 		 * @function
 		 * @return {Context2D}
 		 */
-		api.getScreenFrameBuffer = function() {
+		api.getSystemCanvas = function() {
+			return backBufferCanvas;
+		};
+		
+		/**
+		 * return a reference to the system 2d Context
+		 * @name me.video#getSystemContext
+		 * @function
+		 * @return {Context2D}
+		 */
+		api.getSystemContext = function() {
 			return backBufferContext2D;
 		};
 		
