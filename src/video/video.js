@@ -477,7 +477,27 @@
 			context.scale(scale, scale);
 
 		};
-
+		
+		/**
+		 * enable/disable image smoothing <br>
+		 * (!) this might not be supported by all browsers <br>
+		 * default : enabled
+		 * @name me.video#setImageSmoothing
+		 * @function
+		 * @param {Boolean} enable
+		 */
+		api.setImageSmoothing = function(enable) {
+			// a quick polyfill for the `imageSmoothingEnabled` property
+			var vendors = ['ms', 'moz', 'webkit', 'o'];
+			for(var x = 0; x < vendors.length; ++x) {
+				if (context2D[vendors[x]+'ImageSmoothingEnabled'] !== undefined) {
+					context2D[vendors[x]+'ImageSmoothingEnabled'] = enable
+				}
+			};
+			// generic one (if implemented)
+			context2D.imageSmoothingEnabled = false;
+		};
+		
 		/**
 		 * enable/disable Alpha for the specified context
 		 * @name me.video#setAlpha
