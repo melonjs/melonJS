@@ -351,9 +351,13 @@
 		};
 
 		/**
-		 * return a reference of the screen canvas
-		 * (this is only useful when checking size/mouse event)
-		 * @private
+		 * return a reference to the screen canvas <br>
+		 * use this when checking for display size, event <br>
+		 * or if you need to apply any special "effect" to <br>
+		 * the corresponding context (ie. imageSmoothingEnabled)
+		 * @name me.video#getScreenCanvas
+		 * @function
+		 * @return {Canvas}
 		 */
 		api.getScreenCanvas = function() {
 			return canvas;
@@ -361,9 +365,9 @@
 
 		/**
 		 * return a reference to the system canvas
-		 * @name me.video#backBufferCanvas
+		 * @name me.video#getSystemCanvas
 		 * @function
-		 * @return {Context2D}
+		 * @return {Canvas}
 		 */
 		api.getSystemCanvas = function() {
 			return backBufferCanvas;
