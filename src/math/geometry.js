@@ -13,13 +13,13 @@
 	/*                                                                                  */
 	/************************************************************************************/
 	/**
-	 * a 2D Vector Object
+	 * a generic 2D Vector Object
 	 * @class
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x x position of the vector
-	 * @param {int} y y position of the vector
+	 * @param {int} x x value of the vector
+	 * @param {int} y y value of the vector
 	 */
 	me.Vector2d = Object.extend(
 	/** @scope me.Vector2d.prototype */
@@ -40,46 +40,76 @@
 		y : 0,
 
 		/** @private */
-		init : function(/**Int*/ x, /**Int*/ y) {
+		init : function(/**Number*/ x, /**Number*/ y) {
 			this.x = x || 0;
 			this.y = y || 0;
 		},
-
-		set : function(/**Int*/ x, /**Int*/ y) {
+		
+		/**
+		 * set the Vector x and y properties to the given values<br>
+		 * @param {Number} x
+		 * @param {Number} y
+		 */
+		set : function(x, y) {
 			this.x = x;
 			this.y = y;
 		},
 
+		/**
+		 * set the Vector x and y properties to 0
+		 */
 		setZero : function() {
 			this.set(0, 0);
-
 		},
 
-		setV : function(/**me.Vector2d*/ v) {
+		/**
+		 * set the Vector x and y properties using the passed vector
+		 * @param {me.Vector2d} v
+		 */
+		setV : function(v) {
 			this.x = v.x;
 			this.y = v.y;
 		},
 
-		add : function(/**me.Vector2d*/ v) {
+		/**
+		 * Add the passed vector to this vector
+		 * @param {me.Vector2d} v
+		 */
+		add : function(v) {
 			this.x += v.x;
 			this.y += v.y;
 		},
 
-		sub : function(/**me.Vector2d*/ v) {
+		/**
+		 * Substract the passed vector to this vector
+		 * @param {me.Vector2d} v
+		 */
+		sub : function(v) {
 			this.x -= v.x;
 			this.y -= v.y;
 		},
 
-		scale : function(/**me.Vector2d*/ v) {
+		/**
+		 * Multiply this vector values by the passed vector
+		 * @param {me.Vector2d} v
+		 */
+		scale : function(v) {
 			this.x *= v.x;
 			this.y *= v.y;
 		},
 
-		div : function(/**Int*/	n) {
+		/**
+		 * Divide this vector values by the passed value
+		 * @param {Number} value
+		 */
+		div : function(n) {
 			this.x /= n;
 			this.y /= n;
 		},
 
+		/**
+		 * Update this vector values to absolute values
+		 */
 		abs : function() {
 			if (this.x < 0)
 				this.x = -this.x;
@@ -87,78 +117,126 @@
 				this.y = -this.y;
 		},
 
-		/** @return {me.Vector2D} */
+		/**
+		 * Clamp the vector value within the specified value range
+		 * @param {Number} low
+		 * @param {Number} high
+		 * @return {me.Vector2d}
+		 */
 		clamp : function(low, high) {
 			return new me.Vector2d(this.x.clamp(low, high), this.y.clamp(low, high));
 		},
 		
+		/**
+		 * Clamp this vector value within the specified value range
+		 * @param {Number} low
+		 * @param {Number} high
+		 */
 		clampSelf : function(low, high) {
 			this.x = this.x.clamp(low, high);
 			this.y = this.y.clamp(low, high);
 			return this;
 		},
 
-		minV : function(/**me.Vector2d*/ v) {
+		/**
+		 * Update this vector with the minimum value between this and the passed vector
+		 * @param {me.Vector2d} v
+		 */
+		minV : function(v) {
 			this.x = this.x < v.x ? this.x : v.x;
 			this.y = this.y < v.y ? this.y : v.y;
 		},
 
-		maxV : function(/**me.Vector2d*/ v) {
+		/**
+		 * Update this vector with the maximum value between this and the passed vector
+		 * @param {me.Vector2d} v
+		 */
+		maxV : function(v) {
 			this.x = this.x > v.x ? this.x : v.x;
 			this.y = this.y > v.y ? this.y : v.y;
 		},
-		
-		/** @return {me.Vector2D} New Vector2d */
+
+		/**
+		 * Floor the vector values
+		 * @return {me.Vector2d}
+		 */
 		floor : function() {
 			return new me.Vector2d(~~this.x, ~~this.y);
 		},
 		
-		/** @return {me.Vector2D} New Vector2d */
+		/**
+		 * Floor this vector values
+		 */
 		floorSelf : function() {
 			this.x = ~~this.x;
 			this.y = ~~this.y;
 			return this;
 		},
 		
-		/** @return {me.Vector2D} New Vector2d */
+		/**
+		 * Ceil the vector values
+		 * @return {me.Vector2d}
+		 */
 		ceil : function() {
 			return new me.Vector2d(Math.ceil(this.x), Math.ceil(this.y));
 		},
 		
-		/** @return {me.Vector2D} New Vector2d */
+		/**
+		 * Ceil this vector values
+		 */
 		ceilSelf : function() {
 			this.x = Math.ceil(this.x);
 			this.y = Math.ceil(this.y);
 			return this;
 		},
 
-		/** @return {me.Vector2D} New Vector2d */
+		/**
+		 * Negate the vector values
+		 * @return {me.Vector2d}
+		 */
 		negate : function() {
 			return new me.Vector2d(-this.x, -this.y);
 		},
 
+		/**
+		 * Negate this vector values
+		 */
 		negateSelf : function() {
 			this.x = -this.x;
 			this.y = -this.y;
 			return this;
 		},
 
-		//copy() copies the x,y values of another instance to this
-		copy : function(/**me.Vector2d*/ v) {
+		/**
+		 * Copy the x,y values of the passed vector to this one
+		 * @param {me.Vector2d} v
+		 */
+		copy : function(v) {
 			this.x = v.x;
 			this.y = v.y;
 		},
 		
-		// return true if two vectors are the same
-		equals : function(/**me.Vector2d*/ v) {
+		/**
+		 * return true if the two vectors are the same
+		 * @param {me.Vector2d} v
+		 * @return {Boolean}
+		 */
+		equals : function(v) {
 			return ((this.x === v.x) && (this.y === v.y));
 		},
 
-		/** @return {int} */
-		length : function() {
+		/**
+		 * return the lenght (magnitude) of this vector
+		 * @return {Number}
+		 */		
+		 length : function() {
 			return Math.sqrt(this.x * this.x + this.y * this.y);
 		},
 
+		/**
+		 * normalize this vector (scale the vector so that its magnitude is 1)
+		 * @return {Number}
+		 */		
 		normalize : function() {
 			var len = this.length();
 			// some limit test
@@ -171,23 +249,37 @@
 			return len;
 		},
 
-		/** @return {int} */
+		/**
+		 * return the doc product of this vector and the passed one
+		 * @param {me.Vector2d} v
+		 * @return {Number}
+		 */	
 		dotProduct : function(/**me.Vector2d*/ v) {
 			return this.x * v.x + this.y * v.y;
 		},
 
-		/** @return {int} */
-		distance : function(/**me.Vector2d*/ v) {
+		/**
+		 * return the distance between this vector and the passed one
+		 * @param {me.Vector2d} v
+		 * @return {Number}
+		 */			
+		 distance : function(v) {
 			return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y) * (this.y - v.y));
 		},
 
-		/** @return {me.Vector2d} */
+		/**
+		 * return a clone copy of this vector
+		 * @return {me.Vector2d}
+		 */			
 		clone : function() {
 			return new me.Vector2d(this.x, this.y);
 		},
 
-		/** @return {String} */
-		toString : function() {
+		/**
+		 * convert the object to a string representation
+		 * @return {String}
+		 */			
+		 toString : function() {
 			return 'x:' + this.x + 'y:' + this.y;
 		}
 
