@@ -362,7 +362,17 @@
 		api.getScreenCanvas = function() {
 			return canvas;
 		};
-
+		
+		/**
+		 * return a reference to the screen canvas corresponding 2d Context
+		 * @name me.video#getScreenContext
+		 * @function
+		 * @return {Context2D}
+		 */
+		api.getScreenContext = function() {
+			return context2D;
+		};
+		
 		/**
 		 * return a reference to the system canvas
 		 * @name me.video#getSystemCanvas
