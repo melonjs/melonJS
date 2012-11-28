@@ -175,7 +175,7 @@
 			// add all layers
 			for ( var i = this.mapLayers.length; i--;) {
 				// that are visible
-				if (this.mapLayers[i].visible && (this.mapLayers[i] instanceof me.TiledLayer ) ) {
+				if (this.mapLayers[i] instanceof me.TiledLayer) {
 					this.mapLayers[i].clearTile(x, y);
 				}
 			};
