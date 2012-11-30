@@ -71,7 +71,15 @@
 		 */
 		set : function(font, size, color, align) {
 			// font name and type
-			this.font = "" + size + "px " + "'" + font + "'";
+			if (typeof font === "number") {
+				size = "" + size + "px"
+			}
+			var font_names = font.split(",");
+			for(var i = 0; i < font_names.length; i++) {
+				font_names[i] = "'" + font_names[i] + "'";
+			}
+			font = font_names.join(",");
+			this.font = size + " " + font;
 			this.height = size;
 			this.color = color;
 			this.align = align || "top";
