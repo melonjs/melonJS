@@ -240,7 +240,9 @@
 					this.parent(x, y,
 								(typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image,
 								settings.spritewidth,
-								settings.spriteheight);
+								settings.spriteheight,
+								settings.spacing,
+								settings.margin);
 
 					// check for user defined transparent color
 					if (settings.transparent_color) {

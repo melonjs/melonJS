@@ -102,6 +102,10 @@
 		// image reference
 		image : null,
 
+		// Spacing and margin
+		spacing: 0,
+		margin: 0,
+
 		// to manage the flickering effect
 		flickering : false,
 		flickerTimer : -1,
@@ -115,7 +119,7 @@
 		/**
 		 * @ignore
 		 */
-		init : function(x, y, image, spritewidth, spriteheight) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
 
 			// Used by the game engine to adjust visibility as the
 			// sprite moves in and out of the viewport
@@ -125,6 +129,10 @@
 			this.parent(new me.Vector2d(x, y),
 						spritewidth  || image.width,
 						spriteheight || image.height);
+						
+			// Spacing and margin in spritesheet
+			this.spacing = spacing;
+			this.margin = margin;
 
 			// cache image reference
 			this.image = image;
@@ -142,8 +150,8 @@
 			this.alpha = 1.0;
 			
 			// sprite count (line, col)
-			this.spritecount = new me.Vector2d(~~(this.image.width / this.width),
-											   ~~(this.image.height / this.height));
+			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
+											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
 		},
 
 		/**
@@ -385,7 +393,7 @@
 		animationspeed : 0,
 
 		/** @private */
-		init : function(x, y, image, spritewidth, spriteheight) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
 			// hold all defined animation
 			this.anim = [];
 
@@ -395,8 +403,12 @@
 			// default animation sequence
 			this.current = null;
 
+			// Spacing and margin
+			this.spacing = spacing;
+			this.margin = margin;
+
 			// call the constructor
-			this.parent(x, y, image, spritewidth, spriteheight);
+			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
 
 			// if one single image, disable animation
 			if ((this.spritecount.x * this.spritecount.y) == 1) {
@@ -446,8 +458,8 @@
 
 			// compute and add the offset of each frame
 			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x),
-														   this.height * ~~(frame[i] / this.spritecount.x));
+				this.anim[name].frame[i] = new me.Vector2d(this.margin + (this.spacing + this.width) * (frame[i] % this.spritecount.x),
+														   this.margin + (this.spacing + this.height) * ~~(frame[i] / this.spritecount.x));
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},
