@@ -74,16 +74,15 @@
 		 */
 		set : function(font, size, color, align) {
 			// font name and type
-			if (typeof font === "number") {
-				size = "" + size + "px"
-			}
 			var font_names = font.split(",");
-			for(var i = 0; i < font_names.length; i++) {
+			for (var i = 0; i < font_names.length; i++) {
 				font_names[i] = "'" + font_names[i] + "'";
 			}
-			font = font_names.join(",");
-			this.font = size + " " + font;
 			this.height = size;
+			if (typeof size === "number") {
+				size = "" + size + "px"
+			}
+			this.font = size + " " + font_names.join(",");;
 			this.color = color;
 			this.align = align || "top";
 		},
