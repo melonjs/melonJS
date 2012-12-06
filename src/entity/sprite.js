@@ -113,13 +113,10 @@
 		flickerState : false,
 
 
-		// a reference to the game vp
-		vp : null,
-
 		/**
 		 * @ignore
 		 */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
+		init : function(x, y, image, spritewidth, spriteheight) {
 
 			// Used by the game engine to adjust visibility as the
 			// sprite moves in and out of the viewport
@@ -130,10 +127,6 @@
 						spritewidth  || image.width,
 						spriteheight || image.height);
 						
-			// Spacing and margin in spritesheet
-			this.spacing = spacing;
-			this.margin = margin;
-
 			// cache image reference
 			this.image = image;
 
@@ -147,11 +140,7 @@
 			this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
 			// ensure it's fully opaque by default
-			this.alpha = 1.0;
-			
-			// sprite count (line, col)
-			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
-											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+			this.alpha = 1.0;			
 		},
 
 		/**
@@ -404,11 +393,16 @@
 			this.current = null;
 
 			// Spacing and margin
-			this.spacing = spacing;
-			this.margin = margin;
+			this.spacing = spacing || 0;
+			this.margin = margin || 0;
 
 			// call the constructor
 			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+			
+			// sprite count (line, col)
+			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
+											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+
 
 			// if one single image, disable animation
 			if ((this.spritecount.x * this.spritecount.y) == 1) {
