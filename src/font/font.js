@@ -78,7 +78,7 @@
 			for (var i = 0; i < font_names.length; i++) {
 				font_names[i] = "'" + font_names[i] + "'";
 			}
-			this.height = size;
+			this.height = parseInt(size);
 			if (typeof size === "number") {
 				size = "" + size + "px"
 			}
