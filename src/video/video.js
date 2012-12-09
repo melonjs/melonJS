@@ -526,6 +526,7 @@
 		 */
 		api.blitSurface = function() {
 			if (double_buffering) {
+				/** @private */
 				api.blitSurface = function() {
 					//FPS.update();
 					context2D.drawImage(backBufferCanvas, 0, 0,
@@ -535,6 +536,7 @@
 				};
 			} else {
 				// "empty" function, as we directly render stuff on "context2D"
+				/** @private */
 				api.blitSurface = function() {
 				};
 			}

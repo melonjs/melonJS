@@ -13,40 +13,36 @@
 	/*                                                                                  */
 	/************************************************************************************/
 
-	/* ----
-		Item skeleton for game stat element
-	
-			--- */
-
+	/**
+	 * Item skeleton for game stat element
+	 * @private
+	 */
 	function Stat_Item(val) {
 		this.defaultvalue = val || 0;
 		this.value = val || 0;
 		this.updated = true;
 	};
 
-	/* ----
-		
-		reset to default value
-		
-		--- */
-
+	/**
+	 * reset to default value
+	 * @private
+	 */
 	Stat_Item.prototype.reset = function() {
 		this.set(this.defaultvalue);
 	};
 
-	/* ----
-		
-		update the value of an item
-		
-		--- */
-
+	/**
+	 * update the value of an item
+	 * @private
+	 */
 	Stat_Item.prototype.update = function(val) {
 		return this.set(this.value + val);
 	};
 	
 	/** 
       * Sets the value of an item 
-      */ 
+	 * @private
+	 */
     Stat_Item.prototype.set = function(value) { 
 		this.value = value; 
 		this.updated = true; 

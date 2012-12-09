@@ -108,7 +108,7 @@
 		 * Data passed : {Event} Event object <br>
 		 * @public
 		 * @type {String}
-		 * @name me.event#KEYUP
+		 * @name me.event#WINDOW_ONRESIZE
 		 */
 		obj.WINDOW_ONRESIZE = "window.onresize";
 		
