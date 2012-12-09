@@ -33,7 +33,7 @@
 		var audio_channels = {};
 
 		// supported Audio Format
-		var supportedFormat = [  "m4a", "mp3", "ogg", "wav"];
+		var supportedFormat = ["m4a", "mp3", "ogg", "wav"];
 
 		// Request format by the app/game
 		var requestedFormat = null;
@@ -166,7 +166,6 @@
 		function soundLoaded(sound_id, sound_channel) {
 			// reset the retry counter
 			retry_counter = 0;
-
 			// create other "copy" channels if necessary
 			if (sound_channel > 1) {
 				var soundclip = audio_channels[sound_id][0];
@@ -174,13 +173,13 @@
 				for (var channel = 1; channel < sound_channel; channel++) {
 					// allocate the new additional channels
 					audio_channels[sound_id][channel] = new Audio( soundclip.src );
-					audio_channels[sound_id][channel].preload = "auto";
+					audio_channels[sound_id][channel].preload = 'auto';
 					audio_channels[sound_id][channel].load();
 				}
 			}
 			// callback if defined
 			if (load_cb) {
-				load_cb();
+				load_cb.call();
 			}
 		}
 		;
@@ -238,8 +237,7 @@
 				// SoundMngr._play_cb = callback;
 				setTimeout(callback, 2000); // 2 sec as default timer ?
 			}
-		}
-		;
+		};
 
 		/*
 		 * ---------------------------------------------
@@ -251,38 +249,27 @@
 
 		// audio capabilities
 		obj.capabilities = {
-			mp3 : false,
-			ogg : false,
-			m4a : false,
-			wav : false
-		};
+			mp3 : 'audio/mpeg',
+			ogg : 'audio/ogg; codecs="vorbis"',
+			m4a : 'audio/mp4; codecs="mp4a.40.2"',
+			wav : 'audio/wav; codecs="1"'
+		};	
+		
 		
 		/**
 		 * @private
 		 */
 		obj.detectCapabilities = function () {
-		
 			// init some audio variables
 			var a = document.createElement('audio');
-
 			if (a.canPlayType) {
-				obj.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg")) 
-									&& ("" != a.canPlayType("audio/mpeg"));
-
-				obj.capabilities.ogg = ("no" != a.canPlayType('audio/ogg; codecs="vorbis"'))
-									&& ("" != a.canPlayType('audio/ogg; codecs="vorbis"'));
-
-				obj.capabilities.wav = ("no" != a.canPlayType('audio/wav; codecs="1"'))
-									&& ("" != a.canPlayType('audio/wav; codecs="1"'));
-				
-				obj.capabilities.m4a = ("no" != a.canPlayType('audio/mp4; codecs="mp4a.40.2"'))
-									&& ("" != a.canPlayType('audio/mp4; codecs="mp4a.40.2"'));
-
-				// enable sound if any of the audio format is supported
-				me.sys.sound = obj.capabilities.mp3 ||
-							   obj.capabilities.ogg ||
-							   obj.capabilities.wav || 
-							   obj.capabilities.m4a;
+				for (var c in obj.capabilities) {
+					var canPlay = a.canPlayType(obj.capabilities[c]);
+					// convert the string to a boolean
+					obj.capabilities[c] = (canPlay !== "" && canPlay !== "no");
+					// enable sound if any of the audio format is supported
+					me.sys.sound |= obj.capabilities[c]; 
+				}
 			}
 			
 			// check for specific platform
@@ -316,22 +303,15 @@
 			if (!me.initialized) {
 				throw "melonJS: me.audio.init() called before engine initialization.";
 			}
-
-			if (audioFormat)
-				requestedFormat = new String(audioFormat);
-			else
-				// if no param is given to init we use mp3 by default
-				requestedFormat = new String("mp3");
-
+			// if no param is given to init we use mp3 by default
+			requestedFormat = new String(audioFormat?audioFormat:"mp3");
 			// detect the prefered audio format
 			activeAudioExt = getSupportedAudioFormat();
+			
+			// enable/disable sound
+			obj.play = obj.isAudioEnable() ? _play_audio_enable : _play_audio_disable;
 
-			if (sound_enable)
-				obj.play = _play_audio_enable;
-			else
-				obj.play = _play_audio_disable;
-
-			return sound_enable;
+			return obj.isAudioEnable();
 		};
 
 		/*
@@ -407,29 +387,19 @@
 			if (activeAudioExt == -1)
 				return 0;
 
-			// var soundclip = document.createElement("audio");
+			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
 
-			var soundclip = new Audio(sound.src + sound.name + "."
-					+ activeAudioExt + me.nocache);
-
-			// soundclip.autobuffer = true; // obsolete
 			soundclip.preload = 'auto';
 
 			soundclip.addEventListener('canplaythrough', function(e) {
 				// console.log(soundclip);
-				this.removeEventListener('canplaythrough', arguments.callee,
-						false);
-				soundLoaded(sound.name, sound.channel);
+				this.removeEventListener('canplaythrough', arguments.callee, false);
+				soundLoaded.apply(me.audio, [sound.name, sound.channel]);
 			}, false);
 
 			soundclip.addEventListener("error", function(e) {
-				soundLoadError(sound.name);
+				soundLoadError.apply(me.audio, [sound.name]);
 			}, false);
-
-			soundclip.src = sound.src + sound.name + "." + activeAudioExt
-					+ me.nocache;
-
-			// document.body.appendChild(soundclip);
 
 			// load it
 			soundclip.load();
