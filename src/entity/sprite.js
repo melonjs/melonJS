@@ -102,10 +102,6 @@
 		// image reference
 		image : null,
 
-		// Spacing and margin
-		spacing: 0,
-		margin: 0,
-
 		// to manage the flickering effect
 		flickering : false,
 		flickerTimer : -1,
@@ -362,6 +358,10 @@
 	{
 		// count the fps and manage animation change
 		fpscount : 0,
+		
+		// Spacing and margin
+		spacing: 0,
+		margin: 0,
 
 		/**
 		 * pause and resume animation<br>
