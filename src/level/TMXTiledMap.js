@@ -113,7 +113,18 @@
 		 * @private	
 		 */
 		getObjectGroupByName : function(name) {
-			return this.objectGroups[name];
+			var objectGroup = null;
+
+            		// normalize name
+            		name = name.trim().toLowerCase();
+            		for ( var i = this.objectGroups.length; i--;) {
+                		if (this.objectGroups[i].name.toLowerCase().contains(name)) {
+                    			objectGroup = this.objectGroups[i];
+                    			break;
+                		}
+            		};
+
+			return objectGroup;
 		},
 
 		/**
