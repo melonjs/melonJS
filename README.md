@@ -91,5 +91,5 @@ Note that due to the 'cross-origin request' policy implemented in most browsers 
 
 Questions, need help ?
 -------------------------------------------------------------------------------
-If you need help, you can try the [melonJS developer forum](http://groups.google.com/group/melonjs)
+If you need help, you can try the [melonJS developer forum](http://groups.google.com/group/melonjs), or in #melonjs on irc.freenode.net.
 For any other questions, feel free to send us an [email](mailto:contact@melonjs.org).
