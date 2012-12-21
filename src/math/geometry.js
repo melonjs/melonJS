@@ -548,6 +548,18 @@
 					this.colPos.y = sh - this.height - this.colPos.y;
 					this.hHeight = ~~(this.height / 2);
 				},
+				
+				/**
+				 * return true if this rectangle is equal to the specified one
+				 * @param {me.Rect} rect
+				 * @return {Boolean}
+				 */
+				equals : function(r) {
+					return (this.left 	=== r.left	&& 
+							this.right 	=== r.right && 
+							this.top 	=== r.top 	&&
+							this.bottom === r.bottom);
+				},
 
 				/**
 				 * check if this rectangle is intersecting with the specified one
