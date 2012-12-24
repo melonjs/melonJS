@@ -501,11 +501,11 @@
 			var vendors = ['ms', 'moz', 'webkit', 'o'];
 			for(var x = 0; x < vendors.length; ++x) {
 				if (context2D[vendors[x]+'ImageSmoothingEnabled'] !== undefined) {
-					context2D[vendors[x]+'ImageSmoothingEnabled'] = enable
+					context2D[vendors[x]+'ImageSmoothingEnabled'] = enable;
 				}
 			};
 			// generic one (if implemented)
-			context2D.imageSmoothingEnabled = false;
+			context2D.imageSmoothingEnabled = enable;
 		};
 		
 		/**
