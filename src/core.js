@@ -1564,7 +1564,8 @@ var me = me || {};
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be tested for collision
-		 * @return {me.Vector2d} collision vector {@link me.Rect#collideVsAABB}
+		 * @param {Boolean} [multiple=false] check for multiple collision
+		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 * @example
 		 * // update player movement
 		 * this.updateMovement();
@@ -1594,8 +1595,11 @@ var me = me || {};
 		 * }
 
 		 */
-		api.collide = function(objA) {
-			var res = null;
+		api.collide = function(objA, multiple) {
+			var res;
+			if (multiple===true) {
+				var mres = [], r = 0;
+			}
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
@@ -1609,11 +1613,15 @@ var me = me || {};
 						res.type = obj.type;
 						// return a reference of the colliding object
 						res.obj  = obj;
-						return res;
+						// stop here if we don't look for multiple collision detection
+						if (!multiple) {
+							return res;
+						}
+						mres[r++] = res;
 					}
 				}
 			}
-			return null;
+			return multiple?mres:null;
 		};
 
 		/**
