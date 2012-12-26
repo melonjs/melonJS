@@ -37,12 +37,13 @@ var game = {
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
 			return;
 		}
-		
 		// disable interpolation when scaling
 		me.video.setImageSmoothing(false);
 		
+		// install the debug panel plugin
+		me.plugin.register(debugPanel, "debug");
+		
 		//me.debug.renderHitBox = true;
-		//me.debug.showPanel();
 		
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
@@ -98,6 +99,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		
 		// play some music
 		me.audio.playTrack("DST-GameForest");
+
 	}
 
 });
