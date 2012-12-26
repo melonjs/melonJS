@@ -1328,7 +1328,7 @@ var me = me || {};
 			var objList = [];
 			entityName = entityName.toLowerCase();
 			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				if(obj.name == entityName) {
+				if(obj.name && obj.name.toLowerCase() === entityName) {
 					objList.push(obj);
 				}
 			}
