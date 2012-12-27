@@ -9,7 +9,7 @@ melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/m
 About melonJS
 -------------------------------------------------------------------------------
 
-melonJS is the result of my enthusiasm & my past experiments with Javascript, 
+melonJS is the result of our enthusiasm & experiments with Javascript, 
 and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
