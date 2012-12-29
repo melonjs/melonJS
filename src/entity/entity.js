@@ -89,9 +89,16 @@
 
 
 	/**
-	 * a pool of object entity <br>
-	 * this object is used by the engine to instanciate object defined in the map<br>
-	 * which means, that on level loading the engine will try to instanciate every object<br>
+	 * A pool of Object entity <br>
+	 * This object is used for object pooling - a technique that might speed up your game
+	 * if used properly. <br>
+	 * If some of your classes will be instanciated and removed a lot at a time, it is a 
+	 * good idea to add the class to this entity pool. A separate pool for that class
+	 * will be created, which will reuse objects of the class. That way they won't be instanciated
+	 * each time you need a new one (slowing your game), but stored into that pool and taking one
+	 * already instanciated when you need it.<br><br>
+	 * This object is also used by the engine to instanciate objects defined in the map, 
+	 * which means, that on level loading the engine will try to instanciate every object 
 	 * found in the map, based on the user defined name in each Object Properties<br>
 	 * <img src="object_properties.png"/><br>
 	 * There is no constructor function for me.entityPool, this is a static object
@@ -131,18 +138,23 @@
 		};
 
 		/**
-		 * add an object to the pool
+		 * Add an object to the pool. <br>
+		 * Pooling must be set to true if more than one such objects will be created. <br>
+		 * (note) If pooling is enabled, you shouldn't instanciate objects with `new`.
+		 * See examples in {@link me.entityPool#newInstanceOf}
 		 * @name me.entityPool#add
 		 * @public
 		 * @function
 		 * @param {String} className as defined in the Name fied of the Object Properties (in Tiled)
-		 * @param {Object} object corresponding Object to be instanciated
+		 * @param {Object} class corresponding Class to be instanciated
+		 * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
+		 * - speeds up the game by reusing existing objects
 		 * @example
 		 * // add our users defined entities in the entity pool
 		 * me.entityPool.add("playerspawnpoint", PlayerEntity);
-		 * me.entityPool.add("cherryentity", CherryEntity);
-		 * me.entityPool.add("heartentity", HeartEntity);
-		 * me.entityPool.add("starentity", StarEntity);
+		 * me.entityPool.add("cherryentity", CherryEntity, true);
+		 * me.entityPool.add("heartentity", HeartEntity, true);
+		 * me.entityPool.add("starentity", StarEntity, true);
 		 */
 		obj.add = function(className, entityObj, pooing) {
 			if (!pooing) {
@@ -158,8 +170,29 @@
 		};
 
 		/**
-		 *	return a new instance of the requested object
-		 * @private
+		 *	Return a new instance of the requested object (if added into the object pool)
+		 * @name me.entityPool#newInstanceOf
+		 * @public
+		 * @function
+		 * @param {String} className as used in me.entityPool#add
+		 * @params {arguments} [arguments] to be passed when instanciating/reinitializing the object
+		 * @example
+		 * me.entityPool.add("player", PlayerEntity);
+		 * var player = me.entityPool.newInstanceOf("player");
+		 * @example
+		 * me.entityPool.add("bullet", BulletEntity, true);
+		 * me.entityPool.add("enemy", EnemyEntity, true);
+		 * // ...
+		 * // when we need new bullet:
+		 * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
+		 * // ...
+		 * // params aren't a fixed number
+		 * // when we need new enemy we can add more params, that the object construct requires:
+		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
+		 * // ...
+		 * // when we want to destroy existing object:
+		 * me.entityPool.freeInstance(enemy);
+		 * me.entityPool.freeInstance(bullet);
 		 */
 
 		obj.newInstanceOf = function(data) {
@@ -197,6 +230,16 @@
 			return null;
 		};
 
+		/**
+		 *	Remove object from game. <br>
+		 * Object pooling for the object class must be enabled,
+		 * and object must have been instanciated using {@link me.entityPool#newInstanceOf},
+		 * otherwise this function won't work
+		 * @name me.entityPool#freeInstance
+		 * @public
+		 * @function
+		 * @param {Object} instance to be removed 
+		 */
 		obj.freeInstance = function(obj) {
 			me.game.remove(obj);
 
