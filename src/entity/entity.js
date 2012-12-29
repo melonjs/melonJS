@@ -37,7 +37,7 @@
 		image : null,
 
 		/**
-		 * specify a transparent color for the image in rgb format (#rrggb)<br>
+		 * specify a transparent color for the image in rgb format (#rrggbb)<br>
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
@@ -144,8 +144,17 @@
 		 * me.entityPool.add("heartentity", HeartEntity);
 		 * me.entityPool.add("starentity", StarEntity);
 		 */
-		obj.add = function(className, entityObj) {
-			entityClass[className.toLowerCase()] = entityObj;
+		obj.add = function(className, entityObj, pooing) {
+			if (!pooing) {
+				entityClass[className.toLowerCase()] = entityObj;
+				return;
+			}
+
+			entityClass[className.toLowerCase()] = {
+				"class" : entityObj,
+				"pool" : [],
+				"active" : []
+			};
 		};
 
 		/**
@@ -153,23 +162,65 @@
 		 * @private
 		 */
 
-		obj.newInstanceOf = function(prop) {
-			var name = prop.name ? prop.name.toLowerCase() : undefined;
+		obj.newInstanceOf = function(data) {
+			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
 			if (name && entityClass[name]) {
-				// FIXME: I should pass the entity ownProperty instead of the object itself
-				return new entityClass[name](prop.x, prop.y, prop);
+				if (!entityClass[name]['pool']) {
+					var cls = entityClass[name];
+					arguments[0] = cls;
+					return new (cls.bind.apply(cls, arguments))();
+				}
+
+				var obj, entity = entityClass[name], cls = entity["class"];
+				if (entity["pool"].length > 0) {
+					obj = entity["pool"].pop();
+					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
+				} else {
+					arguments[0] = cls;
+					obj = new (cls.bind.apply(cls, arguments))();
+					obj.className = name;
+				}
+
+				entity["active"].push(obj);
+				return obj;
 			}
 
 			// Tile objects can be created with a GID attribute;
-			// The TMX parser will use it to create the image property.
-			if (prop.image) {
-				return new me.SpriteObject(prop.x, prop.y, prop.image);
+			// The TMX parser will use it to create the image dataerty.
+			if (data.image) {
+				return new me.SpriteObject(data.x, data.y, data.image);
 			}
 
 			if (name) {
 				console.error("Cannot instantiate entity of type '" + name + "': Class not found!");
 			}
 			return null;
+		};
+
+		obj.freeInstance = function(obj) {
+			me.game.remove(obj);
+
+			var name = obj.className;
+			if (!name || !entityClass[name]) {
+				console.error("Cannot free object: unknown class");
+				return;
+			}
+
+			var notFound = true;
+			for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
+				if (entityClass[name]["active"][i] === obj) {
+					notFound = false;
+					entityClass[name]["active"].splice(i, 1);
+					break;
+				}
+			}
+
+			if (notFound) {
+				console.error("Cannot free object: not found in the active pool");
+				return;
+			}
+
+			entityClass[name]["pool"].push(obj);
 		};
 
 		// return our object

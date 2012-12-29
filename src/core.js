@@ -1305,8 +1305,14 @@ var me = me || {};
 		 * @private
 		 * @function
 		 */
-		api.addEntity = function(entityType, zOrder) {
-			var obj = me.entityPool.newInstanceOf(entityType);
+		api.addEntity = function(type, zOrder) {
+			var obj; 
+			if(type.image) {
+				obj = me.entityPool.newInstanceOf(type);
+			} else {
+				obj = me.entityPool.newInstanceOf(type.name, type.x, type.y, type);
+			}
+
 			if (obj) {
 				api.add(obj, zOrder);
 			}
