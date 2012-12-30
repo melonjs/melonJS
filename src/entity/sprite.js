@@ -141,7 +141,7 @@
 
 		/**
 		 *	specify a transparent color
-		 *	@param {String} color color key in rgb format (rrggb or #rrggb)
+		 *	@param {String} color color key in rgb format (rrggbb or #rrggbb)
 		 */
 		setTransparency : function(col) {
 			// remove the # if present

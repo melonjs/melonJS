@@ -291,9 +291,7 @@
 				tileProp.isSlope = tileProp.isLeftSlope || tileProp.isRightSlope;
 
 				// ensure the collidable flag is correct
-				tileProp.isCollidable = tileProp.isSolid || tileProp.isPlatform
-										|| tileProp.isSlope || tileProp.isLadder
-										|| tileProp.isBreakable;
+				tileProp.isCollidable = !! (tileProp.type);
 
 			}
 		},
