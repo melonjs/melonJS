@@ -156,8 +156,8 @@
 		 * me.entityPool.add("heartentity", HeartEntity, true);
 		 * me.entityPool.add("starentity", StarEntity, true);
 		 */
-		obj.add = function(className, entityObj, pooing) {
-			if (!pooing) {
+		obj.add = function(className, entityObj, pooling) {
+			if (!pooling) {
 				entityClass[className.toLowerCase()] = entityObj;
 				return;
 			}
@@ -183,34 +183,35 @@
 		 * me.entityPool.add("bullet", BulletEntity, true);
 		 * me.entityPool.add("enemy", EnemyEntity, true);
 		 * // ...
-		 * // when we need new bullet:
+		 * // when we need to manually create a new bullet:
 		 * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
 		 * // ...
 		 * // params aren't a fixed number
 		 * // when we need new enemy we can add more params, that the object construct requires:
 		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
 		 * // ...
-		 * // when we want to destroy existing object:
-		 * me.entityPool.freeInstance(enemy);
-		 * me.entityPool.freeInstance(bullet);
+		 * // when we want to destroy existing object, the remove 
+		 * // function will ensure the object can then be reallocated later
+		 * me.game.remove(enemy);
+		 * me.game.remove(bullet);
 		 */
 
 		obj.newInstanceOf = function(data) {
 			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
 			if (name && entityClass[name]) {
 				if (!entityClass[name]['pool']) {
-					var cls = entityClass[name];
-					arguments[0] = cls;
-					return new (cls.bind.apply(cls, arguments))();
+					var proto = entityClass[name];
+					arguments[0] = proto;
+					return new (proto.bind.apply(proto, arguments))();
 				}
-
-				var obj, entity = entityClass[name], cls = entity["class"];
+				
+				var obj, entity = entityClass[name], proto = entity["class"];
 				if (entity["pool"].length > 0) {
 					obj = entity["pool"].pop();
 					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
 				} else {
-					arguments[0] = cls;
-					obj = new (cls.bind.apply(cls, arguments))();
+					arguments[0] = proto;
+					obj = new (proto.bind.apply(proto, arguments))();
 					obj.className = name;
 				}
 
@@ -220,8 +221,9 @@
 
 			// Tile objects can be created with a GID attribute;
 			// The TMX parser will use it to create the image dataerty.
-			if (data.image) {
-				return new me.SpriteObject(data.x, data.y, data.image);
+			var settings = arguments[3];
+			if (settings && settings.image) {
+				return new me.SpriteObject(settings.x, settings.y, settings.image);
 			}
 
 			if (name) {
@@ -231,7 +233,21 @@
 		};
 
 		/**
-		 *	Remove object from game. <br>
+		 * purge the entity pool from any unactive object <br>
+		 * Object pooling must be enabled for this function to work<br>
+		 * note: this will trigger the garbage collector
+		 * @name me.entityPool#purge
+		 * @public
+		 * @function
+		 */
+		obj.purge = function() {
+			for (className in entityClass) {
+				entityClass[className]["pool"] = [];
+			}
+		};
+
+		/**
+		 * Remove object from the entity pool <br>
 		 * Object pooling for the object class must be enabled,
 		 * and object must have been instanciated using {@link me.entityPool#newInstanceOf},
 		 * otherwise this function won't work
@@ -241,11 +257,10 @@
 		 * @param {Object} instance to be removed 
 		 */
 		obj.freeInstance = function(obj) {
-			me.game.remove(obj);
 
 			var name = obj.className;
 			if (!name || !entityClass[name]) {
-				console.error("Cannot free object: unknown class");
+				//console.error("Cannot free object: unknown class");
 				return;
 			}
 
@@ -259,7 +274,7 @@
 			}
 
 			if (notFound) {
-				console.error("Cannot free object: not found in the active pool");
+				//console.error("Cannot free object: not found in the active pool");
 				return;
 			}
 
@@ -394,7 +409,7 @@
 
 					// just to identify our object
 					this.isEntity = true;
-
+					
 					// dead state :)
 					/**
 					 * dead/living state of the entity<br>

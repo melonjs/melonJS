@@ -128,6 +128,8 @@
 
 			// scale factor of the object
 			this.scale = new me.Vector2d(1.0, 1.0);
+			this.lastflipX = this.lastflipY = false,
+			this.scaleFlag = false;
 
 			// set the default sprite index & offset
 			this.offset = new me.Vector2d(0, 0);
@@ -137,6 +139,12 @@
 
 			// ensure it's fully opaque by default
 			this.alpha = 1.0;			
+			
+			// make it visible by default
+			this.visible = true;
+			
+			// and not flickering
+			this.flickering = false
 		},
 
 		/**

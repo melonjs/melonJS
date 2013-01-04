@@ -1305,14 +1305,8 @@ var me = me || {};
 		 * @private
 		 * @function
 		 */
-		api.addEntity = function(type, zOrder) {
-			var obj; 
-			if(type.image) {
-				obj = me.entityPool.newInstanceOf(type);
-			} else {
-				obj = me.entityPool.newInstanceOf(type.name, type.x, type.y, type);
-			}
-
+		api.addEntity = function(ent, zOrder) {
+			var obj = me.entityPool.newInstanceOf(ent.name, ent.x, ent.y, ent);
 			if (obj) {
 				api.add(obj, zOrder);
 			}
@@ -1483,6 +1477,7 @@ var me = me || {};
 			if (force===true) {
 				// force immediate object deletion
 				gameObjects.remove(obj);
+				me.entityPool.freeInstance(obj);
 			} else {
 				// make it invisible (this is bad...)
 				obj.visible = false
@@ -1490,6 +1485,7 @@ var me = me || {};
 				/** @private */
 				pendingRemove = (function (obj) {
 					gameObjects.remove(obj);
+					me.entityPool.freeInstance(obj);
 					pendingRemove = null;
 				}).defer(obj);
 			}
