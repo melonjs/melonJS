@@ -895,12 +895,22 @@
 				 *         console.log("y axis : bottom side !");
 				 *   }
 				 * }
-
 				 */
 				collide : function(multiple) {
 					return me.game.collide(this, multiple || false);
 				},
 
+				/**
+				 * Checks if the specified entity collides with others entities of the specified type.
+				 * @public
+				 * @function
+				 * @param {String} type Entity type to be tested for collision
+				 * @param {Boolean} [multiple=false] check for multiple collision
+				 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+				 */
+				collideType : function(type, multiple) {
+					return me.game.collide(this, type, multiple || false);
+				},
 				
 				/**
 				 * object draw<br>
