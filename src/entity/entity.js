@@ -863,6 +863,46 @@
 				},
 				
 				/**
+				 * Checks if this entity collides with others entities.
+				 * @public
+				 * @function
+				 * @param {Boolean} [multiple=false] check for multiple collision
+				 * @return {me.Vector2d} collision vector or an array of collision vector (if multiple collision){@link me.Rect#collideVsAABB}
+				 * @example
+				 * // update player movement
+				 * this.updateMovement();
+				 *
+				 * // check for collision with other objects
+				 * res = this.collide();
+				 *
+				 * // check if we collide with an enemy :
+				 * if (res && (res.obj.type == me.game.ENEMY_OBJECT))
+				 * {
+				 *   if (res.x != 0)
+				 *   {
+				 *      // x axis
+				 *      if (res.x<0)
+				 *         console.log("x axis : left side !");
+				 *      else
+				 *         console.log("x axis : right side !");
+				 *   }
+				 *   else
+				 *   {
+				 *      // y axis
+				 *      if (res.y<0)
+				 *         console.log("y axis : top side !");
+				 *      else
+				 *         console.log("y axis : bottom side !");
+				 *   }
+				 * }
+
+				 */
+				collide : function(multiple) {
+					return me.game.collide(this, multiple || false);
+				},
+
+				
+				/**
 				 * object draw<br>
 				 * not to be called by the end user<br>
 				 * called by the game manager on each game loop

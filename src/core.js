@@ -1561,7 +1561,7 @@ var me = me || {};
 		};
 
 		/**
-		 * check for collision between objects
+		 * Checks if the specified entity collides with others entities.
 		 * @name me.game#collide
 		 * @public
 		 * @function
@@ -1599,9 +1599,11 @@ var me = me || {};
 		 */
 		api.collide = function(objA, multiple) {
 			var res;
+			// make sure we have a boolean
+			multiple = multiple===true ? true : false;
 			if (multiple===true) {
 				var mres = [], r = 0;
-			}
+			} 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
