@@ -909,7 +909,7 @@
 				 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 				 */
 				collideType : function(type, multiple) {
-					return me.game.collide(this, type, multiple || false);
+					return me.game.collideType(this, type, multiple || false);
 				},
 				
 				/**
