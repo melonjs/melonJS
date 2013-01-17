@@ -48,7 +48,7 @@
 		version : "0.9.5",
 
 		/** @private */
-		init : function() {
+		init : function(showKey, hideKey) {
 			// call the parent constructor
 			this.parent();
 			
@@ -82,10 +82,10 @@
 			
 			// enable the FPS counter
 			me.debug.displayFPS = true;
-			
+
 			// bind the "S" and "H" keys
-			me.input.bindKey(me.input.KEY.S, "show");
-			me.input.bindKey(me.input.KEY.H, "hide");
+			me.input.bindKey(showKey || me.input.KEY.S, "show");
+			me.input.bindKey(hideKey || me.input.KEY.H, "hide");
 			
 			// memory heap sample points
 			this.samples = [];
