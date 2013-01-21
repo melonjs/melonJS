@@ -65,14 +65,24 @@
 		/**
 		 * Change the font settings
 		 * @param {String} font
-		 * @param {int} size
+		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
 		 * @param {String} [align="top"]
+		 * @example
+		 * font.set("Arial", 20, "white");
+		 * font.set("Arial", "1.5em", "white");
 		 */
 		set : function(font, size, color, align) {
 			// font name and type
-			this.font = "" + size + "px " + "'" + font + "'";
-			this.height = size;
+			var font_names = font.split(",");
+			for (var i = 0; i < font_names.length; i++) {
+				font_names[i] = "'" + font_names[i] + "'";
+			}
+			this.height = parseInt(size);
+			if (typeof size === "number") {
+				size = "" + size + "px"
+			}
+			this.font = size + " " + font_names.join(",");;
 			this.color = color;
 			this.align = align || "top";
 		},

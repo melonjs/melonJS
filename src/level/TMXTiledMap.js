@@ -113,7 +113,18 @@
 		 * @private	
 		 */
 		getObjectGroupByName : function(name) {
-			return this.objectGroups[name];
+			var objectGroup = null;
+
+            		// normalize name
+            		name = name.trim().toLowerCase();
+            		for ( var i = this.objectGroups.length; i--;) {
+                		if (this.objectGroups[i].name.toLowerCase().contains(name)) {
+                    			objectGroup = this.objectGroups[i];
+                    			break;
+                		}
+            		};
+
+			return objectGroup;
 		},
 
 		/**
@@ -175,7 +186,7 @@
 			// add all layers
 			for ( var i = this.mapLayers.length; i--;) {
 				// that are visible
-				if (this.mapLayers[i].visible && (this.mapLayers[i] instanceof me.TiledLayer ) ) {
+				if (this.mapLayers[i] instanceof me.TiledLayer) {
 					this.mapLayers[i].clearTile(x, y);
 				}
 			};
@@ -195,14 +206,15 @@
 	 */
 	me.TMXTileMap = me.TileMap.extend({
 		// constructor
-		init: function(xmlfile, x, y) {
+		init: function(tmxfile, x, y) {
 			// call the constructor
 			this.parent(x, y);
 
-			this.xmlMap = me.loader.getXML(xmlfile);
+			this.xmlMap = me.loader.getTMX(tmxfile);
+			this.isJSON = me.loader.getTMXFormat(tmxfile) === 'json';
 
 			if (!this.xmlMap) {
-				throw "melonJS:" + xmlfile + " TMX map not found";
+				throw "melonJS:" + tmxfile + " TMX map not found";
 			};
 
 			// tilemap version
@@ -252,10 +264,10 @@
 			var zOrder = 0;
 
 			// init the parser
-			me.XMLParser.parseFromString(this.xmlMap);
+			me.TMXParser.parseFromString(this.xmlMap, this.isJSON);
 
 			// retreive all the elements of the XML file
-			var xmlElements = me.XMLParser.getAllTagElements();
+			var xmlElements = me.TMXParser.getAllTagElements();
 
 			// parse all tags
 			for ( var i = 0; i < xmlElements.length; i++) {
@@ -266,15 +278,15 @@
 				// get the map information
 				case me.TMX_TAG_MAP: {
 				   var map = xmlElements.item(i);
-				   this.version = me.XMLParser.getStringAttribute(map, me.TMX_TAG_VERSION);
-				   this.orientation = me.XMLParser.getStringAttribute(map, me.TMX_TAG_ORIENTATION);
-				   this.width = me.XMLParser.getIntAttribute(map, me.TMX_TAG_WIDTH);
-				   this.height = me.XMLParser.getIntAttribute(map, me.TMX_TAG_HEIGHT);
-				   this.tilewidth = me.XMLParser.getIntAttribute(map,	me.TMX_TAG_TILEWIDTH);
-				   this.tileheight = me.XMLParser.getIntAttribute(map, me.TMX_TAG_TILEHEIGHT);
+				   this.version = me.TMXParser.getStringAttribute(map, me.TMX_TAG_VERSION);
+				   this.orientation = me.TMXParser.getStringAttribute(map, me.TMX_TAG_ORIENTATION);
+				   this.width = me.TMXParser.getIntAttribute(map, me.TMX_TAG_WIDTH);
+				   this.height = me.TMXParser.getIntAttribute(map, me.TMX_TAG_HEIGHT);
+				   this.tilewidth = me.TMXParser.getIntAttribute(map,	me.TMX_TAG_TILEWIDTH);
+				   this.tileheight = me.TMXParser.getIntAttribute(map, me.TMX_TAG_TILEHEIGHT);
 				   this.realwidth = this.width * this.tilewidth;
 				   this.realheight = this.height * this.tileheight;
-				   this.backgroundcolor = me.XMLParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
+				   this.backgroundcolor = me.TMXParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
 				   this.z = zOrder++;
 
 				   // center the map if smaller than the current viewport
@@ -324,17 +336,17 @@
 				case me.TMX_TAG_IMAGE_LAYER: {
 					
 					// extract layer information
-					var iln = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
-					var ilw = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
-					var ilh = me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
+					var iln = me.TMXParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
+					var ilw = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
+					var ilh = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
 					var ilsrc = xmlElements.item(i).getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
 					
 					// create the layer
 					var ilayer = new me.ImageLayer(iln, ilw * this.tilewidth, ilh * this.tileheight, ilsrc, zOrder++);
 				    
 					// set some additional flags
-					ilayer.visible = (me.XMLParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
-					ilayer.opacity = me.XMLParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
+					ilayer.visible = (me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+					ilayer.opacity = me.TMXParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
 					
 					// check if we have any properties 
 					me.TMXUtils.setTMXProperties(ilayer, xmlElements.item(i));
@@ -347,15 +359,59 @@
 				
 				// get the layer(s) information
 				case me.TMX_TAG_LAYER: {
+<<<<<<< HEAD
 					// regular layer or collision layer
 					this.mapLayers.push(new me.TMXLayer(xmlElements.item(i), this.tilewidth, this.tileheight, this.orientation, this.tilesets, zOrder++));
 					break;
+=======
+					// try to identify specific layer type based on the naming convention
+					var layer_name = me.TMXParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
+				
+					// keep this for now for backward-compatibility
+					if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
+						
+						
+						// extract layer information
+						var ilw = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
+						var ilh = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
+						
+						// get the layer properties
+						var properties = {};
+						me.TMXUtils.setTMXProperties(properties, xmlElements.item(i));
+
+						// cherck if a ratio property is defined
+						if (properties.ratio) {
+							lratio = properties.ratio;
+						}
+						
+						// create the layer				
+						var ilayer = new me.ImageLayer(layer_name, ilw * this.tilewidth, ilh * this.tileheight, properties.imagesrc, zOrder++, lratio );
+						
+						// apply default TMX properties
+						ilayer.visible = (me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
+						ilayer.opacity = me.TMXParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
+						
+						// apply other user defined properties
+						me.TMXUtils.mergeProperties(ilayer, properties, false);
+												
+						// default increment for next layer
+						lratio += lratio * lratio;
+
+						// add the new layer
+						this.mapLayers.push(ilayer);
+					}
+					else {
+					  // regular layer or collision layer
+					  this.mapLayers.push(new me.TMXLayer(xmlElements.item(i), this.tilewidth, this.tileheight, this.orientation, this.tilesets, zOrder++));
+				   }
+				   break;
+>>>>>>> origin/master
 				}
 				
 
 				// get the object groups information
 				case me.TMX_TAG_OBJECTGROUP: {
-				   var name = me.XMLParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
+				   var name = me.TMXParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
 				   this.objectGroups.push(new me.TMXOBjectGroup(name, xmlElements.item(i), this.tilesets, zOrder++));
 				   break;
 				}
@@ -363,8 +419,8 @@
 				} // end switch 
 			} // end for
 
-			// free the XMLParser ressource
-			me.XMLParser.free();
+			// free the TMXParser ressource
+			me.TMXParser.free();
 
 			// flag as loaded
 			this.initialized = true;

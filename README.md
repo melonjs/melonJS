@@ -9,7 +9,7 @@ melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/m
 About melonJS
 -------------------------------------------------------------------------------
 
-melonJS is the result of my enthusiasm & my past experiments with Javascript, 
+melonJS is the result of our enthusiasm & experiments with Javascript, 
 and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
@@ -77,14 +77,19 @@ First make sure that you have installed :
 
 Building the documentation
 -------------------------------------------------------------------------------
-
 `cd melonJS`
 
 `make doc`
 
 The generated documentation will be then available under the "docs" directory
 
+Using melonJS
+-------------------------------------------------------------------------------
+Follow this tutorial to get started : http://www.melonjs.org/tutorial/index.html
+
+Note that due to the 'cross-origin request' policy implemented in most browsers (that prevents from accessing local files), you will need to either disable this security check (see the tutorial), or better use a "personal" local web server.
+
 Questions, need help ?
 -------------------------------------------------------------------------------
-If you need help, or have any questions, please feel free to ask on the
-[melonJS developer forum](http://groups.google.com/group/melonjs), or send us an [email](mailto:contact@melonjs.org).
+If you need help, you can try the [melonJS developer forum](http://groups.google.com/group/melonjs), or in #melonjs on irc.freenode.net.
+For any other questions, feel free to send us an [email](mailto:contact@melonjs.org).

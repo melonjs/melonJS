@@ -100,6 +100,7 @@
 		 * @function
 		 * @param {me.plugin.Base} plugin Plugin to instiantiate and register
 		 * @param {String} name
+		 * @param {Object} [args] all extra parameters will be passed to the plugin constructor
 		 * @example
 		 * // register a new plugin
 		 * me.plugin.register(TestPlugin, "testPlugin");
@@ -120,8 +121,16 @@
 				throw ("melonJS: Plugin version mismatch, expected: "+ plugin.prototype.version +", got: " + me.version);
 			}
 			
+			// get extra arguments
+			var _args = []; 
+			if (arguments.length > 2) {
+				// store extra arguments if any
+				_args = Array.prototype.slice.call(arguments, 1);
+			}
+			
 			// try to instantiate the plugin
-			me.plugin[name] = new plugin();
+			_args[0] = plugin;
+			me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
 			
 			// inheritance check
 			if (!(me.plugin[name] instanceof me.plugin.Base)) {

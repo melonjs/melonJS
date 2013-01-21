@@ -40,7 +40,7 @@ var me = me || {};
 		entityPool : null,
 		levelDirector : null,
 		// System Object (instances)
-		XMLParser : null,
+		TMXParser : null,
 		loadingScreen : null,
 		// TMX Stuff
 		TMXTileMap : null
@@ -728,38 +728,46 @@ var me = me || {};
 	/************************************************************************************/
 
 	/**
-	 * a basic XML Parser
+	 * a basic TMX/TSX Parser
 	 * @class
 	 * @constructor
 	 * @ignore
 	 **/
-	function _TinyXMLParser() {
+	function _TinyTMXParser() {
 		var parserObj = {
-			xmlDoc : null,
+			tmxDoc : null,
+			isJSON : false,
 
-			// parse a xml from a string (xmlhttpObj.responseText)
-			parseFromString : function(textxml) {
-				// get a reference to the requested corresponding xml file
-				if ($.DOMParser) {
-					var parser = new DOMParser();
-					this.xmlDoc = parser.parseFromString(textxml, "text/xml");
-				} else // Internet Explorer (untested!)
-				{
-					this.xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-					this.xmlDoc.async = "false";
-					this.xmlDoc.loadXML(textxml);
-				}
-				if (this.xmlDoc == null) {
-					console.log("xml " + this.xmlDoc + " not found!");
+			// parse a TMX/TSX from a string (xmlhttpObj.responseText)
+			parseFromString : function(data, isJSON) {
+				this.isJSON = isJSON || false;
+				
+				if (this.isJSON) {
+					this.tmxDoc = JSON.parse(data);
+					// this won't work !
+				} else {
+					// get a reference to the requested corresponding xml file
+					if ($.DOMParser) {
+						var parser = new DOMParser();
+						this.tmxDoc = parser.parseFromString(data, "text/xml");
+					} else // Internet Explorer (untested!)
+					{
+						this.tmxDoc = new ActiveXObject("Microsoft.XMLDOM");
+						this.tmxDoc.async = "false";
+						this.tmxDoc.loadXML(data);
+					}
+					if (this.tmxDoc == null) {
+						console.log("tmx/tsx " + this.tmxDoc + " not found!");
+					}
 				}
 			},
 
 			getFirstElementByTagName : function(name) {
-				return this.xmlDoc ? this.xmlDoc.getElementsByTagName(name)[0] : null;
+				return this.tmxDoc ? this.tmxDoc.getElementsByTagName(name)[0] : null;
 			},
 
 			getAllTagElements : function() {
-				return this.xmlDoc ? this.xmlDoc.getElementsByTagName('*') : null;
+				return this.tmxDoc ? this.tmxDoc.getElementsByTagName('*') : null;
 			},
 
 			getStringAttribute : function(elt, str, val) {
@@ -784,7 +792,7 @@ var me = me || {};
 
 			// free the allocated parser
 			free : function() {
-				this.xmlDoc = null;
+				this.tmxDoc = null;
 			}
 		}
 		return parserObj;
@@ -809,45 +817,20 @@ var me = me || {};
 		if (me_initialized)
 			return;
 
-		// init some audio variables
-		var a = document.createElement('audio');
-
 		// enable/disable the cache
 		me.utils.setNocache(document.location.href.match(/\?nocache/)||false);
-
-		if (a.canPlayType) {
-			me.audio.capabilities.mp3 = ("no" != a.canPlayType("audio/mpeg"))
-					&& ("" != a.canPlayType("audio/mpeg"));
-
-			me.audio.capabilities.ogg = ("no" != a.canPlayType('audio/ogg; codecs="vorbis"'))
-					&& ("" != a.canPlayType('audio/ogg; codecs="vorbis"'));
-
-			me.audio.capabilities.wav = ("no" != a.canPlayType('audio/wav; codecs="1"'))
-					&& ("" != a.canPlayType('audio/wav; codecs="1"'));
-
-			// enable sound if any of the audio format is supported
-			me.sys.sound = me.audio.capabilities.mp3 ||
-                        me.audio.capabilities.ogg ||
-                        me.audio.capabilities.wav;
-
-		}
-		// hack, check for specific platform
-		if ((me.sys.ua.search("iphone") > -1)
-				|| (me.sys.ua.search("ipod") > -1)
-				|| (me.sys.ua.search("ipad") > -1)
-				|| (me.sys.ua.search("android") > -1)) {
-			//if on mobile device, disable sound for now
-			me.sys.sound = false;
-		}
-
+	
+		// detect audio capabilities
+		me.audio.detectCapabilities();
+		
 		// detect touch capabilities
-		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $);
+		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || (navigator.isCocoonJS);
 
 		// init the FPS counter if needed
 		me.timer.init();
 
-		// create an instance of the XML parser
-		me.XMLParser = new _TinyXMLParser();
+		// create an instance of the TMX parser
+		me.TMXParser = new _TinyTMXParser();
 
 		// create a default loading screen
 		me.loadingScreen = new me.DefaultLoadingScreen();
@@ -1194,7 +1177,7 @@ var me = me || {};
 				api.viewport = new me.Viewport(0, 0, width, height);
 
 				// get a ref to the screen buffer
-				frameBuffer = me.video.getScreenFrameBuffer();
+				frameBuffer = me.video.getSystemContext();
 
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);
@@ -1322,8 +1305,8 @@ var me = me || {};
 		 * @private
 		 * @function
 		 */
-		api.addEntity = function(entityType, zOrder) {
-			var obj = me.entityPool.newInstanceOf(entityType);
+		api.addEntity = function(ent, zOrder) {
+			var obj = me.entityPool.newInstanceOf(ent.name, ent.x, ent.y, ent);
 			if (obj) {
 				api.add(obj, zOrder);
 			}
@@ -1345,7 +1328,7 @@ var me = me || {};
 			var objList = [];
 			entityName = entityName.toLowerCase();
 			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				if(obj.name == entityName) {
+				if(obj.name && obj.name.toLowerCase() === entityName) {
 					objList.push(obj);
 				}
 			}
@@ -1494,6 +1477,7 @@ var me = me || {};
 			if (force===true) {
 				// force immediate object deletion
 				gameObjects.remove(obj);
+				me.entityPool.freeInstance(obj);
 			} else {
 				// make it invisible (this is bad...)
 				obj.visible = false
@@ -1501,6 +1485,7 @@ var me = me || {};
 				/** @private */
 				pendingRemove = (function (obj) {
 					gameObjects.remove(obj);
+					me.entityPool.freeInstance(obj);
 					pendingRemove = null;
 				}).defer(obj);
 			}
@@ -1576,12 +1561,13 @@ var me = me || {};
 		};
 
 		/**
-		 * check for collision between objects
+		 * Checks if the specified entity collides with others entities.
 		 * @name me.game#collide
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be tested for collision
-		 * @return {me.Vector2d} collision vector {@link me.Rect#collideVsAABB}
+		 * @param {Boolean} [multiple=false] check for multiple collision
+		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 * @example
 		 * // update player movement
 		 * this.updateMovement();
@@ -1609,16 +1595,20 @@ var me = me || {};
 		 *         console.log("y axis : bottom side !");
 		 *   }
 		 * }
-
 		 */
-		api.collide = function(objA) {
-			var res = null;
+		api.collide = function(objA, multiple) {
+			var res;
+			// make sure we have a boolean
+			multiple = multiple===true ? true : false;
+			if (multiple===true) {
+				var mres = [], r = 0;
+			} 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.inViewport && obj.visible && obj.collidable && obj.isEntity && (obj!=objA))
+				if (obj.inViewport && obj.visible && obj.collidable && (obj!=objA))
 				{
-					res = obj.collisionBox.collideVsAABB.call(obj, objA);
+					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
 					if (res.x != 0 || res.y != 0) {
 						// notify the object
 						obj.onCollision.call(obj, res, objA);
@@ -1626,11 +1616,56 @@ var me = me || {};
 						res.type = obj.type;
 						// return a reference of the colliding object
 						res.obj  = obj;
-						return res;
+						// stop here if we don't look for multiple collision detection
+						if (!multiple) {
+							return res;
+						}
+						mres[r++] = res;
 					}
 				}
 			}
-			return null;
+			return multiple?mres:null;
+		};
+
+		/**
+		 * Checks if the specified entity collides with others entities of the specified type.
+		 * @name me.game#collideType
+		 * @public
+		 * @function
+		 * @param {me.ObjectEntity} obj Object to be tested for collision
+		 * @param {String} type Entity type to be tested for collision
+		 * @param {Boolean} [multiple=false] check for multiple collision
+		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+		 */
+		api.collideType = function(objA, type, multiple) {
+			var res;
+			// make sure we have a boolean
+			multiple = multiple===true ? true : false;
+			if (multiple===true) {
+				var mres = [], r = 0;
+			} 
+			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
+			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
+			{
+				if (obj.inViewport && obj.visible && obj.collidable && (obj.type === type) && (obj!=objA))
+				{
+					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
+					if (res.x != 0 || res.y != 0) {
+						// notify the object
+						obj.onCollision.call(obj, res, objA);
+						// return the type (deprecated)
+						res.type = obj.type;
+						// return a reference of the colliding object
+						res.obj  = obj;
+						// stop here if we don't look for multiple collision detection
+						if (!multiple) {
+							return res;
+						}
+						mres[r++] = res;
+					}
+				}
+			}
+			return multiple?mres:null;
 		};
 
 		/**

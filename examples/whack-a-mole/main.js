@@ -88,7 +88,10 @@ var jsApp	=
 		{
 			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
 			return;
-		}
+		};
+		
+		// disable interpolation when scaling
+		me.video.setImageSmoothing(false);
 					
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
@@ -151,6 +154,8 @@ var MoleEntity = me.AnimationSheet.extend(
 		this.isOut = false;
 		this.timer = 0;
 		
+		this.initialPos = this.pos.y;
+		
 		// tween to display/hide the moles
 		this.displayTween = null;
 		this.hideTween = null;
@@ -186,7 +191,7 @@ var MoleEntity = me.AnimationSheet.extend(
 	 * goes out of the hole
 	 */
 	display : function() {
-		var finalpos = this.pos.y  - 140;
+		var finalpos = this.initialPos - 140;
 		this.displayTween = new me.Tween(this.pos).to({y: finalpos }, 200);
 		this.displayTween.easing(me.Tween.Easing.Quadratic.EaseOut);
 		this.displayTween.onComplete(this.onDisplayed.bind(this));
@@ -208,7 +213,7 @@ var MoleEntity = me.AnimationSheet.extend(
 	 * goes into the hole
 	 */	
 	hide : function() {
-		var finalpos = this.pos.y + 140;
+		var finalpos = this.initialPos;
 		this.displayTween = new me.Tween(this.pos).to({y: finalpos }, 200);
 		this.displayTween.easing(me.Tween.Easing.Quadratic.EaseIn);
 		this.displayTween.onComplete(this.onHidden.bind(this));

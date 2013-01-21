@@ -109,9 +109,6 @@
 		flickerState : false,
 
 
-		// a reference to the game vp
-		vp : null,
-
 		/**
 		 * @ignore
 		 */
@@ -125,12 +122,14 @@
 			this.parent(new me.Vector2d(x, y),
 						spritewidth  || image.width,
 						spriteheight || image.height);
-
+						
 			// cache image reference
 			this.image = image;
 
 			// scale factor of the object
 			this.scale = new me.Vector2d(1.0, 1.0);
+			this.lastflipX = this.lastflipY = false,
+			this.scaleFlag = false;
 
 			// set the default sprite index & offset
 			this.offset = new me.Vector2d(0, 0);
@@ -139,16 +138,18 @@
 			this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
 			// ensure it's fully opaque by default
-			this.alpha = 1.0;
+			this.alpha = 1.0;			
 			
-			// sprite count (line, col)
-			this.spritecount = new me.Vector2d(~~(this.image.width / this.width),
-											   ~~(this.image.height / this.height));
+			// make it visible by default
+			this.visible = true;
+			
+			// and not flickering
+			this.flickering = false
 		},
 
 		/**
 		 *	specify a transparent color
-		 *	@param {String} color color key in rgb format (rrggb or #rrggb)
+		 *	@param {String} color color key in rgb format (rrggbb or #rrggbb)
 		 */
 		setTransparency : function(col) {
 			// remove the # if present
@@ -365,6 +366,10 @@
 	{
 		// count the fps and manage animation change
 		fpscount : 0,
+		
+		// Spacing and margin
+		spacing: 0,
+		margin: 0,
 
 		/**
 		 * pause and resume animation<br>
@@ -385,7 +390,7 @@
 		animationspeed : 0,
 
 		/** @private */
-		init : function(x, y, image, spritewidth, spriteheight) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
 			// hold all defined animation
 			this.anim = [];
 
@@ -395,8 +400,17 @@
 			// default animation sequence
 			this.current = null;
 
+			// Spacing and margin
+			this.spacing = spacing || 0;
+			this.margin = margin || 0;
+
 			// call the constructor
-			this.parent(x, y, image, spritewidth, spriteheight);
+			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+			
+			// sprite count (line, col)
+			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
+											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+
 
 			// if one single image, disable animation
 			if ((this.spritecount.x * this.spritecount.y) == 1) {
@@ -446,8 +460,8 @@
 
 			// compute and add the offset of each frame
 			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = new me.Vector2d(this.width * (frame[i] % this.spritecount.x),
-														   this.height * ~~(frame[i] / this.spritecount.x));
+				this.anim[name].frame[i] = new me.Vector2d(this.margin + (this.spacing + this.width) * (frame[i] % this.spritecount.x),
+														   this.margin + (this.spacing + this.height) * ~~(frame[i] / this.spritecount.x));
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},
