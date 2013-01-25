@@ -582,8 +582,8 @@
 			if (compression == '')
 				compression = null;
 
-			// create a canvas where to draw our layer
-			if (this.visible) {
+			// if not a collision layer, create a canvas where to draw our layer
+			if (!this.isCollisionMap) {
 				// set the right renderer
 				switch (this.orientation)
 				{
@@ -613,13 +613,11 @@
 				
 			}
 
-			if (this.visible || this.isCollisionMap) {
-				// initialize the layer lookup table (only in case of collision map)
-				this.initArray();
+			// initialize the layer data array
+			this.initArray();
 
-				// populate our level with some data
-				this.fillArray(xmldata, encoding, compression);
-			}
+			// populate our level with some data
+			this.fillArray(xmldata, encoding, compression);
 		},
 		
 		/**
