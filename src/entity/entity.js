@@ -400,8 +400,10 @@
 					/**
 					 * Default gravity value of the entity<br>
 					 * default value : 0.98 (earth gravity)<br>
-					 * to be set to 0 for RPG, shooter, etc...
+					 * to be set to 0 for RPG, shooter, etc...<br>
+					 * Note: Gravity can also globally be defined through me.sys.gravity
 					 * @public
+					 * @see me.sys.gravity
 					 * @type Number
 					 * @name me.ObjectEntity#gravity
 					 */
