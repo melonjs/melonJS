@@ -32,12 +32,6 @@
 		// audio channel list
 		var audio_channels = {};
 
-		// supported Audio Format
-		var supportedFormat = ["m4a", "mp3", "ogg", "wav"];
-
-		// Request format by the app/game
-		var requestedFormat = null;
-
 		// Active (supported) audio extension
 		var activeAudioExt = -1;
 
@@ -66,25 +60,20 @@
 		 */
 
 		/*
-		 * ---
-		 * 
-		 * return the audio format extension supported by the browser ---
+		 * return the first audio format extension supported by the browser
 		 */
-
-		function getSupportedAudioFormat() {
-
+		function getSupportedAudioFormat(requestedFormat) {
 			var result = "";
-			var ext = "";
-			var rx = null;
-			var i = 0;
-			var len = supportedFormat.length;
+			var len = requestedFormat.length;
 
 			// check for sound support by the browser
 			if (me.sys.sound) {
+				var ext = "";
+				var i = 0;
 				for (; i < len; i++) {
-					ext = supportedFormat[i];
-					rx = new RegExp(ext, "i");
-					if ((requestedFormat.search(rx) != -1) && obj.capabilities[ext]) {
+					ext = requestedFormat[i].toLowerCase().trim();
+					// check extension against detected capabilities
+					if (obj.capabilities[ext]) {
 						result = ext;
 						break;
 					}
@@ -97,12 +86,10 @@
 			}
 
 			return result;
-		}
+		};
 
 		/*
-		 * ---
-		 * 
-		 * return the specified sound ---
+		 * return the specified sound
 		 */
 
 		function get(sound_id) {
@@ -120,15 +107,10 @@
 			channels[0].pause();
 			channels[0].currentTime = reset_val;
 			return channels[0];
-		}
-		;
+		};
 
 		/*
-		 * ---
-		 * 
 		 * event listener callback on load error
-		 * 
-		 * ---
 		 */
 
 		function soundLoadError(sound_id) {
@@ -156,11 +138,7 @@
 		};
 
 		/*
-		 * ---
-		 * 
 		 * event listener callback when a sound is loaded
-		 * 
-		 * ---
 		 */
 
 		function soundLoaded(sound_id, sound_channel) {
@@ -181,8 +159,7 @@
 			if (load_cb) {
 				load_cb.call();
 			}
-		}
-		;
+		};
 
 		/**
 		 * play the specified sound
@@ -222,13 +199,10 @@
 				}, false);
 			}
 
-		}
-		;
+		};
 
 		/*
-		 * ---
-		 * 
-		 * play_audio with simulated callback ---
+		 * play_audio with simulated callback
 		 */
 
 		function _play_audio_disable(sound_id, loop, callback) {
@@ -304,9 +278,11 @@
 				throw "melonJS: me.audio.init() called before engine initialization.";
 			}
 			// if no param is given to init we use mp3 by default
-			requestedFormat = new String(audioFormat?audioFormat:"mp3");
+			audioFormat = new String(audioFormat?audioFormat:"mp3");
+			// convert it into an array
+			audioFormat = audioFormat.split(',');
 			// detect the prefered audio format
-			activeAudioExt = getSupportedAudioFormat();
+			activeAudioExt = getSupportedAudioFormat(audioFormat);
 			
 			// enable/disable sound
 			obj.play = obj.isAudioEnable() ? _play_audio_enable : _play_audio_disable;
