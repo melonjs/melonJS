@@ -105,7 +105,7 @@
 					me.game.sort();
 				}
 				// register a mouse event for the checkboxes
-				me.input.registerMouseEvent('mousedown', this.rect, this.onClick.bind(this));
+				me.input.registerMouseEvent('mousedown', this.rect, this.onClick.bind(this), true);
 				// make it visible
 				this.visible = true;
 				// force repaint
