@@ -19,8 +19,6 @@ Version History
 * Event : fixed mouse event conflict and mousewheel event
 * Input : me.GUI_Object's onClicked() function has been renamed to onClick()
 * Loader : use asynchronous mode when loading XML files
-* TMX : fixed a bug that was preventing a non visible layer to be set visible later
-* TMX : fixed the clearTile function on non visible layers (e.g. collision map)
 * Entity : added spacing and margin capacities for sprite (same as Tile Map Sprite)
 * Entity : fixed flickering when using requestAnimationFrame
 * Entity : added opacity setting
@@ -32,9 +30,14 @@ Version History
 * Entity : moved collisionBox from SpriteObject to Entity Object
 * Tween : fixed tween when pausing game
 * Tween : various fixes and optimization from the official repository
+* TMX : fixed a bug that was preventing a non visible layer to be set visible later
+* TMX : fixed the clearTile function on non visible layers (e.g. collision map)
 * TMX : added official support for Opacity in TiledLayer, TMXLayer, colorLayer and ImageLayer
 * TMX : added support for TSX files
+* TMX : added a `repeat` property to Image Layer instances, similar to CSS background-position
+* TMX : Parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
 * Tutorial : fixed camel case issue in resource names 
+* Tutoroal : update the parallax part to reflect last changes in melonJS (Image Layer)
 * Video : added support for display scaling
 * Video : added a setImageSmoothing function
 * Example : added "whack-a-mole" as an official example
