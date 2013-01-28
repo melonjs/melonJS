@@ -36,6 +36,7 @@ Version History
 * TMX : added support for TSX files
 * TMX : added a `repeat` property to Image Layer instances, similar to CSS background-position
 * TMX : Parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
+* TMX : fixed the `getObjectGroupByName()` function
 * Tutorial : fixed camel case issue in resource names 
 * Tutoroal : update the parallax part to reflect last changes in melonJS (Image Layer)
 * Video : added support for display scaling
