@@ -22,11 +22,11 @@ and currently features :
 - A basic set of Object Entities (to be extended)
 - Basic animation management
 - A state manager (to easily manage loading, menu, options, in-game state)
-- Tiled map format version +0.7.x integration for easy level design
+- Tiled map format version +0.9.x integration for easy level design
 	- Uncompressed Plain, Base64 and CSV encoded XML tilemap loading
 	- Orthogonal tilemap with built-in collision management
 	- Isometric, Perspective tilemap support
-	- Multiple layers (multiple background/Foreground, collision and "Parallax" layers)
+	- Multiple layers (multiple background/Foreground, collision and Image layers)
 	- Multiple Tileset support
 	- Tileset Transparency settings
 	- Layers Alpha settings

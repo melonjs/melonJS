@@ -97,10 +97,39 @@
 	 * @param {int}    height      layer height in pixels
 	 * @param {String} image       image name (as defined in the asset list)
 	 * @param {int}    z           z position
-	 * @param {float}  [ratio=0]   scrolling ratio to be applied (apply by multiplying the viewport delta position by the defined ratio)
+	 * @param {float}  [ratio=1.0]   scrolling ratio to be applied
 	 */
 	 me.ImageLayer = Object.extend({
-		// constructor
+		
+		/**
+		 * Define if and how an Image Layer should be repeated.<br>
+		 * By default, an Image Layer is repeated both vertically and horizontally.<br>
+		 * Property values : <br>
+		 * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
+		 * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+		 * * 'repeat-y' - The background image will be repeated only vertically.<br>
+		 * * 'no-repeat' - The background-image will not be repeated.<br>
+		 * @public
+		 * @type String
+		 * @name me.ImageLayer#repeat
+		 */
+		//repeat: 'repeat', (define through getter/setter
+		
+		/**
+		 * Define the image scrolling ratio<br>
+		 * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
+		 * Default value : 1.0 <br>
+		 * @public
+		 * @type float
+		 * @name me.ImageLayer#ratio
+		 */
+		ratio: 1.0,
+	 
+		/**
+		 * constructor
+		 * @private
+		 * @function
+		 */
 		init: function(name, width, height, imagesrc, z, ratio) {
 			// layer name
 			this.name = name;
@@ -118,7 +147,7 @@
 			this.z = z;
 			
 			// if ratio !=0 scrolling image
-			this.ratio = ratio || 1;
+			this.ratio = ratio || 1.0;
 			
 			// last position of the viewport
 			this.lastpos = game.viewport.pos.clone();
@@ -135,8 +164,42 @@
 			// default opacity
 			this.opacity = 1.0;
 			
-			// ?
+			// Image Layer is considered as a floating object
 			this.floating = true;
+			
+			// default value for repeat
+			this._repeat = 'repeat';
+			
+			this.repeatX = true;
+			this.repeatY = true;
+			
+			Object.defineProperty(this, "repeat", {
+				get : function get() {
+					return this._repeat;
+				},
+				set : function set(val) {
+					this._repeat = val;
+					switch (this._repeat) {
+						case "no-repeat" :
+							this.repeatX = false;
+							this.repeatY = false;
+							break;
+						case "repeat-x" :
+							this.repeatX = true;
+							this.repeatY = false;
+							break;
+						case "repeat-y" :
+							this.repeatX = false;
+							this.repeatY = true;
+							break;
+						default : // "repeat"
+							this.repeatX = true;
+							this.repeatY = true;
+							break;
+					}
+				}
+			});
+
 			
 		},
 		
@@ -223,6 +286,7 @@
 								  sw,		 sh);			//dw, dh
 			}
 			// parallax / scrolling image
+			// todo ; broken with dirtyRect enabled
 			else {
 				var sx = ~~this.offset.x;
 				var sy = ~~this.offset.y;
@@ -230,8 +294,8 @@
 				var dx = 0;
 				var dy = 0;				
 				
-				var sw = Math.min(this.imagewidth - ~~this.offset.x, this.width);
-				var sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
+				var sw = Math.min(this.imagewidth - sx, this.width);
+				var sh = Math.min(this.imageheight - sy, this.height);
 				  
 				do {
 					do {
@@ -244,9 +308,9 @@
 						sy = 0;
 						dy += sh;
 						sh = Math.min(this.imageheight, this.height - dy);
-					} while( dy < this.height);
+					} while( this.repeatY && (dy < this.height));
 					dx += sw;
-					if (dx >= this.width ) {
+					if (!this.repeatX || (dx >= this.width) ) {
 						// done ("end" of the viewport)
 						break;
 					}
