@@ -26,17 +26,11 @@
 	 */
 
 	me.audio = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		// audio channel list
 		var audio_channels = {};
-
-		// supported Audio Format
-		var supportedFormat = ["m4a", "mp3", "ogg", "wav"];
-
-		// Request format by the app/game
-		var requestedFormat = null;
 
 		// Active (supported) audio extension
 		var activeAudioExt = -1;
@@ -65,26 +59,37 @@
 		 * ---------------------------------------------
 		 */
 
-		/*
-		 * ---
-		 * 
-		 * return the audio format extension supported by the browser ---
+		/**
+		 * @private
+		 * return the first audio format extension supported by the browser
 		 */
-
-		function getSupportedAudioFormat() {
-
+		function getSupportedAudioFormat(requestedFormat) {
 			var result = "";
-			var ext = "";
-			var rx = null;
-			var i = 0;
-			var len = supportedFormat.length;
+			var len = requestedFormat.length;
 
 			// check for sound support by the browser
 			if (me.sys.sound) {
+				var ext = "";
+				var i = 0;
+				// do a first loop and check for codec with
+				// the 'probably' canPlayType first
 				for (; i < len; i++) {
-					ext = supportedFormat[i];
-					rx = new RegExp(ext, "i");
-					if ((requestedFormat.search(rx) != -1) && obj.capabilities[ext]) {
+					ext = requestedFormat[i].toLowerCase().trim();
+					// check extension against detected capabilities
+					if (obj.capabilities[ext] && 
+						obj.capabilities[ext].canPlay && 
+						obj.capabilities[ext].canPlayType === 'probably') {
+						result = ext;
+						break;
+					}
+				}
+				// loop again and check for all the rest ('maybe')
+				i = 0;
+				for (; i < len; i++) {
+					ext = requestedFormat[i].toLowerCase().trim();
+					// check extension against detected capabilities
+					if (obj.capabilities[ext] && 
+						obj.capabilities[ext].canPlay) {
 						result = ext;
 						break;
 					}
@@ -97,12 +102,11 @@
 			}
 
 			return result;
-		}
+		};
 
-		/*
-		 * ---
-		 * 
-		 * return the specified sound ---
+		/**
+		 * @private
+		 * return the specified sound
 		 */
 
 		function get(sound_id) {
@@ -120,15 +124,11 @@
 			channels[0].pause();
 			channels[0].currentTime = reset_val;
 			return channels[0];
-		}
-		;
+		};
 
-		/*
-		 * ---
-		 * 
+		/**
+		 * @private
 		 * event listener callback on load error
-		 * 
-		 * ---
 		 */
 
 		function soundLoadError(sound_id) {
@@ -155,12 +155,9 @@
 			}
 		};
 
-		/*
-		 * ---
-		 * 
+		/**
+		 * @private
 		 * event listener callback when a sound is loaded
-		 * 
-		 * ---
 		 */
 
 		function soundLoaded(sound_id, sound_channel) {
@@ -181,8 +178,7 @@
 			if (load_cb) {
 				load_cb.call();
 			}
-		}
-		;
+		};
 
 		/**
 		 * play the specified sound
@@ -198,11 +194,13 @@
 		 *            [callback] callback function
 		 * @param {Integer}
 		 * 						[1] integer specifying volume 0.0 - 1.0 values accepted.
-		 * @example // play the "cling" audio clip me.audio.play("cling"); //
-		 *          play & repeat the "engine" audio clip
-		 *          me.audio.play("engine", true); // play the "gameover_sfx"
-		 *          audio clip and call myFunc when finished
-		 *          me.audio.play("gameover_sfx", false, myFunc);
+		 * @example 
+		 * // play the "cling" audio clip 
+		 * me.audio.play("cling"); 
+		 * // play & repeat the "engine" audio clip
+		 * me.audio.play("engine", true); 
+		 * // play the "gameover_sfx" audio clip and call myFunc when finished
+		 * me.audio.play("gameover_sfx", false, myFunc);
 		 */
 
 		function _play_audio_enable(sound_id, loop, callback, volume) {
@@ -227,13 +225,11 @@
 				}, false);
 			}
 
-		}
-		;
+		};
 
-		/*
-		 * ---
-		 * 
-		 * play_audio with simulated callback ---
+		/**
+		 * @private
+		 * play_audio with simulated callback
 		 */
 
 		function _play_audio_disable(sound_id, loop, callback) {
@@ -245,21 +241,34 @@
 		};
 
 		/*
-		 * ---------------------------------------------
-		 * 
+		 *---------------------------------------------
 		 * PUBLIC STUFF
-		 * 
-		 * ---------------------------------------------
+		 *---------------------------------------------
 		 */
 
 		// audio capabilities
 		obj.capabilities = {
-			mp3 : 'audio/mpeg',
-			ogg : 'audio/ogg; codecs="vorbis"',
-			m4a : 'audio/mp4; codecs="mp4a.40.2"',
-			wav : 'audio/wav; codecs="1"'
+			mp3: {
+				codec: 'audio/mpeg',
+				canPlay: false,
+				canPlayType: 'no'
+			},
+			ogg: {
+				codec: 'audio/ogg; codecs="vorbis"',
+				canPlay: false,
+				canPlayType: 'no'
+			},
+			m4a: {
+				codec: 'audio/mp4; codecs="mp4a.40.2"',
+				canPlay: false,
+				canPlayType: 'no'
+			},
+			wav: {
+				codec: 'audio/wav; codecs="1"',
+				canPlay: false,
+				canPlayType: 'no'
+			}
 		};	
-		
 		
 		/**
 		 * @private
@@ -269,11 +278,14 @@
 			var a = document.createElement('audio');
 			if (a.canPlayType) {
 				for (var c in obj.capabilities) {
-					var canPlay = a.canPlayType(obj.capabilities[c]);
+					var canPlayType = a.canPlayType(obj.capabilities[c].codec);
 					// convert the string to a boolean
-					obj.capabilities[c] = (canPlay !== "" && canPlay !== "no");
+					if (canPlayType !== "" && canPlayType !== "no") {
+						obj.capabilities[c].canPlay = true;
+						obj.capabilities[c].canPlayType = canPlayType;
+					}
 					// enable sound if any of the audio format is supported
-					me.sys.sound |= obj.capabilities[c]; 
+					me.sys.sound |= obj.capabilities[c].canPlay;					
 				}
 			}
 			
@@ -292,39 +304,35 @@
 		 * initialize the audio engine<br>
 		 * the melonJS loader will try to load audio files corresponding to the
 		 * browser supported audio format<br>
-		 * if not compatible audio format is found, audio will be disabled
+		 * if no compatible audio codecs are found, audio will be disabled
 		 * 
 		 * @name me.audio#init
 		 * @public
 		 * @function
 		 * @param {String}
-		 *            audioFormat audio format provided ("mp3, ogg, wav")
-		 * @example // initialize the "sound engine", giving "mp3" and "ogg" as
-		 *          available audio format me.audio.init("mp3,ogg"); // i.e. on
-		 *          Safari, the loader will load all audio.mp3 files, // on
-		 *          Opera the loader will however load audio.ogg files
+		 *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
+		 * @example 
+		 * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format 
+		 * // i.e. on Safari, the loader will load all audio.mp3 files, 
+		 * // on Opera the loader will however load audio.ogg files
+		 * me.audio.init("mp3,ogg"); 
 		 */
 		obj.init = function(audioFormat) {
 			if (!me.initialized) {
 				throw "melonJS: me.audio.init() called before engine initialization.";
 			}
 			// if no param is given to init we use mp3 by default
-			requestedFormat = new String(audioFormat?audioFormat:"mp3");
+			audioFormat = new String(audioFormat?audioFormat:"mp3");
+			// convert it into an array
+			audioFormat = audioFormat.split(',');
 			// detect the prefered audio format
-			activeAudioExt = getSupportedAudioFormat();
+			activeAudioExt = getSupportedAudioFormat(audioFormat);
 			
 			// enable/disable sound
 			obj.play = obj.isAudioEnable() ? _play_audio_enable : _play_audio_disable;
 
 			return obj.isAudioEnable();
 		};
-
-		/*
-		 * ---
-		 * 
-		 * 
-		 * ---
-		 */
 
 		/**
 		 * set call back when a sound (and instances) is/are loaded
@@ -420,9 +428,9 @@
 		 * @name me.audio#stop
 		 * @public
 		 * @function
-		 * @param {String}
-		 *            sound_id audio clip id
-		 * @example me.audio.stop("cling");
+		 * @param {String} sound_id audio clip id
+		 * @example 
+		 * me.audio.stop("cling");
 		 */
 		obj.stop = function(sound_id) {
 			if (sound_enable) {
@@ -443,9 +451,9 @@
 		 * @name me.audio#pause
 		 * @public
 		 * @function
-		 * @param {String}
-		 *            sound_id audio clip id
-		 * @example me.audio.pause("cling");
+		 * @param {String} sound_id audio clip id
+		 * @example 
+		 * me.audio.pause("cling");
 		 */
 		obj.pause = function(sound_id) {
 			if (sound_enable) {
@@ -465,9 +473,9 @@
 		 * @name me.audio#playTrack
 		 * @public
 		 * @function
-		 * @param {String}
-		 *            sound_id audio track id
-		 * @example me.audio.playTrack("awesome_music");
+		 * @param {String} sound_id audio track id
+		 * @example 
+		 * me.audio.playTrack("awesome_music");
 		 */
 		obj.playTrack = function(sound_id) {
 			if (sound_enable) {
@@ -492,8 +500,11 @@
 		 * @name me.audio#stopTrack
 		 * @public
 		 * @function
-		 * @example // play a awesome music me.audio.playTrack("awesome_music"); //
-		 *          stop the current music me.audio.stopTrack();
+		 * @example 
+		 * // play a awesome music 
+		 * me.audio.playTrack("awesome_music"); 
+		 * // stop the current music 
+		 * me.audio.stopTrack();
 		 */
 		obj.stopTrack = function() {
 			if (sound_enable && current_track) {
@@ -509,7 +520,8 @@
 		 * @name me.audio#pauseTrack
 		 * @public
 		 * @function
-		 * @example me.audio.pauseTrack();
+		 * @example 
+		 * me.audio.pauseTrack();
 		 */
 		obj.pauseTrack = function() {
 			if (sound_enable && current_track) {
@@ -523,11 +535,14 @@
 		 * @name me.audio#resumeTrack
 		 * @public
 		 * @function
-		 * @param {String}
-		 *            sound_id audio track id
-		 * @example // play a awesome music me.audio.playTrack("awesome_music"); //
-		 *          pause the audio track me.audio.pauseTrack(); // resume the
-		 *          music me.audio.resumeTrack();
+		 * @param {String} sound_id audio track id
+		 * @example 
+		 * // play an awesome music 
+		 * me.audio.playTrack("awesome_music");
+		 * // pause the audio track 
+		 * me.audio.pauseTrack();
+		 * // resume the music 
+		 * me.audio.resumeTrack();
 		 */
 		obj.resumeTrack = function() {
 			if (sound_enable && current_track) {
@@ -543,7 +558,8 @@
 		 * @function
 		 * @param {String} sound_id audio track id
 		 * @return {boolean} true if unloaded
-		 * @example me.audio.unload("awesome_music");
+		 * @example 
+		 * me.audio.unload("awesome_music");
 		 */
 		obj.unload = function(sound_id) {
 			sound_id = sound_id.toLowerCase();
@@ -568,7 +584,8 @@
 		 * @name me.audio#unloadAll
 		 * @public
 		 * @function
-		 * @example me.audio.unloadAll();
+		 * @example 
+		 * me.audio.unloadAll();
 		 */
 		obj.unloadAll = function() {
 			for (var sound_id in audio_channels) {

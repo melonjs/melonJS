@@ -322,7 +322,43 @@
 				 * @see me.Rect#adjustSize
 				 */
 				colPos : null,
-
+				
+				/**
+				 * left coordinate of the Rectange<br>
+				 * takes in account the adjusted size of the rectangle (if set)
+				 * @public
+				 * @type Int
+				 * @name me.Rect#left
+				 */
+				 // define later in the constructor
+				
+				/**
+				 * right coordinate of the Rectange<br>
+				 * takes in account the adjusted size of the rectangle (if set)
+				 * @public
+				 * @type Int
+				 * @name me.Rect#right
+				 */
+				 // define later in the constructor
+				 
+				/**
+				 * bottom coordinate of the Rectange<br>
+				 * takes in account the adjusted size of the rectangle (if set)
+				 * @public
+				 * @type Int
+				 * @name me.Rect#bottom
+				 */
+				// define later in the constructor
+				
+				/**
+				 * top coordinate of the Rectange<br>
+				 * takes in account the adjusted size of the rectangle (if set)
+				 * @public
+				 * @type Int
+				 * @name me.Rect#top
+				 */
+				// define later in the constructor
+				 
 				/**
 				 * width of the Rectange
 				 * @public
@@ -361,54 +397,28 @@
 					this.hWidth = ~~(w / 2);
 					this.hHeight = ~~(h / 2);
 
-					
-					// some properties to ease my life when getting the rectangle coordinates /**
-					/**
-					 * left coordinate of the Rectange<br>
-					 * takes in account the adjusted size of the rectangle (if set)
-					 * @public
-					 * @type Int
-					 * @name me.Rect#left
-					 */
+					// redefine some properties to ease our life when getting the rectangle coordinates
 					Object.defineProperty(this, "left", {
 						get : function() {
 							return this.pos.x;
 						},
 						configurable : true
 					});
-					/**
-					 * right coordinate of the Rectange<br>
-					 * takes in account the adjusted size of the rectangle (if set)
-					 * @public
-					 * @type Int
-					 * @name me.Rect#right
-					 */
+					
 					Object.defineProperty(this, "right", {
 						get : function() {
 							return this.pos.x + this.width;
 						},
 						configurable : true
 					});
-					/**
-					 * top coordinate of the Rectange<br>
-					 * takes in account the adjusted size of the rectangle (if set)
-					 * @public
-					 * @type Int
-					 * @name me.Rect#top
-					 */
+
 					Object.defineProperty(this, "top", {
 						get : function() {
 							return this.pos.y;
 						},
 						configurable : true
 					});
-					/**
-					 * bottom coordinate of the Rectange<br>
-					 * takes in account the adjusted size of the rectangle (if set)
-					 * @public
-					 * @type Int
-					 * @name me.Rect#bottom
-					 */
+
 					Object.defineProperty(this, "bottom", {
 						get : function() {
 							return this.pos.y + this.height;
@@ -547,6 +557,18 @@
 				flipY : function(sh) {
 					this.colPos.y = sh - this.height - this.colPos.y;
 					this.hHeight = ~~(this.height / 2);
+				},
+				
+				/**
+				 * return true if this rectangle is equal to the specified one
+				 * @param {me.Rect} rect
+				 * @return {Boolean}
+				 */
+				equals : function(r) {
+					return (this.left 	=== r.left	&& 
+							this.right 	=== r.right && 
+							this.top 	=== r.top 	&&
+							this.bottom === r.bottom);
 				},
 
 				/**

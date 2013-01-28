@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>melonJS - plateformer demo</title>
+  <meta name="description" content="melonJS homepage" />
+  <meta name="keywords" content="melonJS, HTML5, javascript, game, engine, framework" />
+  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
+	<style type="text/css">
+		canvas {
+			display: block;
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
+		}
+	</style>
+  </head>
+<body>
+  <div id="main">
+    <div id="header">
+      <div id="logo">
+        <div id="logo_text">
+          <!-- class="logo_colour", allows you to change the colour of the text -->
+          <h1><a href="http://www.melonjs.org">melon<span class="logo_colour">JS</span></a></h1>
+          <h2>A lightweight HTML5 game engine</h2>
+        </div>
+      </div>
+     </div>
+    <div id="site_content">
+		<center>
+		<div id="content">
+			<h1>A plateformer demo</h1>
+			<p>instructions : arrow keys to move, X to jump</p>
+			<div id="screen"></div>
+			<script type="text/javascript" src="../../build/melonJS-0.9.5.js"></script>
+			<script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+			<script type="text/javascript" src="entities.js"></script>
+			<script type="text/javascript" src="main.js"></script>
+			</div>
+		</center>
+		(graphics by Kenney Vleugels : www.kenney.nl)
+    </div>
+    <div id="footer">
+      Copyright &copy; melonJS 2012
+    </div>
+  </div>
+</body>
+</html>

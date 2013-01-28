@@ -113,7 +113,18 @@
 		 * @private	
 		 */
 		getObjectGroupByName : function(name) {
-			return this.objectGroups[name];
+			var objectGroup = null;
+
+            		// normalize name
+            		name = name.trim().toLowerCase();
+            		for ( var i = this.objectGroups.length; i--;) {
+                		if (this.objectGroups[i].name.toLowerCase().contains(name)) {
+                    			objectGroup = this.objectGroups[i];
+                    			break;
+                		}
+            		};
+
+			return objectGroup;
 		},
 
 		/**
@@ -251,8 +262,6 @@
 
 			// to automatically increment z index
 			var zOrder = 0;
-			// default layer scrolling ratio
-			var lratio = 0.25; // 1/4 
 
 			// init the parser
 			me.TMXParser.parseFromString(this.xmlMap, this.isJSON);
@@ -347,53 +356,13 @@
 					break;
 				}
 				
-				
 				// get the layer(s) information
 				case me.TMX_TAG_LAYER: {
-					// try to identify specific layer type based on the naming convention
-					var layer_name = me.TMXParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);
-				
-					// keep this for now for backward-compatibility
-					if (layer_name.toLowerCase().contains(me.LevelConstants.PARALLAX_MAP)) {
-						
-						
-						// extract layer information
-						var ilw = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_WIDTH);
-						var ilh = me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_HEIGHT);
-						
-						// get the layer properties
-						var properties = {};
-						me.TMXUtils.setTMXProperties(properties, xmlElements.item(i));
-
-						// cherck if a ratio property is defined
-						if (properties.ratio) {
-							lratio = properties.ratio;
-						}
-						
-						// create the layer				
-						var ilayer = new me.ImageLayer(layer_name, ilw * this.tilewidth, ilh * this.tileheight, properties.imagesrc, zOrder++, lratio );
-						
-						// apply default TMX properties
-						ilayer.visible = (me.TMXParser.getIntAttribute(xmlElements.item(i), me.TMX_TAG_VISIBLE, 1) == 1);
-						ilayer.opacity = me.TMXParser.getFloatAttribute(xmlElements.item(i), me.TMX_TAG_OPACITY, 1.0);
-						
-						// apply other user defined properties
-						me.TMXUtils.mergeProperties(ilayer, properties, false);
-												
-						// default increment for next layer
-						lratio += lratio * lratio;
-
-						// add the new layer
-						this.mapLayers.push(ilayer);
-					}
-					else {
-					  // regular layer or collision layer
-					  this.mapLayers.push(new me.TMXLayer(xmlElements.item(i), this.tilewidth, this.tileheight, this.orientation, this.tilesets, zOrder++));
-				   }
-				   break;
+					// regular layer or collision layer
+					this.mapLayers.push(new me.TMXLayer(xmlElements.item(i), this.tilewidth, this.tileheight, this.orientation, this.tilesets, zOrder++));
+					break;
 				}
 				
-
 				// get the object groups information
 				case me.TMX_TAG_OBJECTGROUP: {
 				   var name = me.TMXParser.getStringAttribute(xmlElements.item(i), me.TMX_TAG_NAME);

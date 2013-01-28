@@ -36,12 +36,12 @@
 	 * @param {int} tileId tileId
 	 */
 	me.Tile = me.Rect.extend({
-		 /**
-		  * tileId
-		  * @public
-		  * @type int
-		  * @name me.Tile#tileId
-		  */
+		/**
+		 * tileId
+		 * @public
+		 * @type int
+		 * @name me.Tile#tileId
+		 */
 		tileId : null,
 		
 		/** @private */
@@ -155,7 +155,6 @@
 			};
 		},
 		
-		// 
 		// e.g. getTileProperty (gid)	
 		/**
 		 * return the properties of the specified tile <br>
@@ -218,7 +217,7 @@
 	 * @memberOf me
 	 * @constructor
 	 */
-	 me.TMXTileset = me.Tileset.extend({
+	me.TMXTileset = me.Tileset.extend({
 		
 		// constructor
 		init: function (xmltileset) {
@@ -291,9 +290,7 @@
 				tileProp.isSlope = tileProp.isLeftSlope || tileProp.isRightSlope;
 
 				// ensure the collidable flag is correct
-				tileProp.isCollidable = tileProp.isSolid || tileProp.isPlatform
-										|| tileProp.isSlope || tileProp.isLadder
-										|| tileProp.isBreakable;
+				tileProp.isCollidable = !! (tileProp.type);
 
 			}
 		},

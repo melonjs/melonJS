@@ -248,7 +248,7 @@
 			// load our file
 			httpReq.open("GET", data.src + me.nocache, false);
 			httpReq.responseType = "arraybuffer";
-			xmlhttp.onerror = onerror;
+			httpReq.onerror = onerror;
 			httpReq.onload = function(event){
 				var arrayBuffer = httpReq.response;
 				if (arrayBuffer) {

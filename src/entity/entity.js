@@ -37,7 +37,7 @@
 		image : null,
 
 		/**
-		 * specify a transparent color for the image in rgb format (#rrggb)<br>
+		 * specify a transparent color for the image in rgb format (#rrggbb)<br>
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
@@ -89,9 +89,16 @@
 
 
 	/**
-	 * a pool of object entity <br>
-	 * this object is used by the engine to instanciate object defined in the map<br>
-	 * which means, that on level loading the engine will try to instanciate every object<br>
+	 * A pool of Object entity <br>
+	 * This object is used for object pooling - a technique that might speed up your game
+	 * if used properly. <br>
+	 * If some of your classes will be instanciated and removed a lot at a time, it is a 
+	 * good idea to add the class to this entity pool. A separate pool for that class
+	 * will be created, which will reuse objects of the class. That way they won't be instanciated
+	 * each time you need a new one (slowing your game), but stored into that pool and taking one
+	 * already instanciated when you need it.<br><br>
+	 * This object is also used by the engine to instanciate objects defined in the map, 
+	 * which means, that on level loading the engine will try to instanciate every object 
 	 * found in the map, based on the user defined name in each Object Properties<br>
 	 * <img src="object_properties.png"/><br>
 	 * There is no constructor function for me.entityPool, this is a static object
@@ -131,45 +138,147 @@
 		};
 
 		/**
-		 * add an object to the pool
+		 * Add an object to the pool. <br>
+		 * Pooling must be set to true if more than one such objects will be created. <br>
+		 * (note) If pooling is enabled, you shouldn't instanciate objects with `new`.
+		 * See examples in {@link me.entityPool#newInstanceOf}
 		 * @name me.entityPool#add
 		 * @public
 		 * @function
 		 * @param {String} className as defined in the Name fied of the Object Properties (in Tiled)
-		 * @param {Object} object corresponding Object to be instanciated
+		 * @param {Object} class corresponding Class to be instanciated
+		 * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
+		 * - speeds up the game by reusing existing objects
 		 * @example
 		 * // add our users defined entities in the entity pool
 		 * me.entityPool.add("playerspawnpoint", PlayerEntity);
-		 * me.entityPool.add("cherryentity", CherryEntity);
-		 * me.entityPool.add("heartentity", HeartEntity);
-		 * me.entityPool.add("starentity", StarEntity);
+		 * me.entityPool.add("cherryentity", CherryEntity, true);
+		 * me.entityPool.add("heartentity", HeartEntity, true);
+		 * me.entityPool.add("starentity", StarEntity, true);
 		 */
-		obj.add = function(className, entityObj) {
-			entityClass[className.toLowerCase()] = entityObj;
+		obj.add = function(className, entityObj, pooling) {
+			if (!pooling) {
+				entityClass[className.toLowerCase()] = entityObj;
+				return;
+			}
+
+			entityClass[className.toLowerCase()] = {
+				"class" : entityObj,
+				"pool" : [],
+				"active" : []
+			};
 		};
 
 		/**
-		 *	return a new instance of the requested object
-		 * @private
+		 *	Return a new instance of the requested object (if added into the object pool)
+		 * @name me.entityPool#newInstanceOf
+		 * @public
+		 * @function
+		 * @param {String} className as used in me.entityPool#add
+		 * @params {arguments} [arguments] to be passed when instanciating/reinitializing the object
+		 * @example
+		 * me.entityPool.add("player", PlayerEntity);
+		 * var player = me.entityPool.newInstanceOf("player");
+		 * @example
+		 * me.entityPool.add("bullet", BulletEntity, true);
+		 * me.entityPool.add("enemy", EnemyEntity, true);
+		 * // ...
+		 * // when we need to manually create a new bullet:
+		 * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
+		 * // ...
+		 * // params aren't a fixed number
+		 * // when we need new enemy we can add more params, that the object construct requires:
+		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
+		 * // ...
+		 * // when we want to destroy existing object, the remove 
+		 * // function will ensure the object can then be reallocated later
+		 * me.game.remove(enemy);
+		 * me.game.remove(bullet);
 		 */
 
-		obj.newInstanceOf = function(prop) {
-			var name = prop.name ? prop.name.toLowerCase() : undefined;
+		obj.newInstanceOf = function(data) {
+			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
 			if (name && entityClass[name]) {
-				// FIXME: I should pass the entity ownProperty instead of the object itself
-				return new entityClass[name](prop.x, prop.y, prop);
+				if (!entityClass[name]['pool']) {
+					var proto = entityClass[name];
+					arguments[0] = proto;
+					return new (proto.bind.apply(proto, arguments))();
+				}
+				
+				var obj, entity = entityClass[name], proto = entity["class"];
+				if (entity["pool"].length > 0) {
+					obj = entity["pool"].pop();
+					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
+				} else {
+					arguments[0] = proto;
+					obj = new (proto.bind.apply(proto, arguments))();
+					obj.className = name;
+				}
+
+				entity["active"].push(obj);
+				return obj;
 			}
 
 			// Tile objects can be created with a GID attribute;
-			// The TMX parser will use it to create the image property.
-			if (prop.image) {
-				return new me.SpriteObject(prop.x, prop.y, prop.image);
+			// The TMX parser will use it to create the image dataerty.
+			var settings = arguments[3];
+			if (settings && settings.image) {
+				return new me.SpriteObject(settings.x, settings.y, settings.image);
 			}
 
 			if (name) {
 				console.error("Cannot instantiate entity of type '" + name + "': Class not found!");
 			}
 			return null;
+		};
+
+		/**
+		 * purge the entity pool from any unactive object <br>
+		 * Object pooling must be enabled for this function to work<br>
+		 * note: this will trigger the garbage collector
+		 * @name me.entityPool#purge
+		 * @public
+		 * @function
+		 */
+		obj.purge = function() {
+			for (className in entityClass) {
+				entityClass[className]["pool"] = [];
+			}
+		};
+
+		/**
+		 * Remove object from the entity pool <br>
+		 * Object pooling for the object class must be enabled,
+		 * and object must have been instanciated using {@link me.entityPool#newInstanceOf},
+		 * otherwise this function won't work
+		 * @name me.entityPool#freeInstance
+		 * @public
+		 * @function
+		 * @param {Object} instance to be removed 
+		 */
+		obj.freeInstance = function(obj) {
+
+			var name = obj.className;
+			if (!name || !entityClass[name]) {
+				//console.error("Cannot free object: unknown class");
+				return;
+			}
+
+			var notFound = true;
+			for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
+				if (entityClass[name]["active"][i] === obj) {
+					notFound = false;
+					entityClass[name]["active"].splice(i, 1);
+					break;
+				}
+			}
+
+			if (notFound) {
+				//console.error("Cannot free object: not found in the active pool");
+				return;
+			}
+
+			entityClass[name]["pool"].push(obj);
 		};
 
 		// return our object
@@ -291,8 +400,10 @@
 					/**
 					 * Default gravity value of the entity<br>
 					 * default value : 0.98 (earth gravity)<br>
-					 * to be set to 0 for RPG, shooter, etc...
+					 * to be set to 0 for RPG, shooter, etc...<br>
+					 * Note: Gravity can also globally be defined through me.sys.gravity
 					 * @public
+					 * @see me.sys.gravity
 					 * @type Number
 					 * @name me.ObjectEntity#gravity
 					 */
@@ -300,7 +411,7 @@
 
 					// just to identify our object
 					this.isEntity = true;
-
+					
 					// dead state :)
 					/**
 					 * dead/living state of the entity<br>
@@ -751,6 +862,56 @@
 					// returns the collision "vector"
 					return collision;
 
+				},
+				
+				/**
+				 * Checks if this entity collides with others entities.
+				 * @public
+				 * @function
+				 * @param {Boolean} [multiple=false] check for multiple collision
+				 * @return {me.Vector2d} collision vector or an array of collision vector (if multiple collision){@link me.Rect#collideVsAABB}
+				 * @example
+				 * // update player movement
+				 * this.updateMovement();
+				 *
+				 * // check for collision with other objects
+				 * res = this.collide();
+				 *
+				 * // check if we collide with an enemy :
+				 * if (res && (res.obj.type == me.game.ENEMY_OBJECT))
+				 * {
+				 *   if (res.x != 0)
+				 *   {
+				 *      // x axis
+				 *      if (res.x<0)
+				 *         console.log("x axis : left side !");
+				 *      else
+				 *         console.log("x axis : right side !");
+				 *   }
+				 *   else
+				 *   {
+				 *      // y axis
+				 *      if (res.y<0)
+				 *         console.log("y axis : top side !");
+				 *      else
+				 *         console.log("y axis : bottom side !");
+				 *   }
+				 * }
+				 */
+				collide : function(multiple) {
+					return me.game.collide(this, multiple || false);
+				},
+
+				/**
+				 * Checks if the specified entity collides with others entities of the specified type.
+				 * @public
+				 * @function
+				 * @param {String} type Entity type to be tested for collision
+				 * @param {Boolean} [multiple=false] check for multiple collision
+				 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+				 */
+				collideType : function(type, multiple) {
+					return me.game.collideType(this, type, multiple || false);
 				},
 				
 				/**

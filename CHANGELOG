@@ -2,31 +2,47 @@ Version History
 ---------------
 0.9.5
 * Audio : added mp4/aac pre-loading support
+* Audio : added codec selection based on audio support level 
 * Core : fixed requestAnimationFrame
 * Core : added an official plugin API
 * Core : fixed a object removing and sorting lock issue
 * Core : added a 'floating' property for renderables
+* Core : added Object Pooling support
+* Core : fixed the `me.game.getEntityByName` function when using camelcase names
 * Debug : added a simple debug panel
 * Font : fixed font name starting with a decimal value
+* Font : added changes to allow specifying a flat number of px,em, etc for font sizes.
+* Font : added support for comma separated font names like in CSS
 * Event : added Daniel Lamb minPubSub library for event publishing
 * Event : fixed touch event support detection on cocoonJS
-* Event : added 'click', 'dblclick', 'tap', 'dbltap' events
+* Event : added `click`, `dblclick`, `tap` events
 * Event : fixed mouse event conflict and mousewheel event
 * Input : me.GUI_Object's onClicked() function has been renamed to onClick()
 * Loader : use asynchronous mode when loading XML files
+* Entity : added spacing and margin capacities for sprite (same as Tile Map Sprite)
 * Entity : fixed flickering when using requestAnimationFrame
 * Entity : added opacity setting
-* Entity : fixed visible property automatic setting 
+* Entity : fixed visible property automatic setting
 * Entity : moved collision check outside of the Entity Object
+* Entity : cleaned and renamed the collision utility function
+* Entity : added the possiblity to check for multiple collision
+* Entity : added a `collideType` function to check for collision with a specific type
 * Entity : moved collisionBox from SpriteObject to Entity Object
 * Tween : fixed tween when pausing game
 * Tween : various fixes and optimization from the official repository
+* TMX : fixed a bug that was preventing a non visible layer to be set visible later
+* TMX : fixed the clearTile function on non visible layers (e.g. collision map)
 * TMX : added official support for Opacity in TiledLayer, TMXLayer, colorLayer and ImageLayer
 * TMX : added support for TSX files
+* TMX : added a `repeat` property to Image Layer instances, similar to CSS background-position
+* TMX : Parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
+* TMX : fixed the `getObjectGroupByName()` function
 * Tutorial : fixed camel case issue in resource names 
+* Tutoroal : update the parallax part to reflect last changes in melonJS (Image Layer)
 * Video : added support for display scaling
 * Video : added a setImageSmoothing function
 * Example : added "whack-a-mole" as an official example
+* Example : added a new "platfomer" example (using legal assets) and removed alex kidd based examples
 
 0.9.4
 * General : melonJS is now only using Google Closure (removed YUI compressor)

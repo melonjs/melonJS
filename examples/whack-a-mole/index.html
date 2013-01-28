@@ -4,16 +4,28 @@
 	<title>Whack-a-mole Demo</title>
 	<meta name="viewport" content="width=device-width, user-scalable=no">
 	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<style>
+	<style type="text/css">
+		html,
 		body {
 			background: #000;
+			display: block;
+			margin: 0;
+			padding: 0;
+		}
+		canvas {
+			image-rendering: optimizeSpeed;
+			image-rendering: -moz-crisp-edges;
+			image-rendering: -o-crisp-edges;
+			image-rendering: -webkit-optimize-contrast;
+			image-rendering: optimize-contrast;
+			-ms-interpolation-mode: nearest-neighbor;
 		}
 	</style>
 </head>
 <body>
 <center>
 	<div id="jsapp"></div>
-	<script type="text/javascript" src="../../build/melonJS-0.9.5.js"></script>
+	<script type="text/javascript" src="../../build/melonJS-0.9.5-min.js"></script>
 	<script type="text/javascript" src="main.js"></script>
 </center>
 </body>
