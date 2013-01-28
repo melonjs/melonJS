@@ -84,14 +84,12 @@
 					}
 				}
 				// loop again and check for all the rest ('maybe')
-				ext = "";
 				i = 0;
 				for (; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
 					// check extension against detected capabilities
 					if (obj.capabilities[ext] && 
-						obj.capabilities[ext].canPlay) 
-						obj.capabilities[ext].canPlayType !== 'probably') {
+						obj.capabilities[ext].canPlay) {
 						result = ext;
 						break;
 					}
