@@ -163,9 +163,8 @@
                                                                       "media/step1_tiled_level_design.png"
                                                               alt="Tiled level design"/></p>
 
-<p>Finally, let's define a background color for our level, by adding a
-    "background_color" property to the map (Map/Map Properties), and just specify any
-    color (in CSS format) you prefer.</p><img src="media/step1_background_color.png" alt=
+<p>Finally, let's define a background color for our level, by using the color picker tool (Map/Map Properties), and just specify any
+    color you prefer.</p><img src="media/step1_background_color.png" alt=
         "Setting a background color in Tiled"/>
 
 <p>To finish, let's save our new map as "area01" under the "data" folder. We are done
@@ -572,10 +571,10 @@ init: function(x, y, settings) {
 <p>This one is very easy. We don't even have to add a single line of code, since
     everything is done through Tiled.</p>
 
-<p>First, let's remove in Tiled the "background_color" property (Map/Map properties)
-    that we added previously at the end of Part 1. Since the background will be filled
-    with our scrolling layers, we don't need the display to be cleared with a specific
-    color (furthermore it will save some precious frames).</p>
+<p>First, let's remove in Tiled the backgroun d color that we added previously at the end of Part 1.
+   (to do so, you will need to text edit the TMX file and remove the `backgroundcolor` property).
+   Since the background will be filled with our scrolling layers, we don't need the display to be 
+   cleared with a specific color (furthermore it will save some precious frames).</p>
 
 <p>Then we will use the two following backgrounds :</p>
 
