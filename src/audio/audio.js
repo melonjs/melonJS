@@ -192,6 +192,8 @@
 		 *            [loop="false"] loop audio
 		 * @param {Function}
 		 *            [callback] callback function
+		 * @param {Integer}
+		 * 						[1] integer specifying volume 0.0 - 1.0 values accepted.
 		 * @example 
 		 * // play the "cling" audio clip 
 		 * me.audio.play("cling"); 
@@ -201,11 +203,14 @@
 		 * me.audio.play("gameover_sfx", false, myFunc);
 		 */
 
-		function _play_audio_enable(sound_id, loop, callback) {
+		function _play_audio_enable(sound_id, loop, callback, volume) {
 			// console.log("play!!");
 			var soundclip = get(sound_id.toLowerCase());
-
+			if(volume === null || typeof volume === "undefined") {
+				volume = 1;
+			}
 			soundclip.loop = loop || false;
+			soundclip.volume = volume;
 			soundclip.play();
 
 			// set a callback if defined
