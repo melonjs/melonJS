@@ -204,6 +204,16 @@
 			}
 		};
 
+		/**
+		 * return the amount of level preloaded<br>
+		 * @name me.levelDirector#levelCount
+		 * @public
+		 * @function
+		 */
+		obj.levelCount = function() {
+			return levelIdx.length;
+		};
+		
 		// return our object
 		return obj;
 
