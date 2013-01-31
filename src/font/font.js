@@ -23,7 +23,7 @@
 	 * @param {String} font
 	 * @param {int} size
 	 * @param {String} color
-	 * @param {String} [align="top"]
+	 * @param {String} [align="left"] horizontal alignement
 	 */
 	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
@@ -67,7 +67,7 @@
 		 * @param {String} font
 		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
-		 * @param {String} [align="top"]
+		 * @param {String} [align="left"] horizontal alignement
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");
@@ -84,7 +84,7 @@
 			}
 			this.font = size + " " + font_names.join(",");;
 			this.color = color;
-			this.align = align || "top";
+			this.align = align || "left";
 		},
 
 		/**
@@ -105,7 +105,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textBaseline = this.align;
+			context.textAlign = this.align;
 			var dim = context.measureText(text);
 			dim.height = this.height;
 
@@ -123,7 +123,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textBaseline = this.align;
+			context.textAlign = this.align;
 			context.fillText(text, ~~x, ~~y);
 		}
 	});

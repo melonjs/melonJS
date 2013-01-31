@@ -63,6 +63,7 @@ Version History
 * Entity : added the possibility to pause an animation (parasyte)
 * Entity : fixed default position by using top-left coordinates as in Tiled
 * Entity : fixed invisible entities being removed when colliding
+* Font: fixed me.Font horizontal alignement
 * General : fixed & enhanced object/memory deallocation when switching levels
 * General : rewrote the parallax code using the new Generic Image Layer Object
 * General : added support for vertical parallax layer
