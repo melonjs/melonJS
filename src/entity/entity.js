@@ -669,13 +669,27 @@
 				 * @param {me.ObjectEntity} entity Entity
 				 * @return {float} distance
 				 */
-				distanceTo: function(o)
+				distanceTo: function(e)
 				{
-					// the Vector object also implements the same function, but
-					// we have to use here the center of both object
-					var dx = (this.pos.x + this.hWidth)  - (o.pos.x + o.hWidth);
-					var dy = (this.pos.y + this.hHeight) - (o.pos.y + o.hHeight);
+					// the me.Vector2d object also implements the same function, but
+					// we have to use here the center of both entities
+					var dx = (this.pos.x + this.hWidth)  - (e.pos.x + e.hWidth);
+					var dy = (this.pos.y + this.hHeight) - (e.pos.y + e.hHeight);
 					return Math.sqrt(dx*dx+dy*dy);
+				},
+				
+				/**
+				 * return the angle to the specified entity
+				 * @param {me.ObjectEntity} entity Entity
+				 * @return {Number} angle in radians
+				 */
+				angleTo: function(e)
+				{
+					// the me.Vector2d object also implements the same function, but
+					// we have to use here the center of both entities
+					var ax = (e.pos.x + e.hWidth) - (this.pos.x + this.hWidth);
+					var ay = (e.pos.y + e.hHeight) - (this.pos.y + this.hHeight);
+					return Math.atan2(ay, ax);
 				},
 
 

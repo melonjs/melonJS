@@ -263,8 +263,17 @@
 		 * @param {me.Vector2d} v
 		 * @return {Number}
 		 */			
-		 distance : function(v) {
+		distance : function(v) {
 			return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y) * (this.y - v.y));
+		},
+		
+		/**
+		 * return the angle between this vector and the passed one
+		 * @param {me.Vector2d} v
+		 * @return {Number} angle in radians
+		 */			
+		angle : function(v) {
+			return Math.atan2((v.y - this.y), (v.x - this.x));
 		},
 
 		/**

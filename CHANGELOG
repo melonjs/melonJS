@@ -17,6 +17,7 @@ Version History
 * Event : fixed touch event support detection on cocoonJS
 * Event : added `click`, `dblclick`, `tap` events
 * Event : fixed mouse event conflict and mousewheel event
+* Geometry : added a function to return the angle between two vectors
 * Input : me.GUI_Object's onClicked() function has been renamed to onClick()
 * Loader : use asynchronous mode when loading XML files
 * Entity : added spacing and margin capacities for sprite (same as Tile Map Sprite)
@@ -28,6 +29,7 @@ Version History
 * Entity : added the possiblity to check for multiple collision
 * Entity : added a `collideType` function to check for collision with a specific type
 * Entity : moved collisionBox from SpriteObject to Entity Object
+* Entity: added an angleTo function
 * Tween : fixed tween when pausing game
 * Tween : various fixes and optimization from the official repository
 * TMX : fixed a bug that was preventing a non visible layer to be set visible later
