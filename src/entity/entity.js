@@ -679,6 +679,20 @@
 				},
 				
 				/**
+				 * return the distance to the specified point
+				 * @param {me.Vector2d} vector vector
+				 * @return {float} distance
+				 */
+				distanceToPoint: function(v)
+				{
+					// the me.Vector2d object also implements the same function, but
+					// we have to use here the center of both entities
+					var dx = (this.pos.x + this.hWidth)  - (v.x);
+					var dy = (this.pos.y + this.hHeight) - (v.y);
+					return Math.sqrt(dx*dx+dy*dy);
+				},
+				
+				/**
 				 * return the angle to the specified entity
 				 * @param {me.ObjectEntity} entity Entity
 				 * @return {Number} angle in radians
@@ -689,6 +703,21 @@
 					// we have to use here the center of both entities
 					var ax = (e.pos.x + e.hWidth) - (this.pos.x + this.hWidth);
 					var ay = (e.pos.y + e.hHeight) - (this.pos.y + this.hHeight);
+					return Math.atan2(ay, ax);
+				},
+				
+				
+				/**
+				 * return the angle to the specified point
+				 * @param {me.Vector2d} vector vector
+				 * @return {Number} angle in radians
+				 */
+				angleToPoint: function(v)
+				{
+					// the me.Vector2d object also implements the same function, but
+					// we have to use here the center of both entities
+					var ax = (v.x) - (this.pos.x + this.hWidth);
+					var ay = (v.y) - (this.pos.y + this.hHeight);
 					return Math.atan2(ay, ax);
 				},
 
