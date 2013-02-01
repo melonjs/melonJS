@@ -509,6 +509,14 @@
 			this.current.idx = (idx || 0) % this.current.length;
 			this.offset = this.current.frame[this.current.idx];
 		},
+		
+		/**
+		 * return the current animation frame index.
+		 * @param {int} index
+		 */
+		getCurrentAnimationFrame : function() {
+			return this.current.idx;
+		},
 
 		/**
 		 * update the animation<br>
