@@ -1480,7 +1480,7 @@ var me = me || {};
 				me.entityPool.freeInstance(obj);
 			} else {
 				// make it invisible (this is bad...)
-				obj.visible = false
+				obj.visible = false;
 				// else wait the end of the current loop
 				/** @private */
 				pendingRemove = (function (obj) {
