@@ -434,6 +434,7 @@
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
 		 * @param {Int[]} index list of sprite index defining the animaton
+		 * @param {Int} speed for animation, lower is faster. Default is fps / 10
 		 * @example
 		 * // walking animatin
 		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
@@ -441,13 +442,16 @@
 		 * this.addAnimation ("eat", [6,6]);
 		 * // rolling animatin
 		 * this.addAnimation ("roll", [7,8,9,10]);
+		 * // slower animation
+		 * this.addAnimation ("roll", [7,8,9,10], 10);
 		 */
-		addAnimation : function(name, frame) {
+		addAnimation : function(name, frame, animationspeed) {
 			this.anim[name] = {
 				name : name,
 				frame : [],
 				idx : 0,
-				length : 0
+				length : 0,
+				animationspeed: animationspeed || this.animationspeed
 			};
 
 			if (frame == null) {
@@ -527,7 +531,7 @@
 			// call the parent function
 			this.parent();
 			// update animation if necessary
-			if (this.visible && !this.animationpause && (this.fpscount++ > this.animationspeed)) {
+			if (this.visible && !this.animationpause && (this.fpscount++ > this.current.animationspeed)) {
 				this.setAnimationFrame(++this.current.idx);
 				this.fpscount = 0;
 
