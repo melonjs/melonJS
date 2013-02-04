@@ -484,9 +484,13 @@
 		 **/
 
 		setCurrentAnimation : function(name, resetAnim) {
-			this.current = this.anim[name];
-			this.resetAnim = resetAnim || null;
-			this.setAnimationFrame(this.current.idx); // or 0 ?
+			if (this.anim[name]) {
+				this.current = this.anim[name];
+				this.resetAnim = resetAnim || null;
+				this.setAnimationFrame(this.current.idx); // or 0 ?
+			} else {
+				throw "melonJS: animation id '" + name + "' not defined";
+			}
 		},
 
 		/**
