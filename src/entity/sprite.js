@@ -434,7 +434,7 @@
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
 		 * @param {Int[]} index list of sprite index defining the animaton
-		 * @param {Int} speed for animation, lower is faster. Default is fps / 10
+		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
 		 * @example
 		 * // walking animatin
 		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
