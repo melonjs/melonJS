@@ -474,10 +474,12 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
+		 * @param {Number}
+		 * 			  [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example 
 		 * me.audio.playTrack("awesome_music");
 		 */
-		obj.playTrack = function(sound_id) {
+		obj.playTrack = function(sound_id, volume) {
 			if (sound_enable) {
 				if (current_track != null)
 					obj.stopTrack();
@@ -488,6 +490,7 @@
 				if (current_track) {
 					current_track_id = sound_id;
 					current_track.loop = true;
+					current_track.volume = volume ? parseFloat(volume) : 1.0;
 					current_track.play();
 				}
 			}
