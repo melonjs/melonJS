@@ -1,5 +1,7 @@
 Version History
 ---------------
+0.9.6
+
 0.9.5
 * Audio : added mp4/aac pre-loading support
 * Audio : added codec selection based on audio support level 

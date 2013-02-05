@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Font / Bitmap font
