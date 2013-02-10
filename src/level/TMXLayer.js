@@ -387,32 +387,30 @@
 			return res;
 		}
 	});
-	
+
 	/**
-	 * a generic tile based layer object
+	 * a TMX Tile Layer Object
+	 * Tile QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TiledLayer = Object.extend({
+	me.TMXLayer = Object.extend({
 		// constructor
-		init: function(w, h, tw, th, tilesets, z) {
-			this.width = w;
-			this.height = h;
+		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
+
+			this.width = me.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
+			this.height = me.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
 			// tile width & height
-			this.tilewidth  = tw;
-			this.tileheight = th;
+			this.tilewidth  = tilewidth;
+			this.tileheight = tileheight;
 			
 			// layer "real" size
 			this.realwidth = this.width * this.tilewidth;
 			this.realheight = this.height * this.tileheight;
 
 			// for displaying order
-			this.z = z;
-
-			this.name = null;
-			this.visible = false;
-			this.opacity = 1.0;
+			this.z = zOrder;
 
 			// data array
 			this.layerData = null;
@@ -421,200 +419,13 @@
 			 * The Layer corresponding Tilesets
 			 * @public
 			 * @type me.TMXTilesetGroup
-			 * @name me.TiledLayer#tilesets
+			 * @name me.TMXLayer#tilesets
 			 */
 			this.tilesets = tilesets;
 
 			// the default tileset
 			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
-		},
-		
-		/**
-		 * reset function
-		 * @private
-		 * @function
-		 */
-		reset : function() {
-			// clear all allocated objects
-			this.layerData = null;
-			this.tileset = null;
-			this.tilesets = null;
-		},
-
-		/**
-		 * Create all required arrays
-		 * @private
-		 */
-		initArray : function() {
-			// initialize the array
-			this.layerData = [];
-			for ( var x = 0; x < this.width; x++) {
-				this.layerData[x] = [];
-				for ( var y = 0; y < this.height; y++) {
-					this.layerData[x][y] = null;
-				}
-			}
-		},
-
-		/**
-		 * get the layer alpha channel value<br>
-		 * @return current opacity value between 0 and 1
-		 */
-		getOpacity : function() {
-			return this.opacity;
-		},
-
-		/**
-		 * set the layer alpha channel value<br>
-		 * @param {alpha} alpha opacity value between 0 and 1
-		 */
-		setOpacity : function(alpha) {
-			if (alpha) {
-				this.opacity = alpha.clamp(0.0, 1.0);
-			}
-		},
-
-		/**
-		 * Return the TileId of the Tile at the specified position
-		 * @name me.TiledLayer#getTileId
-		 * @public
-		 * @function
-		 * @param {Integer} x x coordinate in pixel 
-		 * @param {Integer} y y coordinate in pixel
-		 * @return {Int} TileId
-		 */
-		getTileId : function(x, y) {
-			var tile = this.getTile(x,y);
-			return tile ? tile.tileId : null;
-		},
-		
-		/**
-		 * Return the Tile object at the specified position
-		 * @name me.TiledLayer#getTile
-		 * @public
-		 * @function
-		 * @param {Integer} x x coordinate in pixel 
-		 * @param {Integer} y y coordinate in pixel
-		 * @return {me.Tile} Tile Object
-		 */
-		getTile : function(x, y) {
-			return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
-		},
-
-		/**
-		 * Create a new Tile at the specified position
-		 * @name me.TiledLayer#setTile
-		 * @public
-		 * @function
-		 * @param {Integer} x x coordinate in tile 
-		 * @param {Integer} y y coordinate in tile
-		 * @param {Integer} tileId tileId
-		 */
-		setTile : function(x, y, tileId) {
-			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
-		},
-
-		/**
-		 * clear the tile at the specified position
-		 * @name me.TiledLayer#clearTile
-		 * @public
-		 * @function
-		 * @param {Integer} x x coordinate in tile 
-		 * @param {Integer} y y coordinate in tile 
-		 */
-		clearTile : function(x, y) {
-			// clearing tile
-			this.layerData[x][y] = null;
-		},
-
-		/**
-		 * check for collision
-		 * obj - obj
-		 * pv   - projection vector
-		 * res : result collision object
-		 * @private
-		 */
-		checkCollision : function(obj, pv) {
-
-			var x = (pv.x < 0) ? ~~(obj.left + pv.x) : Math.ceil(obj.right  - 1 + pv.x);
-			var y = (pv.y < 0) ? ~~(obj.top  + pv.y) : Math.ceil(obj.bottom - 1 + pv.y);
-			//to return tile collision detection
-			var res = {
-				x : 0, // !=0 if collision on x axis
-				xtile : undefined,
-				xprop : {},
-				y : 0, // !=0 if collision on y axis
-				ytile : undefined,
-				yprop : {}
-			};
 			
-			//var tile;
-			if (x <= 0 || x >= this.realwidth) {
-				res.x = pv.x;
-			} else if (pv.x != 0 ) {
-				// x, bottom corner
-				res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
-				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-					res.x = pv.x; // reuse pv.x to get a 
-					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-				} else {
-					// x, top corner
-					res.xtile = this.getTile(x, ~~obj.top);
-					if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-						res.x = pv.x;
-						res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-					}
-				}
-			}
-			
-			// check for y movement
-			// left, y corner
-			if ( pv.y != 0 ) {
-				res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
-				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-					res.y = pv.y || 1;
-					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-				} else { // right, y corner
-					res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
-					if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-						res.y = pv.y || 1;
-						res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-					}
-				}
-			}
-			// return the collide object
-			return res;
-		},
-
-		/**
-		 * a dummy update function
-		 * @private
-		 */
-		update : function() {
-			return false;
-		}
-	});
-	
-	/**
-	 * a TMX Tile Map Object
-	 * Tile QT 0.7.x format
-	 * @class
-	 * @extends me.TiledLayer
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.TMXLayer = me.TiledLayer.extend({
-		// constructor
-		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
-			// call the parent
-			this.parent(me.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH), 
-						me.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT),
-						tilewidth, 
-						tileheight,
-						// tilesets should exist here !
-						tilesets, 
-						zOrder);
-						
 			// additional TMX flags
 			this.orientation = orientation;
 			this.name = me.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
@@ -684,6 +495,7 @@
 			this.fillArray(xmldata, encoding, compression);
 		},
 		
+		
 		/**
 		 * reset function
 		 * @private
@@ -696,8 +508,26 @@
 				this.layerSurface = null;
 			}
 			this.renderer = null;
-			// call the parent reset function
-			this.parent();
+			// clear all allocated objects
+			this.layerData = null;
+			this.tileset = null;
+			this.tilesets = null;
+
+		},
+		
+		/**
+		 * Create all required arrays
+		 * @private
+		 */
+		initArray : function() {
+			// initialize the array
+			this.layerData = [];
+			for ( var x = 0; x < this.width; x++) {
+				this.layerData[x] = [];
+				for ( var y = 0; y < this.height; y++) {
+					this.layerData[x][y] = null;
+				}
+			}
 		},
 		
 		/**
@@ -706,48 +536,46 @@
 		 */
 		fillArray : function(xmldata, encoding, compression) {
 			// check if data is compressed
-			switch (compression) {
-			 
-			 // no compression
-			 case null: {
-				// decode data based on encoding type
-				switch (encoding) {
-				// XML encoding
-				   case null: {
-					  var data = xmldata.getElementsByTagName(me.TMX_TAG_TILE);
-					  break;
-				   }
-				   // CSV encoding
-				   case me.TMX_TAG_CSV:
-					  // Base 64 encoding
-				   case me.TMX_TAG_ATTR_BASE64: {
-					  // Merge all childNodes[].nodeValue into a single one
-					  var nodeValue = '';
-					  for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
-						 nodeValue += xmldata.childNodes[i].nodeValue;
-					  }
-					  // and then decode them
-					  if (encoding == me.TMX_TAG_ATTR_BASE64)
-						 var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-					  else
-						 var data = me.utils.decodeCSV(nodeValue, this.width);
+			switch (compression) {	 
+				// no compression
+				case null: {
+					// decode data based on encoding type
+					switch (encoding) {
+						// XML encoding
+						case null: {
+							var data = xmldata.getElementsByTagName(me.TMX_TAG_TILE);
+							break;
+						}
+						// CSV encoding
+						case me.TMX_TAG_CSV:
+						// Base 64 encoding
+						case me.TMX_TAG_ATTR_BASE64: {
+							// Merge all childNodes[].nodeValue into a single one
+							var nodeValue = '';
+							for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
+								nodeValue += xmldata.childNodes[i].nodeValue;
+							}
+							// and then decode them
+							if (encoding == me.TMX_TAG_ATTR_BASE64)
+								var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+							else
+								var data = me.utils.decodeCSV(nodeValue, this.width);
 
-					  // ensure nodeValue is deallocated
-					  nodeValue = null;
-					  break;
-				   }
-					  
-				   default:
-					  throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-					  break;
+							// ensure nodeValue is deallocated
+							nodeValue = null;
+							break;
+						}
+						  
+						default:
+							throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+							break;
+					}
+					break;
 				}
-				
-			 break;
-			 }
-				
-			 default:
-				throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
-				break;
+					
+				default:
+					throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
+					break;
 			}
 
 			var idx = 0;
@@ -779,6 +607,46 @@
 		},
 
 		/**
+		 * Return the TileId of the Tile at the specified position
+		 * @name me.TMXLayer#getTileId
+		 * @public
+		 * @function
+		 * @param {Integer} x x coordinate in pixel 
+		 * @param {Integer} y y coordinate in pixel
+		 * @return {Int} TileId
+		 */
+		getTileId : function(x, y) {
+			var tile = this.getTile(x,y);
+			return tile ? tile.tileId : null;
+		},
+		
+		/**
+		 * Return the Tile object at the specified position
+		 * @name me.TMXLayer#getTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x coordinate in pixel 
+		 * @param {Integer} y y coordinate in pixel
+		 * @return {me.Tile} Tile Object
+		 */
+		getTile : function(x, y) {
+			return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+		},
+
+		/**
+		 * Create a new Tile at the specified position
+		 * @name me.TMXLayer#setTile
+		 * @public
+		 * @function
+		 * @param {Integer} x x coordinate in tile 
+		 * @param {Integer} y y coordinate in tile
+		 * @param {Integer} tileId tileId
+		 */
+		setTile : function(x, y, tileId) {
+			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
+		},
+		
+		/**
 		 * clear the tile at the specified position
 		 * @name me.TMXLayer#clearTile
 		 * @public
@@ -787,28 +655,105 @@
 		 * @param {Integer} y y position 
 		 */
 		clearTile : function(x, y) {
-			// call the parent function
-			this.parent(x, y);
+			// clearing tile
+			this.layerData[x][y] = null;
 			// erase the corresponding area in the canvas
 			if (this.visible && this.preRender) {
 				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
 			}
 		},
+		
+		/**
+		 * get the layer alpha channel value
+		 * @name me.TMXLayer#getOpacity
+		 * @return current opacity value between 0 and 1
+		 */
+		getOpacity : function() {
+			return this.opacity;
+		},
 
 		/**
-		 * set the layer alpha channel value<br>
+		 * set the layer alpha channel value
+		 * @name me.TMXLayer#setOpacity
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			// set opacity through parent function
-			this.parent(alpha);
-
-			// if pre-rendering is used, update opacity on the hidden canvas context
-			if (this.preRender) {
-				this.layerSurface.globalAlpha = this.opacity;
+			if (alpha) {
+				this.opacity = alpha.clamp(0.0, 1.0);
+				// if pre-rendering is used, update opacity on the hidden canvas context
+				if (this.preRender) {
+					this.layerSurface.globalAlpha = this.opacity;
+				}
 			}
 		},
+		
+		/**
+		 * check for collision
+		 * obj - obj
+		 * pv   - projection vector
+		 * res : result collision object
+		 * @private
+		 */
+		checkCollision : function(obj, pv) {
 
+			var x = (pv.x < 0) ? ~~(obj.left + pv.x) : Math.ceil(obj.right  - 1 + pv.x);
+			var y = (pv.y < 0) ? ~~(obj.top  + pv.y) : Math.ceil(obj.bottom - 1 + pv.y);
+			//to return tile collision detection
+			var res = {
+				x : 0, // !=0 if collision on x axis
+				xtile : undefined,
+				xprop : {},
+				y : 0, // !=0 if collision on y axis
+				ytile : undefined,
+				yprop : {}
+			};
+			
+			//var tile;
+			if (x <= 0 || x >= this.realwidth) {
+				res.x = pv.x;
+			} else if (pv.x != 0 ) {
+				// x, bottom corner
+				res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
+				if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+					res.x = pv.x; // reuse pv.x to get a 
+					res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
+				} else {
+					// x, top corner
+					res.xtile = this.getTile(x, ~~obj.top);
+					if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
+						res.x = pv.x;
+						res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
+					}
+				}
+			}
+			
+			// check for y movement
+			// left, y corner
+			if ( pv.y != 0 ) {
+				res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
+				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+					res.y = pv.y || 1;
+					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+				} else { // right, y corner
+					res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+					if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+						res.y = pv.y || 1;
+						res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+					}
+				}
+			}
+			// return the collide object
+			return res;
+		},
+		
+		/**
+		 * a dummy update function
+		 * @private
+		 */
+		update : function() {
+			return false;
+		},
+		
 		/**
 		 * draw a tileset layer
 		 * @private

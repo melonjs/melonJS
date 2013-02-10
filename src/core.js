@@ -1105,7 +1105,7 @@ var me = me || {};
 		/**
 		 * a reference to the game collision Map
 		 * @public
-		 * @type me.TiledLayer
+		 * @type me.TMXLayer
 		 * @name me.game#collisionMap
 		 */
 		api.collisionMap = null;

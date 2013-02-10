@@ -91,133 +91,14 @@
 
 		}
 	});
-
-	/**
-	 * a Tile Set Object
-	 * @class
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.Tileset = Object.extend({
-		// constructor
-		init: function (name, tilewidth, tileheight, spacing, margin, imagesrc) {
-			this.name = name;
-			this.tilewidth = tilewidth;
-			this.tileheight = tileheight;
-			this.spacing = spacing;
-			this.margin = margin;
-			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
-			
-			if (!this.image) {
-				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			
-			
-			// tile types
-			this.type = {
-				SOLID : "solid",
-				PLATFORM : "platform",
-				L_SLOPE : "lslope",
-				R_SLOPE : "rslope",
-				LADDER : "ladder",
-				BREAKABLE : "breakable"
-			};
-
-			// tile properties
-			// (collidable, etc..)
-			this.TileProperties = [];
-			
-			// a cache for offset value
-			this.tileXOffset = [];
-			this.tileYOffset = [];
-
-			// number of tiles per horizontal line 
-			if (this.image) {
-				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			}
-		},
-		
-		// return the list of property for a tile
-		getPropertyList: function() {
-			return {
-				// collectable tiles
-				//isCollectable	: false,
-				// collidable tiles
-				isCollidable : false,
-				isSolid : false,
-				isPlatform : false,
-				isSlope : false,
-				isLeftSlope : false,
-				isRightSlope : false,
-				isLadder : false,
-				isBreakable : false
-			};
-		},
-		
-		// e.g. getTileProperty (gid)	
-		/**
-		 * return the properties of the specified tile <br>
-		 * the function will return an object with the following boolean value :<br>
-		 * - isCollidable<br>
-		 * - isSolid<br>
-		 * - isPlatform<br>
-		 * - isSlope <br>
-		 * - isLeftSlope<br>
-		 * - isRightSlope<br>
-		 * - isLadder<br>
-		 * - isBreakable<br>
-		 * @name me.Tileset#getTileProperties
-		 * @public
-		 * @function
-		 * @param {Integer} tileId 
-		 * @return {Object}
-		 */
-		getTileProperties: function(tileId) {
-			return this.TileProperties[tileId];
-		},
-		
-		//return collidable status of the specifiled tile
-
-		isTileCollidable : function(tileId) {
-			return this.TileProperties[tileId].isCollidable;
-		},
-
-		/*
-		//return collectable status of the specifiled tile
-		isTileCollectable : function (tileId) {
-			return this.TileProperties[tileId].isCollectable;
-		},
-		 */
-		
-		// return the x offset of the specified tile in the tileset image
-		getTileOffsetX : function(tileId) {
-			if (this.tileXOffset[tileId] == null) {
-				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
-			}
-			return this.tileXOffset[tileId];
-		},
-		
-		// return the y offset of the specified tile in the tileset image
-		getTileOffsetY : function(tileId) {
-			if (this.tileYOffset[tileId] == null) {
-				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
-			}
-			return this.tileYOffset[tileId];
-		}
-
-	});
-	
-
 	
     /**
 	 * a TMX Tile Set Object
 	 * @class
-	 * @extends me.Tileset
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXTileset = me.Tileset.extend({
+	me.TMXTileset = Object.extend({
 		
 		// constructor
 		init: function (xmltileset) {
@@ -240,13 +121,40 @@
 				me.TMXParser.parseFromString(xmltileset);
 				xmltileset = me.TMXParser.getFirstElementByTagName("tileset");
 			}
+			
+			this.name = me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
+			this.tilewidth = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
+			this.tileheight = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
+			this.spacing = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
+			this.margin = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
+			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
+			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
+			
+			// tile types
+			this.type = {
+				SOLID : "solid",
+				PLATFORM : "platform",
+				L_SLOPE : "lslope",
+				R_SLOPE : "rslope",
+				LADDER : "ladder",
+				BREAKABLE : "breakable"
+			};
 
-			this.parent(me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0), 
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0), 
-						xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE));
+			// tile properties
+			// (collidable, etc..)
+			this.TileProperties = [];
+			
+			// a cache for offset value
+			this.tileXOffset = [];
+			this.tileYOffset = [];
+
+			if (!this.image) {
+				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+			} else {
+				// number of tiles per horizontal line 
+				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+			}
 			
 			// compute the last gid value in the tileset
 			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
@@ -314,6 +222,63 @@
 			this.drawTile(image, 0, 0, tmxTile);
 			return image.canvas;
 		},
+		
+		// e.g. getTileProperty (gid)	
+		/**
+		 * return the properties of the specified tile <br>
+		 * the function will return an object with the following boolean value :<br>
+		 * - isCollidable<br>
+		 * - isSolid<br>
+		 * - isPlatform<br>
+		 * - isSlope <br>
+		 * - isLeftSlope<br>
+		 * - isRightSlope<br>
+		 * - isLadder<br>
+		 * - isBreakable<br>
+		 * @name me.TMXTileset#getTileProperties
+		 * @public
+		 * @function
+		 * @param {Integer} tileId 
+		 * @return {Object}
+		 */
+		getTileProperties: function(tileId) {
+			return this.TileProperties[tileId];
+		},
+		
+		//return collidable status of the specifiled tile
+		isTileCollidable : function(tileId) {
+			return this.TileProperties[tileId].isCollidable;
+		},
+
+		/*
+		//return collectable status of the specifiled tile
+		isTileCollectable : function (tileId) {
+			return this.TileProperties[tileId].isCollectable;
+		},
+		 */
+		
+		/**
+		 * return the x offset of the specified tile in the tileset image
+		 * @private
+		 */
+		getTileOffsetX : function(tileId) {
+			if (this.tileXOffset[tileId] == null) {
+				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			}
+			return this.tileXOffset[tileId];
+		},
+		
+		/**
+		 * return the y offset of the specified tile in the tileset image
+		 * @private
+		 */
+		getTileOffsetY : function(tileId) {
+			if (this.tileYOffset[tileId] == null) {
+				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+			}
+			return this.tileYOffset[tileId];
+		},
+
 
 		// draw the x,y tile
 		drawTile : function(context, dx, dy, tmxTile) {
