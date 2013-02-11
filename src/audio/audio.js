@@ -51,7 +51,10 @@
 		var retry_counter = 0;
 		
 		// global volume setting
-		var _volume = 1.0;
+		var settings = {
+			volume : 1.0,
+			muted : false
+		}
 		 
 		/**
 		 * @private
@@ -203,7 +206,8 @@
 			var soundclip = get(sound_id.toLowerCase());
 	
 			soundclip.loop = loop || false;
-			soundclip.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : _volume;
+			soundclip.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume;
+			soundclip.muted = settings.muted;
 			soundclip.play();
 
 			// set a callback if defined
@@ -511,7 +515,7 @@
 		 */
 		obj.setVolume = function(volume) {
 			if (volume) {
-				_volume = parseFloat(volume).clamp(0.0,1.0);
+				settings.volume = parseFloat(volume).clamp(0.0,1.0);
 			}
 		};
 
@@ -523,9 +527,61 @@
 		 * @returns {Number} current volume value in Float [0.0 - 1.0] .
 		 */
 		obj.getVolume = function() {
-			return _volume;
+			return settings.volume;
 		};
+		
+		/**
+		 * mute the specified sound
+		 * @name me.audio#mute
+		 * @public
+		 * @function
+		 * @param {String} sound_id audio clip id
+		 */
+		obj.mute = function(sound_id, mute) {
+			// if not defined : true
+			mute = (mute === undefined)?true:!!mute;
+			var channels = audio_channels[sound_id.toLowerCase()];
+			for ( var i = 0, soundclip; soundclip = channels[i++];) {
+				soundclip.muted = mute;
+			}
+		},
 
+		/**
+		 * unmute the specified sound
+		 * @name me.audio#unmute
+		 * @public
+		 * @function
+		 * @param {String} sound_id audio clip id
+		 */
+		obj.unmute = function(sound_id) {
+			obj.mute(sound_id, false);
+		},
+
+		/**
+		 * mute all audio 
+		 * @name me.audio#muteAll
+		 * @public
+		 * @function
+		 */
+		obj.muteAll = function() {
+			settings.muted = true;
+			for (var sound_id in audio_channels) {
+				obj.mute(sound_id, settings.muted);
+			}
+		};
+		
+		/**
+		 * unmute all audio 
+		 * @name me.audio#unmuteAll
+		 * @public
+		 * @function
+		 */
+		obj.unmuteAll = function() {
+			settings.muted = false;
+			for (var sound_id in audio_channels) {
+				obj.mute(sound_id, settings.muted);
+			}
+		};
 		
 		/**
 		 * returns the current track Id
