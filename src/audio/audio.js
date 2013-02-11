@@ -10,13 +10,6 @@
 
 (function($) {
 
-	/*
-	 * -----------------------------------------------------
-	 * 
-	 * a audio class singleton to manage the game fx & music
-	 * -----------------------------------------------------
-	 */
-
 	/**
 	 * There is no constructor function for me.audio.
 	 * 
@@ -24,12 +17,18 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-
 	me.audio = (function() {
+
+		/*
+		 * ---------------------------------------------
+		 * PRIVATE STUFF
+		 * ---------------------------------------------
+		 */
+
 		// hold public stuff in our singleton
 		var obj = {};
 
-		// audio channel list
+ 		// audio channel list
 		var audio_channels = {};
 
 		// Active (supported) audio extension
@@ -50,15 +49,10 @@
 
 		// a retry counter
 		var retry_counter = 0;
-
-		/*
-		 * ---------------------------------------------
-		 * 
-		 * PRIVATE STUFF
-		 * 
-		 * ---------------------------------------------
-		 */
-
+		
+		// global volume setting
+		var _volume = 1.0;
+		 
 		/**
 		 * @private
 		 * return the first audio format extension supported by the browser
@@ -210,7 +204,7 @@
 			var soundclip = get(sound_id.toLowerCase());
 	
 			soundclip.loop = loop || false;
-			soundclip.volume = volume ? parseFloat(volume) : 1.0;
+			soundclip.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : _volume;
 			soundclip.play();
 
 			// set a callback if defined
@@ -474,20 +468,24 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
+		 * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example 
 		 * me.audio.playTrack("awesome_music");
 		 */
-		obj.playTrack = function(sound_id) {
+		obj.playTrack = function(sound_id, volume) {
 			if (sound_enable) {
 				if (current_track != null)
 					obj.stopTrack();
-
+				
+				// TODO : rewrite this and use
+				// the me.audio.play
 				sound_id = sound_id.toLowerCase();
 				current_track = get(sound_id);
 
 				if (current_track) {
 					current_track_id = sound_id;
 					current_track.loop = true;
+					current_track.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : _volume;
 					current_track.play();
 				}
 			}
@@ -514,6 +512,31 @@
 			}
 		};
 
+		/**
+		 * set the default global volume
+		 * @name me.audio#setVolume
+		 * @public
+		 * @function
+		 * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
+		 */
+		obj.setVolume = function(volume) {
+			if (volume) {
+				_volume = parseFloat(volume).clamp(0.0,1.0);
+			}
+		};
+
+		/**
+		 * get the default global volume
+		 * @name me.audio#getVolume
+		 * @public
+		 * @function
+		 * @returns {Number} current volume value in Float [0.0 - 1.0] .
+		 */
+		obj.getVolume = function() {
+			return _volume;
+		};
+
+		
 		/**
 		 * returns the current track Id
 		 * @name me.audio#getCurrentTrack
