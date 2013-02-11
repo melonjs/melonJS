@@ -515,6 +515,17 @@
 		};
 
 		/**
+		 * returns the current track Id
+		 * @name me.audio#getCurrentTrack
+		 * @public
+		 * @function
+		 * @return {String} audio track id
+		 */
+		obj.getCurrentTrack = function() {
+			return current_track_id;
+		};
+		
+		/**
 		 * pause the current audio track
 		 * 
 		 * @name me.audio#pauseTrack
