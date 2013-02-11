@@ -379,8 +379,11 @@
 		 * @function
 		 */
 		obj.disable = function() {
-			sound_enable = false;
+			// stop the current track 
+			me.audio.stopTrack();
+			// disable sound
 			obj.play = _play_audio_disable;
+			sound_enable = false;
 		};
 
 		/**
