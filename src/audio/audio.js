@@ -200,7 +200,6 @@
 		 */
 
 		function _play_audio_enable(sound_id, loop, callback, volume) {
-			// console.log("play!!");
 			var soundclip = get(sound_id.toLowerCase());
 	
 			soundclip.loop = loop || false;
@@ -217,7 +216,8 @@
 					// execute a callback if required
 					callback();
 				}, false);
-			}
+			}			
+			return soundclip;
 
 		};
 
@@ -232,6 +232,7 @@
 				// SoundMngr._play_cb = callback;
 				setTimeout(callback, 2000); // 2 sec as default timer ?
 			}
+			return null;
 		};
 
 		/*
@@ -476,22 +477,8 @@
 		 * me.audio.playTrack("awesome_music");
 		 */
 		obj.playTrack = function(sound_id, volume) {
-			if (sound_enable) {
-				if (current_track != null)
-					obj.stopTrack();
-				
-				// TODO : rewrite this and use
-				// the me.audio.play
-				sound_id = sound_id.toLowerCase();
-				current_track = get(sound_id);
-
-				if (current_track) {
-					current_track_id = sound_id;
-					current_track.loop = true;
-					current_track.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : _volume;
-					current_track.play();
-				}
-			}
+			current_track = me.audio.play(sound_id, true, null, volume);
+			current_track_id = sound_id.toLowerCase();
 		};
 
 		/**
