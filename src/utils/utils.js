@@ -118,8 +118,15 @@
 		api.decodeBase64AsArray = function(input, bytes) {
 			bytes = bytes || 1;
 
-			var dec = Base64.decode(input), ar = [], i, j, len;
-
+			var dec = Base64.decode(input), i, j, len;
+			
+			// use a typed array if supported
+			if (typeof window.Uint32Array === 'function') {
+				var ar = new Uint32Array(dec.length / bytes);
+			} else {
+				var ar = [];
+			}
+			
 			for (i = 0, len = dec.length / bytes; i < len; i++) {
 				ar[i] = 0;
 				for (j = bytes - 1; j >= 0; --j) {
