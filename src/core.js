@@ -1105,6 +1105,14 @@ var me = me || {};
 		 */
 		api.currentLevel = null;
 
+		/**
+		 * default layer renderer
+		 * @private
+		 * @type me.TMXRenderer
+		 * @name me.game#renderer
+		 */		
+		api.renderer = null;
+
 		// FIX ME : put this somewhere else
 		api.NO_OBJECT = 0;
 

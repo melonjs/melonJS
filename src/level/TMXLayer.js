@@ -457,36 +457,38 @@
 			if (compression == '')
 				compression = null;
 
-			// if not a collision layer, create a canvas where to draw our layer
+			// associate a renderer to the layer (if not a collision layer)
 			if (!this.isCollisionMap) {
-				// set the right renderer
-				switch (this.orientation)
-				{
-					case "orthogonal": {
-					  this.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
-					  break;
-					}
-					case "isometric": {
-					  this.renderer = new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
-					  break;
-					}
-			
-					// if none found, throw an exception
-					default : {
-						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
-					}
+				if (!me.game.renderer.canRender(this)) {
+					// set a new layer specific renderer
+					switch (this.orientation) {
+						case "orthogonal": {
+						  this.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
+						  break;
+						}
+						case "isometric": {
+						  this.renderer = new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
+						  break;
+						}
+						// if none found, throw an exception
+						default : {
+							throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
+						}
+					} 
+				} else {
+					// use the default one
+					this.renderer = me.game.renderer;
 				}
-				
-				// if pre-rendering method is use, create the offline canvas
-				if (this.preRender) {
-					this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
-					this.layerSurface = this.layerCanvas.getContext('2d');
-					
-					// set alpha value for this layer
-					this.layerSurface.globalAlpha = this.opacity;
-				}
-				
 			}
+				
+			// if pre-rendering method is use, create the offline canvas
+			if (this.preRender) {
+				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerSurface = this.layerCanvas.getContext('2d');
+					
+				// set alpha value for this layer
+				this.layerSurface.globalAlpha = this.opacity;
+			}	
 
 			// initialize the layer data array
 			this.initArray();
