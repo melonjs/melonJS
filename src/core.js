@@ -738,27 +738,15 @@ var me = me || {};
 			tmxDoc : null,
 			isJSON : false,
 
-			// parse a TMX/TSX from a string (xmlhttpObj.responseText)
+			// parse a TMX XML file (and soon a JSON one)
 			parseFromString : function(data, isJSON) {
 				this.isJSON = isJSON || false;
 				
 				if (this.isJSON) {
+					// this won't work for now!
 					this.tmxDoc = JSON.parse(data);
-					// this won't work !
 				} else {
-					// get a reference to the requested corresponding xml file
-					if ($.DOMParser) {
-						var parser = new DOMParser();
-						this.tmxDoc = parser.parseFromString(data, "text/xml");
-					} else // Internet Explorer (untested!)
-					{
-						this.tmxDoc = new ActiveXObject("Microsoft.XMLDOM");
-						this.tmxDoc.async = "false";
-						this.tmxDoc.loadXML(data);
-					}
-					if (this.tmxDoc == null) {
-						console.log("tmx/tsx " + this.tmxDoc + " not found!");
-					}
+					this.tmxDoc = data;
 				}
 			},
 
