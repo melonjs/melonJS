@@ -436,9 +436,10 @@
 			me.TMXUtils.setTMXProperties(this, layer);
 			
 			// check for the correct rendering method
-			if (this.preRender === undefined)
-				this.preRender = me.sys.preRender
-				
+			if (this.preRender === undefined) {
+				this.preRender = me.sys.preRender;
+			}
+			
 			// detect if the layer is a collision map
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
