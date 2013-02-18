@@ -367,7 +367,7 @@
 		 * y : y position of the touch event in the canvas (screen coordinates)<br>
 		 * id : unique finger identifier<br>
 		 * @public
-		 * @type {Array}
+		 * @type Array
 		 * @name me.input#touches
 		 */		
 		obj.touches = [];

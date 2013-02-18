@@ -55,39 +55,39 @@ var me = me || {};
 		// Browser capabilities
 		/**
 		 * Browser User Agent (read-only)
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		ua : navigator.userAgent.toLowerCase(),
 		/**
 		 * Browser Audio capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		sound : false,
 		/**
 		 * Browser Local Storage capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		localStorage : (typeof($.localStorage) == 'object'),
 		/**
 		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		gyro : ($.DeviceMotionEvent !== undefined),
 
 		/**
 		 * Browser Base64 decoding capability (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		nativeBase64 : (typeof($.atob) == 'function'),
 
 		/**
 		 * Touch capabilities <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		touch : false,
@@ -96,21 +96,21 @@ var me = me || {};
 		// Global settings
 		/**
 		 * Game FPS (default 60)
-		 * @type {Int}
+		 * @type Int
 		 * @memberOf me.sys
 		 */
 		fps : 60,
 
 		/**
 		 * enable/disable frame interpolation (default disable)<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		interpolation : false,
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type {me.Vector2d}
+		 * @type me.Vector2d
 		 * @memberOf me.sys
 		 */
 		scale : null, //initialized by me.video.init
@@ -119,7 +119,7 @@ var me = me || {};
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
 		 * default value : undefined
-		 * @type {Number}
+		 * @type Number
 		 * @memberOf me.sys
 		 */
 		gravity : undefined,
@@ -127,7 +127,7 @@ var me = me || {};
 		/**
 		 * Use native "requestAnimFrame" function if supported <br>
 		 * fallback to clearInterval if not supported by the browser<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		useNativeAnimFrame : false,
@@ -136,7 +136,7 @@ var me = me || {};
 		 * cache Image using a Canvas element, instead of directly using the Image Object<br>
 		 * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
 		 * default value : false
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		cacheImage : false,
@@ -145,7 +145,7 @@ var me = me || {};
 		 * Enable dirtyRegion Feature <br>
 		 * default value : false<br>
 		 * (!) not fully implemented/supported (!)
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		dirtyRegion : false,
@@ -155,7 +155,7 @@ var me = me || {};
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
 		 * default value : true<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		stopOnAudioError : true,
@@ -163,7 +163,7 @@ var me = me || {};
 		/**
 		 * Specify either to pause the game when losing focus or not<br>
 		 * default value : true<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
@@ -175,7 +175,7 @@ var me = me || {};
 		 * the "best" rendering method depends of your game<br>
 		 * (amount of layer, layer size, amount of tiles per layer, etc…)<br>
 		 * note : rendering method is also configurable per layer by adding this property to your layer (in Tiled)<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		preRender : false,
@@ -516,7 +516,8 @@ var me = me || {};
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
-	 * @returns id that can be used to clear the deferred function using clearTimeout
+	 * @param {Args} [args] Optional additional arguments to curry for the function.
+	 * @return {Int} id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 *
 	 *   // execute myFunc() when the stack is empty, with 'myArgument' as parameter
@@ -587,8 +588,9 @@ var me = me || {};
 
 	/**
 	 * add a contains fn to the string object
+	 * @param {String} string to test for
 	 * @extends String
-	 * @return {Boolean}
+	 * @return {Boolean} true if contains the specified string
 	 */
 	String.prototype.contains = function(word) {
 		return this.indexOf(word) > -1;
@@ -610,6 +612,8 @@ var me = me || {};
 
 	/**
 	 * add a clamp fn to the Number object
+	 * @param {Number} low lower limit
+	 * @param {Number} high higher limit
 	 * @extends Number
 	 * @return {Number} clamped value
 	 */
@@ -1545,6 +1549,7 @@ var me = me || {};
 				if (typeof(sort_func) !== "function") {
 					sort_func = default_sort_func;
 				}
+				/** @private */
 				pendingSort = (function (sort_func) {
 					// sort everything
 					gameObjects.sort(sort_func);

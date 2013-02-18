@@ -34,7 +34,7 @@
 		 * Channel Constant when the game is paused <br>
 		 * Data passed : none <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#STATE_PAUSE
 		 */		
 		obj.STATE_PAUSE = "me.state.onPause";
@@ -43,7 +43,7 @@
 		 * Channel Constant for when the game is resumed <br>
 		 * Data passed : none <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#STATE_RESUME
 		 */		
 		obj.STATE_RESUME = "me.state.onResume";
@@ -52,7 +52,7 @@
 		 * Channel Constant for when the game manager is initialized <br>
 		 * Data passed : none <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#GAME_INIT
 		 */		
 		obj.GAME_INIT = "me.game.onInit";
@@ -61,7 +61,7 @@
 		 * Channel Constant for when a level is loaded <br>
 		 * Data passed : {String} Level Name
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#LEVEL_LOADED
 		 */		
 		obj.LEVEL_LOADED = "me.game.onLevelLoaded";
@@ -70,7 +70,7 @@
 		 * Channel Constant for when everything has loaded <br>
 		 * Data passed : none <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#LOADER_COMPLETE
 		 */
 		obj.LOADER_COMPLETE = "me.loader.onload";
@@ -79,7 +79,7 @@
 		 * Channel Constant for displaying a load progress indicator <br>
 		 * Data passed : {Number} [0 .. 1] <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#LOADER_PROGRESS
 		 */
 		obj.LOADER_PROGRESS = "me.loader.onProgress";
@@ -88,7 +88,7 @@
 		 * Channel Constant for pressing a binded key <br>
 		 * Data passed : {String} user-defined action <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#KEYDOWN
 		 */
 		obj.KEYDOWN = "me.input.keydown";
@@ -97,7 +97,7 @@
 		 * Channel Constant for releasing a binded key <br>
 		 * Data passed : {Number} user-defined action <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#KEYUP
 		 */
 		obj.KEYUP = "me.input.keyup";
@@ -107,7 +107,7 @@
 		 * note the `orientationchange` event will also trigger this channel<br>
 		 * Data passed : {Event} Event object <br>
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.event#WINDOW_ONRESIZE
 		 */
 		obj.WINDOW_ONRESIZE = "window.onresize";

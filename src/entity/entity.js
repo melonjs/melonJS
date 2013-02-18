@@ -21,7 +21,7 @@
 		 * object entity name<br>
 		 * as defined in the Tiled Object Properties
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.ObjectSettings#name
 		 */
 		name : null,
@@ -31,7 +31,7 @@
 		 * MANDATORY<br>
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.ObjectSettings#image
 		 */
 		image : null,
@@ -41,7 +41,7 @@
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.ObjectSettings#transparent_color
 		 */
 		transparent_color : null,
@@ -51,7 +51,7 @@
 		 * MANDATORY<br>
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
-		 * @type {Int}
+		 * @type Int
 		 * @name me.ObjectSettings#spritewidth
 		 */
 		spritewidth : null,
@@ -62,7 +62,7 @@
 		 * if not specified the value will be set to the corresponding image height<br>
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
-		 * @type {Int}
+		 * @type Int
 		 * @name me.ObjectSettings#spriteheight
 		 */
 		spriteheight : null,
@@ -72,7 +72,7 @@
 		 * custom type for collision detection<br>
 		 * OPTIONAL
 		 * @public
-		 * @type {String}
+		 * @type String
 		 * @name me.ObjectSettings#type
 		 */
 		type : 0,
@@ -81,7 +81,7 @@
 		 * Enable collision detection for this object<br>
 		 * OPTIONAL
 		 * @public
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @name me.ObjectSettings#collidable
 		 */
 		collidable : false
@@ -321,7 +321,7 @@
 				 * define the type of the object<br>
 				 * default value : none<br>
 				 * @public
-				 * @type {Object}
+				 * @type Object
 				 * @name me.ObjectEntity#type
 				 */
 				type : 0,
@@ -330,7 +330,7 @@
 				 * flag to enable collision detection for this object<br>
 				 * default value : false<br>
 				 * @public
-				 * @type {Boolean}
+				 * @type Boolean
 				 * @name me.ObjectEntity#collidable
 				 */
 				collidable : false,
@@ -339,7 +339,7 @@
 				/**
 				 * Entity collision Box<br>
 				 * @public
-				 * @type {me.Rect}
+				 * @type me.Rect
 				 * @name me.ObjectEntity#collisionBox
 				 */
 				collisionBox : null,
