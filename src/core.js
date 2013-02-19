@@ -472,7 +472,7 @@ var me = me || {};
 		};
 	};
 
-	if (!Function.bind) {
+	if (!Function.prototype.bind) {
 		/**
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
@@ -483,11 +483,32 @@ var me = me || {};
 		 * // Ensure that our callback is triggered with the right object context (this):
 		 * myObject.onComplete(this.callback.bind(this));
 		 */
-		Function.prototype.bind = function() {
-			var fn = this, args = Array.prototype.slice.call(arguments), object = args.shift();
-			return function() {
-				return fn.apply(object, args.concat(Array.prototype.slice.call(arguments)));
+		Function.prototype.bind = function bind(that) {
+			// ECMAScript 5 compliant implementation
+			// http://es5.github.com/#x15.3.4.5
+			// from https://github.com/kriskowal/es5-shim
+			var target = this;
+			if (typeof target != "function") {
+				throw new TypeError("Function.prototype.bind called on incompatible " + target);
+			}
+			var args = slice.call(arguments, 1);
+			var bound = function () {
+				if (this instanceof bound) {
+					var result = target.apply( this, args.concat(slice.call(arguments)));
+					if (Object(result) === result) {
+						return result;
+					}
+					return this;
+				} else {
+					return target.apply(that, args.concat(slice.call(arguments)));
+				}
 			};
+			if(target.prototype) {
+				Empty.prototype = target.prototype;
+				bound.prototype = new Empty();
+				Empty.prototype = null;
+			}
+			return bound;
 		};
 	};
 	
