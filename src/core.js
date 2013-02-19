@@ -472,7 +472,11 @@ var me = me || {};
 		};
 	};
 
+	
 	if (!Function.prototype.bind) {
+		/** @private */
+		function Empty() {};
+		
 		/**
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
@@ -491,16 +495,16 @@ var me = me || {};
 			if (typeof target != "function") {
 				throw new TypeError("Function.prototype.bind called on incompatible " + target);
 			}
-			var args = slice.call(arguments, 1);
+			var args = Array.prototype.slice.call(arguments, 1);
 			var bound = function () {
 				if (this instanceof bound) {
-					var result = target.apply( this, args.concat(slice.call(arguments)));
+					var result = target.apply( this, args.concat(Array.prototype.slice.call(arguments)));
 					if (Object(result) === result) {
 						return result;
 					}
 					return this;
 				} else {
-					return target.apply(that, args.concat(slice.call(arguments)));
+					return target.apply(that, args.concat(Array.prototype.slice.call(arguments)));
 				}
 			};
 			if(target.prototype) {
