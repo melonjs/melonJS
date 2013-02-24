@@ -390,9 +390,6 @@
 					return 1;
 
 				case "tmx":
-					preloadTMX.call(this, res, onload, onerror);
-					return 1;
-
 				case "tsx":
 					preloadTMX.call(this, res, onload, onerror);
 					return 1;
