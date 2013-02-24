@@ -64,28 +64,18 @@
 			// check for sound support by the browser
 			if (me.sys.sound) {
 				var ext = "";
-				var i = 0;
-				// do a first loop and check for codec with
-				// the 'probably' canPlayType first
-				for (; i < len; i++) {
+				for (var i = 0; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
 					// check extension against detected capabilities
 					if (obj.capabilities[ext] && 
 						obj.capabilities[ext].canPlay && 
-						obj.capabilities[ext].canPlayType === 'probably') {
+						// get only the first valid OR first 'probably' playable codec
+						(result === "" || obj.capabilities[ext].canPlayType === 'probably' ||
+					) {
 						result = ext;
-						break;
-					}
-				}
-				// loop again and check for all the rest ('maybe')
-				i = 0;
-				for (; i < len; i++) {
-					ext = requestedFormat[i].toLowerCase().trim();
-					// check extension against detected capabilities
-					if (obj.capabilities[ext] && 
-						obj.capabilities[ext].canPlay) {
-						result = ext;
-						break;
+						if (obj.capabilities[ext].canPlayType === 'probably') {
+							break;
+						}
 					}
 				}
 			}
