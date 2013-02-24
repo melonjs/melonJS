@@ -777,7 +777,8 @@
 								  vpos.x + rect.pos.x, //sx
 								  vpos.y + rect.pos.y, //sy
 								  width, height,    //sw, sh
-								  rect.pos.x, rect.pos.y,     //dx, dy
+								  vpos.x + rect.pos.x, //dx
+								  vpos.y + rect.pos.y, //dy
 								  width, height);   //dw, dh
 			}
 			// dynamically render the layer
