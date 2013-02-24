@@ -330,7 +330,8 @@
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : number of channels to be created<br>
+		 * - channel : optional number of channels to be created<br>
+		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
 		 * @name me.loader#preload
 		 * @public
@@ -340,6 +341,7 @@
 		 * var g_resources = [ {name: "tileset-platformer",  type: "image",  src: "data/map/tileset-platformer.png"},
 		 *                     {name: "meta_tiles",          type: "tsx",    src: "data/map/meta_tiles.tsx"},
 		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1.tmx"},
+		 *                     {name: "bgmusic",             type: "audio",  src: "data/audio/",        channel: 1,  stream: true},
 		 *                     {name: "cling",               type: "audio",  src: "data/audio/",        channel: 2},
 		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
 		 *                    ];
@@ -363,6 +365,10 @@
 		 * - name    : internal name of the resource<br>
 		 * - type    : "binary", "image", "tmx", "tsx", "audio"
 		 * - src     : path and file name of the resource<br>
+		 * (!) for audio :<br>
+		 * - src     : path (only) where resources are located<br>
+		 * - channel : optional number of channels to be created<br>
+		 * - stream  : optional boolean to enable audio streaming<br>
 		 * @name me.loader#load
 		 * @public
 		 * @function
@@ -370,8 +376,18 @@
 		 * @param {Function} onload function to be called when the resource is loaded
 		 * @param {Function} onerror function to be called in case of error
 		 * @example
-		 * // load a image asset
+		 * // load an image asset
 		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+		 * 
+		 * // start streaming music
+		 * me.loader.load({
+		 *     name   : "bgmusic",
+		 *     type   : "audio",
+		 *     src    : "data/audio/",
+		 *     stream : true
+		 * }, function() {
+		 *     me.audio.play("bgmusic");
+		 * });
 		 */
 
 		obj.load = function(res, onload, onerror) {
@@ -395,10 +411,9 @@
 					return 1;
 
 				case "audio":
-					me.audio.setLoadCallback(onload);
 					// only load is sound is enable
 					if (me.audio.isAudioEnable()) {
-						me.audio.load(res);
+						me.audio.load(res, onload, onerror);
 						return 1;
 					}
 					break;
