@@ -2096,7 +2096,9 @@ var me = me || {};
 			_activeUpdateFrame();
 			// we already checked it was supported earlier
 			// so no need to do it again here
-			_animFrameId = window.requestAnimationFrame(_renderFrame);
+			if (_animFrameId != -1) {
+				_animFrameId = window.requestAnimationFrame(_renderFrame);
+			}
 		};
 
 		/**
