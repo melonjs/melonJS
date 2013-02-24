@@ -70,7 +70,7 @@
 					if (obj.capabilities[ext] && 
 						obj.capabilities[ext].canPlay && 
 						// get only the first valid OR first 'probably' playable codec
-						(result === "" || obj.capabilities[ext].canPlayType === 'probably' ||
+						(result === "" || obj.capabilities[ext].canPlayType === 'probably')
 					) {
 						result = ext;
 						if (obj.capabilities[ext].canPlayType === 'probably') {
