@@ -383,26 +383,24 @@
 				return 0;
 
 			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
-
 			soundclip.preload = 'auto';
 
-			soundclip.addEventListener("canplaythrough", function(e) {
-				// console.log(soundclip);
-				this.removeEventListener("canplaythrough", arguments.callee, false);
-				soundLoaded.call(
-					me.audio,
-					sound.name,
-					sound.channel || 1,
-					(sound.stream === true) ? null : onload_cb
-				);
-			}, false);
+			var channels = sound.channel || 1;
+			var eventname = "canplaythrough";
 
 			if (sound.stream === true) {
-				soundclip.addEventListener("canplay", function(e) {
-					this.removeEventListener("canplay", arguments.callee, false);
-					onload_cb();
-				}, false);
+				channels = 1;
+				eventname = "canplay";
 			}
+			soundclip.addEventListener(eventname, function(e) {
+			   this.removeEventListener(eventname, arguments.callee, false);
+				  soundLoaded.call(
+					 me.audio,
+					 sound.name,
+					 channels,
+					 onload_cb
+			   );
+			}, false);
 
 			soundclip.addEventListener("error", function(e) {
 				soundLoadError.call(me.audio, sound.name, onerror_cb);
