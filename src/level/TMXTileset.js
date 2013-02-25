@@ -143,7 +143,11 @@
 			// tile properties
 			// (collidable, etc..)
 			this.TileProperties = [];
-						
+			
+			// a cache for offset value
+			this.tileXOffset = [];
+			this.tileYOffset = [];
+
 			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
 			} else {
@@ -256,33 +260,25 @@
 		/**
 		 * return the x offset of the specified tile in the tileset image
 		 * @private
-		 */	
-		getTileOffsetX : (function() {
-			var cache = [];
-			return function (tileId) {
-				var cached = cache[tileId];
-				if (cached === undefined) {
-					return (cache[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount));
-				}
-				return cached;
-			};
-		}()),
-		
+		 */
+		getTileOffsetX : function(tileId) {
+			if (this.tileXOffset[tileId] == null) {
+				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			}
+			return this.tileXOffset[tileId];
+		},
 		
 		/**
 		 * return the y offset of the specified tile in the tileset image
 		 * @private
 		 */
-		getTileOffsetY : (function() {
-			var cache = [];
-			return function (tileId) {
-				var cached = cache[tileId];
-				if (cached === undefined) {
-					return (cache[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount));
-				}
-				return cached;
-			};
-		}()),
+		getTileOffsetY : function(tileId) {
+			if (this.tileYOffset[tileId] == null) {
+				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+			}
+			return this.tileYOffset[tileId];
+		},
+
 
 		// draw the x,y tile
 		drawTile : function(context, dx, dy, tmxTile) {
