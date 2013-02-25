@@ -7,7 +7,7 @@ Version History
 * Audio : added the possibility to stream audio elements
 * TMX : code optimization to lower memory usage
 * TMX : fixed layer scrolling when using pre-rendering
-
+* Loader : fixed `me.loader.load` not adding TMX into the `me.levelDirector`
 
 0.9.5
 * Audio : added mp4/aac pre-loading support
