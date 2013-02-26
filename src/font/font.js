@@ -171,7 +171,7 @@
 			this.loadFontMetrics(font, size);
 
 			// set a default alignement
-			this.textAlign = this.ALIGN.RIGHT
+			this.textAlign = this.ALIGN.LEFT;
 			
 			// resize if necessary
 			if (scale) { 
