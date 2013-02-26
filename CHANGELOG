@@ -1,5 +1,7 @@
 Version History
 ---------------
+0.9.7
+
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
 * Core : Workaround for useNativeFrame when cancelAnimationRequest is not supported 
