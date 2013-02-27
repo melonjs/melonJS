@@ -292,6 +292,7 @@ var ScoreObject = me.HUD_Item.extend( {
 		this.parent(x, y);
 		// create a font
 		this.font = new me.BitmapFont("atasci40", {x:40});
+		this.font.set("right");
 	},
 	/**
 	 * draw the score
