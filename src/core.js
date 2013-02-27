@@ -55,39 +55,39 @@ var me = me || {};
 		// Browser capabilities
 		/**
 		 * Browser User Agent (read-only)
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		ua : navigator.userAgent.toLowerCase(),
 		/**
 		 * Browser Audio capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		sound : false,
 		/**
 		 * Browser Local Storage capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		localStorage : (typeof($.localStorage) == 'object'),
 		/**
 		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		gyro : ($.DeviceMotionEvent !== undefined),
 
 		/**
 		 * Browser Base64 decoding capability (read-only) <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		nativeBase64 : (typeof($.atob) == 'function'),
 
 		/**
 		 * Touch capabilities <br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		touch : false,
@@ -96,21 +96,21 @@ var me = me || {};
 		// Global settings
 		/**
 		 * Game FPS (default 60)
-		 * @type {Int}
+		 * @type Int
 		 * @memberOf me.sys
 		 */
 		fps : 60,
 
 		/**
 		 * enable/disable frame interpolation (default disable)<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		interpolation : false,
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type {me.Vector2d}
+		 * @type me.Vector2d
 		 * @memberOf me.sys
 		 */
 		scale : null, //initialized by me.video.init
@@ -119,7 +119,7 @@ var me = me || {};
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
 		 * default value : undefined
-		 * @type {Number}
+		 * @type Number
 		 * @memberOf me.sys
 		 */
 		gravity : undefined,
@@ -127,7 +127,7 @@ var me = me || {};
 		/**
 		 * Use native "requestAnimFrame" function if supported <br>
 		 * fallback to clearInterval if not supported by the browser<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		useNativeAnimFrame : false,
@@ -136,7 +136,7 @@ var me = me || {};
 		 * cache Image using a Canvas element, instead of directly using the Image Object<br>
 		 * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
 		 * default value : false
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		cacheImage : false,
@@ -145,7 +145,7 @@ var me = me || {};
 		 * Enable dirtyRegion Feature <br>
 		 * default value : false<br>
 		 * (!) not fully implemented/supported (!)
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		dirtyRegion : false,
@@ -155,7 +155,7 @@ var me = me || {};
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
 		 * default value : true<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		stopOnAudioError : true,
@@ -163,7 +163,7 @@ var me = me || {};
 		/**
 		 * Specify either to pause the game when losing focus or not<br>
 		 * default value : true<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
@@ -175,7 +175,7 @@ var me = me || {};
 		 * the "best" rendering method depends of your game<br>
 		 * (amount of layer, layer size, amount of tiles per layer, etc…)<br>
 		 * note : rendering method is also configurable per layer by adding this property to your layer (in Tiled)<br>
-		 * @type {Boolean}
+		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		preRender : false,
@@ -472,7 +472,11 @@ var me = me || {};
 		};
 	};
 
-	if (!Function.bind) {
+	
+	if (!Function.prototype.bind) {
+		/** @private */
+		function Empty() {};
+		
 		/**
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
@@ -483,11 +487,32 @@ var me = me || {};
 		 * // Ensure that our callback is triggered with the right object context (this):
 		 * myObject.onComplete(this.callback.bind(this));
 		 */
-		Function.prototype.bind = function() {
-			var fn = this, args = Array.prototype.slice.call(arguments), object = args.shift();
-			return function() {
-				return fn.apply(object, args.concat(Array.prototype.slice.call(arguments)));
+		Function.prototype.bind = function bind(that) {
+			// ECMAScript 5 compliant implementation
+			// http://es5.github.com/#x15.3.4.5
+			// from https://github.com/kriskowal/es5-shim
+			var target = this;
+			if (typeof target != "function") {
+				throw new TypeError("Function.prototype.bind called on incompatible " + target);
+			}
+			var args = Array.prototype.slice.call(arguments, 1);
+			var bound = function () {
+				if (this instanceof bound) {
+					var result = target.apply( this, args.concat(Array.prototype.slice.call(arguments)));
+					if (Object(result) === result) {
+						return result;
+					}
+					return this;
+				} else {
+					return target.apply(that, args.concat(Array.prototype.slice.call(arguments)));
+				}
 			};
+			if(target.prototype) {
+				Empty.prototype = target.prototype;
+				bound.prototype = new Empty();
+				Empty.prototype = null;
+			}
+			return bound;
 		};
 	};
 	
@@ -516,7 +541,8 @@ var me = me || {};
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
-	 * @returns id that can be used to clear the deferred function using clearTimeout
+	 * @param {Args} [args] Optional additional arguments to curry for the function.
+	 * @return {Int} id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 *
 	 *   // execute myFunc() when the stack is empty, with 'myArgument' as parameter
@@ -587,8 +613,9 @@ var me = me || {};
 
 	/**
 	 * add a contains fn to the string object
+	 * @param {String} string to test for
 	 * @extends String
-	 * @return {Boolean}
+	 * @return {Boolean} true if contains the specified string
 	 */
 	String.prototype.contains = function(word) {
 		return this.indexOf(word) > -1;
@@ -610,6 +637,8 @@ var me = me || {};
 
 	/**
 	 * add a clamp fn to the Number object
+	 * @param {Number} low lower limit
+	 * @param {Number} high higher limit
 	 * @extends Number
 	 * @return {Number} clamped value
 	 */
@@ -738,27 +767,15 @@ var me = me || {};
 			tmxDoc : null,
 			isJSON : false,
 
-			// parse a TMX/TSX from a string (xmlhttpObj.responseText)
+			// parse a TMX XML file (and soon a JSON one)
 			parseFromString : function(data, isJSON) {
 				this.isJSON = isJSON || false;
 				
 				if (this.isJSON) {
+					// this won't work for now!
 					this.tmxDoc = JSON.parse(data);
-					// this won't work !
 				} else {
-					// get a reference to the requested corresponding xml file
-					if ($.DOMParser) {
-						var parser = new DOMParser();
-						this.tmxDoc = parser.parseFromString(data, "text/xml");
-					} else // Internet Explorer (untested!)
-					{
-						this.tmxDoc = new ActiveXObject("Microsoft.XMLDOM");
-						this.tmxDoc.async = "false";
-						this.tmxDoc.loadXML(data);
-					}
-					if (this.tmxDoc == null) {
-						console.log("tmx/tsx " + this.tmxDoc + " not found!");
-					}
+					this.tmxDoc = data;
 				}
 			},
 
@@ -1116,6 +1133,14 @@ var me = me || {};
 		 * @name me.game#currentLevel
 		 */
 		api.currentLevel = null;
+
+		/**
+		 * default layer renderer
+		 * @private
+		 * @type me.TMXRenderer
+		 * @name me.game#renderer
+		 */		
+		api.renderer = null;
 
 		// FIX ME : put this somewhere else
 		api.NO_OBJECT = 0;
@@ -1549,6 +1574,7 @@ var me = me || {};
 				if (typeof(sort_func) !== "function") {
 					sort_func = default_sort_func;
 				}
+				/** @private */
 				pendingSort = (function (sort_func) {
 					// sort everything
 					gameObjects.sort(sort_func);
@@ -2070,7 +2096,9 @@ var me = me || {};
 			_activeUpdateFrame();
 			// we already checked it was supported earlier
 			// so no need to do it again here
-			_animFrameId = window.requestAnimationFrame(_renderFrame);
+			if (_animFrameId != -1) {
+				_animFrameId = window.requestAnimationFrame(_renderFrame);
+			}
 		};
 
 		/**

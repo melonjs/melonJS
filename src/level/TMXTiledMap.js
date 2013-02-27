@@ -163,49 +163,66 @@
 				switch (xmlElements.item(i).nodeName) {
 					// get the map information
 					case me.TMX_TAG_MAP: {
-					   var map = xmlElements.item(i);
-					   this.version = me.TMXParser.getStringAttribute(map, me.TMX_TAG_VERSION);
-					   this.orientation = me.TMXParser.getStringAttribute(map, me.TMX_TAG_ORIENTATION);
-					   this.width = me.TMXParser.getIntAttribute(map, me.TMX_TAG_WIDTH);
-					   this.height = me.TMXParser.getIntAttribute(map, me.TMX_TAG_HEIGHT);
-					   this.tilewidth = me.TMXParser.getIntAttribute(map,	me.TMX_TAG_TILEWIDTH);
-					   this.tileheight = me.TMXParser.getIntAttribute(map, me.TMX_TAG_TILEHEIGHT);
-					   this.realwidth = this.width * this.tilewidth;
-					   this.realheight = this.height * this.tileheight;
-					   this.backgroundcolor = me.TMXParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
-					   this.z = zOrder++;
+						var map = xmlElements.item(i);
+						this.version = me.TMXParser.getStringAttribute(map, me.TMX_TAG_VERSION);
+						this.orientation = me.TMXParser.getStringAttribute(map, me.TMX_TAG_ORIENTATION);
+						this.width = me.TMXParser.getIntAttribute(map, me.TMX_TAG_WIDTH);
+						this.height = me.TMXParser.getIntAttribute(map, me.TMX_TAG_HEIGHT);
+						this.tilewidth = me.TMXParser.getIntAttribute(map,	me.TMX_TAG_TILEWIDTH);
+						this.tileheight = me.TMXParser.getIntAttribute(map, me.TMX_TAG_TILEHEIGHT);
+						this.realwidth = this.width * this.tilewidth;
+						this.realheight = this.height * this.tileheight;
+						this.backgroundcolor = me.TMXParser.getStringAttribute(map, me.TMX_BACKGROUND_COLOR);
+						this.z = zOrder++;
+					   
+					   	// initilialize a new default renderer
+						if ((me.game.renderer === null) || !me.game.renderer.canRender(this)) {
+							switch (this.orientation) {
+								case "orthogonal": {
+								  me.game.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
+								  break;
+								}
+								case "isometric": {
+								  me.game.renderer =  new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
+								  break;
+								}
+								// if none found, throw an exception
+								default : {
+									throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
+								}
+							}
+						}
 
-					   // center the map if smaller than the current viewport
-					   if ((this.realwidth < me.game.viewport.width) || 
-						   (this.realheight < me.game.viewport.height)) {
+						// center the map if smaller than the current viewport
+						if ((this.realwidth < me.game.viewport.width) || 
+							(this.realheight < me.game.viewport.height)) {
 							var shiftX =  ~~( (me.game.viewport.width - this.realwidth) / 2);
 							var shiftY =  ~~( (me.game.viewport.height - this.realheight) / 2);
 							// update the map default screen position
 							this.pos.add({x:shiftX > 0 ? shiftX : 0 , y:shiftY > 0 ? shiftY : 0} );
-					   }
+						}
 
-					   // set the map properties (if any)
-					   me.TMXUtils.setTMXProperties(this, map);
+						// set the map properties (if any)
+						me.TMXUtils.setTMXProperties(this, map);
 						
-					   // check if a user-defined background color is defined  
-					   this.background_color = this.backgroundcolor ? this.backgroundcolor : this.background_color;
-					   if (this.background_color) {
+						// check if a user-defined background color is defined  
+						this.background_color = this.backgroundcolor ? this.backgroundcolor : this.background_color;
+						if (this.background_color) {
 							this.mapLayers.push(new me.ColorLayer("background_color", 
 																  this.background_color, 
 																  zOrder++));
-					   }
+						}
 
-					   // check if a background image is defined
-					   if (this.background_image) {
+						// check if a background image is defined
+						if (this.background_image) {
 							// add a new image layer
 							this.mapLayers.push(new me.ImageLayer("background_image", 
 																  this.width, this.height, 
 																  this.background_image, 
 																  zOrder++));
-					   }
-					   break;
+						}
+						break;
 					};
-				   
 
 					// get the tileset information
 					case me.TMX_TAG_TILESET: {
@@ -267,7 +284,7 @@
 
 			// free the TMXParser ressource
 			me.TMXParser.free();
-
+			
 			// flag as loaded
 			this.initialized = true;
 

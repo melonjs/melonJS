@@ -56,7 +56,7 @@
 		/**
 		 * last game tick value
 		 * @public
-		 * @type {Int}
+		 * @type Int
 		 * @name me.timer#tick
 		 */
 		api.tick = 1.0;
@@ -64,7 +64,7 @@
 		/**
 		 * last measured fps rate
 		 * @public
-		 * @type {Int}
+		 * @type Int
 		 * @name me.timer#fps
 		 */
 		api.fps = 0;

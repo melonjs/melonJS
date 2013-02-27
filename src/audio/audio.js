@@ -34,9 +34,6 @@
 		// Active (supported) audio extension
 		var activeAudioExt = -1;
 
-		// loadcb function
-		var load_cb = null;
-
 		// current music
 		var current_track_id = null;
 		var current_track = null;
@@ -67,28 +64,18 @@
 			// check for sound support by the browser
 			if (me.sys.sound) {
 				var ext = "";
-				var i = 0;
-				// do a first loop and check for codec with
-				// the 'probably' canPlayType first
-				for (; i < len; i++) {
+				for (var i = 0; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
 					// check extension against detected capabilities
 					if (obj.capabilities[ext] && 
 						obj.capabilities[ext].canPlay && 
-						obj.capabilities[ext].canPlayType === 'probably') {
+						// get only the first valid OR first 'probably' playable codec
+						(result === "" || obj.capabilities[ext].canPlayType === 'probably')
+					) {
 						result = ext;
-						break;
-					}
-				}
-				// loop again and check for all the rest ('maybe')
-				i = 0;
-				for (; i < len; i++) {
-					ext = requestedFormat[i].toLowerCase().trim();
-					// check extension against detected capabilities
-					if (obj.capabilities[ext] && 
-						obj.capabilities[ext].canPlay) {
-						result = ext;
-						break;
+						if (obj.capabilities[ext].canPlayType === 'probably') {
+							break;
+						}
 					}
 				}
 			}
@@ -128,7 +115,7 @@
 		 * event listener callback on load error
 		 */
 
-		function soundLoadError(sound_id) {
+		function soundLoadError(sound_id, onerror_cb) {
 			// check the retry counter
 			if (retry_counter++ > 3) {
 				// something went wrong
@@ -136,9 +123,9 @@
 				if (me.sys.stopOnAudioError===false) {
 					// disable audio
 					me.audio.disable();
-					// call load callback if defined
-					if (load_cb) {
-						load_cb();
+					// call error callback if defined
+					if (onerror_cb) {
+						onerror_cb();
 					}
 					// warning
 					console.log(errmsg + ", disabling audio");
@@ -157,7 +144,7 @@
 		 * event listener callback when a sound is loaded
 		 */
 
-		function soundLoaded(sound_id, sound_channel) {
+		function soundLoaded(sound_id, sound_channel, onload_cb) {
 			// reset the retry counter
 			retry_counter = 0;
 			// create other "copy" channels if necessary
@@ -172,8 +159,8 @@
 				}
 			}
 			// callback if defined
-			if (load_cb) {
-				load_cb.call();
+			if (onload_cb) {
+				onload_cb();
 			}
 		};
 
@@ -334,17 +321,6 @@
 		};
 
 		/**
-		 * set call back when a sound (and instances) is/are loaded
-		 * 
-		 * @name me.audio#setLoadCallback
-		 * @private
-		 * @function
-		 */
-		obj.setLoadCallback = function(callback) {
-			load_cb = callback;
-		};
-
-		/**
 		 * return true if audio is enable
 		 * 
 		 * @see me.audio#enable
@@ -392,28 +368,42 @@
 		};
 
 		/**
-		 * load a sound sound struct : name: id of the sound src: src path
-		 * channel: number of channel to allocate
-		 * 
+		 * Load an audio file.<br>
+		 * <br>
+		 * sound item must contain the following fields :<br>
+		 * - name    : id of the sound<br>
+		 * - src     : source path<br>
+		 * - channel : [Optional] number of channels to allocate<br>
+		 * - stream  : [Optional] boolean to enable streaming<br>
 		 * @private
 		 */
-		obj.load = function(sound) {
+		obj.load = function(sound, onload_cb, onerror_cb) {
 			// do nothing if no compatible format is found
 			if (activeAudioExt == -1)
 				return 0;
 
 			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
-
 			soundclip.preload = 'auto';
 
-			soundclip.addEventListener('canplaythrough', function(e) {
-				// console.log(soundclip);
-				this.removeEventListener('canplaythrough', arguments.callee, false);
-				soundLoaded.apply(me.audio, [sound.name, sound.channel]);
+			var channels = sound.channel || 1;
+			var eventname = "canplaythrough";
+
+			if (sound.stream === true) {
+				channels = 1;
+				eventname = "canplay";
+			}
+			soundclip.addEventListener(eventname, function(e) {
+			   this.removeEventListener(eventname, arguments.callee, false);
+				  soundLoaded.call(
+					 me.audio,
+					 sound.name,
+					 channels,
+					 onload_cb
+			   );
 			}, false);
 
 			soundclip.addEventListener("error", function(e) {
-				soundLoadError.apply(me.audio, [sound.name]);
+				soundLoadError.call(me.audio, sound.name, onerror_cb);
 			}, false);
 
 			// load it

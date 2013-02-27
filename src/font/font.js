@@ -23,7 +23,7 @@
 	 * @param {String} font
 	 * @param {int} size
 	 * @param {String} color
-	 * @param {String} [align="left"] horizontal alignement
+	 * @param {String} [textAlign="left"] horizontal alignement
 	 */
 	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
@@ -39,13 +39,13 @@
 		font : null,
 		height : null,
 		color : null,
-		align : null,
+		textAlign : null,
 
 		/** @private */
-		init : function(font, size, color, align) {
+		init : function(font, size, color, textAlign) {
 
 			// font name and type
-			this.set(font, size, color, align);
+			this.set(font, size, color, textAlign);
 		},
 
 		/**
@@ -67,12 +67,12 @@
 		 * @param {String} font
 		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
-		 * @param {String} [align="left"] horizontal alignement
+		 * @param {String} [textAlign="left"] horizontal alignement
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");
 		 */
-		set : function(font, size, color, align) {
+		set : function(font, size, color, textAlign) {
 			// font name and type
 			var font_names = font.split(",");
 			for (var i = 0; i < font_names.length; i++) {
@@ -84,7 +84,7 @@
 			}
 			this.font = size + " " + font_names.join(",");;
 			this.color = color;
-			this.align = align || "left";
+			this.textAlign = textAlign || "left";
 		},
 
 		/**
@@ -105,7 +105,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textAlign = this.align;
+			context.textAlign = this.textAlign;
 			var dim = context.measureText(text);
 			dim.height = this.height;
 
@@ -123,7 +123,7 @@
 			// draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
-			context.textAlign = this.align;
+			context.textAlign = this.textAlign;
 			context.fillText(text, ~~x, ~~y);
 		}
 	});
@@ -171,7 +171,7 @@
 			this.loadFontMetrics(font, size);
 
 			// set a default alignement
-			this.align = this.ALIGN.RIGHT
+			this.textAlign = this.ALIGN.LEFT;
 			
 			// resize if necessary
 			if (scale) { 
@@ -198,11 +198,11 @@
 
 		/**
 		 * change the font settings
-		 * @param {String} align ("left", "center", "right")
+		 * @param {String} textAlign ("left", "center", "right")
 		 * @param {int} [scale]
 		 */
-		set : function(align, scale) {
-			this.align = align;
+		set : function(textAlign, scale) {
+			this.textAlign = textAlign;
 			// updated scaled Size
 			if (scale) {
 				this.resize(scale);
@@ -245,7 +245,7 @@
 			text = new String(text);
 
 			// adjust pos based on alignment
-			switch(this.align) {
+			switch(this.textAlign) {
 				case this.ALIGN.RIGHT:
 					x -= this.measureText(text).width;
 					break;

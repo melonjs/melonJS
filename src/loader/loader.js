@@ -132,30 +132,13 @@
 		var resourceCount = 0;
 		var loadCount = 0;
 		var timerId = 0;
-		// keep track of how much TMX file we are loading
-		var tmxCount = 0;
-
 
 		/**
 		 * check the loading status
 		 * @private
 		 */
 		function checkLoadStatus() {
-			// remove tmxCount from the total resource to be loaded
-			// as we will after load each TMX into the level director
-			if (loadCount == (resourceCount - tmxCount)) {
-
-				// add all TMX level into the level Director
-				for ( var tmxObj in tmxList) {
-					if (tmxList[tmxObj].isTMX) {
-						// load the level into the levelDirector
-						if (me.levelDirector.addTMXLevel(tmxObj)) {
-							//progress notification
-							obj.onResourceLoaded();
-						}
-					}
-				}
-
+			if (loadCount == resourceCount) {
 				// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
 				if (obj.onload) {
 					// make sure we clear the timer
@@ -165,8 +148,6 @@
 						obj.onload();
 						me.event.publish(me.event.LOADER_COMPLETE);
 					}, 300);
-					// reset tmxcount for next time
-					tmxCount = 0;
 				} else
 					console.error("no load callback defined");
 			} else {
@@ -217,13 +198,25 @@
 					// status = 0 when file protocol is used, or cross-domain origin,
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+						var result = null;
+						// ie9 does not fully implement the responseXML
+						if (me.sys.ua.contains('msie') || !xmlhttp.responseXML) {
+							// manually create the XML DOM
+							result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
+						} else {
+							result = xmlhttp.responseXML;
+						}
 						// get the TMX content
 						tmxList[tmxData.name] = {
-							data: xmlhttp.responseText,
+							data: result,
 							isTMX: (tmxData.type === "tmx"),
 							// Sore the data format ('tmx', 'json')
 							type : me.utils.getFileExtension(tmxData.src).toLowerCase()
 						};
+						// add the tmx to the levelDirector
+						if (tmxData.type === "tmx") {
+							me.levelDirector.addTMXLevel(tmxData.name);
+						}
 						// fire the callback
 						onload();
 					} else {
@@ -231,11 +224,8 @@
 					}
 				}
 			};
-			
 			// send the request
 			xmlhttp.send(null);
-			
-			
 		};
 			
 		/**
@@ -340,7 +330,8 @@
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : number of channels to be created<br>
+		 * - channel : optional number of channels to be created<br>
+		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
 		 * @name me.loader#preload
 		 * @public
@@ -350,6 +341,7 @@
 		 * var g_resources = [ {name: "tileset-platformer",  type: "image",  src: "data/map/tileset-platformer.png"},
 		 *                     {name: "meta_tiles",          type: "tsx",    src: "data/map/meta_tiles.tsx"},
 		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1.tmx"},
+		 *                     {name: "bgmusic",             type: "audio",  src: "data/audio/",        channel: 1,  stream: true},
 		 *                     {name: "cling",               type: "audio",  src: "data/audio/",        channel: 2},
 		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
 		 *                    ];
@@ -373,6 +365,10 @@
 		 * - name    : internal name of the resource<br>
 		 * - type    : "binary", "image", "tmx", "tsx", "audio"
 		 * - src     : path and file name of the resource<br>
+		 * (!) for audio :<br>
+		 * - src     : path (only) where resources are located<br>
+		 * - channel : optional number of channels to be created<br>
+		 * - stream  : optional boolean to enable audio streaming<br>
 		 * @name me.loader#load
 		 * @public
 		 * @function
@@ -380,8 +376,18 @@
 		 * @param {Function} onload function to be called when the resource is loaded
 		 * @param {Function} onerror function to be called in case of error
 		 * @example
-		 * // load a image asset
+		 * // load an image asset
 		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+		 * 
+		 * // start streaming music
+		 * me.loader.load({
+		 *     name   : "bgmusic",
+		 *     type   : "audio",
+		 *     src    : "data/audio/",
+		 *     stream : true
+		 * }, function() {
+		 *     me.audio.play("bgmusic");
+		 * });
 		 */
 
 		obj.load = function(res, onload, onerror) {
@@ -400,22 +406,14 @@
 					return 1;
 
 				case "tmx":
-					preloadTMX.call(this, res, onload, onerror);
-					// increase the resourceCount by 1
-					// allowing to add the loading of level in the 
-					// levelDirector as part of the loading progress
-					tmxCount += 1;
-					return 2;
-
 				case "tsx":
 					preloadTMX.call(this, res, onload, onerror);
 					return 1;
 
 				case "audio":
-					me.audio.setLoadCallback(onload);
 					// only load is sound is enable
 					if (me.audio.isAudioEnable()) {
-						me.audio.load(res);
+						me.audio.load(res, onload, onerror);
 						return 1;
 					}
 					break;
