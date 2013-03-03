@@ -269,8 +269,8 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 			// set dead animation
 			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
-			var obj = this;
-			this.renderable.flicker(45, function(){me.game.remove(obj)});
+			var self = this;
+			this.renderable.flicker(45, function(){me.game.remove(self)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score
