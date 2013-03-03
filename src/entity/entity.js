@@ -131,10 +131,9 @@
 
 		obj.init = function() {
 			// add default entity object
-			obj.add("me.LevelEntity", me.LevelEntity);
 			obj.add("me.ObjectEntity", me.ObjectEntity);
 			obj.add("me.CollectableEntity", me.CollectableEntity);
-			obj.add("me.InvisibleEntity", me.ObjectEntity);
+			obj.add("me.LevelEntity", me.LevelEntity);
 		};
 
 		/**
@@ -1105,45 +1104,19 @@
 
 	/************************************************************************************/
 	/*                                                                                  */
-	/*      a non visible entity                                                        */
-	/*      NOT FINISHED                                                                */
-	/************************************************************************************/
-	/**
-	 * @class
-	 * @extends me.Rect
-	 * @memberOf me
-	 * @constructor
-	 * @param {int} x the x coordinates of the object
-	 * @param {int} y the y coordinates of the object
-	 * @param {me.ObjectSettings} settings object settings
-	 */
-	me.InvisibleEntity = me.ObjectEntity.extend(
-	/** @scope me.InvisibleEntity.prototype */ {
-
-		/** @private */
-		init : function(x, y, settings) {
-			// call the parent constructor
-			this.parent(x, y, settings);
-			
-			this.collidable = true;
-		}
-	});
-
-	/************************************************************************************/
-	/*                                                                                  */
 	/*      a level entity                                                              */
 	/*                                                                                  */
 	/************************************************************************************/
 	/**
 	 * @class
-	 * @extends me.InvisibleEntity
+	 * @extends me.ObjectEntity
 	 * @memberOf me
 	 * @constructor
 	 * @param {int} x the x coordinates of the object
 	 * @param {int} y the y coordinates of the object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
-	me.LevelEntity = me.InvisibleEntity.extend(
+	me.LevelEntity = me.ObjectEntity.extend(
 	/** @scope me.LevelEntity.prototype */
 	{
 		/** @private */
@@ -1155,10 +1128,11 @@
 			this.fade = settings.fade;
 			this.duration = settings.duration;
 			this.fading = false;
-
+			
+			this.collidable = true;
+			
 			// a temp variable
 			this.gotolevel = settings.to;
-
 		},
 
 		/**
