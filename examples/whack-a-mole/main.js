@@ -258,7 +258,7 @@ var MoleEntity = me.AnimationSheet.extend(
 /**
  * a mole manager (to manage movement, etc..)
  */
-var MoleManager = me.InvisibleEntity.extend(
+var MoleManager = me.ObjectEntity.extend(
 {	
 	moles : [],
 	
