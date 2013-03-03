@@ -344,12 +344,12 @@
 		collisionBox : null,
 
 		/**
-		 * The entity animation sheet (if defined)
+		 * The entity renderable object (if defined)
 		 * @public
-		 * @type me.AnimationSheet
-		 * @name me.ObjectEntity#anim
+		 * @type me.Renderable
+		 * @name me.ObjectEntity#renderable
 		 */
-		anim : null,
+		renderable : null,
 		
 		// z position (for ordering display)
 		z : 0,
@@ -394,21 +394,16 @@
 			
 			if (settings.image) {
 				var image = (typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image
-				this.anim = new me.AnimationSheet(x, y,
-												  image,
-												  settings.spritewidth,
-												  settings.spriteheight,
-												  settings.spacing,
-												  settings.margin);
+				this.renderable = new me.AnimationSheet(0, 0, image,
+														settings.spritewidth,
+														settings.spriteheight,
+														settings.spacing,
+														settings.margin);
 				
 				// check for user defined transparent color
 				if (settings.transparent_color) {
-					this.anim.setTransparency(settings.transparent_color);
+					this.renderable.setTransparency(settings.transparent_color);
 				}
-				
-				// link both position vector
-				this.anim.pos = this.pos;
-				
 			}
 
 			// set the object GUID value
@@ -620,9 +615,9 @@
 		 */
 		flipX : function(flip) {
 			if (flip != this.lastflipX) {
-				if (this.anim) {
+				if (this.renderable) {
 					// flip the animation
-					this.anim.flipX(flip);
+					this.renderable.flipX(flip);
 				}
 
 				// flip the collision box
@@ -636,9 +631,9 @@
 		 */
 		flipY : function(flip) {
 			if (flip != this.lastflipY) {
-				if (this.anim) {
+				if (this.renderable) {
 					// flip the animation
-					this.anim.flipY(flip);
+					this.renderable.flipY(flip);
 				}
 				// flip the collision box
 				this.collisionBox.flipY(this.height);
@@ -1014,8 +1009,8 @@
 		
 		/** @private */
 		update : function() {
-			if (this.anim) {
-				return this.anim.update();
+			if (this.renderable) {
+				return this.renderable.update();
 			}
 			return false;
 		},
@@ -1029,8 +1024,12 @@
 		 **/
 		draw : function(context) {
 			// draw the sprite if defined
-			if (this.anim) {
-				this.anim.draw(context);
+			if (this.renderable) {
+				//translate display since renderable
+				//postion is relative to the entity
+				context.translate(this.pos.x, this.pos.y);
+				this.renderable.draw(context);
+				context.translate(-this.pos.x, -this.pos.y);
 			}
 			// check if debug mode is enabled
 			if (me.debug.renderHitBox) {
@@ -1055,10 +1054,13 @@
 		 */
 		destroy : function() {
 			// free some property objects
-			this.anim = null;
+			if (this.renderable) {
+				this.renderable.destroy.apply(this.renderable, arguments);
+				this.renderable = null;
+			}
+			this.onDestroyEvent.apply(this, arguments);
 			this.pos = null;
 			this.collisionBox = null;
-			this.onDestroyEvent.apply(this, arguments);
 		},
 
 		/**

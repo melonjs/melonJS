@@ -37,10 +37,10 @@ var PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
 		// walking animatin
-		this.anim.addAnimation ("walk",  [0,2,1]);
+		this.renderable.addAnimation ("walk",  [0,2,1]);
 		
 		// set default one
-		this.anim.setCurrentAnimation("walk");
+		this.renderable.setCurrentAnimation("walk");
 	},
 	
 	/* -----
@@ -112,7 +112,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		// check if we moved
-		if (this.vel.x!=0 || this.vel.y!=0 || this.anim.isFlickering()) {
+		if (this.vel.x!=0 || this.vel.y!=0 || this.renderable.isFlickering()) {
 			this.parent();
 			return true;
 		}
@@ -125,9 +125,9 @@ var PlayerEntity = me.ObjectEntity.extend({
 	 * ouch
 	 */
 	hurt : function () {
-		if (!this.anim.flickering)
+		if (!this.renderable.flickering)
 		{
-			this.anim.flicker(45);
+			this.renderable.flicker(45);
 			// flash the screen
 			me.game.viewport.fadeIn("#FFFFFF", 75);
 			me.audio.play("die", false);
@@ -151,15 +151,15 @@ var CoinEntity = me.CollectableEntity.extend({
 		this.parent(x, y , settings);
 
 		// animation speed		
-		this.anim.animationspeed = 8;
+		this.renderable.animationspeed = 8;
 		
 		// bounding box
 		//this.updateColRect(8,16,16,16);
 		
 		// walking animatin
-		this.anim.addAnimation("spin", [0,1,2,3]);
+		this.renderable.addAnimation("spin", [0,1,2,3]);
 		
-		this.anim.setCurrentAnimation("spin");
+		this.renderable.setCurrentAnimation("spin");
 		
 	},		
 	
@@ -210,16 +210,16 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 	
 		// custom animation speed ?
 		if (settings.animationspeed) {
-			this.anim.animationspeed = settings.animationspeed; 
+			this.renderable.animationspeed = settings.animationspeed; 
 		}
 		
 		// walking animatin
-		this.anim.addAnimation ("walk", [0,1]);
+		this.renderable.addAnimation ("walk", [0,1]);
 		// dead animatin
-		this.anim.addAnimation ("dead", [2]);
+		this.renderable.addAnimation ("dead", [2]);
 		
 		// set default one
-		this.anim.setCurrentAnimation("walk");
+		this.renderable.setCurrentAnimation("walk");
 	},
 		
 	
@@ -252,7 +252,7 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// call the parent function
 		this.parent();
 		// return true if we moved of if flickering
-		return (this.vel.x != 0 || this.vel.y != 0 || this.anim.isFlickering());
+		return (this.vel.x != 0 || this.vel.y != 0 || this.renderable.isFlickering());
 	},
 	
 	/**
@@ -267,9 +267,10 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 			// and not collidable anymore
 			this.collidable = false;
 			// set dead animation
-			this.anim.setCurrentAnimation("dead");
+			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
-			this.anim.flicker(45, function(){me.game.remove(this)});
+			var obj = this;
+			this.renderable.flicker(45, function(){me.game.remove(obj)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score
