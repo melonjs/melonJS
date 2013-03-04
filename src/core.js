@@ -754,64 +754,6 @@ var me = me || {};
 			}
 		};
 	}
-	/************************************************************************************/
-
-	/**
-	 * a basic TMX/TSX Parser
-	 * @class
-	 * @constructor
-	 * @ignore
-	 **/
-	function _TinyTMXParser() {
-		var parserObj = {
-			tmxDoc : null,
-			isJSON : false,
-
-			// parse a TMX XML file (and soon a JSON one)
-			parseFromString : function(data, isJSON) {
-				this.isJSON = isJSON || false;
-				this.tmxDoc = data;
-			},
-
-			getFirstElementByTagName : function(name) {
-				return this.tmxDoc ? this.tmxDoc.getElementsByTagName(name)[0] : null;
-			},
-
-			getAllTagElements : function() {
-				return this.tmxDoc ? this.tmxDoc.getElementsByTagName('*') : null;
-			},
-
-			getStringAttribute : function(elt, str, val) {
-				var ret = elt.getAttribute(str);
-				return ret ? ret.trim() : val;
-			},
-
-			getIntAttribute : function(elt, str, val) {
-				var ret = this.getStringAttribute(elt, str, val);
-				return ret ? parseInt(ret) : val;
-			},
-
-			getFloatAttribute : function(elt, str, val) {
-				var ret = this.getStringAttribute(elt, str, val);
-				return ret ? parseFloat(ret) : val;
-			},
-
-			getBooleanAttribute : function(elt, str, val) {
-				var ret = this.getStringAttribute(elt, str, val);
-				return ret ? (ret == "true") : val;
-			},
-
-			// free the allocated parser
-			free : function() {
-				this.tmxDoc = null;
-			}
-		}
-		return parserObj;
-	}
-	;
-	/************************************************************************************/
-
-	/************************************************************************************/
 
 	Object.defineProperty(me, "initialized", {
 		get : function get() {
@@ -840,8 +782,8 @@ var me = me || {};
 		// init the FPS counter if needed
 		me.timer.init();
 
-		// create an instance of the TMX parser
-		me.TMXParser = new _TinyTMXParser();
+		// create a new map reader instance
+		me.mapReader = new me.TMXMapReader();
 
 		// create a default loading screen
 		me.loadingScreen = new me.DefaultLoadingScreen();

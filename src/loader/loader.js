@@ -203,6 +203,7 @@
 						// check the data format ('tmx', 'json')
 						var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
 						switch (format) {
+							case 'xml' : 
 							case 'tmx' : {
 								// ie9 does not fully implement the responseXML
 								if (me.sys.ua.contains('msie') || !xmlhttp.responseXML) {
@@ -211,6 +212,8 @@
 								} else {
 									result = xmlhttp.responseXML;
 								}
+								// change the data format
+								format = 'xml';
 								break;
 							}
 							case 'json' : {
@@ -227,8 +230,9 @@
 						tmxList[tmxData.name] = {
 							data: result,
 							isTMX: (tmxData.type === "tmx"),
-							type : format
+							format : format
 						};
+						
 						// add the tmx to the levelDirector
 						if (tmxData.type === "tmx") {
 							me.levelDirector.addTMXLevel(tmxData.name);
@@ -515,7 +519,7 @@
 		 * @public
 		 * @function
 		 * @param {String} tmx name of the tmx/tsx element ("map1");
-		 * @return {String} 'tmx' or 'json'
+		 * @return {String} 'xml' or 'json'
 		 */
 		obj.getTMXFormat = function(elt) {
 			// avoid case issue

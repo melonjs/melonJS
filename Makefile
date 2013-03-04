@@ -57,6 +57,7 @@ MODULE = $(srcdir)/core.js\
 	 $(srcdir)/level/TMXRenderer.js\
 	 $(srcdir)/level/TMXLayer.js\
 	 $(srcdir)/level/TMXTiledMap.js\
+	 $(srcdir)/level/TMXMapReader.js\
 	 $(srcdir)/level/LevelDirector.js\
 	 $(srcdir)/vendors/tween.js\
 	 $(srcdir)/vendors/minpubsub.src.js\

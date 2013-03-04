@@ -25,13 +25,13 @@
 			this.objects = [];
 
 			this.name   = name;
-			this.width  = me.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
-			this.height = me.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
-			this.visible = (me.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.width  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
+			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
+			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.z       = z;
 
 						
-			// check if we have any user-defined properties 
+			// check if we have any user-defined properties
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
 				me.TMXUtils.setTMXProperties(this, tmxObjGroup);
 			}
@@ -74,14 +74,14 @@
 	me.TMXOBject = Object.extend(
 	{
 		init :  function(tmxObj, tilesets, z) {
-			this.name = me.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
-			this.x = me.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
-			this.y = me.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
+			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
+			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
+			this.y = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
 			this.z = z;
 
-			this.width = me.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
-			this.height = me.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
-			this.gid = me.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
+			this.width = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
+			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
+			this.gid = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
 			// check if the object has an associated gid	
 			if (this.gid) {
 				
@@ -113,7 +113,7 @@
 
 				if (polygon.length) {
 					this.points = [];
-					var points = me.TMXParser.getStringAttribute(polygon[0], me.TMX_TAG_POINTS);
+					var points = me.mapReader.TMXParser.getStringAttribute(polygon[0], me.TMX_TAG_POINTS);
 					var point = points.split(" ");
 					for (var i = 0, v; i < point.length; i++) {
 						v = point[i].split(",");

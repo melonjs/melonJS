@@ -33,8 +33,8 @@
 				var oProp = properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
 
 				for ( var i = 0; i < oProp.length; i++) {
-					var propname = me.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
-					var value = me.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
+					var propname = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
+					var value = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
 					
 					// if value not defined or boolean
 					if (!value || value.isBoolean()) {

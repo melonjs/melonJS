@@ -104,9 +104,9 @@
 		init: function (xmltileset) {
 
 			// first gid
-			this.firstgid = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
+			this.firstgid = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
 
-			var src = me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
+			var src = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
 			if (src) {
 				// load TSX
 				src = me.utils.getBasename(src);
@@ -117,16 +117,16 @@
 				}
 
 				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.TMXParser`
-				me.TMXParser.parseFromString(xmltileset);
-				xmltileset = me.TMXParser.getFirstElementByTagName("tileset");
+				// XML currently loaded into the global `me.mapReader.TMXParser`
+				me.mapReader.TMXParser.parseFromString(xmltileset);
+				xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
 			}
 			
-			this.name = me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
-			this.tilewidth = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
-			this.tileheight = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
-			this.spacing = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
-			this.margin = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
+			this.name = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
+			this.tilewidth = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
+			this.tileheight = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
+			this.spacing = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
+			this.margin = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
 			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
 			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
 			
@@ -172,35 +172,41 @@
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
 			if (offset.length>0) {
-				this.tileoffset.x = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
+				this.tileoffset.x = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
+				this.tileoffset.y = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
 			}
 
 			// set tile properties, if any
 			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
 			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
-
-				this.TileProperties[tileID] = {};
-
-				var tileProp = this.TileProperties[tileID];
-
+				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
 				// apply tiled defined properties
-				me.TMXUtils.setTMXProperties(tileProp, tileInfo[i]);
-
-				// check what we found and adjust property
-				tileProp.isSolid = tileProp.type ? tileProp.type.toLowerCase() === this.type.SOLID : false;
-				tileProp.isPlatform = tileProp.type ? tileProp.type.toLowerCase() === this.type.PLATFORM : false;
-				tileProp.isLeftSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.L_SLOPE : false;
-				tileProp.isRightSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.R_SLOPE	: false;
-				tileProp.isBreakable = tileProp.type ? tileProp.type.toLowerCase() === this.type.BREAKABLE : false;
-				tileProp.isLadder = tileProp.type ? tileProp.type.toLowerCase() === this.type.LADDER : false;
-				tileProp.isSlope = tileProp.isLeftSlope || tileProp.isRightSlope;
-
-				// ensure the collidable flag is correct
-				tileProp.isCollidable = !! (tileProp.type);
-
+				var prop = {};
+				me.TMXUtils.setTMXProperties(prop, tileInfo[i]);
+				this.setTileProperty(tileID, prop);
 			}
+		},
+		
+		/**
+		 * set the tile properties
+		 * @private
+		 * @function
+		 */
+		setTileProperty : function(gid, prop) {
+			// check what we found and adjust property
+			prop.isSolid = prop.type ? prop.type.toLowerCase() === this.type.SOLID : false;
+			prop.isPlatform = prop.type ? prop.type.toLowerCase() === this.type.PLATFORM : false;
+			prop.isLeftSlope = prop.type ? prop.type.toLowerCase() === this.type.L_SLOPE : false;
+			prop.isRightSlope = prop.type ? prop.type.toLowerCase() === this.type.R_SLOPE : false;
+			prop.isBreakable = prop.type ? prop.type.toLowerCase() === this.type.BREAKABLE : false;
+			prop.isLadder = prop.type ? prop.type.toLowerCase() === this.type.LADDER : false;
+			prop.isSlope = prop.isLeftSlope || prop.isRightSlope;
+			
+			// ensure the collidable flag is correct
+			prop.isCollidable = !! (prop.type);
+			
+			// set the given tile id 
+			this.TileProperties[gid] = prop;
 		},
 		
 		/**
