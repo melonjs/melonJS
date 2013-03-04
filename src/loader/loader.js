@@ -199,19 +199,35 @@
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
 						var result = null;
-						// ie9 does not fully implement the responseXML
-						if (me.sys.ua.contains('msie') || !xmlhttp.responseXML) {
-							// manually create the XML DOM
-							result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
-						} else {
-							result = xmlhttp.responseXML;
+						
+						// check the data format ('tmx', 'json')
+						var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
+						switch (format) {
+							case 'tmx' : {
+								// ie9 does not fully implement the responseXML
+								if (me.sys.ua.contains('msie') || !xmlhttp.responseXML) {
+									// manually create the XML DOM
+									result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
+								} else {
+									result = xmlhttp.responseXML;
+								}
+								break;
+							}
+							case 'json' : {
+								result = JSON.parse(xmlhttp.responseText);
+								break;
+							}
+							
+							default : {
+								throw "melonJS: TMX file format " + format + "not supported !";
+							}
 						}
+												
 						// get the TMX content
 						tmxList[tmxData.name] = {
 							data: result,
 							isTMX: (tmxData.type === "tmx"),
-							// Sore the data format ('tmx', 'json')
-							type : me.utils.getFileExtension(tmxData.src).toLowerCase()
+							type : format
 						};
 						// add the tmx to the levelDirector
 						if (tmxData.type === "tmx") {
@@ -505,7 +521,7 @@
 			// avoid case issue
 			elt = elt.toLowerCase();
 			if (elt in tmxList)
-				return tmxList[elt].type;
+				return tmxList[elt].format;
 			else {
 				//console.log ("warning %s resource not yet loaded!",name);
 				return null;

@@ -770,13 +770,7 @@ var me = me || {};
 			// parse a TMX XML file (and soon a JSON one)
 			parseFromString : function(data, isJSON) {
 				this.isJSON = isJSON || false;
-				
-				if (this.isJSON) {
-					// this won't work for now!
-					this.tmxDoc = JSON.parse(data);
-				} else {
-					this.tmxDoc = data;
-				}
+				this.tmxDoc = data;
 			},
 
 			getFirstElementByTagName : function(name) {
