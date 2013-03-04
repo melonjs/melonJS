@@ -21,7 +21,7 @@ var game = {
 		{name: "enemykill",		type: "audio",	src: "data/audio/",	channel : 1},
 		{name: "jump",			type: "audio",	src: "data/audio/",	channel : 2},
 		{name: "DST-GameForest",type: "audio",	src: "data/audio/",	channel : 1},
-		{name: "map1",			type: "tmx",	src: "data/map/map1.tmx"},
+		{name: "map1",			type: "tmx",	src: "data/map/map1.json"},
 		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"}
 	],
 	
