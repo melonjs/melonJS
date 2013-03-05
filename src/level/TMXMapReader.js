@@ -11,6 +11,87 @@
 (function(window) {
 
 	/**
+	 * a TMX Map Reader
+	 * Tile QT 0.7.x format
+	 * @class
+	 * @memberOf me
+	 * @constructor
+	 * @private
+	 */
+	me.TMXMapReader = Object.extend({
+		
+		XMLReader : null,
+		JSONReader : null,
+		
+		// temporary, the time to
+		// rewrite the rest properly
+		TMXParser: null,
+		
+		readMap: function (map) {
+			// if already loaded, do nothing
+			if (map.initialized)
+				return;
+			
+			if (me.loader.getTMXFormat(map.levelId) === 'xml') {
+				// create an instance of the XML Reader
+				if  (this.XMLReader === null) {
+					this.XMLReader = new XMLMapReader(); 
+				}
+				this.TMXParser = this.XMLReader.TMXParser;
+				// load the map
+				this.XMLReader.readXMLMap(map, me.loader.getTMX(map.levelId));
+			
+			}
+			else /*JSON*/ {
+				// create an instance of the JSON Reader
+				if  (this.JSONReader === null) {
+					this.JSONReader = new JSONMapReader(); 
+				}
+				this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));
+			
+			};
+			
+			
+			// center the map if smaller than the current viewport
+			if ((map.realwidth < me.game.viewport.width) || 
+				(map.realheight < me.game.viewport.height)) {
+					var shiftX =  ~~( (me.game.viewport.width - map.realwidth) / 2);
+					var shiftY =  ~~( (me.game.viewport.height - map.realheight) / 2);
+					// update the map default screen position
+					map.pos.add({x:shiftX > 0 ? shiftX : 0 , y:shiftY > 0 ? shiftY : 0} );
+			}
+			
+			// flag as loaded
+			map.initialized = true;
+
+		},
+		
+		/** 
+		 * set a compatible renderer object
+		 * for the specified map
+		 * TODO : put this somewhere else
+		 * @private
+		 */
+		getNewDefaultRenderer: function (obj) {
+			switch (obj.orientation) {
+				case "orthogonal": {
+				  return new me.TMXOrthogonalRenderer(obj.width, obj.height, obj.tilewidth, obj.tileheight);
+				  break;
+				}
+				case "isometric": {
+				  return new me.TMXIsometricRenderer(obj.width, obj.height , obj.tilewidth, obj.tileheight);
+				  break;
+				}
+				// if none found, throw an exception
+				default : {
+					throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
+				}
+			}
+		}
+
+	});
+	
+	/**
 	 * a basic TMX/TSX Parser
 	 * @class
 	 * @constructor
@@ -69,7 +150,7 @@
 	 * @constructor
 	 * @private
 	 */
-	var XMLMapReader = Object.extend({
+	var XMLMapReader = me.TMXMapReader.extend({
 		
 		TMXParser : null,
 		
@@ -83,7 +164,7 @@
 		 * initialize a map using XML data
 		 * @private
 		 */
-		readMap : function(map, data) {
+		readXMLMap : function(map, data) {
 			if (!data) {
 				throw "melonJS:" + map.levelId + " TMX map not found";
 			};
@@ -137,7 +218,9 @@
 						}
 						
 					 	// initialize a default renderer
-						me.mapReader.setDefaultRenderer(map);
+						if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
+							me.game.renderer = this.getNewDefaultRenderer(map);
+						}
 						
 						break;
 					};
@@ -187,7 +270,19 @@
 		
 		
 		readLayer: function (map, data, z) {
-			return new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z)
+			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+			// init the layer properly
+			layer.initFromXML(data);
+			// associate a renderer to the layer (if not a collision layer)
+			if (!layer.isCollisionMap) {
+				if (!me.game.renderer.canRender(layer)) {
+					layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
+				} else {
+					// use the default one
+					layer.setRenderer(me.game.renderer);
+				}
+			}
+			return layer;
 		},
 
 		readImageLayer: function(map, data, z) {
@@ -214,7 +309,9 @@
 
 		
 		readTileset : function (data) {
-			return new me.TMXTileset(data);
+			var tileset = new me.TMXTileset();
+			tileset.initFromXML(data);
+			return tileset;
 		},
 		
    
@@ -233,22 +330,36 @@
 	 * @constructor
 	 * @private
 	 */
-	var JSONMapReader = Object.extend({
+	var JSONMapReader = me.TMXMapReader.extend({
 		
-		readMap: function (map) {
+		readJSONMap: function (map) {
 			// TODO
 		},
 		
 		readLayer: function (layer) {
-			// TODO
+			var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+			// init the layer properly
+			layer.initFromJSON(data);
+			// associate a renderer to the layer (if not a collision layer)
+			if (!layer.isCollisionMap) {
+				if (!me.game.renderer.canRender(layer)) {
+					layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
+				} else {
+					// use the default one
+					layer.setRenderer(me.game.renderer);
+				}
+			}
+			return layer;
 		},
 		
 		readImageLayer: function() {
 			// TODO
 		},
 		
-		readTileset : function (tileset) {
-			// TODO
+		readTileset : function (data) {
+			var tileset = new me.TMXTileset();
+			tileset.initFromJSON(data);
+			return tileset;
 		},
 		
 		readObjectGroup: function() {
@@ -257,90 +368,6 @@
 	
 	});
 	
-	/**
-	 * a TMX Map Reader
-	 * Tile QT 0.7.x format
-	 * @class
-	 * @memberOf me
-	 * @constructor
-	 * @private
-	 */
-	me.TMXMapReader = Object.extend({
-		
-		XMLReader : null,
-		JSONReader : null,
-		reader : null,
-		
-		// temporary, the time to
-		// rewrite the rest properly
-		TMXParser: null,
-		
-		readMap: function (map) {
-			// if already loaded, do nothing
-			if (map.initialized)
-				return;
-			
-			if (me.loader.getTMXFormat(map.levelId) === 'xml') {
-				// create an instance of the XML Reader
-				if  (this.XMLReader === null) {
-					this.XMLReader = new XMLMapReader(); 
-				}
-				this.TMXParser = this.XMLReader.TMXParser;
-				// set the default reader
-				this.reader = this.XMLReader;
-			}
-			else /*JSON*/ {
-				// create an instance of the XML Reader
-				if  (this.JSONReader === null) {
-					this.JSONReader = new JSONMapReader(); 
-				}
-				// set the default reader
-				this.reader = this.JSONReader;
-			};
-			
-			// load the map
-			this.reader.readMap(map, me.loader.getTMX(map.levelId));
-			
-			// center the map if smaller than the current viewport
-			if ((map.realwidth < me.game.viewport.width) || 
-				(map.realheight < me.game.viewport.height)) {
-					var shiftX =  ~~( (me.game.viewport.width - map.realwidth) / 2);
-					var shiftY =  ~~( (me.game.viewport.height - map.realheight) / 2);
-					// update the map default screen position
-					map.pos.add({x:shiftX > 0 ? shiftX : 0 , y:shiftY > 0 ? shiftY : 0} );
-			}
-			
-			// flag as loaded
-			map.initialized = true;
 
-		},
-		
-		/** 
-		 * set a compatible renderer object
-		 * for the specified map
-		 * TODO : put this somewhere else
-		 * @private
-		 */
-		setDefaultRenderer: function (map) {
-			if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
-				switch (map.orientation) {
-					case "orthogonal": {
-					  me.game.renderer = new me.TMXOrthogonalRenderer(map.width, map.height, map.tilewidth, map.tileheight);
-					  break;
-					}
-					case "isometric": {
-					  me.game.renderer =  new me.TMXIsometricRenderer(map.width, map.height , map.tilewidth, map.tileheight);
-					  break;
-					}
-					// if none found, throw an exception
-					default : {
-						throw "melonJS: " + map.orientation + " type TMX Tile Map not supported!";
-					}
-				}
-			}
-		}
-		
-
-	});
 
 })(window);

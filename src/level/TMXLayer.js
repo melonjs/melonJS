@@ -396,24 +396,26 @@
 	 * @constructor
 	 */
 	me.TMXLayer = Object.extend({
+		
+		// the layer data array
+		layerData : null,
+		
 		// constructor
-		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
+		init: function(tilewidth, tileheight, orientation, tilesets, zOrder) {
 
-			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
-			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
 			// tile width & height
 			this.tilewidth  = tilewidth;
 			this.tileheight = tileheight;
 			
+			// layer orientation
+			this.orientation = orientation;
+			
 			// layer "real" size
 			this.realwidth = this.width * this.tilewidth;
 			this.realheight = this.height * this.tileheight;
-
+			
 			// for displaying order
 			this.z = zOrder;
-
-			// data array
-			this.layerData = null;
 
 			/**
 			 * The Layer corresponding Tilesets
@@ -425,13 +427,18 @@
 
 			// the default tileset
 			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
+		},
+		
+		initFromXML: function(layer) {
 			
 			// additional TMX flags
-			this.orientation = orientation;
 			this.name = me.mapReader.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
 			this.visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.opacity = me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
-				
+			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
+			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			
+			
 			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
 			
@@ -458,30 +465,6 @@
 			if (compression == '')
 				compression = null;
 
-			// associate a renderer to the layer (if not a collision layer)
-			if (!this.isCollisionMap) {
-				if (!me.game.renderer.canRender(this)) {
-					// set a new layer specific renderer
-					switch (this.orientation) {
-						case "orthogonal": {
-						  this.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
-						  break;
-						}
-						case "isometric": {
-						  this.renderer = new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
-						  break;
-						}
-						// if none found, throw an exception
-						default : {
-							throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
-						}
-					} 
-				} else {
-					// use the default one
-					this.renderer = me.game.renderer;
-				}
-			}
-				
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
 				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
@@ -490,14 +473,17 @@
 				// set alpha value for this layer
 				this.layerSurface.globalAlpha = this.opacity;
 			}	
-
-			// initialize the layer data array
-			this.initArray();
-
+			
 			// populate our level with some data
-			this.fillArray(xmldata, encoding, compression);
+			this.fillArray(xmldata, 'xml', encoding, compression);
 		},
 		
+		initFromJSON: function(layer) {
+			// TODO
+			
+			// populate our level with some data
+			this.fillArray(xmldata, 'json', encoding, compression);
+		},
 		
 		/**
 		 * reset function
@@ -519,15 +505,23 @@
 		},
 		
 		/**
+		 * set the layer renderer
+		 * @private
+		 */
+		setRenderer : function(renderer) {
+			this.renderer = renderer;
+		},
+		
+		/**
 		 * Create all required arrays
 		 * @private
 		 */
-		initArray : function() {
+		initArray : function(w, h) {
 			// initialize the array
 			this.layerData = [];
-			for ( var x = 0; x < this.width; x++) {
+			for ( var x = 0; x < w; x++) {
 				this.layerData[x] = [];
-				for ( var y = 0; y < this.height; y++) {
+				for ( var y = 0; y < h; y++) {
 					this.layerData[x][y] = null;
 				}
 			}
@@ -537,7 +531,10 @@
 		 * Build the tiled layer
 		 * @private
 		 */
-		fillArray : function(xmldata, encoding, compression) {
+		fillArray : function(data, format, encoding, compression) {
+			// initialize the layer data array
+			this.initArray(this.width, this.height);
+			
 			// check if data is compressed
 			switch (compression) {	 
 				// no compression
@@ -546,7 +543,7 @@
 					switch (encoding) {
 						// XML encoding
 						case null: {
-							var data = xmldata.getElementsByTagName(me.TMX_TAG_TILE);
+							var data = data.getElementsByTagName(me.TMX_TAG_TILE);
 							break;
 						}
 						// CSV encoding
@@ -555,8 +552,8 @@
 						case me.TMX_TAG_ATTR_BASE64: {
 							// Merge all childNodes[].nodeValue into a single one
 							var nodeValue = '';
-							for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
-								nodeValue += xmldata.childNodes[i].nodeValue;
+							for ( var i = 0, len = data.childNodes.length; i < len; i++) {
+								nodeValue += data.childNodes[i].nodeValue;
 							}
 							// and then decode them
 							if (encoding == me.TMX_TAG_ATTR_BASE64)
