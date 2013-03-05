@@ -332,8 +332,72 @@
 	 */
 	var JSONMapReader = me.TMXMapReader.extend({
 		
-		readJSONMap: function (map) {
-			// TODO
+		readJSONMap: function (map, data) {
+			if (!data) {
+				throw "melonJS:" + map.levelId + " TMX map not found";
+			};
+			
+			// to automatically increment z index
+			var zOrder = 0;
+			
+			// map information
+			map.version = data[me.TMX_TAG_VERSION];
+			map.orientation = data[me.TMX_TAG_ORIENTATION];
+			map.width = data[me.TMX_TAG_WIDTH];
+			map.height = data[me.TMX_TAG_HEIGHT];
+			map.tilewidth = data[me.TMX_TAG_TILEWIDTH];
+			map.tileheight = data[me.TMX_TAG_TILEHEIGHT];
+			map.realwidth = map.width * map.tilewidth;
+			map.realheight = map.height * map.tileheight;
+			map.backgroundcolor = data[me.TMX_BACKGROUND_COLOR];
+			map.z = zOrder++;
+		   
+			// set the map properties (if any)
+			me.TMXUtils.mergeProperties(map, data[me.TMX_TAG_PROPERTIES]);
+			
+			// check if a user-defined background color is defined  
+			map.background_color = map.backgroundcolor ? map.backgroundcolor : map.background_color;
+			if (map.background_color) {
+				map.mapLayers.push(new me.ColorLayer("background_color", 
+													  map.background_color, 
+													  zOrder++));
+			}
+
+			// check if a background image is defined
+			if (map.background_image) {
+				// add a new image layer
+				map.mapLayers.push(new me.ImageLayer("background_image", 
+													  map.width, map.height, 
+													  map.background_image, 
+													  zOrder++));
+			}
+			
+			// initialize a default renderer
+			if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
+				me.game.renderer = this.getNewDefaultRenderer(map);
+			}
+			
+			// Tileset information
+			for(var i in data["tilesets"]) {
+				// WHY IS THIS RETURNING AN ADDITIONAL WRONG OBJECT ?
+				if (data["tilesets"][i].firstgid) { 
+					// Initialize our object if not yet done
+					if (!map.tilesets) {
+						map.tilesets = new me.TMXTilesetGroup();
+					}
+					// add the new tileset
+					map.tilesets.add(this.readTileset(data["tilesets"][i]));
+				}
+			}
+			
+			// Image Layer
+			
+			// Layer
+			
+			// Object Group
+			
+			// FINISH !
+			
 		},
 		
 		readLayer: function (layer) {
