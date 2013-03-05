@@ -423,10 +423,10 @@
 			 * @type me.TMXTilesetGroup
 			 * @name me.TMXLayer#tilesets
 			 */
+			
 			this.tilesets = tilesets;
-
 			// the default tileset
-			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
+			this.tileset = this.tilesets?this.tilesets.getTilesetByIndex(0):null;
 		},
 		
 		initFromXML: function(layer) {
@@ -437,7 +437,6 @@
 			this.opacity = me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
 			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
-			
 			
 			// check if we have any user-defined properties 
 			me.TMXUtils.setTMXProperties(this, layer);
@@ -475,14 +474,49 @@
 			}	
 			
 			// populate our level with some data
-			this.fillArray(xmldata, 'xml', encoding, compression);
+			this.fillArray(xmldata, encoding, compression);
 		},
 		
 		initFromJSON: function(layer) {
-			// TODO
+			// additional TMX flags
+			this.name = layer[me.TMX_TAG_NAME];
+			this.visible = layer[me.TMX_TAG_VISIBLE];
+			this.opacity = layer[me.TMX_TAG_OPACITY].clamp(0.0, 1.0);
+			this.width = layer[me.TMX_TAG_WIDTH];
+			this.height = layer[me.TMX_TAG_HEIGHT];
+			
+			
+			// check if we have any user-defined properties 
+			me.TMXUtils.mergeProperties(layer, layer['properties']);
+			
+			// check for the correct rendering method
+			if (this.preRender === undefined) {
+				this.preRender = me.sys.preRender;
+			}
+			
+			// detect if the layer is a collision map
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
+				// force the layer as invisible
+				this.visible = false;
+			}
+
+			// store the data information
+			var data = layer[me.TMX_TAG_DATA];
+
+
+			// if pre-rendering method is use, create the offline canvas
+			if (this.preRender) {
+				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerSurface = this.layerCanvas.getContext('2d');
+					
+				// set alpha value for this layer
+				this.layerSurface.globalAlpha = this.opacity;
+			}	
+
 			
 			// populate our level with some data
-			this.fillArray(xmldata, 'json', encoding, compression);
+			this.fillArray(data, 'json', null);
 		},
 		
 		/**
@@ -531,7 +565,7 @@
 		 * Build the tiled layer
 		 * @private
 		 */
-		fillArray : function(data, format, encoding, compression) {
+		fillArray : function(data, encoding, compression) {
 			// initialize the layer data array
 			this.initArray(this.width, this.height);
 			
@@ -542,10 +576,13 @@
 					// decode data based on encoding type
 					switch (encoding) {
 						// XML encoding
-						case null: {
+						case null:
 							var data = data.getElementsByTagName(me.TMX_TAG_TILE);
 							break;
-						}
+						// json encoding
+						case 'json':
+							// do nothing as data can be directly reused
+							break;
 						// CSV encoding
 						case me.TMX_TAG_CSV:
 						// Base 64 encoding
@@ -603,7 +640,9 @@
 			}
 
 			// make sure data is deallocated :)
-			data = null;
+			if (encoding !== 'json') {
+				data = null;
+			} // i'm not sure we should else ?
 		},
 
 		/**

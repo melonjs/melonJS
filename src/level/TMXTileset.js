@@ -226,14 +226,13 @@
 			}
 			
 			// check for the texture corresponding image
-			//console.log(tileset);
 			var imagesrc = me.utils.getBasename(tileset[me.TMX_TAG_IMAGE]);
 			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
 			if (!image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
 			}
 			// check if transparency is defined for a specific color
-			var trans = tileset[me.TMX_TAG_TRANS];
+			var trans = tileset[me.TMX_TAG_TRANS] || null;
 
 			this.initFromImage(image, trans);
 		},
@@ -252,7 +251,7 @@
 			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
 		  
 			// set Color Key for transparency if needed
-			if (transparency !== undefined && this.image) {
+			if (transparency !== null && this.image) {
 				// applyRGB Filter (return a context object)
 				this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
 			}

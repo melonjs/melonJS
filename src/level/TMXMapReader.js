@@ -402,9 +402,14 @@
 						break;
 					}
 					case me.TMX_TAG_TILE_LAYER : {
-						//map.mapLayers.push(this.readLayer(map, layers[i], zOrder++));
+						map.mapLayers.push(this.readLayer(map, layers[i], zOrder++));
 						break;
 					}
+					// get the object groups information
+					case me.TMX_TAG_OBJECTGROUP: {
+					   //map.objectGroups.push(this.readObjectGroup(map, layers[i], zOrder++));
+					   break;
+					};
 					default : break;
 				
 				}
@@ -417,7 +422,7 @@
 		},
 		
 		readLayer: function (map, data, z) {
-			var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
 			// associate a renderer to the layer (if not a collision layer)
@@ -447,7 +452,7 @@
 			imageLayer.opacity = data[me.TMX_TAG_OPACITY];
 			
 			// check if we have any additional properties 
-			me.TMXUtils.mergeProperties(data, imageLayer['properties']);
+			me.TMXUtils.mergeProperties(imageLayer, data['properties']);
 			
 			return imageLayer;
 		},
@@ -458,7 +463,7 @@
 			return tileset;
 		},
 		
-		readObjectGroup: function() {
+		readObjectGroup: function(map, data, z) {
 			// TODO
 		}
 	
