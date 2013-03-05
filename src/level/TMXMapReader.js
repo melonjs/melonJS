@@ -378,21 +378,37 @@
 			}
 			
 			// Tileset information
-			for(var i in data["tilesets"]) {
+			
+			var tilesets = data["tilesets"];
+			for (var i in tilesets) {
+				// Initialize our object if not yet done
+				if (!map.tilesets) {
+					map.tilesets = new me.TMXTilesetGroup();
+				}
 				// WHY IS THIS RETURNING AN ADDITIONAL WRONG OBJECT ?
-				if (data["tilesets"][i].firstgid) { 
-					// Initialize our object if not yet done
-					if (!map.tilesets) {
-						map.tilesets = new me.TMXTilesetGroup();
-					}
+				if (tilesets[i].firstgid) { 
 					// add the new tileset
-					map.tilesets.add(this.readTileset(data["tilesets"][i]));
+					map.tilesets.add(this.readTileset(tilesets[i]));
 				}
 			}
 			
 			// Image Layer
-			
-			// Layer
+			// get image layer information
+			var layers = data["layers"];
+			for (var i in layers) {
+				switch (layers[i].type) {
+					case me.TMX_TAG_IMAGE_LAYER : {
+						map.mapLayers.push(this.readImageLayer(map, layers[i], zOrder++));
+						break;
+					}
+					case me.TMX_TAG_TILE_LAYER : {
+						//map.mapLayers.push(this.readLayer(map, layers[i], zOrder++));
+						break;
+					}
+					default : break;
+				
+				}
+			};
 			
 			// Object Group
 			
@@ -400,7 +416,7 @@
 			
 		},
 		
-		readLayer: function (layer) {
+		readLayer: function (map, data, z) {
 			var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
@@ -416,8 +432,24 @@
 			return layer;
 		},
 		
-		readImageLayer: function() {
-			// TODO
+		readImageLayer: function(map, data, z) {
+			// extract layer information
+			var iln = data[me.TMX_TAG_NAME];
+			var ilw = data[me.TMX_TAG_WIDTH];
+			var ilh = data[me.TMX_TAG_HEIGHT];
+			var ilsrc = data[me.TMX_TAG_IMAGE];
+			
+			// create the layer
+			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
+			
+			// set some additional flags
+			imageLayer.visible = data[me.TMX_TAG_VISIBLE];
+			imageLayer.opacity = data[me.TMX_TAG_OPACITY];
+			
+			// check if we have any additional properties 
+			me.TMXUtils.mergeProperties(data, imageLayer['properties']);
+			
+			return imageLayer;
 		},
 		
 		readTileset : function (data) {
