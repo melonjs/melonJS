@@ -189,17 +189,14 @@
 			if (src) {
 				// load TSX
 				src = me.utils.getBasename(src);
-				xmltileset = me.loader.getTMX(src);
+				// replace tiletset with a local variable
+				var tileset = me.loader.getTMX(src);
 
-				if (!xmltileset) {
+				if (!tileset) {
 					throw "melonJS:" + src + " TSX tileset not found";
 				}
-
-				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.mapReader.TMXParser`
-				//me.mapReader.TMXParser.parseFromString(xmltileset);
-				//xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
-				throw "melonJS: TSX tileset not implemented";
+				// normally tileset shoudld directly contains the required 
+				//information : UNTESTED as I did not find how to generate a JSON TSX file
 			}
 			
 			this.name = tileset[me.TMX_TAG_NAME];
@@ -208,7 +205,6 @@
 			this.spacing = tileset[me.TMX_TAG_SPACING] || 0;
 			this.margin = tileset[me.TMX_TAG_MARGIN] ||0;
 		
-
 			// set tile offset properties (if any)
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = tileset[me.TMX_TAG_TILEOFFSET];
