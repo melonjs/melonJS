@@ -416,9 +416,6 @@
 				
 				}
 			};
-			
-			// Object Group
-			
 			// FINISH !
 			
 		},

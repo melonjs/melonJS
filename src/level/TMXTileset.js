@@ -218,7 +218,7 @@
 			for(var i in tileInfo) {
 				var prop = {};
 				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
-				this.setTileProperty(i, prop);
+				this.setTileProperty(parseInt(i) + this.firstgid, prop);
 			}
 			
 			// check for the texture corresponding image
