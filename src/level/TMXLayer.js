@@ -487,7 +487,7 @@
 			
 			
 			// check if we have any user-defined properties 
-			me.TMXUtils.mergeProperties(layer, layer['properties']);
+			me.TMXUtils.mergeProperties(layer, layer[me.TMX_TAG_PROPERTIES]);
 			
 			// check for the correct rendering method
 			if (this.preRender === undefined) {

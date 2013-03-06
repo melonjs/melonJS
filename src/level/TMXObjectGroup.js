@@ -20,17 +20,18 @@
 	 */
 	me.TMXOBjectGroup = Object.extend(
 	{
-		// constructor
-		init : function(name, tmxObjGroup, tilesets, z) {
-			this.objects = [];
+		// array of objects
+		objects : [],
+		
+		// constructor from XML content
+		initFromXML : function(name, tmxObjGroup, tilesets, z) {
 
 			this.name   = name;
 			this.width  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
 			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.z       = z;
-
-						
+		
 			// check if we have any user-defined properties
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
 				me.TMXUtils.setTMXProperties(this, tmxObjGroup);
@@ -39,7 +40,33 @@
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
 			for ( var i = 0; i < data.length; i++) {
-				this.objects.push(new me.TMXOBject(data[i], tilesets, z));
+				var object = new me.TMXOBject();
+				object.initFromXML(data[i], tilesets, z);
+				this.objects.push(object);
+			}
+		},
+		
+		// constructor from XML content
+		initFromJSON : function(name, tmxObjGroup, tilesets, z) {
+
+			this.name   = name;
+			this.width  = tmxObjGroup[me.TMX_TAG_WIDTH];
+			this.height = tmxObjGroup[me.TMX_TAG_HEIGHT];
+			this.visible = tmxObjGroup[me.TMX_TAG_VISIBLE];
+			this.z       = z;
+
+			// check if we have any user-defined properties 
+			me.TMXUtils.mergeProperties(this, tmxObjGroup[me.TMX_TAG_PROPERTIES]);
+			
+			var objects = tmxObjGroup["objects"];
+			for (var i in objects) {
+				// same as layers here, additional dummy object are being
+				// taken in account (I don't know why)
+				if (objects[i].type==="") {
+					var object = new me.TMXOBject();
+					object.initFromJSON(objects[i], tilesets, z);
+					this.objects.push(object);
+				}
 			}
 		},
 		
@@ -73,7 +100,7 @@
 
 	me.TMXOBject = Object.extend(
 	{
-		init :  function(tmxObj, tilesets, z) {
+		initFromXML :  function(tmxObj, tilesets, z) {
 			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
 			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
 			this.y = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
@@ -82,28 +109,11 @@
 			this.width = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
 			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
 			this.gid = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
+			
 			// check if the object has an associated gid	
 			if (this.gid) {
-				
-				// get the corresponding tileset
-				var tileset = tilesets.getTilesetByGid(this.gid);
-			 
-				// set width and height equal to tile size
-				this.width = tileset.tilewidth;
-				this.height = tileset.tileheight;
-
-				// force spritewidth size
-				this.spritewidth = this.width;
-				// adjust y coordinates (bug in tile 0.6.2?)
-				this.y -= this.height;
-
-				// the object corresponding tile 
-				var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
-
-				// get the corresponding tile into our object
-				this.image = tileset.getTileImage(tmxTile);
-			} 
-			else {
+				this.setImage(this.gid, tilesets);
+			} else {
 				var polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
 				this.isPolygon = true;
 				if (!polygon.length) {
@@ -123,6 +133,67 @@
 			}
 			// set the object properties
 			me.TMXUtils.setTMXProperties(this, tmxObj);
+		},
+		
+		initFromJSON :  function(tmxObj, tilesets, z) {
+			
+			
+			this.name = tmxObj[me.TMX_TAG_NAME];
+			this.x = tmxObj[me.TMX_TAG_X];
+			this.y = tmxObj[me.TMX_TAG_Y];
+			this.z = z;
+
+			this.width = tmxObj[me.TMX_TAG_WIDTH] || 0;
+			this.height = tmxObj[me.TMX_TAG_HEIGHT] || 0;
+			this.gid = tmxObj[me.TMX_TAG_GID] || null;
+			
+			
+			// check if the object has an associated gid	
+			if (this.gid) {
+				this.setImage(this.gid, tilesets);
+			}
+			/*	comment it for now
+			else {
+				var polygon = tmxObj[me.TMX_TAG_POLYGON];
+				this.isPolygon = polygon!undefined;
+				if (!polygon) {
+					polygon = [me.TMX_TAG_POLYLINE];
+					this.isPolygon = false;
+				}
+
+				if (polygon) {
+					this.points = [];
+					var points = polygon[me.TMX_TAG_POINTS];
+					var point = points.split(" ");
+					for (var i = 0, v; i < point.length; i++) {
+						v = point[i].split(",");
+						this.points[i] = new me.Vector2d(+v[0], +v[1]);
+					}
+				}
+			}
+			*/
+			// set the object properties
+			me.TMXUtils.mergeProperties(this, tmxObj[me.TMX_TAG_PROPERTIES]);
+		},
+		
+		setImage : function(gid, tilesets) {
+			// get the corresponding tileset
+			var tileset = tilesets.getTilesetByGid(this.gid);
+		 
+			// set width and height equal to tile size
+			this.width = tileset.tilewidth;
+			this.height = tileset.tileheight;
+
+			// force spritewidth size
+			this.spritewidth = this.width;
+			// adjust y coordinates (bug in tile 0.6.2?)
+			this.y -= this.height;
+
+			// the object corresponding tile 
+			var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
+
+			// get the corresponding tile into our object
+			this.image = tileset.getTileImage(tmxTile);
 		},
 		
 		getObjectPropertyByName : function(name) {

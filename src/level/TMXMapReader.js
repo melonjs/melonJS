@@ -316,8 +316,10 @@
 		
    
 		readObjectGroup: function(map, data, z) {
-			  var name = this.TMXParser.getStringAttribute(data, me.TMX_TAG_NAME);
-			  return new me.TMXOBjectGroup(name, data, map.tilesets, z);
+			var name = this.TMXParser.getStringAttribute(data, me.TMX_TAG_NAME);
+			var group = new me.TMXOBjectGroup()
+			group.initFromXML(name, data, map.tilesets, z);
+			return group;
 		}
 
 	});
@@ -407,7 +409,7 @@
 					}
 					// get the object groups information
 					case me.TMX_TAG_OBJECTGROUP: {
-					   //map.objectGroups.push(this.readObjectGroup(map, layers[i], zOrder++));
+					   map.objectGroups.push(this.readObjectGroup(map, layers[i], zOrder++));
 					   break;
 					};
 					default : break;
@@ -464,7 +466,9 @@
 		},
 		
 		readObjectGroup: function(map, data, z) {
-			// TODO
+			var group = new me.TMXOBjectGroup()
+			group.initFromJSON(data[me.TMX_TAG_NAME], data, map.tilesets, z);
+			return group;
 		}
 	
 	});

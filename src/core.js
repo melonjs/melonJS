@@ -268,8 +268,7 @@ var me = me || {};
 			// A fallback to window.onload, that will always work
 			$.addEventListener("load", domReady, false);
 		}
-	}
-	;
+	};
 
 	/**
 	 * Specify a function to execute when the DOM is fully loaded
