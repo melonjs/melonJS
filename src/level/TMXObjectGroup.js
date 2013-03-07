@@ -20,12 +20,11 @@
 	 */
 	me.TMXOBjectGroup = Object.extend(
 	{
-		// array of objects
-		objects : [],
+
 		
 		// constructor from XML content
 		initFromXML : function(name, tmxObjGroup, tilesets, z) {
-
+			
 			this.name   = name;
 			this.width  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
@@ -36,6 +35,8 @@
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
 				me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObjGroup);
 			}
+			
+			this.objects = [];
 			
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 
@@ -58,13 +59,15 @@
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
 			
-			var objects = tmxObjGroup["objects"];
-			for (var i in objects) {
+			this.objects = [];
+			
+			var data = tmxObjGroup["objects"];
+			for (var i in data) {
 				// same as layers here, additional strange object are 
 				// being taken in account (and I don't know why!)
-				if (typeof(objects[i].type) == "string") {
+				if (typeof(data[i].type) == "string") {
 					var object = new me.TMXOBject();
-					object.initFromJSON(objects[i], tilesets, z);
+					object.initFromJSON(data[i], tilesets, z);
 					this.objects.push(object);
 				}
 			}
