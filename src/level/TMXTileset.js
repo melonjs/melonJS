@@ -163,7 +163,7 @@
 				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
 				// apply tiled defined properties
 				var prop = {};
-				me.TMXUtils.setTMXProperties(prop, tileInfo[i]);
+				me.TMXUtils.applyTMXPropertiesFromXML(prop, tileInfo[i]);
 				this.setTileProperty(tileID, prop);
 			}
 			

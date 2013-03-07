@@ -439,7 +439,7 @@
 			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
 			
 			// check if we have any user-defined properties 
-			me.TMXUtils.setTMXProperties(this, layer);
+			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
 			
 			// check for the correct rendering method
 			if (this.preRender === undefined) {
@@ -487,7 +487,7 @@
 			
 			
 			// check if we have any user-defined properties 
-			me.TMXUtils.mergeProperties(layer, layer[me.TMX_TAG_PROPERTIES]);
+			me.TMXUtils.applyTMXPropertiesFromJSON(this, layer);
 			
 			// check for the correct rendering method
 			if (this.preRender === undefined) {

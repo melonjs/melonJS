@@ -34,7 +34,7 @@
 		
 			// check if we have any user-defined properties
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
-				me.TMXUtils.setTMXProperties(this, tmxObjGroup);
+				me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObjGroup);
 			}
 			
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
@@ -56,7 +56,7 @@
 			this.z       = z;
 
 			// check if we have any user-defined properties 
-			me.TMXUtils.mergeProperties(this, tmxObjGroup[me.TMX_TAG_PROPERTIES]);
+			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
 			
 			var objects = tmxObjGroup["objects"];
 			for (var i in objects) {
@@ -132,7 +132,7 @@
 				}
 			}
 			// set the object properties
-			me.TMXUtils.setTMXProperties(this, tmxObj);
+			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
 		},
 		
 		initFromJSON :  function(tmxObj, tilesets, z) {
@@ -173,7 +173,7 @@
 			}
 			*/
 			// set the object properties
-			me.TMXUtils.mergeProperties(this, tmxObj[me.TMX_TAG_PROPERTIES]);
+			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
 		},
 		
 		setImage : function(gid, tilesets) {

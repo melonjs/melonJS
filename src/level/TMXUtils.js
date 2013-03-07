@@ -26,7 +26,7 @@
 		 * Apply TMX Properties to the give object
 		 * @private
 		 */
-		api.setTMXProperties = function(obj, xmldata) {
+		api.applyTMXPropertiesFromXML = function(obj, xmldata) {
 			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
 
 			if (properties) {
@@ -50,6 +50,30 @@
 				}
 			}
 
+		};
+		
+		/**
+		 * Apply TMX Properties to the give object
+		 * @private
+		 */
+		api.applyTMXPropertiesFromJSON = function(obj, data) {
+			var properties = data[me.TMX_TAG_PROPERTIES];
+			if (properties) {
+				for(var name in properties){
+					var value = properties[name];
+					
+					// if value not defined or boolean
+					if (!value || value.isBoolean()) {
+						value = value ? (value == "true") : true;
+					}
+					// check if numeric
+					else if (value.isNumeric()) {
+						value = Number(value);
+					}
+					// add the new prop to the object prop list
+					obj[name] = value;
+				}
+			}
 		};
 		
 		/**

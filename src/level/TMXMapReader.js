@@ -190,7 +190,7 @@
 						map.orientation = this.TMXParser.getStringAttribute(elements, me.TMX_TAG_ORIENTATION);
 						map.width = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_WIDTH);
 						map.height = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_HEIGHT);
-						map.tilewidth = this.TMXParser.getIntAttribute(elements,	me.TMX_TAG_TILEWIDTH);
+						map.tilewidth = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_TILEWIDTH);
 						map.tileheight = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_TILEHEIGHT);
 						map.realwidth = map.width * map.tilewidth;
 						map.realheight = map.height * map.tileheight;
@@ -198,7 +198,7 @@
 						map.z = zOrder++;
 					   
 						// set the map properties (if any)
-						me.TMXUtils.setTMXProperties(map, elements);
+						me.TMXUtils.applyTMXPropertiesFromXML(map, elements);
 						
 						// check if a user-defined background color is defined  
 						map.background_color = map.backgroundcolor ? map.backgroundcolor : map.background_color;
@@ -300,7 +300,7 @@
 			imageLayer.opacity = this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0);
 			
 			// check if we have any properties 
-			me.TMXUtils.setTMXProperties(imageLayer, data);
+			me.TMXUtils.applyTMXPropertiesFromXML(imageLayer, data);
 
 			// add the new layer
 			return imageLayer;
@@ -355,7 +355,7 @@
 			map.z = zOrder++;
 		   
 			// set the map properties (if any)
-			me.TMXUtils.mergeProperties(map, data[me.TMX_TAG_PROPERTIES]);
+			me.TMXUtils.applyTMXPropertiesFromJSON(map, data);
 			
 			// check if a user-defined background color is defined  
 			map.background_color = map.backgroundcolor ? map.backgroundcolor : map.background_color;
@@ -451,7 +451,7 @@
 			imageLayer.opacity = parseFloat(data[me.TMX_TAG_OPACITY]);
 			
 			// check if we have any additional properties 
-			me.TMXUtils.mergeProperties(imageLayer, data['properties']);
+			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);
 			
 			// make sure ratio is a float
 			imageLayer.ratio = parseFloat(imageLayer.ratio);
