@@ -111,8 +111,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 			}
 		}
 		
-		// check if we moved
-		if (this.vel.x!=0 || this.vel.y!=0 || this.renderable.isFlickering()) {
+		// check if we moved (a "stand" animation would definitely be cleaner)
+		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
 			this.parent();
 			return true;
 		}
@@ -252,7 +252,7 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// call the parent function
 		this.parent();
 		// return true if we moved of if flickering
-		return (this.vel.x != 0 || this.vel.y != 0 || this.renderable.isFlickering());
+		return (this.parent() || this.vel.x != 0 || this.vel.y != 0);
 	},
 	
 	/**
