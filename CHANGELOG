@@ -1,6 +1,9 @@
 Version History
 ---------------
 0.9.7
+* Font : changed default alignement to `left`
+* Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
+* TMX : added JSON map format support
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
