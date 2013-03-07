@@ -132,7 +132,9 @@
 				if (levels[obj.getCurrentLevelId()]) {
 					levels[obj.getCurrentLevelId()].reset();
 				}
-				levels[levelId].load();
+				
+				// read the map data
+				me.mapReader.readMap(levels[levelId]);
 			
 				// update current level index
 				currentLevelIdx = levelIdx.indexOf(levelId);
