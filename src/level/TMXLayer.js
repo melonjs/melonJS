@@ -453,16 +453,7 @@
 				this.visible = false;
 			}
 
-			// store the data information
-			var xmldata = layer.getElementsByTagName(me.TMX_TAG_DATA)[0];
-			var encoding = me.mapReader.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
-			var compression = me.mapReader.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_COMPRESSION, null);
 
-			// make sure this is not happening
-			if (encoding == '')
-				encoding = null;
-			if (compression == '')
-				compression = null;
 
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
@@ -472,9 +463,7 @@
 				// set alpha value for this layer
 				this.layerSurface.globalAlpha = this.opacity;
 			}	
-			
-			// populate our level with some data
-			this.fillArray(xmldata, encoding, compression);
+
 		},
 		
 		initFromJSON: function(layer) {
@@ -501,10 +490,6 @@
 				this.visible = false;
 			}
 
-			// store the data information
-			var data = layer[me.TMX_TAG_DATA];
-
-
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
 				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
@@ -514,9 +499,6 @@
 				this.layerSurface.globalAlpha = this.opacity;
 			}	
 
-			
-			// populate our level with some data
-			this.fillArray(data, 'json', null);
 		},
 		
 		/**
@@ -561,89 +543,7 @@
 			}
 		},
 		
-		/**
-		 * Build the tiled layer
-		 * @private
-		 */
-		fillArray : function(data, encoding, compression) {
-			// initialize the layer data array
-			this.initArray(this.width, this.height);
-			
-			// check if data is compressed
-			switch (compression) {	 
-				// no compression
-				case null: {
-					// decode data based on encoding type
-					switch (encoding) {
-						// XML encoding
-						case null:
-							var data = data.getElementsByTagName(me.TMX_TAG_TILE);
-							break;
-						// json encoding
-						case 'json':
-							// do nothing as data can be directly reused
-							break;
-						// CSV encoding
-						case me.TMX_TAG_CSV:
-						// Base 64 encoding
-						case me.TMX_TAG_ATTR_BASE64: {
-							// Merge all childNodes[].nodeValue into a single one
-							var nodeValue = '';
-							for ( var i = 0, len = data.childNodes.length; i < len; i++) {
-								nodeValue += data.childNodes[i].nodeValue;
-							}
-							// and then decode them
-							if (encoding == me.TMX_TAG_ATTR_BASE64)
-								var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-							else
-								var data = me.utils.decodeCSV(nodeValue, this.width);
-
-							// ensure nodeValue is deallocated
-							nodeValue = null;
-							break;
-						}
-						  
-						default:
-							throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-							break;
-					}
-					break;
-				}
-					
-				default:
-					throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
-					break;
-			}
-
-			var idx = 0;
-			// set everything
-			for ( var y = 0 ; y <this.height; y++) {
-				for ( var x = 0; x <this.width; x++) {
-					// get the value of the gid
-					var gid = (encoding == null) ? me.mapReader.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
-					// fill the array										
-					if (gid !== 0) {
-						// create a new tile object
-						var tmxTile = new me.Tile(x, y, this.tilewidth, this.tileheight, gid);
-						// set the tile in the data array
-						this.layerData[x][y] = tmxTile;
-						// switch to the right tileset
-						if (!this.tileset.contains(tmxTile.tileId)) {
-							this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
-						}
-					   	// draw the corresponding tile
-						if (this.visible && this.preRender) {
-							this.renderer.drawTile(this.layerSurface, x, y, tmxTile, this.tileset);
-						}
-					}
-				}
-			}
-
-			// make sure data is deallocated :)
-			if (encoding !== 'json') {
-				data = null;
-			} // i'm not sure we should else ?
-		},
+		
 
 		/**
 		 * Return the TileId of the Tile at the specified position

@@ -87,6 +87,86 @@
 					throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
 				}
 			}
+		},
+		
+		
+		/**
+		 * Set tiled layer Data
+		 * @private
+		 */
+		setLayerData : function(layer, data, encoding, compression) {
+			// initialize the layer data array
+			layer.initArray(layer.width, layer.height);
+			
+			// check if data is compressed
+			switch (compression) {	 
+				// no compression
+				case null: {
+					// decode data based on encoding type
+					switch (encoding) {
+						// XML encoding
+						case null:
+							var data = data.getElementsByTagName(me.TMX_TAG_TILE);
+							break;
+						// json encoding
+						case 'json':
+							// do nothing as data can be directly reused
+							break;
+						// CSV encoding
+						case me.TMX_TAG_CSV:
+						// Base 64 encoding
+						case me.TMX_TAG_ATTR_BASE64: {
+							// Merge all childNodes[].nodeValue into a single one
+							var nodeValue = '';
+							for ( var i = 0, len = data.childNodes.length; i < len; i++) {
+								nodeValue += data.childNodes[i].nodeValue;
+							}
+							// and then decode them
+							if (encoding == me.TMX_TAG_ATTR_BASE64)
+								var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+							else
+								var data = me.utils.decodeCSV(nodeValue, layer.width);
+
+							// ensure nodeValue is deallocated
+							nodeValue = null;
+							break;
+						}
+						  
+						default:
+							throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+							break;
+					}
+					break;
+				}
+					
+				default:
+					throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
+					break;
+			}
+
+			var idx = 0;
+			// set everything
+			for ( var y = 0 ; y <layer.height; y++) {
+				for ( var x = 0; x <layer.width; x++) {
+					// get the value of the gid
+					var gid = (encoding == null) ? this.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
+					// fill the array										
+					if (gid !== 0) {
+						// create a new tile object
+						var tmxTile = new me.Tile(x, y, layer.tilewidth, layer.tileheight, gid);
+						// set the tile in the data array
+						layer.layerData[x][y] = tmxTile;
+						// switch to the right tileset
+						if (!layer.tileset.contains(tmxTile.tileId)) {
+							layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+						}
+					   	// draw the corresponding tile
+						if (layer.visible && layer.preRender) {
+							layer.renderer.drawTile(layer.layerSurface, x, y, tmxTile, layer.tileset);
+						}
+					}
+				}
+			}
 		}
 
 	});
@@ -273,6 +353,24 @@
 			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromXML(data);
+			
+			
+			// check data encoding/compression type
+			var layerData = data.getElementsByTagName(me.TMX_TAG_DATA)[0];
+			var encoding = this.TMXParser.getStringAttribute(layerData, me.TMX_TAG_ENCODING, null);
+			var compression = this.TMXParser.getStringAttribute(layerData, me.TMX_TAG_COMPRESSION, null);
+			// make sure this is not happening
+			if (encoding == '') {
+				encoding = null;
+			}
+			if (compression == '') {
+				compression = null;
+			}
+			// parse the layer data
+			this.setLayerData(layer, layerData, encoding, compression);
+			// free layerData
+			layerData = null;
+			
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
@@ -424,6 +522,8 @@
 			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
+			// parse the layer data
+			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
