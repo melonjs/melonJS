@@ -60,9 +60,9 @@
 			
 			var objects = tmxObjGroup["objects"];
 			for (var i in objects) {
-				// same as layers here, additional dummy object are being
-				// taken in account (I don't know why)
-				if (objects[i].type==="") {
+				// same as layers here, additional strange object are 
+				// being taken in account (and I don't know why!)
+				if (typeof(objects[i].type) == "string") {
 					var object = new me.TMXOBject();
 					object.initFromJSON(objects[i], tilesets, z);
 					this.objects.push(object);
@@ -139,13 +139,13 @@
 			
 			
 			this.name = tmxObj[me.TMX_TAG_NAME];
-			this.x = tmxObj[me.TMX_TAG_X];
-			this.y = tmxObj[me.TMX_TAG_Y];
-			this.z = z;
+			this.x = parseInt(tmxObj[me.TMX_TAG_X]);
+			this.y = parseInt(tmxObj[me.TMX_TAG_Y]);
+			this.z = parseInt(z);
 
-			this.width = tmxObj[me.TMX_TAG_WIDTH] || 0;
-			this.height = tmxObj[me.TMX_TAG_HEIGHT] || 0;
-			this.gid = tmxObj[me.TMX_TAG_GID] || null;
+			this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0);
+			this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0);
+			this.gid = parseInt(tmxObj[me.TMX_TAG_GID]) || null;
 			
 			
 			// check if the object has an associated gid	

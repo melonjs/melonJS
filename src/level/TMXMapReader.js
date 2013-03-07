@@ -345,10 +345,10 @@
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
-			map.width = data[me.TMX_TAG_WIDTH];
-			map.height = data[me.TMX_TAG_HEIGHT];
-			map.tilewidth = data[me.TMX_TAG_TILEWIDTH];
-			map.tileheight = data[me.TMX_TAG_TILEHEIGHT];
+			map.width = parseInt(data[me.TMX_TAG_WIDTH]);
+			map.height = parseInt(data[me.TMX_TAG_HEIGHT]);
+			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH]);
+			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT]);
 			map.realwidth = map.width * map.tilewidth;
 			map.realheight = map.height * map.tileheight;
 			map.backgroundcolor = data[me.TMX_BACKGROUND_COLOR];
@@ -439,8 +439,8 @@
 		readImageLayer: function(map, data, z) {
 			// extract layer information
 			var iln = data[me.TMX_TAG_NAME];
-			var ilw = data[me.TMX_TAG_WIDTH];
-			var ilh = data[me.TMX_TAG_HEIGHT];
+			var ilw = parseInt(data[me.TMX_TAG_WIDTH]);
+			var ilh = parseInt(data[me.TMX_TAG_HEIGHT]);
 			var ilsrc = data[me.TMX_TAG_IMAGE];
 			
 			// create the layer
@@ -448,10 +448,14 @@
 			
 			// set some additional flags
 			imageLayer.visible = data[me.TMX_TAG_VISIBLE];
-			imageLayer.opacity = data[me.TMX_TAG_OPACITY];
+			imageLayer.opacity = parseFloat(data[me.TMX_TAG_OPACITY]);
 			
 			// check if we have any additional properties 
 			me.TMXUtils.mergeProperties(imageLayer, data['properties']);
+			
+			// make sure ratio is a float
+			imageLayer.ratio = parseFloat(imageLayer.ratio);
+			
 			
 			return imageLayer;
 		},

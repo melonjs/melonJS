@@ -481,9 +481,9 @@
 			// additional TMX flags
 			this.name = layer[me.TMX_TAG_NAME];
 			this.visible = layer[me.TMX_TAG_VISIBLE];
-			this.opacity = layer[me.TMX_TAG_OPACITY].clamp(0.0, 1.0);
-			this.width = layer[me.TMX_TAG_WIDTH];
-			this.height = layer[me.TMX_TAG_HEIGHT];
+			this.opacity = parseFloat(layer[me.TMX_TAG_OPACITY]).clamp(0.0, 1.0);
+			this.width = parseInt(layer[me.TMX_TAG_WIDTH]);
+			this.height = parseInt(layer[me.TMX_TAG_HEIGHT]);
 			
 			
 			// check if we have any user-defined properties 

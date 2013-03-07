@@ -200,17 +200,17 @@
 			}
 			
 			this.name = tileset[me.TMX_TAG_NAME];
-			this.tilewidth = tileset[me.TMX_TAG_TILEWIDTH];
-			this.tileheight = tileset[me.TMX_TAG_TILEHEIGHT];
-			this.spacing = tileset[me.TMX_TAG_SPACING] || 0;
-			this.margin = tileset[me.TMX_TAG_MARGIN] ||0;
+			this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH]);
+			this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT]);
+			this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0);
+			this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] ||0);
 		
 			// set tile offset properties (if any)
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = tileset[me.TMX_TAG_TILEOFFSET];
 			if (offset) {
-				this.tileoffset.x = offset[me.TMX_TAG_X];
-				this.tileoffset.y = offset[me.TMX_TAG_Y];
+				this.tileoffset.x = parseInt(offset[me.TMX_TAG_X]);
+				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y]);
 			}
 			
 			var tileInfo = tileset["tileproperties"];

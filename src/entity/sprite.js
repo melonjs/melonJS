@@ -167,8 +167,8 @@
 
 			// call the parent constructor
 			this.parent(new me.Vector2d(x, y),
-						~~spritewidth  || image.width,
-						~~spriteheight || image.height);
+						spritewidth  || image.width,
+						spriteheight || image.height);
 						
 			// cache image reference
 			this.image = image;
