@@ -264,7 +264,7 @@
  "orientation":"orthogonal",
  "properties":
     {
-
+     "backgroundcolor":"#aa55ff"
     },
  "tileheight":35,
  "tilesets":[
