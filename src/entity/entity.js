@@ -388,16 +388,16 @@
 			
 			// call the parent constructor
 			this.parent(new me.Vector2d(x, y),
-						settings.spritewidth  || settings.width,
-						settings.spriteheight || settings.height);
+						~~settings.spritewidth  || ~~settings.width,
+						~~settings.spriteheight || ~~settings.height);
 			
 			if (settings.image) {
 				var image = (typeof settings.image == "string") ? me.loader.getImage(settings.image) : settings.image
 				this.renderable = new me.AnimationSheet(0, 0, image,
-														settings.spritewidth,
-														settings.spriteheight,
-														settings.spacing,
-														settings.margin);
+														~~settings.spritewidth,
+														~~settings.spriteheight,
+														~~settings.spacing,
+														~~settings.margin);
 				
 				// check for user defined transparent color
 				if (settings.transparent_color) {

@@ -48,6 +48,7 @@
 	me.TMX_TAG_VISIBLE             = "visible";
 	me.TMX_TAG_TILESET             = "tileset";
 	me.TMX_TAG_LAYER               = "layer";
+	me.TMX_TAG_TILE_LAYER          = "tilelayer";
 	me.TMX_TAG_IMAGE_LAYER         = "imagelayer";
 	me.TMX_TAG_OBJECTGROUP         = "objectgroup";
 	me.TMX_TAG_OBJECT              = "object";
