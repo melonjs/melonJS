@@ -440,6 +440,9 @@
 			// to automatically increment z index
 			var zOrder = 0;
 			
+			// keep a reference to our scope
+			var self = this;
+			
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
@@ -478,44 +481,37 @@
 			}
 			
 			// Tileset information
-			
-			var tilesets = data["tilesets"];
-			for (var i in tilesets) {
-				// Initialize our object if not yet done
-				if (!map.tilesets) {
-					map.tilesets = new me.TMXTilesetGroup();
-				}
-				// WHY IS THIS RETURNING AN ADDITIONAL WRONG OBJECT ?
-				if (tilesets[i].firstgid) { 
-					// add the new tileset
-					map.tilesets.add(this.readTileset(tilesets[i]));
-				}
+			if (!map.tilesets) {
+				// make sure we have a TilesetGroup Object
+				map.tilesets = new me.TMXTilesetGroup();
 			}
+			// parse all tileset objects
+			data["tilesets"].forEach(function(tileset) {
+				// add the new tileset
+				map.tilesets.add(self.readTileset(tileset));
+			});
 			
-			// Image Layer
-			// get image layer information
-			var layers = data["layers"];
-			for (var i in layers) {
-				switch (layers[i].type) {
+			// get layers information
+			data["layers"].forEach(function(layer) {
+				switch (layer.type) {
 					case me.TMX_TAG_IMAGE_LAYER : {
-						map.mapLayers.push(this.readImageLayer(map, layers[i], zOrder++));
+						map.mapLayers.push(self.readImageLayer(map, layer, zOrder++));
 						break;
 					}
 					case me.TMX_TAG_TILE_LAYER : {
-						map.mapLayers.push(this.readLayer(map, layers[i], zOrder++));
+						map.mapLayers.push(self.readLayer(map, layer, zOrder++));
 						break;
 					}
 					// get the object groups information
 					case me.TMX_TAG_OBJECTGROUP: {
-					   map.objectGroups.push(this.readObjectGroup(map, layers[i], zOrder++));
+					   map.objectGroups.push(self.readObjectGroup(map, layer, zOrder++));
 					   break;
 					};
 					default : break;
-				
 				}
-			};
-			// FINISH !
+			});
 			
+			// FINISH !
 		},
 		
 		readLayer: function (map, data, z) {

@@ -25,21 +25,19 @@
 		// constructor from XML content
 		initFromXML : function(name, tmxObjGroup, tilesets, z) {
 			
-			this.name   = name;
-			this.width  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
-			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
+			this.name    = name;
+			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
+			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
 			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.z       = z;
+			this.objects = [];
 		
 			// check if we have any user-defined properties
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
 				me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObjGroup);
 			}
 			
-			this.objects = [];
-			
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
-
 			for ( var i = 0; i < data.length; i++) {
 				var object = new me.TMXOBject();
 				object.initFromXML(data[i], tilesets, z);
@@ -49,28 +47,24 @@
 		
 		// constructor from XML content
 		initFromJSON : function(name, tmxObjGroup, tilesets, z) {
-
-			this.name   = name;
-			this.width  = tmxObjGroup[me.TMX_TAG_WIDTH];
-			this.height = tmxObjGroup[me.TMX_TAG_HEIGHT];
+			var self = this;
+			
+			this.name    = name;
+			this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
+			this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
 			this.visible = tmxObjGroup[me.TMX_TAG_VISIBLE];
 			this.z       = z;
-
+			this.objects  = [];
+			
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
 			
-			this.objects = [];
-			
-			var data = tmxObjGroup["objects"];
-			for (var i in data) {
-				// same as layers here, additional strange object are 
-				// being taken in account (and I don't know why!)
-				if (typeof(data[i].type) == "string") {
-					var object = new me.TMXOBject();
-					object.initFromJSON(data[i], tilesets, z);
-					this.objects.push(object);
-				}
-			}
+			// parse all TMX objects
+			tmxObjGroup["objects"].forEach(function(tmxObj) {
+				var object = new me.TMXOBject();
+				object.initFromJSON(tmxObj, tilesets, z);
+				self.objects.push(object);
+			});
 		},
 		
 		/**

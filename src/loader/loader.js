@@ -182,11 +182,15 @@
 		 */
 		function preloadTMX(tmxData, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
+			// check the data format ('tmx', 'json')
+			var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
 			
-			if (me.utils.getFileExtension(tmxData.src).toLowerCase() !== 'json') {
-				// to ensure our document is treated as a XML file
-				if (xmlhttp.overrideMimeType)
+			if (xmlhttp.overrideMimeType) {
+				if (format === 'json') {
+					xmlhttp.overrideMimeType('application/json');
+				} else {
 					xmlhttp.overrideMimeType('text/xml');
+				}
 			}
 			
 			xmlhttp.open("GET", tmxData.src + me.nocache, true);
@@ -200,8 +204,7 @@
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
 						var result = null;
 						
-						// check the data format ('tmx', 'json')
-						var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
+						// parse response
 						switch (format) {
 							case 'xml' : 
 							case 'tmx' : {
@@ -217,7 +220,7 @@
 								break;
 							}
 							case 'json' : {
-								result = JSON.parse(xmlhttp.responseText);
+								result = JSON.parse(xmlhttp.responseText.replace(/\\'/g, "'"));
 								break;
 							}
 							
