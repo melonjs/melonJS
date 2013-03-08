@@ -220,7 +220,7 @@
 								break;
 							}
 							case 'json' : {
-								result = JSON.parse(xmlhttp.responseText.replace(/\\'/g, "'"));
+								result = JSON.parse(xmlhttp.responseText);
 								break;
 							}
 							
