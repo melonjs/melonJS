@@ -249,8 +249,6 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// check & update movement
 		this.updateMovement();
 		
-		// call the parent function
-		this.parent();
 		// return true if we moved of if flickering
 		return (this.parent() || this.vel.x != 0 || this.vel.y != 0);
 	},

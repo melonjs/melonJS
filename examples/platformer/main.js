@@ -10,7 +10,7 @@ var game = {
 	// game assets
 	assets : [	
 		{name: "tileset",		type:"image",	src: "data/gfx/tileset.png"},
-		{name: "atascii",		type:"image",	src: "data/gfx/atascii_40px.png"},
+		{name: "atascii",		type:"image",	src: "data/gfx/atascii_24px.png"},
 		{name: "player_sheet",	type:"image",	src: "data/gfx/player_sheet.png"},
 		{name: "slime_sheet",	type:"image",	src: "data/gfx/slime_sheet.png"},
 		{name: "fly_sheet",		type:"image",	src: "data/gfx/fly_sheet.png"},
