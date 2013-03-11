@@ -149,26 +149,22 @@
 			if (this.gid) {
 				this.setImage(this.gid, tilesets);
 			}
-			/*	comment it for now
 			else {
 				var polygon = tmxObj[me.TMX_TAG_POLYGON];
-				this.isPolygon = polygon!undefined;
+				this.isPolygon = polygon!==undefined;
 				if (!polygon) {
-					polygon = [me.TMX_TAG_POLYLINE];
+					polygon = tmxObj[me.TMX_TAG_POLYLINE];
 					this.isPolygon = false;
 				}
-
 				if (polygon) {
 					this.points = [];
-					var points = polygon[me.TMX_TAG_POINTS];
-					var point = points.split(" ");
-					for (var i = 0, v; i < point.length; i++) {
-						v = point[i].split(",");
-						this.points[i] = new me.Vector2d(+v[0], +v[1]);
-					}
+					var self = this;
+					var i = 0;
+					polygon.forEach(function(point) {
+						self.points[i++] = new me.Vector2d(parseInt(point.x), parseInt(point.y));
+					});
 				}
 			}
-			*/
 			// set the object properties
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
 		},
