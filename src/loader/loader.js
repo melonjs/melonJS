@@ -128,6 +128,8 @@
 		var tmxList = {};
 		// contains all the binary files loaded
 		var binList = {};
+		// contains all the texture atlas files
+		var atlasList = {};
 		// flag to check loading status
 		var resourceCount = 0;
 		var loadCount = 0;
@@ -250,6 +252,40 @@
 			// send the request
 			xmlhttp.send(null);
 		};
+		
+		
+		/**
+		 * preload TMX files
+		 * @private
+		 */
+		function preloadJSON(data, onload, onerror) {
+			var xmlhttp = new XMLHttpRequest();
+			
+			if (xmlhttp.overrideMimeType) {
+				xmlhttp.overrideMimeType('application/json');
+			}
+			
+			xmlhttp.open("GET", data.src + me.nocache, true);
+						
+			// set the callbacks
+			xmlhttp.ontimeout = onerror;
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState==4) {
+					// status = 0 when file protocol is used, or cross-domain origin,
+					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
+					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+						// get the Texture Packer Atlas content
+						atlasList[data.name] = JSON.parse(xmlhttp.responseText);
+						// fire the callback
+						onload();
+					} else {
+						onerror();
+					}
+				}
+			};
+			// send the request
+			xmlhttp.send(null);
+		};
 			
 		/**
 		 * preload Binary files
@@ -284,13 +320,8 @@
 			
 			PUBLIC STUFF
 				
-			---										*/
+			---	*/
 
-		/* ---
-		
-			onload callback : to be initialized
-			
-			---*/
 		/**
 		 * onload callback
 		 * @public
@@ -386,7 +417,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "binary", "image", "tmx", "tsx", "audio"
+		 * - type    : "binary", "image", "tmx", "tsx", "audio", "tps"
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
@@ -426,6 +457,10 @@
 				case "image":
 					// reuse the preloadImage fn
 					preloadImage.call(this, res, onload, onerror);
+					return 1;
+				
+				case "tps":
+					preloadJSON.call(this, res, onload, onerror);
 					return 1;
 
 				case "tmx":
@@ -474,6 +509,16 @@
 					delete imgList[res.name];
 					return true;
 
+				case "t":
+					return me.audio.unload(res.name);
+				
+				case "tps":
+					if (!(res.name in atlasList))
+						return false;
+
+					delete atlasList[res.name];
+					return true;
+					
 				case "tmx":
 				case "tsx":
 					if (!(res.name in tmxList))
@@ -535,6 +580,7 @@
 			}
 
 		};
+
 		/**
 		 * return the specified TMX/TSX object
 		 * @name me.loader#getTMX
@@ -572,6 +618,25 @@
 				return null;
 			}
 
+		};
+		
+		/**
+		 * return the specified Atlas object
+		 * @name me.loader#getAtlas
+		 * @public
+		 * @function
+		 * @param {String} name of the atlas object;
+		 * @return {Object} 
+		 */
+		obj.getAtlas = function(elt) {
+			// avoid case issue
+			elt = elt.toLowerCase();
+			if (elt in atlasList)
+				return atlasList[elt];
+			else {
+				//console.log ("warning %s resource not yet loaded!",name);
+				return null;
+			}
 		};
 
 

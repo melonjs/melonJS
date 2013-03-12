@@ -7,6 +7,7 @@ files = [
 	'./src/debug/debug.js',
 	'./src/entity/camera.js',
 	'./src/entity/sprite.js',
+	'./src/entity/texturepacker.js',
 	'./src/entity/entity.js',
 	'./src/state/state.js',
 	'./src/loader/loader.js',

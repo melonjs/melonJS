@@ -22,7 +22,10 @@ var game = {
 		{name: "jump",			type: "audio",	src: "data/audio/",	channel : 2},
 		{name: "DST-GameForest",type: "audio",	src: "data/audio/",	channel : 1},
 		{name: "map1",			type: "tmx",	src: "data/map/map1.json"},
-		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"}
+		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"},
+		// texturePacker
+		{name: "texture",		type: "tps",	src: "data/gfx/texture.json"},
+		{name: "texture",		type:"image",	src: "data/gfx/texture.png"}
 	],
 	
 	/* ---
@@ -77,6 +80,10 @@ var game = {
 		me.entityPool.add("SlimeEntity", PathEnemyEntity);
 		me.entityPool.add("FlyEntity", PathEnemyEntity);
 		me.entityPool.add("CoinEntity", CoinEntity);
+		
+		// load the texture atlas file
+		game.textureAtlas = new me.TextureAtlas(me.loader.getAtlas("texture"));
+
 		
 		// switch to PLAY state
 		me.state.change(me.state.PLAY);
