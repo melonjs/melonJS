@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -48,6 +48,7 @@
 	me.TMX_TAG_VISIBLE             = "visible";
 	me.TMX_TAG_TILESET             = "tileset";
 	me.TMX_TAG_LAYER               = "layer";
+	me.TMX_TAG_TILE_LAYER          = "tilelayer";
 	me.TMX_TAG_IMAGE_LAYER         = "imagelayer";
 	me.TMX_TAG_OBJECTGROUP         = "objectgroup";
 	me.TMX_TAG_OBJECT              = "object";

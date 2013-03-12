@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  */
@@ -387,46 +387,118 @@
 			return res;
 		}
 	});
-	
+
 	/**
-	 * a generic tile based layer object
+	 * a TMX Tile Layer Object
+	 * Tile QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TiledLayer = Object.extend({
+	me.TMXLayer = Object.extend({
+		
+		// the layer data array
+		layerData : null,
+		
 		// constructor
-		init: function(w, h, tw, th, tilesets, z) {
-			this.width = w;
-			this.height = h;
+		init: function(tilewidth, tileheight, orientation, tilesets, zOrder) {
+
 			// tile width & height
-			this.tilewidth  = tw;
-			this.tileheight = th;
+			this.tilewidth  = tilewidth;
+			this.tileheight = tileheight;
+			
+			// layer orientation
+			this.orientation = orientation;
 			
 			// layer "real" size
 			this.realwidth = this.width * this.tilewidth;
 			this.realheight = this.height * this.tileheight;
-
+			
 			// for displaying order
-			this.z = z;
-
-			this.name = null;
-			this.visible = false;
-			this.opacity = 1.0;
-
-			// data array
-			this.layerData = null;
+			this.z = zOrder;
 
 			/**
 			 * The Layer corresponding Tilesets
 			 * @public
 			 * @type me.TMXTilesetGroup
-			 * @name me.TiledLayer#tilesets
+			 * @name me.TMXLayer#tilesets
 			 */
+			
 			this.tilesets = tilesets;
-
 			// the default tileset
-			this.tileset = tilesets?this.tilesets.getTilesetByIndex(0):null;
+			this.tileset = this.tilesets?this.tilesets.getTilesetByIndex(0):null;
+		},
+		
+		initFromXML: function(layer) {
+			
+			// additional TMX flags
+			this.name = me.mapReader.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
+			this.visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.opacity = me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
+			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
+			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			
+			// check if we have any user-defined properties 
+			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
+			
+			// check for the correct rendering method
+			if (this.preRender === undefined) {
+				this.preRender = me.sys.preRender;
+			}
+			
+			// detect if the layer is a collision map
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
+				// force the layer as invisible
+				this.visible = false;
+			}
+
+
+
+			// if pre-rendering method is use, create the offline canvas
+			if (this.preRender) {
+				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerSurface = this.layerCanvas.getContext('2d');
+					
+				// set alpha value for this layer
+				this.layerSurface.globalAlpha = this.opacity;
+			}	
+
+		},
+		
+		initFromJSON: function(layer) {
+			// additional TMX flags
+			this.name = layer[me.TMX_TAG_NAME];
+			this.visible = layer[me.TMX_TAG_VISIBLE];
+			this.opacity = parseFloat(layer[me.TMX_TAG_OPACITY]).clamp(0.0, 1.0);
+			this.width = parseInt(layer[me.TMX_TAG_WIDTH]);
+			this.height = parseInt(layer[me.TMX_TAG_HEIGHT]);
+			
+			
+			// check if we have any user-defined properties 
+			me.TMXUtils.applyTMXPropertiesFromJSON(this, layer);
+			
+			// check for the correct rendering method
+			if (this.preRender === undefined) {
+				this.preRender = me.sys.preRender;
+			}
+			
+			// detect if the layer is a collision map
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
+				// force the layer as invisible
+				this.visible = false;
+			}
+
+			// if pre-rendering method is use, create the offline canvas
+			if (this.preRender) {
+				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerSurface = this.layerCanvas.getContext('2d');
+					
+				// set alpha value for this layer
+				this.layerSurface.globalAlpha = this.opacity;
+			}	
+
 		},
 		
 		/**
@@ -436,47 +508,46 @@
 		 */
 		reset : function() {
 			// clear all allocated objects
+			if (this.preRender) {
+				this.layerCanvas = null;
+				this.layerSurface = null;
+			}
+			this.renderer = null;
+			// clear all allocated objects
 			this.layerData = null;
 			this.tileset = null;
 			this.tilesets = null;
-		},
 
+		},
+		
+		/**
+		 * set the layer renderer
+		 * @private
+		 */
+		setRenderer : function(renderer) {
+			this.renderer = renderer;
+		},
+		
 		/**
 		 * Create all required arrays
 		 * @private
 		 */
-		initArray : function() {
+		initArray : function(w, h) {
 			// initialize the array
 			this.layerData = [];
-			for ( var x = 0; x < this.width; x++) {
+			for ( var x = 0; x < w; x++) {
 				this.layerData[x] = [];
-				for ( var y = 0; y < this.height; y++) {
+				for ( var y = 0; y < h; y++) {
 					this.layerData[x][y] = null;
 				}
 			}
 		},
-
-		/**
-		 * get the layer alpha channel value<br>
-		 * @return current opacity value between 0 and 1
-		 */
-		getOpacity : function() {
-			return this.opacity;
-		},
-
-		/**
-		 * set the layer alpha channel value<br>
-		 * @param {alpha} alpha opacity value between 0 and 1
-		 */
-		setOpacity : function(alpha) {
-			if (alpha) {
-				this.opacity = alpha.clamp(0.0, 1.0);
-			}
-		},
+		
+		
 
 		/**
 		 * Return the TileId of the Tile at the specified position
-		 * @name me.TiledLayer#getTileId
+		 * @name me.TMXLayer#getTileId
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in pixel 
@@ -490,7 +561,7 @@
 		
 		/**
 		 * Return the Tile object at the specified position
-		 * @name me.TiledLayer#getTile
+		 * @name me.TMXLayer#getTile
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in pixel 
@@ -503,7 +574,7 @@
 
 		/**
 		 * Create a new Tile at the specified position
-		 * @name me.TiledLayer#setTile
+		 * @name me.TMXLayer#setTile
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in tile 
@@ -513,20 +584,48 @@
 		setTile : function(x, y, tileId) {
 			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
 		},
-
+		
 		/**
 		 * clear the tile at the specified position
-		 * @name me.TiledLayer#clearTile
+		 * @name me.TMXLayer#clearTile
 		 * @public
 		 * @function
-		 * @param {Integer} x x coordinate in tile 
-		 * @param {Integer} y y coordinate in tile 
+		 * @param {Integer} x x position 
+		 * @param {Integer} y y position 
 		 */
 		clearTile : function(x, y) {
 			// clearing tile
 			this.layerData[x][y] = null;
+			// erase the corresponding area in the canvas
+			if (this.visible && this.preRender) {
+				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
+			}
+		},
+		
+		/**
+		 * get the layer alpha channel value
+		 * @name me.TMXLayer#getOpacity
+		 * @return current opacity value between 0 and 1
+		 */
+		getOpacity : function() {
+			return this.opacity;
 		},
 
+		/**
+		 * set the layer alpha channel value
+		 * @name me.TMXLayer#setOpacity
+		 * @param {alpha} alpha opacity value between 0 and 1
+		 */
+		setOpacity : function(alpha) {
+			if (alpha) {
+				this.opacity = alpha.clamp(0.0, 1.0);
+				// if pre-rendering is used, update opacity on the hidden canvas context
+				if (this.preRender) {
+					this.layerSurface.globalAlpha = this.opacity;
+				}
+			}
+		},
+		
 		/**
 		 * check for collision
 		 * obj - obj
@@ -585,230 +684,15 @@
 			// return the collide object
 			return res;
 		},
-
+		
 		/**
 		 * a dummy update function
 		 * @private
 		 */
 		update : function() {
 			return false;
-		}
-	});
-	
-	/**
-	 * a TMX Tile Map Object
-	 * Tile QT 0.7.x format
-	 * @class
-	 * @extends me.TiledLayer
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.TMXLayer = me.TiledLayer.extend({
-		// constructor
-		init: function(layer, tilewidth, tileheight, orientation, tilesets, zOrder) {
-			// call the parent
-			this.parent(me.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH), 
-						me.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT),
-						tilewidth, 
-						tileheight,
-						// tilesets should exist here !
-						tilesets, 
-						zOrder);
-						
-			// additional TMX flags
-			this.orientation = orientation;
-			this.name = me.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.visible = (me.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
-			this.opacity = me.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
-				
-			// check if we have any user-defined properties 
-			me.TMXUtils.setTMXProperties(this, layer);
-			
-			// check for the correct rendering method
-			if (this.preRender === undefined)
-				this.preRender = me.sys.preRender
-				
-			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
-			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
-				// force the layer as invisible
-				this.visible = false;
-			}
-
-			// store the data information
-			var xmldata = layer.getElementsByTagName(me.TMX_TAG_DATA)[0];
-			var encoding = me.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_ENCODING, null);
-			var compression = me.TMXParser.getStringAttribute(xmldata, me.TMX_TAG_COMPRESSION, null);
-
-			// make sure this is not happening
-			if (encoding == '')
-				encoding = null;
-			if (compression == '')
-				compression = null;
-
-			// if not a collision layer, create a canvas where to draw our layer
-			if (!this.isCollisionMap) {
-				// set the right renderer
-				switch (this.orientation)
-				{
-					case "orthogonal": {
-					  this.renderer = new me.TMXOrthogonalRenderer(this.width, this.height, this.tilewidth, this.tileheight);
-					  break;
-					}
-					case "isometric": {
-					  this.renderer = new me.TMXIsometricRenderer(this.width, this.height , this.tilewidth, this.tileheight);
-					  break;
-					}
-			
-					// if none found, throw an exception
-					default : {
-						throw "melonJS: " + this.orientation + " type TMX Tile Map not supported!";
-					}
-				}
-				
-				// if pre-rendering method is use, create the offline canvas
-				if (this.preRender) {
-					this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
-					this.layerSurface = this.layerCanvas.getContext('2d');
-					
-					// set alpha value for this layer
-					this.layerSurface.globalAlpha = this.opacity;
-				}
-				
-			}
-
-			// initialize the layer data array
-			this.initArray();
-
-			// populate our level with some data
-			this.fillArray(xmldata, encoding, compression);
 		},
 		
-		/**
-		 * reset function
-		 * @private
-		 * @function
-		 */
-		reset : function() {
-			// clear all allocated objects
-			if (this.preRender) {
-				this.layerCanvas = null;
-				this.layerSurface = null;
-			}
-			this.renderer = null;
-			// call the parent reset function
-			this.parent();
-		},
-		
-		/**
-		 * Build the tiled layer
-		 * @private
-		 */
-		fillArray : function(xmldata, encoding, compression) {
-			// check if data is compressed
-			switch (compression) {
-			 
-			 // no compression
-			 case null: {
-				// decode data based on encoding type
-				switch (encoding) {
-				// XML encoding
-				   case null: {
-					  var data = xmldata.getElementsByTagName(me.TMX_TAG_TILE);
-					  break;
-				   }
-				   // CSV encoding
-				   case me.TMX_TAG_CSV:
-					  // Base 64 encoding
-				   case me.TMX_TAG_ATTR_BASE64: {
-					  // Merge all childNodes[].nodeValue into a single one
-					  var nodeValue = '';
-					  for ( var i = 0, len = xmldata.childNodes.length; i < len; i++) {
-						 nodeValue += xmldata.childNodes[i].nodeValue;
-					  }
-					  // and then decode them
-					  if (encoding == me.TMX_TAG_ATTR_BASE64)
-						 var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-					  else
-						 var data = me.utils.decodeCSV(nodeValue, this.width);
-
-					  // ensure nodeValue is deallocated
-					  nodeValue = null;
-					  break;
-				   }
-					  
-				   default:
-					  throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-					  break;
-				}
-				
-			 break;
-			 }
-				
-			 default:
-				throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
-				break;
-			}
-
-			var idx = 0;
-			// set everything
-			for ( var y = 0 ; y <this.height; y++) {
-				for ( var x = 0; x <this.width; x++) {
-					// get the value of the gid
-					var gid = (encoding == null) ? me.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
-					// fill the array										
-					if (gid !== 0) {
-						// create a new tile object
-						var tmxTile = new me.Tile(x, y, this.tilewidth, this.tileheight, gid);
-						// set the tile in the data array
-						this.layerData[x][y] = tmxTile;
-						// switch to the right tileset
-						if (!this.tileset.contains(tmxTile.tileId)) {
-							this.tileset = this.tilesets.getTilesetByGid(tmxTile.tileId);
-						}
-					   	// draw the corresponding tile
-						if (this.visible && this.preRender) {
-							this.renderer.drawTile(this.layerSurface, x, y, tmxTile, this.tileset);
-						}
-					}
-				}
-			}
-
-			// make sure data is deallocated :)
-			data = null;
-		},
-
-		/**
-		 * clear the tile at the specified position
-		 * @name me.TMXLayer#clearTile
-		 * @public
-		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position 
-		 */
-		clearTile : function(x, y) {
-			// call the parent function
-			this.parent(x, y);
-			// erase the corresponding area in the canvas
-			if (this.visible && this.preRender) {
-				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
-			}
-		},
-
-		/**
-		 * set the layer alpha channel value<br>
-		 * @param {alpha} alpha opacity value between 0 and 1
-		 */
-		setOpacity : function(alpha) {
-			// set opacity through parent function
-			this.parent(alpha);
-
-			// if pre-rendering is used, update opacity on the hidden canvas context
-			if (this.preRender) {
-				this.layerSurface.globalAlpha = this.opacity;
-			}
-		},
-
 		/**
 		 * draw a tileset layer
 		 * @private
@@ -829,7 +713,8 @@
 								  vpos.x + rect.pos.x, //sx
 								  vpos.y + rect.pos.y, //sy
 								  width, height,    //sw, sh
-								  rect.pos.x, rect.pos.y,     //dx, dy
+								  vpos.x + rect.pos.x, //dx
+								  vpos.y + rect.pos.y, //dy
 								  width, height);   //dw, dh
 			}
 			// dynamically render the layer

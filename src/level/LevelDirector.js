@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  */
@@ -132,7 +132,9 @@
 				if (levels[obj.getCurrentLevelId()]) {
 					levels[obj.getCurrentLevelId()].reset();
 				}
-				levels[levelId].load();
+				
+				// read the map data
+				me.mapReader.readMap(levels[levelId]);
 			
 				// update current level index
 				currentLevelIdx = levelIdx.indexOf(levelId);

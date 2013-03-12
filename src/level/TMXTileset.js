@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -91,141 +91,42 @@
 
 		}
 	});
-
-	/**
-	 * a Tile Set Object
-	 * @class
-	 * @memberOf me
-	 * @constructor
-	 */
-	me.Tileset = Object.extend({
-		// constructor
-		init: function (name, tilewidth, tileheight, spacing, margin, imagesrc) {
-			this.name = name;
-			this.tilewidth = tilewidth;
-			this.tileheight = tileheight;
-			this.spacing = spacing;
-			this.margin = margin;
-			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
-			
-			if (!this.image) {
-				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			
-			
-			// tile types
-			this.type = {
-				SOLID : "solid",
-				PLATFORM : "platform",
-				L_SLOPE : "lslope",
-				R_SLOPE : "rslope",
-				LADDER : "ladder",
-				BREAKABLE : "breakable"
-			};
-
-			// tile properties
-			// (collidable, etc..)
-			this.TileProperties = [];
-			
-			// a cache for offset value
-			this.tileXOffset = [];
-			this.tileYOffset = [];
-
-			// number of tiles per horizontal line 
-			if (this.image) {
-				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			}
-		},
-		
-		// return the list of property for a tile
-		getPropertyList: function() {
-			return {
-				// collectable tiles
-				//isCollectable	: false,
-				// collidable tiles
-				isCollidable : false,
-				isSolid : false,
-				isPlatform : false,
-				isSlope : false,
-				isLeftSlope : false,
-				isRightSlope : false,
-				isLadder : false,
-				isBreakable : false
-			};
-		},
-		
-		// e.g. getTileProperty (gid)	
-		/**
-		 * return the properties of the specified tile <br>
-		 * the function will return an object with the following boolean value :<br>
-		 * - isCollidable<br>
-		 * - isSolid<br>
-		 * - isPlatform<br>
-		 * - isSlope <br>
-		 * - isLeftSlope<br>
-		 * - isRightSlope<br>
-		 * - isLadder<br>
-		 * - isBreakable<br>
-		 * @name me.Tileset#getTileProperties
-		 * @public
-		 * @function
-		 * @param {Integer} tileId 
-		 * @return {Object}
-		 */
-		getTileProperties: function(tileId) {
-			return this.TileProperties[tileId];
-		},
-		
-		//return collidable status of the specifiled tile
-
-		isTileCollidable : function(tileId) {
-			return this.TileProperties[tileId].isCollidable;
-		},
-
-		/*
-		//return collectable status of the specifiled tile
-		isTileCollectable : function (tileId) {
-			return this.TileProperties[tileId].isCollectable;
-		},
-		 */
-		
-		// return the x offset of the specified tile in the tileset image
-		getTileOffsetX : function(tileId) {
-			if (this.tileXOffset[tileId] == null) {
-				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
-			}
-			return this.tileXOffset[tileId];
-		},
-		
-		// return the y offset of the specified tile in the tileset image
-		getTileOffsetY : function(tileId) {
-			if (this.tileYOffset[tileId] == null) {
-				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
-			}
-			return this.tileYOffset[tileId];
-		}
-
-	});
-	
-
 	
     /**
 	 * a TMX Tile Set Object
 	 * @class
-	 * @extends me.Tileset
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXTileset = me.Tileset.extend({
+	me.TMXTileset = Object.extend({
+		
+		
+		// tile types
+		type : {
+			SOLID : "solid",
+			PLATFORM : "platform",
+			L_SLOPE : "lslope",
+			R_SLOPE : "rslope",
+			LADDER : "ladder",
+			BREAKABLE : "breakable"
+		},
+		
+		// tile properties (collidable, etc..)
+		TileProperties : [],
+			
+		// a cache for offset value
+		tileXOffset : [],
+		tileYOffset : [],
+
 		
 		// constructor
-		init: function (xmltileset) {
+		initFromXML: function (xmltileset) {
 
 			// first gid
-			this.firstgid = me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
+			this.firstgid = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
+			
 
-			var src = me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
+			var src = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
 			if (src) {
 				// load TSX
 				src = me.utils.getBasename(src);
@@ -236,63 +137,143 @@
 				}
 
 				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.TMXParser`
-				me.TMXParser.parseFromString(xmltileset);
-				xmltileset = me.TMXParser.getFirstElementByTagName("tileset");
-			}
-
-			this.parent(me.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT),
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0), 
-						me.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0), 
-						xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE));
-			
-			// compute the last gid value in the tileset
-			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
-		  
-			// check if transparency is defined for a specific color
-			this.trans = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_TRANS);
-
-			// set Color Key for transparency if needed
-			if (this.trans !== null && this.image) {
-				// applyRGB Filter (return a context object)
-				this.image = me.video.applyRGBFilter(this.image, "transparent", this.trans.toUpperCase()).canvas;
+				// XML currently loaded into the global `me.mapReader.TMXParser`
+				me.mapReader.TMXParser.parseFromString(xmltileset);
+				xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
 			}
 			
+			this.name = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
+			this.tilewidth = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
+			this.tileheight = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
+			this.spacing = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
+			this.margin = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
+		
+
 			// set tile offset properties (if any)
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
 			if (offset.length>0) {
-				this.tileoffset.x = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
+				this.tileoffset.x = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
+				this.tileoffset.y = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
 			}
-
+			
 			// set tile properties, if any
 			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
 			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
-
-				this.TileProperties[tileID] = {};
-
-				var tileProp = this.TileProperties[tileID];
-
+				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
 				// apply tiled defined properties
-				me.TMXUtils.setTMXProperties(tileProp, tileInfo[i]);
-
-				// check what we found and adjust property
-				tileProp.isSolid = tileProp.type ? tileProp.type.toLowerCase() === this.type.SOLID : false;
-				tileProp.isPlatform = tileProp.type ? tileProp.type.toLowerCase() === this.type.PLATFORM : false;
-				tileProp.isLeftSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.L_SLOPE : false;
-				tileProp.isRightSlope = tileProp.type ? tileProp.type.toLowerCase() === this.type.R_SLOPE	: false;
-				tileProp.isBreakable = tileProp.type ? tileProp.type.toLowerCase() === this.type.BREAKABLE : false;
-				tileProp.isLadder = tileProp.type ? tileProp.type.toLowerCase() === this.type.LADDER : false;
-				tileProp.isSlope = tileProp.isLeftSlope || tileProp.isRightSlope;
-
-				// ensure the collidable flag is correct
-				tileProp.isCollidable = !! (tileProp.type);
-
+				var prop = {};
+				me.TMXUtils.applyTMXPropertiesFromXML(prop, tileInfo[i]);
+				this.setTileProperty(tileID, prop);
 			}
+			
+			// check for the texture corresponding image
+			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
+			var image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)):null;
+			if (!image) {
+				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+			}
+			// check if transparency is defined for a specific color
+			var trans = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_TRANS);
+			
+			this.initFromImage(image, trans);
+			
+		},
+		
+		// constructor
+		initFromJSON: function (tileset) {
+			// first gid
+			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
+
+			var src = tileset[me.TMX_TAG_SOURCE];
+			if (src) {
+				// load TSX
+				src = me.utils.getBasename(src);
+				// replace tiletset with a local variable
+				var tileset = me.loader.getTMX(src);
+
+				if (!tileset) {
+					throw "melonJS:" + src + " TSX tileset not found";
+				}
+				// normally tileset shoudld directly contains the required 
+				//information : UNTESTED as I did not find how to generate a JSON TSX file
+			}
+			
+			this.name = tileset[me.TMX_TAG_NAME];
+			this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH]);
+			this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT]);
+			this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0);
+			this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] ||0);
+		
+			// set tile offset properties (if any)
+			this.tileoffset = new me.Vector2d(0,0);
+			var offset = tileset[me.TMX_TAG_TILEOFFSET];
+			if (offset) {
+				this.tileoffset.x = parseInt(offset[me.TMX_TAG_X]);
+				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y]);
+			}
+			
+			var tileInfo = tileset["tileproperties"];
+			// set tile properties, if any
+			for(var i in tileInfo) {
+				var prop = {};
+				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
+				this.setTileProperty(parseInt(i) + this.firstgid, prop);
+			}
+			
+			// check for the texture corresponding image
+			var imagesrc = me.utils.getBasename(tileset[me.TMX_TAG_IMAGE]);
+			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
+			if (!image) {
+				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+			}
+			// check if transparency is defined for a specific color
+			var trans = tileset[me.TMX_TAG_TRANS] || null;
+
+			this.initFromImage(image, trans);
+		},
+		
+		
+		// constructor
+		initFromImage: function (image, transparency) {
+			if (image) {
+				this.image = image;
+				// number of tiles per horizontal line 
+				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+			}
+			
+			// compute the last gid value in the tileset
+			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
+		  
+			// set Color Key for transparency if needed
+			if (transparency !== null && this.image) {
+				// applyRGB Filter (return a context object)
+				this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
+			}
+			
+		},
+		
+		/**
+		 * set the tile properties
+		 * @private
+		 * @function
+		 */
+		setTileProperty : function(gid, prop) {
+			// check what we found and adjust property
+			prop.isSolid = prop.type ? prop.type.toLowerCase() === this.type.SOLID : false;
+			prop.isPlatform = prop.type ? prop.type.toLowerCase() === this.type.PLATFORM : false;
+			prop.isLeftSlope = prop.type ? prop.type.toLowerCase() === this.type.L_SLOPE : false;
+			prop.isRightSlope = prop.type ? prop.type.toLowerCase() === this.type.R_SLOPE : false;
+			prop.isBreakable = prop.type ? prop.type.toLowerCase() === this.type.BREAKABLE : false;
+			prop.isLadder = prop.type ? prop.type.toLowerCase() === this.type.LADDER : false;
+			prop.isSlope = prop.isLeftSlope || prop.isRightSlope;
+			
+			// ensure the collidable flag is correct
+			prop.isCollidable = !! (prop.type);
+			
+			// set the given tile id 
+			this.TileProperties[gid] = prop;
 		},
 		
 		/**
@@ -314,6 +295,63 @@
 			this.drawTile(image, 0, 0, tmxTile);
 			return image.canvas;
 		},
+		
+		// e.g. getTileProperty (gid)	
+		/**
+		 * return the properties of the specified tile <br>
+		 * the function will return an object with the following boolean value :<br>
+		 * - isCollidable<br>
+		 * - isSolid<br>
+		 * - isPlatform<br>
+		 * - isSlope <br>
+		 * - isLeftSlope<br>
+		 * - isRightSlope<br>
+		 * - isLadder<br>
+		 * - isBreakable<br>
+		 * @name me.TMXTileset#getTileProperties
+		 * @public
+		 * @function
+		 * @param {Integer} tileId 
+		 * @return {Object}
+		 */
+		getTileProperties: function(tileId) {
+			return this.TileProperties[tileId];
+		},
+		
+		//return collidable status of the specifiled tile
+		isTileCollidable : function(tileId) {
+			return this.TileProperties[tileId].isCollidable;
+		},
+
+		/*
+		//return collectable status of the specifiled tile
+		isTileCollectable : function (tileId) {
+			return this.TileProperties[tileId].isCollectable;
+		},
+		 */
+		
+		/**
+		 * return the x offset of the specified tile in the tileset image
+		 * @private
+		 */
+		getTileOffsetX : function(tileId) {
+			if (this.tileXOffset[tileId] == null) {
+				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+			}
+			return this.tileXOffset[tileId];
+		},
+		
+		/**
+		 * return the y offset of the specified tile in the tileset image
+		 * @private
+		 */
+		getTileOffsetY : function(tileId) {
+			if (this.tileYOffset[tileId] == null) {
+				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+			}
+			return this.tileYOffset[tileId];
+		},
+
 
 		// draw the x,y tile
 		drawTile : function(context, dx, dy, tmxTile) {

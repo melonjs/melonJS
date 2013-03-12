@@ -1,5 +1,19 @@
 Version History
 ---------------
+0.9.7
+* Font : changed default alignement to `left`
+* Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
+* TMX : added JSON map format support
+
+0.9.6
+* General : fix compatibility issue with previous iOS(5.x) and Android version
+* Core : Workaround for useNativeFrame when cancelAnimationRequest is not supported 
+* Audio : added volume and mute control settings
+* Audio : added the possibility to stream audio elements
+* TMX : code optimization to lower memory usage
+* TMX : fixed layer scrolling when using pre-rendering
+* Loader : fixed `me.loader.load` not adding TMX into the `me.levelDirector`
+
 0.9.5
 * Audio : added mp4/aac pre-loading support
 * Audio : added codec selection based on audio support level 

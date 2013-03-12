@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -26,15 +26,15 @@
 		 * Apply TMX Properties to the give object
 		 * @private
 		 */
-		api.setTMXProperties = function(obj, xmldata) {
+		api.applyTMXPropertiesFromXML = function(obj, xmldata) {
 			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
 
 			if (properties) {
 				var oProp = properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
 
 				for ( var i = 0; i < oProp.length; i++) {
-					var propname = me.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
-					var value = me.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
+					var propname = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
+					var value = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
 					
 					// if value not defined or boolean
 					if (!value || value.isBoolean()) {
@@ -50,6 +50,30 @@
 				}
 			}
 
+		};
+		
+		/**
+		 * Apply TMX Properties to the give object
+		 * @private
+		 */
+		api.applyTMXPropertiesFromJSON = function(obj, data) {
+			var properties = data[me.TMX_TAG_PROPERTIES];
+			if (properties) {
+				for(var name in properties){
+					var value = properties[name];
+					
+					// if value not defined or boolean
+					if (!value || value.isBoolean()) {
+						value = value ? (value == "true") : true;
+					}
+					// check if numeric
+					else if (value.isNumeric()) {
+						value = Number(value);
+					}
+					// add the new prop to the object prop list
+					obj[name] = value;
+				}
+			}
 		};
 		
 		/**

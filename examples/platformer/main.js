@@ -10,7 +10,7 @@ var game = {
 	// game assets
 	assets : [	
 		{name: "tileset",		type:"image",	src: "data/gfx/tileset.png"},
-		{name: "atasci40",		type:"image",	src: "data/gfx/atascii_40px.png"},
+		{name: "atascii",		type:"image",	src: "data/gfx/atascii_24px.png"},
 		{name: "player_sheet",	type:"image",	src: "data/gfx/player_sheet.png"},
 		{name: "slime_sheet",	type:"image",	src: "data/gfx/slime_sheet.png"},
 		{name: "fly_sheet",		type:"image",	src: "data/gfx/fly_sheet.png"},
@@ -21,7 +21,7 @@ var game = {
 		{name: "enemykill",		type: "audio",	src: "data/audio/",	channel : 1},
 		{name: "jump",			type: "audio",	src: "data/audio/",	channel : 2},
 		{name: "DST-GameForest",type: "audio",	src: "data/audio/",	channel : 1},
-		{name: "map1",			type: "tmx",	src: "data/map/map1.tmx"},
+		{name: "map1",			type: "tmx",	src: "data/map/map1.json"},
 		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"}
 	],
 	

@@ -1,6 +1,6 @@
 #######################################################################
 #   MelonJS Game Engine
-#   Copyright (C) 2012, Olivier BIOT
+#   Copyright (C) 2011 - 2013, Olivier BIOT
 #   http://www.melonjs.org
 #
 #   melonJS is licensed under the MIT License.
@@ -14,7 +14,7 @@
 #######################################################################
 
 # GOOGLE CLOSURE COMPILER
-GCC_VERSION = 2338
+GCC_VERSION = 20130227
 GCC_PATH = tools/closure-compiler/
 GCC_COMPRESSOR = ${GCC_PATH}compiler$(GCC_VERSION).jar
 GCC_OPTION =
@@ -57,6 +57,7 @@ MODULE = $(srcdir)/core.js\
 	 $(srcdir)/level/TMXRenderer.js\
 	 $(srcdir)/level/TMXLayer.js\
 	 $(srcdir)/level/TMXTiledMap.js\
+	 $(srcdir)/level/TMXMapReader.js\
 	 $(srcdir)/level/LevelDirector.js\
 	 $(srcdir)/vendors/tween.js\
 	 $(srcdir)/vendors/minpubsub.src.js\

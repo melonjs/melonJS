@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -25,6 +25,19 @@
 			this.tilewidth = tilewidth;
 			this.tileheight = tileheight;
 		},
+		
+		/** 
+		 * return true if the renderer can render the specified layer
+		 * @private
+		 */
+		canRender : function(layer) {
+			return ((layer.orientation === 'orthogonal') &&
+					(this.width === layer.width) && 
+					(this.height === layer.height) &&
+					(this.tilewidth === layer.tilewidth) &&
+					(this.tileheight === layer.tileheight));
+		},
+		
 		/**
 		 * return the tile position corresponding to the specified pixel
 		 * @private
@@ -110,6 +123,20 @@
 			this.ratio = this.tilewidth / this.tileheight;
 			this.originX = this.height * this.hTilewidth;
 		},
+		
+		
+		/** 
+		 * return true if the renderer can render the specified layer
+		 * @private
+		 */
+		canRender : function(layer) {
+			return ((layer.orientation === 'isometric') &&
+					(this.width === layer.width) && 
+					(this.height === layer.height) &&
+					(this.tilewidth === layer.tilewidth) &&
+					(this.tileheight === layer.tileheight));
+		},
+		
 		/**
 		 * return the tile position corresponding to the specified pixel
 		 * @private

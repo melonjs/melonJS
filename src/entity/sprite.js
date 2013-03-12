@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  */
@@ -8,9 +8,66 @@
 (function($) {
 
 	/**
-	 * A Simple object to display a sprite on screen.
+	 * A base class for renderable objects.
 	 * @class
 	 * @extends me.Rect
+	 * @memberOf me
+	 * @constructor
+	 * @param {me.Vector2d} position of the renderable object
+	 * @param {int} object width
+	 * @param {int} object height
+	 */
+	me.Renderable = me.Rect.extend(
+	/** @scope me.Renderable.prototype */
+	{
+		// to identify the object as a renderable object
+		isRenderable: true,
+
+		/**
+		 * Define if a renderable follows screen coordinates (floating)<br>
+		 * or the world coordinates (not floating)<br>
+		 * default value : false
+		 * @public
+		 * @type Boolean
+		 * @name me.Renderable#floating
+		 */
+		floating: false,
+
+		/**
+		 * @ignore
+		 */
+		init : function(pos, width, height) {
+			// call the parent constructor
+			this.parent(pos, width, height);
+		},
+
+		/**
+		 * update function
+		 * called by the game manager on each game loop
+		 * @protected
+		 * @return false
+		 **/
+		update : function() {
+			return false;
+		},
+
+		/**
+		 * object draw
+		 * called by the game manager on each game loop
+		 * @protected
+		 * @param {Context2d} context 2d Context on which draw our object
+		 **/
+		draw : function(context, color) {
+			// draw the parent rectangle
+			this.parent(context, color);
+		}
+	});
+	
+
+	/**
+	 * A Simple object to display a sprite on screen.
+	 * @class
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
@@ -22,7 +79,7 @@
 	 * // create a static Sprite Object
 	 * mySprite = new me.SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
 	 */
-	me.SpriteObject = me.Rect.extend(
+	me.SpriteObject = me.Renderable.extend(
 	/** @scope me.SpriteObject.prototype */
 	{
 		// default scale ratio of the object
@@ -89,16 +146,6 @@
 		 */
 		alpha: 1.0,
 		
-		/**
-		 * Define if a renderable follows screen coordinates (floating)<br>
-		 * or the world coordinates (not floating)<br>
-		 * default value : false
-		 * @public
-		 * @type Boolean
-		 * @name me.SpriteObject#floating
-		 */
-		floating: false,
-
 		// image reference
 		image : null,
 
@@ -326,7 +373,7 @@
 				
 			if (me.debug.renderHitBox) {
 				// draw the sprite rectangle
-				this.parent(context, "blue");
+				this.parent(context);
 			}
 		},
 
@@ -434,7 +481,7 @@
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
 		 * @param {Int[]} index list of sprite index defining the animaton
-		 * @param {Int} speed for animation, lower is faster. Default is fps / 10
+		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
 		 * @example
 		 * // walking animatin
 		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
@@ -484,9 +531,13 @@
 		 **/
 
 		setCurrentAnimation : function(name, resetAnim) {
-			this.current = this.anim[name];
-			this.resetAnim = resetAnim || null;
-			this.setAnimationFrame(this.current.idx); // or 0 ?
+			if (this.anim[name]) {
+				this.current = this.anim[name];
+				this.resetAnim = resetAnim || null;
+				this.setAnimationFrame(this.current.idx); // or 0 ?
+			} else {
+				throw "melonJS: animation id '" + name + "' not defined";
+			}
 		},
 
 		/**
@@ -528,8 +579,6 @@
 		 * @protected
 		 */
 		update : function() {
-			// call the parent function
-			this.parent();
 			// update animation if necessary
 			if (this.visible && !this.animationpause && (this.fpscount++ > this.current.animationspeed)) {
 				this.setAnimationFrame(++this.current.idx);
@@ -545,9 +594,9 @@
 					else if (typeof(this.resetAnim) == "function")
 						this.resetAnim();
 				}
-				return true;
+				return this.parent() || true;
 			}
-			return false;
+			return this.parent();
 		}
 	});
 

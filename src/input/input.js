@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  */
@@ -367,7 +367,7 @@
 		 * y : y position of the touch event in the canvas (screen coordinates)<br>
 		 * id : unique finger identifier<br>
 		 * @public
-		 * @type {Array}
+		 * @type Array
 		 * @name me.input#touches
 		 */		
 		obj.touches = [];

@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  *
  * Audio Mngt Objects
@@ -10,13 +10,6 @@
 
 (function($) {
 
-	/*
-	 * -----------------------------------------------------
-	 * 
-	 * a audio class singleton to manage the game fx & music
-	 * -----------------------------------------------------
-	 */
-
 	/**
 	 * There is no constructor function for me.audio.
 	 * 
@@ -24,19 +17,22 @@
 	 * @memberOf me
 	 * @constructor Should not be called by the user.
 	 */
-
 	me.audio = (function() {
+
+		/*
+		 * ---------------------------------------------
+		 * PRIVATE STUFF
+		 * ---------------------------------------------
+		 */
+
 		// hold public stuff in our singleton
 		var obj = {};
 
-		// audio channel list
+ 		// audio channel list
 		var audio_channels = {};
 
 		// Active (supported) audio extension
 		var activeAudioExt = -1;
-
-		// loadcb function
-		var load_cb = null;
 
 		// current music
 		var current_track_id = null;
@@ -50,15 +46,13 @@
 
 		// a retry counter
 		var retry_counter = 0;
-
-		/*
-		 * ---------------------------------------------
-		 * 
-		 * PRIVATE STUFF
-		 * 
-		 * ---------------------------------------------
-		 */
-
+		
+		// global volume setting
+		var settings = {
+			volume : 1.0,
+			muted : false
+		}
+		 
 		/**
 		 * @private
 		 * return the first audio format extension supported by the browser
@@ -70,28 +64,18 @@
 			// check for sound support by the browser
 			if (me.sys.sound) {
 				var ext = "";
-				var i = 0;
-				// do a first loop and check for codec with
-				// the 'probably' canPlayType first
-				for (; i < len; i++) {
+				for (var i = 0; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
 					// check extension against detected capabilities
 					if (obj.capabilities[ext] && 
 						obj.capabilities[ext].canPlay && 
-						obj.capabilities[ext].canPlayType === 'probably') {
+						// get only the first valid OR first 'probably' playable codec
+						(result === "" || obj.capabilities[ext].canPlayType === 'probably')
+					) {
 						result = ext;
-						break;
-					}
-				}
-				// loop again and check for all the rest ('maybe')
-				i = 0;
-				for (; i < len; i++) {
-					ext = requestedFormat[i].toLowerCase().trim();
-					// check extension against detected capabilities
-					if (obj.capabilities[ext] && 
-						obj.capabilities[ext].canPlay) {
-						result = ext;
-						break;
+						if (obj.capabilities[ext].canPlayType === 'probably') {
+							break;
+						}
 					}
 				}
 			}
@@ -131,7 +115,7 @@
 		 * event listener callback on load error
 		 */
 
-		function soundLoadError(sound_id) {
+		function soundLoadError(sound_id, onerror_cb) {
 			// check the retry counter
 			if (retry_counter++ > 3) {
 				// something went wrong
@@ -139,9 +123,9 @@
 				if (me.sys.stopOnAudioError===false) {
 					// disable audio
 					me.audio.disable();
-					// call load callback if defined
-					if (load_cb) {
-						load_cb();
+					// call error callback if defined
+					if (onerror_cb) {
+						onerror_cb();
 					}
 					// warning
 					console.log(errmsg + ", disabling audio");
@@ -160,7 +144,7 @@
 		 * event listener callback when a sound is loaded
 		 */
 
-		function soundLoaded(sound_id, sound_channel) {
+		function soundLoaded(sound_id, sound_channel, onload_cb) {
 			// reset the retry counter
 			retry_counter = 0;
 			// create other "copy" channels if necessary
@@ -175,8 +159,8 @@
 				}
 			}
 			// callback if defined
-			if (load_cb) {
-				load_cb.call();
+			if (onload_cb) {
+				onload_cb();
 			}
 		};
 
@@ -206,11 +190,11 @@
 		 */
 
 		function _play_audio_enable(sound_id, loop, callback, volume) {
-			// console.log("play!!");
 			var soundclip = get(sound_id.toLowerCase());
 	
 			soundclip.loop = loop || false;
-			soundclip.volume = volume ? parseFloat(volume) : 1.0;
+			soundclip.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume;
+			soundclip.muted = settings.muted;
 			soundclip.play();
 
 			// set a callback if defined
@@ -223,7 +207,8 @@
 					// execute a callback if required
 					callback();
 				}, false);
-			}
+			}			
+			return soundclip;
 
 		};
 
@@ -238,6 +223,7 @@
 				// SoundMngr._play_cb = callback;
 				setTimeout(callback, 2000); // 2 sec as default timer ?
 			}
+			return null;
 		};
 
 		/*
@@ -335,17 +321,6 @@
 		};
 
 		/**
-		 * set call back when a sound (and instances) is/are loaded
-		 * 
-		 * @name me.audio#setLoadCallback
-		 * @private
-		 * @function
-		 */
-		obj.setLoadCallback = function(callback) {
-			load_cb = callback;
-		};
-
-		/**
 		 * return true if audio is enable
 		 * 
 		 * @see me.audio#enable
@@ -385,33 +360,50 @@
 		 * @function
 		 */
 		obj.disable = function() {
-			sound_enable = false;
+			// stop the current track 
+			me.audio.stopTrack();
+			// disable sound
 			obj.play = _play_audio_disable;
+			sound_enable = false;
 		};
 
 		/**
-		 * load a sound sound struct : name: id of the sound src: src path
-		 * channel: number of channel to allocate
-		 * 
+		 * Load an audio file.<br>
+		 * <br>
+		 * sound item must contain the following fields :<br>
+		 * - name    : id of the sound<br>
+		 * - src     : source path<br>
+		 * - channel : [Optional] number of channels to allocate<br>
+		 * - stream  : [Optional] boolean to enable streaming<br>
 		 * @private
 		 */
-		obj.load = function(sound) {
+		obj.load = function(sound, onload_cb, onerror_cb) {
 			// do nothing if no compatible format is found
 			if (activeAudioExt == -1)
 				return 0;
 
 			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
-
 			soundclip.preload = 'auto';
 
-			soundclip.addEventListener('canplaythrough', function(e) {
-				// console.log(soundclip);
-				this.removeEventListener('canplaythrough', arguments.callee, false);
-				soundLoaded.apply(me.audio, [sound.name, sound.channel]);
+			var channels = sound.channel || 1;
+			var eventname = "canplaythrough";
+
+			if (sound.stream === true) {
+				channels = 1;
+				eventname = "canplay";
+			}
+			soundclip.addEventListener(eventname, function(e) {
+			   this.removeEventListener(eventname, arguments.callee, false);
+				  soundLoaded.call(
+					 me.audio,
+					 sound.name,
+					 channels,
+					 onload_cb
+			   );
 			}, false);
 
 			soundclip.addEventListener("error", function(e) {
-				soundLoadError.apply(me.audio, [sound.name]);
+				soundLoadError.call(me.audio, sound.name, onerror_cb);
 			}, false);
 
 			// load it
@@ -474,26 +466,13 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
-		 * @param {Number}
-		 * 			  [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
+		 * @param {Number} [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example 
 		 * me.audio.playTrack("awesome_music");
 		 */
 		obj.playTrack = function(sound_id, volume) {
-			if (sound_enable) {
-				if (current_track != null)
-					obj.stopTrack();
-
-				sound_id = sound_id.toLowerCase();
-				current_track = get(sound_id);
-
-				if (current_track) {
-					current_track_id = sound_id;
-					current_track.loop = true;
-					current_track.volume = volume ? parseFloat(volume) : 1.0;
-					current_track.play();
-				}
-			}
+			current_track = me.audio.play(sound_id, true, null, volume);
+			current_track_id = sound_id.toLowerCase();
 		};
 
 		/**
@@ -517,6 +496,94 @@
 			}
 		};
 
+		/**
+		 * set the default global volume
+		 * @name me.audio#setVolume
+		 * @public
+		 * @function
+		 * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
+		 */
+		obj.setVolume = function(volume) {
+			if (volume) {
+				settings.volume = parseFloat(volume).clamp(0.0,1.0);
+			}
+		};
+
+		/**
+		 * get the default global volume
+		 * @name me.audio#getVolume
+		 * @public
+		 * @function
+		 * @returns {Number} current volume value in Float [0.0 - 1.0] .
+		 */
+		obj.getVolume = function() {
+			return settings.volume;
+		};
+		
+		/**
+		 * mute the specified sound
+		 * @name me.audio#mute
+		 * @public
+		 * @function
+		 * @param {String} sound_id audio clip id
+		 */
+		obj.mute = function(sound_id, mute) {
+			// if not defined : true
+			mute = (mute === undefined)?true:!!mute;
+			var channels = audio_channels[sound_id.toLowerCase()];
+			for ( var i = 0, soundclip; soundclip = channels[i++];) {
+				soundclip.muted = mute;
+			}
+		},
+
+		/**
+		 * unmute the specified sound
+		 * @name me.audio#unmute
+		 * @public
+		 * @function
+		 * @param {String} sound_id audio clip id
+		 */
+		obj.unmute = function(sound_id) {
+			obj.mute(sound_id, false);
+		},
+
+		/**
+		 * mute all audio 
+		 * @name me.audio#muteAll
+		 * @public
+		 * @function
+		 */
+		obj.muteAll = function() {
+			settings.muted = true;
+			for (var sound_id in audio_channels) {
+				obj.mute(sound_id, settings.muted);
+			}
+		};
+		
+		/**
+		 * unmute all audio 
+		 * @name me.audio#unmuteAll
+		 * @public
+		 * @function
+		 */
+		obj.unmuteAll = function() {
+			settings.muted = false;
+			for (var sound_id in audio_channels) {
+				obj.mute(sound_id, settings.muted);
+			}
+		};
+		
+		/**
+		 * returns the current track Id
+		 * @name me.audio#getCurrentTrack
+		 * @public
+		 * @function
+		 * @return {String} audio track id
+		 */
+		obj.getCurrentTrack = function() {
+			return current_track_id;
+		};
+		
 		/**
 		 * pause the current audio track
 		 * 
