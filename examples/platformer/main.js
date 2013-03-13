@@ -46,7 +46,7 @@ var game = {
 		// install the debug panel plugin
 		me.plugin.register(debugPanel, "debug");
 		
-		//me.debug.renderHitBox = true;
+		me.debug.renderHitBox = true;
 		
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
@@ -82,8 +82,8 @@ var game = {
 		me.entityPool.add("CoinEntity", CoinEntity);
 		
 		// load the texture atlas file
-		game.textureAtlas = new me.TextureAtlas(me.loader.getAtlas("texture"));
-
+		// this will be used by object entities later
+		game.texture = new me.TextureAtlas(me.loader.getAtlas("texture"), me.loader.getImage("texture"));
 		
 		// switch to PLAY state
 		me.state.change(me.state.PLAY);

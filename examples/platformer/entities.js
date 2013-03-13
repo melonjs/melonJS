@@ -37,10 +37,12 @@ var PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
 		// walking animatin
-		this.renderable.addAnimation ("walk",  [0,2,1]);
-		
+		//this.renderable.addAnimation ("walk",  [0,2,1]);
 		// set default one
-		this.renderable.setCurrentAnimation("walk");
+		//this.renderable.setCurrentAnimation("walk");
+		
+		// use this one for testing
+		this.renderable = game.texture.createSpriteByName("walk0004.png");
 	},
 	
 	/* -----
