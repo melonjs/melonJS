@@ -458,8 +458,29 @@
 				 * @return {me.Rect} new rectangle	
 				 */
 				getRect : function() {
-					return new me.Rect(this.pos.clone(), this.width,
-							this.height);
+					return new me.Rect(this.pos.clone(), this.width, this.height);
+				},
+				
+				/**
+				 * translate the rect by the specified offset
+				 * @param {Number} x x offset
+				 * @param {Number} y y offset
+				 * @return {me.Rect} this rectangle	
+				 */
+				translate : function(x, y) {
+					this.pos.x+=x;
+					this.pos.y+=y;
+					return this;
+				},
+
+				/**
+				 * translate the rect by the specified vector
+				 * @param {me.Vector2d} v vector offset
+				 * @return {me.Rect} this rectangle	
+				 */
+				translateV : function(v) {
+					this.pos.add(v);
+					return this;
 				},
 
 				/**
