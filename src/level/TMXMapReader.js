@@ -366,10 +366,6 @@
 			if (compression == '') {
 				compression = null;
 			}
-			// parse the layer data
-			this.setLayerData(layer, layerData, encoding, compression);
-			// free layerData
-			layerData = null;
 			
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
@@ -380,6 +376,12 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
+			
+			// parse the layer data
+			this.setLayerData(layer, layerData, encoding, compression);
+			// free layerData
+			layerData = null;
+			
 			return layer;
 		},
 
@@ -518,8 +520,6 @@
 			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
-			// parse the layer data
-			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
@@ -529,6 +529,8 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
+			// parse the layer data
+			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
 			return layer;
 		},
 		

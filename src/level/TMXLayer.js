@@ -410,10 +410,6 @@
 			// layer orientation
 			this.orientation = orientation;
 			
-			// layer "real" size
-			this.realwidth = this.width * this.tilewidth;
-			this.realheight = this.height * this.tileheight;
-			
 			// for displaying order
 			this.z = zOrder;
 
@@ -437,6 +433,10 @@
 			this.opacity = me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
 			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			
+			// layer "real" size
+			this.realwidth = this.width * this.tilewidth;
+			this.realheight = this.height * this.tileheight;
 			
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
@@ -473,6 +473,10 @@
 			this.opacity = parseFloat(layer[me.TMX_TAG_OPACITY]).clamp(0.0, 1.0);
 			this.width = parseInt(layer[me.TMX_TAG_WIDTH]);
 			this.height = parseInt(layer[me.TMX_TAG_HEIGHT]);
+			
+			// layer "real" size
+			this.realwidth = this.width * this.tilewidth;
+			this.realheight = this.height * this.tileheight;
 			
 			
 			// check if we have any user-defined properties 
