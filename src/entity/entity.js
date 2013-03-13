@@ -1015,6 +1015,18 @@
 		},
 		
 		/**
+		 * @private	
+		 */
+		getRect : function() {
+			if (this.renderable) {
+				// translate the renderable position since its 
+				// position is relative to this entity
+				return this.renderable.getRect().translateV(this.pos);
+			}
+			return null;
+		},
+		
+		/**
 		 * object draw<br>
 		 * not to be called by the end user<br>
 		 * called by the game manager on each game loop
