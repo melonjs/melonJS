@@ -509,9 +509,6 @@
 					delete imgList[res.name];
 					return true;
 
-				case "t":
-					return me.audio.unload(res.name);
-				
 				case "tps":
 					if (!(res.name in atlasList))
 						return false;

@@ -71,10 +71,11 @@
 					frame: new me.Rect( 
 						new me.Vector2d(frame['frame']['x'], frame['frame']['y']), w, h
 					),
-					sourceSize: new me.Rect(
+					source: new me.Rect(
 						new me.Vector2d(frame['spriteSourceSize']['x'], frame['spriteSourceSize']['y']), 
 						frame['spriteSourceSize']['w'], frame['spriteSourceSize']['h']
 					),
+					// non trimmed size, but since we don't support trimming both value are the same
 					//sourceSize: new me.Vector2d(frame['sourceSize']['w'],frame['sourceSize']['h']),
 					rotated : frame['rotated']===true,
 					trimmed : frame['trimmed']===true
@@ -97,7 +98,7 @@
 				sprite.offset.setV(tex.frame.pos);
 				
 				// adjust final position
-				sprite.pos.setV(tex.sourceSize.pos);
+				sprite.pos.setV(tex.source.pos);
 				
 				// check if we need rotation
 				if (tex.rotated===true) {
