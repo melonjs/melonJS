@@ -42,7 +42,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		//this.renderable.setCurrentAnimation("walk");
 		
 		// use this one for testing
-		this.renderable = game.texture.createSpriteByName("walk0004.png");
+		this.renderable = game.texture.createSpriteFromName("walk0004.png");
 	},
 	
 	/* -----

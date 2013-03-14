@@ -68,10 +68,16 @@
 				}
 				
 				atlas[frame.filename] = {
-					rect: new me.Rect(new me.Vector2d(frame['frame']['x'], frame['frame']['y']), w, h),
-					spriteSourceSize: new me.Vector2d(frame['spriteSourceSize']['x'], frame['spriteSourceSize']['y']),
-					sourceSize: new me.Vector2d(frame['sourceSize']['w'],frame['sourceSize']['h']),
-					rotated : frame['rotated']===true
+					frame: new me.Rect( 
+						new me.Vector2d(frame['frame']['x'], frame['frame']['y']), w, h
+					),
+					sourceSize: new me.Rect(
+						new me.Vector2d(frame['spriteSourceSize']['x'], frame['spriteSourceSize']['y']), 
+						frame['spriteSourceSize']['w'], frame['spriteSourceSize']['h']
+					),
+					//sourceSize: new me.Vector2d(frame['sourceSize']['w'],frame['sourceSize']['h']),
+					rotated : frame['rotated']===true,
+					trimmed : frame['trimmed']===true
 				};
 			});
 			return atlas;
@@ -82,16 +88,16 @@
 		 * @param {String} name of the sprite
 		 * @return me.SpriteObject
 		 */
-		createSpriteByName : function(name) {
+		createSpriteFromName : function(name) {
 			var tex = this.atlas[name];
 			if (tex) {
 				// instantiate a new sprite object
-				var sprite = new me.SpriteObject(0,0, this.texture, tex.rect.width, tex.rect.height);
-				// set the offset sprite position
-				sprite.offset.set(tex.rect.pos.x, tex.rect.pos.y);
+				var sprite = new me.SpriteObject(0,0, this.texture, tex.frame.width, tex.frame.height);
+				// set the sprite offset within the texture
+				sprite.offset.setV(tex.frame.pos);
 				
-				// adjust final position 
-				sprite.pos.set(tex.spriteSourceSize.x, tex.spriteSourceSize.y);
+				// adjust final position
+				sprite.pos.setV(tex.sourceSize.pos);
 				
 				// check if we need rotation
 				if (tex.rotated===true) {
@@ -110,7 +116,7 @@
 		 * @param {String[]} name names of the sprite
 		 * @return me.AnimationSheet
 		 */
-		createAnimationByName : function(name) {
+		createAnimationFromName : function(name) {
 			//i'm not sure this one will stay as it
 			// keep it for now while define the API
 			// require futher change to animationSheet
