@@ -337,9 +337,9 @@
 	 * @private
 	 * @constructor
 	 */
-	CollisionTiledLayer = Object.extend({
+	me.CollisionTiledLayer = Object.extend({
 		// constructor
-		init: function CollisionTiledLayer(realwidth, realheight) {
+		init: function(realwidth, realheight) {
 			this.realwidth = realwidth;
 			this.realheight = realheight;
 

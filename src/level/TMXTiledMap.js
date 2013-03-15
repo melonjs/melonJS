@@ -192,7 +192,7 @@
 
 			// return a fake collision layer if not found
 			if ((name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
-				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,	me.game.currentLevel.realheight);
+				layer = new me.CollisionTiledLayer(me.game.currentLevel.realwidth,	me.game.currentLevel.realheight);
 			}
 
 			return layer;
