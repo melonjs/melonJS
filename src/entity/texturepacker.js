@@ -52,11 +52,6 @@
 		initFromTexturePacker : function (data) {
 			var atlas = {};
 			data['frames'].forEach(function(frame) {
-				// check if the frame is trimmed
-				if (frame['trimmed']===true) {
-					// TODO, throw an error for now
-					throw "melonjs: texturepacker - trim option not supported";
-				}
 				
 				// check if the frame is rotated
 				if(frame['rotated']===true){
@@ -97,9 +92,10 @@
 				// set the sprite offset within the texture
 				sprite.offset.setV(tex.frame.pos);
 				
-				// adjust final position
-				sprite.pos.setV(tex.source.pos);
-				
+				if (tex.trimmed===true) {
+					// adjust default position
+					sprite.pos.add(tex.source.pos);
+				}
 				// check if we need rotation
 				if (tex.rotated===true) {
 					sprite.angle = (-90).degToRad();

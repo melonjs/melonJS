@@ -20,8 +20,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		this.setFriction(0.4,0);
 		
 		// update the hit box
-		this.updateColRect(20,32, -1,0);
-		
+		//this.updateColRect(20,32, -1,0);
 		this.dying = false;
 		
 		this.mutipleJump = 1;
@@ -42,7 +41,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		//this.renderable.setCurrentAnimation("walk");
 		
 		// use this one for testing
-		this.renderable = game.texture.createSpriteFromName("walk0004.png");
+		this.renderable = game.texture.createSpriteFromName("walk0001.png");
 	},
 	
 	/* -----
