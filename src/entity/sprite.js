@@ -127,16 +127,6 @@
 		angle: 0,
 
 		/**
-		 * Define the sprite anchor point<br>
-		 * This is used when using rotation, or sprite flipping<br>
-		 * with the default anchor point being the center of the sprite
-		 * @public
-		 * @type me.Vector2d
-		 * @name me.SpriteObject#anchorPoint
-		 */
-		anchorPoint: null,
-		
-		/**
 		 * Define the sprite opacity<br>
 		 * @see me.SpriteObject#setOpacity
 		 * @see me.SpriteObject#getOpacity 
@@ -180,9 +170,6 @@
 
 			// set the default sprite index & offset
 			this.offset = new me.Vector2d(0, 0);
-
-			// set the default anchor point (middle of the sprite)
-			this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
 			// ensure it's fully opaque by default
 			this.alpha = 1.0;			

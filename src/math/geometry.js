@@ -333,6 +333,16 @@
 				colPos : null,
 				
 				/**
+				 * Define the rect anchor point<br>
+				 * This is used for positioning, rotation, or  flipping<br>
+				 * default anchoring point is the center of the rect
+				 * @public
+				 * @type me.Vector2d
+				 * @name me.Rect#anchorPoint
+				 */
+				anchorPoint: null,
+						
+				/**
 				 * left coordinate of the Rectange<br>
 				 * takes in account the adjusted size of the rectangle (if set)
 				 * @public
@@ -405,6 +415,9 @@
 					// half width/height
 					this.hWidth = ~~(w / 2);
 					this.hHeight = ~~(h / 2);
+					
+					// set the default anchor point (middle of the sprite)
+					this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
 					// redefine some properties to ease our life when getting the rectangle coordinates
 					Object.defineProperty(this, "left", {
