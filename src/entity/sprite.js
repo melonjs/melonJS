@@ -360,7 +360,7 @@
 				
 			if (me.debug.renderHitBox) {
 				// draw the sprite rectangle
-				this.parent(context);
+				this.parent(context, 'green');
 			}
 		},
 
