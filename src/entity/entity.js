@@ -1013,11 +1013,14 @@
 		draw : function(context) {
 			// draw the sprite if defined
 			if (this.renderable) {
-				//translate display since renderable
-				//postion is relative to the entity
-				context.translate(this.pos.x, this.pos.y);
+				// translate the renderable position (relative to the entity)
+				// and keeps it in the entity defined bounds
+				// anyway to optimize this ?
+				var x = ~~(this.pos.x + (this.anchorPoint.x * (this.width - this.renderable.width)));
+				var y = ~~(this.pos.y + (this.anchorPoint.y * (this.height - this.renderable.height)));
+				context.translate(x, y);
 				this.renderable.draw(context);
-				context.translate(-this.pos.x, -this.pos.y);
+				context.translate(-x, -y);
 			}
 			// check if debug mode is enabled
 			if (me.debug.renderHitBox) {

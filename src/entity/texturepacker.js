@@ -92,10 +92,15 @@
 				// set the sprite offset within the texture
 				sprite.offset.setV(tex.frame.pos);
 				
+				/* -> when using anchor positioning, this is not required
+				   -> and makes final position wrong...
 				if (tex.trimmed===true) {
 					// adjust default position
 					sprite.pos.add(tex.source.pos);
 				}
+				*/
+				
+				
 				// check if we need rotation
 				if (tex.rotated===true) {
 					sprite.angle = (-90).degToRad();
