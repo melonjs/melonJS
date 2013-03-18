@@ -131,8 +131,8 @@
 						spriteheight || image.height);
 						
 			// Spacing and margin in spritesheet
-			this.spacing = spacing;
-			this.margin = margin;
+			this.spacing = spacing || 0;
+			this.margin = margin || 0;
 
 			// cache image reference
 			this.image = image;
