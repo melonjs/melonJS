@@ -39,11 +39,9 @@ var TitleScreen = me.ScreenObject.extend(
 			this.title = me.loader.getImage("title_screen");
 			// font to display the menu items
 			this.font = new me.BitmapFont("32x32_font", 32);
-			this.font.set("left");
 			
 			// set the scroller
 			this.scrollerfont = new me.BitmapFont("32x32_font", 32);
-			this.scrollerfont.set("left");
 						
 		}
       
@@ -113,4 +111,3 @@ var TitleScreen = me.ScreenObject.extend(
    },
 
 });
-
