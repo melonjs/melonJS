@@ -193,8 +193,8 @@
 		// manage the enemy movement
 		update : function ()
 		{
-			// do nothing if not visible
-			if (!this.visible)
+			// do nothing if not in viewport
+			if (!this.inViewport)
 				return false;
 				
 			if (this.alive)
