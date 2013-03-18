@@ -782,7 +782,7 @@ var EnemyEntity = me.ObjectEntity.extend({
         // res.y &gt;0 means touched by something on the bottom
         // which mean at top position for this one
         if (this.alive &amp;&amp; (res.y &gt; 0) &amp;&amp; obj.falling) {
-            this.flicker(45);
+            this.renderable.flicker(45);
         }
     },
 
@@ -900,7 +900,7 @@ update: function() {
 
             } else {
                 // let's flicker in case we touched an enemy
-                this.flicker(45);
+                this.renderable.flicker(45);
             }
         }
     }
@@ -1270,7 +1270,7 @@ if (res) {
 			me.audio.play("stomp");
         } else {
             // let's flicker in case we touched an enemy
-            this.flicker(45);
+            this.renderable.flicker(45);
         }
     }
 }

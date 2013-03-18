@@ -93,7 +93,7 @@
 				   else
 				   {
 					  // let's flicker in case we touched an enemy
-					  this.flicker(45);
+					  this.renderable.flicker(45);
 				   }
 				}
 			}
@@ -173,7 +173,7 @@
 			// which mean at top position for this one
 			if (this.alive && (res.y > 0) && obj.falling)
 			{
-				this.flicker(45);
+				this.renderable.flicker(45);
 			}
 		},
 

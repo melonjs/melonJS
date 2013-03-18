@@ -81,7 +81,7 @@
 				   else
 				   {
 					  // let's flicker in case we touched an enemy
-					  this.flicker(45);
+					  this.renderable.flicker(45);
 				   }
 				}
 			}
@@ -173,7 +173,7 @@
 			if (this.alive && (res.y > 0) && obj.falling)
 			{
 				// make it flicker
-				this.flicker(45);
+				this.renderable.flicker(45);
 			}
 		},
 
