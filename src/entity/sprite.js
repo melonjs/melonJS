@@ -22,7 +22,26 @@
 	{
 		// to identify the object as a renderable object
 		isRenderable: true,
+		
+		/**
+		 * the visible state of the renderable object<br>
+		 * default value : true
+		 * @public
+		 * @type Boolean
+		 * @name me.Renderable#visible
+		 */
+		visible : true,
 
+		/**
+		 * Whether the renderable object is visible and within the viewport<br>
+		 * default value : false
+		 * @public
+		 * @readonly
+		 * @type Boolean
+		 * @name me.Renderable#inViewport
+		 */
+		inViewport : false,
+		
 		/**
 		 * Define if a renderable follows screen coordinates (floating)<br>
 		 * or the world coordinates (not floating)<br>
@@ -97,25 +116,6 @@
 
 		// image offset
 		offset : null,
-
-		/**
-		 * the visible state of the object<br>
-		 * default value : true
-		 * @public
-		 * @type Boolean
-		 * @name me.SpriteObject#visible
-		 */
-		visible : true,
-
-		/**
-		 * Whether the object is visible and within the viewport<br>
-		 * default value : false
-		 * @public
-		 * @readonly
-		 * @type Boolean
-		 * @name me.SpriteObject#inViewport
-		 */
-		inViewport : false,
 
 		/**
 		 * Set the angle (in Radians) of a sprite to rotate it <br>
