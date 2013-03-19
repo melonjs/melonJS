@@ -44,7 +44,7 @@
 			this.cols = 0;
 			
 			/**
-			 * height of the tilemap in pixels
+			 * height of the tilemap in tiles
 			 * @public
 			 * @type Int
 			 * @name me.TMXTileMap#rows
