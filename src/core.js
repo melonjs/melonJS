@@ -1204,8 +1204,8 @@ var me = me || {};
 			};
 
 			// change the viewport limit
-			api.viewport.setBounds(Math.max(api.currentLevel.realwidth, api.viewport.width),
-								   Math.max(api.currentLevel.realheight, api.viewport.height));
+			api.viewport.setBounds(Math.max(api.currentLevel.width, api.viewport.width),
+								   Math.max(api.currentLevel.height, api.viewport.height));
 
 			// load all game entities
 			var objectGroups = api.currentLevel.getObjectGroups();
@@ -1393,13 +1393,13 @@ var me = me || {};
 				// check for previous rect before position change
 				oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
-				// update our object
-				var updated = obj.update();
-
 				// check if object is visible
 				obj.inViewport = obj.visible && (
 					obj.floating || (obj.getRect && api.viewport.isVisible(obj))
 				);
+
+				// update our object
+				var updated = obj.update();
 
 				// add it to the draw manager
 				drawManager.makeDirty(obj, updated, updated ? oldRect : null);

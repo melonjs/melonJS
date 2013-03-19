@@ -19,9 +19,9 @@
 	 */
 	me.TMXOrthogonalRenderer = Object.extend({
 		// constructor
-		init: function(width, height, tilewidth, tileheight) {
-			this.width = width;
-			this.height = height;
+		init: function(cols, rows, tilewidth, tileheight) {
+			this.cols = cols;
+			this.rows = rows;
 			this.tilewidth = tilewidth;
 			this.tileheight = tileheight;
 		},
@@ -32,8 +32,8 @@
 		 */
 		canRender : function(layer) {
 			return ((layer.orientation === 'orthogonal') &&
-					(this.width === layer.width) && 
-					(this.height === layer.height) &&
+					(this.cols === layer.cols) && 
+					(this.rows === layer.rows) &&
 					(this.tilewidth === layer.tilewidth) &&
 					(this.tileheight === layer.tileheight));
 		},
@@ -81,8 +81,8 @@
 											 viewport.y + rect.pos.y + rect.height + this.tileheight).ceilSelf();
 			
 			//ensure we are in the valid tile range
-			end.x = end.x > this.width ? this.width : end.x;
-			end.y = end.y > this.height ? this.height : end.y;
+			end.x = end.x > this.cols ? this.cols : end.x;
+			end.y = end.y > this.rows ? this.rows : end.y;
 			
 			// main drawing loop			
 			for ( var y = start.y ; y < end.y; y++) {
@@ -113,15 +113,15 @@
 	 */
 	me.TMXIsometricRenderer = Object.extend({
 		// constructor
-		init: function(width, height, tilewidth, tileheight) {
-			this.width = width;
-			this.height = height;
+		init: function(cols, rows, tilewidth, tileheight) {
+			this.cols = cols;
+			this.rows = rows;
 			this.tilewidth = tilewidth;
 			this.tileheight = tileheight;
 			this.hTilewidth = tilewidth / 2;
 			this.hTileheight = tileheight / 2;
 			this.ratio = this.tilewidth / this.tileheight;
-			this.originX = this.height * this.hTilewidth;
+			this.originX = this.rows * this.hTilewidth;
 		},
 		
 		
@@ -131,8 +131,8 @@
 		 */
 		canRender : function(layer) {
 			return ((layer.orientation === 'isometric') &&
-					(this.width === layer.width) && 
-					(this.height === layer.height) &&
+					(this.cols === layer.cols) && 
+					(this.rows === layer.rows) &&
 					(this.tilewidth === layer.tilewidth) &&
 					(this.tileheight === layer.tileheight));
 		},
@@ -164,7 +164,7 @@
 		drawTile : function(context, x, y, tmxTile, tileset) {
 			// draw the tile
 			tileset.drawTile(context, 
-							 ((this.width-1) * tileset.tilewidth + (x-y) * tileset.tilewidth>>1), 
+							 ((this.cols-1) * tileset.tilewidth + (x-y) * tileset.tilewidth>>1), 
 							 (-tileset.tilewidth + (x+y) * tileset.tileheight>>2),
 							 tmxTile);
 		},
@@ -223,7 +223,7 @@
 				columnItr.setV(rowItr);
 				for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
 					//check if it's valid tile, if so render
-					if ((columnItr.x >= 0) && (columnItr.y >= 0) && (columnItr.x < this.width) && (columnItr.y < this.height))
+					if ((columnItr.x >= 0) && (columnItr.y >= 0) && (columnItr.x < this.cols) && (columnItr.y < this.rows))
 					{
 						var tmxTile = layer.layerData[columnItr.x][columnItr.y];
 						if (tmxTile) {

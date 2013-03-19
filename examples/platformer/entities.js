@@ -73,8 +73,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 		// check for collision with environment
 		this.updateMovement();
 		
-		// check if we felt into a hole
-		if (this.pos.y + this.height > me.game.currentLevel.realheight) {
+		// check if we fell into a hole
+		if (!this.inViewport) {
 			// if yes reset the game
 			me.game.remove(this);
 			me.game.viewport.fadeIn('#fff', 150, function(){
@@ -82,7 +82,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 				me.levelDirector.reloadLevel();
 				me.game.viewport.fadeOut('#fff', 150);
 			});
-			
+			return true;
 		}
 		
 		// check for collision with sthg
