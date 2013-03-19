@@ -16,7 +16,7 @@
 	 * @param {String}  color   in hexadecimal "#RRGGBB" format
 	 * @param {int}     z       z position
 	 */
-	 me.ColorLayer = Object.extend({
+	 me.ColorLayer = me.Renderable.extend({
 		// constructor
 		init: function(name, color, z) {
 			this.name = name;
@@ -24,10 +24,11 @@
 			// for displaying order
 			this.z = z;
 			
-			this.visible = true;
 			this.opacity = 1.0;
 			
 			this.floating = true;
+			
+			this.parent(new me.Vector2d(0, 0), game.viewport.width, game.viewport.height);
 		},
 
 		/**
@@ -99,7 +100,7 @@
 	 * @param {int}    z           z position
 	 * @param {float}  [ratio=1.0]   scrolling ratio to be applied
 	 */
-	 me.ImageLayer = Object.extend({
+	 me.ImageLayer = me.Renderable.extend({
 		
 		/**
 		 * Define if and how an Image Layer should be repeated.<br>
@@ -155,11 +156,9 @@
 			this.offset = new me.Vector2d(0,0);
 			
 			// set layer width & height 
-			this.width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
-			this.height = height? Math.min(game.viewport.height, height) : game.viewport.height;
-			
-			// make it visible
-			this.visible = true;
+			width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
+			height = height? Math.min(game.viewport.height, height) : game.viewport.height;
+			this.parent(new me.Vector2d(0, 0), width, height);
 			
 			// default opacity
 			this.opacity = 1.0;
@@ -395,7 +394,7 @@
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXLayer = Object.extend({
+	me.TMXLayer = me.Renderable.extend({
 		
 		// the layer data array
 		layerData : null,
@@ -423,6 +422,8 @@
 			this.tilesets = tilesets;
 			// the default tileset
 			this.tileset = this.tilesets?this.tilesets.getTilesetByIndex(0):null;
+			
+			this.parent(game.viewport.pos, game.viewport.width, game.viewport.height);
 		},
 		
 		initFromXML: function(layer) {
