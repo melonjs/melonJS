@@ -1023,7 +1023,7 @@
 				context.translate(-x, -y);
 			}
 			// check if debug mode is enabled
-			if (me.debug.renderHitBox) {
+			if (me.debug.renderHitBox && this.collisionBox) {
 				// draw the collisionBox
 				this.collisionBox.draw(context, "red");
 				

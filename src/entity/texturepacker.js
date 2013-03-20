@@ -80,9 +80,9 @@
 		},
 		
 		/**
-		 * @return create a sprite object using the first region found using the specified name
+		 * Create a sprite object using the first region found using the specified name
 		 * @param {String} name of the sprite
-		 * @return me.SpriteObject
+		 * @return {me.SpriteObject}
 		 */
 		createSpriteFromName : function(name) {
 			var tex = this.atlas[name];
@@ -100,10 +100,9 @@
 				}
 				*/
 				
-				
 				// check if we need rotation
 				if (tex.rotated===true) {
-					sprite.angle = (-90).degToRad();
+					sprite.angle = - Math.PI;
 					// >> sprite pos not correct when rotated ? <<
 				}
 				// return our object
@@ -114,14 +113,32 @@
 		},
 		
 		/**
-		 * @return create an animation object using the first region found using all specified names
+		 * Create an animation object using the first region found using all specified names
 		 * @param {String[]} name names of the sprite
-		 * @return me.AnimationSheet
+		 * @return {me.AnimationSheet}
 		 */
-		createAnimationFromName : function(name) {
-			//i'm not sure this one will stay as it
-			// keep it for now while define the API
-			// require futher change to animationSheet
+		createAnimationFromName : function(names) {
+			var tpAtlas = [], count = 0;
+			// iterate through the given names 
+			// and create a "normalized" atlas
+			for (var i = 0; i < names.length;++i) {
+				var tex = this.atlas[names[i]];
+				if (tex) {
+					tpAtlas[count++] = {
+						pos: tex.source.pos.clone(), // unused for now
+						offset: tex.frame.pos.clone(),
+						width: tex.frame.width,
+						height: tex.frame.height,
+						angle : (tex.rotated===true) ? -Math.PI : 0
+					};
+				} else {
+					// throw an error
+					throw "melonjs: TextureAtlas - region for " + names[i] + " not found";
+				}
+			}
+			
+			// instantiate a new animation sheet object
+			return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas);
 		}
 	});
 

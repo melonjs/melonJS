@@ -50,7 +50,6 @@
  <objectgroup color="#55ff00" name="player" width="50" height="17">
   <object name="mainPlayer" x="70" y="280" width="70" height="70">
    <properties>
-    <property name="image" value="player_sheet"/>
     <property name="spriteheight" value="98"/>
     <property name="spritewidth" value="72"/>
    </properties>

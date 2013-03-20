@@ -1,8 +1,3 @@
-/* -----
-
-game object
-	
------- */
 
 /************************************************************************************/
 /*																					*/
@@ -35,13 +30,20 @@ var PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.UP,	"up");
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
-		// walking animatin
-		//this.renderable.addAnimation ("walk",  [0,2,1]);
-		// set default one
-		//this.renderable.setCurrentAnimation("walk");
 		
-		// use this one for testing
-		this.renderable = game.texture.createSpriteFromName("walk0001.png");
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"walk0001.png", "walk0002.png", "walk0003.png",
+			"walk0004.png", "walk0005.png", "walk0006.png",
+			"walk0007.png", "walk0008.png", "walk0009.png",
+			"walk0010.png", "walk0011.png"
+		]);
+		
+		// define a basic walking animatin
+		this.renderable.addAnimation ("walk",  [0,2,1]);
+		// set as default
+		this.renderable.setCurrentAnimation("walk");
+
 		// set the renderable position to bottom center
 		this.anchorPoint.set(0.5, 1.0);
 	},

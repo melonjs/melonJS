@@ -32,7 +32,6 @@
                  "name":"mainPlayer",
                  "properties":
                     {
-                     "image":"player_sheet",
                      "spriteheight":"98",
                      "spritewidth":"72"
                     },

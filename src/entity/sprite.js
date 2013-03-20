@@ -424,7 +424,7 @@
 		animationspeed : 0,
 
 		/** @private */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas) {
 			// hold all defined animation
 			this.anim = [];
 
@@ -433,6 +433,12 @@
 
 			// default animation sequence
 			this.current = null;
+						
+			// default animation speed
+			this.animationspeed = me.sys.fps / 10;
+			
+			// amount of sprite in the png/texture
+			this.spritecount = null ;
 
 			// Spacing and margin
 			this.spacing = spacing || 0;
@@ -440,26 +446,56 @@
 
 			// call the constructor
 			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+						
+			// store the current atlas information
+			this.textureAtlas = null;
 			
-			// sprite count (line, col)
-			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
-											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
-
-
-			// if one single image, disable animation
-			if ((this.spritecount.x * this.spritecount.y) == 1) {
-				// override setAnimationFrame with an empty function
-				/** @private */
-				this.setAnimationFrame = function() {;};
-			}
-
-			// default animation speed
-			this.animationspeed = me.sys.fps / 10;
-
+			// build the local textureAtlas
+			this.buildLocalAtlas(atlas || undefined);
+			
 			// create a default animation sequence with all sprites
 			this.addAnimation("default", null);
+			
 			// set as default
 			this.setCurrentAnimation("default");
+		},
+		
+		/**
+		 * build a
+		 * @private
+		 */
+		buildLocalAtlas : function (atlas) {
+			// reinitialze the atlas
+			if (atlas !== undefined) {
+				this.textureAtlas = atlas;
+				// initialize sprite count
+				this.spritecount = new me.Vector2d(this.textureAtlas.length, 1);
+			} else {
+				// regular spritesheet
+				this.textureAtlas = [];
+				// calculate the sprite count (line, col)
+				this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
+												   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+
+				// if one single image, disable animation
+				if ((this.spritecount.x * this.spritecount.y) == 1) {
+					// override setAnimationFrame with an empty function
+					/** @private */
+					this.setAnimationFrame = function() {;};
+				}
+				
+				// build the local atlas
+				for ( var frame = 0, count = this.spritecount.x * this.spritecount.y; frame < count ; frame++) {
+					this.textureAtlas[frame] = {
+						offset: new me.Vector2d(
+									this.margin + (this.spacing + this.width) * (frame % this.spritecount.x),
+									this.margin + (this.spacing + this.height) * ~~(frame / this.spritecount.x)
+								),
+						width: this.width,
+						height: this.height
+					};
+				}
+			}
 		},
 
 		/**
@@ -498,12 +534,15 @@
 
 			// compute and add the offset of each frame
 			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = new me.Vector2d(this.margin + (this.spacing + this.width) * (frame[i] % this.spritecount.x),
-														   this.margin + (this.spacing + this.height) * ~~(frame[i] / this.spritecount.x));
+				this.anim[name].frame[i] = {
+					offset: this.textureAtlas[frame[i]].offset,
+					width: this.textureAtlas[frame[i]].width,
+					height: this.textureAtlas[frame[i]].height
+				}
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},
-
+		
 		/**
 		 * set the current animation
 		 * @param {String} name animation id
@@ -549,7 +588,9 @@
 		 */
 		setAnimationFrame : function(idx) {
 			this.current.idx = (idx || 0) % this.current.length;
-			this.offset = this.current.frame[this.current.idx];
+			this.offset = this.current.frame[this.current.idx].offset;
+			this.width = this.current.frame[this.current.idx].width;
+			this.height = this.current.frame[this.current.idx].height;
 		},
 		
 		/**
