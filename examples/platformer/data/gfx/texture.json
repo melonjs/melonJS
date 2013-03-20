@@ -1,8 +1,16 @@
 {"frames": [
 
 {
+	"filename": "coin.png",
+	"frame": {"x":2,"y":194,"w":35,"h":35},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":35,"h":35},
+	"sourceSize": {"w":35,"h":35}
+},
+{
 	"filename": "fly_dead.png",
-	"frame": {"x":141,"y":194,"w":69,"h":32},
+	"frame": {"x":110,"y":194,"w":69,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":69,"h":32},
@@ -10,7 +18,7 @@
 },
 {
 	"filename": "fly_fly.png",
-	"frame": {"x":212,"y":194,"w":69,"h":31},
+	"frame": {"x":181,"y":194,"w":69,"h":31},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":69,"h":31},
@@ -18,7 +26,7 @@
 },
 {
 	"filename": "fly_normal.png",
-	"frame": {"x":70,"y":194,"w":69,"h":32},
+	"frame": {"x":39,"y":194,"w":69,"h":32},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":69,"h":32},
@@ -26,24 +34,24 @@
 },
 {
 	"filename": "slime_dead.png",
-	"frame": {"x":2,"y":194,"w":54,"h":8},
-	"rotated": true,
+	"frame": {"x":2,"y":231,"w":54,"h":8},
+	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":54,"h":8},
 	"sourceSize": {"w":54,"h":8}
 },
 {
 	"filename": "slime_normal.png",
-	"frame": {"x":12,"y":194,"w":43,"h":28},
-	"rotated": true,
+	"frame": {"x":252,"y":190,"w":43,"h":28},
+	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":43,"h":28},
 	"sourceSize": {"w":43,"h":28}
 },
 {
 	"filename": "slime_walk.png",
-	"frame": {"x":42,"y":194,"w":43,"h":26},
-	"rotated": true,
+	"frame": {"x":58,"y":228,"w":43,"h":26},
+	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":43,"h":26},
 	"sourceSize": {"w":43,"h":26}
@@ -143,6 +151,6 @@
 	"format": "RGBA8888",
 	"size": {"w":512,"h":256},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:0ffcf24dac533fe8b3dec6145cd6ea39$"
+	"smartupdate": "$TexturePacker:SmartUpdate:cf4a6f90a36031cc6cdf179b67921d61$"
 }
 }

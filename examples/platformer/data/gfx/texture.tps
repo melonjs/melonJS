@@ -10,7 +10,7 @@
         <key>autoSDSettings</key>
         <array/>
         <key>allowRotation</key>
-        <true/>
+        <false/>
         <key>quiet</key>
         <false/>
         <key>premultiplyAlpha</key>
@@ -158,6 +158,7 @@
             <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_dead.png</filename>
             <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_normal.png</filename>
             <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_walk.png</filename>
+            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/coin.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

@@ -148,23 +148,12 @@ var CoinEntity = me.CollectableEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
-		// define this here instead of tiled
-		settings.image = "coin_sheet";
-		settings.spritewidth = 35;
 		
 		// call the parent constructor
 		this.parent(x, y , settings);
 
-		// animation speed		
-		this.renderable.animationspeed = 8;
-		
-		// bounding box
-		//this.updateColRect(8,16,16,16);
-		
-		// walking animatin
-		this.renderable.addAnimation("spin", [0,1,2,3]);
-		
-		this.renderable.setCurrentAnimation("spin");
+		// add the coin sprite as renderable
+		this.renderable = game.texture.createSpriteFromName("coin.png");
 		
 		// set the renderable position to bottom center
 		this.anchorPoint.set(0.5, 1.0);
@@ -215,22 +204,6 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// make it collidable
 		this.collidable = true;
 		this.type = me.game.ENEMY_OBJECT;
-	
-		// custom animation speed ?
-		if (settings.animationspeed) {
-			this.renderable.animationspeed = settings.animationspeed; 
-		}
-		
-		// walking animatin
-		this.renderable.addAnimation ("walk", [0,1]);
-		// dead animatin
-		this.renderable.addAnimation ("dead", [2]);
-		
-		// set default one
-		this.renderable.setCurrentAnimation("walk");
-		
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
 	},
 		
 	
@@ -288,6 +261,77 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 	}
 
 });
+
+/**
+ * An Slime enemy entity
+ * follow a horizontal path defined by the box size in Tiled
+ */
+var SlimeEnemyEntity = PathEnemyEntity.extend({	
+	/**
+	 * constructor
+	 */
+	init: function (x, y, settings) {
+		// parent constructor
+		this.parent(x, y, settings);
+	
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"slime_normal.png", "slime_walk.png", "slime_dead.png"
+		]);
+
+		// custom animation speed ?
+		if (settings.animationspeed) {
+			this.renderable.animationspeed = settings.animationspeed; 
+		}
+
+		// walking animatin
+		this.renderable.addAnimation ("walk", [0,1]);
+		// dead animatin
+		this.renderable.addAnimation ("dead", [2]);
+		
+		// set default one
+		this.renderable.setCurrentAnimation("walk");
+
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);		
+	}
+});
+
+/**
+ * An Fly enemy entity
+ * follow a horizontal path defined by the box size in Tiled
+ */
+var FlyEnemyEntity = PathEnemyEntity.extend({	
+	/**
+	 * constructor
+	 */
+	init: function (x, y, settings) {
+		// parent constructor
+		this.parent(x, y, settings);
+	
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"fly_normal.png", "fly_fly.png", "fly_dead.png"
+		]);
+
+		// custom animation speed ?
+		if (settings.animationspeed) {
+			this.renderable.animationspeed = settings.animationspeed; 
+		}
+
+		// walking animatin
+		this.renderable.addAnimation ("walk", [0,1]);
+		// dead animatin
+		this.renderable.addAnimation ("dead", [2]);
+		
+		// set default one
+		this.renderable.setCurrentAnimation("walk");
+
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);		
+	}
+});
+
 
 /** 
  * a GUI object 
