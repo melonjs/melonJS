@@ -259,7 +259,7 @@
 
 		/**
 		 *	Resize the sprite around his center<br>
-		 *	@param {Boolean} ratio scaling ratio
+		 *	@param {Number} ratio scaling ratio
 		 */
 		resize : function(ratio) {
 			if (ratio > 0) {
