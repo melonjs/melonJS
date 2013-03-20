@@ -532,13 +532,9 @@
 				}
 			}
 
-			// compute and add the offset of each frame
+			// set each frame configuration (offset, size, etc..)
 			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = {
-					offset: this.textureAtlas[frame[i]].offset,
-					width: this.textureAtlas[frame[i]].width,
-					height: this.textureAtlas[frame[i]].height
-				}
+				this.anim[name].frame[i] = this.textureAtlas[frame[i]];
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},
