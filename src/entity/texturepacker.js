@@ -129,7 +129,7 @@
 						offset: tex.frame.pos.clone(),
 						width: tex.frame.width,
 						height: tex.frame.height,
-						angle : (tex.rotated===true) ? -Math.PI : 0
+						angle : (tex.rotated===true) ? -(Math.PI/2) : 0
 					};
 				} else {
 					// throw an error

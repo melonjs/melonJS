@@ -125,6 +125,7 @@
 		 * @name me.SpriteObject#angle
 		 */
 		angle: 0,
+		
 
 		/**
 		 * Define the sprite opacity<br>
@@ -443,6 +444,10 @@
 			// Spacing and margin
 			this.spacing = spacing || 0;
 			this.margin = margin || 0;
+			
+			// to keep track of angle change
+			// (texture packer)
+			this.defaultAngle = 0;
 
 			// call the constructor
 			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
@@ -492,7 +497,8 @@
 									this.margin + (this.spacing + this.height) * ~~(frame / this.spritecount.x)
 								),
 						width: this.width,
-						height: this.height
+						height: this.height,
+						angle: 0
 					};
 				}
 			}
@@ -584,9 +590,14 @@
 		 */
 		setAnimationFrame : function(idx) {
 			this.current.idx = (idx || 0) % this.current.length;
-			this.offset = this.current.frame[this.current.idx].offset;
-			this.width = this.current.frame[this.current.idx].width;
-			this.height = this.current.frame[this.current.idx].height;
+			var frame = this.current.frame[this.current.idx];
+			this.offset = frame.offset;
+			this.width = frame.width;
+			this.height = frame.height;
+			if (this.defaultAngle !== frame.angle) {
+				this.angle = (this.angle + frame.angle - this.defaultAngle) % (Math.PI*2);
+				this.defaultAngle = frame.angle;
+			}
 		},
 		
 		/**
