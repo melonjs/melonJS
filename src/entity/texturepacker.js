@@ -102,7 +102,7 @@
 				
 				// check if we need rotation
 				if (tex.rotated===true) {
-					sprite.angle = - Math.PI;
+					sprite.angle = - (Math.PI/2);
 					// >> sprite pos not correct when rotated ? <<
 				}
 				// return our object
