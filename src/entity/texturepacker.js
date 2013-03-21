@@ -16,7 +16,10 @@
 	 * @param {Object} texture atlas information
 	 * @example
 	 * // create a texture atlas
-	 * texture = new me.TextureAtlas (me.loader.getAtlas("texture") me.loader.getImage("texture"));
+	 * texture = new me.TextureAtlas (
+	 *    me.loader.getAtlas("texture"), 
+	 *    me.loader.getImage("texture")
+	 * );
 	 */
 	me.TextureAtlas = Object.extend(
 	/** @scope me.TextureAtlas.prototype */
@@ -83,6 +86,18 @@
 		 * Create a sprite object using the first region found using the specified name
 		 * @param {String} name of the sprite
 		 * @return {me.SpriteObject}
+		 * @example
+		 * // create a new texture atlas object under the `game` namespace
+		 * game.texture = new me.TextureAtlas(
+		 *    me.loader.getAtlas("texture"), 
+		 *    me.loader.getImage("texture")
+		 * );
+		 * ...
+		 * ...
+		 * // add the coin sprite as renderable for the entity
+		 * this.renderable = game.texture.createSpriteFromName("coin.png");
+		 * // set the renderable position to bottom center
+		 * this.anchorPoint.set(0.5, 1.0);
 		 */
 		createSpriteFromName : function(name) {
 			var tex = this.atlas[name];
@@ -114,8 +129,30 @@
 		
 		/**
 		 * Create an animation object using the first region found using all specified names
-		 * @param {String[]} name names of the sprite
+		 * @param {String[]} names names of the sprite
 		 * @return {me.AnimationSheet}
+		 * @example
+		 * // create a new texture atlas object under the `game` namespace
+		 * game.texture = new me.TextureAtlas(
+		 *    me.loader.getAtlas("texture"), 
+		 *    me.loader.getImage("texture")
+		 * );
+		 * ...
+		 * ...
+		 * // create a new animationSheet as renderable for the entity
+		 * this.renderable = game.texture.createAnimationFromName([
+		 *   "walk0001.png", "walk0002.png", "walk0003.png",
+		 *   "walk0004.png", "walk0005.png", "walk0006.png",
+		 *   "walk0007.png", "walk0008.png", "walk0009.png",
+		 *	 "walk0010.png", "walk0011.png"
+		 * ]);
+		 *
+		 * // define an additional basic walking animatin
+		 * this.renderable.addAnimation ("walk",  [0,2,1]);
+		 * // set as current animation
+		 * this.renderable.setCurrentAnimation("walk");
+		 * // set the renderable position to bottom center
+		 * this.anchorPoint.set(0.5, 1.0);		 
 		 */
 		createAnimationFromName : function(names) {
 			var tpAtlas = [], count = 0;

@@ -392,13 +392,24 @@
 		 * @function
 		 * @param {Array.<string>} resources
 		 * @example
-		 * var g_resources = [ {name: "tileset-platformer",  type: "image",  src: "data/map/tileset-platformer.png"},
-		 *                     {name: "meta_tiles",          type: "tsx",    src: "data/map/meta_tiles.tsx"},
-		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1.tmx"},
-		 *                     {name: "bgmusic",             type: "audio",  src: "data/audio/",        channel: 1,  stream: true},
-		 *                     {name: "cling",               type: "audio",  src: "data/audio/",        channel: 2},
-		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
-		 *                    ];
+		 * var g_resources = [ 
+		 *   // PNG tileset
+		 *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
+		 *   // PNG packed texture
+		 *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+		 *   // TSX file
+		 *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
+		 *   // TMX level (XML & JSON)
+		 *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
+		 *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
+		 *   // audio ressources
+		 *   {name: "bgmusic", type: "audio",  src: "data/audio/",  channel: 1,  stream: true},
+		 *   {name: "cling",   type: "audio",  src: "data/audio/",  channel: 2},
+		 *   // binary file
+		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
+		 *   // texturePacker
+		 *   {name: "texture", type: "tps", src: "data/gfx/texture.json"}
+		 * ];
 		 * ...
 		 *
 		 * // set all resources to be loaded
