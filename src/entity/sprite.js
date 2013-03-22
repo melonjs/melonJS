@@ -6,7 +6,13 @@
  */
 
 (function($) {
-
+	
+	/** 
+	 * a local constant for the (Math.PI * 2) value
+	 * @private
+	 */
+	var PI2 = Math.PI * 2;
+	
 	/**
 	 * A base class for renderable objects.
 	 * @class
@@ -595,7 +601,7 @@
 			this.width = frame.width;
 			this.height = frame.height;
 			if (this.defaultAngle !== frame.angle) {
-				this.angle = (this.angle + frame.angle - this.defaultAngle) % (Math.PI*2);
+				this.angle = (this.angle + frame.angle - this.defaultAngle) % (PI2);
 				this.defaultAngle = frame.angle;
 			}
 		},
