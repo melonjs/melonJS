@@ -857,7 +857,10 @@ var me = me || {};
 
 				// add a dirty rect if feature enable
 				if (me.sys.dirtyRegion) {
-					// some stuff to optimiwze the amount
+					// TODO : HOW DO WE MANAGE COORDINATES 
+					// OF FLOATING OBJECT'S RECTS ?
+					
+					// some stuff to optimize the amount
 					// of dirty rect would be nice here
 					// instead of adding everything :)
 					// this is for later I guess !
