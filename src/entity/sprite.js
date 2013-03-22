@@ -49,6 +49,16 @@
 		inViewport : false,
 		
 		/**
+		 * make the renderable object persistent over level changes
+		 * default value : false
+		 * @public
+		 * @readonly
+		 * @type Boolean
+		 * @name me.Renderable#isPersistent
+		 */
+		isPersistent : false,
+		
+		/**
 		 * Define if a renderable follows screen coordinates (floating)<br>
 		 * or the world coordinates (not floating)<br>
 		 * default value : false
@@ -183,6 +193,9 @@
 			
 			// make it visible by default
 			this.visible = true;
+			
+			// non persistent per default
+			isPersistent = false;
 			
 			// and not flickering
 			this.flickering = false

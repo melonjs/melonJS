@@ -96,11 +96,9 @@
 	 *
 	 */
 	me.ScreenObject = me.Renderable.extend(
-	/** @scope me.ScreenObject.prototype */
+	/** @scope me.ScreenObject.prototype */	
 	{
-
 		addAsObject	: false,
-		isPersistent : false,
 		z : 999,
 
 		/**
