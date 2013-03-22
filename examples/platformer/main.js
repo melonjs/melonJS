@@ -41,9 +41,7 @@ var game = {
 		me.video.setImageSmoothing(false);
 		
 		// install the debug panel plugin
-		me.plugin.register(debugPanel, "debug");
-		
-		me.debug.renderHitBox = true;
+		//me.plugin.register(debugPanel, "debug");
 		
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
