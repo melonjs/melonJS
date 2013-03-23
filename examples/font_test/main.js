@@ -43,7 +43,6 @@ var PlayScreen = me.ScreenObject.extend( {
 		this.parent(true);
 		// arial font 
 		this.logo = new me.Font('Arial', 8, 'white');
-		this.logo.textBaseline = "top";
     },
     
 	
@@ -57,9 +56,37 @@ var PlayScreen = me.ScreenObject.extend( {
 		// font size test
 		for (var i = 8;i<56;i+=8) {
 			this.logo.set('Arial', i, 'white');
-			this.logo.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
 			y_pos+=this.logo.measureText(context, "DUMMY").height;
+			this.logo.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
 		}
+
+		// font baseline test
+		this.logo.set('Arial', 14, 'white');
+		var baseline = 200;
+
+		// Draw the baseline
+		context.beginPath();
+		context.moveTo(0, baseline + 0.5);
+		context.lineTo(me.video.getWidth(), baseline + 0.5);
+		context.strokeStyle = "red";
+		context.stroke();
+
+		var baselines = [
+			"bottom", "ideographic", "alphabetic", "middle", "hanging", "top"
+		];
+
+		var x_pos = 0;
+
+		// font baseline test
+		for (var i = 0;i<baselines.length;i++) {
+			var text = "Arial " + baselines[i];
+			this.logo.textBaseline = baselines[i];
+			this.logo.draw(context, text, x_pos, baseline);
+			x_pos+=this.logo.measureText(context, text + "   ").width;
+		}
+
+		// reset to default baseline
+		this.logo.textBaseline = "alphabetic";
 		
 	}
 
