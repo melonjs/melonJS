@@ -28,24 +28,38 @@
 	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
 	{
-		// alignement constants
-		ALIGN : {
-			LEFT : "left",
-			CENTER : "center",
-			RIGHT : "right"
-		},
 
-		// font properties
+		// private font properties
 		font : null,
 		height : null,
 		color : null,
-		textAlign : null,
+		
+		/**
+		 * Set the default text alignment (or justification),<br>
+		 * possible values are "left", "right", and "center".<br>
+		 * Default value : "left"
+		 * @public
+		 * @type String
+		 * @name me.Font#textAlign
+		 */
+		textAlign : "left",
+		
+		/**
+		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+		 * Default value : "alphabetic"
+		 * @public
+		 * @type String
+		 * @name me.Font#textBaseline
+		 */
+		textBaseline : "alphabetic",
 
 		/** @private */
 		init : function(font, size, color, textAlign) {
 
 			// font name and type
 			this.set(font, size, color, textAlign);
+			
 		},
 
 		/**
@@ -106,6 +120,7 @@
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
+			context.textBaseline = this.textBaseline;
 			var dim = context.measureText(text);
 			dim.height = this.height;
 
@@ -171,7 +186,8 @@
 			this.loadFontMetrics(font, size);
 
 			// set a default alignement
-			this.textAlign = this.ALIGN.LEFT;
+			this.textAlign = "left";
+			this.textBaseline = "top";
 			
 			// resize if necessary
 			if (scale) { 
@@ -244,14 +260,28 @@
 			// make sure it's a String object
 			text = new String(text);
 
-			// adjust pos based on alignment
+			// adjust x pos based on alignment value
+			var dim = this.measureText(text);
 			switch(this.textAlign) {
-				case this.ALIGN.RIGHT:
-					x -= this.measureText(text).width;
+				case "right":
+					x -= dim.width;
 					break;
 
-				case this.ALIGN.CENTER:
-					x -= this.measureText(text).width * 0.5;
+				case "center":
+					x -= dim.width * 0.5;
+					break;
+			};
+			 
+			// adjust y pos based on alignment value
+			switch(this.textBaseline) {
+				case "middle":
+					y -= dim.height * 0.5;
+					break;
+
+				case "ideographic":
+				case "alphabetic":
+				case "bottom":
+					y -= dim.height;
 					break;
 			};
 			
