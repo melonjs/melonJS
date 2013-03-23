@@ -139,6 +139,7 @@
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
+			context.textBaseline = this.textBaseline;
 			context.fillText(text, ~~x, ~~y);
 		}
 	});

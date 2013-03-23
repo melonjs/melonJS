@@ -43,6 +43,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		this.parent(true);
 		// arial font 
 		this.logo = new me.Font('Arial', 8, 'white');
+		this.logo.textBaseline = "top";
     },
     
 	
@@ -56,8 +57,8 @@ var PlayScreen = me.ScreenObject.extend( {
 		// font size test
 		for (var i = 8;i<56;i+=8) {
 			this.logo.set('Arial', i, 'white');
-			y_pos+=this.logo.measureText(context, "DUMMY").height;
 			this.logo.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
+			y_pos+=this.logo.measureText(context, "DUMMY").height;
 		}
 		
 	}
