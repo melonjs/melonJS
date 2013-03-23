@@ -13,7 +13,8 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {Object} texture atlas information
+	 * @param {Object} atlas atlas information
+	 * @param {Image} [texture] texture (texture name from the atlas will be used if not specified)
 	 * @example
 	 * // create a texture atlas
 	 * texture = new me.TextureAtlas (
@@ -39,8 +40,18 @@
 		init : function(atlas, texture) {
 			if (atlas && atlas.meta && atlas.meta.app.contains("texturepacker")) {
 				this.format = "texturepacker";
+				// set the texture
+				if (texture===undefined) {
+					var name = me.utils.getBasename(atlas.meta.image);
+					this.texture = me.loader.getImage(name);
+					if (this.texture === null) {
+						throw "melonjs: Atlas texture '" + name + "' not found";
+					}
+				} else {
+					this.texture = texture;
+				}
+				// initialize the atlas
 				this.atlas = this.initFromTexturePacker(atlas);
-				this.texture = texture;
 			};
 			
 			// if format not recognized
