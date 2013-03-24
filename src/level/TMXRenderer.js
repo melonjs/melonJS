@@ -143,8 +143,11 @@
 		 */
 		pixelToTileCoords : function(x, y) {
 			x -=  this.originX;
-			return new me.Vector2d((y + (x / this.ratio)) / this.tileheight,
-								   (y - (x / this.ratio)) / this.tileheight);
+
+			var tileY = y / this.tileheight;
+			var tileX = x / this.tilewidth;
+
+			return new me.Vector2d(tileY + tileX, tileY - tileX);
 		},
 		
 		/**
