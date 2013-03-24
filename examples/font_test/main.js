@@ -15,8 +15,7 @@ var jsApp = {
 		me.loader.onload = this.loaded.bind(this);
 		
 		// set all ressources to be loaded
-		// (for later to load bitmap font)
-		me.loader.preload({});
+		me.loader.preload([{name: "atascii", type:"image",	src: "atascii_8px.png"}]);
 		
 		// load everything & display a loading screen
 		me.state.change(me.state.LOADING);
@@ -42,7 +41,9 @@ var PlayScreen = me.ScreenObject.extend( {
 		// as we draw our progress bar in the draw function
 		this.parent(true);
 		// arial font 
-		this.logo = new me.Font('Arial', 8, 'white');
+		this.font = new me.Font('Arial', 8, 'white');
+		// bitmap font
+		this.bFont = new me.BitmapFont("atascii", {x:8});
     },
     
 	
@@ -54,14 +55,28 @@ var PlayScreen = me.ScreenObject.extend( {
 		var y_pos = 0;
 		
 		// font size test
+		this.bFont.textAlign = "left";
+		this.font.textBaseline = "top";
 		for (var i = 8;i<56;i+=8) {
-			this.logo.set('Arial', i, 'white');
-			y_pos+=this.logo.measureText(context, "DUMMY").height;
-			this.logo.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
+			this.font.set('Arial', i, 'white');
+			this.font.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
+			y_pos+=this.font.measureText(context, "DUMMY").height;
 		}
 
+		// bFont size test		
+		y_pos = 0;
+		this.bFont.textAlign = "right";
+		this.bFont.textBaseline = "top";
+		for (var i = 1;i<5;i++) {
+			this.bFont.resize(i);
+			this.bFont.draw(context, "BITMAP TEST" , me.video.getWidth() , y_pos );
+			y_pos+=this.bFont.measureText("DUMMY").height;
+			
+		}
+
+		
 		// font baseline test
-		this.logo.set('Arial', 14, 'white');
+		this.font.set('Arial', 14, 'white');
 		var baseline = 200;
 
 		// Draw the baseline
@@ -80,13 +95,13 @@ var PlayScreen = me.ScreenObject.extend( {
 		// font baseline test
 		for (var i = 0;i<baselines.length;i++) {
 			var text = "Arial " + baselines[i];
-			this.logo.textBaseline = baselines[i];
-			this.logo.draw(context, text, x_pos, baseline);
-			x_pos+=this.logo.measureText(context, text + "   ").width;
+			this.font.textBaseline = baselines[i];
+			this.font.draw(context, text, x_pos, baseline);
+			x_pos+=this.font.measureText(context, text + "   ").width;
 		}
 
 		// reset to default baseline
-		this.logo.textBaseline = "alphabetic";
+		this.font.textBaseline = "alphabetic";
 		
 	}
 
