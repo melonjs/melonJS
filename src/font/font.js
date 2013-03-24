@@ -81,7 +81,7 @@
 		 * @param {String} font
 		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
-		 * @param {String} [textAlign="left"] horizontal alignement
+		 * @param {String} [textAlign] horizontal alignement
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");
@@ -98,7 +98,9 @@
 			}
 			this.font = size + " " + font_names.join(",");;
 			this.color = color;
-			this.textAlign = textAlign || "left";
+			if (textAlign) {
+				this.textAlign = textAlign;
+			}
 		},
 
 		/**
@@ -271,6 +273,9 @@
 				case "center":
 					x -= dim.width * 0.5;
 					break;
+					
+				default : 
+					break;
 			};
 			 
 			// adjust y pos based on alignment value
@@ -283,6 +288,9 @@
 				case "alphabetic":
 				case "bottom":
 					y -= dim.height;
+					break;
+				
+				default : 
 					break;
 			};
 			
