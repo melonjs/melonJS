@@ -120,7 +120,6 @@
 			this.tileheight = tileheight;
 			this.hTilewidth = tilewidth / 2;
 			this.hTileheight = tileheight / 2;
-			this.ratio = this.tilewidth / this.tileheight;
 			this.originX = this.rows * this.hTilewidth;
 		},
 		
