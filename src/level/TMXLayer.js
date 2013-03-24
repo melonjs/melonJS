@@ -138,7 +138,7 @@
 			// get the corresponding image (throw an exception if not found)
 			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
 			if (!this.image) {
-				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
+				throw "melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!";
 			}
 			
 			this.imagewidth = this.image.width;
