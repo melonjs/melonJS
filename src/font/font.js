@@ -47,12 +47,12 @@
 		/**
 		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
 		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
-		 * Default value : "alphabetic"
+		 * Default value : "top"
 		 * @public
 		 * @type String
 		 * @name me.Font#textBaseline
 		 */
-		textBaseline : "alphabetic",
+		textBaseline : "top",
 
 		/** @private */
 		init : function(font, size, color, textAlign) {

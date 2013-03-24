@@ -56,7 +56,6 @@ var PlayScreen = me.ScreenObject.extend( {
 		
 		// font size test
 		this.bFont.textAlign = "left";
-		this.font.textBaseline = "top";
 		for (var i = 8;i<56;i+=8) {
 			this.font.set('Arial', i, 'white');
 			this.font.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
@@ -66,7 +65,6 @@ var PlayScreen = me.ScreenObject.extend( {
 		// bFont size test		
 		y_pos = 0;
 		this.bFont.textAlign = "right";
-		this.bFont.textBaseline = "top";
 		for (var i = 1;i<5;i++) {
 			this.bFont.resize(i);
 			this.bFont.draw(context, "BITMAP TEST" , me.video.getWidth() , y_pos );
@@ -99,9 +97,6 @@ var PlayScreen = me.ScreenObject.extend( {
 			this.font.draw(context, text, x_pos, baseline);
 			x_pos+=this.font.measureText(context, text + "   ").width;
 		}
-
-		// reset to default baseline
-		this.font.textBaseline = "alphabetic";
 		
 	}
 

@@ -25,6 +25,7 @@
 			this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
 			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'middle');
 			this.logo2.bold();
+			this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
 
 			// flag to know if we need to refresh the display
 			this.invalidate = false;
