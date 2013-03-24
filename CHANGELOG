@@ -1,7 +1,7 @@
 Version History
 ---------------
 0.9.7
-* Font : changed default alignement to `left`
+* Font : changed default alignement to `left'/'top'
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
 * Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.
 * Sprite : added TexturePacker Support (see me.TextureAtlas)
