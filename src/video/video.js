@@ -502,10 +502,16 @@
 			for(var x = 0; x < vendors.length; ++x) {
 				if (context2D[vendors[x]+'ImageSmoothingEnabled'] !== undefined) {
 					context2D[vendors[x]+'ImageSmoothingEnabled'] = enable;
+					if (double_buffering) {
+						backBufferContext2D[vendors[x]+'ImageSmoothingEnabled'] = enable;
+					}
 				}
 			};
 			// generic one (if implemented)
 			context2D.imageSmoothingEnabled = enable;
+			if (double_buffering) {
+				backBufferContext2D.imageSmoothingEnabled = enable;
+			}
 		};
 		
 		/**
