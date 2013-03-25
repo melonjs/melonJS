@@ -28,7 +28,7 @@
 		// hold public stuff in our singleton
 		var obj = {};
 
- 		// audio channel list
+		// audio channel list
 		var audio_channels = {};
 
 		// Active (supported) audio extension
@@ -52,6 +52,10 @@
 			volume : 1.0,
 			muted : false
 		}
+
+		// synchronous loader for mobile user agents
+		var sync_loading = false;
+		var sync_loader = [];
 		 
 		/**
 		 * @private
@@ -274,16 +278,6 @@
 					me.sys.sound |= obj.capabilities[c].canPlay;					
 				}
 			}
-			
-			// check for specific platform
-			if ((me.sys.ua.search("iphone") > -1) || (me.sys.ua.search("ipod") > -1) || 
-				(me.sys.ua.search("ipad") > -1) || (me.sys.ua.search("android") > -1)) {
-				// if on mobile device, without a specific HTML5 acceleration framework
-				if (!navigator.isCocoonJS) {
-					// disable sound for now
-					me.sys.sound = false;
-				}
-			}
 		};
 
 		/**
@@ -382,24 +376,41 @@
 			if (activeAudioExt == -1)
 				return 0;
 
-			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
-			soundclip.preload = 'auto';
+			// check for specific platform
+			var isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod/i);
+			if (isMobile && !navigator.isCocoonJS) {
+				if (sync_loading) {
+					sync_loader.push([ sound, onload_cb, onerror_cb ]);
+					return;
+				}
+				sync_loading = true;
+			}
 
 			var channels = sound.channel || 1;
 			var eventname = "canplaythrough";
 
-			if (sound.stream === true) {
+			if (sound.stream === true && !isMobile) {
 				channels = 1;
 				eventname = "canplay";
 			}
+
+			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
+			soundclip.preload = 'auto';
 			soundclip.addEventListener(eventname, function(e) {
-			   this.removeEventListener(eventname, arguments.callee, false);
-				  soundLoaded.call(
-					 me.audio,
-					 sound.name,
-					 channels,
-					 onload_cb
-			   );
+				soundclip.removeEventListener(eventname, arguments.callee, false);
+				sync_loading = false;
+				soundLoaded.call(
+					me.audio,
+					sound.name,
+					channels,
+					onload_cb
+				);
+
+				// Load next audio clip synchronously
+				var next = sync_loader.shift();
+				if (next) {
+					obj.load.apply(obj, next);
+				}
 			}, false);
 
 			soundclip.addEventListener("error", function(e) {
