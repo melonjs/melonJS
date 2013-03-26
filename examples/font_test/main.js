@@ -45,7 +45,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		// bitmap font
 		this.bFont = new me.BitmapFont("atascii", {x:8});
     },
-    
+  
 	
 	// draw function
 	draw : function(context) {
@@ -68,7 +68,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		for (var i = 1;i<5;i++) {
 			this.bFont.resize(i);
 			this.bFont.draw(context, "BITMAP TEST" , me.video.getWidth() , y_pos );
-			y_pos+=this.bFont.measureText("DUMMY").height;
+			y_pos+=this.bFont.measureText(context, "DUMMY").height;
 			
 		}
 
@@ -98,6 +98,58 @@ var PlayScreen = me.ScreenObject.extend( {
 			x_pos+=this.font.measureText(context, text + "   ").width;
 		}
 		
+		// restore default base;line
+		this.font.textBaseline = "top";
+		
+		// ---- multiline testing -----
+		
+		// font text
+		var text = "this is a multiline\nfont test with melonjs\nand it works!";
+		this.font.textAlign = "center";		
+		this.font.draw(context, text, 75, 230);
+
+		var text = "this is another font test \nwith right alignement\nand it still works!";
+		this.font.textAlign = "right";		
+		this.font.draw(context, text, 200, 300);
+		
+		// bFont  test		
+		this.bFont.textAlign = "center";
+		var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
+		this.bFont.resize(2);
+		this.bFont.draw(context, text, 400, 230);
+		
+		// bFont  test		
+		this.bFont.textAlign = "right";
+		var text = "AN ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+		this.bFont.resize(3);
+		this.bFont.draw(context, text, 640, 400);
+		
+		// baseline test with bitmap font
+		var x_pos = 0;
+		this.bFont.textAlign = "left";
+		this.bFont.resize(1);
+		var baseline = 375;
+
+		// Draw the baseline
+		context.beginPath();
+		context.moveTo(0, baseline + 0.5);
+		context.lineTo(me.video.getWidth(), baseline + 0.5);
+		context.strokeStyle = "red";
+		context.stroke();
+		
+		// font baseline test
+		for (var i = 0;i<baselines.length;i++) {
+			var text = "FONT " + baselines[i].toUpperCase();
+			this.bFont.textBaseline = baselines[i];
+			this.bFont.draw(context, text, x_pos, baseline);
+			x_pos+=this.bFont.measureText(context, text).width + 8;
+		}
+		
+		// restore default alignement/baseline
+		this.font.textAlign = "left";
+		this.font.textBaseline = "top";
+		this.bFont.textAlign = "left";
+		this.bFont.textBaseline = "top";	
 	}
 
 });

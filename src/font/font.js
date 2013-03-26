@@ -53,6 +53,16 @@
 		 * @name me.Font#textBaseline
 		 */
 		textBaseline : "top",
+		
+		/**
+		 * Set the line height (when displaying multi-line strings). <br>
+		 * Current font height will be multiplied with this value to set the line height.
+		 * Default value : 1.0
+		 * @public
+		 * @type Number
+		 * @name me.Font#lineHeight
+		 */
+		lineHeight : 1.0,
 
 		/** @private */
 		init : function(font, size, color, textAlign) {
@@ -123,10 +133,15 @@
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
-			var dim = context.measureText(text);
-			dim.height = this.height;
 
-			return dim;
+			var strings = text.split("\n");
+			var width = 0, height = 0;
+			for (var i = 0; i < strings.length; i++) {
+				var dim = context.measureText(strings[i].trim());
+				width = dim.width > width ? dim.width : width;
+				height += this.height * this.lineHeight;
+			}
+			return {width: width, height: height};
 		},
 
 		/**
@@ -142,7 +157,15 @@
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
-			context.fillText(text, ~~x, ~~y);
+			
+			var strings = text.split("\n");
+			for (var i = 0; i < strings.length; i++) {
+				// draw the string
+				context.fillText(strings[i].trim(), ~~x, ~~y);
+				// add leading space
+				y += this.height * this.lineHeight;
+			}
+			
 		}
 	});
 
@@ -234,7 +257,7 @@
 		 */
 		resize : function(scale) {
 			// updated scaled Size
-			this.sSize.copy(this.size);
+			this.sSize.setV(this.size);
 			this.sSize.x *= scale;
 			this.sSize.y *= scale;
 		},
@@ -245,11 +268,16 @@
 		 * @param {String} text
 		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
 		 */
-		measureText : function(text) {
-			return {
-				width : text.length * this.sSize.x,
-				height : this.sSize.y
-			};
+		measureText : function(context, text) {
+			
+			var strings = text.split("\n");
+			var width = 0, height = 0;
+			for (var i = 0; i < strings.length; i++) {
+				var len = strings[i].trim().length * this.sSize.x;
+				width = len > width ? len : width;
+				height += this.sSize.y * this.lineHeight;
+			}
+			return {width: width, height: height};
 		},
 
 		/**
@@ -260,54 +288,59 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
-			// make sure it's a String object
-			text = new String(text);
+			var strings = text.split("\n");
+			var lX = x;
+			var height = this.sSize.y * this.lineHeight;
+			for (var i = 0; i < strings.length; i++) {
+				var x = lX, y = y;
+				var string = strings[i].trim();
+				// adjust x pos based on alignment value
+				var width = string.length * this.sSize.x;
+				switch(this.textAlign) {
+					case "right":
+						x -= width;
+						break;
 
-			// adjust x pos based on alignment value
-			var dim = this.measureText(text);
-			switch(this.textAlign) {
-				case "right":
-					x -= dim.width;
-					break;
+					case "center":
+						x -= width * 0.5;
+						break;
+						
+					default : 
+						break;
+				};
+				 
+				// adjust y pos based on alignment value
+				switch(this.textBaseline) {
+					case "middle":
+						y -= height * 0.5;
+						break;
 
-				case "center":
-					x -= dim.width * 0.5;
-					break;
+					case "ideographic":
+					case "alphabetic":
+					case "bottom":
+						y -= height;
+						break;
 					
-				default : 
-					break;
-			};
-			 
-			// adjust y pos based on alignment value
-			switch(this.textBaseline) {
-				case "middle":
-					y -= dim.height * 0.5;
-					break;
-
-				case "ideographic":
-				case "alphabetic":
-				case "bottom":
-					y -= dim.height;
-					break;
+					default : 
+						break;
+				};
 				
-				default : 
-					break;
-			};
-			
-			// draw the text
-			for ( var i = 0,len = text.length; i < len; i++) {
-				// calculate the char index
-				var idx = text.charCodeAt(i) - this.firstChar;
-				// draw it
-				context.drawImage(this.font,
-						this.size.x * (idx % this.charCount), 
-						this.size.y * ~~(idx / this.charCount), 
-						this.size.x, this.size.y, 
-						~~x, ~~y, 
-						this.sSize.x, this.sSize.y);
-				x += this.sSize.x;
+				// draw the string
+				for ( var c = 0,len = string.length; c < len; c++) {
+					// calculate the char index
+					var idx = string.charCodeAt(c) - this.firstChar;
+					// draw it
+					context.drawImage(this.font,
+							this.size.x * (idx % this.charCount), 
+							this.size.y * ~~(idx / this.charCount), 
+							this.size.x, this.size.y, 
+							~~x, ~~y, 
+							this.sSize.x, this.sSize.y);
+					x += this.sSize.x;
+				}
+				// increment line
+				y += height;
 			}
-
 		}
 	});
 
