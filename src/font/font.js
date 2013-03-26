@@ -260,8 +260,13 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
+            
+            // Keep starting x pos
+			startx = x;
 			// make sure it's a String object
-			text = new String(text);
+            text = new String(text);
+            // process non JavaScript newlines
+            text = text.replace(/\\n/g, "\n")
 
 			// adjust x pos based on alignment value
 			var dim = this.measureText(text);
@@ -299,13 +304,20 @@
 				// calculate the char index
 				var idx = text.charCodeAt(i) - this.firstChar;
 				// draw it
-				context.drawImage(this.font,
+				if (idx == (10- this.firstChar)) {
+				    y += this.sSize.y + ~~(this.size.y / 2) ;
+                    x = startx;
+                }
+                else
+                {
+                context.drawImage(this.font,
 						this.size.x * (idx % this.charCount), 
 						this.size.y * ~~(idx / this.charCount), 
 						this.size.x, this.size.y, 
 						~~x, ~~y, 
 						this.sSize.x, this.sSize.y);
 				x += this.sSize.x;
+                }
 			}
 
 		}
