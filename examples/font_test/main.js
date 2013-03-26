@@ -55,10 +55,10 @@ var PlayScreen = me.ScreenObject.extend( {
 		var y_pos = 0;
 		
 		// font size test
-		this.bFont.textAlign = "left";
-		for (var i = 8;i<56;i+=8) {
+		this.font.textAlign = "left";
+		for (var i = 8; i < 56; i += 8) {
 			this.font.set('Arial', i, 'white');
-			this.font.draw(context, "Arial Text " +i + "px !" , 5 , y_pos );
+			this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
 			y_pos+=this.font.measureText(context, "DUMMY").height;
 		}
 
@@ -92,13 +92,13 @@ var PlayScreen = me.ScreenObject.extend( {
 
 		// font baseline test
 		for (var i = 0;i<baselines.length;i++) {
-			var text = "Arial " + baselines[i];
+			var text = baselines[i];
 			this.font.textBaseline = baselines[i];
 			this.font.draw(context, text, x_pos, baseline);
-			x_pos+=this.font.measureText(context, text + "   ").width;
+			x_pos+=this.font.measureText(context, text + "@@@").width;
 		}
 		
-		// restore default base;line
+		// restore default baseline
 		this.font.textBaseline = "top";
 		
 		// ---- multiline testing -----
@@ -108,7 +108,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		this.font.textAlign = "center";		
 		this.font.draw(context, text, 75, 230);
 
-		var text = "this is another font test \nwith right alignement\nand it still works!";
+		var text = "this is another font test \nwith right alignment\nand it still works!";
 		this.font.textAlign = "right";		
 		this.font.draw(context, text, 200, 300);
 		
@@ -120,7 +120,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		
 		// bFont  test		
 		this.bFont.textAlign = "right";
-		var text = "AN ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+		var text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
 		this.bFont.resize(3);
 		this.bFont.draw(context, text, 640, 400);
 		
@@ -138,11 +138,11 @@ var PlayScreen = me.ScreenObject.extend( {
 		context.stroke();
 		
 		// font baseline test
-		for (var i = 0;i<baselines.length;i++) {
-			var text = "FONT " + baselines[i].toUpperCase();
+		for (var i = 0; i < baselines.length; i++) {
+			var text = baselines[i].toUpperCase();
 			this.bFont.textBaseline = baselines[i];
 			this.bFont.draw(context, text, x_pos, baseline);
-			x_pos+=this.bFont.measureText(context, text).width + 8;
+			x_pos+=this.bFont.measureText(context, text + "@@@").width + 8;
 		}
 		
 		// restore default alignement/baseline
