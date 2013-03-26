@@ -447,7 +447,7 @@
 			this.floating = false;
 			
 			// and non persistent per default
-			isPersistent = false;
+			this.isPersistent = false;
 
 			/**
 			 * falling state of the object<br>
