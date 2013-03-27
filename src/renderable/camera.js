@@ -296,8 +296,6 @@
 			}
 			this.shaking = true;
 
-			var self = this;
-
 			this._shake = {
 				intensity : intensity,
 				duration : duration,
