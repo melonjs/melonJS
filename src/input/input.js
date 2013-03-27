@@ -522,6 +522,22 @@
 		};
 		
 		/**
+		 * unlock a key manually
+		 * @name me.input#unlockKey
+		 * @public
+		 * @function
+		 * @param {String} action user defined corresponding action
+		 * @example
+		 * // Unlock jump when touching the ground
+		 * if(!this.falling && !this.jumping) {
+		 * me.input.unlockKey("jump");
+		 * }
+		 */
+		obj.unlockKey = function(action) {
+			keyLocked[action] = false;			
+		};
+		
+		/**
 		 * unbind the defined keycode
 		 * @name me.input#unbindKey
 		 * @public
