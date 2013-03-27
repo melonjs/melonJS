@@ -346,6 +346,7 @@ var ScoreObject = me.HUD_Item.extend( {
 		this.parent(x, y);
 		// create a font
 		this.font = new me.BitmapFont("atascii", {x:24});
+		this.font.alignText = "bottom";
 		this.font.set("right", 1.6);
 	},
 	/**
