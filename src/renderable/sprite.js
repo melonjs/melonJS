@@ -109,7 +109,7 @@
 			this.visible = true;
 			
 			// non persistent per default
-			isPersistent = false;
+			this.isPersistent = false;
 			
 			// and not flickering
 			this.flickering = false
