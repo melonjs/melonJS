@@ -137,8 +137,7 @@
 			var strings = text.split("\n");
 			var width = 0, height = 0;
 			for (var i = 0; i < strings.length; i++) {
-				var dim = context.measureText(strings[i].trim());
-				width = dim.width > width ? dim.width : width;
+				width = Math.max(context.measureText(strings[i].trim()).width, width);
 				height += this.height * this.lineHeight;
 			}
 			return {width: width, height: height};
@@ -273,8 +272,7 @@
 			var strings = text.split("\n");
 			var width = 0, height = 0;
 			for (var i = 0; i < strings.length; i++) {
-				var len = strings[i].trim().length * this.sSize.x;
-				width = len > width ? len : width;
+				width = Math.max((strings[i].trim().length * this.sSize.x), width);
 				height += this.sSize.y * this.lineHeight;
 			}
 			return {width: width, height: height};
