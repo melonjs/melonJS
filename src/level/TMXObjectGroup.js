@@ -179,8 +179,10 @@
 
 			// force spritewidth size
 			this.spritewidth = this.width;
-			// adjust y coordinates (bug in tile 0.6.2?)
-			this.y -= this.height;
+			
+			// Offset the object position by the tileheight
+			// (Objects origin point is "bottom-left" in Tiled, "top-left" in melonJS)
+			this.y -= tileset.tileheight;
 
 			// the object corresponding tile 
 			var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);

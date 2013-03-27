@@ -81,7 +81,7 @@
 				   else
 				   {
 					  // let's flicker in case we touched an enemy
-					  this.flicker(45);
+					  this.renderable.flicker(45);
 				   }
 				}
 			}
@@ -173,7 +173,7 @@
 			if (this.alive && (res.y > 0) && obj.falling)
 			{
 				// make it flicker
-				this.flicker(45);
+				this.renderable.flicker(45);
 			}
 		},
 
@@ -181,8 +181,8 @@
 		// manage the enemy movement
 		update : function ()
 		{
-			// do nothing if not visible
-			if (!this.visible)
+			// do nothing if not in viewport
+			if (!this.inViewport)
 				return false;
 				
 			if (this.alive)
@@ -231,6 +231,7 @@
 			this.parent(x, y);
 			// create a font
 			this.font = new me.BitmapFont("32x32_font", 32);
+			this.font.set("right");
 		},
 		/* -----
 

@@ -1,9 +1,12 @@
 Version History
 ---------------
 0.9.7
-* Font : changed default alignement to `left`
+* Font : changed default alignement to `left'/'top'
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
-* TMX : added JSON map format support
+* Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.
+* Sprite : added TexturePacker Support (see me.TextureAtlas)
+* TMX : refactored some object inheritance using the new base `me.Renderable` object
+* TMX : added JSON map parsing support 
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version

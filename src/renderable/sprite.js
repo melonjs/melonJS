@@ -6,63 +6,12 @@
  */
 
 (function($) {
-
-	/**
-	 * A base class for renderable objects.
-	 * @class
-	 * @extends me.Rect
-	 * @memberOf me
-	 * @constructor
-	 * @param {me.Vector2d} position of the renderable object
-	 * @param {int} object width
-	 * @param {int} object height
-	 */
-	me.Renderable = me.Rect.extend(
-	/** @scope me.Renderable.prototype */
-	{
-		// to identify the object as a renderable object
-		isRenderable: true,
-
-		/**
-		 * Define if a renderable follows screen coordinates (floating)<br>
-		 * or the world coordinates (not floating)<br>
-		 * default value : false
-		 * @public
-		 * @type Boolean
-		 * @name me.Renderable#floating
-		 */
-		floating: false,
-
-		/**
-		 * @ignore
-		 */
-		init : function(pos, width, height) {
-			// call the parent constructor
-			this.parent(pos, width, height);
-		},
-
-		/**
-		 * update function
-		 * called by the game manager on each game loop
-		 * @protected
-		 * @return false
-		 **/
-		update : function() {
-			return false;
-		},
-
-		/**
-		 * object draw
-		 * called by the game manager on each game loop
-		 * @protected
-		 * @param {Context2d} context 2d Context on which draw our object
-		 **/
-		draw : function(context, color) {
-			// draw the parent rectangle
-			this.parent(context, color);
-		}
-	});
 	
+	/** 
+	 * a local constant for the (Math.PI * 2) value
+	 * @private
+	 */
+	var PI2 = Math.PI * 2;
 
 	/**
 	 * A Simple object to display a sprite on screen.
@@ -99,25 +48,6 @@
 		offset : null,
 
 		/**
-		 * the visible state of the object<br>
-		 * default value : true
-		 * @public
-		 * @type Boolean
-		 * @name me.SpriteObject#visible
-		 */
-		visible : true,
-
-		/**
-		 * Whether the object is visible and within the viewport<br>
-		 * default value : false
-		 * @public
-		 * @readonly
-		 * @type Boolean
-		 * @name me.SpriteObject#inViewport
-		 */
-		inViewport : false,
-
-		/**
 		 * Set the angle (in Radians) of a sprite to rotate it <br>
 		 * WARNING: rotating sprites decreases performances
 		 * @public
@@ -125,17 +55,8 @@
 		 * @name me.SpriteObject#angle
 		 */
 		angle: 0,
-
-		/**
-		 * Define the sprite anchor point<br>
-		 * This is used when using rotation, or sprite flipping<br>
-		 * with the default anchor point being the center of the sprite
-		 * @public
-		 * @type me.Vector2d
-		 * @name me.SpriteObject#anchorPoint
-		 */
-		anchorPoint: null,
 		
+
 		/**
 		 * Define the sprite opacity<br>
 		 * @see me.SpriteObject#setOpacity
@@ -181,14 +102,14 @@
 			// set the default sprite index & offset
 			this.offset = new me.Vector2d(0, 0);
 
-			// set the default anchor point (middle of the sprite)
-			this.anchorPoint = new me.Vector2d(0.5, 0.5);
-
 			// ensure it's fully opaque by default
 			this.alpha = 1.0;			
 			
 			// make it visible by default
 			this.visible = true;
+			
+			// non persistent per default
+			isPersistent = false;
 			
 			// and not flickering
 			this.flickering = false
@@ -272,7 +193,7 @@
 
 		/**
 		 *	Resize the sprite around his center<br>
-		 *	@param {Boolean} ratio scaling ratio
+		 *	@param {Number} ratio scaling ratio
 		 */
 		resize : function(ratio) {
 			if (ratio > 0) {
@@ -373,7 +294,7 @@
 				
 			if (me.debug.renderHitBox) {
 				// draw the sprite rectangle
-				this.parent(context);
+				this.parent(context, 'green');
 			}
 		},
 
@@ -437,7 +358,7 @@
 		animationspeed : 0,
 
 		/** @private */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas) {
 			// hold all defined animation
 			this.anim = [];
 
@@ -446,33 +367,74 @@
 
 			// default animation sequence
 			this.current = null;
+						
+			// default animation speed
+			this.animationspeed = me.sys.fps / 10;
+			
+			// amount of sprite in the png/texture
+			this.spritecount = null ;
 
 			// Spacing and margin
 			this.spacing = spacing || 0;
 			this.margin = margin || 0;
+			
+			// to keep track of angle change
+			// (texture packer)
+			this.defaultAngle = 0;
 
 			// call the constructor
 			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+						
+			// store the current atlas information
+			this.textureAtlas = null;
 			
-			// sprite count (line, col)
-			this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
-											   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
-
-
-			// if one single image, disable animation
-			if ((this.spritecount.x * this.spritecount.y) == 1) {
-				// override setAnimationFrame with an empty function
-				/** @private */
-				this.setAnimationFrame = function() {;};
-			}
-
-			// default animation speed
-			this.animationspeed = me.sys.fps / 10;
-
+			// build the local textureAtlas
+			this.buildLocalAtlas(atlas || undefined);
+			
 			// create a default animation sequence with all sprites
 			this.addAnimation("default", null);
+			
 			// set as default
 			this.setCurrentAnimation("default");
+		},
+		
+		/**
+		 * build a
+		 * @private
+		 */
+		buildLocalAtlas : function (atlas) {
+			// reinitialze the atlas
+			if (atlas !== undefined) {
+				this.textureAtlas = atlas;
+				// initialize sprite count
+				this.spritecount = new me.Vector2d(this.textureAtlas.length, 1);
+			} else {
+				// regular spritesheet
+				this.textureAtlas = [];
+				// calculate the sprite count (line, col)
+				this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
+												   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+
+				// if one single image, disable animation
+				if ((this.spritecount.x * this.spritecount.y) == 1) {
+					// override setAnimationFrame with an empty function
+					/** @private */
+					this.setAnimationFrame = function() {;};
+				}
+				
+				// build the local atlas
+				for ( var frame = 0, count = this.spritecount.x * this.spritecount.y; frame < count ; frame++) {
+					this.textureAtlas[frame] = {
+						offset: new me.Vector2d(
+									this.margin + (this.spacing + this.width) * (frame % this.spritecount.x),
+									this.margin + (this.spacing + this.height) * ~~(frame / this.spritecount.x)
+								),
+						width: this.width,
+						height: this.height,
+						angle: 0
+					};
+				}
+			}
 		},
 
 		/**
@@ -509,14 +471,13 @@
 				}
 			}
 
-			// compute and add the offset of each frame
+			// set each frame configuration (offset, size, etc..)
 			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = new me.Vector2d(this.margin + (this.spacing + this.width) * (frame[i] % this.spritecount.x),
-														   this.margin + (this.spacing + this.height) * ~~(frame[i] / this.spritecount.x));
+				this.anim[name].frame[i] = this.textureAtlas[frame[i]];
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},
-
+		
 		/**
 		 * set the current animation
 		 * @param {String} name animation id
@@ -562,7 +523,14 @@
 		 */
 		setAnimationFrame : function(idx) {
 			this.current.idx = (idx || 0) % this.current.length;
-			this.offset = this.current.frame[this.current.idx];
+			var frame = this.current.frame[this.current.idx];
+			this.offset = frame.offset;
+			this.width = frame.width;
+			this.height = frame.height;
+			if (this.defaultAngle !== frame.angle) {
+				this.angle = (this.angle + frame.angle - this.defaultAngle) % (PI2);
+				this.defaultAngle = frame.angle;
+			}
 		},
 		
 		/**

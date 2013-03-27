@@ -32,7 +32,6 @@
                  "name":"mainPlayer",
                  "properties":
                     {
-                     "image":"player_sheet",
                      "spriteheight":"98",
                      "spritewidth":"72"
                     },
@@ -134,7 +133,6 @@
                  "name":"SlimeEntity",
                  "properties":
                     {
-                     "image":"slime_sheet",
                      "spriteheight":"35",
                      "spritewidth":"55"
                     },
@@ -149,7 +147,6 @@
                  "name":"SlimeEntity",
                  "properties":
                     {
-                     "image":"slime_sheet",
                      "spriteheight":"35",
                      "spritewidth":"55"
                     },
@@ -214,7 +211,6 @@
                     {
                      "animationspeed":"12",
                      "gravity":"0",
-                     "image":"fly_sheet",
                      "spriteheight":"35",
                      "spritewidth":"70",
                      "velX":"2"
@@ -232,7 +228,6 @@
                     {
                      "animationspeed":"12",
                      "gravity":"0",
-                     "image":"fly_sheet",
                      "spriteheight":"35",
                      "spritewidth":"70",
                      "velX":"2"

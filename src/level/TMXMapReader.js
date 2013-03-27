@@ -53,10 +53,10 @@
 			
 			
 			// center the map if smaller than the current viewport
-			if ((map.realwidth < me.game.viewport.width) || 
-				(map.realheight < me.game.viewport.height)) {
-					var shiftX =  ~~( (me.game.viewport.width - map.realwidth) / 2);
-					var shiftY =  ~~( (me.game.viewport.height - map.realheight) / 2);
+			if ((map.width < me.game.viewport.width) || 
+				(map.height < me.game.viewport.height)) {
+					var shiftX =  ~~( (me.game.viewport.width - map.width) / 2);
+					var shiftY =  ~~( (me.game.viewport.height - map.height) / 2);
 					// update the map default screen position
 					map.pos.add({x:shiftX > 0 ? shiftX : 0 , y:shiftY > 0 ? shiftY : 0} );
 			}
@@ -75,11 +75,11 @@
 		getNewDefaultRenderer: function (obj) {
 			switch (obj.orientation) {
 				case "orthogonal": {
-				  return new me.TMXOrthogonalRenderer(obj.width, obj.height, obj.tilewidth, obj.tileheight);
+				  return new me.TMXOrthogonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
 				  break;
 				}
 				case "isometric": {
-				  return new me.TMXIsometricRenderer(obj.width, obj.height , obj.tilewidth, obj.tileheight);
+				  return new me.TMXIsometricRenderer(obj.cols, obj.rows , obj.tilewidth, obj.tileheight);
 				  break;
 				}
 				// if none found, throw an exception
@@ -96,7 +96,7 @@
 		 */
 		setLayerData : function(layer, data, encoding, compression) {
 			// initialize the layer data array
-			layer.initArray(layer.width, layer.height);
+			layer.initArray(layer.cols, layer.rows);
 			
 			// check if data is compressed
 			switch (compression) {	 
@@ -125,7 +125,7 @@
 							if (encoding == me.TMX_TAG_ATTR_BASE64)
 								var data = me.utils.decodeBase64AsArray(nodeValue, 4);
 							else
-								var data = me.utils.decodeCSV(nodeValue, layer.width);
+								var data = me.utils.decodeCSV(nodeValue, layer.cols);
 
 							// ensure nodeValue is deallocated
 							nodeValue = null;
@@ -146,8 +146,8 @@
 
 			var idx = 0;
 			// set everything
-			for ( var y = 0 ; y <layer.height; y++) {
-				for ( var x = 0; x <layer.width; x++) {
+			for ( var y = 0 ; y <layer.rows; y++) {
+				for ( var x = 0; x <layer.cols; x++) {
 					// get the value of the gid
 					var gid = (encoding == null) ? this.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
 					// fill the array										
@@ -268,12 +268,12 @@
 						var elements = xmlElements.item(i);
 						map.version = this.TMXParser.getStringAttribute(elements, me.TMX_TAG_VERSION);
 						map.orientation = this.TMXParser.getStringAttribute(elements, me.TMX_TAG_ORIENTATION);
-						map.width = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_WIDTH);
-						map.height = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_HEIGHT);
+						map.cols = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_WIDTH);
+						map.rows = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_HEIGHT);
 						map.tilewidth = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_TILEWIDTH);
 						map.tileheight = this.TMXParser.getIntAttribute(elements, me.TMX_TAG_TILEHEIGHT);
-						map.realwidth = map.width * map.tilewidth;
-						map.realheight = map.height * map.tileheight;
+						map.width = map.cols * map.tilewidth;
+						map.height = map.rows * map.tileheight;
 						map.backgroundcolor = this.TMXParser.getStringAttribute(elements, me.TMX_BACKGROUND_COLOR);
 						map.z = zOrder++;
 					   
@@ -366,10 +366,6 @@
 			if (compression == '') {
 				compression = null;
 			}
-			// parse the layer data
-			this.setLayerData(layer, layerData, encoding, compression);
-			// free layerData
-			layerData = null;
 			
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
@@ -380,6 +376,12 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
+			
+			// parse the layer data
+			this.setLayerData(layer, layerData, encoding, compression);
+			// free layerData
+			layerData = null;
+			
 			return layer;
 		},
 
@@ -446,12 +448,12 @@
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
-			map.width = parseInt(data[me.TMX_TAG_WIDTH]);
-			map.height = parseInt(data[me.TMX_TAG_HEIGHT]);
+			map.cols = parseInt(data[me.TMX_TAG_WIDTH]);
+			map.rows = parseInt(data[me.TMX_TAG_HEIGHT]);
 			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH]);
 			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT]);
-			map.realwidth = map.width * map.tilewidth;
-			map.realheight = map.height * map.tileheight;
+			map.width = map.cols * map.tilewidth;
+			map.height = map.rows * map.tileheight;
 			map.backgroundcolor = data[me.TMX_BACKGROUND_COLOR];
 			map.z = zOrder++;
 		   
@@ -518,8 +520,6 @@
 			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
-			// parse the layer data
-			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
 			// associate a renderer to the layer (if not a collision layer)
 			if (!layer.isCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
@@ -529,6 +529,8 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
+			// parse the layer data
+			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
 			return layer;
 		},
 		

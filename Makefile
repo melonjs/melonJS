@@ -36,12 +36,15 @@ VERSION=sed "s/@VERSION/${ME_VER}/"
 
 # list of module to compile
 MODULE = $(srcdir)/core.js\
-	 $(srcdir)/loader/loader.js\
 	 $(srcdir)/math/geometry.js\
 	 $(srcdir)/debug/debug.js\
-	 $(srcdir)/entity/camera.js\
-	 $(srcdir)/entity/sprite.js\
+	 $(srcdir)/renderable/base.js\
+	 $(srcdir)/renderable/sprite.js\
+	 $(srcdir)/renderable/texturepacker.js\
+	 $(srcdir)/renderable/camera.js\
 	 $(srcdir)/entity/entity.js\
+	 $(srcdir)/state/state.js\
+	 $(srcdir)/loader/loader.js\
 	 $(srcdir)/font/font.js\
 	 $(srcdir)/GUI/GUI.js\
 	 $(srcdir)/GUI/HUD.js\

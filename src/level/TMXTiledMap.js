@@ -17,11 +17,9 @@
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXTileMap = Object.extend({
+	me.TMXTileMap = me.Renderable.extend({
 		// constructor
 		init: function(levelId, x, y) {
-			// map default position
-			this.pos = new me.Vector2d(x, y);
 			
 			// map id
 			this.levelId = levelId;
@@ -38,36 +36,20 @@
 			this.name = null;
 			
 			/**
-			 * width of the tilemap in Tile
+			 * width of the tilemap in tiles
 			 * @public
 			 * @type Int
-			 * @name me.TMXTileMap#width
+			 * @name me.TMXTileMap#cols
 			 */
-			this.width = 0;
+			this.cols = 0;
 			
 			/**
-			 * height of the tilemap in Tile
+			 * height of the tilemap in tiles
 			 * @public
 			 * @type Int
-			 * @name me.TMXTileMap#height
+			 * @name me.TMXTileMap#rows
 			 */
-			this.height = 0;
-
-			/**
-			 * width of the tilemap in pixels
-			 * @public
-			 * @type Int
-			 * @name me.TMXTileMap#realwidth
-			 */
-			this.realwidth = -1;
-			
-			/**
-			 * height of the tilemap in pixels
-			 * @public
-			 * @type Int
-			 * @name me.TMXTileMap#realheight
-			 */
-			this.realheight = -1;
+			this.rows = 0;
 
 			/**
 			 * Tile width
@@ -105,7 +87,8 @@
 
 			// tileset(s)
 			this.tilesets = null;
-			
+
+			this.parent(new me.Vector2d(x, y), 0, 0);
 		},
 		
 		/**
@@ -192,7 +175,10 @@
 
 			// return a fake collision layer if not found
 			if ((name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP)) && (layer == null)) {
-				layer = new CollisionTiledLayer(me.game.currentLevel.realwidth,	me.game.currentLevel.realheight);
+				layer = new me.CollisionTiledLayer(
+					me.game.currentLevel.width,
+					me.game.currentLevel.height
+				);
 			}
 
 			return layer;

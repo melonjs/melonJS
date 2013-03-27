@@ -11,18 +11,18 @@ var game = {
 	assets : [	
 		{name: "tileset",		type:"image",	src: "data/gfx/tileset.png"},
 		{name: "atascii",		type:"image",	src: "data/gfx/atascii_24px.png"},
-		{name: "player_sheet",	type:"image",	src: "data/gfx/player_sheet.png"},
-		{name: "slime_sheet",	type:"image",	src: "data/gfx/slime_sheet.png"},
-		{name: "fly_sheet",		type:"image",	src: "data/gfx/fly_sheet.png"},
-		{name: "coin_sheet",	type:"image",	src: "data/gfx/coin_sheet.png"},
 		{name: "background",	type:"image",	src: "data/gfx/background.png"},
 		{name: "cling",			type: "audio",	src: "data/audio/",	channel : 2},
 		{name: "die",			type: "audio",	src: "data/audio/",	channel : 1},
 		{name: "enemykill",		type: "audio",	src: "data/audio/",	channel : 1},
 		{name: "jump",			type: "audio",	src: "data/audio/",	channel : 2},
 		{name: "DST-GameForest",type: "audio",	src: "data/audio/",	channel : 1},
+		// level map
 		{name: "map1",			type: "tmx",	src: "data/map/map1.json"},
-		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"}
+		{name: "map2",			type: "tmx",	src: "data/map/map2.tmx"},
+		// texturePacker
+		{name: "texture",		type: "tps",	src: "data/gfx/texture.json"},
+		{name: "texture",		type:"image",	src: "data/gfx/texture.png"}
 	],
 	
 	/* ---
@@ -41,9 +41,7 @@ var game = {
 		me.video.setImageSmoothing(false);
 		
 		// install the debug panel plugin
-		me.plugin.register(debugPanel, "debug");
-		
-		//me.debug.renderHitBox = true;
+		//me.plugin.register(debugPanel, "debug");
 		
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
@@ -74,9 +72,13 @@ var game = {
 		// add our player entity in the entity pool
 		me.entityPool.add("mainPlayer", PlayerEntity);
 		// add our enemy entity in the entity pool
-		me.entityPool.add("SlimeEntity", PathEnemyEntity);
-		me.entityPool.add("FlyEntity", PathEnemyEntity);
+		me.entityPool.add("SlimeEntity", SlimeEnemyEntity);
+		me.entityPool.add("FlyEntity", FlyEnemyEntity);
 		me.entityPool.add("CoinEntity", CoinEntity);
+		
+		// load the texture atlas file
+		// this will be used by object entities later
+		game.texture = new me.TextureAtlas(me.loader.getAtlas("texture"), me.loader.getImage("texture"));
 		
 		// switch to PLAY state
 		me.state.change(me.state.PLAY);
@@ -87,7 +89,7 @@ var game = {
 var PlayScreen = me.ScreenObject.extend( {
 	// we just defined what to be done on reset
 	// no need to do somehting else
-	onResetEvent: function() {	
+	onResetEvent: function() {
 		// load a level
 		me.levelDirector.loadLevel("map1");
 		

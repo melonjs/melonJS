@@ -110,15 +110,16 @@
 			LADDER : "ladder",
 			BREAKABLE : "breakable"
 		},
-		
-		// tile properties (collidable, etc..)
-		TileProperties : [],
-			
-		// a cache for offset value
-		tileXOffset : [],
-		tileYOffset : [],
 
-		
+		init: function() {
+			// tile properties (collidable, etc..)
+			this.TileProperties = [];
+
+			// a cache for offset value
+			this.tileXOffset = [];
+			this.tileYOffset = [];
+		},
+
 		// constructor
 		initFromXML: function (xmltileset) {
 

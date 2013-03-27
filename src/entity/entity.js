@@ -304,7 +304,7 @@
 	 * @param {int} y the y coordinates of the sprite object
 	 * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="object_properties.png"/>
 	 */
-	me.ObjectEntity = me.Rect.extend(
+	me.ObjectEntity = me.Renderable.extend(
 	/** @scope me.ObjectEntity.prototype */ {
 	
 	   /**
@@ -353,35 +353,6 @@
 		// z position (for ordering display)
 		z : 0,
 		
-		/**
-		 * the visible state of the object<br>
-		 * default value : true
-		 * @public
-		 * @type Boolean
-		 * @name me.ObjectEntity#visible
-		 */
-		visible : true,
-
-		/**
-		 * Whether the object is visible and within the viewport<br>
-		 * default value : false
-		 * @public
-		 * @readonly
-		 * @type Boolean
-		 * @name me.ObjectEntity#inViewport
-		 */
-		inViewport : false,
-		
-		/**
-		 * Define if a renderable follows screen coordinates (floating)<br>
-		 * or the world coordinates (not floating)<br>
-		 * default value : false
-		 * @public
-		 * @type Boolean
-		 * @name me.ObjectEntity#floating
-		 */
-		floating: false,
-
 		
 		/** @private */
 		init : function(x, y, settings) {
@@ -468,8 +439,15 @@
 			 * @name me.ObjectEntity#alive
 			 */
 			this.alive = true;
-
-			// some usefull variable
+			
+			// make sure it's visible by default
+			this.visible = true;
+			
+			// and also non floating by default
+			this.floating = false;
+			
+			// and non persistent per default
+			this.isPersistent = false;
 
 			/**
 			 * falling state of the object<br>
@@ -1015,6 +993,18 @@
 		},
 		
 		/**
+		 * @private	
+		 */
+		getRect : function() {
+			if (this.renderable) {
+				// translate the renderable position since its 
+				// position is relative to this entity
+				return this.renderable.getRect().translateV(this.pos);
+			}
+			return null;
+		},
+		
+		/**
 		 * object draw<br>
 		 * not to be called by the end user<br>
 		 * called by the game manager on each game loop
@@ -1024,14 +1014,17 @@
 		draw : function(context) {
 			// draw the sprite if defined
 			if (this.renderable) {
-				//translate display since renderable
-				//postion is relative to the entity
-				context.translate(this.pos.x, this.pos.y);
+				// translate the renderable position (relative to the entity)
+				// and keeps it in the entity defined bounds
+				// anyway to optimize this ?
+				var x = ~~(this.pos.x + (this.anchorPoint.x * (this.width - this.renderable.width)));
+				var y = ~~(this.pos.y + (this.anchorPoint.y * (this.height - this.renderable.height)));
+				context.translate(x, y);
 				this.renderable.draw(context);
-				context.translate(-this.pos.x, -this.pos.y);
+				context.translate(-x, -y);
 			}
 			// check if debug mode is enabled
-			if (me.debug.renderHitBox) {
+			if (me.debug.renderHitBox && this.collisionBox) {
 				// draw the collisionBox
 				this.collisionBox.draw(context, "red");
 				

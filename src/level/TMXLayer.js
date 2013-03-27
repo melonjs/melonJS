@@ -16,7 +16,7 @@
 	 * @param {String}  color   in hexadecimal "#RRGGBB" format
 	 * @param {int}     z       z position
 	 */
-	 me.ColorLayer = Object.extend({
+	 me.ColorLayer = me.Renderable.extend({
 		// constructor
 		init: function(name, color, z) {
 			this.name = name;
@@ -24,10 +24,11 @@
 			// for displaying order
 			this.z = z;
 			
-			this.visible = true;
 			this.opacity = 1.0;
 			
 			this.floating = true;
+			
+			this.parent(new me.Vector2d(0, 0), game.viewport.width, game.viewport.height);
 		},
 
 		/**
@@ -99,7 +100,7 @@
 	 * @param {int}    z           z position
 	 * @param {float}  [ratio=1.0]   scrolling ratio to be applied
 	 */
-	 me.ImageLayer = Object.extend({
+	 me.ImageLayer = me.Renderable.extend({
 		
 		/**
 		 * Define if and how an Image Layer should be repeated.<br>
@@ -137,7 +138,7 @@
 			// get the corresponding image (throw an exception if not found)
 			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
 			if (!this.image) {
-				console.log("melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
+				throw "melonJS: '" + imagesrc + "' file for Image Layer '" + this.name + "' not found!";
 			}
 			
 			this.imagewidth = this.image.width;
@@ -151,15 +152,11 @@
 			
 			// last position of the viewport
 			this.lastpos = game.viewport.pos.clone();
-			// current base offset when drawing the image
-			this.offset = new me.Vector2d(0,0);
 			
 			// set layer width & height 
-			this.width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
-			this.height = height? Math.min(game.viewport.height, height) : game.viewport.height;
-			
-			// make it visible
-			this.visible = true;
+			width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
+			height = height? Math.min(game.viewport.height, height) : game.viewport.height;
+			this.parent(new me.Vector2d(0, 0), width, height);
 			
 			// default opacity
 			this.opacity = 1.0;
@@ -213,7 +210,6 @@
 			this.image = null;
 			this.lastpos = null;
 			this.viewport = null;
-			this.offset = null;
 		},
 
 		/**
@@ -250,8 +246,8 @@
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
-					this.offset.x = (this.imagewidth + this.offset.x + ((vpos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
-					this.offset.y = (this.imageheight + this.offset.y + ((vpos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
+					this.pos.x = (this.imagewidth + this.pos.x + ((vpos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
+					this.pos.y = (this.imageheight + this.pos.y + ((vpos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
 					this.lastpos.setV(vpos);
 					return true;
 				}
@@ -288,8 +284,8 @@
 			// parallax / scrolling image
 			// todo ; broken with dirtyRect enabled
 			else {
-				var sx = ~~this.offset.x;
-				var sy = ~~this.offset.y;
+				var sx = ~~this.pos.x;
+				var sy = ~~this.pos.y;
 				
 				var dx = 0;
 				var dy = 0;				
@@ -317,9 +313,9 @@
 					// else update required var for next iteration
 					sx = 0;
 					sw = Math.min(this.imagewidth, this.width - dx);
-					sy = ~~this.offset.y;
+					sy = ~~this.pos.y;
 					dy = 0;
-					sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
+					sh = Math.min(this.imageheight - ~~this.pos.y, this.height);
 				} while( true );
 			}
 			
@@ -337,11 +333,10 @@
 	 * @private
 	 * @constructor
 	 */
-	CollisionTiledLayer = Object.extend({
+	me.CollisionTiledLayer = me.Renderable.extend({
 		// constructor
-		init: function CollisionTiledLayer(realwidth, realheight) {
-			this.realwidth = realwidth;
-			this.realheight = realheight;
+		init: function(width, height) {
+			this.parent(new me.Vector2d(0, 0), width, height);
 
 			this.isCollisionMap = true;
 
@@ -374,12 +369,12 @@
 			};
 
 			// test x limits
-			if (x <= 0 || x >= this.realwidth) {
+			if (x <= 0 || x >= this.width) {
 				res.x = pv.x;
 			}
 
 			// test y limits
-			if (y <= 0 || y >= this.realheight) {
+			if (y <= 0 || y >= this.height) {
 				res.y = pv.y;
 			}
 
@@ -395,7 +390,7 @@
 	 * @memberOf me
 	 * @constructor
 	 */
-	me.TMXLayer = Object.extend({
+	me.TMXLayer = me.Renderable.extend({
 		
 		// the layer data array
 		layerData : null,
@@ -410,10 +405,6 @@
 			// layer orientation
 			this.orientation = orientation;
 			
-			// layer "real" size
-			this.realwidth = this.width * this.tilewidth;
-			this.realheight = this.height * this.tileheight;
-			
 			// for displaying order
 			this.z = zOrder;
 
@@ -427,6 +418,8 @@
 			this.tilesets = tilesets;
 			// the default tileset
 			this.tileset = this.tilesets?this.tilesets.getTilesetByIndex(0):null;
+			
+			this.parent(new me.Vector2d(0, 0), 0, 0);
 		},
 		
 		initFromXML: function(layer) {
@@ -435,8 +428,12 @@
 			this.name = me.mapReader.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
 			this.visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) == 1);
 			this.opacity = me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
-			this.width = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
-			this.height = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			this.cols = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
+			this.rows = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
+			
+			// layer "real" size
+			this.width = this.cols * this.tilewidth;
+			this.height = this.rows * this.tileheight;
 			
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
@@ -457,7 +454,7 @@
 
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
-				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = this.layerCanvas.getContext('2d');
 					
 				// set alpha value for this layer
@@ -471,8 +468,12 @@
 			this.name = layer[me.TMX_TAG_NAME];
 			this.visible = layer[me.TMX_TAG_VISIBLE];
 			this.opacity = parseFloat(layer[me.TMX_TAG_OPACITY]).clamp(0.0, 1.0);
-			this.width = parseInt(layer[me.TMX_TAG_WIDTH]);
-			this.height = parseInt(layer[me.TMX_TAG_HEIGHT]);
+			this.cols = parseInt(layer[me.TMX_TAG_WIDTH]);
+			this.rows = parseInt(layer[me.TMX_TAG_HEIGHT]);
+			
+			// layer "real" size
+			this.width = this.cols * this.tilewidth;
+			this.height = this.rows * this.tileheight;
 			
 			
 			// check if we have any user-defined properties 
@@ -492,7 +493,7 @@
 
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
-				this.layerCanvas = me.video.createCanvas(this.width	* this.tilewidth, this.height * this.tileheight);
+				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = this.layerCanvas.getContext('2d');
 					
 				// set alpha value for this layer
@@ -648,7 +649,7 @@
 			};
 			
 			//var tile;
-			if (x <= 0 || x >= this.realwidth) {
+			if (x <= 0 || x >= this.width) {
 				res.x = pv.x;
 			} else if (pv.x != 0 ) {
 				// x, bottom corner
@@ -705,8 +706,8 @@
 			// use the offscreen canvas
 			if (this.preRender) {
 			
-				var width = Math.min(rect.width, this.realwidth);
-				var height = Math.min(rect.height, this.realheight);
+				var width = Math.min(rect.width, this.width);
+				var height = Math.min(rect.height, this.height);
 			
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 

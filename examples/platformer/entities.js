@@ -1,8 +1,3 @@
-/* -----
-
-game object
-	
------- */
 
 /************************************************************************************/
 /*																					*/
@@ -21,7 +16,6 @@ var PlayerEntity = me.ObjectEntity.extend({
 		
 		// update the hit box
 		this.updateColRect(20,32, -1,0);
-		
 		this.dying = false;
 		
 		this.mutipleJump = 1;
@@ -36,11 +30,22 @@ var PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.UP,	"up");
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
-		// walking animatin
-		this.renderable.addAnimation ("walk",  [0,2,1]);
 		
-		// set default one
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"walk0001.png", "walk0002.png", "walk0003.png",
+			"walk0004.png", "walk0005.png", "walk0006.png",
+			"walk0007.png", "walk0008.png", "walk0009.png",
+			"walk0010.png", "walk0011.png"
+		]);
+		
+		// define a basic walking animatin
+		this.renderable.addAnimation ("walk",  [0,2,1]);
+		// set as default
 		this.renderable.setCurrentAnimation("walk");
+
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);
 	},
 	
 	/* -----
@@ -73,8 +78,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 		// check for collision with environment
 		this.updateMovement();
 		
-		// check if we felt into a hole
-		if (this.pos.y + this.height > me.game.currentLevel.realheight) {
+		// check if we fell into a hole
+		if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
 			// if yes reset the game
 			me.game.remove(this);
 			me.game.viewport.fadeIn('#fff', 150, function(){
@@ -82,7 +87,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 				me.levelDirector.reloadLevel();
 				me.game.viewport.fadeOut('#fff', 150);
 			});
-			
+			return true;
 		}
 		
 		// check for collision with sthg
@@ -143,23 +148,15 @@ var CoinEntity = me.CollectableEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
-		// define this here instead of tiled
-		settings.image = "coin_sheet";
-		settings.spritewidth = 35;
 		
 		// call the parent constructor
 		this.parent(x, y , settings);
 
-		// animation speed		
-		this.renderable.animationspeed = 8;
+		// add the coin sprite as renderable
+		this.renderable = game.texture.createSpriteFromName("coin.png");
 		
-		// bounding box
-		//this.updateColRect(8,16,16,16);
-		
-		// walking animatin
-		this.renderable.addAnimation("spin", [0,1,2,3]);
-		
-		this.renderable.setCurrentAnimation("spin");
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);
 		
 	},		
 	
@@ -207,19 +204,6 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// make it collidable
 		this.collidable = true;
 		this.type = me.game.ENEMY_OBJECT;
-	
-		// custom animation speed ?
-		if (settings.animationspeed) {
-			this.renderable.animationspeed = settings.animationspeed; 
-		}
-		
-		// walking animatin
-		this.renderable.addAnimation ("walk", [0,1]);
-		// dead animatin
-		this.renderable.addAnimation ("dead", [2]);
-		
-		// set default one
-		this.renderable.setCurrentAnimation("walk");
 	},
 		
 	
@@ -277,6 +261,77 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 	}
 
 });
+
+/**
+ * An Slime enemy entity
+ * follow a horizontal path defined by the box size in Tiled
+ */
+var SlimeEnemyEntity = PathEnemyEntity.extend({	
+	/**
+	 * constructor
+	 */
+	init: function (x, y, settings) {
+		// parent constructor
+		this.parent(x, y, settings);
+	
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"slime_normal.png", "slime_walk.png", "slime_dead.png"
+		]);
+
+		// custom animation speed ?
+		if (settings.animationspeed) {
+			this.renderable.animationspeed = settings.animationspeed; 
+		}
+
+		// walking animatin
+		this.renderable.addAnimation ("walk", [0,1]);
+		// dead animatin
+		this.renderable.addAnimation ("dead", [2]);
+		
+		// set default one
+		this.renderable.setCurrentAnimation("walk");
+
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);		
+	}
+});
+
+/**
+ * An Fly enemy entity
+ * follow a horizontal path defined by the box size in Tiled
+ */
+var FlyEnemyEntity = PathEnemyEntity.extend({	
+	/**
+	 * constructor
+	 */
+	init: function (x, y, settings) {
+		// parent constructor
+		this.parent(x, y, settings);
+	
+		// set a renderable
+		this.renderable = game.texture.createAnimationFromName([
+			"fly_normal.png", "fly_fly.png", "fly_dead.png"
+		]);
+
+		// custom animation speed ?
+		if (settings.animationspeed) {
+			this.renderable.animationspeed = settings.animationspeed; 
+		}
+
+		// walking animatin
+		this.renderable.addAnimation ("walk", [0,1]);
+		// dead animatin
+		this.renderable.addAnimation ("dead", [2]);
+		
+		// set default one
+		this.renderable.setCurrentAnimation("walk");
+
+		// set the renderable position to bottom center
+		this.anchorPoint.set(0.5, 1.0);		
+	}
+});
+
 
 /** 
  * a GUI object 

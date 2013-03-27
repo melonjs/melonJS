@@ -124,7 +124,7 @@
 		 * Anything subscribed will be called with a function
 		 * signature like: function(a,b,c){ ... }
 		 *
-		 * me.publish("/some/channel", ["a","b","c"]);
+		 * me.event.publish("/some/channel", ["a","b","c"]);
 		 * 
 		 */
 		obj.publish = function(channel, args){
@@ -149,7 +149,7 @@
 		 * @return {Array} A handle which can be used to unsubscribe this
 		 * particular subscription
 		 * @example
-		 * me.subscribe("/some/channel", function(a, b, c){ doSomething(); });
+		 * me.event.subscribe("/some/channel", function(a, b, c){ doSomething(); });
 		 */
 
 		obj.subscribe = function(channel, callback){
@@ -170,7 +170,7 @@
 		 * @param {Function} [callback] The return value from a subscribe call.
 		 * @example
 		 * var handle = me.subscribe("/some/channel", function(){});
-		 * me.unsubscribe(handle);
+		 * me.event.unsubscribe(handle);
 		 */
 		obj.unsubscribe = function(handle, callback){
 			var subs = cache[callback ? handle : handle[0]],

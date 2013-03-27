@@ -148,11 +148,9 @@
 	 */
 
 
-	me.HUD_Object = me.Rect.extend(
+	me.HUD_Object = me.Renderable.extend(
 	/** @scope me.HUD_Object.prototype */
 	{	
-	
-		
 		/**
 		 * @Constructor
 		 * @private
@@ -278,7 +276,6 @@
 			return (this.HUDItems[name]) ? this.HUDItems[name].value : 0;
 		},
 		
-		
 		/**
 		 * return true if the HUD has been updated
 		 * @private
@@ -315,20 +312,6 @@
 				obj.reset();
 			}
 			this.HUD_invalidated = true;
-		},
-
-		/**
-		 * override the default me.Rect get Rectangle definition
-		 * since the HUD if a flaoting object
-		 * (is this correct?)
-		 * @private
-		 * @return {me.Rect} new rectangle
-		 */
-
-		getRect : function() {
-			p = this.pos.clone();
-			p.add(me.game.viewport.pos);
-			return new me.Rect(p, this.width, this.height);
 		},
 
 		/**

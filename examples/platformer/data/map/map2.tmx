@@ -50,7 +50,6 @@
  <objectgroup color="#55ff00" name="player" width="49" height="17">
   <object name="mainPlayer" x="0" y="385" width="70" height="70">
    <properties>
-    <property name="image" value="player_sheet"/>
     <property name="spriteheight" value="98"/>
     <property name="spritewidth" value="72"/>
    </properties>
@@ -78,42 +77,36 @@
  <objectgroup color="#ff0000" name="slimes" width="49" height="17">
   <object name="SlimeEntity" x="700" y="420" width="840" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="490" y="490" width="210" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="770" y="350" width="700" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="840" y="280" width="560" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="910" y="210" width="420" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="980" y="140" width="280" height="35">
    <properties>
-    <property name="image" value="slime_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
@@ -143,7 +136,6 @@
    <properties>
     <property name="animationspeed" value="12"/>
     <property name="gravity" value="0"/>
-    <property name="image" value="fly_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="70"/>
     <property name="velX" value="2"/>
@@ -153,7 +145,6 @@
    <properties>
     <property name="animationspeed" value="12"/>
     <property name="gravity" value="0"/>
-    <property name="image" value="fly_sheet"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="70"/>
     <property name="velX" value="2"/>

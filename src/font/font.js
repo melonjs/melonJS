@@ -28,24 +28,48 @@
 	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
 	{
-		// alignement constants
-		ALIGN : {
-			LEFT : "left",
-			CENTER : "center",
-			RIGHT : "right"
-		},
 
-		// font properties
+		// private font properties
 		font : null,
 		height : null,
 		color : null,
-		textAlign : null,
+		
+		/**
+		 * Set the default text alignment (or justification),<br>
+		 * possible values are "left", "right", and "center".<br>
+		 * Default value : "left"
+		 * @public
+		 * @type String
+		 * @name me.Font#textAlign
+		 */
+		textAlign : "left",
+		
+		/**
+		 * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+		 * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+		 * Default value : "top"
+		 * @public
+		 * @type String
+		 * @name me.Font#textBaseline
+		 */
+		textBaseline : "top",
+		
+		/**
+		 * Set the line height (when displaying multi-line strings). <br>
+		 * Current font height will be multiplied with this value to set the line height.
+		 * Default value : 1.0
+		 * @public
+		 * @type Number
+		 * @name me.Font#lineHeight
+		 */
+		lineHeight : 1.0,
 
 		/** @private */
 		init : function(font, size, color, textAlign) {
 
 			// font name and type
 			this.set(font, size, color, textAlign);
+			
 		},
 
 		/**
@@ -67,7 +91,7 @@
 		 * @param {String} font
 		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
-		 * @param {String} [textAlign="left"] horizontal alignement
+		 * @param {String} [textAlign] horizontal alignement
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");
@@ -84,7 +108,9 @@
 			}
 			this.font = size + " " + font_names.join(",");;
 			this.color = color;
-			this.textAlign = textAlign || "left";
+			if (textAlign) {
+				this.textAlign = textAlign;
+			}
 		},
 
 		/**
@@ -106,10 +132,15 @@
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
-			var dim = context.measureText(text);
-			dim.height = this.height;
+			context.textBaseline = this.textBaseline;
 
-			return dim;
+			var strings = text.split("\n");
+			var width = 0, height = 0;
+			for (var i = 0; i < strings.length; i++) {
+				width = Math.max(context.measureText(strings[i].trim()).width, width);
+				height += this.height * this.lineHeight;
+			}
+			return {width: width, height: height};
 		},
 
 		/**
@@ -124,7 +155,16 @@
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
-			context.fillText(text, ~~x, ~~y);
+			context.textBaseline = this.textBaseline;
+			
+			var strings = text.split("\n");
+			for (var i = 0; i < strings.length; i++) {
+				// draw the string
+				context.fillText(strings[i].trim(), ~~x, ~~y);
+				// add leading space
+				y += this.height * this.lineHeight;
+			}
+			
 		}
 	});
 
@@ -171,7 +211,8 @@
 			this.loadFontMetrics(font, size);
 
 			// set a default alignement
-			this.textAlign = this.ALIGN.LEFT;
+			this.textAlign = "left";
+			this.textBaseline = "top";
 			
 			// resize if necessary
 			if (scale) { 
@@ -215,7 +256,7 @@
 		 */
 		resize : function(scale) {
 			// updated scaled Size
-			this.sSize.copy(this.size);
+			this.sSize.setV(this.size);
 			this.sSize.x *= scale;
 			this.sSize.y *= scale;
 		},
@@ -226,11 +267,15 @@
 		 * @param {String} text
 		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
 		 */
-		measureText : function(text) {
-			return {
-				width : text.length * this.sSize.x,
-				height : this.sSize.y
-			};
+		measureText : function(context, text) {
+			
+			var strings = text.split("\n");
+			var width = 0, height = 0;
+			for (var i = 0; i < strings.length; i++) {
+				width = Math.max((strings[i].trim().length * this.sSize.x), width);
+				height += this.sSize.y * this.lineHeight;
+			}
+			return {width: width, height: height};
 		},
 
 		/**
@@ -241,34 +286,59 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
-			// make sure it's a String object
-			text = new String(text);
+			var strings = text.split("\n");
+			var lX = x;
+			var height = this.sSize.y * this.lineHeight;
+			for (var i = 0; i < strings.length; i++) {
+				var x = lX, y = y;
+				var string = strings[i].trim();
+				// adjust x pos based on alignment value
+				var width = string.length * this.sSize.x;
+				switch(this.textAlign) {
+					case "right":
+						x -= width;
+						break;
 
-			// adjust pos based on alignment
-			switch(this.textAlign) {
-				case this.ALIGN.RIGHT:
-					x -= this.measureText(text).width;
-					break;
+					case "center":
+						x -= width * 0.5;
+						break;
+						
+					default : 
+						break;
+				};
+				 
+				// adjust y pos based on alignment value
+				switch(this.textBaseline) {
+					case "middle":
+						y -= height * 0.5;
+						break;
 
-				case this.ALIGN.CENTER:
-					x -= this.measureText(text).width * 0.5;
-					break;
-			};
-			
-			// draw the text
-			for ( var i = 0,len = text.length; i < len; i++) {
-				// calculate the char index
-				var idx = text.charCodeAt(i) - this.firstChar;
-				// draw it
-				context.drawImage(this.font,
-						this.size.x * (idx % this.charCount), 
-						this.size.y * ~~(idx / this.charCount), 
-						this.size.x, this.size.y, 
-						~~x, ~~y, 
-						this.sSize.x, this.sSize.y);
-				x += this.sSize.x;
+					case "ideographic":
+					case "alphabetic":
+					case "bottom":
+						y -= height;
+						break;
+					
+					default : 
+						break;
+				};
+				
+				// draw the string
+				for ( var c = 0,len = string.length; c < len; c++) {
+					// calculate the char index
+					var idx = string.charCodeAt(c) - this.firstChar;
+					// draw it
+					context.drawImage(this.font,
+							this.size.x * (idx % this.charCount), 
+							this.size.y * ~~(idx / this.charCount), 
+							this.size.x, this.size.y, 
+							~~x, ~~y, 
+							this.sSize.x, this.sSize.y);
+					x += this.sSize.x;
+				}
+				// increment line
+				y += height;
 			}
-
 		}
 	});
 
