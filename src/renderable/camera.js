@@ -291,9 +291,6 @@
 		 */
 
 		shake : function(intensity, duration, axis, onComplete) {
-			if (this.shaking) {
-				return;
-			}
 			this.shaking = true;
 
 			this._shake = {
