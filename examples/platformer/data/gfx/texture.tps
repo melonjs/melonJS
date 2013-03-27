@@ -141,24 +141,9 @@
         </struct>
         <key>fileList</key>
         <array>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0001.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0002.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0003.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0004.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0005.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0006.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0007.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0008.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0009.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0010.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/character/walk/walk0011.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/fly_dead.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/fly_fly.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/fly_normal.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_dead.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_normal.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/enemies/slime_walk.png</filename>
-            <filename>../../../../../../../Desktop/Perso/melonjs/platformerArt_v3 (1)/png/coin.png</filename>
+            <filename>character</filename>
+            <filename>enemies</filename>
+            <filename>coin.png</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
