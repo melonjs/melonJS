@@ -286,7 +286,7 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
-			var strings = text.split("\n");
+			var strings = (""+text).split("\n");
 			var lX = x;
 			var height = this.sSize.y * this.lineHeight;
 			for (var i = 0; i < strings.length; i++) {
