@@ -49,6 +49,7 @@
 		follow_axis : 0,
 
 		// shake parameters
+		shaking : false,
 		_shake : null,
 		// fade parameters
 		_fadeIn : null,
@@ -68,6 +69,9 @@
 			// real worl limits
 			this.limits = new me.Vector2d(realw||this.width, realh||this.height);
 
+			// offset for shake effect
+			this.offset = new me.Vector2d();
+
 			// target to follow
 			this.target = null;
 
@@ -79,8 +83,10 @@
 				intensity : 0,
 				duration : 0,
 				axis : this.AXIS.BOTH,
-				onComplete : null
+				onComplete : null,
+				start : 0
 			};
+
 			// flash variables
 			this._fadeOut = {
 				color : 0,
@@ -239,34 +245,27 @@
 				}
 			}
 
-			if (this._shake.duration > 0) {
-				this._shake.duration -= me.timer.tick;
-				if (this._shake.duration < 0) {
-					if (this._shake.onComplete)
+			if (this.shaking) {
+				var delta = me.timer.getTime() - this._shake.start;
+				if (delta >= this._shake.duration) {
+					this.shaking = false;
+					this.offset.setZero();
+					if (typeof(this._shake.onComplete) === "function") {
 						this._shake.onComplete();
-				} else {
-					if ((this._shake.axis == this.AXIS.BOTH)
-							|| (this._shake.axis == this.AXIS.HORIZONTAL)) {
-						var shakex = (Math.random() * this._shake.intensity);
-
-						if (this.pos.x + this.width + shakex < this.limits.x)
-							this.pos.x += ~~shakex;
-						else
-							this.pos.x -= ~~shakex;
 					}
-					if ((this._shake.axis == this.AXIS.BOTH)
-							|| (this._shake.axis == this.AXIS.VERTICAL)) {
-						var shakey = (Math.random() * this._shake.intensity);
-
-						if (this.pos.y + this.height + shakey < this.limits.y)
-							this.pos.y += ~~shakey;
-						else
-							this.pos.y -= ~~shakey;
-
-					}
-					// updated!
-					updateTarget = true;
 				}
+				else {
+					if (this._shake.axis == this.AXIS.BOTH ||
+						this._shake.axis == this.AXIS.HORIZONTAL) {
+						this.offset.x = (Math.random() - 0.5) * this._shake.intensity;
+					}
+					if (this._shake.axis == this.AXIS.BOTH ||
+						this._shake.axis == this.AXIS.VERTICAL) {
+						this.offset.y = (Math.random() - 0.5) * this._shake.intensity;
+					}
+				}
+				// updated!
+				updateTarget = true;
 			}
 
 			// check for fade/flash effect
@@ -283,37 +282,29 @@
 		/**
 		 * shake the camera 
 		 * @param {int} intensity maximum offset that the screen can be moved while shaking
-		 * @param {int} duration expressed in frame
-		 * @param {axis} axis specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
+		 * @param {int} duration expressed in milliseconds
+		 * @param {axis} [axis] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
 		 * @param {function} [onComplete] callback once shaking effect is over
 		 * @example
 		 * // shake it baby !
-		 * me.game.viewport.shake(10, 30, me.game.viewport.AXIS.BOTH);
+		 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
 		 */
 
 		shake : function(intensity, duration, axis, onComplete) {
-			// make sure we have a default value for axis
-			axis = axis || this.AXIS.BOTH;
-
-			// some limit test
-			if (axis == this.AXIS.BOTH) {
-				if (this.width == this.limits.x)
-					axis = this.AXIS.VERTICAL;
-				else if (this.height == this.limits.y)
-					axis = this.AXIS.HORIZONTAL;
+			if (this.shaking) {
+				return;
 			}
-			if ((axis == this.AXIS.HORIZONTAL)
-					&& (this.width == this.limits.x))
-				return;
+			this.shaking = true;
 
-			if ((axis == this.AXIS.VERTICAL)
-					&& (this.height == this.limits.y))
-				return;
+			var self = this;
 
-			this._shake.intensity = intensity;
-			this._shake.duration = duration;
-			this._shake.axis = axis;
-			this._shake.onComplete = onComplete || null;
+			this._shake = {
+				intensity : intensity,
+				duration : duration,
+				axis : axis || this.AXIS.BOTH,
+				onComplete : onComplete || null,
+				start : me.timer.getTime()
+			};
 		},
 
 		/**

@@ -927,8 +927,8 @@ var me = me || {};
 		 */
 		api.draw = function(context) {
 			// cache viewport position vector
-			var posx = me.game.viewport.pos.x;
-			var posy = me.game.viewport.pos.y;
+			var posx = me.game.viewport.pos.x + ~~me.game.viewport.offset.x;
+			var posy = me.game.viewport.pos.y + ~~me.game.viewport.offset.y;
 						
 			// save the current context
 			context.save();
