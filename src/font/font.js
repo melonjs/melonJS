@@ -134,7 +134,7 @@
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
 
-			var strings = text.split("\n");
+			var strings = (""+text).split("\n");
 			var width = 0, height = 0;
 			for (var i = 0; i < strings.length; i++) {
 				width = Math.max(context.measureText(strings[i].trim()).width, width);
@@ -157,7 +157,7 @@
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
 			
-			var strings = text.split("\n");
+			var strings = (""+text).split("\n");
 			for (var i = 0; i < strings.length; i++) {
 				// draw the string
 				context.fillText(strings[i].trim(), ~~x, ~~y);
@@ -269,7 +269,7 @@
 		 */
 		measureText : function(context, text) {
 			
-			var strings = text.split("\n");
+			var strings = (""+text).split("\n");
 			var width = 0, height = 0;
 			for (var i = 0; i < strings.length; i++) {
 				width = Math.max((strings[i].trim().length * this.sSize.x), width);
