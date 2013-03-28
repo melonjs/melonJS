@@ -7,7 +7,7 @@
  *
  * ASCII Table
  * http://www.asciitable.com/ 
- * [ !"#$%&'()*+'-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_'abcdefghijklmnopqrstuvwxyz]
+ * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
  *
  * -> first char " " 32d (0x20);
  */
