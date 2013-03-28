@@ -108,6 +108,7 @@
 			L_SLOPE : "lslope",
 			R_SLOPE : "rslope",
 			LADDER : "ladder",
+			TOPLADDER: "topladder",
 			BREAKABLE : "breakable"
 		},
 		
@@ -267,6 +268,7 @@
 			prop.isRightSlope = prop.type ? prop.type.toLowerCase() === this.type.R_SLOPE : false;
 			prop.isBreakable = prop.type ? prop.type.toLowerCase() === this.type.BREAKABLE : false;
 			prop.isLadder = prop.type ? prop.type.toLowerCase() === this.type.LADDER : false;
+			prop.isTopLadder = prop.type ? prop.type.toLowerCase() === this.type.TOPLADDER : false;
 			prop.isSlope = prop.isLeftSlope || prop.isRightSlope;
 			
 			// ensure the collidable flag is correct
