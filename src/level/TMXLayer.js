@@ -672,7 +672,7 @@
 			
 			// check for y movement
 			// left, y corner
-			if ( pv.y != 0 ) {
+			//if ( pv.y != 0 ) {
 				res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
 				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 					res.y = pv.y || 1;
@@ -684,7 +684,7 @@
 						res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
 					}
 				}
-			}
+			//}
 			// return the collide object
 			return res;
 		},
