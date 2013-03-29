@@ -1365,6 +1365,27 @@ var me = me || {};
 		};
 
 		/**
+		 * return the entity corresponding to the property and value<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name me.game#getEntityByProp
+		 * @public
+		 * @function
+		 * @param {String} prop Property name
+		 * @param {String} value Value of the property
+		 * @return {me.ObjectEntity} Object Entity (or null if not found)
+		 */
+		api.getEntityByProp = function(prop, value)
+		{
+			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+				if(obj.isEntity && obj[prop] == value) {
+					return obj;
+				}
+			}
+			return null;
+		};
+
+		/**
 		 * add a HUD obj to the game manager
 		 * @name me.game#addHUD
 		 * @public
