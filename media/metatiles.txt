@@ -7,4 +7,5 @@ type, platform	: can jump through it, and walk on it
 type, lslope	: slope tile, bottom left to top right
 type, rslope	: slope tile, top right to bottom left
 type, ladder	: ladder tile, can be climb
+type, topladder	: ladder top tile, can be climb and walk on top of it
 type, breakable	: breakable tile
