@@ -1352,16 +1352,22 @@ var me = me || {};
 		 * @function
 		 * @param {String} prop Property name
 		 * @param {String} value Value of the property
-		 * @return {me.ObjectEntity} Object Entity (or null if not found)
+		 * @return {me.ObjectEntity[]} Array of Object Entity (or null if not found)
 		 */
 		api.getEntityByProp = function(prop, value)
 		{
+			var tab = [];
 			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
 				if(obj.isEntity && obj[prop] == value) {
-					return obj;
+					tab.push(obj);
 				}
 			}
-			return null;
+			
+			if (tab.length == 0) {
+				return null;
+			}else {
+				return tab;
+			}
 		};
 
 		/**
