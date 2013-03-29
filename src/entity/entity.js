@@ -84,7 +84,7 @@
 		 * @type Boolean
 		 * @name me.ObjectSettings#collidable
 		 */
-		collidable : false
+		collidable : true
 	};
 
 
@@ -326,12 +326,12 @@
 
 		/**
 		 * flag to enable collision detection for this object<br>
-		 * default value : false<br>
+		 * default value : true<br>
 		 * @public
 		 * @type Boolean
 		 * @name me.ObjectEntity#collidable
 		 */
-		collidable : false,
+		collidable : true,
 		
 		
 		/**
@@ -497,7 +497,7 @@
 			this.disableTopLadderCollision = false;
 
 			// to enable collision detection
-			this.collidable = settings.collidable || false;
+			this.collidable = settings.collidable || true;
 			//this.collectable = false;
 
 			this.type = settings.type || 0;
@@ -1100,8 +1100,6 @@
 			// call the parent constructor
 			this.parent(x, y, settings);
 
-			// make it collidable
-			this.collidable = true;
 			this.type = me.game.COLLECTABLE_OBJECT;
 
 		}
@@ -1133,8 +1131,6 @@
 			this.fade = settings.fade;
 			this.duration = settings.duration;
 			this.fading = false;
-			
-			this.collidable = true;
 			
 			// a temp variable
 			this.gotolevel = settings.to;
