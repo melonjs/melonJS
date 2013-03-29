@@ -13,6 +13,11 @@
 # 
 #######################################################################
 
+# Fix MAKE for Windows Problem
+ifdef SystemRoot
+  SHELL=C:/Windows/System32/cmd.exe
+endif
+
 # GOOGLE CLOSURE COMPILER
 GCC_VERSION = 20130227
 GCC_PATH = tools/closure-compiler/
