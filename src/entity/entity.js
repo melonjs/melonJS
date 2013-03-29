@@ -490,7 +490,7 @@
 			/**
 			 * equal true if the entity can go down on a ladder<br>
 			 * (!) READ ONLY property
-			 * @public
+			 * @readonly
 			 * @type Boolean
 			 * @name me.ObjectEntity#disableTopLadderCollision
 			 */
@@ -875,7 +875,9 @@
 					this.onladder = collision.yprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.y > 0) {
-						if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) || (collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
+						if (collision.yprop.isSolid	|| 
+							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
+							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
 							this.pos.y = ~~this.pos.y;
 							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
