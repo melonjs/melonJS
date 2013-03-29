@@ -642,6 +642,10 @@
 		 * @function
 		 * @param {Int} state @see me.state#Constant
 		 * @param {Arguments} [args] extra arguments to be passed to the reset functions
+		 * @example
+		 * // The onResetEvent method on the play screen will receive two args:
+		 * // "level_1" and the number 3
+		 * me.state.change(me.state.PLAY, "level_1", 3);
 		 */
 
 		obj.change = function(state) {
