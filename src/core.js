@@ -1116,7 +1116,7 @@ var me = me || {};
 		 * @type function
 		 * @name me.game#onLevelLoaded
 		 * @example
-		 * call myFunction() everytime a level is loaded
+		 * // call myFunction() everytime a level is loaded
 		 * me.game.onLevelLoaded = this.myFunction.bind(this);
 		 */
 		 api.onLevelLoaded = null;
