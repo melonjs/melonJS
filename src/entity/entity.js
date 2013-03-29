@@ -453,7 +453,7 @@
 			 * falling state of the object<br>
 			 * true if the object is falling<br>
 			 * false if the object is standing on something<br>
-			 * (!) READ ONLY property
+			 * @readonly property
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#falling
@@ -462,7 +462,7 @@
 			/**
 			 * jumping state of the object<br>
 			 * equal true if the entity is jumping<br>
-			 * (!) READ ONLY property
+			 * @readonly property
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#jumping
@@ -473,7 +473,7 @@
 			this.slopeY = 0;
 			/**
 			 * equal true if the entity is standing on a slope<br>
-			 * (!) READ ONLY property
+			 * @readonly property
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#onslope
@@ -481,12 +481,20 @@
 			this.onslope = false;
 			/**
 			 * equal true if the entity is on a ladder<br>
-			 * (!) READ ONLY property
+			 * @readonly property
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#onladder
 			 */
 			this.onladder = false;
+			/**
+			 * equal true if the entity can go down on a ladder<br>
+			 * @readonly property
+			 * @public
+			 * @type Boolean
+			 * @name me.ObjectEntity#disableTopLadderCollision
+			 */
+			this.disableTopLadderCollision = false;
 
 			// to enable collision detection
 			this.collidable = settings.collidable || false;
@@ -659,6 +667,7 @@
 			if (this.onladder) {
 				this.vel.y = (up) ? -this.accel.x * me.timer.tick
 						: this.accel.x * me.timer.tick;
+				this.disableTopLadderCollision = !up;
 				return true;
 			}
 			return false;
@@ -847,84 +856,87 @@
 		updateMovement : function() {
 
 			this.computeVelocity(this.vel);
+			
+			// Adjust position only on collidable object
+			if (this.collidable) {
+				// check for collision
+				var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
 
-			// check for collision
-			var collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
-
-			// update some flags
-			this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
-			// clear the ladder flag
-			this.onladder = false;
+				// update some flags
+				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
+				// clear the ladder flag
+				this.onladder = false;
 
 
 
-			// y collision
-			if (collision.y) {
+				// y collision
+				if (collision.y) {
+					// going down, collision with the floor
+					this.onladder = collision.yprop.isLadder || collision.yprop.isTopLadder;
 
-				// going down, collision with the floor
-				this.onladder = collision.yprop.isLadder;
-
-				if (collision.y > 0) {
-					if (collision.yprop.isSolid	|| (collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y))) {
-						// adjust position to the corresponding tile
-						this.pos.y = ~~this.pos.y;
-						this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
-						this.falling = false;
-					}
-					else if (collision.yprop.isSlope && !this.jumping) {
-						// we stop falling
-						this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
-						this.falling = false;
-					}
-					else if (collision.yprop.isBreakable) {
-						if  (this.canBreakTile) {
-							// remove the tile
-							me.game.currentLevel.clearTile(collision.ytile.col, collision.ytile.row);
-							if (this.onTileBreak)
-								this.onTileBreak();
-						}
-						else {
+					if (collision.y > 0) {
+						if (collision.yprop.isSolid	|| 
+							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
+							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
 							this.pos.y = ~~this.pos.y;
-							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
+							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
 							this.falling = false;
 						}
-					}
-				}
-				// going up, collision with ceiling
-				else if (collision.y < 0) {
-					if (!collision.yprop.isPlatform	&& !collision.yprop.isLadder) {
-						this.falling = true;
-						// cancel the y velocity
-						this.vel.y = 0;
-					}
-				}
-			}
-
-			// x collision
-			if (collision.x) {
-
-				this.onladder = collision.xprop.isLadder ;
-
-				if (collision.xprop.isSlope && !this.jumping) {
-					this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
-					this.falling = false;
-				} else {
-					// can walk through the platform & ladder
-					if (!collision.xprop.isPlatform && !collision.xprop.isLadder) {
-						if (collision.xprop.isBreakable	&& this.canBreakTile) {
-							// remove the tile
-							me.game.currentLevel.clearTile(collision.xtile.col, collision.xtile.row);
-							if (this.onTileBreak) {
-								this.onTileBreak();
+						else if (collision.yprop.isSlope && !this.jumping) {
+							// we stop falling
+							this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
+							this.falling = false;
+						}
+						else if (collision.yprop.isBreakable) {
+							if  (this.canBreakTile) {
+								// remove the tile
+								me.game.currentLevel.clearTile(collision.ytile.col, collision.ytile.row);
+								if (this.onTileBreak)
+									this.onTileBreak();
 							}
-						} else {
-							this.vel.x = 0;
+							else {
+								// adjust position to the corresponding tile
+								this.pos.y = ~~this.pos.y;
+								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
+								this.falling = false;
+							}
+						}
+					}
+					// going up, collision with ceiling
+					else if (collision.y < 0) {
+						if (!collision.yprop.isPlatform	&& !collision.yprop.isLadder && !collision.yprop.isTopLadder) {
+							this.falling = true;
+							// cancel the y velocity
+							this.vel.y = 0;
+						}
+					}
+				}
+
+				// x collision
+				if (collision.x) {
+
+					this.onladder = collision.xprop.isLadder || collision.yprop.isTopLadder;
+
+					if (collision.xprop.isSlope && !this.jumping) {
+						this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
+						this.falling = false;
+					} else {
+						// can walk through the platform & ladder
+						if (!collision.xprop.isPlatform && !collision.xprop.isLadder && !collision.xprop.isTopLadder) {
+							if (collision.xprop.isBreakable	&& this.canBreakTile) {
+								// remove the tile
+								me.game.currentLevel.clearTile(collision.xtile.col, collision.xtile.row);
+								if (this.onTileBreak) {
+									this.onTileBreak();
+								}
+							} else {
+								this.vel.x = 0;
+							}
 						}
 					}
 				}
 			}
-
 
 			// update player position
 			this.pos.add(this.vel);
