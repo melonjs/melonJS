@@ -454,7 +454,7 @@
 			 * true if the object is falling<br>
 			 * false if the object is standing on something<br>
 			 * (!) READ ONLY property
-			 * @public
+			 * @readonly
 			 * @type Boolean
 			 * @name me.ObjectEntity#falling
 			 */
@@ -463,7 +463,7 @@
 			 * jumping state of the object<br>
 			 * equal true if the entity is jumping<br>
 			 * (!) READ ONLY property
-			 * @public
+			 * @readonly
 			 * @type Boolean
 			 * @name me.ObjectEntity#jumping
 			 */
@@ -474,7 +474,7 @@
 			/**
 			 * equal true if the entity is standing on a slope<br>
 			 * (!) READ ONLY property
-			 * @public
+			 * @readonly
 			 * @type Boolean
 			 * @name me.ObjectEntity#onslope
 			 */
@@ -482,7 +482,7 @@
 			/**
 			 * equal true if the entity is on a ladder<br>
 			 * (!) READ ONLY property
-			 * @public
+			 * @readonly
 			 * @type Boolean
 			 * @name me.ObjectEntity#onladder
 			 */
