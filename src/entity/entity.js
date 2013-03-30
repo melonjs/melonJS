@@ -497,7 +497,8 @@
 			this.disableTopLadderCollision = false;
 
 			// to enable collision detection			
-			this.collidable = typeof(settings.collidable) !== undefined ? settings.collidable : true;
+			this.collidable = typeof(settings.collidable) !== "undefined" ?
+				settings.collidable : true;
 			//this.collectable = false;
 
 			this.type = settings.type || 0;
