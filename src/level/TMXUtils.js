@@ -60,19 +60,21 @@
 			var properties = data[me.TMX_TAG_PROPERTIES];
 			if (properties) {
 				for(var name in properties){
-					var value = properties[name];
-					
-					// if value not defined or boolean
-					if (!value || value.isBoolean()) {
-						value = value ? (value == "true") : true;
-					}
-					// check if numeric
-					else if (value.isNumeric()) {
-						value = Number(value);
-					}
-					// add the new prop to the object prop list
-					obj[name] = value;
-				}
+                    if (properties.hasOwnProperty(name)) {
+                        var value = properties[name];
+
+                        // if value not defined or boolean
+                        if (!value || value.isBoolean()) {
+                            value = value ? (value == "true") : true;
+                        }
+                        // check if numeric
+                        else if (value.isNumeric()) {
+                            value = Number(value);
+                        }
+                        // add the new prop to the object prop list
+                        obj[name] = value;
+                    }
+                }
 			}
 		};
 		
