@@ -64,7 +64,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		if (me.input.isKeyPressed('jump')) {
-			
+			this.jumping = true;
+
 			// reset the dblJump flag if off the ground
 			this.mutipleJump = (this.vel.y === 0)?1:this.mutipleJump;
 			
