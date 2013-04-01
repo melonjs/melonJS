@@ -36,6 +36,8 @@
 	me.TMX_TAG_ID                  = "id";
 	me.TMX_TAG_DATA                = "data";
 	me.TMX_TAG_COMPRESSION         = "compression";
+	me.TMX_TAG_GZIP                = "gzip";
+	me.TMX_TAG_ZLIB                = "zlib";
 	me.TMX_TAG_ENCODING            = "encoding";
 	me.TMX_TAG_ATTR_BASE64         = "base64";
 	me.TMX_TAG_CSV                 = "csv";
