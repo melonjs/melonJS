@@ -1,12 +1,23 @@
 Version History
 ---------------
 0.9.7
-* Font : changed default alignement to `left'/'top'
+* Audio : preliminary audio support for mobile devices (iOS6 for now)
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
 * Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.
-* Sprite : added TexturePacker Support (see me.TextureAtlas)
-* TMX : refactored some object inheritance using the new base `me.Renderable` object
-* TMX : added JSON map parsing support 
+* Entity : Fixed ladder collision detection/management
+* Input : added an `unlockKey` function that allows to manually unlock key
+* Font : changed default alignement to `left`/`top`
+* Font : added multiline support for `me.Font` and `me.BitmapFont`
+* Renderable : new base class for any objects that needs to draw (Sprite, ImageLayer, GUI, etc...)
+* Renderable : added TexturePacker Support (see me.TextureAtlas)
+* TMX : fixed me.ImageLayer.ratio on Firefox & Opera
+* TMX : added a new `getEntityByProp()` function
+* TMX : added JSON map parsing support
+* TMX : small optimization for isometric rendering (`pixelToTileCoords()` function)
+* TMX : fixed access to inherited properties
+* TMX : added an entry point for a potential gzip/zlib TMX deccompression plugin
+* Video : fixed `viewport.shake()`
+* Loader : fixed loader when repeatedly calling the preloader
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
