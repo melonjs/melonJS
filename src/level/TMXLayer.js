@@ -444,7 +444,7 @@
 			}
 			
 			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
 				this.visible = false;
@@ -485,7 +485,7 @@
 			}
 			
 			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
 				this.visible = false;
