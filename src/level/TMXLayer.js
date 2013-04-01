@@ -247,9 +247,9 @@
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
 					this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio) % this.imagewidth;
-					this.pos.x %= this.imagewidth;
+					this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
 					this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio) % this.imageheight;
-					this.pos.y %= this.imageheight;
+					this.pos.x = (this.imageheight + this.pos.y) % this.imageheight;
 					this.lastpos.setV(vpos);
 					return true;
 				}
