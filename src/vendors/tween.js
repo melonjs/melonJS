@@ -276,14 +276,6 @@
 
 		};
 
-		/** @private*/
-		this.destroy = function() {
-
-			// indicate we can safely be destroyed
-			return true;
-
-		};
-
 	}
 
 	/**

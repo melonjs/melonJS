@@ -64,7 +64,8 @@ var PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		if (me.input.isKeyPressed('jump')) {
-			
+			this.jumping = true;
+
 			// reset the dblJump flag if off the ground
 			this.mutipleJump = (this.vel.y === 0)?1:this.mutipleJump;
 			
@@ -346,6 +347,7 @@ var ScoreObject = me.HUD_Item.extend( {
 		this.parent(x, y);
 		// create a font
 		this.font = new me.BitmapFont("atascii", {x:24});
+		this.font.alignText = "bottom";
 		this.font.set("right", 1.6);
 	},
 	/**

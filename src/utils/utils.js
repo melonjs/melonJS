@@ -135,6 +135,17 @@
 			}
 			return ar;
 		};
+		
+		/**
+		 * decompress zlib/gzip data (NOT IMPLEMENTED)
+		 *
+		 * @param  {Int[]} Array of bytes
+		 * @param  {String} compressed data format ("gzip","zlib")
+		 * @return {Int[]} Array of bytes
+		 */
+		api.decompress = function(data, format) {
+			throw "melonJS: GZIP/ZLIB compressed TMX Tile Map not supported!";
+		};
 
 		/**
 		 * Decode a CSV encoded array into a binary array
