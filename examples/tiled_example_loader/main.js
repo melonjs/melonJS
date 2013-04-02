@@ -47,6 +47,7 @@ var jsApp	=
 		me.input.bindKey(me.input.KEY.RIGHT, "right");
 		me.input.bindKey(me.input.KEY.UP,	 "up");
 		me.input.bindKey(me.input.KEY.DOWN,	 "down");
+		me.input.bindKey(me.input.KEY.ENTER, "enter");
 
 		// start the game
 		me.state.change(me.state.PLAY);
@@ -96,7 +97,14 @@ var jsApp	=
 			// force redraw
 			me.game.repaint();
 		}
-	
+
+		if (me.input.isKeyPressed('enter')) {
+			me.game.viewport.shake(16, 500);
+		}
+
+		// update the frame counter
+		me.timer.update();
+
 		// update our sprites
 		me.game.update();
 	

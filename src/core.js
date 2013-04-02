@@ -927,8 +927,8 @@ var me = me || {};
 		 */
 		api.draw = function(context) {
 			// cache viewport position vector
-			var posx = me.game.viewport.pos.x;
-			var posy = me.game.viewport.pos.y;
+			var posx = me.game.viewport.pos.x + ~~me.game.viewport.offset.x;
+			var posy = me.game.viewport.pos.y + ~~me.game.viewport.offset.y;
 						
 			// save the current context
 			context.save();
@@ -1116,7 +1116,7 @@ var me = me || {};
 		 * @type function
 		 * @name me.game#onLevelLoaded
 		 * @example
-		 * call myFunction() everytime a level is loaded
+		 * // call myFunction() everytime a level is loaded
 		 * me.game.onLevelLoaded = this.myFunction.bind(this);
 		 */
 		 api.onLevelLoaded = null;
@@ -1341,6 +1341,28 @@ var me = me || {};
 				}
 			}
 			return null;
+		};
+		
+		/**
+		 * return the entity corresponding to the property and value<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name me.game#getEntityByProp
+		 * @public
+		 * @function
+		 * @param {String} prop Property name
+		 * @param {String} value Value of the property
+		 * @return {me.ObjectEntity[]} Array of object entities
+		 */
+		api.getEntityByProp = function(prop, value)
+		{
+			var objList = [];
+			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+				if(obj.isEntity && obj[prop] == value) {
+					objList.push(obj);
+				}
+			}
+			return objList;
 		};
 
 		/**

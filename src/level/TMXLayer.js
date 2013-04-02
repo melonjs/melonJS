@@ -246,8 +246,10 @@
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
-					this.pos.x = (this.imagewidth + this.pos.x + ((vpos.x - this.lastpos.x) * this.ratio)) % this.imagewidth;
-					this.pos.y = (this.imageheight + this.pos.y + ((vpos.y - this.lastpos.y) * this.ratio)) % this.imageheight;
+					this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio) % this.imagewidth;
+					this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
+					this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio) % this.imageheight;
+					this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
 					this.lastpos.setV(vpos);
 					return true;
 				}
@@ -444,7 +446,7 @@
 			}
 			
 			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
 				this.visible = false;
@@ -485,7 +487,7 @@
 			}
 			
 			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.LevelConstants.COLLISION_MAP));
+			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
 				this.visible = false;
@@ -669,17 +671,15 @@
 			
 			// check for y movement
 			// left, y corner
-			if ( pv.y != 0 ) {
-				res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
+			res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
+			if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+				res.y = pv.y || 1;
+				res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+			} else { // right, y corner
+				res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
 				if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
 					res.y = pv.y || 1;
 					res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-				} else { // right, y corner
-					res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
-					if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-						res.y = pv.y || 1;
-						res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-					}
 				}
 			}
 			// return the collide object

@@ -10,13 +10,8 @@
 
 (function($) {
 	
-	// some custom level constants
-	me.LevelConstants = {
-		//# name of the collision map
-		COLLISION_MAP : "collision",
-		PARALLAX_MAP : "parallax"
-	};
-	
+	// some custom constants
+	me.COLLISION_LAYER             = "collision";
 	// some TMX constants
 	me.TMX_TAG_MAP                 = "map";
 	me.TMX_TAG_NAME                = "name";
@@ -36,6 +31,8 @@
 	me.TMX_TAG_ID                  = "id";
 	me.TMX_TAG_DATA                = "data";
 	me.TMX_TAG_COMPRESSION         = "compression";
+	me.TMX_TAG_GZIP                = "gzip";
+	me.TMX_TAG_ZLIB                = "zlib";
 	me.TMX_TAG_ENCODING            = "encoding";
 	me.TMX_TAG_ATTR_BASE64         = "base64";
 	me.TMX_TAG_CSV                 = "csv";

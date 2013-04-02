@@ -98,51 +98,47 @@
 			// initialize the layer data array
 			layer.initArray(layer.cols, layer.rows);
 			
-			// check if data is compressed
-			switch (compression) {	 
-				// no compression
-				case null: {
-					// decode data based on encoding type
-					switch (encoding) {
-						// XML encoding
-						case null:
-							var data = data.getElementsByTagName(me.TMX_TAG_TILE);
-							break;
-						// json encoding
-						case 'json':
-							// do nothing as data can be directly reused
-							break;
-						// CSV encoding
-						case me.TMX_TAG_CSV:
-						// Base 64 encoding
-						case me.TMX_TAG_ATTR_BASE64: {
-							// Merge all childNodes[].nodeValue into a single one
-							var nodeValue = '';
-							for ( var i = 0, len = data.childNodes.length; i < len; i++) {
-								nodeValue += data.childNodes[i].nodeValue;
-							}
-							// and then decode them
-							if (encoding == me.TMX_TAG_ATTR_BASE64)
-								var data = me.utils.decodeBase64AsArray(nodeValue, 4);
-							else
-								var data = me.utils.decodeCSV(nodeValue, layer.cols);
-
-							// ensure nodeValue is deallocated
-							nodeValue = null;
-							break;
-						}
-						  
-						default:
-							throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-							break;
+			// decode data based on encoding type
+			switch (encoding) {
+				// XML encoding
+				case null:
+					var data = data.getElementsByTagName(me.TMX_TAG_TILE);
+					break;
+				// json encoding
+				case 'json':
+					// do nothing as data can be directly reused
+					break;
+				// CSV encoding
+				case me.TMX_TAG_CSV:
+				// Base 64 encoding
+				case me.TMX_TAG_ATTR_BASE64: {
+					// Merge all childNodes[].nodeValue into a single one
+					var nodeValue = '';
+					for ( var i = 0, len = data.childNodes.length; i < len; i++) {
+						nodeValue += data.childNodes[i].nodeValue;
 					}
+					// and then decode them
+					if (encoding == me.TMX_TAG_CSV) {
+						// CSV decode
+						var data = me.utils.decodeCSV(nodeValue, layer.cols);
+					} else {
+						// Base 64 decode
+						var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+						// check if data is compressed
+						if (compression !== null) {
+							data = me.utils.decompress(data, compression);
+						}
+					}
+					// ensure nodeValue is deallocated
+					nodeValue = null;
 					break;
 				}
-					
+				  
 				default:
-					throw "melonJS: " + compression+ " compressed TMX Tile Map not supported!";
+					throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
 					break;
 			}
+					
 
 			var idx = 0;
 			// set everything
@@ -368,7 +364,7 @@
 			}
 			
 			// associate a renderer to the layer (if not a collision layer)
-			if (!layer.isCollisionMap) {
+			if (!layer.isCollisionMap || me.debug.renderCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
 					layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
 				} else {

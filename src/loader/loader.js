@@ -21,11 +21,6 @@
 			---*/
 		init : function() {
 			this.parent(true);
-			// melonJS logo
-			this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
-			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'middle');
-			this.logo2.bold();
-			this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
 
 			// flag to know if we need to refresh the display
 			this.invalidate = false;
@@ -33,15 +28,21 @@
 			// handle for the susbcribe function
 			this.handle = null;
 			
-			// load progress in percent
-			this.loadPercent = 0;
-			
 		},
 
 		// call when the loader is resetted
 		onResetEvent : function() {
+			// melonJS logo
+			this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
+			this.logo2 = new me.Font('century gothic', 32, '#89b002', 'middle');
+			this.logo2.bold();
+			this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
+
 			// setup a callback
 			this.handle = me.event.subscribe(me.event.LOADER_PROGRESS, this.onProgressUpdate.bind(this));
+
+			// load progress in percent
+			this.loadPercent = 0;
 		},
 		
 		// destroy object at end of loading
