@@ -364,7 +364,7 @@
 			}
 			
 			// associate a renderer to the layer (if not a collision layer)
-			if (!layer.isCollisionMap) {
+			if (!layer.isCollisionMap || me.debug.renderCollisionMap) {
 				if (!me.game.renderer.canRender(layer)) {
 					layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
 				} else {
