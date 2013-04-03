@@ -375,9 +375,19 @@
 		api.getScreenContext = function() {
 			return context2D;
 		};
+
+		/**
+		 * Alias function for getSystemCanvas
+		 * @name me.video#getBackBufferCanvas
+		 * @function
+		 * @return {Canvas}
+		 */
+		api.getBackBufferCanvas = function() {
+			return api.getSystemCanvas();
+		}
 		
 		/**
-		 * return a reference to the system canvas
+		 * return a reference to the system canvas. Will return buffered canvas if double buffering is enabled, or a reference to ScreenCanvas
 		 * @name me.video#getSystemCanvas
 		 * @function
 		 * @return {Canvas}
@@ -385,9 +395,19 @@
 		api.getSystemCanvas = function() {
 			return backBufferCanvas;
 		};
+
+		/**
+		 * Alias function for getSystemContext
+		 * @name me.video#getBackBufferContext
+		 * @function
+		 * @return {Context2D}
+		 */
+		api.getBackBufferContext = function() {
+			return api.getSystemContext();
+		}
 		
 		/**
-		 * return a reference to the system 2d Context
+		 * return a reference to the system 2d Context. Will return buffered context if double buffering is enabled, or a reference to ScreenContext
 		 * @name me.video#getSystemContext
 		 * @function
 		 * @return {Context2D}
