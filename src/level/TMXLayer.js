@@ -274,8 +274,8 @@
 			// if not scrolling ratio define, static image
 			if (this.ratio===0) {
 				// static image
-				sw = Math.min(rect.width, this.imagewidth);
-				sh = Math.min(rect.height, this.imageheight);
+				var sw = Math.min(rect.width, this.imagewidth);
+				var sh = Math.min(rect.height, this.imageheight);
 				
 				context.drawImage(this.image, 
 								  rect.left, rect.top,		//sx, sy
