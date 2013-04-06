@@ -329,8 +329,11 @@
 		 * @return {Canvas}
 		 */
 		api.createCanvas = function(width, height) {
-			var _canvas = document.createElement("canvas");
+			var _canvas = document.createElement(navigator.isCocoonJS ? 'screencanvas' : "canvas");
 
+			if((width === 0 || height === 0) && backBufferCanvas === null) {
+				throw new Error("width or height was zero. Canvas could not be initialized. Be sure to pass proper values to me.video.init");
+			}
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
 
@@ -374,7 +377,7 @@
 		};
 		
 		/**
-		 * return a reference to the system canvas
+		 * return a reference to the system canvas. Will return buffered canvas if double buffering is enabled, or a reference to ScreenCanvas
 		 * @name me.video#getSystemCanvas
 		 * @function
 		 * @return {Canvas}
@@ -384,7 +387,7 @@
 		};
 		
 		/**
-		 * return a reference to the system 2d Context
+		 * return a reference to the system 2d Context. Will return buffered context if double buffering is enabled, or a reference to ScreenContext
 		 * @name me.video#getSystemContext
 		 * @function
 		 * @return {Context2D}

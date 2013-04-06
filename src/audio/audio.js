@@ -477,7 +477,7 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
-		 * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+		 * @param {Number} [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example 
 		 * me.audio.playTrack("awesome_music");
 		 */
