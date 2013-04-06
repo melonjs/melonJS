@@ -46,6 +46,7 @@
 			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/"
 					+ me.sys.fps + " fps)"), htmlCounter.firstChild);
 		};
+		
 
 		/*---------------------------------------------
 			
@@ -171,6 +172,21 @@
 		var game_height_zoom = 0;
 		var auto_scale = false;
 		var maintainAspectRatio = true;
+		
+		/**
+		 * return a vendor specific canvas type
+		 * @private
+		 */
+		function getCanvasType() {
+			// cocoonJS specific canvas extension
+			if (navigator.isCocoonJS) {
+				if (!me.sys.dirtyRegion) {
+					return 'screencanvas';
+				}
+			}
+			return 'canvas';
+		};
+		
 
 		/*---------------------------------------------
 			
@@ -235,7 +251,7 @@
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			
 			// create the main canvas
-			canvas = api.createCanvas(game_width_zoom, game_height_zoom);
+			canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
 
 			// add our canvas
 			if (wrapperid) {
@@ -326,11 +342,19 @@
 		 * @function
 		 * @param {Int} width width
 		 * @param {Int} height height
+		 * @param {Boolean} [vendorExt=false] create a vendor specific canvas using vendor extension (only supports cocoonJS 'screencanvas' for now)
 		 * @return {Canvas}
 		 */
-		api.createCanvas = function(width, height) {
-			var _canvas = document.createElement("canvas");
-
+		api.createCanvas = function(width, height, vendorExt) {
+			
+			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
+		
+			var _canvas = document.createElement(canvasType);
+			
+			if ( (width === 0 || height === 0) && _canvas === null) {
+				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
+			}
+			
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
 
@@ -352,6 +376,7 @@
 
 		/**
 		 * return a reference to the screen canvas <br>
+		 * (will return buffered canvas if double buffering is enabled, or a reference to Screen Canvas) <br>
 		 * use this when checking for display size, event <br>
 		 * or if you need to apply any special "effect" to <br>
 		 * the corresponding context (ie. imageSmoothingEnabled)
@@ -364,7 +389,8 @@
 		};
 		
 		/**
-		 * return a reference to the screen canvas corresponding 2d Context
+		 * return a reference to the screen canvas corresponding 2d Context<br>
+		 * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
 		 * @name me.video#getScreenContext
 		 * @function
 		 * @return {Context2D}
