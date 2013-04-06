@@ -85,7 +85,7 @@ The generated documentation will be then available under the "docs" directory
 
 Using melonJS
 -------------------------------------------------------------------------------
-Follow this tutorial to get started : http://www.melonjs.org/tutorial/index.html
+Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
 
 Note that due to the 'cross-origin request' policy implemented in most browsers (that prevents from accessing local files), you will need to either disable this security check (see the tutorial), or better use a "personal" local web server.
 
