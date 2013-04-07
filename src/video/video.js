@@ -194,12 +194,6 @@
 				
 			---------------------------------------------*/
 
-		/* ---
-		
-			init the video part
-			
-			
-			---							*/
 		/**
 		 * init the "video" part<p>
 		 * return false if initialization failed (canvas not supported)
@@ -214,8 +208,7 @@
 		 * @return {Boolean}
 		 * @example
 		 * // init the video with a 480x320 canvas
-		 * if (!me.video.init('jsapp', 480, 320))
-		 * {
+		 * if (!me.video.init('jsapp', 480, 320)) {
 		 *    alert("Sorry but your browser does not support html 5 canvas !");
 		 *    return;
 		 * }
@@ -273,7 +266,7 @@
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
-				backBufferCanvas = api.createCanvas(game_width, game_height);
+				backBufferCanvas = api.createCanvas(game_width, game_height, false);
 				backBufferContext2D = backBufferCanvas.getContext('2d');
 			} else {
 				backBufferCanvas = canvas;
@@ -342,18 +335,15 @@
 		 * @function
 		 * @param {Int} width width
 		 * @param {Int} height height
-		 * @param {Boolean} [vendorExt=false] create a vendor specific canvas using vendor extension (only supports cocoonJS 'screencanvas' for now)
 		 * @return {Canvas}
 		 */
 		api.createCanvas = function(width, height, vendorExt) {
-			
-			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
-		
-			var _canvas = document.createElement(canvasType);
-			
-			if ( (width === 0 || height === 0) && _canvas === null) {
+			if (width === 0 || height === 0)  {
 				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
 			}
+			
+			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
+			var _canvas = document.createElement(canvasType);
 			
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
@@ -371,7 +361,7 @@
 		 * @return {Context2D}
 		 */
 		api.createCanvasSurface = function(width, height) {
-			return api.createCanvas(width, height).getContext('2d');
+			return api.createCanvas(width, height, false).getContext('2d');
 		};
 
 		/**
@@ -589,7 +579,7 @@
 		 */
 		api.applyRGBFilter = function(object, effect, option) {
 			//create a output canvas using the given canvas or image size
-			var fcanvas = api.createCanvasSurface(object.width, object.height);
+			var fcanvas = api.createCanvasSurface(object.width, object.height, false);
 			// get the pixels array of the give parameter
 			var imgpix = me.utils.getPixels(object);
 			// pointer to the pixels data
