@@ -20,6 +20,9 @@ var game = {
         // disable interpolation when scaling
         me.video.setImageSmoothing(false);
 
+        // Run fast!
+        me.sys.useNativeAnimFrame = true;
+
         // install the debug panel plugin
         me.plugin.register(debugPanel, "debug");
         me.debug.renderCollisionMap = true;
@@ -49,7 +52,6 @@ var PlayScreen = me.ScreenObject.extend( {
         me.levelDirector.loadLevel("level");
 
         // Add some objects
-        var i = 0;
         for (var i = 0; i < 200; i++) {
             me.game.add(new Smilie(i), 2);
         }
@@ -61,8 +63,8 @@ var Smilie = me.ObjectEntity.extend({
         this.parent(
             64 + Math.random() * (1024 - 64 * 3),
             64 + Math.random() * (768 - 64 * 3), {
-                spritewidth : 64,
-                spriteheight : 64,
+                spritewidth : 16,
+                spriteheight : 16,
                 image : game.assets[i % 5].name
             }
         );
