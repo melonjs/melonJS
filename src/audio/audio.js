@@ -309,8 +309,7 @@
 			activeAudioExt = getSupportedAudioFormat(audioFormat);
 
 			// Disable audio on Mobile devices for now. (ARGH!)
-			var isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod/i);
-			if (isMobile && !navigator.isCocoonJS) {
+			if (me.sys.isMobile && !navigator.isCocoonJS) {
 				sound_enable = false;
 			}
 
@@ -383,8 +382,7 @@
 				return 0;
 
 			// check for specific platform
-			var isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod/i);
-			if (isMobile && !navigator.isCocoonJS) {
+			if (me.sys.isMobile && !navigator.isCocoonJS) {
 				if (sync_loading) {
 					sync_loader.push([ sound, onload_cb, onerror_cb ]);
 					return;
@@ -395,7 +393,7 @@
 			var channels = sound.channel || 1;
 			var eventname = "canplaythrough";
 
-			if (sound.stream === true && !isMobile) {
+			if (sound.stream === true && !me.sys.isMobile) {
 				channels = 1;
 				eventname = "canplay";
 			}
