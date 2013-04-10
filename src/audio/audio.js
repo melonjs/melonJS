@@ -307,7 +307,13 @@
 			audioFormat = audioFormat.split(',');
 			// detect the prefered audio format
 			activeAudioExt = getSupportedAudioFormat(audioFormat);
-			
+
+			// Disable audio on Mobile devices for now. (ARGH!)
+			var isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod/i);
+			if (isMobile && !navigator.isCocoonJS) {
+				sound_enable = false;
+			}
+
 			// enable/disable sound
 			obj.play = obj.isAudioEnable() ? _play_audio_enable : _play_audio_disable;
 
