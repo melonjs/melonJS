@@ -1474,19 +1474,21 @@ var me = me || {};
 				me.entityPool.freeInstance(target);
 			}
 
-			// remove the object from the object list
-			if (force===true) {
-				// force immediate object deletion
-				removeNow(obj);
-			} else {
-				// make it invisible (this is bad...)
-				obj.visible = false;
-				// else wait the end of the current loop
-				/** @private */
-				pendingRemove = (function (obj) {
+			if (gameObjects.indexOf(obj) > -1) {
+				// remove the object from the object list
+				if (force===true) {
+					// force immediate object deletion
 					removeNow(obj);
-					pendingRemove = null;
-				}).defer(obj);
+				} else {
+					// make it invisible (this is bad...)
+					obj.visible = false;
+					// else wait the end of the current loop
+					/** @private */
+					pendingRemove = (function (obj) {
+						removeNow(obj);
+						pendingRemove = null;
+					}).defer(obj);
+				}
 			}
 		};
 
