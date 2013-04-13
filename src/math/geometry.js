@@ -49,72 +49,87 @@
 		 * set the Vector x and y properties to the given values<br>
 		 * @param {Number} x
 		 * @param {Number} y
+		 * @return Reference to this object for method chaining
 		 */
 		set : function(x, y) {
 			this.x = x;
 			this.y = y;
+			return this;
 		},
 
 		/**
 		 * set the Vector x and y properties to 0
+		 * @return Reference to this object for method chaining
 		 */
 		setZero : function() {
-			this.set(0, 0);
+			return this.set(0, 0);
 		},
 
 		/**
 		 * set the Vector x and y properties using the passed vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		setV : function(v) {
 			this.x = v.x;
 			this.y = v.y;
+			return this;
 		},
 
 		/**
 		 * Add the passed vector to this vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		add : function(v) {
 			this.x += v.x;
 			this.y += v.y;
+			return this;
 		},
 
 		/**
 		 * Substract the passed vector to this vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		sub : function(v) {
 			this.x -= v.x;
 			this.y -= v.y;
+			return this;
 		},
 
 		/**
 		 * Multiply this vector values by the passed vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		scale : function(v) {
 			this.x *= v.x;
 			this.y *= v.y;
+			return this;
 		},
 
 		/**
 		 * Divide this vector values by the passed value
 		 * @param {Number} value
+		 * @return Reference to this object for method chaining
 		 */
 		div : function(n) {
 			this.x /= n;
 			this.y /= n;
+			return this;
 		},
 
 		/**
 		 * Update this vector values to absolute values
+		 * @return Reference to this object for method chaining
 		 */
 		abs : function() {
 			if (this.x < 0)
 				this.x = -this.x;
 			if (this.y < 0)
 				this.y = -this.y;
+			return this;
 		},
 
 		/**
@@ -131,6 +146,7 @@
 		 * Clamp this vector value within the specified value range
 		 * @param {Number} low
 		 * @param {Number} high
+		 * @return Reference to this object for method chaining
 		 */
 		clampSelf : function(low, high) {
 			this.x = this.x.clamp(low, high);
@@ -141,19 +157,23 @@
 		/**
 		 * Update this vector with the minimum value between this and the passed vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		minV : function(v) {
 			this.x = this.x < v.x ? this.x : v.x;
 			this.y = this.y < v.y ? this.y : v.y;
+			return this;
 		},
 
 		/**
 		 * Update this vector with the maximum value between this and the passed vector
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		maxV : function(v) {
 			this.x = this.x > v.x ? this.x : v.x;
 			this.y = this.y > v.y ? this.y : v.y;
+			return this;
 		},
 
 		/**
@@ -166,6 +186,7 @@
 		
 		/**
 		 * Floor this vector values
+		 * @return Reference to this object for method chaining
 		 */
 		floorSelf : function() {
 			this.x = ~~this.x;
@@ -183,6 +204,7 @@
 		
 		/**
 		 * Ceil this vector values
+		 * @return Reference to this object for method chaining
 		 */
 		ceilSelf : function() {
 			this.x = Math.ceil(this.x);
@@ -200,6 +222,7 @@
 
 		/**
 		 * Negate this vector values
+		 * @return Reference to this object for method chaining
 		 */
 		negateSelf : function() {
 			this.x = -this.x;
@@ -210,10 +233,12 @@
 		/**
 		 * Copy the x,y values of the passed vector to this one
 		 * @param {me.Vector2d} v
+		 * @return Reference to this object for method chaining
 		 */
 		copy : function(v) {
 			this.x = v.x;
 			this.y = v.y;
+			return this;
 		},
 		
 		/**
@@ -289,7 +314,7 @@
 		 * @return {String}
 		 */			
 		 toString : function() {
-			return 'x:' + this.x + 'y:' + this.y;
+			return 'x:' + this.x + ',y:' + this.y;
 		}
 
 	});
