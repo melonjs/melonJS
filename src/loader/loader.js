@@ -213,7 +213,7 @@
 							case 'xml' : 
 							case 'tmx' : {
 								// ie9 does not fully implement the responseXML
-								if (me.sys.ua.toLowerCase().contains('msie') || !xmlhttp.responseXML) {
+								if (me.sys.ua.match(/msie/i) || !xmlhttp.responseXML) {
 									// manually create the XML DOM
 									result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
 								} else {
