@@ -196,7 +196,9 @@
 					}
 				}
 			});
-
+			
+			// default origin position
+			this.anchorPoint.set(0,0);
 			
 		},
 		
@@ -263,13 +265,18 @@
 		 * @private
 		 */
 		draw : function(context, rect) {
+			// save current context state
+			context.save();
 			
-			// check if transparency
-			if (this.opacity < 1.0) {
-				// set the layer alpha value
-				var _alpha = context.globalAlpha
-				context.globalAlpha = this.opacity;
-			}
+			// translate default position 
+			// using the anchorPoint value
+			context.translate (
+				~~(this.anchorPoint.x * this.width),
+				~~(this.anchorPoint.y * this.height)
+			)
+			
+			// set the layer alpha value
+			context.globalAlpha = this.opacity;
 			
 			// if not scrolling ratio define, static image
 			if (this.ratio===0) {
@@ -322,9 +329,7 @@
 			}
 			
 			// restore context state
-			if (this.opacity < 1.0) {
-				context.globalAlpha = _alpha;
-			}
+			context.restore();
 		}
 	});	
 	
