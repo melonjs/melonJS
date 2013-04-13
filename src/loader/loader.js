@@ -566,6 +566,10 @@
 			// unload all tmx resources
 			for (name in tmxList)
 				obj.unload(name);
+			
+			// unload all atlas resources
+			for (name in atlasList)
+				obj.unload(name);
 
 			// unload all audio resources
 			me.audio.unloadAll();
