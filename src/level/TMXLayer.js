@@ -5,7 +5,7 @@
  *
  */
 
-(function($, game) {
+(function(window) {
 	
 	/**
 	 * a generic Color Layer Object
@@ -28,7 +28,7 @@
 			
 			this.floating = true;
 			
-			this.parent(new me.Vector2d(0, 0), game.viewport.width, game.viewport.height);
+			this.parent(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
 		},
 
 		/**
@@ -150,12 +150,16 @@
 			// if ratio !=0 scrolling image
 			this.ratio = ratio || 1.0;
 			
+			// a cached reference to the viewport
+			this.viewport = me.game.viewport;
+			
 			// last position of the viewport
-			this.lastpos = game.viewport.pos.clone();
+			this.lastpos = this.viewport.pos.clone();
+			
 			
 			// set layer width & height 
-			width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
-			height = height? Math.min(game.viewport.height, height) : game.viewport.height;
+			width  = width ? Math.min(this.viewport.width, width)   : this.viewport.width;
+			height = height? Math.min(this.viewport.height, height) : this.viewport.height;
 			this.parent(new me.Vector2d(0, 0), width, height);
 			
 			// default opacity
@@ -244,7 +248,7 @@
 			}
 			else {
 				// reference to the viewport
-				var vpos = game.viewport.pos;
+				var vpos = this.viewport.pos;
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
@@ -268,12 +272,13 @@
 			// save current context state
 			context.save();
 			
-			// translate default position 
-			// using the anchorPoint value
-			context.translate (
-				~~(this.anchorPoint.x * this.width),
-				~~(this.anchorPoint.y * this.height)
-			)
+			// translate default position using the anchorPoint value
+			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
+				context.translate (
+					~~(this.anchorPoint.x * (this.viewport.width - this.imagewidth)),
+					~~(this.anchorPoint.y * (this.viewport.height - this.imageheight))
+				)
+			}
 			
 			// set the layer alpha value
 			context.globalAlpha = this.opacity;
@@ -706,7 +711,7 @@
 		draw : function(context, rect) {
 			
 			// get a reference to the viewport
-			var vpos = game.viewport.pos;
+			var vpos = me.game.viewport.pos;
 			
 			// use the offscreen canvas
 			if (this.preRender) {
@@ -741,4 +746,4 @@
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
-})(window, me.game);
+})(window);
