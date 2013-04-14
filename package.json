@@ -7,19 +7,19 @@
 	"repositories": [
 		{
 			"type": "git",
-			"url": "https://github.com/obiot/melonJS"
+			"url": "https://github.com/melonjs/melonJS"
 		}
 	],
 
 	"licenses": [
 		{
 			"type": "MIT License",
-			"url": "https://github.com/obiot/melonJS/blob/master/MIT-LICENSE"
+			"url": "https://github.com/melonjs/melonJS/blob/master/MIT-LICENSE"
 		}
 	],
 
 	"author": {
-		"name": "Olivier Biot",
+		"name": "melonJS",
 		"email": "contact@melonjs.org"
 	},
 
@@ -28,6 +28,9 @@
 	},
 
 	"dependencies": {
+		"grunt": "~0.4.1",
+		"grunt-contrib-jshint": "~0.1.1",
+		"grunt-contrib-nodeunit": "~0.1.2",
 		"coffee-script": ">1 <2",
 		"uglify-js": "1.1.0"
 	}
