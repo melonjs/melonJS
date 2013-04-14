@@ -23,10 +23,14 @@
     "node": ">= 0.8.0"
   },
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.4.3",
-    "grunt-contrib-concat": "~0.2.0",
-    "grunt-contrib-uglify": "~0.2.0",
+	"grunt": "~0.4.1",
+	"grunt-contrib-jshint": "~0.4.3",
+	"grunt-contrib-concat": "~0.2.0",
+	"grunt-contrib-uglify": "~0.2.0",	
 	"grunt-contrib-nodeunit": "~0.1.2"
+  },
+  "dependencies": {
+	"grunt-jsdoc": "~0.3.2"
   }
+ 
 }

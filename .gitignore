@@ -6,6 +6,7 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+npm-debug.log
 
 # project specific ignore
 add-on/

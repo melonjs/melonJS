@@ -72,14 +72,26 @@ module.exports = function(grunt) {
 			eqnull: true,
 			browser: true
 		}
-   }
+	},
+   
+    jsdoc : {
+        dist : {
+            src: ['build/<%= pkg.name %>-<%= pkg.version %>.js'], 
+            options: {
+                destination: 'docs'
+            }
+        }
+    }
+   
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-jsdoc');
  
  // Default task.
   grunt.registerTask('default', ['concat', 'uglify']);
+  grunt.registerTask('docs', ['concat', 'jsdoc']);
 
 };
