@@ -99,7 +99,8 @@ module.exports = function(grunt) {
         dist : {
             src: ['build/<%= pkg.name %>-<%= pkg.version %>.js'], 
             options: {
-                destination: 'docs'
+				configure: 'jsdoc_conf.json',
+				destination: 'docs'
             }
         }
     }
