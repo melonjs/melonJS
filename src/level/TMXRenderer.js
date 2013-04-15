@@ -62,7 +62,6 @@
 		 * @private
 		 */
 		objectPosFix: function(x,y,width,height) {
-			//tiled places the origin of an object in the bottom center of the image
 			return {x: x, y:y-height};
 		},
 		
