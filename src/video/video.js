@@ -337,14 +337,6 @@
 		 * @param {Int} height height
 		 * @return {Canvas}
 		 */
-<<<<<<< HEAD
-		api.createCanvas = function(width, height) {
-			var _canvas = document.createElement(navigator.isCocoonJS ? 'screencanvas' : "canvas");
-
-			if((width === 0 || height === 0) && backBufferCanvas === null) {
-				throw new Error("width or height was zero. Canvas could not be initialized. Be sure to pass proper values to me.video.init");
-			}
-=======
 		api.createCanvas = function(width, height, vendorExt) {
 			if (width === 0 || height === 0)  {
 				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
@@ -353,7 +345,6 @@
 			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
 			var _canvas = document.createElement(canvasType);
 			
->>>>>>> dd6c286a7906a5cfb11140891f0244c96114fa46
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
 
