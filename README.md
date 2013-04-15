@@ -42,31 +42,32 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-In order to build melonJS, you need to have the following installed :
+* Initial setup :
+In order to build melonJS, we need first to have the following installed :
 
-- [node.js](http://nodejs.org/)
+- [node.js](http://nodejs.org/) package manager
+- Java (and the JAVA_HOME environemnt variable under windows) for the doc generation
 
-For the doc generation
+Once the node.js package manager has been installed, we need to install the Grunt CLI by typing :
+`$ npm install -g grunt-cli`
+and install the melonJS required dependencies, by typing :
+````
+$ cd melonJS
+$ npm install
+````
 
-- java (and JAVA_HOME environemnt variable under windows)
 
-once installed, call `npm install` to install all dependencies
-
-
-* Regular flavored build :
-
-`$ cd melonJS`
-
-`$ make`
-
+* For a regular flavored build :
+````
+$ cd melonJS
+$ grunt
+````
 Both plain and minified library will be available under the "build" directory
 
 * CoffeeScript flavored build :
 
 First make sure that you have installed :
 
-- [node.js](http://nodejs.org/)
-- [npm](http://npmjs.org/)
 - [CofeeScript](http://jashkenas.github.com/coffee-script/)
 
 `$ sudo npm install -g coffee-script`
@@ -79,9 +80,10 @@ First make sure that you have installed :
 
 Building the documentation
 -------------------------------------------------------------------------------
-`cd melonJS`
-
-`make doc`
+````
+$ cd melonJS
+grunt doc
+````
 
 The generated documentation will be then available under the "docs" directory
 
