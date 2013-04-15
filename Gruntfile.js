@@ -60,6 +60,7 @@ module.exports = function(grunt) {
 	uglify: {
 		options: {
 			banner: "/*! melonJS (c)2011 - 2013 Olivier Biot (http://www.melonjs.org) */\n",
+			report: 'min'
 		},
 		dist: {
 			files: {
