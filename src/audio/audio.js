@@ -58,8 +58,8 @@
 		var sync_loader = [];
 		 
 		/**
-		 * @private
 		 * return the first audio format extension supported by the browser
+		 * @private
 		 */
 		function getSupportedAudioFormat(requestedFormat) {
 			var result = "";
@@ -93,8 +93,8 @@
 		};
 
 		/**
-		 * @private
 		 * return the specified sound
+		 * @private
 		 */
 
 		function get(sound_id) {
@@ -115,8 +115,8 @@
 		};
 
 		/**
-		 * @private
 		 * event listener callback on load error
+		 * @private
 		 */
 
 		function soundLoadError(sound_id, onerror_cb) {
@@ -144,8 +144,8 @@
 		};
 
 		/**
-		 * @private
 		 * event listener callback when a sound is loaded
+		 * @private
 		 */
 
 		function soundLoaded(sound_id, sound_channel, onload_cb) {
@@ -217,8 +217,8 @@
 		};
 
 		/**
-		 * @private
 		 * play_audio with simulated callback
+		 * @private
 		 */
 
 		function _play_audio_disable(sound_id, loop, callback) {

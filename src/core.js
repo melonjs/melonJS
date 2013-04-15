@@ -1452,7 +1452,7 @@ var me = me || {};
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be removed
-		 * @param {Boolean=false} force Force immediate deletion.<br>
+		 * @param {Boolean} [force=false] Force immediate deletion.<br>
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 */
 		api.remove = function(obj, force) {
@@ -1493,7 +1493,7 @@ var me = me || {};
 		/**
 		 * remove all objects<br>
 		 * @name me.game#removeAll
-		 * @param {Boolean=false} force Force immediate deletion.<br>
+		 * @param {Boolean} [force=false] Force immediate deletion.<br>
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 * @public
 		 * @function

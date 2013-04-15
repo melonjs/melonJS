@@ -85,7 +85,7 @@
 		 * @name me.gamestat#add
 		 * @public
 		 * @function
-		 * @param {String||Object} name name of the item or hash of items
+		 * @param {String|Object} name name of the item or hash of items
 		 * @param {int} [val="0"] default value
 		 * @example
 		 * // add a "stars" item
@@ -110,7 +110,7 @@
 		 * @name me.gamestat#updateValue
 		 * @public
 		 * @function
-		 * @param {String||Object} name name of the item or hash of items
+		 * @param {String|Object} name name of the item or hash of items
 		 * @param {int} val value to be added
 		 * @example
 		 * // update the "stars" item
@@ -133,7 +133,7 @@
 		 * @name me.gamestat#setValue 
 		 * @public 
 		 * @function 
-		 * @param {String||Object} name name of the item or hash of items
+		 * @param {String|Object} name name of the item or hash of items
 		 * @param {int} val value to be set 
 		 * @example 
 		 * // set the"stars" item 

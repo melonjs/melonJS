@@ -453,7 +453,7 @@
 			 * falling state of the object<br>
 			 * true if the object is falling<br>
 			 * false if the object is standing on something<br>
-			 * @readonly property
+			 * @readonly
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#falling
@@ -462,7 +462,7 @@
 			/**
 			 * jumping state of the object<br>
 			 * equal true if the entity is jumping<br>
-			 * @readonly property
+			 * @readonly
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#jumping
@@ -473,7 +473,7 @@
 			this.slopeY = 0;
 			/**
 			 * equal true if the entity is standing on a slope<br>
-			 * @readonly property
+			 * @readonly
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#onslope
@@ -481,7 +481,7 @@
 			this.onslope = false;
 			/**
 			 * equal true if the entity is on a ladder<br>
-			 * @readonly property
+			 * @readonly
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#onladder
@@ -489,7 +489,7 @@
 			this.onladder = false;
 			/**
 			 * equal true if the entity can go down on a ladder<br>
-			 * @readonly property
+			 * @readonly
 			 * @public
 			 * @type Boolean
 			 * @name me.ObjectEntity#disableTopLadderCollision
