@@ -129,8 +129,7 @@
 				}
 			}
 			
-			// Offset the object position by the tileheight
-			// (Objects origin point is "bottom-left" in Tiled, "top-left" in melonJS)
+			// Fix Position to match Tiled 
 			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
 			this.x = posFix.x;
 			this.y = posFix.y;
@@ -173,8 +172,7 @@
 				}
 			}
 			
-			// Offset the object position by the tileheight
-			// (Objects origin point is "bottom-left" in Tiled, "top-left" in melonJS)
+			// Fix Position to match Tiled
 			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
 			this.x = posFix.x;
 			this.y = posFix.y;
