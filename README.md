@@ -42,50 +42,49 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-In order to build melonJS, you need to have GNU make and Java installed :
+Initial setup :
 
-On windows, you should Install [Cygwin](http://cygwin.com/) (be sure to choose “make’ in the package list, note that it should be also possible to use [GNU make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)), Java can be downloaded from [here](http://java.com/en/download/index.jsp).
+In order to build melonJS, we need first to have the following installed :
 
-On OS X, you should install [Xcode](https://developer.apple.com/xcode/) (both Xcode 3 & Xcode 4 version can be used).
+- [node.js](http://nodejs.org/) package manager
+- Java (and the JAVA_HOME environemnt variable under windows) for the doc generation
 
-On Linux/BSD users should use their appropriate package managers to install make and java.
+Once the node.js package manager has been installed, we need to install the Grunt CLI by typing :
+````
+$ npm install -g grunt-cli
+````
+and install the melonJS required dependencies, by typing :
+````
+$ cd melonJS
+$ npm install
+````
 
 
-* Regular flavored build :
-
-`$ cd melonJS`
-
-`$ make`
-
+* For a regular flavored build :
+````
+$ cd melonJS
+$ grunt
+````
 Both plain and minified library will be available under the "build" directory
 
-* CoffeeScript flavored build :
-
-First make sure that you have installed :
-
-- [node.js](http://nodejs.org/)
-- [npm](http://npmjs.org/)
-- [CofeeScript](http://jashkenas.github.com/coffee-script/)
-
-`$ sudo npm install -g coffee-script`
-
-`$ cd melonJS`
-
-`$ npm install -d`      # Installs the deps from the package.json file
-
-`$ cake build:browser`
+* CoffeeScript flavored build (broken!!) :
+````
+$ cd melonJS
+$ grunt coffee
+````
 
 Building the documentation
 -------------------------------------------------------------------------------
-`cd melonJS`
-
-`make doc`
+````
+$ cd melonJS
+grunt doc
+````
 
 The generated documentation will be then available under the "docs" directory
 
 Using melonJS
 -------------------------------------------------------------------------------
-Follow this tutorial to get started : http://www.melonjs.org/tutorial/index.html
+Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
 
 Note that due to the 'cross-origin request' policy implemented in most browsers (that prevents from accessing local files), you will need to either disable this security check (see the tutorial), or better use a "personal" local web server.
 

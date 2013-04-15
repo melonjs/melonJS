@@ -17,6 +17,7 @@ Version History
 * TMX : fixed access to inherited properties
 * TMX : added an entry point for a potential gzip/zlib TMX deccompression plugin
 * Video : fixed `viewport.shake()`
+* Video : optimized framerate on cocoonJS platforms by using the 'screencanvas' extension
 * Loader : fixed loader when repeatedly calling the preloader
 
 0.9.6

@@ -217,7 +217,7 @@
 		 *	@param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			if (alpha) {
+			if (typeof (alpha) === "number") {
 				this.alpha = alpha.clamp(0.0,1.0);
 			}
 		},

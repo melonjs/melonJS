@@ -46,6 +46,7 @@
 			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/"
 					+ me.sys.fps + " fps)"), htmlCounter.firstChild);
 		};
+		
 
 		/*---------------------------------------------
 			
@@ -171,6 +172,21 @@
 		var game_height_zoom = 0;
 		var auto_scale = false;
 		var maintainAspectRatio = true;
+		
+		/**
+		 * return a vendor specific canvas type
+		 * @private
+		 */
+		function getCanvasType() {
+			// cocoonJS specific canvas extension
+			if (navigator.isCocoonJS) {
+				if (!me.sys.dirtyRegion) {
+					return 'screencanvas';
+				}
+			}
+			return 'canvas';
+		};
+		
 
 		/*---------------------------------------------
 			
@@ -178,12 +194,6 @@
 				
 			---------------------------------------------*/
 
-		/* ---
-		
-			init the video part
-			
-			
-			---							*/
 		/**
 		 * init the "video" part<p>
 		 * return false if initialization failed (canvas not supported)
@@ -198,8 +208,7 @@
 		 * @return {Boolean}
 		 * @example
 		 * // init the video with a 480x320 canvas
-		 * if (!me.video.init('jsapp', 480, 320))
-		 * {
+		 * if (!me.video.init('jsapp', 480, 320)) {
 		 *    alert("Sorry but your browser does not support html 5 canvas !");
 		 *    return;
 		 * }
@@ -235,7 +244,7 @@
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			
 			// create the main canvas
-			canvas = api.createCanvas(game_width_zoom, game_height_zoom);
+			canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
 
 			// add our canvas
 			if (wrapperid) {
@@ -257,7 +266,7 @@
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
-				backBufferCanvas = api.createCanvas(game_width, game_height);
+				backBufferCanvas = api.createCanvas(game_width, game_height, false);
 				backBufferContext2D = backBufferCanvas.getContext('2d');
 			} else {
 				backBufferCanvas = canvas;
@@ -328,12 +337,23 @@
 		 * @param {Int} height height
 		 * @return {Canvas}
 		 */
+<<<<<<< HEAD
 		api.createCanvas = function(width, height) {
 			var _canvas = document.createElement(navigator.isCocoonJS ? 'screencanvas' : "canvas");
 
 			if((width === 0 || height === 0) && backBufferCanvas === null) {
 				throw new Error("width or height was zero. Canvas could not be initialized. Be sure to pass proper values to me.video.init");
 			}
+=======
+		api.createCanvas = function(width, height, vendorExt) {
+			if (width === 0 || height === 0)  {
+				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
+			}
+			
+			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
+			var _canvas = document.createElement(canvasType);
+			
+>>>>>>> dd6c286a7906a5cfb11140891f0244c96114fa46
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
 
@@ -350,11 +370,12 @@
 		 * @return {Context2D}
 		 */
 		api.createCanvasSurface = function(width, height) {
-			return api.createCanvas(width, height).getContext('2d');
+			return api.createCanvas(width, height, false).getContext('2d');
 		};
 
 		/**
 		 * return a reference to the screen canvas <br>
+		 * (will return buffered canvas if double buffering is enabled, or a reference to Screen Canvas) <br>
 		 * use this when checking for display size, event <br>
 		 * or if you need to apply any special "effect" to <br>
 		 * the corresponding context (ie. imageSmoothingEnabled)
@@ -367,7 +388,8 @@
 		};
 		
 		/**
-		 * return a reference to the screen canvas corresponding 2d Context
+		 * return a reference to the screen canvas corresponding 2d Context<br>
+		 * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
 		 * @name me.video#getScreenContext
 		 * @function
 		 * @return {Context2D}
@@ -566,7 +588,7 @@
 		 */
 		api.applyRGBFilter = function(object, effect, option) {
 			//create a output canvas using the given canvas or image size
-			var fcanvas = api.createCanvasSurface(object.width, object.height);
+			var fcanvas = api.createCanvasSurface(object.width, object.height, false);
 			// get the pixels array of the give parameter
 			var imgpix = me.utils.getPixels(object);
 			// pointer to the pixels data

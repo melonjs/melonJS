@@ -5,7 +5,7 @@
  *
  */
 
-(function($, game) {
+(function(window) {
 	
 	/**
 	 * a generic Color Layer Object
@@ -28,7 +28,7 @@
 			
 			this.floating = true;
 			
-			this.parent(new me.Vector2d(0, 0), game.viewport.width, game.viewport.height);
+			this.parent(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
 		},
 
 		/**
@@ -53,7 +53,7 @@
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			if (alpha) {
+			if (typeof(alpha) === "number") {
 				this.opacity = alpha.clamp(0.0, 1.0);
 			}
 		},
@@ -150,12 +150,16 @@
 			// if ratio !=0 scrolling image
 			this.ratio = ratio || 1.0;
 			
+			// a cached reference to the viewport
+			this.viewport = me.game.viewport;
+			
 			// last position of the viewport
-			this.lastpos = game.viewport.pos.clone();
+			this.lastpos = this.viewport.pos.clone();
+			
 			
 			// set layer width & height 
-			width  = width ? Math.min(game.viewport.width, width)   : game.viewport.width;
-			height = height? Math.min(game.viewport.height, height) : game.viewport.height;
+			width  = width ? Math.min(this.viewport.width, width)   : this.viewport.width;
+			height = height? Math.min(this.viewport.height, height) : this.viewport.height;
 			this.parent(new me.Vector2d(0, 0), width, height);
 			
 			// default opacity
@@ -196,7 +200,9 @@
 					}
 				}
 			});
-
+			
+			// default origin position
+			this.anchorPoint.set(0,0);
 			
 		},
 		
@@ -225,7 +231,7 @@
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			if (alpha) {
+			if (typeof(alpha) === "number") {
 				this.opacity = alpha.clamp(0.0, 1.0);
 			}
 		},
@@ -242,7 +248,7 @@
 			}
 			else {
 				// reference to the viewport
-				var vpos = game.viewport.pos;
+				var vpos = this.viewport.pos;
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
@@ -263,13 +269,19 @@
 		 * @private
 		 */
 		draw : function(context, rect) {
+			// save current context state
+			context.save();
 			
-			// check if transparency
-			if (this.opacity < 1.0) {
-				// set the layer alpha value
-				var _alpha = context.globalAlpha
-				context.globalAlpha = this.opacity;
+			// translate default position using the anchorPoint value
+			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
+				context.translate (
+					~~(this.anchorPoint.x * (this.viewport.width - this.imagewidth)),
+					~~(this.anchorPoint.y * (this.viewport.height - this.imageheight))
+				)
 			}
+			
+			// set the layer alpha value
+			context.globalAlpha = this.opacity;
 			
 			// if not scrolling ratio define, static image
 			if (this.ratio===0) {
@@ -322,9 +334,7 @@
 			}
 			
 			// restore context state
-			if (this.opacity < 1.0) {
-				context.globalAlpha = _alpha;
-			}
+			context.restore();
 		}
 	});	
 	
@@ -620,7 +630,7 @@
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			if (alpha) {
+			if (typeof(alpha) === "number") {
 				this.opacity = alpha.clamp(0.0, 1.0);
 				// if pre-rendering is used, update opacity on the hidden canvas context
 				if (this.preRender) {
@@ -701,7 +711,7 @@
 		draw : function(context, rect) {
 			
 			// get a reference to the viewport
-			var vpos = game.viewport.pos;
+			var vpos = me.game.viewport.pos;
 			
 			// use the offscreen canvas
 			if (this.preRender) {
@@ -736,4 +746,4 @@
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/
-})(window, me.game);
+})(window);
