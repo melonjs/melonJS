@@ -42,7 +42,8 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-* Initial setup :
+Initial setup :
+
 In order to build melonJS, we need first to have the following installed :
 
 - [node.js](http://nodejs.org/) package manager
