@@ -4,7 +4,7 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-
+	
     concat: {
 		dist: {
 			src: [
@@ -42,6 +42,20 @@ module.exports = function(grunt) {
 			dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
 		}
     },
+	
+	replace: {
+		dist: {
+			options: {
+				variables: {
+					'VERSION': '<%= pkg.version %>'
+				},
+				prefix: '@'
+			},
+			files: [
+				{expand: true, flatten: true, src: ['build/<%= pkg.name %>-<%= pkg.version %>.js'], dest: 'build/'}
+			]
+		}
+	},
 	
 	uglify: {
 		options: {
@@ -95,14 +109,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-replace');
   
   // Custom Tasks
   grunt.loadTasks( 'tasks' );
   
  
   // Default task.
-  grunt.registerTask('default', ['concat', 'uglify']);
-  grunt.registerTask('lint', ['concat', 'jshint']);
-  grunt.registerTask('doc', ['concat', 'jsdoc']);
+  grunt.registerTask('default', ['concat', 'replace', 'uglify']);
+  grunt.registerTask('lint', ['concat', 'replace', 'jshint']);
+  grunt.registerTask('doc', ['concat', 'replace', 'jsdoc']);
 
 };
