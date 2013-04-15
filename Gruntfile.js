@@ -73,6 +73,11 @@ module.exports = function(grunt) {
 			browser: true
 		}
 	},
+	
+	clean: {
+		dist: ['build/<%= pkg.name %>-<%= pkg.version %>.js', 'build/<%= pkg.name %>-<%= pkg.version %>.min.js'],
+		jsdoc: ['./docs/**/*.*', './docs/scripts', './doc/styles']
+    },
    
     jsdoc : {
         dist : {
@@ -88,9 +93,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-jsdoc');
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  
+  // Custom Tasks
+  grunt.loadTasks( 'tasks' );
+  
  
- // Default task.
+  // Default task.
   grunt.registerTask('default', ['concat', 'uglify']);
   grunt.registerTask('docs', ['concat', 'jsdoc']);
 

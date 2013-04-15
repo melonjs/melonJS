@@ -42,13 +42,15 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-In order to build melonJS, you need to have GNU make and Java installed :
+In order to build melonJS, you need to have the following installed :
 
-On windows, you should Install [Cygwin](http://cygwin.com/) (be sure to choose “make’ in the package list, note that it should be also possible to use [GNU make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)), Java can be downloaded from [here](http://java.com/en/download/index.jsp).
+- [node.js](http://nodejs.org/)
 
-On OS X, you should install [Xcode](https://developer.apple.com/xcode/) (both Xcode 3 & Xcode 4 version can be used).
+For the doc generation
 
-On Linux/BSD users should use their appropriate package managers to install make and java.
+- java (and JAVA_HOME environemnt variable under windows)
+
+once installed, call `npm install` to install all dependencies
 
 
 * Regular flavored build :
