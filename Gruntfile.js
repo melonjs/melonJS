@@ -101,6 +101,6 @@ module.exports = function(grunt) {
  
   // Default task.
   grunt.registerTask('default', ['concat', 'uglify']);
-  grunt.registerTask('docs', ['concat', 'jsdoc']);
+  grunt.registerTask('doc', ['concat', 'jsdoc']);
 
 };
