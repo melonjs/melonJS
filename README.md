@@ -42,39 +42,37 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-Initial setup :
+To build your own version of melonJS you will need to install :
 
-In order to build melonJS, we need first to have the following installed :
+- the [Node.js](http://nodejs.org/) package manager
+- the [Grunt](http://gruntjs.com/) task manager
 
-- [node.js](http://nodejs.org/) package manager
-- Java (and the JAVA_HOME environemnt variable under windows) for the doc generation
+Once the Node.js package manager has been installed (using the installer from their website), 
+we need to install Grunt and the Grunt CLI (Command Line Interface), by doin the following :
 
-Once the node.js package manager has been installed, we need to install the Grunt CLI by typing :
+Open a [Terminal](http://en.wikipedia.org/wiki/Terminal_(OS_X)) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and 
+type the following :
 ````
 $ npm install -g grunt-cli
 ````
-and install the melonJS required dependencies, by typing :
+then we can install the melonJS required dependencies, by typing :
 ````
 $ cd melonJS
 $ npm install
 ````
 
-
-* For a regular flavored build :
+Once all the above done, we are ready to build melonJS :
 ````
 $ cd melonJS
 $ grunt
 ````
-Both plain and minified library will be available under the "build" directory
 
-* CoffeeScript flavored build (broken!!) :
-````
-$ cd melonJS
-$ grunt coffee
-````
+Both plain and minified library will be available under the "build" directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
+melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed.
+
 ````
 $ cd melonJS
 grunt doc
