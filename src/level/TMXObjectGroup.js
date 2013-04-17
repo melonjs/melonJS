@@ -106,7 +106,7 @@
 			this.width = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
 			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
 			this.gid = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
-			
+
 			// check if the object has an associated gid	
 			if (this.gid) {
 				this.setImage(this.gid, tilesets);
@@ -128,6 +128,12 @@
 					}
 				}
 			}
+			
+			// Fix Position to match Tiled 
+			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
+			this.x = posFix.x;
+			this.y = posFix.y;
+			
 			// set the object properties
 			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
 		},
@@ -165,6 +171,12 @@
 					});
 				}
 			}
+			
+			// Fix Position to match Tiled
+			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
+			this.x = posFix.x;
+			this.y = posFix.y;
+			
 			// set the object properties
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
 		},
@@ -176,13 +188,9 @@
 			// set width and height equal to tile size
 			this.width = tileset.tilewidth;
 			this.height = tileset.tileheight;
-
+			
 			// force spritewidth size
 			this.spritewidth = this.width;
-			
-			// Offset the object position by the tileheight
-			// (Objects origin point is "bottom-left" in Tiled, "top-left" in melonJS)
-			this.y -= tileset.tileheight;
 
 			// the object corresponding tile 
 			var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
