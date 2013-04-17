@@ -3,12 +3,13 @@
   "version": "0.9.7",
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/melonjs/melonJS"
-    }
-  ],
+  "repository": {
+	  "type": "git",
+	  "url": "https://github.com/melonjs/melonJS"
+  },
+  "bugs": {
+	  "url": "https://github.com/melonjs/melonJS/issues"
+  },
   "licenses": [
     {
       "type": "MIT License",
@@ -22,6 +23,7 @@
   "engines": {
     "node": ">= 0.8.0"
   },
+  "dependencies": {},
   "devDependencies": {
 	"grunt": "~0.4.1",
 	"grunt-contrib-jshint": "~0.4.3",
@@ -29,7 +31,6 @@
 	"grunt-contrib-clean": "~0.4.0",
 	"grunt-contrib-uglify": "~0.2.0",
 	"grunt-contrib-nodeunit": "~0.1.2",
-	"grunt-contrib-coffee": "~0.6.6",
 	"grunt-replace": "~0.4.3"
   }
 }
