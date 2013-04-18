@@ -42,44 +42,41 @@ and currently features :
 
 Building melonJS
 -------------------------------------------------------------------------------
-In order to build melonJS, you need to have GNU make and Java installed :
+To build your own version of melonJS you will need to install :
 
-On windows, you should Install [Cygwin](http://cygwin.com/) (be sure to choose “make’ in the package list, note that it should be also possible to use [GNU make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)), Java can be downloaded from [here](http://java.com/en/download/index.jsp).
+- the [Node.js](http://nodejs.org/) package manager
+- the [Grunt](http://gruntjs.com/) task manager
 
-On OS X, you should install [Xcode](https://developer.apple.com/xcode/) (both Xcode 3 & Xcode 4 version can be used).
+Once the Node.js package manager has been installed (using the installer from their website), 
+we need to install Grunt and the Grunt CLI (Command Line Interface), by doing the following :
 
-On Linux/BSD users should use their appropriate package managers to install make and java.
+Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and 
+type the following :
+````
+$ npm install -g grunt-cli
+````
+then we can install the melonJS required dependencies, by typing :
+````
+$ cd melonJS
+$ npm install
+````
 
+Once all the above done, we are ready to build melonJS :
+````
+$ cd melonJS
+$ grunt
+````
 
-* Regular flavored build :
-
-`$ cd melonJS`
-
-`$ make`
-
-Both plain and minified library will be available under the "build" directory
-
-* CoffeeScript flavored build :
-
-First make sure that you have installed :
-
-- [node.js](http://nodejs.org/)
-- [npm](http://npmjs.org/)
-- [CofeeScript](http://jashkenas.github.com/coffee-script/)
-
-`$ sudo npm install -g coffee-script`
-
-`$ cd melonJS`
-
-`$ npm install -d`      # Installs the deps from the package.json file
-
-`$ cake build:browser`
+Both plain and minified library will be available under the "build" directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
-`cd melonJS`
+melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed.
 
-`make doc`
+````
+$ cd melonJS
+grunt doc
+````
 
 The generated documentation will be then available under the "docs" directory
 

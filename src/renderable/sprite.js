@@ -6,12 +6,6 @@
  */
 
 (function($) {
-	
-	/** 
-	 * a local constant for the (Math.PI * 2) value
-	 * @private
-	 */
-	var PI2 = Math.PI * 2;
 
 	/**
 	 * A Simple object to display a sprite on screen.
@@ -55,7 +49,13 @@
 		 * @name me.SpriteObject#angle
 		 */
 		angle: 0,
-		
+
+		/**
+		 * Source rotation angle for pre-rotating the source image<br>
+		 * Commonly used for TexturePacker
+		 * @private
+		 */
+		_sourceAngle: 0,
 
 		/**
 		 * Define the sprite opacity<br>
@@ -217,7 +217,7 @@
 		 *	@param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
-			if (alpha) {
+			if (typeof (alpha) === "number") {
 				this.alpha = alpha.clamp(0.0,1.0);
 			}
 		},
@@ -266,27 +266,36 @@
 
 			// clamp position vector to pixel grid
 			var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
-			
-			if ((this.scaleFlag) || (this.angle!==0)) {
+
+			var w = this.width, h = this.height;
+			var angle = this.angle + this._sourceAngle;
+
+			if ((this.scaleFlag) || (angle!==0)) {
 				// calculate pixel pos of the anchor point
-				var ax = this.width * this.anchorPoint.x, ay = this.height * this.anchorPoint.y;
+				var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
 				// translate to the defined anchor point
 				context.translate(xpos + ax, ypos + ay);
 				// scale
 				if (this.scaleFlag)
 					context.scale(this.scale.x, this.scale.y);
-				if (this.angle!==0)
-					context.rotate(this.angle);
-				// reset coordinates back to upper left coordinates
-				xpos = -ax;
-				ypos = -ay;
+				if (angle!==0)
+					context.rotate(angle);
+
+				if (this._sourceAngle!==0) {
+					// swap w and h for rotated source images
+					w = this.height, h = this.width;
+					xpos = -ay, ypos = -ax;
+				}
+				else
+					// reset coordinates back to upper left coordinates
+					xpos = -ax, ypos = -ay;
 			}
 
 			context.drawImage(this.image,
 							this.offset.x, this.offset.y,
-							this.width, this.height,
+							w, h,
 							xpos, ypos,
-							this.width, this.height);
+							w, h);
 
 			
 			// restore the context
@@ -377,10 +386,6 @@
 			// Spacing and margin
 			this.spacing = spacing || 0;
 			this.margin = margin || 0;
-			
-			// to keep track of angle change
-			// (texture packer)
-			this.defaultAngle = 0;
 
 			// call the constructor
 			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
@@ -527,10 +532,7 @@
 			this.offset = frame.offset;
 			this.width = frame.width;
 			this.height = frame.height;
-			if (this.defaultAngle !== frame.angle) {
-				this.angle = (this.angle + frame.angle - this.defaultAngle) % (PI2);
-				this.defaultAngle = frame.angle;
-			}
+			this._sourceAngle = frame.angle;
 		},
 		
 		/**

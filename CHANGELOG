@@ -1,6 +1,7 @@
 Version History
 ---------------
 0.9.7
+* General : melonJS now uses Grunt, the task manager, for the build system
 * Audio : preliminary audio support for mobile devices (iOS6 for now)
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
 * Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.

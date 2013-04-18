@@ -213,7 +213,7 @@
 							case 'xml' : 
 							case 'tmx' : {
 								// ie9 does not fully implement the responseXML
-								if (me.sys.ua.toLowerCase().contains('msie') || !xmlhttp.responseXML) {
+								if (me.sys.ua.match(/msie/i) || !xmlhttp.responseXML) {
 									// manually create the XML DOM
 									result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
 								} else {
@@ -565,6 +565,10 @@
 
 			// unload all tmx resources
 			for (name in tmxList)
+				obj.unload(name);
+			
+			// unload all atlas resources
+			for (name in atlasList)
 				obj.unload(name);
 
 			// unload all audio resources

@@ -70,7 +70,7 @@ var me = me || {};
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		localStorage : (typeof($.localStorage) == 'object'),
+		localStorage : (typeof($.localStorage) === 'object'),
 		/**
 		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
 		 * @type Boolean
@@ -83,7 +83,7 @@ var me = me || {};
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		nativeBase64 : (typeof($.atob) == 'function'),
+		nativeBase64 : (typeof($.atob) === 'function'),
 
 		/**
 		 * Touch capabilities <br>
@@ -241,11 +241,12 @@ var me = me || {};
 			}
 
 			// clean up loading event
-			if (document.removeEventListener)
+			if (document.removeEventListener) {
 				document.removeEventListener("DOMContentLoaded", domReady, false);
-			else
+			} else {
 				$.removeEventListener("load", domReady, false);
-
+			}
+			
 			// Remember that the DOM is ready
 			isReady = true;
 
@@ -256,7 +257,6 @@ var me = me || {};
 			readyList.length = 0;
 		}
 	}
-	;
 
 	// bind ready
 	function bindReady() {
@@ -276,7 +276,7 @@ var me = me || {};
 			// A fallback to window.onload, that will always work
 			$.addEventListener("load", domReady, false);
 		}
-	};
+	}
 
 	/**
 	 * Specify a function to execute when the DOM is fully loaded
@@ -350,14 +350,11 @@ var me = me || {};
 
 	/************************************************************************************/
 
-	/*---
+	/*
+	 * some "Javascript API" patch & enhancement
+	 */
 
-	 	some "Javascript API" patch & enhancement
-
-						---*/
-
-	var initializing = false,
-		fnTest = /xyz/.test(function() {/**@nosideeffects*/xyz;}) ? /\bparent\b/ : /.*/;
+	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
 	/**
 	 * JavaScript Inheritance Helper <br>
@@ -421,8 +418,8 @@ var me = me || {};
 		// Copy the properties over onto the new prototype
 		for ( var name in prop) {
 			// Check if we're overwriting an existing function
-			proto[name] = typeof prop[name] == "function"
-					&& typeof parent[name] == "function"
+			proto[name] = typeof prop[name] === "function"
+					&& typeof parent[name] === "function"
 					&& fnTest.test(prop[name]) ? (function(name, fn) {
 				return function() {
 					var tmp = this.parent;
@@ -499,7 +496,7 @@ var me = me || {};
 			// http://es5.github.com/#x15.3.4.5
 			// from https://github.com/kriskowal/es5-shim
 			var target = this;
-			if (typeof target != "function") {
+			if (typeof target !== "function") {
 				throw new TypeError("Function.prototype.bind called on incompatible " + target);
 			}
 			var args = Array.prototype.slice.call(arguments, 1);
@@ -521,7 +518,7 @@ var me = me || {};
 			}
 			return bound;
 		};
-	};
+	}
 	
 	
 	if (typeof Date.now === "undefined") {
@@ -530,7 +527,7 @@ var me = me || {};
 		 * supporting Date.now (JS 1.5)
 		 * @private
 		 */
-		Date.now = function(){return new Date().getTime()};
+		Date.now = function(){return new Date().getTime();};
 	}
 
 	if(typeof console === "undefined") {
@@ -605,7 +602,7 @@ var me = me || {};
 	 * @return {Boolean} true if string contains only digits
 	 */
 	String.prototype.isNumeric = function() {
-		return (this != null && !isNaN(this) && this.trim() != "");
+		return (this !== null && !isNaN(this) && this.trim() !== "");
 	};
 
 	/**
@@ -614,8 +611,7 @@ var me = me || {};
 	 * @return {Boolean} true if the string is either true or false
 	 */
 	String.prototype.isBoolean = function() {
-		return (this != null && ("true" == this.trim() || "false" == this
-				.trim()));
+		return (this !== null && ("true" === this.trim() || "false" === this.trim()));
 	};
 
 	/**
@@ -691,8 +687,7 @@ var me = me || {};
 	 * @return {String} converted hexadecimal value
 	 */
 	Number.prototype.toHex = function() {
-		return "0123456789ABCDEF".charAt((this - this % 16) >> 4)
-				+ "0123456789ABCDEF".charAt(this % 16);
+		return "0123456789ABCDEF".charAt((this - this % 16) >> 4) + "0123456789ABCDEF".charAt(this % 16);
 	};
 
 	/**
@@ -768,14 +763,15 @@ var me = me || {};
 		}
 	});
 
-	/*---
-	 	ME init stuff
-						---*/
+	/*
+	 * me init stuff
+     */
 
 	function _init_ME() {
 		// don't do anything if already initialized (should not happen anyway)
-		if (me_initialized)
+		if (me_initialized) {
 			return;
+		}
 
 		// enable/disable the cache
 		me.utils.setNocache(document.location.href.match(/\?nocache/)||false);
@@ -809,7 +805,7 @@ var me = me || {};
 
 		me_initialized = true;
 
-	};
+	}
 
 	/******************************************/
 	/*		OBJECT DRAWING MANAGEMENT           */
@@ -913,7 +909,7 @@ var me = me || {};
 		 */
 		api.remove = function(obj) {
 			var idx = dirtyObjects.indexOf(obj);
-			if (idx != -1) {
+			if (idx !== -1) {
 				// remove the object from the list of obj to draw
 				dirtyObjects.splice(idx, 1);
 
@@ -925,14 +921,14 @@ var me = me || {};
 				api.makeDirty(obj, true);
 			}
  		};
-
+		
 		/**
 		 * return the amount of draw object per frame
 		 */
 		api.getDrawCount = function() {
 			return drawCount;
  		};
-
+		
 		/**
 		 * draw all dirty objects/regions
 		 */
@@ -944,7 +940,7 @@ var me = me || {};
 			// save the current context
 			context.save();
 			// translate by default to screen coordinates
-			context.translate(-posx, -posy)
+			context.translate(-posx, -posy);
 			
 			// substract the map offset to current the current pos
 			posx -= me.game.currentLevel.pos.x;
@@ -1131,7 +1127,7 @@ var me = me || {};
 		 * me.game.onLevelLoaded = this.myFunction.bind(this);
 		 */
 		 api.onLevelLoaded = null;
-
+		 
 		/**
 		 * Initialize the game manager
 		 * @name me.game#init
@@ -1171,16 +1167,18 @@ var me = me || {};
 		api.reset = function() {
 
 			// initialized the object if not yet done
-			if (!initialized)
+			if (!initialized) {
 				api.init();
+			}
 
 			// remove all objects
 			api.removeAll(true);
 
 			// reset the viewport to zero ?
-			if (api.viewport)
+			if (api.viewport) {
 				api.viewport.reset();
-
+			}
+			
 			// also reset the draw manager
 			drawManager.reset();
 
@@ -1215,7 +1213,7 @@ var me = me || {};
 					// only if visible
 					api.add(layers[i]);
 				}
-			};
+			}
 
 			// change the viewport limit
 			api.viewport.setBounds(Math.max(api.currentLevel.width, api.viewport.width),
@@ -1233,7 +1231,7 @@ var me = me || {};
 			}
 			
 			// check if the map has different default (0,0) screen coordinates
-			if (api.currentLevel.pos.x != api.currentLevel.pos.y) {
+			if (api.currentLevel.pos.x !== api.currentLevel.pos.y) {
 				// translate the display accordingly
 				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
 			}
@@ -1243,7 +1241,7 @@ var me = me || {};
 
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
-				api.onLevelLoaded.call(api.onLevelLoaded, level.name)
+				api.onLevelLoaded.call(api.onLevelLoaded, level.name);
 			}
 			//publish the corresponding message
 			me.event.publish(me.event.LEVEL_LOADED, [level.name]);
@@ -1454,7 +1452,7 @@ var me = me || {};
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be removed
-		 * @param {Boolean=false} force Force immediate deletion.<br>
+		 * @param {Boolean} [force=false] Force immediate deletion.<br>
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 */
 		api.remove = function(obj, force) {
@@ -1474,26 +1472,28 @@ var me = me || {};
 				me.entityPool.freeInstance(target);
 			}
 
-			// remove the object from the object list
-			if (force===true) {
-				// force immediate object deletion
-				removeNow(obj);
-			} else {
-				// make it invisible (this is bad...)
-				obj.visible = false;
-				// else wait the end of the current loop
-				/** @private */
-				pendingRemove = (function (obj) {
+			if (gameObjects.indexOf(obj) > -1) {
+				// remove the object from the object list
+				if (force===true) {
+					// force immediate object deletion
 					removeNow(obj);
-					pendingRemove = null;
-				}).defer(obj);
+				} else {
+					// make it invisible (this is bad...)
+					obj.visible = false;
+					// else wait the end of the current loop
+					/** @private */
+					pendingRemove = (function (obj) {
+						removeNow(obj);
+						pendingRemove = null;
+					}).defer(obj);
+				}
 			}
 		};
 
 		/**
 		 * remove all objects<br>
 		 * @name me.game#removeAll
-		 * @param {Boolean=false} force Force immediate deletion.<br>
+		 * @param {Boolean} [force=false] Force immediate deletion.<br>
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 * @public
 		 * @function

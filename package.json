@@ -1,34 +1,36 @@
 {
-	"name": "melonJS",
-	"version": "0.9.7",
-	"description": "MelonJS Game Engine",
-
-	"homepage": "http://www.melonjs.org/",
-	"repositories": [
-		{
-			"type": "git",
-			"url": "https://github.com/obiot/melonJS"
-		}
-	],
-
-	"licenses": [
-		{
-			"type": "MIT License",
-			"url": "https://github.com/obiot/melonJS/blob/master/MIT-LICENSE"
-		}
-	],
-
-	"author": {
-		"name": "Olivier Biot",
-		"email": "contact@melonjs.org"
-	},
-
-	"engines": {
-		"node": ">0.4 <0.6"
-	},
-
-	"dependencies": {
-		"coffee-script": ">1 <2",
-		"uglify-js": "1.1.0"
-	}
+  "name": "melonJS",
+  "version": "0.9.7",
+  "description": "MelonJS Game Engine",
+  "homepage": "http://www.melonjs.org/",
+  "repository": {
+	  "type": "git",
+	  "url": "https://github.com/melonjs/melonJS"
+  },
+  "bugs": {
+	  "url": "https://github.com/melonjs/melonJS/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT License",
+      "url": "https://github.com/melonjs/melonJS/blob/master/MIT-LICENSE"
+    }
+  ],
+  "author": {
+    "name": "melonJS",
+    "email": "contact@melonjs.org"
+  },
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+	"grunt": "~0.4.1",
+	"grunt-contrib-jshint": "~0.4.3",
+	"grunt-contrib-concat": "~0.2.0",
+	"grunt-contrib-clean": "~0.4.0",
+	"grunt-contrib-uglify": "~0.2.0",
+	"grunt-contrib-nodeunit": "~0.1.2",
+	"grunt-replace": "~0.4.3"
+  }
 }
