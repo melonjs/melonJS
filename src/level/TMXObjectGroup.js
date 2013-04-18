@@ -129,10 +129,8 @@
 				}
 			}
 			
-			// Fix Position to match Tiled 
-			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
-			this.x = posFix.x;
-			this.y = posFix.y;
+			// Adjust the Position to match Tiled
+			me.game.renderer.adjustPosition(this);
 			
 			// set the object properties
 			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
@@ -172,10 +170,8 @@
 				}
 			}
 			
-			// Fix Position to match Tiled
-			var posFix = me.game.renderer.objectPosFix(this.x, this.y, this.width, this.height);
-			this.x = posFix.x;
-			this.y = posFix.y;
+			// Adjust the Position to match Tiled
+			me.game.renderer.adjustPosition(this);
 			
 			// set the object properties
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);

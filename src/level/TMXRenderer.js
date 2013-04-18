@@ -61,8 +61,9 @@
 		 * the way Tiled places them
 		 * @private
 		 */
-		objectPosFix: function(x,y,width,height) {
-			return {x: x, y:y-height};
+		adjustPosition: function(obj){
+			if(typeof(this.gid) !== "undefined")
+				this.y -= this.height;
 		},
 		
 		/**
@@ -172,14 +173,17 @@
 		 * the way Tiled places them
 		 * @private
 		 */
-		objectPosFix: function(x,y, width, height) {
-			var tilex = x/this.hTilewidth;
-			var tiley = y/this.tileheight;
+		adjustPosition: function(obj){
+			var tilex = obj.x/this.hTilewidth;
+			var tiley = obj.y/this.tileheight;
 			var isoPos = this.tileToPixelCoords(tilex, tiley);
-			isoPos.x -= width/2;
-			isoPos.y -= height;
+			isoPos.x -= obj.width/2;
+			isoPos.y -= obj.height;
+			
+			obj.x = isoPos.x;
+			obj.y = isoPos.y;
 
-			return isoPos;
+			//return isoPos;
 		},
 		
 		/**
