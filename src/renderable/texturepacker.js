@@ -8,6 +8,12 @@
 (function($) {
 
 	/**
+	 * a local constant for the -(Math.PI / 2) value
+	 * @private
+	 */
+	var nhPI = -(Math.PI / 2);
+
+	/**
 	 * A Texture atlas object.
 	 * @class
 	 * @extends Object
@@ -65,29 +71,20 @@
 		 */
 		initFromTexturePacker : function (data) {
 			var atlas = {};
-			data['frames'].forEach(function(frame) {
-				
-				// check if the frame is rotated
-				if(frame['rotated']===true){
-					var w = frame['frame']['h'];
-					var h = frame['frame']['w'];
-				} else {
-					var w = frame['frame']['w'];
-					var h = frame['frame']['h'];
-				}
-				
+			data.frames.forEach(function(frame) {
 				atlas[frame.filename] = {
 					frame: new me.Rect( 
-						new me.Vector2d(frame['frame']['x'], frame['frame']['y']), w, h
+						new me.Vector2d(frame.frame.x, frame.frame.y),
+						frame.frame.w, frame.frame.h
 					),
 					source: new me.Rect(
-						new me.Vector2d(frame['spriteSourceSize']['x'], frame['spriteSourceSize']['y']), 
-						frame['spriteSourceSize']['w'], frame['spriteSourceSize']['h']
+						new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
+						frame.spriteSourceSize.w, frame.spriteSourceSize.h
 					),
 					// non trimmed size, but since we don't support trimming both value are the same
-					//sourceSize: new me.Vector2d(frame['sourceSize']['w'],frame['sourceSize']['h']),
-					rotated : frame['rotated']===true,
-					trimmed : frame['trimmed']===true
+					//sourceSize: new me.Vector2d(frame.sourceSize.w,frame.sourceSize.h),
+					rotated : frame.rotated===true,
+					trimmed : frame.trimmed===true
 				};
 			});
 			return atlas;
@@ -128,7 +125,7 @@
 				
 				// check if we need rotation
 				if (tex.rotated===true) {
-					sprite.angle = - (Math.PI/2);
+					sprite._sourceAngle = nhPI;
 					// >> sprite pos not correct when rotated ? <<
 				}
 				// return our object
@@ -177,7 +174,7 @@
 						offset: tex.frame.pos.clone(),
 						width: tex.frame.width,
 						height: tex.frame.height,
-						angle : (tex.rotated===true) ? -(Math.PI/2) : 0
+						angle : (tex.rotated===true) ? nhPI : 0
 					};
 				} else {
 					// throw an error
