@@ -63,7 +63,7 @@
 		 */
 		adjustPosition: function(obj){
 			if(typeof(obj.gid) != "undefined")
-				this.y -= this.height;
+				obj.y -= obj.height;
 		},
 		
 		/**
