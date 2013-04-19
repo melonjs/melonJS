@@ -19,6 +19,32 @@
 	 */
 
 	me.TMXUtils = (function() {
+		
+		/**
+		 * set and interpret a TMX property value 
+		 * @private
+		 */
+		function setTMXValue(value) {
+			if (!value || value.isBoolean()) {
+				// if value not defined or boolean
+				value = value ? (value == "true") : true;
+			} else if (value.isNumeric()) {
+				// check if numeric
+				value = Number(value);
+			} else if (value.match(/json:/i)) {
+				// try to parse it
+				var match = value.split(/json:/i)[1];
+				try {
+					value = JSON.parse(match);
+				}
+				catch (e) {
+					throw "Unable to parse JSON: " + match
+				}
+			}
+			// return the interpreted value
+			return value;
+		};
+	
 		// hold public stuff in our singleton
 		var api = {};
 
@@ -35,17 +61,8 @@
 				for ( var i = 0; i < oProp.length; i++) {
 					var propname = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
 					var value = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
-					
-					// if value not defined or boolean
-					if (!value || value.isBoolean()) {
-						value = value ? (value == "true") : true;
-					}
-					// check if numeric
-					else if (value.isNumeric()) {
-						value = Number(value);
-					}
-					// add the new prop to the object prop list
-					obj[propname] = value;
+					// set the value
+					obj[propname] = setTMXValue(value);
 							
 				}
 			}
@@ -61,18 +78,8 @@
 			if (properties) {
 				for(var name in properties){
                     if (properties.hasOwnProperty(name)) {
-                        var value = properties[name];
-
-                        // if value not defined or boolean
-                        if (!value || value.isBoolean()) {
-                            value = value ? (value == "true") : true;
-                        }
-                        // check if numeric
-                        else if (value.isNumeric()) {
-                            value = Number(value);
-                        }
-                        // add the new prop to the object prop list
-                        obj[name] = value;
+                        // set the value
+                        obj[name] = setTMXValue(properties[name]);
                     }
                 }
 			}
