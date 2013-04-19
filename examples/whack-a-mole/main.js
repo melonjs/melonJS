@@ -89,9 +89,6 @@ var jsApp	=
 			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
 			return;
 		};
-		
-		// disable interpolation when scaling
-		me.video.setImageSmoothing(false);
 					
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
