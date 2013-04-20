@@ -100,7 +100,8 @@ module.exports = function(grunt) {
             src: ['build/<%= pkg.name %>-<%= pkg.version %>.js'], 
             options: {
 				configure: 'jsdoc_conf.json',
-				destination: 'docs'
+				destination: 'docs',
+				template: 'tasks/jsdoc-template/melonjs'
             }
         }
     }
