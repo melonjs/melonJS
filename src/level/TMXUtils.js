@@ -27,13 +27,13 @@
 		function setTMXValue(value) {
 			if (!value || value.isBoolean()) {
 				// if value not defined or boolean
-				value = value ? (value == "true") : true;
+				value = value ? (value === "true") : true;
 			} else if (value.isNumeric()) {
 				// check if numeric
 				value = Number(value);
-			} else if (value.match(/json:/i)) {
+			} else if (value.match(/^json:/i)) {
 				// try to parse it
-				var match = value.split(/json:/i)[1];
+				var match = value.split(/^json:/i)[1];
 				try {
 					value = JSON.parse(match);
 				}
