@@ -63,7 +63,7 @@
 		 */
 		adjustPosition: function(obj) {
 			// only adjust position if obj.gid is defined
-			if (obj.gid) {
+			if (typeof(obj.gid) === 'number') {
 				 // Tiled objects origin point is "bottom-left" in Tiled, 
 				 // "top-left" in melonJS)
 				obj.y -= obj.height;
