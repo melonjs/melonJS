@@ -40,7 +40,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		]);
 		
 		// define a basic walking animatin
-		this.renderable.addAnimation ("walk",  [0,2,1]);
+		this.renderable.addAnimation ("walk",  ["walk0001.png", "walk0002.png", "walk0003.png"]);
 		// set as default
 		this.renderable.setCurrentAnimation("walk");
 
@@ -286,9 +286,9 @@ var SlimeEnemyEntity = PathEnemyEntity.extend({
 		}
 
 		// walking animatin
-		this.renderable.addAnimation ("walk", [0,1]);
+		this.renderable.addAnimation ("walk", ["slime_normal.png", "slime_walk.png"]);
 		// dead animatin
-		this.renderable.addAnimation ("dead", [2]);
+		this.renderable.addAnimation ("dead", ["slime_dead.png"]);
 		
 		// set default one
 		this.renderable.setCurrentAnimation("walk");
@@ -321,9 +321,9 @@ var FlyEnemyEntity = PathEnemyEntity.extend({
 		}
 
 		// walking animatin
-		this.renderable.addAnimation ("walk", [0,1]);
+		this.renderable.addAnimation ("walk", ["fly_normal.png", "fly_fly.png"]);
 		// dead animatin
-		this.renderable.addAnimation ("dead", [2]);
+		this.renderable.addAnimation ("dead", ["fly_dead.png"]);
 		
 		// set default one
 		this.renderable.setCurrentAnimation("walk");
