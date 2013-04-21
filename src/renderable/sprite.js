@@ -438,7 +438,7 @@
 		 * the index list must follow the logic as per the following example :<br>
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
-		 * @param {Int[]||String[]} index list of sprite index defining the animaton
+		 * @param {Int[]|String[]} index list of sprite index defining the animaton
 		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
 		 * @example
 		 * // walking animatin
