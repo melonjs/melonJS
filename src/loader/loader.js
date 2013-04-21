@@ -198,7 +198,12 @@
 			}
 			
 			xmlhttp.open("GET", tmxData.src + me.nocache, true);
-						
+
+			// add the tmx to the levelDirector
+			if (tmxData.type === "tmx") {
+				me.levelDirector.addTMXLevel(tmxData.name);
+			}
+
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
 			xmlhttp.onreadystatechange = function() {
@@ -240,10 +245,6 @@
 							format : format
 						};
 						
-						// add the tmx to the levelDirector
-						if (tmxData.type === "tmx") {
-							me.levelDirector.addTMXLevel(tmxData.name);
-						}
 						// fire the callback
 						onload();
 					} else {

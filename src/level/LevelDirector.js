@@ -67,7 +67,7 @@
 				// set the name of the level
 				levels[levelId].name = levelId;
 				// level index
-				levelIdx[levelIdx.length] = levelId;
+				levelIdx.push(levelId);
 			} 
 			else  {
 				//console.log("level %s already loaded", levelId);
