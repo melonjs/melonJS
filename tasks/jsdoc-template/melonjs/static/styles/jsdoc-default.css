@@ -6,7 +6,7 @@ html
 
 body
 {
-	font: 14px "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans serif;
+	font: 12px "Tahoma", Geneva, "Helvetica Neue", Helvetica, Arial, sans serif;
 	line-height: 130%;
 	color: #000;
 	background-color: #fff;
@@ -28,6 +28,8 @@ header
 {
 	display: block;
 	padding: 6px 4px;
+	background-color: #ccc;
+}
 }
 
 .class-description {
