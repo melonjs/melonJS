@@ -379,9 +379,6 @@
 						
 			// default animation speed
 			this.animationspeed = me.sys.fps / 10;
-			
-			// amount of sprite in the png/texture
-			this.spritecount = null ;
 
 			// Spacing and margin
 			this.spacing = spacing || 0;
@@ -411,29 +408,23 @@
 			// reinitialze the atlas
 			if (atlas !== undefined) {
 				this.textureAtlas = atlas;
-				// initialize sprite count
-				this.spritecount = new me.Vector2d(this.textureAtlas.length, 1);
 			} else {
 				// regular spritesheet
 				this.textureAtlas = [];
 				// calculate the sprite count (line, col)
-				this.spritecount = new me.Vector2d(~~((this.image.width - this.margin) / (this.width + this.spacing)),
-												   ~~((this.image.height - this.margin) / (this.height + this.spacing)));
+				var spritecount = new me.Vector2d(
+					~~((this.image.width - this.margin) / (this.width + this.spacing)),
+					~~((this.image.height - this.margin) / (this.height + this.spacing))
+				);
 
-				// if one single image, disable animation
-				if ((this.spritecount.x * this.spritecount.y) == 1) {
-					// override setAnimationFrame with an empty function
-					/** @private */
-					this.setAnimationFrame = function() {;};
-				}
-				
 				// build the local atlas
-				for ( var frame = 0, count = this.spritecount.x * this.spritecount.y; frame < count ; frame++) {
+				for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
 					this.textureAtlas[frame] = {
+						name: ''+frame,
 						offset: new me.Vector2d(
-									this.margin + (this.spacing + this.width) * (frame % this.spritecount.x),
-									this.margin + (this.spacing + this.height) * ~~(frame / this.spritecount.x)
-								),
+							this.margin + (this.spacing + this.width) * (frame % spritecount.x),
+							this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x)
+						),
 						width: this.width,
 						height: this.height,
 						angle: 0
@@ -447,7 +438,7 @@
 		 * the index list must follow the logic as per the following example :<br>
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
-		 * @param {Int[]} index list of sprite index defining the animaton
+		 * @param {Int[]||String[]} index list of sprite index defining the animaton
 		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
 		 * @example
 		 * // walking animatin
@@ -459,7 +450,7 @@
 		 * // slower animation
 		 * this.addAnimation ("roll", [7,8,9,10], 10);
 		 */
-		addAnimation : function(name, frame, animationspeed) {
+		addAnimation : function(name, index, animationspeed) {
 			this.anim[name] = {
 				name : name,
 				frame : [],
@@ -468,17 +459,28 @@
 				animationspeed: animationspeed || this.animationspeed
 			};
 
-			if (frame == null) {
-				frame = [];
-				// create a default animation with all sprites in the spritesheet
-				for ( var i = 0, count = this.spritecount.x * this.spritecount.y; i < count ; i++) {
-					frame[i] = i;
-				}
+			if (index == null) {
+				index = [];
+				var i = 0;
+				// create a default animation with all frame
+				this.textureAtlas.forEach(function() {
+					index[i] = i++;
+				});
 			}
 
 			// set each frame configuration (offset, size, etc..)
-			for ( var i = 0 , len = frame.length ; i < len; i++) {
-				this.anim[name].frame[i] = this.textureAtlas[frame[i]];
+			for ( var i = 0 , len = index.length ; i < len; i++) {
+				if (typeof(index[i]) === "number") {
+					this.anim[name].frame[i] = this.textureAtlas[index[i]];
+				} else { // string
+					// parse the atlas (not the most efficient way!)
+					for ( var t = 0 , tlen = this.textureAtlas.length ; t < tlen; t++) {
+						if (this.textureAtlas[t].name === index[i]) {
+							this.anim[name].frame[i] = this.textureAtlas[t];
+							break;
+						}
+					}
+				}
 			}
 			this.anim[name].length = this.anim[name].frame.length;
 		},

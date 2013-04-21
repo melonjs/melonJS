@@ -126,7 +126,6 @@
 				// check if we need rotation
 				if (tex.rotated===true) {
 					sprite._sourceAngle = nhPI;
-					// >> sprite pos not correct when rotated ? <<
 				}
 				// return our object
 				return sprite;
@@ -156,20 +155,23 @@
 		 * ]);
 		 *
 		 * // define an additional basic walking animatin
-		 * this.renderable.addAnimation ("walk",  [0,2,1]);
-		 * // set as current animation
-		 * this.renderable.setCurrentAnimation("walk");
+		 * this.renderable.addAnimation ("simple_walk", [0,2,1]);
+		 * // you can also use frame name to define your animation
+		 * this.renderable.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+		 * // set the default animation
+		 * this.renderable.setCurrentAnimation("simple_walk");
 		 * // set the renderable position to bottom center
 		 * this.anchorPoint.set(0.5, 1.0);		 
 		 */
 		createAnimationFromName : function(names) {
-			var tpAtlas = [], count = 0;
+			var tpAtlas = [];
 			// iterate through the given names 
 			// and create a "normalized" atlas
 			for (var i = 0; i < names.length;++i) {
 				var tex = this.atlas[names[i]];
 				if (tex) {
-					tpAtlas[count++] = {
+					tpAtlas[i] = {
+						name: names[i], // frame name
 						pos: tex.source.pos.clone(), // unused for now
 						offset: tex.frame.pos.clone(),
 						width: tex.frame.width,
@@ -181,7 +183,6 @@
 					throw "melonjs: TextureAtlas - region for " + names[i] + " not found";
 				}
 			}
-			
 			// instantiate a new animation sheet object
 			return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas);
 		}
