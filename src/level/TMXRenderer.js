@@ -55,6 +55,16 @@
 			return new me.Vector2d(x * this.tilewidth,
 								   y * this.tileheight);		
 		},
+
+		/**
+		 * fix the position of Objects to match
+		 * the way Tiled places them
+		 * @private
+		 */
+		adjustPosition: function(obj){
+			if(typeof(obj.gid) != "undefined")
+				obj.y -= obj.height;
+		},
 		
 		/**
 		 * draw the tile map
@@ -158,6 +168,23 @@
 								   (x + y) * this.hTileheight);
 		},
 
+		/**
+		 * fix the position of Objects to match
+		 * the way Tiled places them
+		 * @private
+		 */
+		adjustPosition: function(obj){
+			var tilex = obj.x/this.hTilewidth;
+			var tiley = obj.y/this.tileheight;
+			var isoPos = this.tileToPixelCoords(tilex, tiley);
+			isoPos.x -= obj.width/2;
+			isoPos.y -= obj.height;
+			
+			obj.x = isoPos.x;
+			obj.y = isoPos.y;
+
+			//return isoPos;
+		},
 		
 		/**
 		 * draw the tile map
