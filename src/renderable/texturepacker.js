@@ -91,6 +91,34 @@
 		},
 		
 		/**
+		 * return the Atlas texture
+		 * @return {Image}
+		 */
+		getTexture : function() {
+			return this.texture;
+		},
+		
+		/**
+		 * return a normalized region/frame information for the specified sprite name
+		 * @param {String} name of the sprite
+		 * @return {Object}
+		 */
+		getRegion : function(name) {
+			var region = this.atlas[name];
+			if (region) {
+				return {
+					name: name, // frame name
+					pos: region.source.pos.clone(), // unused for now
+					offset: region.frame.pos.clone(),
+					width: region.frame.width,
+					height: region.frame.height,
+					angle : (region.rotated===true) ? nhPI : 0
+				}
+			}
+			return null;
+		},
+		
+		/**
 		 * Create a sprite object using the first region found using the specified name
 		 * @param {String} name of the sprite
 		 * @return {me.SpriteObject}
@@ -108,12 +136,14 @@
 		 * this.anchorPoint.set(0.5, 1.0);
 		 */
 		createSpriteFromName : function(name) {
-			var tex = this.atlas[name];
-			if (tex) {
+			var region = this.getRegion(name);
+			if (region) {
 				// instantiate a new sprite object
-				var sprite = new me.SpriteObject(0,0, this.texture, tex.frame.width, tex.frame.height);
+				var sprite = new me.SpriteObject(0,0, this.getTexture(), region.width, region.height);
 				// set the sprite offset within the texture
-				sprite.offset.setV(tex.frame.pos);
+				sprite.offset.setV(region.offset);
+				// set angle if defined
+				sprite._sourceAngle = region.angle;
 				
 				/* -> when using anchor positioning, this is not required
 				   -> and makes final position wrong...
@@ -122,16 +152,11 @@
 					sprite.pos.add(tex.source.pos);
 				}
 				*/
-				
-				// check if we need rotation
-				if (tex.rotated===true) {
-					sprite._sourceAngle = nhPI;
-				}
 				// return our object
 				return sprite;
 			}
 			// throw an error
-			throw "melonjs: TextureAtlas - region not found";
+			throw "melonjs: TextureAtlas - region for " + name + " not found";
 		},
 		
 		/**
@@ -168,17 +193,8 @@
 			// iterate through the given names 
 			// and create a "normalized" atlas
 			for (var i = 0; i < names.length;++i) {
-				var tex = this.atlas[names[i]];
-				if (tex) {
-					tpAtlas[i] = {
-						name: names[i], // frame name
-						pos: tex.source.pos.clone(), // unused for now
-						offset: tex.frame.pos.clone(),
-						width: tex.frame.width,
-						height: tex.frame.height,
-						angle : (tex.rotated===true) ? nhPI : 0
-					};
-				} else {
+				tpAtlas[i] = this.getRegion(names[i]);
+				if (tpAtlas[i] == null) {
 					// throw an error
 					throw "melonjs: TextureAtlas - region for " + names[i] + " not found";
 				}
