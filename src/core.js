@@ -1,6 +1,6 @@
 /**
  * @license MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * @copyright (C) 2011 - 2013 Olivier Biot, Jason Oster
  * http://www.melonjs.org
  *
  * melonJS is licensed under the MIT License.
@@ -486,7 +486,7 @@ var me = me || {};
 
 	
 	if (!Function.prototype.bind) {
-		/** @private */
+		/** @ignore */
 		function Empty() {};
 		
 		/**
@@ -533,7 +533,7 @@ var me = me || {};
 		/**
 		 * provide a replacement for browser not
 		 * supporting Date.now (JS 1.5)
-		 * @private
+		 * @ignore
 		 */
 		Date.now = function(){return new Date().getTime();};
 	}
@@ -542,7 +542,7 @@ var me = me || {};
 		/**
 		 * Dummy console.log to avoid crash
 		 * in case the browser does not support it
-		 * @private
+		 * @ignore
 		 */
 		console = {
 			log: function() {},
@@ -756,7 +756,7 @@ var me = me || {};
 		/**
 		 * provide a replacement for browsers that don't
 		 * support Array.prototype.forEach (JS 1.6)
-		 * @private
+		 * @ignore
 		 */
 		Array.prototype.forEach = function (callback, scope) {
 			for (var i = 0, j = this.length; j--; i++) {
@@ -1015,10 +1015,8 @@ var me = me || {};
 	 * me.game represents your current game, it contains all the objects, tilemap layers,<br>
 	 * HUD information, current viewport, collision map, etc..<br>
 	 * me.game is also responsible for updating (each frame) the object status and draw them<br>
-	 * There is no constructor function for me.game.
-	 * @final
+	 * @namespace me.game
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.game = (function() {
 		// hold public stuff in our singletong
@@ -1046,6 +1044,7 @@ var me = me || {};
 		/**
 		 * a default sort function
 		 * @private
+		 * @ignore
 		 */
 		var default_sort_func = function(a, b) {
 			// sort order is inverted,
@@ -1062,36 +1061,42 @@ var me = me || {};
 		 * a reference to the game viewport.
 		 * @public
 		 * @type me.Viewport
-		 * @name me.game#viewport
+		 * @name viewport
+		 * @memberOf me.game
 		 */
 		api.viewport = null;
 		/**
 		 * a reference to the game HUD (if defined).
 		 * @public
 		 * @type me.HUD_Object
-		 * @name me.game#HUD
+		 * @name HUD
+		 * @memberOf me.game
 		 */
 		api.HUD = null;
 		/**
 		 * a reference to the game collision Map
 		 * @public
 		 * @type me.TMXLayer
-		 * @name me.game#collisionMap
+		 * @name collisionMap
+		 * @memberOf me.game
 		 */
 		api.collisionMap = null;
 		/**
 		 * a reference to the game current level
 		 * @public
 		 * @type me.TMXTileMap
-		 * @name me.game#currentLevel
+		 * @name currentLevel
+		 * @memberOf me.game
 		 */
 		api.currentLevel = null;
 
 		/**
 		 * default layer renderer
 		 * @private
+		 * @ignore
 		 * @type me.TMXRenderer
-		 * @name me.game#renderer
+		 * @name renderer
+		 * @memberOf me.game
 		 */		
 		api.renderer = null;
 
@@ -1102,7 +1107,8 @@ var me = me || {};
 		 * Default object type constant.<br>
 		 * See type property of the returned collision vector.
 		 * @constant
-		 * @name me.game#ENEMY_OBJECT
+		 * @name ENEMY_OBJECT
+		 * @memberOf me.game
 		 */
 		api.ENEMY_OBJECT = 1;
 
@@ -1110,7 +1116,8 @@ var me = me || {};
 		 * Default object type constant.<br>
 		 * See type property of the returned collision vector.
 		 * @constant
-		 * @name me.game#COLLECTABLE_OBJECT
+		 * @name COLLECTABLE_OBJECT
+		 * @memberOf me.game
 		 */
 		api.COLLECTABLE_OBJECT = 2;
 
@@ -1118,7 +1125,8 @@ var me = me || {};
 		 * Default object type constant.<br>
 		 * See type property of the returned collision vector.
 		 * @constant
-		 * @name me.game#ACTION_OBJECT
+		 * @name ACTION_OBJECT
+		 * @memberOf me.game
 		 */
 		api.ACTION_OBJECT = 3; // door, etc...
 
@@ -1128,8 +1136,9 @@ var me = me || {};
 		 * Additionnaly the level id will also be passed
 		 * to the called function.
 		 * @public
-		 * @type function
-		 * @name me.game#onLevelLoaded
+		 * @callback
+		 * @name onLevelLoaded
+		 * @memberOf me.game
 		 * @example
 		 * // call myFunction() everytime a level is loaded
 		 * me.game.onLevelLoaded = this.myFunction.bind(this);
@@ -1138,8 +1147,10 @@ var me = me || {};
 		 
 		/**
 		 * Initialize the game manager
-		 * @name me.game#init
+		 * @name init
+		 * @memberOf me.game
 		 * @private
+		 * @ignore
 		 * @function
 		 * @param {int} [width="full size of the created canvas"] width of the canvas
 		 * @param {int} [height="full size of the created canvas"] width of the canvas
@@ -1168,7 +1179,8 @@ var me = me || {};
 		 * reset the game Object manager<p>
 		 * destroy all current object except the HUD
 		 * @see me.game#disableHUD
-		 * @name me.game#reset
+		 * @name reset
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 */
@@ -1199,8 +1211,10 @@ var me = me || {};
 	
 		/**
 		 * Load a TMX level
-		 * @name me.game#loadTMXLevel
+		 * @name loadTMXLevel
+		 * @memberOf me.game
 		 * @private
+		 * @ignore
 		 * @function
 		 */
 
@@ -1258,7 +1272,8 @@ var me = me || {};
 
 		/**
 		 * Manually add object to the game manager
-		 * @name me.game#add
+		 * @name add
+		 * @memberOf me.game
 		 * @param {me.ObjectEntity} obj Object to be added
 		 * @param {int} [z="obj.z"] z index
 		 * @public
@@ -1281,8 +1296,10 @@ var me = me || {};
 
 		/**
 		 * add an entity to the game manager
-		 * @name me.game#addEntity
+		 * @name addEntity
+		 * @memberOf me.game
 		 * @private
+		 * @ignore
 		 * @function
 		 */
 		api.addEntity = function(ent, zOrder) {
@@ -1297,7 +1314,8 @@ var me = me || {};
 		 * as defined in Tiled (Name field of the Object Properties)<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @name me.game#getEntityByName
+		 * @name getEntityByName
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {String} entityName entity name
@@ -1317,8 +1335,10 @@ var me = me || {};
 
 		/**
 		 * returns the amount of existing objects<br>
-		 * @name me.game#getObjectCount
+		 * @name getObjectCount
+		 * @memberOf me.game
 		 * @protected
+ 		 * @ignore
 		 * @function
 		 * @return {Number} the amount of object
 		 */
@@ -1329,8 +1349,10 @@ var me = me || {};
 
 		/**
 		 * returns the amount of object being drawn per frame<br>
-		 * @name me.game#getDrawCount
+		 * @name getDrawCount
+		 * @memberOf me.game
 		 * @protected
+ 		 * @ignore
 		 * @function
 		 * @return {Number} the amount of object draws
 		 */
@@ -1344,7 +1366,8 @@ var me = me || {};
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @name me.game#getEntityByGUID
+		 * @name getEntityByGUID
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {String} GUID entity GUID
@@ -1364,7 +1387,8 @@ var me = me || {};
 		 * return the entity corresponding to the property and value<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @name me.game#getEntityByProp
+		 * @name getEntityByProp
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {String} prop Property name
@@ -1384,7 +1408,8 @@ var me = me || {};
 
 		/**
 		 * add a HUD obj to the game manager
-		 * @name me.game#addHUD
+		 * @name addHUD
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {int} x x position of the HUD
@@ -1404,7 +1429,8 @@ var me = me || {};
 
 		/**
 		 * disable the current HUD
-		 * @name me.game#disableHUD
+		 * @name disableHUD
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 */
@@ -1422,8 +1448,10 @@ var me = me || {};
 
 		/**
 		 * update all objects of the game manager
-		 * @name me.game#update
+		 * @name update
+		 * @memberOf me.game
 		 * @private
+		 * @ignore
 		 * @function
 		 */
 		api.update = function() {
@@ -1456,7 +1484,8 @@ var me = me || {};
 		
 		/**
 		 * remove an object
-		 * @name me.game#remove
+		 * @name remove
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be removed
@@ -1489,7 +1518,7 @@ var me = me || {};
 					// make it invisible (this is bad...)
 					obj.visible = false;
 					// else wait the end of the current loop
-					/** @private */
+					/** @ignore */
 					pendingRemove = (function (obj) {
 						removeNow(obj);
 						pendingRemove = null;
@@ -1500,7 +1529,8 @@ var me = me || {};
 
 		/**
 		 * remove all objects<br>
-		 * @name me.game#removeAll
+		 * @name removeAll
+		 * @memberOf me.game
 		 * @param {Boolean} [force=false] Force immediate deletion.<br>
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 * @public
@@ -1536,7 +1566,8 @@ var me = me || {};
 		 * <p>Normally all objects loaded through the LevelDirector are automatically sorted.
 		 * this function is however usefull if you create and add object during the game,
 		 * or need a specific sorting algorithm.<p>
-		 * @name me.game#sort
+		 * @name sort
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {Function} [sort_func="sorted on z property value"] sort function
@@ -1559,7 +1590,7 @@ var me = me || {};
 				if (typeof(sort_func) !== "function") {
 					sort_func = default_sort_func;
 				}
-				/** @private */
+				/** @ignore */
 				pendingSort = (function (sort_func) {
 					// sort everything
 					gameObjects.sort(sort_func);
@@ -1573,7 +1604,8 @@ var me = me || {};
 
 		/**
 		 * Checks if the specified entity collides with others entities.
-		 * @name me.game#collide
+		 * @name collide
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be tested for collision
@@ -1640,7 +1672,8 @@ var me = me || {};
 
 		/**
 		 * Checks if the specified entity collides with others entities of the specified type.
-		 * @name me.game#collideType
+		 * @name collideType
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be tested for collision
@@ -1681,7 +1714,8 @@ var me = me || {};
 
 		/**
 		 * force the redraw (not update) of all objects
-		 * @name me.game#repaint
+		 * @name repaint
+		 * @memberOf me.game
 		 * @public
 		 * @function
 		 */
@@ -1692,8 +1726,10 @@ var me = me || {};
 
 		/**
 		 * draw all existing objects
-		 * @name me.game#draw
+		 * @name draw
+		 * @memberOf me.game
 		 * @private
+		 * @ignore
 		 * @function
 		 */
 
