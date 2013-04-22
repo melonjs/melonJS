@@ -189,18 +189,19 @@
 		 * this.anchorPoint.set(0.5, 1.0);		 
 		 */
 		createAnimationFromName : function(names) {
-			var tpAtlas = [];
+			var tpAtlas = [], indices = {};
 			// iterate through the given names 
 			// and create a "normalized" atlas
 			for (var i = 0; i < names.length;++i) {
 				tpAtlas[i] = this.getRegion(names[i]);
+				indices[names[i]] = i;
 				if (tpAtlas[i] == null) {
 					// throw an error
 					throw "melonjs: TextureAtlas - region for " + names[i] + " not found";
 				}
 			}
 			// instantiate a new animation sheet object
-			return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas);
+			return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas, indices);
 		}
 	});
 
