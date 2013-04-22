@@ -367,7 +367,7 @@
 		animationspeed : 0,
 
 		/** @private */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas) {
+		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
 			// hold all defined animation
 			this.anim = [];
 
@@ -389,9 +389,10 @@
 						
 			// store the current atlas information
 			this.textureAtlas = null;
+			this.atlasIndices = null;
 			
 			// build the local textureAtlas
-			this.buildLocalAtlas(atlas || undefined);
+			this.buildLocalAtlas(atlas || undefined, atlasIndices || undefined);
 			
 			// create a default animation sequence with all sprites
 			this.addAnimation("default", null);
@@ -404,10 +405,11 @@
 		 * build a
 		 * @private
 		 */
-		buildLocalAtlas : function (atlas) {
+		buildLocalAtlas : function (atlas, indices) {
 			// reinitialze the atlas
 			if (atlas !== undefined) {
 				this.textureAtlas = atlas;
+				this.atlasIndices = indices;
 			} else {
 				// regular spritesheet
 				this.textureAtlas = [];
@@ -435,10 +437,10 @@
 
 		/**
 		 * add an animation <br>
-		 * the index list must follow the logic as per the following example :<br>
+		 * For fixed-sized cell spritesheet, the index list must follow the logic as per the following example :<br>
 		 * <img src="spritesheet_grid.png"/>
 		 * @param {String} name animation id
-		 * @param {Int[]|String[]} index list of sprite index defining the animaton
+		 * @param {Int[]|String[]}  list of sprite index or name defining the animaton
 		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
 		 * @example
 		 * // walking animatin
@@ -473,12 +475,10 @@
 				if (typeof(index[i]) === "number") {
 					this.anim[name].frame[i] = this.textureAtlas[index[i]];
 				} else { // string
-					// parse the atlas (not the most efficient way!)
-					for ( var t = 0 , tlen = this.textureAtlas.length ; t < tlen; t++) {
-						if (this.textureAtlas[t].name === index[i]) {
-							this.anim[name].frame[i] = this.textureAtlas[t];
-							break;
-						}
+					if (this.atlasIndices === null) {
+						throw "melonjs: string parameters for addAnimation are only allowed for TextureAtlas ";
+					} else {
+						this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
 					}
 				}
 			}
