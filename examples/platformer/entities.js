@@ -8,10 +8,12 @@ var PlayerEntity = me.ObjectEntity.extend({
 	init: function(x, y, settings) {
 		// call the constructor
 		this.parent(x, y , settings);
-		
+
+		// player can exit the viewport (jumping, falling into a hole, etc.)
+		this.alwaysUpdate = true;
+
 		// walking & jumping speed
 		this.setVelocity(3, 15);
-		
 		this.setFriction(0.4,0);
 		
 		// update the hit box
@@ -19,7 +21,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 		this.dying = false;
 		
 		this.mutipleJump = 1;
-	
+
 		// set the display around our position
 		me.game.viewport.follow(this, me.game.viewport.AXIS.HORIZONTAL);
 				

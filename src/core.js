@@ -1469,7 +1469,7 @@ var me = me || {};
 				);
 
 				// update our object
-				var updated = obj.update();
+				var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
 
 				// add it to the draw manager
 				drawManager.makeDirty(obj, updated, updated ? oldRect : null);

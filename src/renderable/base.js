@@ -41,7 +41,16 @@
 		 * @name me.Renderable#inViewport
 		 */
 		inViewport : false,
-		
+
+		/**
+		 * Whether the renderable object will always update, even when outside of the viewport<br>
+		 * default value : false
+		 * @public
+		 * @type Boolean
+		 * @name me.Renderable#alwaysUpdate
+		 */
+		alwaysUpdate : false,
+
 		/**
 		 * make the renderable object persistent over level changes
 		 * default value : false
