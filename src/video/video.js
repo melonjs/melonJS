@@ -263,6 +263,9 @@
 				
 			// get the 2D context
 			context2D = canvas.getContext('2d');
+			if (!context2D.canvas) {
+				context2D.canvas = canvas;
+			}
 			// set scaling interpolation filter
 			me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
 
@@ -270,6 +273,9 @@
 			if (double_buffering) {
 				backBufferCanvas = api.createCanvas(game_width, game_height, false);
 				backBufferContext2D = backBufferCanvas.getContext('2d');
+				if (!backBufferContext2D.canvas) {
+					backBufferContext2D.canvas = backBufferCanvas;
+				}
 				// set scaling interpolation filter
 				me.video.setImageSmoothing(backBufferContext2D, me.sys.scalingInterpolation);
 			} else {
@@ -367,6 +373,9 @@
 		api.createCanvasSurface = function(width, height) {
 			var _canvas = api.createCanvas(width, height, false);
 			var _context = _canvas.getContext('2d');
+			if (!_context.canvas) {
+				_context.canvas = _canvas;
+			}
 			me.video.setImageSmoothing(_context, me.sys.scalingInterpolation);
 			return _context;
 		};
