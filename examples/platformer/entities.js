@@ -207,6 +207,9 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 		// make it collidable
 		this.collidable = true;
 		this.type = me.game.ENEMY_OBJECT;
+		
+		// don't update the entities when out of the viewport
+		this.alwaysUpdate = false;
 	},
 		
 	
@@ -214,10 +217,6 @@ var PathEnemyEntity = me.ObjectEntity.extend({
 	 * manage the enemy movement
 	 */
 	update : function () {
-		// do nothing if not visible
-		if (!this.inViewport) {
-			return false;
-		}
 		
 		if (this.alive)	{
 			if (this.walkLeft && this.pos.x <= this.startX) {
