@@ -2,24 +2,34 @@ Version History
 ---------------
 0.9.7
 * General : melonJS now uses Grunt, the task manager, for the build system
+* General : game objects will not update unless inside the viewport or `obj.alwaysUpdate` flag is enabled
 * Audio : preliminary audio support for mobile devices (iOS6 for now)
+* Core : added a `me.sys.isMobile` flag to detect running on a mobile device
+* Core : now using `screencanvas` extension for CocoonJS
+* Core : fixed `me.game.remove()` destroying the object too early
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
 * Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.
 * Entity : Fixed ladder collision detection/management
-* Input : added an `unlockKey` function that allows to manually unlock key
+* Examples : new collision_test example (see ticket #103)
+* Examples : new font_test example
 * Font : changed default alignement to `left`/`top`
 * Font : added multiline support for `me.Font` and `me.BitmapFont`
+* Geometry : most `me.Vector2d` methods return a reference to `this`, to allow method chaining
+* Input : added a `me.input.unlockKey()` function that allows to manually unlock key (DblK)
+* Loader : fixed loader when repeatedly calling the preloader
 * Renderable : new base class for any objects that needs to draw (Sprite, ImageLayer, GUI, etc...)
-* Renderable : added TexturePacker Support (see me.TextureAtlas)
-* TMX : fixed me.ImageLayer.ratio on Firefox & Opera
-* TMX : added a new `getEntityByProp()` function
+* Renderable : added TexturePacker Support (see `me.TextureAtlas`)
+* TMX : fixed `me.ImageLayer.ratio` on Firefox & Opera
+* TMX : added a new `me.game.getEntityByProp()` function (DblK)
 * TMX : added JSON map parsing support
 * TMX : small optimization for isometric rendering (`pixelToTileCoords()` function)
 * TMX : fixed access to inherited properties
 * TMX : added an entry point for a potential gzip/zlib TMX deccompression plugin
+* TMX : fixed object positioning on isometric maps (andyveliz)
+* TMX : property value convention for automatically JSON-decoding; prefix with `json:`
 * Video : fixed `viewport.shake()`
 * Video : optimized framerate on cocoonJS platforms by using the 'screencanvas' extension
-* Loader : fixed loader when repeatedly calling the preloader
+* Video : disable video scaling interpolation by default
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
