@@ -552,7 +552,7 @@
 		 */
 		update : function() {
 			// update animation if necessary
-			if (this.visible && !this.animationpause && (this.fpscount++ > this.current.animationspeed)) {
+			if (this.inViewport && !this.animationpause && (this.fpscount++ > this.current.animationspeed)) {
 				this.setAnimationFrame(++this.current.idx);
 				this.fpscount = 0;
 
