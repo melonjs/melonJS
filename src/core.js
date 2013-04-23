@@ -1649,7 +1649,7 @@ var me = me || {};
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.inViewport && obj.visible && obj.collidable && (obj!=objA))
+				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj!=objA))
 				{
 					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
 					if (res.x != 0 || res.y != 0) {
@@ -1691,7 +1691,7 @@ var me = me || {};
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
 			{
-				if (obj.inViewport && obj.visible && obj.collidable && (obj.type === type) && (obj!=objA))
+				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj.type === type) && (obj!=objA))
 				{
 					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
 					if (res.x != 0 || res.y != 0) {
