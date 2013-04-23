@@ -49,6 +49,12 @@
 			_onCompleteCallback = null;
 
 		/**
+		 * Always update the tween (it's never in viewport)
+		 * @private
+		 */
+		this.alwaysUpdate = true;
+
+		/**
 		 * object properties to be updated and duration
 		 * @name me.Tween#to
 		 * @public
