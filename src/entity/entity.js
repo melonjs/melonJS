@@ -12,9 +12,8 @@
 	 * and is created by the engine and passed as parameter to the corresponding object when loading a level<br>
 	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor
 	 * <img src="object_properties.png"/><br>
-	 * @final
+	 * @class
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.ObjectSettings = {
 		/**
@@ -22,7 +21,8 @@
 		 * as defined in the Tiled Object Properties
 		 * @public
 		 * @type String
-		 * @name me.ObjectSettings#name
+		 * @name name
+		 * @memberOf me.ObjectSettings
 		 */
 		name : null,
 
@@ -32,7 +32,8 @@
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
 		 * @type String
-		 * @name me.ObjectSettings#image
+		 * @name image
+		 * @memberOf me.ObjectSettings
 		 */
 		image : null,
 
@@ -42,7 +43,8 @@
 		 * (using this option will imply processing time on the image)
 		 * @public
 		 * @type String
-		 * @name me.ObjectSettings#transparent_color
+		 * @name transparent_color
+		 * @memberOf me.ObjectSettings
 		 */
 		transparent_color : null,
 
@@ -52,7 +54,8 @@
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
 		 * @type Int
-		 * @name me.ObjectSettings#spritewidth
+		 * @name spritewidth
+		 * @memberOf me.ObjectSettings
 		 */
 		spritewidth : null,
 
@@ -63,7 +66,8 @@
 		 * (in case of TiledObject, this field is automatically set)
 		 * @public
 		 * @type Int
-		 * @name me.ObjectSettings#spriteheight
+		 * @name spriteheight
+		 * @memberOf me.ObjectSettings
 		 */
 		spriteheight : null,
 
@@ -73,7 +77,8 @@
 		 * OPTIONAL
 		 * @public
 		 * @type String
-		 * @name me.ObjectSettings#type
+		 * @name type
+		 * @memberOf me.ObjectSettings
 		 */
 		type : 0,
 
@@ -82,7 +87,8 @@
 		 * OPTIONAL
 		 * @public
 		 * @type Boolean
-		 * @name me.ObjectSettings#collidable
+		 * @name collidable
+		 * @memberOf me.ObjectSettings
 		 */
 		collidable : true
 	};

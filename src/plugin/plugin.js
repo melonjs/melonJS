@@ -8,9 +8,8 @@
 
 	/**
 	 * There is no constructor function for me.plugin
-	 * @final
+	 * @namespace me.plugin
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.plugin = (function() {
 		
@@ -27,7 +26,8 @@
 		* @see me.plugin#Base
 		* @class
 		* @extends Object
-		* @memberOf me
+		* @name Base
+		* @memberOf me.plugin
 		* @constructor
 		*/
 		singleton.Base = Object.extend(
@@ -52,7 +52,8 @@
 
 		/**
 		 * patch a melonJS function
-		 * @name me.plugin#patch
+		 * @name patch
+		 * @memberOf me.plugin
 		 * @public
 		 * @function
 		 * @param {Object} object target object
@@ -94,7 +95,8 @@
 
 		/**
 		 * Register a plugin.
-		 * @name me.plugin#register
+		 * @name register
+		 * @memberOf me.plugin
 		 * @see me.plugin#Base
 		 * @public
 		 * @function

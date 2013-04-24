@@ -55,9 +55,8 @@
 	 * manage game statistics<p>
 	 * me.gamestat can be used to store useful values during the game<p>
 	 * there is no constructor for me.gamestat
-	 * @final
+	 * @namespace me.gamestat
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.gamestat = (function() {
 
@@ -82,7 +81,8 @@
 
 		/**
 		 * add an item to the me.gamestat Object
-		 * @name me.gamestat#add
+		 * @name add
+		 * @memberOf me.gamestat
 		 * @public
 		 * @function
 		 * @param {String|Object} name name of the item or hash of items
@@ -107,7 +107,8 @@
 
 		/**
 		 * update an item
-		 * @name me.gamestat#updateValue
+		 * @name updateValue
+		 * @memberOf me.gamestat
 		 * @public
 		 * @function
 		 * @param {String|Object} name name of the item or hash of items
@@ -130,7 +131,8 @@
 		
 		/** 
 		 * set value of an item 
-		 * @name me.gamestat#setValue 
+		 * @name setValue
+		 * @memberOf me.gamestat
 		 * @public 
 		 * @function 
 		 * @param {String|Object} name name of the item or hash of items
@@ -154,7 +156,8 @@
 		
 		/**
 		 * return an item value
-		 * @name me.gamestat#getItemValue
+		 * @name getItemValue
+		 * @memberOf me.gamestat
 		 * @public
 		 * @function
 		 * @param {String} name name of the item
@@ -169,7 +172,8 @@
 
 		/**
 		 * reset the specified item to default value
-		 * @name me.gamestat#reset
+		 * @name reset
+		 * @memberOf me.gamestat
 		 * @public
 		 * @function
 		 * @param {String} [name="all"] name of the item
@@ -187,7 +191,8 @@
 
 		/**
 		 * reset all items to default value
-		 * @name me.gamestat#resetAll
+		 * @name resetAll
+		 * @memberOf me.gamestat
 		 * @ignore
 		 * @function
 		 */
