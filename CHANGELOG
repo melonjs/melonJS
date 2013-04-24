@@ -20,6 +20,7 @@ Version History
 * Renderable : new base class for any objects that needs to draw (Sprite, ImageLayer, GUI, etc...)
 * Renderable : added TexturePacker Support (see `me.TextureAtlas`)
 * TMX : fixed `me.ImageLayer.ratio` on Firefox & Opera
+* TMX : allows changing the imageLayer default origin using the imageLayer anchorPoint
 * TMX : added a new `me.game.getEntityByProp()` function (DblK)
 * TMX : added JSON map parsing support
 * TMX : small optimization for isometric rendering (`pixelToTileCoords()` function)
