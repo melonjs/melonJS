@@ -129,7 +129,7 @@
 		 */
 		this.stop = function() {
 
-			me.game.remove(this);
+			me.game.remove(this, true);
 			return this;
 
 		};
@@ -260,7 +260,7 @@
 			if (elapsed === 1) {
 
 				// remove the tween from the object pool
-				me.game.remove(this);
+				me.game.remove(this, true);
 
 				if (_onCompleteCallback !== null) {
 
