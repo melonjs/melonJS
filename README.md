@@ -1,7 +1,7 @@
 [melonJS](http://melonjs.org/) - a fresh & lightweight 2D sprite-based engine
 =============================================================================
 
-Copyright (C) 2011 - 2013, Olivier BIOT
+Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
 
 melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
@@ -20,10 +20,12 @@ and currently features :
 - Tween Effects
 - Transition effects
 - A basic set of Object Entities (to be extended)
+- Object Pooling
 - Basic animation management
+- Spritesheet and Packed Textures (Texture Packer)
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
-	- Uncompressed Plain, Base64 and CSV encoded XML tilemap loading
+	- Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
 	- Orthogonal tilemap with built-in collision management
 	- Isometric, Perspective tilemap support
 	- Multiple layers (multiple background/Foreground, collision and Image layers)
@@ -72,7 +74,15 @@ Both plain and minified library will be available under the "build" directory.
 Building the documentation
 -------------------------------------------------------------------------------
 melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed.
+JSDoc also requires specific dependencies to be installed :
+````
+$ cd melonJS
+$ cd tasks
+$ cd jsdoc
+$ npm install
+````
 
+Then do the following to actually build the documentation :
 ````
 $ cd melonJS
 grunt doc
