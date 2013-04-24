@@ -50,7 +50,7 @@
 
 		/**
 		 * Always update the tween (it's never in viewport)
-		 * @private
+		 * @ignore
 		 */
 		this.alwaysUpdate = true;
 
@@ -150,7 +150,7 @@
 
 		/**
 		 * Calculate delta to pause the tween
-		 * @private
+		 * @ignore
 		 */
 		me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
 			if (_startTime) {
@@ -160,7 +160,7 @@
 
 		/**
 		 * Calculate delta to resume the tween
-		 * @private
+		 * @ignore
 		 */
 		me.event.subscribe(me.event.STATE_RESUME, function onResume() {
 			if (_startTime && _pauseTime) {
@@ -224,7 +224,7 @@
 
 		};
 
-		/** @private*/
+		/** @ignore*/
 		this.update = function(/* time */) {
 
 			var property, elapsed, value;

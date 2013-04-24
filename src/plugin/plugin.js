@@ -43,7 +43,7 @@
 			 */
 			version : undefined,
 			
-			/** @private */
+			/** @ignore */
 			init : function() {
 				; //empty for now !
 			}

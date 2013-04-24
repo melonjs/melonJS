@@ -28,25 +28,30 @@
 		 * x value of the vector
 		 * @public
 		 * @type Number
-		 * @name me.Vector2d#x
+		 * @name x
+		 * @memberOf me.Vector2d
 		 */
 		x : 0,
 		/**
 		 * y value of the vector
 		 * @public
 		 * @type Number
-		 * @name me.Vector2d#y
+		 * @name y
+		 * @memberOf me.Vector2d
 		 */
 		y : 0,
 
-		/** @private */
-		init : function(/**Number*/ x, /**Number*/ y) {
+		/** @ignore */
+		init : function(x, y) {
 			this.x = x || 0;
 			this.y = y || 0;
 		},
 		
 		/**
 		 * set the Vector x and y properties to the given values<br>
+		 * @name set
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
 		 * @return Reference to this object for method chaining
@@ -59,6 +64,9 @@
 
 		/**
 		 * set the Vector x and y properties to 0
+		 * @name setZero
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return Reference to this object for method chaining
 		 */
 		setZero : function() {
@@ -67,6 +75,9 @@
 
 		/**
 		 * set the Vector x and y properties using the passed vector
+		 * @name setV
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -78,6 +89,9 @@
 
 		/**
 		 * Add the passed vector to this vector
+		 * @name add
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -89,6 +103,9 @@
 
 		/**
 		 * Substract the passed vector to this vector
+		 * @name sub
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -100,6 +117,9 @@
 
 		/**
 		 * Multiply this vector values by the passed vector
+		 * @name scale
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -111,6 +131,9 @@
 
 		/**
 		 * Divide this vector values by the passed value
+		 * @name div
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {Number} value
 		 * @return Reference to this object for method chaining
 		 */
@@ -122,6 +145,9 @@
 
 		/**
 		 * Update this vector values to absolute values
+		 * @name abs
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return Reference to this object for method chaining
 		 */
 		abs : function() {
@@ -134,6 +160,9 @@
 
 		/**
 		 * Clamp the vector value within the specified value range
+		 * @name clamp
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {Number} low
 		 * @param {Number} high
 		 * @return {me.Vector2d}
@@ -144,6 +173,9 @@
 		
 		/**
 		 * Clamp this vector value within the specified value range
+		 * @name clampSelf
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {Number} low
 		 * @param {Number} high
 		 * @return Reference to this object for method chaining
@@ -156,6 +188,9 @@
 
 		/**
 		 * Update this vector with the minimum value between this and the passed vector
+		 * @name minV
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -167,6 +202,9 @@
 
 		/**
 		 * Update this vector with the maximum value between this and the passed vector
+		 * @name maxV
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -178,6 +216,9 @@
 
 		/**
 		 * Floor the vector values
+		 * @name floor
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {me.Vector2d}
 		 */
 		floor : function() {
@@ -186,6 +227,9 @@
 		
 		/**
 		 * Floor this vector values
+		 * @name floorSelf
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return Reference to this object for method chaining
 		 */
 		floorSelf : function() {
@@ -196,6 +240,9 @@
 		
 		/**
 		 * Ceil the vector values
+		 * @name ceil
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {me.Vector2d}
 		 */
 		ceil : function() {
@@ -204,6 +251,9 @@
 		
 		/**
 		 * Ceil this vector values
+		 * @name ceilSelf
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return Reference to this object for method chaining
 		 */
 		ceilSelf : function() {
@@ -214,6 +264,9 @@
 
 		/**
 		 * Negate the vector values
+		 * @name negate
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {me.Vector2d}
 		 */
 		negate : function() {
@@ -222,6 +275,9 @@
 
 		/**
 		 * Negate this vector values
+		 * @name negateSelf
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return Reference to this object for method chaining
 		 */
 		negateSelf : function() {
@@ -232,6 +288,9 @@
 
 		/**
 		 * Copy the x,y values of the passed vector to this one
+		 * @name copy
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return Reference to this object for method chaining
 		 */
@@ -243,6 +302,9 @@
 		
 		/**
 		 * return true if the two vectors are the same
+		 * @name equals
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return {Boolean}
 		 */
@@ -252,6 +314,9 @@
 
 		/**
 		 * return the lenght (magnitude) of this vector
+		 * @name length
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {Number}
 		 */		
 		 length : function() {
@@ -260,6 +325,9 @@
 
 		/**
 		 * normalize this vector (scale the vector so that its magnitude is 1)
+		 * @name normalize
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {Number}
 		 */		
 		normalize : function() {
@@ -276,6 +344,9 @@
 
 		/**
 		 * return the doc product of this vector and the passed one
+		 * @name dotProduct
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return {Number}
 		 */	
@@ -285,6 +356,9 @@
 
 		/**
 		 * return the distance between this vector and the passed one
+		 * @name distance
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return {Number}
 		 */			
@@ -294,6 +368,9 @@
 		
 		/**
 		 * return the angle between this vector and the passed one
+		 * @name angle
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @param {me.Vector2d} v
 		 * @return {Number} angle in radians
 		 */			
@@ -303,6 +380,9 @@
 
 		/**
 		 * return a clone copy of this vector
+		 * @name clone
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {me.Vector2d}
 		 */			
 		clone : function() {
@@ -311,6 +391,9 @@
 
 		/**
 		 * convert the object to a string representation
+		 * @name toString
+		 * @memberOf me.Vector2d
+		 * @function
 		 * @return {String}
 		 */			
 		 toString : function() {
@@ -341,7 +424,8 @@
 		 * position of the Rectange
 		 * @public
 		 * @type me.Vector2d
-		 * @name me.Rect#pos
+		 * @name pos
+		 * @memberOf me.Rect
 		 */
 		pos : null,
 
@@ -350,9 +434,10 @@
 		 * while keeping the original position vector (pos)<p>
 		 * corresponding to the entity<p>
 		 * colPos is a relative offset to pos
-		 * @private
+		 * @ignore
 		 * @type me.Vector2d
-		 * @name me.Rect#colPos
+		 * @name colPos
+		 * @memberOf me.Rect
 		 * @see me.Rect#adjustSize
 		 */
 		colPos : null,
@@ -366,7 +451,8 @@
 		 * default anchoring point is the center (0.5, 0.5) of the object.
 		 * @public
 		 * @type me.Vector2d
-		 * @name me.Rect#anchorPoint
+		 * @name anchorPoint
+		 * @memberOf me.Rect
 		 */
 		anchorPoint: null,
 				
@@ -375,7 +461,8 @@
 		 * takes in account the adjusted size of the rectangle (if set)
 		 * @public
 		 * @type Int
-		 * @name me.Rect#left
+		 * @name left
+		 * @memberOf me.Rect
 		 */
 		 // define later in the constructor
 		
@@ -384,7 +471,8 @@
 		 * takes in account the adjusted size of the rectangle (if set)
 		 * @public
 		 * @type Int
-		 * @name me.Rect#right
+		 * @name right
+		 * @memberOf me.Rect
 		 */
 		 // define later in the constructor
 		 
@@ -393,7 +481,8 @@
 		 * takes in account the adjusted size of the rectangle (if set)
 		 * @public
 		 * @type Int
-		 * @name me.Rect#bottom
+		 * @name bottom
+		 * @memberOf me.Rect
 		 */
 		// define later in the constructor
 		
@@ -402,7 +491,8 @@
 		 * takes in account the adjusted size of the rectangle (if set)
 		 * @public
 		 * @type Int
-		 * @name me.Rect#top
+		 * @name top
+		 * @memberOf me.Rect
 		 */
 		// define later in the constructor
 		 
@@ -410,14 +500,16 @@
 		 * width of the Rectange
 		 * @public
 		 * @type Int
-		 * @name me.Rect#width
+		 * @name width
+		 * @memberOf me.Rect
 		 */
 		width : 0,
 		/**
 		 * height of the Rectange
 		 * @public
 		 * @type Int
-		 * @name me.Rect#height
+		 * @name height
+		 * @memberOf me.Rect
 		 */
 		height : 0,
 
@@ -426,7 +518,7 @@
 		hHeight : 0,
 		
 		
-		/** @private */
+		/** @ignore */
 		init : function(v, w, h) {
 			// reference to the initial position
 			// we don't copy it, so we can use it later
@@ -480,6 +572,9 @@
 
 		/**
 		 * set new value to the rectangle
+		 * @name set
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {me.Vector2d} v x,y position for the rectangle
 		 * @param {int} w width of the rectangle
 		 * @param {int} h height of the rectangle	 
@@ -496,6 +591,9 @@
 
 		/**
 		 * return a new Rect with this rectangle coordinates
+		 * @name getRect
+		 * @memberOf me.Rect
+		 * @function
 		 * @return {me.Rect} new rectangle	
 		 */
 		getRect : function() {
@@ -504,6 +602,9 @@
 		
 		/**
 		 * translate the rect by the specified offset
+		 * @name translate
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {Number} x x offset
 		 * @param {Number} y y offset
 		 * @return {me.Rect} this rectangle	
@@ -516,6 +617,9 @@
 
 		/**
 		 * translate the rect by the specified vector
+		 * @name translateV
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {me.Vector2d} v vector offset
 		 * @return {me.Rect} this rectangle	
 		 */
@@ -526,6 +630,9 @@
 
 		/**
 		 * merge this rectangle with another one
+		 * @name union
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {me.Rect} rect other rectangle to union with
 		 * @return {me.Rect} the union(ed) rectangle	 
 		 */
@@ -549,7 +656,9 @@
 		 * update the size of the collision rectangle<br>
 		 * the colPos Vector is then set as a relative offset to the initial position (pos)<br>
 		 * <img src="me.Rect.colpos.png"/>
-		 * @private
+		 * @name adjustSize
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {int} x x offset (specify -1 to not change the width)
 		 * @param {int} w width of the hit box
 		 * @param {int} y y offset (specify -1 to not change the height)
@@ -610,7 +719,7 @@
 		 *	
 		 * flip on X axis
 		 * usefull when used as collision box, in a non symetric way
-		 * @private
+		 * @ignore
 		 * @param sw the sprite width
 		 */
 		flipX : function(sw) {
@@ -622,7 +731,7 @@
 		 *	
 		 * flip on Y axis
 		 * usefull when used as collision box, in a non symetric way
-		 * @private
+		 * @ignore
 		 * @param sh the height width
 		 */
 		flipY : function(sh) {
@@ -632,6 +741,9 @@
 		
 		/**
 		 * return true if this rectangle is equal to the specified one
+		 * @name equals
+		 * @memberOf me.Rect
+		 * @function
 		 * @param {me.Rect} rect
 		 * @return {Boolean}
 		 */
@@ -644,6 +756,9 @@
 
 		/**
 		 * check if this rectangle is intersecting with the specified one
+		 * @name overlaps
+		 * @memberOf me.Rect
+		 * @function
 		 * @param  {me.Rect} rect
 		 * @return {boolean} true if overlaps
 		 */
@@ -656,6 +771,9 @@
 		
 		/**
 		 * check if this rectangle is within the specified one
+		 * @name within
+		 * @memberOf me.Rect
+		 * @function
 		 * @param  {me.Rect} rect
 		 * @return {boolean} true if within
 		 */
@@ -668,6 +786,9 @@
 		
 		/**
 		 * check if this rectangle contains the specified one
+		 * @name contains
+		 * @memberOf me.Rect
+		 * @function
 		 * @param  {me.Rect} rect
 		 * @return {boolean} true if contains
 		 */
@@ -680,6 +801,9 @@
 		
 		/**
 		 * check if this rectangle contains the specified point
+		 * @name containsPoint
+		 * @memberOf me.Rect
+		 * @function
 		 * @param  {me.Vector2d} point
 		 * @return {boolean} true if contains
 		 */
@@ -713,7 +837,7 @@
 		 *   }
 		 *		
 		 * }
-		 * @private
+		 * @ignore
 		 * @param {me.Rect} rect
 		 * @return {me.Vector2d} 
 		 */
@@ -746,7 +870,7 @@
 
 		/**
 		 * debug purpose
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context, color) {
 			// draw the rectangle

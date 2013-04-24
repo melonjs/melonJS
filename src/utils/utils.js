@@ -8,8 +8,9 @@
 (function($) {
 
 	/**
-	 *  Base64 decoding
-	 *  @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
+	 * Base64 decoding
+	 * @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
+	 * @ignore 
 	 */
 	var Base64 = (function() {
 
@@ -64,10 +65,9 @@
 
 	/**
 	 * a collection of utility Function
-	 * @final
+	 * @namespace me.utils
 	 * @memberOf me
-	 * @private
-	 * @constructor Should not be called by the user.
+	 * @ignore
 	 */
 
 	me.utils = (function() {

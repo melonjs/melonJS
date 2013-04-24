@@ -10,7 +10,7 @@
 	/**
 	 * a default loading screen
 	 * @memberOf me
-	 * @private
+	 * @ignore
 	 * @constructor
 	 */
 	me.DefaultLoadingScreen = me.ScreenObject.extend({
@@ -139,7 +139,7 @@
 
 		/**
 		 * check the loading status
-		 * @private
+		 * @ignore
 		 */
 		function checkLoadStatus() {
 			if (loadCount == resourceCount) {
@@ -169,7 +169,7 @@
 		 * 				  {name: 'image2', src: 'images/image2.png'},
 		 *				  {name: 'image3', src: 'images/image3.png'},
 		 *				  {name: 'image4', src: 'images/image4.png'}]);
-		 * @private
+		 * @ignore
 		 */
 		
 		function preloadImage(img, onload, onerror) {
@@ -182,7 +182,7 @@
 
 		/**
 		 * preload TMX files
-		 * @private
+		 * @ignore
 		 */
 		function preloadTMX(tmxData, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
@@ -259,7 +259,7 @@
 		
 		/**
 		 * preload TMX files
-		 * @private
+		 * @ignore
 		 */
 		function preloadJSON(data, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
@@ -292,7 +292,7 @@
 			
 		/**
 		 * preload Binary files
-		 * @private
+		 * @ignore
 		 */
 		function preloadBinary(data, onload, onerror) {
 			var httpReq = new XMLHttpRequest();
@@ -353,7 +353,7 @@
 
 		/**
 		 *	just increment the number of already loaded resources
-		 * @private
+		 * @ignore
 		 */
 
 		obj.onResourceLoaded = function(e) {
@@ -372,7 +372,7 @@
 		
 		/**
 		 * on error callback for image loading 	
-		 * @private
+		 * @ignore
 		 */
 		obj.onLoadingError = function(res) {
 			throw "melonJS: Failed loading resource " + res.src;

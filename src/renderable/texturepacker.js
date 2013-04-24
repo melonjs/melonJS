@@ -9,7 +9,7 @@
 
 	/**
 	 * a local constant for the -(Math.PI / 2) value
-	 * @private
+	 * @ignore
 	 */
 	var nhPI = -(Math.PI / 2);
 
@@ -31,13 +31,22 @@
 	me.TextureAtlas = Object.extend(
 	/** @scope me.TextureAtlas.prototype */
 	{
-		// to identify the atlas format (e.g. texture packer)
+		/**
+		 * to identify the atlas format (e.g. texture packer)
+		 * @ignore
+		 */
 		format: null,
 		
-		// the image texture itself
+		/**
+		 * the image texture itself
+		 * @ignore
+		 */
 		texture : null,		
 		
-		// the atlas dictionnary
+		/**
+		 * the atlas dictionnary
+		 * @ignore
+		 */
 		atlas: null,
 
 		/**
@@ -67,7 +76,7 @@
 		},
 		
 		/**
-		 * @private
+		 * @ignore
 		 */
 		initFromTexturePacker : function (data) {
 			var atlas = {};
@@ -92,6 +101,9 @@
 		
 		/**
 		 * return the Atlas texture
+		 * @name getTexture
+		 * @memberOf me.TextureAtlas
+		 * @function
 		 * @return {Image}
 		 */
 		getTexture : function() {
@@ -100,6 +112,9 @@
 		
 		/**
 		 * return a normalized region/frame information for the specified sprite name
+		 * @name getRegion
+		 * @memberOf me.TextureAtlas
+		 * @function
 		 * @param {String} name of the sprite
 		 * @return {Object}
 		 */
@@ -120,6 +135,9 @@
 		
 		/**
 		 * Create a sprite object using the first region found using the specified name
+		 * @name createSpriteFromName
+		 * @memberOf me.TextureAtlas
+		 * @function
 		 * @param {String} name of the sprite
 		 * @return {me.SpriteObject}
 		 * @example
@@ -161,6 +179,9 @@
 		
 		/**
 		 * Create an animation object using the first region found using all specified names
+		 * @name createAnimationFromName
+		 * @memberOf me.TextureAtlas
+		 * @function
 		 * @param {String[]} names names of the sprite
 		 * @return {me.AnimationSheet}
 		 * @example

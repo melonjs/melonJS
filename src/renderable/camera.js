@@ -28,9 +28,11 @@
 	{
 
 		/**
-		 *	Axis constant
+		 * Axis constant
 		 * @public
 		 * @type enum
+		 * @name AXIS
+		 * @memberOf me.Viewport
 		 */
 		AXIS : {
 			NONE : 0,
@@ -61,7 +63,7 @@
 		_limitwidth : 0,
 		_limitheight : 0,
 
-		/** @private */
+		/** @ignore */
 		init : function(minX, minY, maxX, maxY, realw, realh) {
 			// viewport coordinates
 			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
@@ -108,7 +110,7 @@
 
 		// -- some private function ---
 
-		/** @private */
+		/** @ignore */
 		_followH : function(target) {
 			if ((target.x - this.pos.x) > (this._deadwidth)) {
 				this.pos.x = ~~MIN((target.x) - (this._deadwidth), this._limitwidth);
@@ -121,7 +123,7 @@
 			return false;
 		},
 
-		/** @private */
+		/** @ignore */
 		_followV : function(target) {
 			if ((target.y - this.pos.y) > (this._deadheight)) {
 				this.pos.y = ~~MIN((target.y) - (this._deadheight),	this._limitheight);
@@ -138,6 +140,9 @@
 
 		/**
 		 * reset the viewport to specified coordinates
+		 * @name reset
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {int} x
 		 * @param {int} y
 		 */
@@ -156,6 +161,9 @@
 
 		/**
 		 * Change the deadzone settings
+		 * @name setDeadzone
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {int} w deadzone width
 		 * @param {int} h deadzone height
 		 */
@@ -173,6 +181,9 @@
 
 		/**
 		 * set the viewport bound (real world limit)
+		 * @name setBounds
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {int} w real world width
 		 * @param {int} h real world height
 		 */
@@ -186,6 +197,9 @@
 
 		/**
 		 * set the viewport to follow the specified entity
+		 * @name follow
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {Object} Object ObjectEntity or Position Vector to follow
 		 * @param {axis} [axis="AXIS.BOTH"] AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
 		 */
@@ -206,6 +220,9 @@
 
 		/**
 		 * move the viewport to the specified coordinates
+		 * @name move
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {int} x
 		 * @param {int} y
 		 */
@@ -218,7 +235,7 @@
 			this.pos.y = newy.clamp(0,this._limitheight);
 		},
 
-		/** @private */
+		/** @ignore */
 		update : function(updateTarget) {
 
 			if (this.target && updateTarget) {
@@ -281,6 +298,9 @@
 
 		/**
 		 * shake the camera 
+		 * @name shake
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {int} intensity maximum offset that the screen can be moved while shaking
 		 * @param {int} duration expressed in milliseconds
 		 * @param {axis} [axis] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
@@ -308,6 +328,9 @@
 		/**
 		 * fadeOut(flash) effect<p>
 		 * screen is filled with the specified color and slowy goes back to normal
+		 * @name fadeOut
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {string} color in #rrggbb format
 		 * @param {Int} [duration="1000"] in ms
 		 * @param {function} [onComplete] callback once effect is over
@@ -324,6 +347,9 @@
 		/**
 		 * fadeIn effect <p>
 		 * fade to the specified color
+		 * @name fadeIn
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {string} color in #rrggbb format
 		 * @param {int} [duration="1000"] in ms
 		 * @param {function} [onComplete] callback once effect is over
@@ -338,7 +364,10 @@
 		},
 
 		/**
-		 *	return the viewport width
+		 * return the viewport width
+		 * @name getWidth
+		 * @memberOf me.Viewport
+		 * @function
 		 * @return {int}
 		 */
 		getWidth : function() {
@@ -346,7 +375,10 @@
 		},
 
 		/**
-		 *	return the viewport height
+		 * return the viewport height
+		 * @name getHeight
+		 * @memberOf me.Viewport
+		 * @function
 		 * @return {int}
 		 */
 		getHeight : function() {
@@ -356,7 +388,7 @@
 		/**
 		 *	set the viewport around the specified entity<p>
 		 * <b>BROKEN !!!!</b>
-		 * @private
+		 * @ignore
 		 * @param {Object} 
 		 */
 		focusOn : function(target) {
@@ -366,7 +398,10 @@
 		},
 
 		/**
-		 *	check if the specified rectange is in the viewport
+		 * check if the specified rectange is in the viewport
+		 * @name isVisible
+		 * @memberOf me.Viewport
+		 * @function
 		 * @param {me.Rect} rect
 		 * @return {boolean}
 		 */
@@ -376,7 +411,7 @@
 
 		/**
 		 *	render the camera effects
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context) {
 			

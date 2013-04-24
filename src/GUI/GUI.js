@@ -59,8 +59,7 @@
 		updated : false,
 
 		/**
-		 * @Constructor
-		 * @private
+		 * @ignore
 		 */
 		 init : function(x, y, settings) {
 			this.parent(x, y, 
@@ -78,7 +77,7 @@
 
 		/**
 		 * return true if the object has been clicked
-		 * @private
+		 * @ignore
 		 */
 		update : function() {
 			if (this.updated) {
@@ -91,7 +90,7 @@
 		
 		/**
 		 * function callback for the mousedown event
-		 * @private
+		 * @ignore
 		 */
 		clicked : function() {
 			if (this.isClickable) {
@@ -104,6 +103,8 @@
 		 * function called when the object is clicked <br>
 		 * to be extended <br>
 		 * return true if we need to stop propagating the event
+		 * @name onClick
+		 * @memberOf me.GUI_Object
 		 * @public
 		 * @function
 		 */
@@ -116,6 +117,8 @@
 		 * OnDestroy notification function<br>
 		 * Called by engine before deleting the object<br>
 		 * be sure to call the parent function if overwritten
+		 * @name onDestroyEvent
+		 * @memberOf me.GUI_Object
 		 */
 		onDestroyEvent : function() {
 			me.input.releaseMouseEvent('mousedown', this);

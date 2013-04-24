@@ -15,7 +15,7 @@
 
 	/**
 	 * Item skeleton for game stat element
-	 * @private
+	 * @ignore
 	 */
 	function Stat_Item(val) {
 		this.defaultvalue = val || 0;
@@ -25,7 +25,7 @@
 
 	/**
 	 * reset to default value
-	 * @private
+	 * @ignore
 	 */
 	Stat_Item.prototype.reset = function() {
 		this.set(this.defaultvalue);
@@ -33,7 +33,7 @@
 
 	/**
 	 * update the value of an item
-	 * @private
+	 * @ignore
 	 */
 	Stat_Item.prototype.update = function(val) {
 		return this.set(this.value + val);
@@ -41,7 +41,7 @@
 	
 	/** 
       * Sets the value of an item 
-	 * @private
+	 * @ignore
 	 */
     Stat_Item.prototype.set = function(value) { 
 		this.value = value; 
@@ -188,7 +188,7 @@
 		/**
 		 * reset all items to default value
 		 * @name me.gamestat#resetAll
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		singleton.resetAll = function() {

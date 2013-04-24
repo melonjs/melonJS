@@ -51,6 +51,7 @@
 	me.HUD_Item = Object.extend(
 	/** @scope me.HUD_Item.prototype */
 	{
+		/** @ignore */
 		init : function(x, y, val) {
 			/**
 			 * position of the item
@@ -79,6 +80,10 @@
 
 		/**
 		 * reset the item to the default value
+		 * @name reset
+		 * @memberOf me.HUD_Item
+		 * @public
+		 * @function
 		 */
 		reset : function() {
 			this.set(this.defaultvalue);
@@ -86,6 +91,10 @@
 		
 		/**
 		 * set the item value to the specified one
+		 * @name set
+		 * @memberOf me.HUD_Item
+		 * @public
+		 * @function
 		 */
 		set : function(value) {
 			this.value = value;
@@ -95,6 +104,10 @@
 
 		/**
 		 * update the item value
+		 * @name update
+		 * @memberOf me.HUD_Item
+		 * @public
+		 * @function
 		 * @param {int} value add the specified value
 		 */
 		update : function(value) {
@@ -103,6 +116,9 @@
 
 		/**
 		 * draw the HUD item
+		 * @name draw
+		 * @memberOf me.HUD_Item
+		 * @function
 		 * @protected
 		 * @param {Context2D} context 2D context
 		 * @param {x} x
@@ -152,8 +168,7 @@
 	/** @scope me.HUD_Object.prototype */
 	{	
 		/**
-		 * @Constructor
-		 * @private
+		 * @ignore
 		 */
 		init : function(x, y, w, h, bg) {
 			// call the parent constructor
@@ -280,7 +295,7 @@
 		
 		/**
 		 * return true if the HUD has been updated
-		 * @private
+		 * @ignore
 		 */
 		update : function() {
 			return this.HUD_invalidated;
@@ -307,7 +322,7 @@
 
 		/**
 		 * reset all items to default value
-		 * @private
+		 * @ignore
 		 */
 		resetAll : function() {
 			for ( var i = this.objCount, obj; i--, obj = this.HUDobj[i];) {
@@ -318,7 +333,7 @@
 
 		/**
 		 * draw the HUD
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context) {
 			if (this.HUD_invalidated) {

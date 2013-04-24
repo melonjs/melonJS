@@ -16,7 +16,7 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @private
+	 * @ignore
 	 */
 	me.TMXOBjectGroup = Object.extend(
 	{
@@ -69,7 +69,7 @@
 		
 		/**
 		 * reset function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		reset : function() {
@@ -92,7 +92,7 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @private
+	 * @ignore
 	 */
 
 	me.TMXOBject = Object.extend(

@@ -22,7 +22,7 @@
 		
 		/**
 		 * the channel/subscription hash
-		 * @private
+		 * @ignore
 		 */
 		var cache = {};
 		

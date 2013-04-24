@@ -33,7 +33,7 @@
 
 		/**
 		 * reset function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		reset : function() {
@@ -42,6 +42,9 @@
 
 		/**
 		 * get the layer alpha channel value<br>
+		 * @name getOpacity
+		 * @memberOf me.ColorLayer
+		 * @function
 		 * @return current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
@@ -50,6 +53,9 @@
 
 		/**
 		 * set the layer alpha channel value<br>
+		 * @name setOpacity
+		 * @memberOf me.ColorLayer
+		 * @function
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
@@ -60,7 +66,7 @@
 
 		/**
 		 * update function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		update : function() {
@@ -69,7 +75,7 @@
 
 		/**
 		 * draw the color layer
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context, rect) {
 			// set layer opacity
@@ -128,7 +134,7 @@
 	 
 		/**
 		 * constructor
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		init: function(name, width, height, imagesrc, z, ratio) {
@@ -208,7 +214,7 @@
 		
 		/**
 		 * reset function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		reset : function() {
@@ -220,6 +226,9 @@
 
 		/**
 		 * get the layer alpha channel value<br>
+		 * @name getOpacity
+		 * @memberOf me.ImageLayer
+		 * @function
 		 * @return current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
@@ -228,6 +237,9 @@
 
 		/**
 		 * set the layer alpha channel value<br>
+		 * @name setOpacity
+		 * @memberOf me.ImageLayer
+		 * @function
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
@@ -238,7 +250,7 @@
 		
 		/**
 		 * update function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		update : function() {
@@ -266,7 +278,7 @@
 
 		/**
 		 * draw the image layer
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context, rect) {
 			// save current context state
@@ -342,7 +354,7 @@
 	/**
 	 * a generic collision tile based layer object
 	 * @memberOf me
-	 * @private
+	 * @ignore
 	 * @constructor
 	 */
 	me.CollisionTiledLayer = me.Renderable.extend({
@@ -356,7 +368,7 @@
 	
 		/**
 		 * reset function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		reset : function() {
@@ -365,7 +377,7 @@
 
 		/**
 		 * only test for the world limit
-		 * @private
+		 * @ignore
 		 **/
 
 		checkCollision : function(obj, pv) {
@@ -407,7 +419,7 @@
 		// the layer data array
 		layerData : null,
 		
-		// constructor
+		/** @ignore */
 		init: function(tilewidth, tileheight, orientation, tilesets, zOrder) {
 
 			// tile width & height
@@ -434,6 +446,7 @@
 			this.parent(new me.Vector2d(0, 0), 0, 0);
 		},
 		
+		/** @ignore */
 		initFromXML: function(layer) {
 			
 			// additional TMX flags
@@ -476,6 +489,7 @@
 
 		},
 		
+		/** @ignore */
 		initFromJSON: function(layer) {
 			// additional TMX flags
 			this.name = layer[me.TMX_TAG_NAME];
@@ -519,7 +533,7 @@
 		
 		/**
 		 * reset function
-		 * @private
+		 * @ignore
 		 * @function
 		 */
 		reset : function() {
@@ -538,7 +552,7 @@
 		
 		/**
 		 * set the layer renderer
-		 * @private
+		 * @ignore
 		 */
 		setRenderer : function(renderer) {
 			this.renderer = renderer;
@@ -546,7 +560,7 @@
 		
 		/**
 		 * Create all required arrays
-		 * @private
+		 * @ignore
 		 */
 		initArray : function(w, h) {
 			// initialize the array
@@ -563,7 +577,8 @@
 
 		/**
 		 * Return the TileId of the Tile at the specified position
-		 * @name me.TMXLayer#getTileId
+		 * @name getTileId
+		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in pixel 
@@ -577,7 +592,8 @@
 		
 		/**
 		 * Return the Tile object at the specified position
-		 * @name me.TMXLayer#getTile
+		 * @name getTile
+		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in pixel 
@@ -590,7 +606,8 @@
 
 		/**
 		 * Create a new Tile at the specified position
-		 * @name me.TMXLayer#setTile
+		 * @name setTile
+		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
 		 * @param {Integer} x x coordinate in tile 
@@ -603,7 +620,8 @@
 		
 		/**
 		 * clear the tile at the specified position
-		 * @name me.TMXLayer#clearTile
+		 * @name clearTile
+		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
 		 * @param {Integer} x x position 
@@ -620,7 +638,8 @@
 		
 		/**
 		 * get the layer alpha channel value
-		 * @name me.TMXLayer#getOpacity
+		 * @name getOpacity
+		 * @memberOf me.TMXLayer
 		 * @return current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
@@ -629,7 +648,8 @@
 
 		/**
 		 * set the layer alpha channel value
-		 * @name me.TMXLayer#setOpacity
+		 * @name setOpacity
+		 * @memberOf me.TMXLayer
 		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
@@ -647,7 +667,7 @@
 		 * obj - obj
 		 * pv   - projection vector
 		 * res : result collision object
-		 * @private
+		 * @ignore
 		 */
 		checkCollision : function(obj, pv) {
 
@@ -701,7 +721,7 @@
 		
 		/**
 		 * a dummy update function
-		 * @private
+		 * @ignore
 		 */
 		update : function() {
 			return false;
@@ -709,7 +729,7 @@
 		
 		/**
 		 * draw a tileset layer
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context, rect) {
 			
