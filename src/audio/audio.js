@@ -12,10 +12,8 @@
 
 	/**
 	 * There is no constructor function for me.audio.
-	 * 
-	 * @final
+	 * @namespace me.audio
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.audio = (function() {
 
@@ -59,7 +57,7 @@
 		 
 		/**
 		 * return the first audio format extension supported by the browser
-		 * @private
+		 * @ignore
 		 */
 		function getSupportedAudioFormat(requestedFormat) {
 			var result = "";
@@ -94,7 +92,7 @@
 
 		/**
 		 * return the specified sound
-		 * @private
+		 * @ignore
 		 */
 
 		function get(sound_id) {
@@ -116,7 +114,7 @@
 
 		/**
 		 * event listener callback on load error
-		 * @private
+		 * @ignore
 		 */
 
 		function soundLoadError(sound_id, onerror_cb) {
@@ -145,7 +143,7 @@
 
 		/**
 		 * event listener callback when a sound is loaded
-		 * @private
+		 * @ignore
 		 */
 
 		function soundLoaded(sound_id, sound_channel, onload_cb) {
@@ -170,8 +168,8 @@
 
 		/**
 		 * play the specified sound
-		 * 
-		 * @name me.audio#play
+		 * @name play
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String}
@@ -218,7 +216,7 @@
 
 		/**
 		 * play_audio with simulated callback
-		 * @private
+		 * @ignore
 		 */
 
 		function _play_audio_disable(sound_id, loop, callback) {
@@ -261,7 +259,7 @@
 		};	
 		
 		/**
-		 * @private
+		 * @ignore
 		 */
 		obj.detectCapabilities = function () {
 			// init some audio variables
@@ -285,8 +283,8 @@
 		 * the melonJS loader will try to load audio files corresponding to the
 		 * browser supported audio format<br>
 		 * if no compatible audio codecs are found, audio will be disabled
-		 * 
-		 * @name me.audio#init
+		 * @name init
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String}
@@ -323,7 +321,8 @@
 		 * return true if audio is enable
 		 * 
 		 * @see me.audio#enable
-		 * @name me.audio#isAudioEnable
+		 * @name isAudioEnable
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @return {boolean}
@@ -338,7 +337,8 @@
 		 * audio.disable()
 		 * 
 		 * @see me.audio#disable
-		 * @name me.audio#enable
+		 * @name enable
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 */
@@ -354,7 +354,8 @@
 		/**
 		 * disable audio output
 		 * 
-		 * @name me.audio#disable
+		 * @name disable
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 */
@@ -374,7 +375,7 @@
 		 * - src     : source path<br>
 		 * - channel : [Optional] number of channels to allocate<br>
 		 * - stream  : [Optional] boolean to enable streaming<br>
-		 * @private
+		 * @ignore
 		 */
 		obj.load = function(sound, onload_cb, onerror_cb) {
 			// do nothing if no compatible format is found
@@ -432,7 +433,8 @@
 		/**
 		 * stop the specified sound on all channels
 		 * 
-		 * @name me.audio#stop
+		 * @name stop
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
@@ -455,7 +457,8 @@
 		 * pause the specified sound on all channels<br>
 		 * this function does not reset the currentTime property
 		 * 
-		 * @name me.audio#pause
+		 * @name pause
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
@@ -477,7 +480,8 @@
 		 * this function automatically set the loop property to true<br>
 		 * and keep track of the current sound being played.
 		 * 
-		 * @name me.audio#playTrack
+		 * @name playTrack
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
@@ -494,7 +498,8 @@
 		 * stop the current audio track
 		 * 
 		 * @see me.audio#playTrack
-		 * @name me.audio#stopTrack
+		 * @name stopTrack
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @example 
@@ -513,7 +518,8 @@
 
 		/**
 		 * set the default global volume
-		 * @name me.audio#setVolume
+		 * @name setVolume
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
@@ -526,7 +532,8 @@
 
 		/**
 		 * get the default global volume
-		 * @name me.audio#getVolume
+		 * @name getVolume
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @returns {Number} current volume value in Float [0.0 - 1.0] .
@@ -537,7 +544,8 @@
 		
 		/**
 		 * mute the specified sound
-		 * @name me.audio#mute
+		 * @name mute
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
@@ -553,7 +561,8 @@
 
 		/**
 		 * unmute the specified sound
-		 * @name me.audio#unmute
+		 * @name unmute
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
@@ -564,7 +573,8 @@
 
 		/**
 		 * mute all audio 
-		 * @name me.audio#muteAll
+		 * @name muteAll
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 */
@@ -577,7 +587,8 @@
 		
 		/**
 		 * unmute all audio 
-		 * @name me.audio#unmuteAll
+		 * @name unmuteAll
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 */
@@ -590,7 +601,8 @@
 		
 		/**
 		 * returns the current track Id
-		 * @name me.audio#getCurrentTrack
+		 * @name getCurrentTrack
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @return {String} audio track id
@@ -602,7 +614,8 @@
 		/**
 		 * pause the current audio track
 		 * 
-		 * @name me.audio#pauseTrack
+		 * @name pauseTrack
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @example 
@@ -617,7 +630,8 @@
 		/**
 		 * resume the previously paused audio track
 		 * 
-		 * @name me.audio#resumeTrack
+		 * @name resumeTrack
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
@@ -638,7 +652,8 @@
 		/**
 		 * unload specified audio track to free memory
 		 *
-		 * @name me.audio#unload
+		 * @name unload
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
@@ -666,7 +681,8 @@
 		/**
 		 * unload all audio to free memory
 		 *
-		 * @name me.audio#unloadAll
+		 * @name unloadAll
+		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @example 

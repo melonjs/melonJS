@@ -15,14 +15,14 @@
 	 * a collection of TMX utility Function
 	 * @final
 	 * @memberOf me
-	 * @private
+	 * @ignore
 	 */
 
 	me.TMXUtils = (function() {
 		
 		/**
 		 * set and interpret a TMX property value 
-		 * @private
+		 * @ignore
 		 */
 		function setTMXValue(value) {
 			if (!value || value.isBoolean()) {
@@ -50,7 +50,7 @@
 
 		/**
 		 * Apply TMX Properties to the give object
-		 * @private
+		 * @ignore
 		 */
 		api.applyTMXPropertiesFromXML = function(obj, xmldata) {
 			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
@@ -71,7 +71,7 @@
 		
 		/**
 		 * Apply TMX Properties to the give object
-		 * @private
+		 * @ignore
 		 */
 		api.applyTMXPropertiesFromJSON = function(obj, data) {
 			var properties = data[me.TMX_TAG_PROPERTIES];
@@ -87,7 +87,7 @@
 		
 		/**
 		 * basic function to merge object properties
-		 * @private
+		 * @ignore
 		 */
 		api.mergeProperties = function(dest, src, overwrite) {
 			for(var p in src){

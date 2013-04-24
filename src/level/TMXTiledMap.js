@@ -93,7 +93,7 @@
 		
 		/**
 		 * a dummy update function
-		 * @private
+		 * @ignore
 		 */
 		reset : function() {
 			if (this.initialized === true) {
@@ -119,7 +119,7 @@
 		
 		/**
 		 * return the specified object group
-		 * @private	
+		 * @ignore	
 		 */
 		getObjectGroupByName : function(name) {
 			var objectGroup = null;
@@ -136,7 +136,7 @@
 
 		/**
 		 * return all the object group
-		 * @private		
+		 * @ignore		
 		 */
 		getObjectGroups : function() {
 			return this.objectGroups;

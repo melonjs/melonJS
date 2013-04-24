@@ -30,6 +30,7 @@
 	{
 
 		// private font properties
+		/** @ignore */
 		font : null,
 		height : null,
 		color : null,
@@ -64,7 +65,7 @@
 		 */
 		lineHeight : 1.0,
 
-		/** @private */
+		/** @ignore */
 		init : function(font, size, color, textAlign) {
 
 			// font name and type
@@ -74,6 +75,9 @@
 
 		/**
 		 * make the font bold
+		 * @name bold
+		 * @memberOf me.Font
+		 * @function
 		 */
 		bold : function() {
 			this.font = "bold " + this.font;
@@ -81,6 +85,9 @@
 
 		/**
 		 * make the font italic
+		 * @name italic
+		 * @memberOf me.Font
+		 * @function
 		 */
 		italic : function() {
 			this.font = "italic " + this.font;
@@ -88,6 +95,9 @@
 
 		/**
 		 * Change the font settings
+		 * @name set
+		 * @memberOf me.Font
+		 * @function
 		 * @param {String} font
 		 * @param {int} size/{String} size + suffix (px, em, pt)
 		 * @param {String} color
@@ -115,7 +125,7 @@
 
 		/**
 		 * FIX ME !
-		 * @private
+		 * @ignore
 		 */
 		getRect : function() {
 			return new me.Rect(new Vector2d(0, 0), 0, 0);
@@ -123,6 +133,9 @@
 
 		/**
 		 * measure the given text size in pixels
+		 * @name measureText
+		 * @memberOf me.Font
+		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
 		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
@@ -145,6 +158,9 @@
 
 		/**
 		 * draw a text at the specified coord
+		 * @name draw
+		 * @memberOf me.Font
+		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
 		 * @param {int} x
@@ -184,6 +200,7 @@
 	/** @scope me.BitmapFont.prototype */
 	{
 		// character size;
+		/** @ignore */
 		size : null,
 		// font scale;
 		sSize : null,
@@ -193,7 +210,7 @@
 		// #char per row
 		charCount : 0,
 
-		/** @private */
+		/** @ignore */
 		init : function(font, size, scale, firstChar) {
 			// font name and type
 			this.parent(font, null, null);
@@ -223,7 +240,7 @@
 
 		/**
 		 * Load the font metrics
-		 * @private	
+		 * @ignore	
 		 */
 		loadFontMetrics : function(font, size) {
 			this.font = me.loader.getImage(font);
@@ -239,6 +256,9 @@
 
 		/**
 		 * change the font settings
+		 * @name set
+		 * @memberOf me.BitmapFont
+		 * @function
 		 * @param {String} textAlign ("left", "center", "right")
 		 * @param {int} [scale]
 		 */
@@ -252,6 +272,9 @@
 		
 		/**
 		 * change the font display size
+		 * @name resize
+		 * @memberOf me.BitmapFont
+		 * @function
 		 * @param {int} scale ratio
 		 */
 		resize : function(scale) {
@@ -263,6 +286,9 @@
 
 		/**
 		 * measure the given text size in pixels
+		 * @name measureText
+		 * @memberOf me.BitmapFont
+		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
 		 * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
@@ -280,6 +306,9 @@
 
 		/**
 		 * draw a text at the specified coord
+		 * @name draw
+		 * @memberOf me.BitmapFont
+		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
 		 * @param {int} x

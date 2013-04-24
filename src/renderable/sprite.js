@@ -26,6 +26,7 @@
 	/** @scope me.SpriteObject.prototype */
 	{
 		// default scale ratio of the object
+		/** @ignore */
 		scale	   : null,
 
 		// if true, image flipping/scaling is needed
@@ -53,7 +54,7 @@
 		/**
 		 * Source rotation angle for pre-rotating the source image<br>
 		 * Commonly used for TexturePacker
-		 * @private
+		 * @ignore
 		 */
 		_sourceAngle: 0,
 
@@ -62,7 +63,7 @@
 		 * @see me.SpriteObject#setOpacity
 		 * @see me.SpriteObject#getOpacity 
 		 * @public
-		 * @type me.Vector2d
+		 * @type Number
 		 * @name me.SpriteObject#alpha
 		 */
 		alpha: 1.0,
@@ -116,8 +117,11 @@
 		},
 
 		/**
-		 *	specify a transparent color
-		 *	@param {String} color color key in rgb format (rrggbb or #rrggbb)
+		 * specify a transparent color
+		 * @name setTransparency
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {String} color color key in rgb format (rrggbb or #rrggbb)
 		 */
 		setTransparency : function(col) {
 			// remove the # if present
@@ -128,6 +132,9 @@
 
 		/**
 		 * return the flickering state of the object
+		 * @name isFlickering
+		 * @memberOf me.SpriteObject
+		 * @function
 		 * @return Boolean
 		 */
 		isFlickering : function() {
@@ -137,6 +144,9 @@
 
 		/**
 		 * make the object flicker
+		 * @name flicker
+		 * @memberOf me.SpriteObject
+		 * @function
 		 * @param {Int} duration
 		 * @param {Function} callback
 		 * @example
@@ -160,8 +170,11 @@
 
 
 		/**
-		 *	Flip object on horizontal axis
-		 *	@param {Boolean} flip enable/disable flip
+		 * Flip object on horizontal axis
+		 * @name flipX
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {Boolean} flip enable/disable flip
 		 */
 		flipX : function(flip) {
 			if (flip != this.lastflipX) {
@@ -176,8 +189,11 @@
 		},
 
 		/**
-		 *	Flip object on vertical axis
-		 *	@param {Boolean} flip enable/disable flip
+		 * Flip object on vertical axis
+		 * @name flipY
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {Boolean} flip enable/disable flip
 		 */
 		flipY : function(flip) {
 			if (flip != this.lastflipY) {
@@ -192,8 +208,11 @@
 		},
 
 		/**
-		 *	Resize the sprite around his center<br>
-		 *	@param {Number} ratio scaling ratio
+		 * Resize the sprite around his center<br>
+		 * @name resize
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {Number} ratio scaling ratio
 		 */
 		resize : function(ratio) {
 			if (ratio > 0) {
@@ -205,16 +224,22 @@
 		},
 
 		/**
-		 *	get the sprite alpha channel value<br>
-		 *  @return current opacity value between 0 and 1
+		 * get the sprite alpha channel value<br>
+		 * @name getOpacity
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @return current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
 			return this.alpha;
 		},
 		
 		/**
-		 *	set the sprite alpha channel value<br>
-		 *	@param {alpha} alpha opacity value between 0 and 1
+		 * set the sprite alpha channel value<br>
+		 * @name setOpacity
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {alpha} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
 			if (typeof (alpha) === "number") {
@@ -226,6 +251,9 @@
 		 * sprite update<br>
 		 * not to be called by the end user<br>
 		 * called by the game manager on each game loop
+		 * @name update
+		 * @memberOf me.SpriteObject
+		 * @function
 		 * @protected
 		 * @return false
 		 **/
@@ -247,6 +275,9 @@
 		 * object draw<br>
 		 * not to be called by the end user<br>
 		 * called by the game manager on each game loop
+		 * @name draw
+		 * @memberOf me.SpriteObject
+		 * @function
 		 * @protected
 		 * @param {Context2d} context 2d Context on which draw our object
 		 **/
@@ -309,7 +340,7 @@
 
 		/**
 		 * Destroy function<br>
-		 * @private
+		 * @ignore
 		 */
 		destroy : function() {
 			this.onDestroyEvent.apply(this, arguments);
@@ -318,6 +349,9 @@
 		/**
 		 * OnDestroy Notification function<br>
 		 * Called by engine before deleting the object
+		 * @name onDestroyEvent
+		 * @memberOf me.SpriteObject
+		 * @function
 		 */
 		onDestroyEvent : function() {
 			;// to be extended !
@@ -341,7 +375,10 @@
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
 	{
-		// count the fps and manage animation change
+		/** 
+		 * count the fps and manage animation change
+		 * @ignore
+		 */
 		fpscount : 0,
 		
 		// Spacing and margin
@@ -366,7 +403,7 @@
 		 */
 		animationspeed : 0,
 
-		/** @private */
+		/** @ignore */
 		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
 			// hold all defined animation
 			this.anim = [];
@@ -402,8 +439,8 @@
 		},
 		
 		/**
-		 * build a
-		 * @private
+		 * build the local (private) atlas
+		 * @ignore
 		 */
 		buildLocalAtlas : function (atlas, indices) {
 			// reinitialze the atlas
@@ -439,6 +476,9 @@
 		 * add an animation <br>
 		 * For fixed-sized cell spritesheet, the index list must follow the logic as per the following example :<br>
 		 * <img src="spritesheet_grid.png"/>
+		 * @name addAnimation
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @param {String} name animation id
 		 * @param {Int[]|String[]}  list of sprite index or name defining the animaton
 		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
@@ -487,6 +527,9 @@
 		
 		/**
 		 * set the current animation
+		 * @name setCurrentAnimation
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @param {String} name animation id
 		 * @param {Object} [onComplete] animation id to switch to when complete, or callback
 		 * @example
@@ -510,6 +553,9 @@
 
 		/**
 		 * return true if the specified animation is the current one.
+		 * @name isCurrentAnimation
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @param {String} name animation id
 		 * @example
 		 * if (!this.isCurrentAnimation("walk"))
@@ -523,6 +569,9 @@
 
 		/**
 		 * force the current animation frame index.
+		 * @name setAnimationFrame
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @param {int} [index=0]
 		 * @example
 		 * //reset the current animation to the first frame
@@ -539,6 +588,9 @@
 		
 		/**
 		 * return the current animation frame index.
+		 * @name getCurrentAnimationFrame
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @param {int} index
 		 */
 		getCurrentAnimationFrame : function() {
@@ -548,6 +600,9 @@
 		/**
 		 * update the animation<br>
 		 * this is automatically called by the game manager {@link me.game}
+		 * @name update
+		 * @memberOf me.AnimationSheet
+		 * @function
 		 * @protected
 		 */
 		update : function() {

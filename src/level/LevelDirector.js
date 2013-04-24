@@ -40,7 +40,7 @@
   		  ---------------------------------------------*/
 		/**
 		 * reset the level director 
-		 * @private
+		 * @ignore
 		 */
 		obj.reset = function() {
 
@@ -48,7 +48,7 @@
 
 		/**
 		 * add a level  
-		 * @private
+		 * @ignore
 		 */
 		obj.addLevel = function(level) {
 			throw "melonJS: no level loader defined";
@@ -57,7 +57,7 @@
 		/**
 		 *
 		 * add a TMX level  
-		 * @private
+		 * @ignore
 		 */
 		obj.addTMXLevel = function(levelId, callback) {
 			// just load the level with the XML stuff

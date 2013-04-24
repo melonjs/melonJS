@@ -98,16 +98,20 @@
 	me.ScreenObject = me.Renderable.extend(
 	/** @scope me.ScreenObject.prototype */	
 	{
+		/** @ignore */
 		addAsObject	: false,
+		/** @ignore */
 		z : 999,
 
 		/**
 		 * initialization function
+		 * @name init
+		 * @memberOf me.ScreenObject
+		 * @function
 		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
 		 * @param {Boolean} [isPersistent] isPersistent make the screen persistent overt level changes<br>
 		 * allowing to override the update & draw function to add specific treatment.
 		 */
-
 		init : function(addAsObject, isPersistent) {
 			this.parent(new me.Vector2d(0, 0), 0, 0);
 			this.addAsObject = this.visible = (addAsObject === true) || false;
@@ -116,7 +120,7 @@
 
 		/**
 		 * Object reset function
-		 * @private
+		 * @ignore
 		 */
 		reset : function() {
 
@@ -144,7 +148,7 @@
 
 		/**
 		 * destroy function
-		 * @private
+		 * @ignore
 		 */
 		destroy : function() {
 			// notify the object
@@ -155,6 +159,9 @@
 		 * update function<br>
 		 * optional empty function<br>
 		 * only used by the engine if the object has been initialized using addAsObject parameter set to true<br>
+		 * @name update
+		 * @memberOf me.ScreenObject
+		 * @function
 		 * @example
 		 * // define a Title Screen
 		 * var TitleScreen = me.ScreenObject.extend(
@@ -177,7 +184,7 @@
 
 		/**
 		 * frame update function function
-		 * @private
+		 * @ignore
 		 */
 		onUpdateFrame : function() {
 			// update the frame counter
@@ -197,6 +204,9 @@
 		 * draw function<br>
 		 * optional empty function<br>
 		 * only used by the engine if the object has been initialized using addAsObject parameter set to true<br>
+		 * @name draw
+		 * @memberOf me.ScreenObject
+		 * @function
 		 * @example
 		 * // define a Title Screen
 		 * var TitleScreen = me.ScreenObject.extend(
@@ -222,7 +232,10 @@
 		 * called by the state manager when reseting the object<br>
 		 * this is typically where you will load a level, etc...
 		 * to be extended
-		 *	@param {String[]} [arguments] optional arguments passed when switching state
+		 * @name onResetEvent
+		 * @memberOf me.ScreenObject
+		 * @function
+		 * @param {String[]} [arguments] optional arguments passed when switching state
 		 */
 		onResetEvent : function() {
 			// to be extended
@@ -231,6 +244,9 @@
 		/**
 		 * onDestroyEvent function<br>
 		 * called by the state manager before switching to another state<br>
+		 * @name onDestroyEvent
+		 * @memberOf me.ScreenObject
+		 * @function
 		 */
 		onDestroyEvent : function() {
 			// to be extended
@@ -243,9 +259,8 @@
 	/**
 	 * a State Manager (state machine)<p>
 	 * There is no constructor function for me.state.
-	 * @final
+	 * @namespace me.state
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 
 	me.state = (function() {
@@ -300,7 +315,7 @@
 		};
 
 		// callback when state switch is done
-		/** @private */
+		/** @ignore */
 		var _onSwitchComplete = null;
 
 		// just to keep track of possible extra arguments
@@ -421,62 +436,72 @@
 		/**
 		 * default state value for Loading Screen
 		 * @constant
-		 * @name me.state#LOADING
+		 * @name LOADING
+		 * @memberOf me.state
 		 */
 		obj.LOADING = 0;
 		/**
 		 * default state value for Menu Screen
 		 * @constant
-		 * @name me.state#MENU
+		 * @name MENU
+		 * @memberOf me.state
 		 */
 		obj.MENU = 1;
 		/**
 		 * default state value for "Ready" Screen
 		 * @constant
-		 * @name me.state#READY
+		 * @name READY
+		 * @memberOf me.state
 		 */
 		obj.READY = 2;
 		/**
 		 * default state value for Play Screen
 		 * @constant
-		 * @name me.state#PLAY
+		 * @name PLAY
+		 * @memberOf me.state
 		 */
 		obj.PLAY = 3;
 		/**
 		 * default state value for Game Over Screen
 		 * @constant
-		 * @name me.state#GAMEOVER
+		 * @name GAMEOVER
+		 * @memberOf me.state
 		 */
 		obj.GAMEOVER = 4;
 		/**
 		 * default state value for Game End Screen
 		 * @constant
-		 * @name me.state#GAME_END
+		 * @name GAME_END
+		 * @memberOf me.state
 		 */
 		obj.GAME_END = 5;
 		/**
 		 * default state value for High Score Screen
 		 * @constant
-		 * @name me.state#SCORE
+		 * @name SCORE
+		 * @memberOf me.state
 		 */
 		obj.SCORE = 6;
 		/**
 		 * default state value for Credits Screen
 		 * @constant
-		 * @name me.state#CREDITS
+		 * @name CREDITS
+		 * @memberOf me.state
 		 */
 		obj.CREDITS = 7;
 		/**
 		 * default state value for Settings Screen
 		 * @constant
-		 * @name me.state#SETTINGS
+		 * @name SETTINGS
+		 * @memberOf me.state
 		 */
 		obj.SETTINGS = 8;
 		
 		/**
 		 * default state value for user defined constants<br>
 		 * @constant
-		 * @name me.state#USER
+		 * @name USER
+		 * @memberOf me.state
 		 * @example
 		 * var STATE_INFO = me.state.USER + 0;
 		 * var STATE_WARN = me.state.USER + 1;
@@ -487,15 +512,17 @@
 
 		/**
 		 * onPause callback
-		 * @type function
-		 * @name me.state#onPause
+		 * @callback
+		 * @name onPause
+		 * @memberOf me.state
 		 */
 		obj.onPause = null;
 
 		/**
 		 * onResume callback
-		 * @type function
-		 * @name me.state#onResume
+		 * @callback
+		 * @name onResume
+		 * @memberOf me.state
 		 */
 		obj.onResume = null;
 
@@ -542,7 +569,8 @@
 
 		/**
 		 * pause the current screen object
-		 * @name me.state#pause
+		 * @name pause
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Boolean} pauseTrack pause current track on screen pause
@@ -558,7 +586,8 @@
 
 		/**
 		 * resume the resume screen object
-		 * @name me.state#resume
+		 * @name resume
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Boolean} resumeTrack resume current track on screen resume
@@ -573,7 +602,8 @@
 
 		/**
 		 * return the running state of the state manager
-		 * @name me.state#isRunning
+		 * @name isRunning
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Boolean} true if a "process is running"
@@ -584,7 +614,8 @@
 
 		/**
 		 * associate the specified state with a screen object
-		 * @name me.state#set
+		 * @name set
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
@@ -599,7 +630,8 @@
 		/**
 		 * return a reference to the current screen object<br>
 		 * useful to call a object specific method
-		 * @name me.state#current
+		 * @name current
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @return {me.ScreenObject} so
@@ -610,7 +642,8 @@
 
 		/**
 		 * specify a global transition effect
-		 * @name me.state#transition
+		 * @name transition
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {String} effect (only "fade" is supported for now)
@@ -626,7 +659,8 @@
 
 		/**
 		 * enable/disable transition for a specific state (by default enabled for all)
-		 * @name me.state#setTransition
+		 * @name setTransition
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 */
@@ -637,7 +671,8 @@
 
 		/**
 		 * change the game/app state
-		 * @name me.state#change
+		 * @name change
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
@@ -656,7 +691,7 @@
 			}
 			// if fading effect
 			if (_fade.duration && _screenObject[state].transition) {
-				/** @private */
+				/** @ignore */
 				_onSwitchComplete = function() {
 					me.game.viewport.fadeOut(_fade.color, _fade.duration);
 				};
@@ -677,7 +712,8 @@
 
 		/**
 		 * return true if the specified state is the current one
-		 * @name me.state#isCurrent
+		 * @name isCurrent
+		 * @memberOf me.state
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant

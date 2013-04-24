@@ -20,7 +20,10 @@
 	me.Renderable = me.Rect.extend(
 	/** @scope me.Renderable.prototype */
 	{
-		// to identify the object as a renderable object
+		/**
+		 * to identify the object as a renderable object
+		 * @ignore
+		 */
 		isRenderable: true,
 		
 		/**
@@ -28,7 +31,8 @@
 		 * default value : true
 		 * @public
 		 * @type Boolean
-		 * @name me.Renderable#visible
+		 * @name visible
+		 * @memberOf me.Renderable
 		 */
 		visible : true,
 
@@ -38,7 +42,8 @@
 		 * @public
 		 * @readonly
 		 * @type Boolean
-		 * @name me.Renderable#inViewport
+		 * @name inViewport
+		 * @memberOf me.Renderable
 		 */
 		inViewport : false,
 
@@ -47,7 +52,8 @@
 		 * default value : false
 		 * @public
 		 * @type Boolean
-		 * @name me.Renderable#alwaysUpdate
+		 * @name alwaysUpdate
+		 * @memberOf me.Renderable
 		 */
 		alwaysUpdate : false,
 
@@ -57,7 +63,8 @@
 		 * @public
 		 * @readonly
 		 * @type Boolean
-		 * @name me.Renderable#isPersistent
+		 * @name isPersistent
+		 * @memberOf me.Renderable
 		 */
 		isPersistent : false,
 		
@@ -67,7 +74,8 @@
 		 * default value : false
 		 * @public
 		 * @type Boolean
-		 * @name me.Renderable#floating
+		 * @name floating
+		 * @memberOf me.Renderable
 		 */
 		floating: false,
 
@@ -82,6 +90,9 @@
 		/**
 		 * update function
 		 * called by the game manager on each game loop
+		 * @name update
+		 * @memberOf me.Renderable
+		 * @function
 		 * @protected
 		 * @return false
 		 **/
@@ -92,6 +103,9 @@
 		/**
 		 * object draw
 		 * called by the game manager on each game loop
+		 * @name draw
+		 * @memberOf me.Renderable
+		 * @function
 		 * @protected
 		 * @param {Context2d} context 2d Context on which draw our object
 		 **/
