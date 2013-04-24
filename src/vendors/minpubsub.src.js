@@ -11,9 +11,8 @@
 
 	/**
 	 * There is no constructor function for me.event
-	 * @final
+	 * @namespace me.event
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.event = (function() {
 		

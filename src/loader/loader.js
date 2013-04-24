@@ -115,9 +115,8 @@
 	/**
 	 * a small class to manage loading of stuff and manage resources
 	 * There is no constructor function for me.input.
-	 * @final
+	 * @namespace me.loader
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 
 	me.loader = (function() {
@@ -328,8 +327,9 @@
 		/**
 		 * onload callback
 		 * @public
-		 * @type Function
-		 * @name me.loader#onload
+		 * @callback
+		 * @name onload
+		 * @memberOf me.loader
 		 * @example
 		 *
 		 * // set a callback when everything is loaded
@@ -342,8 +342,9 @@
 		 * each time a resource is loaded, the loader will fire the specified function,
 		 * giving the actual progress [0 ... 1], as argument.
 		 * @public
-		 * @type Function
-		 * @name me.loader#onProgress
+		 * @callback
+		 * @name onProgress
+		 * @memberOf me.loader
 		 * @example
 		 *
 		 * // set a callback for progress notification
@@ -390,7 +391,8 @@
 		 * - channel : optional number of channels to be created<br>
 		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
-		 * @name me.loader#preload
+		 * @name preload
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {Array.<string>} resources
@@ -437,7 +439,8 @@
 		 * - src     : path (only) where resources are located<br>
 		 * - channel : optional number of channels to be created<br>
 		 * - stream  : optional boolean to enable audio streaming<br>
-		 * @name me.loader#load
+		 * @name load
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {Object} resource
@@ -499,7 +502,8 @@
 
 		/**
 		 * unload specified resource to free memory
-		 * @name me.loader#unload
+		 * @name unload
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {Object} resource
@@ -548,7 +552,8 @@
 
 		/**
 		 * unload all resources to free memory
-		 * @name me.loader#unloadAll
+		 * @name unloadAll
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @example me.loader.unloadAll();
@@ -578,7 +583,8 @@
 
 		/**
 		 * return the specified TMX object storing type
-		 * @name me.loader#getTMXFormat
+		 * @name getTMXFormat
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {String} tmx name of the tmx/tsx element ("map1");
@@ -598,7 +604,8 @@
 
 		/**
 		 * return the specified TMX/TSX object
-		 * @name me.loader#getTMX
+		 * @name getTMX
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {String} tmx name of the tmx/tsx element ("map1");
@@ -617,7 +624,8 @@
 		
 		/**
 		 * return the specified Binary object
-		 * @name me.loader#getBinary
+		 * @name getBinary
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {String} name of the binary object ("ymTrack");
@@ -637,7 +645,8 @@
 		
 		/**
 		 * return the specified Atlas object
-		 * @name me.loader#getAtlas
+		 * @name getAtlas
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {String} name of the atlas object;
@@ -657,7 +666,8 @@
 
 		/**
 		 * return the specified Image Object
-		 * @name me.loader#getImage
+		 * @name getImage
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @param {String} Image name of the Image element ("tileset-platformer");
@@ -689,7 +699,8 @@
 
 		/**
 		 * Return the loading progress in percent
-		 * @name me.loader#getLoadProgress
+		 * @name getLoadProgress
+		 * @memberOf me.loader
 		 * @public
 		 * @function
 		 * @deprecated use callback instead

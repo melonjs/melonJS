@@ -12,9 +12,8 @@
 	 * a level manager object <br>
 	 * once ressources loaded, the level director contains all references of defined levels<br>
 	 * There is no constructor function for me.levelDirector, this is a static object
-	 * @final
+	 * @namespace me.levelDirector
 	 * @memberOf me
-	 * @constructor Should not be called by the user.
 	 */
 	me.levelDirector = (function() {
 		// hold public stuff in our singletong
@@ -85,7 +84,8 @@
 		/**
 		 * load a level into the game manager<br>
 		 * (will also create all level defined entities, etc..)
-		 * @name me.levelDirector#loadLevel
+		 * @name loadLevel
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 * @param {String} level level id
@@ -155,7 +155,8 @@
 
 		/**
 		 * return the current level id<br>
-		 * @name me.levelDirector#getCurrentLevelId
+		 * @name getCurrentLevelId
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 * @return {String}
@@ -166,7 +167,8 @@
 
 		/**
 		 * reload the current level<br>
-		 * @name me.levelDirector#reloadLevel
+		 * @name reloadLevel
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 */
@@ -178,7 +180,8 @@
 
 		/**
 		 * load the next level<br>
-		 * @name me.levelDirector#nextLevel
+		 * @name nextLevel
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 */
@@ -193,7 +196,8 @@
 
 		/**
 		 * load the previous level<br>
-		 * @name me.levelDirector#previousLevel
+		 * @name previousLevel
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 */
@@ -208,7 +212,8 @@
 
 		/**
 		 * return the amount of level preloaded<br>
-		 * @name me.levelDirector#levelCount
+		 * @name levelCount
+		 * @memberOf me.levelDirector
 		 * @public
 		 * @function
 		 */
