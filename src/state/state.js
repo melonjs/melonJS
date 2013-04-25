@@ -254,6 +254,32 @@
 
 	});
 
+	// requestAnimationFrame polyfill by Erik Möller
+	// fixes from Paul Irish and Tino Zijdel
+	(function() {
+		var lastTime = 0;
+		var vendors = ['ms', 'moz', 'webkit', 'o'];
+		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] ||
+										window[vendors[x]+'CancelRequestAnimationFrame'];
+		}
+
+		if (!window.requestAnimationFrame)
+			window.requestAnimationFrame = function(callback, element) {
+				var currTime = Date.now();
+				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+				var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+				  timeToCall);
+				lastTime = currTime + timeToCall;
+				return id;
+			};
+
+		if (!window.cancelAnimationFrame)
+			window.cancelAnimationFrame = function(id) {
+				clearTimeout(id);
+			};
+	}());
 
 	
 	/**
@@ -265,32 +291,6 @@
 
 	me.state = (function() {
 		
-		// list of vendors prefix (note : last modernizr version has
-		// a getPrefix function that makes this cleaner and more generic
-		var vendors = ['ms', 'moz', 'webkit', 'o'];
-		
-		// polyfill for RequestAnimationFrame (based on Erik Möller polyfill)
-		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
-		};
-		
-		if (!window.requestAnimationFrame) {
-			window.requestAnimationFrame = function(callback, element) {
-				// TODO : allow to run at a lower rate than 60fps with requestAnimationFrame by skipping frame
-				// TODO : integrate setInterval directly here as a fallback
-				// (for next version, I plan to review the whole main loop mechanism, so I don't do it now) 
-				// in melonJS if this returns -1 clearInterval is used
-				return -1;
-			};
-        };
-		
-		if (!window.cancelAnimationFrame) {
-			window.cancelAnimationFrame = function() {
-				return -1;
-			};
-		};
-		
 		// hold public stuff in our singleton
 		var obj = {};
 
@@ -300,8 +300,7 @@
 
 		// current state
 		var _state = -1;
-		// SetInterval Id
-		var _intervalId = -1;
+
 		// requestAnimeFrame Id
 		var _animFrameId = -1;
 
@@ -329,28 +328,13 @@
 		 */
 		function _startRunLoop() {
 			// ensure nothing is running first
-			if ((_intervalId == -1) && (_animFrameId == -1)) {
+			if (_animFrameId === -1) {
 
 				// reset the timer
 				me.timer.reset();
 
 				// start the main loop
-				if (me.sys.useNativeAnimFrame) {
-					// attempt to setup the game loop using requestAnimationFrame
-					_animFrameId = window.requestAnimationFrame(_renderFrame);
-
-					if (_animFrameId != -1) {
-						return;
-					}
-					// else feature not supported !
-
-					// disable use of requestAnimationFrame (since unsupported)
-					me.sys.useNativeAnimFrame = false;
-					//console.log("using setInterval as fallback ("+_animFrameId+")");
-				}
-
-				// setup the game loop using setInterval
-				_intervalId = setInterval(_activeUpdateFrame, ~~(1000 / me.sys.fps));
+				_animFrameId = window.requestAnimationFrame(_renderFrame);
 			}
 		};
 
@@ -360,9 +344,7 @@
 		 */
 		function _renderFrame() {
 			_activeUpdateFrame();
-			// we already checked it was supported earlier
-			// so no need to do it again here
-			if (_animFrameId != -1) {
+			if (_animFrameId !== -1) {
 				_animFrameId = window.requestAnimationFrame(_renderFrame);
 			}
 		};
@@ -372,17 +354,9 @@
 		 * @ignore
 		 */
 		function _stopRunLoop() {
-			// cancel any previous setInterval
-			if (_intervalId != -1) {
-				clearInterval(_intervalId);
-				_intervalId = -1;
-			}
 			// cancel any previous animationRequestFrame
-			if (_animFrameId != -1) {
-				window.cancelAnimationFrame(_animFrameId);
-				_animFrameId = -1;
-			}
-
+			window.cancelAnimationFrame(_animFrameId);
+			_animFrameId = -1;
 		};
 
 		/**
@@ -609,7 +583,7 @@
 		 * @param {Boolean} true if a "process is running"
 		 */
 		obj.isRunning = function() {
-			return ((_intervalId != -1) || (_animFrameId != -1))
+			return (_animFrameId != -1)
 		};
 
 		/**
