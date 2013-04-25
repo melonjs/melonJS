@@ -475,7 +475,7 @@
 		/**
 		 * add an animation <br>
 		 * For fixed-sized cell spritesheet, the index list must follow the logic as per the following example :<br>
-		 * <img src="spritesheet_grid.png"/>
+		 * <img src="images/spritesheet_grid.png"/>
 		 * @name addAnimation
 		 * @memberOf me.AnimationSheet
 		 * @function

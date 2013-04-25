@@ -655,7 +655,7 @@
 		/**
 		 * update the size of the collision rectangle<br>
 		 * the colPos Vector is then set as a relative offset to the initial position (pos)<br>
-		 * <img src="me.Rect.colpos.png"/>
+		 * <img src="images/me.Rect.colpos.png"/>
 		 * @name adjustSize
 		 * @memberOf me.Rect
 		 * @function
