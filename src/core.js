@@ -140,14 +140,6 @@ window.me = window.me || {};
 		gravity : undefined,
 
 		/**
-		 * Use native "requestAnimFrame" function if supported <br>
-		 * fallback to clearInterval if not supported by the browser<br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		useNativeAnimFrame : false,
-
-		/**
 		 * cache Image using a Canvas element, instead of directly using the Image Object<br>
 		 * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
 		 * default value : false
