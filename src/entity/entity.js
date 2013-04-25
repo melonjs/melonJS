@@ -11,7 +11,7 @@
 	 * me.ObjectSettings contains the object attributes defined in Tiled<br>
 	 * and is created by the engine and passed as parameter to the corresponding object when loading a level<br>
 	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor
-	 * <img src="object_properties.png"/><br>
+	 * <img src="images/object_properties.png"/><br>
 	 * @class
 	 * @memberOf me
 	 */
@@ -106,7 +106,7 @@
 	 * This object is also used by the engine to instanciate objects defined in the map, 
 	 * which means, that on level loading the engine will try to instanciate every object 
 	 * found in the map, based on the user defined name in each Object Properties<br>
-	 * <img src="object_properties.png"/><br>
+	 * <img src="images/object_properties.png"/><br>
 	 * There is no constructor function for me.entityPool, this is a static object
 	 * @namespace me.entityPool
 	 * @memberOf me
@@ -311,7 +311,7 @@
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
-	 * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="object_properties.png"/>
+	 * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="images/object_properties.png"/>
 	 */
 	me.ObjectEntity = me.Renderable.extend(
 	/** @scope me.ObjectEntity.prototype */ {
@@ -559,7 +559,7 @@
 		 * specify the size of the hit box for collision detection<br>
 		 * (allow to have a specific size for each object)<br>
 		 * e.g. : object with resized collision box :<br>
-		 * <img src="me.Rect.colpos.png"/>
+		 * <img src="images/me.Rect.colpos.png"/>
 		 * @name updateColRect
 		 * @memberOf me.ObjectEntity
 		 * @function

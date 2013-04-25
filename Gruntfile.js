@@ -92,7 +92,7 @@ module.exports = function(grunt) {
 	
 	clean: {
 		dist: ['build/<%= pkg.name %>-<%= pkg.version %>.js', 'build/<%= pkg.name %>-<%= pkg.version %>.min.js'],
-		jsdoc: ['./docs/**/*.*', './docs/scripts', './docs/styles']
+		jsdoc: ['./docs/**/*.*', './docs/scripts', './docs/styles', './docs/images']
     },
    
     jsdoc : {

@@ -6,7 +6,7 @@ html
 
 body
 {
-	font: 12px "Tahoma", Geneva, "Helvetica Neue", Helvetica, Arial, sans serif;
+	font: 12px/1.5 "Helvetica Neue", Arial, sans-serif;
 	line-height: 130%;
 	color: #000;
 	background-color: #fff;
@@ -26,10 +26,53 @@ a:active {
 
 header
 {
-	display: block;
-	padding: 6px 4px;
+	clear: both;
 	background-color: #ccc;
+	padding: 0px;
 }
+
+#logo
+{ 
+  width: 100%;
+  position: relative;
+  height: 100px;
+  background: #667F03 url(logo.png) no-repeat;
+}
+
+#logo #logo_text 
+{ 
+  position: absolute; 
+  top: 0px;
+  left: 10;
+  margin-left: 20px;
+}
+
+#logo h1, #logo h2
+{ 
+  font: normal 300% 'century gothic', arial, sans-serif;
+  border-bottom: 0;
+  text-transform: none;
+  margin: 0;
+ }
+
+#logo_text h1, #logo_text h1 a, #logo_text h1 a:hover 
+{ 
+  padding: 22px 0 0 0;
+  color: #FFF;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+}
+
+#logo_text h1 a .logo_colour
+{ 
+  color: #CDF63E;
+}
+
+#logo_text h2
+{ 
+  font-size: 100%;
+  padding: 4px 0 0 0;
+  color: #DDD;
 }
 
 .class-description {
