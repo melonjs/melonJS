@@ -37,8 +37,6 @@ var game = {
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
 			return;
 		}
-		// disable interpolation when scaling
-		me.video.setImageSmoothing(false);
 		
 		// install the debug panel plugin
 		//me.plugin.register(debugPanel, "debug");
