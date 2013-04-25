@@ -17,12 +17,13 @@ and currently features :
 - Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE)
 - Multiple Audio Channel support
 - Basic physics & collision mechanisms (to ensure low cpu requirements)
+- Basic Vector Math
 - Tween Effects
 - Transition effects
 - A basic set of Object Entities (to be extended)
 - Object Pooling
 - Basic animation management
-- Spritesheet and Packed Textures (Texture Packer)
+- Standard pritesheet and Packed Textures (Texture Packer) support
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
 	- Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
@@ -39,8 +40,10 @@ and currently features :
 	- Solid, Platform, Slope and Breakable Tiles
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
+- Built-in support for cocoonJS
+- Asynchronous messaging support (minPubSub)
 - some basic GUI elements
-- a customizable loader, etc
+- a customizable loader, etc...
 
 Building melonJS
 -------------------------------------------------------------------------------
