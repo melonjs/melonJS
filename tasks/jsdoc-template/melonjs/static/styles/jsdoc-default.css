@@ -35,9 +35,12 @@ a:active {
 #logo_text
 {
 	position: relative;
-	left: 250px;
+	left: 240px;
+	width: 825px;
 	height: 100%;
-	background: url(../images/logo.png) 0 -40px no-repeat;
+	padding-left: 1em;
+	border-left: 1px solid #667F03;
+	background: #667F03 url(../images/logo.png) 0 -40px no-repeat;
 }
 
 #logo h1, #logo h2
@@ -78,7 +81,8 @@ a:active {
 }
 
 #main {
-    padding: 1em;
+    padding: 1em 0 1em 1em;
+    min-width: 825px;
     margin-left: 240px;
     border-left: 1px solid #667F03;
     border-bottom: 1px solid #667F03;
