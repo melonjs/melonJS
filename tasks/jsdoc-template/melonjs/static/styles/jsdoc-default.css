@@ -80,8 +80,8 @@ a:active {
 #main {
     padding: 1em;
     margin-left: 240px;
-    border-left: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
+    border-left: 1px solid #667F03;
+    border-bottom: 1px solid #667F03;
 }
 
 section
@@ -94,7 +94,8 @@ section
 
 header
 {
-	background-color: #ccc;
+	background-color: #667F03;
+	color: #fff;
 	padding: 3px;
 }
 
@@ -127,7 +128,7 @@ nav ul {
 }
 
 nav h2 a, nav h2 a:visited {
-    color: #A35A00;
+    color: #667F03;
     text-decoration: none;
 }
 
@@ -191,7 +192,7 @@ h4
 	letter-spacing: -0.01em;
 	margin-top: 16px;
 	margin: 18px 0 3px 0;
-	color: #A35A00;
+	color: #667F03;
 }
 
 h5, .container-overview .subsection-title
@@ -210,10 +211,10 @@ h6
 	font-style: italic;
 }
 
-.ancestors { color: #999; }
+.ancestors { color: #ddd; }
 .ancestors a
 {
-    color: #999 !important;
+    color: #ddd !important;
     text-decoration: none;
 }
 
@@ -236,7 +237,7 @@ h6
 }
 
 .details { margin-top: 14px; }
-.details dt { width:100px; float:left; border-left: 2px solid #DDD; padding-left: 10px;  padding-top: 6px; }
+.details dt { width:100px; float:left; border-left: 2px solid #667F03; padding-left: 10px;  padding-top: 6px; }
 .details dd { margin-left: 50px; }
 .details ul { margin: 0; }
 .details ul { list-style-type: none; }
@@ -258,7 +259,7 @@ h6
 
 .prettyprint
 {
-	border: 1px solid #ddd;
+	border: 1px solid #667F03;
 	width: 80%;
     overflow: auto;
 }
@@ -277,7 +278,7 @@ h6
 	margin: 0;
 	background-color: #fff;
 	color: #000;
-	border-left: 3px #ddd solid;
+	border-left: 3px #667F03 solid;
 }
 
 .params, .props
@@ -288,14 +289,14 @@ h6
 }
 
 .params .name, .props .name, .name code {
-	color: #A35A00;
+	color: #667F03;
 	font-family: Consolas, 'Lucida Console', Monaco, monospace;
 	font-size: 100%;
 }
 
 .params td, .params th, .props td, .props th
 {
-	border: 1px solid #ddd;
+	border: 1px solid #667F03;
 	margin: 0px;
 	text-align: left;
 	vertical-align: top;
@@ -305,18 +306,13 @@ h6
 
 .params thead tr, .props thead tr
 {
-	background-color: #ddd;
+	background-color: #667F03;
+	color: #fff;
 	font-weight: bold;
 }
 
-.params .params thead tr, .props .props thead tr
-{
-	background-color: #fff;
-	font-weight: bold;
-}
-
-.params th, .props th { border-right: 1px solid #aaa; }
-.params thead .last, .props thead .last { border-right: 1px solid #ddd; }
+.params th, .props th { border-right: 1px solid #3d4d02; }
+.params thead .last, .props thead .last { border-right: 1px solid #667F03; }
 
 .disabled {
     color: #454545;
