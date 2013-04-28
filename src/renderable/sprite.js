@@ -480,8 +480,9 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
-		 * @param {Int[]|String[]}  list of sprite index or name defining the animaton
-		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
+		 * @param {Int[]|String[]} index list of sprite index or name defining the animaton
+		 * @param {Int} [animationspeed] cycling speed for animation in fps (lower is faster).
+		 * @see me.AnimationSheet#animationspeed
 		 * @example
 		 * // walking animatin
 		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
@@ -531,7 +532,7 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
-		 * @param {Object} [onComplete] animation id to switch to when complete, or callback
+		 * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
 		 * @example
 		 * // set "walk" animation
 		 * this.setCurrentAnimation("walk");
@@ -557,6 +558,7 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
+		 * @return {Boolean}
 		 * @example
 		 * if (!this.isCurrentAnimation("walk"))
 		 * {
@@ -572,7 +574,7 @@
 		 * @name setAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @param {int} [index=0]
+		 * @param {int} [index=0] animation frame index
 		 * @example
 		 * //reset the current animation to the first frame
 		 * this.setAnimationFrame();
@@ -591,7 +593,7 @@
 		 * @name getCurrentAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @param {int} index
+		 * @return {int} current animation frame index
 		 */
 		getCurrentAnimationFrame : function() {
 			return this.current.idx;
