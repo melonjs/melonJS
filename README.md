@@ -88,7 +88,7 @@ $ npm install
 Then do the following to actually build the documentation :
 ````
 $ cd melonJS
-grunt doc
+$ grunt doc
 ````
 
 The generated documentation will be then available under the "docs" directory
