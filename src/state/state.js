@@ -232,7 +232,8 @@
 		 * @name onResetEvent
 		 * @memberOf me.ScreenObject
 		 * @function
-		 * @param {String[]} [arguments] optional arguments passed when switching state
+		 * @param {} [arguments...] optional arguments passed when switching state
+		 * @see me.state#change
 		 */
 		onResetEvent : function() {
 			// to be extended
@@ -673,7 +674,7 @@
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
-		 * @param {Arguments} [args] extra arguments to be passed to the reset functions
+		 * @param {} [arguments...] extra arguments to be passed to the reset functions
 		 * @example
 		 * // The onResetEvent method on the play screen will receive two args:
 		 * // "level_1" and the number 3
