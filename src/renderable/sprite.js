@@ -121,6 +121,7 @@
 		 * @name setTransparency
 		 * @memberOf me.SpriteObject
 		 * @function
+		 * @deprecated Use PNG or GIF with transparency instead
 		 * @param {String} color color key in rgb format (rrggbb or #rrggbb)
 		 */
 		setTransparency : function(col) {
