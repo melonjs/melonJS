@@ -12,7 +12,7 @@
 	
 	/**
 	 * an Orthogonal Map Renderder
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @memberOf me
 	 * @ignore
 	 * @constructor
@@ -120,7 +120,7 @@
 	
 	/**
 	 * an Isometric Map Renderder
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @memberOf me
 	 * @ignore
 	 * @constructor

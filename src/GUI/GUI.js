@@ -15,6 +15,10 @@
 	 * @class
 	 * @extends me.SpriteObject
 	 * @memberOf me
+	 * @constructor
+	 * @param {Number} x the x coordinate of the GUI Object
+	 * @param {Number} y the y coordinate of the GUI Object
+	 * @param {me.ObjectSettings} settings Object settings
 	 * @example
 	 *
 	 * // create a basic GUI Object

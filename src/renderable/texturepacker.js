@@ -20,7 +20,7 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {Object} atlas atlas information
-	 * @param {Image} [texture] texture (texture name from the atlas will be used if not specified)
+	 * @param {Image} [texture=atlas.meta.image] texture name
 	 * @example
 	 * // create a texture atlas
 	 * texture = new me.TextureAtlas (
@@ -115,7 +115,7 @@
 		 * @name getRegion
 		 * @memberOf me.TextureAtlas
 		 * @function
-		 * @param {String} name of the sprite
+		 * @param {String} name name of the sprite
 		 * @return {Object}
 		 */
 		getRegion : function(name) {
@@ -138,7 +138,7 @@
 		 * @name createSpriteFromName
 		 * @memberOf me.TextureAtlas
 		 * @function
-		 * @param {String} name of the sprite
+		 * @param {String} name name of the sprite
 		 * @return {me.SpriteObject}
 		 * @example
 		 * // create a new texture atlas object under the `game` namespace
@@ -182,7 +182,7 @@
 		 * @name createAnimationFromName
 		 * @memberOf me.TextureAtlas
 		 * @function
-		 * @param {String[]} names names of the sprite
+		 * @param {String[]} names list of names for each sprite
 		 * @return {me.AnimationSheet}
 		 * @example
 		 * // create a new texture atlas object under the `game` namespace
@@ -197,7 +197,7 @@
 		 *   "walk0001.png", "walk0002.png", "walk0003.png",
 		 *   "walk0004.png", "walk0005.png", "walk0006.png",
 		 *   "walk0007.png", "walk0008.png", "walk0009.png",
-		 *	 "walk0010.png", "walk0011.png"
+		 *   "walk0010.png", "walk0011.png"
 		 * ]);
 		 *
 		 * // define an additional basic walking animatin

@@ -62,7 +62,7 @@
 			// just load the level with the XML stuff
 			if (levels[levelId] == null) {
 				//console.log("loading "+ levelId);
-				levels[levelId] = new me.TMXTileMap(levelId, 0, 0);
+				levels[levelId] = new me.TMXTileMap(levelId);
 				// set the name of the level
 				levels[levelId].name = levelId;
 				// level index

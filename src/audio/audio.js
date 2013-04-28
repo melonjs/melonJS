@@ -175,12 +175,12 @@
 		 * @param {String}
 		 *            sound_id audio clip id
 		 * @param {Boolean}
-		 *            [loop="false"] loop audio
+		 *            [loop=false] loop audio
 		 * @param {Function}
 		 *            [callback] callback function
 		 * @param {Number}
 		 * 			  [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
-		 * @example 
+		 * @example
 		 * // play the "cling" audio clip 
 		 * me.audio.play("cling"); 
 		 * // play & repeat the "engine" audio clip
@@ -289,7 +289,7 @@
 		 * @function
 		 * @param {String}
 		 *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
-		 * @example 
+		 * @example
 		 * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format 
 		 * // i.e. on Safari, the loader will load all audio.mp3 files, 
 		 * // on Opera the loader will however load audio.ogg files
@@ -438,7 +438,7 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
-		 * @example 
+		 * @example
 		 * me.audio.stop("cling");
 		 */
 		obj.stop = function(sound_id) {
@@ -462,7 +462,7 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio clip id
-		 * @example 
+		 * @example
 		 * me.audio.pause("cling");
 		 */
 		obj.pause = function(sound_id) {
@@ -486,7 +486,7 @@
 		 * @function
 		 * @param {String} sound_id audio track id
 		 * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-		 * @example 
+		 * @example
 		 * me.audio.playTrack("awesome_music");
 		 */
 		obj.playTrack = function(sound_id, volume) {
@@ -502,7 +502,7 @@
 		 * @memberOf me.audio
 		 * @public
 		 * @function
-		 * @example 
+		 * @example
 		 * // play a awesome music 
 		 * me.audio.playTrack("awesome_music"); 
 		 * // stop the current music 
@@ -618,7 +618,7 @@
 		 * @memberOf me.audio
 		 * @public
 		 * @function
-		 * @example 
+		 * @example
 		 * me.audio.pauseTrack();
 		 */
 		obj.pauseTrack = function() {
@@ -635,7 +635,7 @@
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
-		 * @example 
+		 * @example
 		 * // play an awesome music 
 		 * me.audio.playTrack("awesome_music");
 		 * // pause the audio track 
@@ -658,7 +658,7 @@
 		 * @function
 		 * @param {String} sound_id audio track id
 		 * @return {boolean} true if unloaded
-		 * @example 
+		 * @example
 		 * me.audio.unload("awesome_music");
 		 */
 		obj.unload = function(sound_id) {
@@ -685,7 +685,7 @@
 		 * @memberOf me.audio
 		 * @public
 		 * @function
-		 * @example 
+		 * @example
 		 * me.audio.unloadAll();
 		 */
 		obj.unloadAll = function() {

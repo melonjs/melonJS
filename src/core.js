@@ -21,7 +21,7 @@ var me = me || {};
 
 	/**
 	 * me global references
-	 * @namespace
+	 * @ignore
 	 */
 	me = {
 		// settings & configuration
@@ -1416,7 +1416,7 @@ var me = me || {};
 		 * @param {int} y y position of the HUD
 		 * @param {int} w width of the HUD
 		 * @param {int} h height of the HUD
-		 * @param {String} [bg="none"] a CSS string specifying the background color (e.g. "#0000ff" or "rgb(0,0,255)")
+		 * @param {String} [bg] a CSS string specifying the background color (e.g. "#0000ff" or "rgb(0,0,255)")
 		 */
 		api.addHUD = function(x, y, w, h, bg) {
 			// if no HUD existing

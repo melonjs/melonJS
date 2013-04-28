@@ -18,11 +18,14 @@
 	 * Javascript Tweening Engine<p>
 	 * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
 	 * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
-	 * @author <a href="http://soledadpenades.com">sole</a>
-	 * @author <a href="http://mrdoob.com">mr.doob</a>
-	 * @author <a href="http://www.xarg.org">Robert Eisele</a>
-	 * @author <a href="http://philippe.elsass.me">Philippe</a>
-	 * @author <a href="http://www.robertpenner.com/easing_terms_of_use.html">Robert Penner</a>
+	 * @author {@link http://soledadpenades.com|sole}
+	 * @author {@link http://mrdoob.com|mr.doob}
+	 * @author {@link http://www.xarg.org|Robert Eisele}
+	 * @author {@link http://philippe.elsass.me|Philippe}
+	 * @author {@link http://www.robertpenner.com/easing_terms_of_use.html|Robert Penner}
+	 * @author {@link http://www.aerotwist.com/|Paul Lewis}
+	 * @author lechecacharro
+	 * @author {@link http://jocafa.com/|Josh Faul}
 	 * @class
 	 * @memberOf me
 	 * @constructor
