@@ -23,7 +23,7 @@ and currently features :
 - A basic set of Object Entities (to be extended)
 - Object Pooling
 - Basic animation management
-- Standard pritesheet and Packed Textures (Texture Packer) support
+- Standard spritesheet and Packed Textures (Texture Packer) support
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
 	- Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
