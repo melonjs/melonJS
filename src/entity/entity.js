@@ -43,6 +43,7 @@
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
+		 * @deprecated Use PNG or GIF with transparency instead
 		 * @type String
 		 * @name transparent_color
 		 * @memberOf me.ObjectSettings
