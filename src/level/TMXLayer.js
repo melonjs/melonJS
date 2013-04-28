@@ -409,10 +409,15 @@
 
 	/**
 	 * a TMX Tile Layer Object
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
+	 * @param {Number} tilewidth width of each tile in pixels
+	 * @param {Number} tileheight height of each tile in pixels
+	 * @param {String} orientation "isometric" or "orthogonal"
+	 * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+	 * @param {Number} zOrder layer z-order
 	 */
 	me.TMXLayer = me.Renderable.extend({
 		

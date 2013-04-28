@@ -23,11 +23,11 @@
 		/**
 		* a base Object for plugin <br>
 		* plugin must be installed using the register function
-		* @see me.plugin#Base
+		* @see me.plugin
 		* @class
 		* @extends Object
-		* @name Base
-		* @memberOf me.plugin
+		* @name plugin.Base
+		* @memberOf me
 		* @constructor
 		*/
 		singleton.Base = Object.extend(
@@ -97,12 +97,12 @@
 		 * Register a plugin.
 		 * @name register
 		 * @memberOf me.plugin
-		 * @see me.plugin#Base
+		 * @see me.plugin.Base
 		 * @public
 		 * @function
 		 * @param {me.plugin.Base} plugin Plugin to instiantiate and register
 		 * @param {String} name
-		 * @param {Object} [args] all extra parameters will be passed to the plugin constructor
+		 * @param {} [arguments...] all extra parameters will be passed to the plugin constructor
 		 * @example
 		 * // register a new plugin
 		 * me.plugin.register(TestPlugin, "testPlugin");

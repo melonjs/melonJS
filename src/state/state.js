@@ -17,6 +17,8 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
+	 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
+	 * @param {Boolean} [isPersistent] make the screen persistent over level changes<br>
 	 * @see me.state
 	 * @example
 	 * // create a custom loading screen
@@ -105,12 +107,7 @@
 
 		/**
 		 * initialization function
-		 * @name init
-		 * @memberOf me.ScreenObject
-		 * @function
-		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
-		 * @param {Boolean} [isPersistent] isPersistent make the screen persistent overt level changes<br>
-		 * allowing to override the update & draw function to add specific treatment.
+		 * @ignore
 		 */
 		init : function(addAsObject, isPersistent) {
 			this.parent(new me.Vector2d(0, 0), 0, 0);

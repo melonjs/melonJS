@@ -33,6 +33,7 @@
 		 * Channel Constant when the game is paused <br>
 		 * Data passed : none <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#STATE_PAUSE
 		 */		
@@ -42,6 +43,7 @@
 		 * Channel Constant for when the game is resumed <br>
 		 * Data passed : none <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#STATE_RESUME
 		 */		
@@ -51,6 +53,7 @@
 		 * Channel Constant for when the game manager is initialized <br>
 		 * Data passed : none <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#GAME_INIT
 		 */		
@@ -60,6 +63,7 @@
 		 * Channel Constant for when a level is loaded <br>
 		 * Data passed : {String} Level Name
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#LEVEL_LOADED
 		 */		
@@ -69,6 +73,7 @@
 		 * Channel Constant for when everything has loaded <br>
 		 * Data passed : none <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#LOADER_COMPLETE
 		 */
@@ -78,6 +83,7 @@
 		 * Channel Constant for displaying a load progress indicator <br>
 		 * Data passed : {Number} [0 .. 1] <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#LOADER_PROGRESS
 		 */
@@ -87,6 +93,7 @@
 		 * Channel Constant for pressing a binded key <br>
 		 * Data passed : {String} user-defined action <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#KEYDOWN
 		 */
@@ -96,6 +103,7 @@
 		 * Channel Constant for releasing a binded key <br>
 		 * Data passed : {Number} user-defined action <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#KEYUP
 		 */
@@ -106,6 +114,7 @@
 		 * note the `orientationchange` event will also trigger this channel<br>
 		 * Data passed : {Event} Event object <br>
 		 * @public
+		 * @constant
 		 * @type String
 		 * @name me.event#WINDOW_ONRESIZE
 		 */
@@ -145,7 +154,7 @@
 		 * @param {Function} callback The event handler, any time something is
 		 * published on a subscribed channel, the callback will be called
 		 * with the published array as ordered arguments
-		 * @return {Array} A handle which can be used to unsubscribe this
+		 * @return {handle} A handle which can be used to unsubscribe this
 		 * particular subscription
 		 * @example
 		 * me.event.subscribe("/some/channel", function(a, b, c){ doSomething(); });
@@ -164,7 +173,7 @@
 		 * @name me.event#unsubscribe
 		 * @public
 		 * @function
-		 * @param {Array} handle The return value from a subscribe call or the
+		 * @param {handle} handle The return value from a subscribe call or the
 		 * name of a channel as a String
 		 * @param {Function} [callback] The return value from a subscribe call.
 		 * @example

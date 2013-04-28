@@ -10,9 +10,10 @@
 	/**
 	 * me.ObjectSettings contains the object attributes defined in Tiled<br>
 	 * and is created by the engine and passed as parameter to the corresponding object when loading a level<br>
-	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor
+	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor<br>
 	 * <img src="images/object_properties.png"/><br>
 	 * @class
+	 * @protected
 	 * @memberOf me
 	 */
 	me.ObjectSettings = {
@@ -180,8 +181,8 @@
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {String} className as used in me.entityPool#add
-		 * @params {arguments} [arguments] to be passed when instanciating/reinitializing the object
+		 * @param {String} className as used in {@link me.entityPool#add}
+		 * @param {} [arguments...] arguments to be passed when instanciating/reinitializing the object
 		 * @example
 		 * me.entityPool.add("player", PlayerEntity);
 		 * var player = me.entityPool.newInstanceOf("player");
@@ -925,7 +926,7 @@
 		 *    else
 		 *       console.log("y axis : bottom side !");
 		 *
-		 *	  // display the tile type
+		 *    // display the tile type
 		 *    console.log(res.yprop.type)
 		 * }
 		 *
@@ -1238,6 +1239,7 @@
 		 * @name goTo
 		 * @memberOf me.LevelEntity
 		 * @function
+		 * @param {String} [level=this.nextlevel] name of the level to load
 		 * @protected
 		 */
 		goTo : function(level) {
