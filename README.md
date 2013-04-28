@@ -1,5 +1,5 @@
-[melonJS](http://melonjs.org/) - a fresh & lightweight 2D sprite-based engine
-=============================================================================
+[melonJS](http://melonjs.org/) - a fresh & lightweight HTML5 game engine
+========================================================================
 
 Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
 
@@ -49,7 +49,7 @@ Building melonJS
 -------------------------------------------------------------------------------
 To build your own version of melonJS you will need to install :
 
-- the [Node.js](http://nodejs.org/) package manager
+- the [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
 - the [Grunt](http://gruntjs.com/) task manager
 
 Once the Node.js package manager has been installed (using the installer from their website), 
@@ -57,39 +57,39 @@ we need to install Grunt and the Grunt CLI (Command Line Interface), by doing th
 
 Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and 
 type the following :
-````
-$ npm install -g grunt-cli
-````
+
+	$ npm install -g grunt-cli
+
 then we can install the melonJS required dependencies, by typing :
-````
-$ cd melonJS
-$ npm install
-````
+
+	$ cd melonJS
+	$ npm install
 
 Once all the above done, we are ready to build melonJS :
-````
-$ cd melonJS
-$ grunt
-````
+
+	$ cd melonJS
+	$ grunt
 
 Both plain and minified library will be available under the "build" directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
-melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed.
+melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed, and a special `JAVA_HOME` environment variable to be set. E.g. for Mac OS X :
+
+	$ export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+
+
 JSDoc also requires specific dependencies to be installed :
-````
-$ cd melonJS
-$ cd tasks
-$ cd jsdoc
-$ npm install
-````
+
+	$ cd melonJS
+	$ cd tasks
+	$ cd jsdoc
+	$ npm install
 
 Then do the following to actually build the documentation :
-````
-$ cd melonJS
-$ grunt doc
-````
+
+	$ cd melonJS
+	$ grunt doc
 
 The generated documentation will be then available under the "docs" directory
 
