@@ -1,15 +1,14 @@
-[melonJS](http://melonjs.org/) - a fresh & lightweight HTML5 game engine
+melonJS - a fresh & lightweight HTML5 game engine
 ========================================================================
 
 Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
 
-melonJS is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
-
+[melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
 About melonJS
 -------------------------------------------------------------------------------
 
-melonJS is the result of our enthusiasm & experiments with Javascript, 
+[melonJS](http://melonjs.org/) is the result of our enthusiasm & experiments with Javascript, 
 and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
