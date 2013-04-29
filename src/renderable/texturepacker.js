@@ -19,7 +19,7 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {Object} atlas atlas information
+	 * @param {Object} atlas atlas information. See {@link me.loader#getAtlas}
 	 * @param {Image} [texture=atlas.meta.image] texture name
 	 * @example
 	 * // create a texture atlas

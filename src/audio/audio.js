@@ -179,7 +179,7 @@
 		 * @param {Function}
 		 *            [callback] callback function
 		 * @param {Number}
-		 * 			  [volume=1.0] Float specifying volume (0.0 - 1.0 values accepted).
+		 * 			  [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example
 		 * // play the "cling" audio clip 
 		 * me.audio.play("cling"); 

@@ -15,7 +15,7 @@
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
-	 * @param {me.loader#getImage} image reference to the Sprite Image
+	 * @param {Image} image reference to the Sprite Image. See {@link me.loader#getImage}
 	 * @param {int} [spritewidth] sprite width
 	 * @param {int} [spriteheigth] sprite height
 	 * @example
@@ -122,7 +122,7 @@
 		 * @memberOf me.SpriteObject
 		 * @function
 		 * @deprecated Use PNG or GIF with transparency instead
-		 * @param {String} color color key in rgb format (rrggbb or #rrggbb)
+		 * @param {String} color color key in "#RRGGBB" format
 		 */
 		setTransparency : function(col) {
 			// remove the # if present
@@ -136,7 +136,7 @@
 		 * @name isFlickering
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @return Boolean
+		 * @return {Boolean}
 		 */
 		isFlickering : function() {
 			return this.flickering;
@@ -148,8 +148,8 @@
 		 * @name flicker
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Int} duration
-		 * @param {Function} callback
+		 * @param {Int} duration expressed in frames
+		 * @param {Function} callback Function to call when flickering ends
 		 * @example
 		 * // make the object flicker for 60 frame
 		 * // and then remove it
@@ -229,7 +229,7 @@
 		 * @name getOpacity
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @return current opacity value between 0 and 1
+		 * @return {Number} current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
 			return this.alpha;

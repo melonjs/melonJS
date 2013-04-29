@@ -123,6 +123,8 @@
 		 * be sure to call the parent function if overwritten
 		 * @name onDestroyEvent
 		 * @memberOf me.GUI_Object
+		 * @public
+		 * @function
 		 */
 		onDestroyEvent : function() {
 			me.input.releaseMouseEvent('mousedown', this);
