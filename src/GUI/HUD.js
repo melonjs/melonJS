@@ -121,8 +121,8 @@
 		 * @function
 		 * @protected
 		 * @param {Context2D} context 2D context
-		 * @param {x} x
-		 * @param {y} y
+		 * @param {Number} x
+		 * @param {Number} y
 		 */
 		draw : function(context, x, y) {
 			;// to be extended

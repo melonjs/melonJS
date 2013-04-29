@@ -17,7 +17,7 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
-	 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
+	 * @param {Boolean} [addAsObject] add the object in the game manager object pool<br>
 	 * @param {Boolean} [isPersistent] make the screen persistent over level changes<br>
 	 * @see me.state
 	 * @example
@@ -617,7 +617,7 @@
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
-		 * @param {me.ScreenObject} so
+		 * @param {me.ScreenObject}
 		 */
 		obj.set = function(state, so) {
 			_screenObject[state] = {};
@@ -632,7 +632,7 @@
 		 * @memberOf me.state
 		 * @public
 		 * @function
-		 * @return {me.ScreenObject} so
+		 * @return {me.ScreenObject}
 		 */
 		obj.current = function() {
 			return _screenObject[_state].screen;
@@ -645,8 +645,8 @@
 		 * @public
 		 * @function
 		 * @param {String} effect (only "fade" is supported for now)
-		 * @param {String} color in RGB format (e.g. "#000000")
-		 * @param {Int} [duration="1000"] in ms
+		 * @param {String} color a CSS color value
+		 * @param {Int} [duration=1000] expressed in milliseconds
 		 */
 		obj.transition = function(effect, color, duration) {
 			if (effect == "fade") {
@@ -662,7 +662,6 @@
 		 * @public
 		 * @function
 		 */
-
 		obj.setTransition = function(state, enable) {
 			_screenObject[state].transition = enable;
 		};
@@ -680,7 +679,6 @@
 		 * // "level_1" and the number 3
 		 * me.state.change(me.state.PLAY, "level_1", 3);
 		 */
-
 		obj.change = function(state) {
 			// Protect against undefined ScreenObject
 			if (typeof(_screenObject[state]) === "undefined") {

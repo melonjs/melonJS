@@ -12,8 +12,8 @@
 	 * @class
 	 * @memberOf me
 	 * @constructor
-	 * @param {name}    name    layer name
-	 * @param {String}  color   in hexadecimal "#RRGGBB" format
+	 * @param {String}  name    layer name
+	 * @param {String}  color   a CSS color value
 	 * @param {int}     z       z position
 	 */
 	 me.ColorLayer = me.Renderable.extend({
@@ -99,7 +99,7 @@
 	 * @class
 	 * @memberOf me
 	 * @constructor
-	 * @param {name}   name        layer name
+	 * @param {String} name        layer name
 	 * @param {int}    width       layer width in pixels 
 	 * @param {int}    height      layer height in pixels
 	 * @param {String} image       image name (as defined in the asset list)
@@ -645,7 +645,9 @@
 		 * get the layer alpha channel value
 		 * @name getOpacity
 		 * @memberOf me.TMXLayer
-		 * @return current opacity value between 0 and 1
+		 * @public
+		 * @function
+		 * @return {Number} current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
 			return this.opacity;
@@ -655,7 +657,9 @@
 		 * set the layer alpha channel value
 		 * @name setOpacity
 		 * @memberOf me.TMXLayer
-		 * @param {alpha} alpha opacity value between 0 and 1
+		 * @public
+		 * @function
+		 * @param {Number} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
 			if (typeof(alpha) === "number") {
