@@ -131,6 +131,8 @@
 		var binList = {};
 		// contains all the texture atlas files
 		var atlasList = {};
+		// contains all the JSON files
+		var jsonList = {};
 		// flag to check loading status
 		var resourceCount = 0;
 		var loadCount = 0;
@@ -260,7 +262,7 @@
 		 * preload TMX files
 		 * @ignore
 		 */
-		function preloadJSON(data, onload, onerror) {
+		function preloadJSON(data, onload, onerror, list) {
 			var xmlhttp = new XMLHttpRequest();
 			
 			if (xmlhttp.overrideMimeType) {
@@ -277,7 +279,7 @@
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
 						// get the Texture Packer Atlas content
-						atlasList[data.name] = JSON.parse(xmlhttp.responseText);
+						list[data.name] = JSON.parse(xmlhttp.responseText);
 						// fire the callback
 						onload();
 					} else {
@@ -433,7 +435,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "binary", "image", "tmx", "tsx", "audio", "tps"
+		 * - type    : "audio", binary", "image", "json", "tmx", "tsp", "tsx"
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
@@ -475,9 +477,13 @@
 					// reuse the preloadImage fn
 					preloadImage.call(this, res, onload, onerror);
 					return 1;
+
+				case "json":
+					preloadJSON.call(this, res, onload, onerror, jsonList);
+					return 1;
 				
 				case "tps":
-					preloadJSON.call(this, res, onload, onerror);
+					preloadJSON.call(this, res, onload, onerror, atlasList);
 					return 1;
 
 				case "tmx":
@@ -525,6 +531,13 @@
 						return false;
 
 					delete imgList[res.name];
+					return true;
+
+				case "json":
+					if(!(res.name in jsonList))
+						return false;
+
+					delete jsonList[res.name];
 					return true;
 
 				case "tps":
@@ -575,6 +588,10 @@
 			
 			// unload all atlas resources
 			for (name in atlasList)
+				obj.unload(name);
+
+			// unload all in json resources
+			for (name in jsonList)
 				obj.unload(name);
 
 			// unload all audio resources
