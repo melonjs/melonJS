@@ -55,6 +55,13 @@
 			for(var region in this.texture.atlas) {
 				this.sprites.push(texture.createSpriteFromName(region));
 			}
+		},
+
+		/**
+		 * parses the data property.
+		 */
+		parseData: function() {
+			
 		}
 	});
 })(window);
