@@ -698,6 +698,25 @@
 		};
 
 		/**
+		 * return the specified JSON Object
+		 * @name getJSON
+		 * @memberOf me.loader
+		 * @public
+		 * @function
+		 * @param {String} Name for the json file to load
+		 * @return {Object} 
+		 */
+		obj.getJSON = function(elt) {
+			elt = elt.toLowerCase();
+			if(elt in jsonList) {
+				return jsonList[elt];
+			}
+			else {
+				return null;
+			}
+		}
+
+		/**
 		 * Return the loading progress in percent
 		 * @name getLoadProgress
 		 * @memberOf me.loader
