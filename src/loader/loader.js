@@ -262,7 +262,7 @@
 		 * preload TMX files
 		 * @ignore
 		 */
-		function preloadJSON(data, onload, onerror, list) {
+		function preloadJSON(data, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
 			
 			if (xmlhttp.overrideMimeType) {
@@ -279,7 +279,7 @@
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
 						// get the Texture Packer Atlas content
-						list[data.name] = JSON.parse(xmlhttp.responseText);
+						jsonList[data.name] = JSON.parse(xmlhttp.responseText);
 						// fire the callback
 						onload();
 					} else {
@@ -414,8 +414,8 @@
 		 *   {name: "cling",   type: "audio",  src: "data/audio/",  channel: 2},
 		 *   // binary file
 		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
-		 *   // texturePacker
-		 *   {name: "texture", type: "tps", src: "data/gfx/texture.json"}
+		 *   // JSON file (used for texturePacker) 
+		 *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
 		 * ];
 		 * ...
 		 *
@@ -435,7 +435,7 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parmeter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "audio", binary", "image", "json", "tmx", "tsp", "tsx"
+		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
@@ -479,11 +479,7 @@
 					return 1;
 
 				case "json":
-					preloadJSON.call(this, res, onload, onerror, jsonList);
-					return 1;
-				
-				case "tps":
-					preloadJSON.call(this, res, onload, onerror, atlasList);
+					preloadJSON.call(this, res, onload, onerror);
 					return 1;
 
 				case "tmx":
@@ -538,13 +534,6 @@
 						return false;
 
 					delete jsonList[res.name];
-					return true;
-
-				case "tps":
-					if (!(res.name in atlasList))
-						return false;
-
-					delete atlasList[res.name];
 					return true;
 					
 				case "tmx":
@@ -658,26 +647,6 @@
 				return null;
 			}
 
-		};
-		
-		/**
-		 * return the specified Atlas object
-		 * @name getAtlas
-		 * @memberOf me.loader
-		 * @public
-		 * @function
-		 * @param {String} name of the atlas object;
-		 * @return {Object} 
-		 */
-		obj.getAtlas = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (elt in atlasList)
-				return atlasList[elt];
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
 		};
 
 
