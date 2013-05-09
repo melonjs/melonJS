@@ -540,7 +540,9 @@
 		 * // set "eat" animation, and switch to "walk" when complete
 		 * this.setCurrentAnimation("eat", "walk");
 		 * // set "die" animation, and remove the object when finished
-		 * this.setCurrentAnimation("die", function(){me.game.remove(this)});
+		 * this.setCurrentAnimation("die", (function () {
+		 *    me.game.remove(this);
+		 * }).bind(this));
 		 **/
 
 		setCurrentAnimation : function(name, resetAnim) {

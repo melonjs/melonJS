@@ -56,7 +56,7 @@
 		 * @name setOpacity
 		 * @memberOf me.ColorLayer
 		 * @function
-		 * @param {alpha} alpha opacity value between 0 and 1
+		 * @param {Number} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
 			if (typeof(alpha) === "number") {
@@ -240,7 +240,7 @@
 		 * @name setOpacity
 		 * @memberOf me.ImageLayer
 		 * @function
-		 * @param {alpha} alpha opacity value between 0 and 1
+		 * @param {Number} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
 			if (typeof(alpha) === "number") {
