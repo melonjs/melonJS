@@ -18,11 +18,14 @@
 	 * Javascript Tweening Engine<p>
 	 * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
 	 * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
-	 * @author <a href="http://soledadpenades.com">sole</a>
-	 * @author <a href="http://mrdoob.com">mr.doob</a>
-	 * @author <a href="http://www.xarg.org">Robert Eisele</a>
-	 * @author <a href="http://philippe.elsass.me">Philippe</a>
-	 * @author <a href="http://www.robertpenner.com/easing_terms_of_use.html">Robert Penner</a>
+	 * @author {@link http://soledadpenades.com|sole}
+	 * @author {@link http://mrdoob.com|mr.doob}
+	 * @author {@link http://www.xarg.org|Robert Eisele}
+	 * @author {@link http://philippe.elsass.me|Philippe}
+	 * @author {@link http://www.robertpenner.com/easing_terms_of_use.html|Robert Penner}
+	 * @author {@link http://www.aerotwist.com/|Paul Lewis}
+	 * @author lechecacharro
+	 * @author {@link http://jocafa.com/|Josh Faul}
 	 * @class
 	 * @memberOf me
 	 * @constructor
@@ -139,7 +142,7 @@
 		 * @name me.Tween#delay
 		 * @public
 		 * @function
-		 * @param {int} amount delay amount
+		 * @param {int} amount delay amount expressed in milliseconds
 		 */
 		this.delay = function(amount) {
 
@@ -173,7 +176,7 @@
 		 * @name me.Tween#easing
 		 * @public
 		 * @function
-		 * @param {Function} easing easing function
+		 * @param {me.Tween#Easing} easing easing function
 		 */
 		this.easing = function(easing) {
 
@@ -201,7 +204,7 @@
 		 * @name me.Tween#onUpdate
 		 * @public
 		 * @function
-		 * @param {function} onUpdateCallback callback
+		 * @param {Function} onUpdateCallback callback
 		 */
 		this.onUpdate = function(onUpdateCallback) {
 
@@ -215,7 +218,7 @@
 		 * @name me.Tween#onComplete
 		 * @public
 		 * @function
-		 * @param {function} onCompleteCallback callback
+		 * @param {Function} onCompleteCallback callback
 		 */
 		this.onComplete = function(onCompleteCallback) {
 
@@ -285,39 +288,42 @@
 	}
 
 	/**
-	 * Easing Function :<p>
-	 * Easing.Linear.EaseNone<p>
-	 * Easing.Quadratic.EaseIn<p>
-	 * Easing.Quadratic.EaseOut<p>
-	 * Easing.Quadratic.EaseInOut<p>
-	 * Easing.Cubic.EaseIn<p>
-	 * Easing.Cubic.EaseOut<p>
-	 * Easing.Cubic.EaseInOut<p>
-	 * Easing.Quartic.EaseIn<p>
-	 * Easing.Quartic.EaseOut<p>
-	 * Easing.Quartic.EaseInOut<p>
-	 * Easing.Quintic.EaseIn<p>
-	 * Easing.Quintic.EaseOut<p>
-	 * Easing.Quintic.EaseInOut<p>
-	 * Easing.Sinusoidal.EaseIn<p>
-	 * Easing.Sinusoidal.EaseOut<p>
-	 * Easing.Sinusoidal.EaseInOut<p>
-	 * Easing.Exponential.EaseIn<p>
-	 * Easing.Exponential.EaseOut<p>
-	 * Easing.Exponential.EaseInOut<p>
-	 * Easing.Circular.EaseIn<p>
-	 * Easing.Circular.EaseOut<p>
-	 * Easing.Circular.EaseInOut<p>
-	 * Easing.Elastic.EaseIn<p>
-	 * Easing.Elastic.EaseOut<p>
-	 * Easing.Elastic.EaseInOut<p>
-	 * Easing.Back.EaseIn<p>
-	 * Easing.Back.EaseOut<p>
-	 * Easing.Back.EaseInOut<p>
-	 * Easing.Bounce.EaseIn<p>
-	 * Easing.Bounce.EaseOut<p>
+	 * Easing Function :<br>
+	 * <p>
+	 * Easing.Linear.EaseNone<br>
+	 * Easing.Quadratic.EaseIn<br>
+	 * Easing.Quadratic.EaseOut<br>
+	 * Easing.Quadratic.EaseInOut<br>
+	 * Easing.Cubic.EaseIn<br>
+	 * Easing.Cubic.EaseOut<br>
+	 * Easing.Cubic.EaseInOut<br>
+	 * Easing.Quartic.EaseIn<br>
+	 * Easing.Quartic.EaseOut<br>
+	 * Easing.Quartic.EaseInOut<br>
+	 * Easing.Quintic.EaseIn<br>
+	 * Easing.Quintic.EaseOut<br>
+	 * Easing.Quintic.EaseInOut<br>
+	 * Easing.Sinusoidal.EaseIn<br>
+	 * Easing.Sinusoidal.EaseOut<br>
+	 * Easing.Sinusoidal.EaseInOut<br>
+	 * Easing.Exponential.EaseIn<br>
+	 * Easing.Exponential.EaseOut<br>
+	 * Easing.Exponential.EaseInOut<br>
+	 * Easing.Circular.EaseIn<br>
+	 * Easing.Circular.EaseOut<br>
+	 * Easing.Circular.EaseInOut<br>
+	 * Easing.Elastic.EaseIn<br>
+	 * Easing.Elastic.EaseOut<br>
+	 * Easing.Elastic.EaseInOut<br>
+	 * Easing.Back.EaseIn<br>
+	 * Easing.Back.EaseOut<br>
+	 * Easing.Back.EaseInOut<br>
+	 * Easing.Bounce.EaseIn<br>
+	 * Easing.Bounce.EaseOut<br>
 	 * Easing.Bounce.EaseInOut
+	 * </p>
 	 * @public
+	 * @constant
 	 * @type enum
 	 * @name me.Tween#Easing
 	 */

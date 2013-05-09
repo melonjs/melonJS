@@ -10,9 +10,10 @@
 	/**
 	 * me.ObjectSettings contains the object attributes defined in Tiled<br>
 	 * and is created by the engine and passed as parameter to the corresponding object when loading a level<br>
-	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor
+	 * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor<br>
 	 * <img src="images/object_properties.png"/><br>
 	 * @class
+	 * @protected
 	 * @memberOf me
 	 */
 	me.ObjectSettings = {
@@ -42,6 +43,7 @@
 		 * OPTIONAL<br>
 		 * (using this option will imply processing time on the image)
 		 * @public
+		 * @deprecated Use PNG or GIF with transparency instead
 		 * @type String
 		 * @name transparent_color
 		 * @memberOf me.ObjectSettings
@@ -180,8 +182,8 @@
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {String} className as used in me.entityPool#add
-		 * @params {arguments} [arguments] to be passed when instanciating/reinitializing the object
+		 * @param {String} className as used in {@link me.entityPool#add}
+		 * @param {} [arguments...] arguments to be passed when instanciating/reinitializing the object
 		 * @example
 		 * me.entityPool.add("player", PlayerEntity);
 		 * var player = me.entityPool.newInstanceOf("player");
@@ -925,7 +927,7 @@
 		 *    else
 		 *       console.log("y axis : bottom side !");
 		 *
-		 *	  // display the tile type
+		 *    // display the tile type
 		 *    console.log(res.yprop.type)
 		 * }
 		 *
@@ -1125,15 +1127,20 @@
 			if (me.debug.renderHitBox && this.collisionBox) {
 				// draw the collisionBox
 				this.collisionBox.draw(context, "red");
-				
+			}
+			if (me.debug.renderVelocity) {
 				// draw entity current velocity
-				var x =  ~~(this.pos.x + this.hWidth);
-				var y =  ~~(this.pos.y + this.hHeight);
-				
+				var x = ~~(this.pos.x + this.hWidth);
+				var y = ~~(this.pos.y + this.hHeight);
+
+				context.strokeStyle = "blue";
 				context.lineWidth = 1;
 				context.beginPath();
-				context.moveTo(x , y);
-				context.lineTo(x +  ~~(this.vel.x * this.hWidth), y + ~~(this.vel.y * this.hHeight));
+				context.moveTo(x, y);
+				context.lineTo(
+					x + ~~(this.vel.x * this.hWidth),
+					y + ~~(this.vel.y * this.hHeight)
+				);
 				context.stroke();
 			}
 		},
@@ -1238,6 +1245,7 @@
 		 * @name goTo
 		 * @memberOf me.LevelEntity
 		 * @function
+		 * @param {String} [level=this.nextlevel] name of the level to load
 		 * @protected
 		 */
 		goTo : function(level) {

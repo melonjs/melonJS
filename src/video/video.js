@@ -481,8 +481,8 @@
 		 * @name updateDisplaySize
 		 * @memberOf me.video
 		 * @function
-		 * @param {Number} scale X scaling value
-		 * @param {Number} scale Y scaling value
+		 * @param {Number} scaleX X scaling multiplier
+		 * @param {Number} scaleY Y scaling multiplier
 		 */
 		api.updateDisplaySize = function(scaleX, scaleY) {
 			// update the global scale variable
@@ -506,8 +506,8 @@
 		 * @name clearSurface
 		 * @memberOf me.video
 		 * @function
-		 * @param {Context2D} context
-		 * @param {Color} col
+		 * @param {Context2D} context Canvas context
+		 * @param {String} color a CSS color string
 		 */
 		api.clearSurface = function(context, col) {
 			var w = context.canvas.width;
@@ -525,12 +525,12 @@
 
 		/**
 		 * scale & keep canvas centered<p>
-		 * usefull for zooming effect
+		 * useful for zooming effect
 		 * @name scale
 		 * @memberOf me.video
 		 * @function
-		 * @param {Context2D} context
-		 * @param {scale} scale
+		 * @param {Context2D} context Canvas context
+		 * @param {Number} scale Scaling multiplier
 		 */
 		api.scale = function(context, scale) {
 			context.translate(
@@ -608,7 +608,7 @@
 		 * @function
 		 * @param {Object} object Canvas or Image Object on which to apply the filter
 		 * @param {String} effect "b&w", "brightness", "transparent"
-		 * @param {String} option : level [0...1] (for brightness), color to be replaced (for transparent) 
+		 * @param {String} option For "brightness" effect : level [0...1] <br> For "transparent" effect : color to be replaced in "#RRGGBB" format
 		 * @return {Context2D} context object
 		 */
 		api.applyRGBFilter = function(object, effect, option) {

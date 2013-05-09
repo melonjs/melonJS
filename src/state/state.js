@@ -17,6 +17,8 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
+	 * @param {Boolean} [addAsObject] add the object in the game manager object pool<br>
+	 * @param {Boolean} [isPersistent] make the screen persistent over level changes<br>
 	 * @see me.state
 	 * @example
 	 * // create a custom loading screen
@@ -105,12 +107,7 @@
 
 		/**
 		 * initialization function
-		 * @name init
-		 * @memberOf me.ScreenObject
-		 * @function
-		 * @param {Boolean} [addAsObjet] add the object in the game manager object pool<br>
-		 * @param {Boolean} [isPersistent] isPersistent make the screen persistent overt level changes<br>
-		 * allowing to override the update & draw function to add specific treatment.
+		 * @ignore
 		 */
 		init : function(addAsObject, isPersistent) {
 			this.parent(new me.Vector2d(0, 0), 0, 0);
@@ -235,7 +232,8 @@
 		 * @name onResetEvent
 		 * @memberOf me.ScreenObject
 		 * @function
-		 * @param {String[]} [arguments] optional arguments passed when switching state
+		 * @param {} [arguments...] optional arguments passed when switching state
+		 * @see me.state#change
 		 */
 		onResetEvent : function() {
 			// to be extended
@@ -593,7 +591,7 @@
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
-		 * @param {me.ScreenObject} so
+		 * @param {me.ScreenObject}
 		 */
 		obj.set = function(state, so) {
 			_screenObject[state] = {};
@@ -608,7 +606,7 @@
 		 * @memberOf me.state
 		 * @public
 		 * @function
-		 * @return {me.ScreenObject} so
+		 * @return {me.ScreenObject}
 		 */
 		obj.current = function() {
 			return _screenObject[_state].screen;
@@ -621,8 +619,8 @@
 		 * @public
 		 * @function
 		 * @param {String} effect (only "fade" is supported for now)
-		 * @param {String} color in RGB format (e.g. "#000000")
-		 * @param {Int} [duration="1000"] in ms
+		 * @param {String} color a CSS color value
+		 * @param {Int} [duration=1000] expressed in milliseconds
 		 */
 		obj.transition = function(effect, color, duration) {
 			if (effect == "fade") {
@@ -638,7 +636,6 @@
 		 * @public
 		 * @function
 		 */
-
 		obj.setTransition = function(state, enable) {
 			_screenObject[state].transition = enable;
 		};
@@ -650,14 +647,18 @@
 		 * @public
 		 * @function
 		 * @param {Int} state @see me.state#Constant
-		 * @param {Arguments} [args] extra arguments to be passed to the reset functions
+		 * @param {} [arguments...] extra arguments to be passed to the reset functions
 		 * @example
 		 * // The onResetEvent method on the play screen will receive two args:
 		 * // "level_1" and the number 3
 		 * me.state.change(me.state.PLAY, "level_1", 3);
 		 */
-
 		obj.change = function(state) {
+			// Protect against undefined ScreenObject
+			if (typeof(_screenObject[state]) === "undefined") {
+				throw "melonJS : Undefined ScreenObject for state '" + state + "'";
+			}
+
 			_extraArgs = null;
 			if (arguments.length > 1) {
 				// store extra arguments if any

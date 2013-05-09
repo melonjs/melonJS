@@ -16,20 +16,27 @@
 	 * @extends me.Rect
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} minX start x offset
-	 * @param {int} minY start y offset
-	 * @param {int} maxX end x offset
-	 * @param {int} maxY end y offset
-	 * @param {int} [realw] real world width limit
-	 * @param {int} [realh] real world height limit
+	 * @param {Number} minX start x offset
+	 * @param {Number} minY start y offset
+	 * @param {Number} maxX end x offset
+	 * @param {Number} maxY end y offset
+	 * @param {Number} [realw] real world width limit
+	 * @param {Number} [realh] real world height limit
 	 */
 	me.Viewport = me.Rect.extend(
 	/** @scope me.Viewport.prototype */
 	{
 
 		/**
-		 * Axis constant
+		 * Axis definition :<br>
+		 * <p>
+		 * AXIS.NONE<br>
+		 * AXIS.HORIZONTAL<br>
+		 * AXIS.VERTICAL<br>
+		 * AXIS.BOTH
+		 * </p>
 		 * @public
+		 * @constant
 		 * @type enum
 		 * @name AXIS
 		 * @memberOf me.Viewport
@@ -143,8 +150,8 @@
 		 * @name reset
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {int} x
-		 * @param {int} y
+		 * @param {Number} [x=0]
+		 * @param {Number} [y=0]
 		 */
 		reset : function(x, y) {
 			// reset the initial viewport position to 0,0
@@ -164,8 +171,8 @@
 		 * @name setDeadzone
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {int} w deadzone width
-		 * @param {int} h deadzone height
+		 * @param {Number} w deadzone width
+		 * @param {Number} h deadzone height
 		 */
 		setDeadzone : function(w, h) {
 			this.deadzone = new me.Vector2d(~~((this.width - w) / 2),
@@ -184,8 +191,8 @@
 		 * @name setBounds
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {int} w real world width
-		 * @param {int} h real world height
+		 * @param {Number} w real world width
+		 * @param {Number} h real world height
 		 */
 		setBounds : function(w, h) {
 			this.limits.set(w, h);
@@ -200,10 +207,9 @@
 		 * @name follow
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {Object} Object ObjectEntity or Position Vector to follow
-		 * @param {axis} [axis="AXIS.BOTH"] AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH
+		 * @param {me.ObjectEntity|me.Vector2d} target ObjectEntity or Position Vector to follow
+		 * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
 		 */
-
 		follow : function(target, axis) {
 			if (target instanceof me.ObjectEntity)
 				this.target = target.pos;
@@ -223,10 +229,9 @@
 		 * @name move
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {int} x
-		 * @param {int} y
+		 * @param {Number} x
+		 * @param {Number} y
 		 */
-
 		move : function(x, y) {
 			var newx = ~~(this.pos.x + x);
 			var newy = ~~(this.pos.y + y);
@@ -301,15 +306,14 @@
 		 * @name shake
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {int} intensity maximum offset that the screen can be moved while shaking
-		 * @param {int} duration expressed in milliseconds
-		 * @param {axis} [axis] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
+		 * @param {Number} intensity maximum offset that the screen can be moved while shaking
+		 * @param {Number} duration expressed in milliseconds
+		 * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
 		 * @param {function} [onComplete] callback once shaking effect is over
 		 * @example
 		 * // shake it baby !
 		 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
 		 */
-
 		shake : function(intensity, duration, axis, onComplete) {
 			if (this.shaking)
 				return;
@@ -331,11 +335,10 @@
 		 * @name fadeOut
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {string} color in #rrggbb format
-		 * @param {Int} [duration="1000"] in ms
-		 * @param {function} [onComplete] callback once effect is over
+		 * @param {String} color a CSS color value
+		 * @param {Number} [duration=1000] expressed in milliseconds
+		 * @param {Function} [onComplete] callback once effect is over
 		 */
-
 		fadeOut : function(color, duration, onComplete) {
 			this._fadeOut.color = color;
 			this._fadeOut.duration = duration || 1000; // convert to ms
@@ -350,11 +353,10 @@
 		 * @name fadeIn
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {string} color in #rrggbb format
-		 * @param {int} [duration="1000"] in ms
-		 * @param {function} [onComplete] callback once effect is over
+		 * @param {String} color a CSS color value
+		 * @param {Number} [duration=1000] expressed in milliseconds
+		 * @param {Function} [onComplete] callback once effect is over
 		 */
-
 		fadeIn : function(color, duration, onComplete) {
 			this._fadeIn.color = color;
 			this._fadeIn.duration = duration || 1000; //convert to ms
@@ -368,7 +370,7 @@
 		 * @name getWidth
 		 * @memberOf me.Viewport
 		 * @function
-		 * @return {int}
+		 * @return {Number}
 		 */
 		getWidth : function() {
 			return this.width;
@@ -379,7 +381,7 @@
 		 * @name getHeight
 		 * @memberOf me.Viewport
 		 * @function
-		 * @return {int}
+		 * @return {Number}
 		 */
 		getHeight : function() {
 			return this.height;
@@ -388,6 +390,7 @@
 		/**
 		 *	set the viewport around the specified entity<p>
 		 * <b>BROKEN !!!!</b>
+		 * @deprecated
 		 * @ignore
 		 * @param {Object} 
 		 */
@@ -398,12 +401,12 @@
 		},
 
 		/**
-		 * check if the specified rectange is in the viewport
+		 * check if the specified rectangle is in the viewport
 		 * @name isVisible
 		 * @memberOf me.Viewport
 		 * @function
 		 * @param {me.Rect} rect
-		 * @return {boolean}
+		 * @return {Boolean}
 		 */
 		isVisible : function(rect) {
 			return rect.overlaps(this);

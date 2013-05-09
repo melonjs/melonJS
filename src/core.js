@@ -21,7 +21,7 @@ var me = me || {};
 
 	/**
 	 * me global references
-	 * @namespace
+	 * @ignore
 	 */
 	me = {
 		// settings & configuration
@@ -486,7 +486,7 @@ var me = me || {};
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
 		 * Also optionally curries arguments for the function.
 		 * @param {Object} context the object to bind to.
-		 * @param {Array.<string>} [args] Optional additional arguments to curry for the function.
+		 * @param {} [arguments...] Optional additional arguments to curry for the function.
 		 * @example
 		 * // Ensure that our callback is triggered with the right object context (this):
 		 * myObject.onComplete(this.callback.bind(this));
@@ -545,7 +545,7 @@ var me = me || {};
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
-	 * @param {Args} [args] Optional additional arguments to curry for the function.
+	 * @param {} [arguments...] Optional additional arguments to curry for the function.
 	 * @return {Int} id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 *
@@ -1408,7 +1408,7 @@ var me = me || {};
 		 * @param {int} y y position of the HUD
 		 * @param {int} w width of the HUD
 		 * @param {int} h height of the HUD
-		 * @param {String} [bg="none"] a CSS string specifying the background color (e.g. "#0000ff" or "rgb(0,0,255)")
+		 * @param {String} [bg] a CSS string specifying the background color (e.g. "#0000ff" or "rgb(0,0,255)")
 		 */
 		api.addHUD = function(x, y, w, h, bg) {
 			// if no HUD existing

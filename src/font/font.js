@@ -20,10 +20,10 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {String} font
-	 * @param {int} size
-	 * @param {String} color
-	 * @param {String} [textAlign="left"] horizontal alignement
+	 * @param {String} font a CSS font name
+	 * @param {Number|String} size size, or size + suffix (px, em, pt)
+	 * @param {String} color a CSS color value
+	 * @param {String} [textAlign="left"] horizontal alignment
 	 */
 	me.Font = Object.extend(
 	/** @scope me.Font.prototype */
@@ -98,10 +98,10 @@
 		 * @name set
 		 * @memberOf me.Font
 		 * @function
-		 * @param {String} font
-		 * @param {int} size/{String} size + suffix (px, em, pt)
-		 * @param {String} color
-		 * @param {String} [textAlign] horizontal alignement
+		 * @param {String} font a CSS font name
+		 * @param {Number|String} size size, or size + suffix (px, em, pt)
+		 * @param {String} color a CSS color value
+		 * @param {String} [textAlign="left"] horizontal alignment
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");

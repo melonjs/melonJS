@@ -13,9 +13,9 @@
 	 * @extends me.Rect
 	 * @memberOf me
 	 * @constructor
-	 * @param {me.Vector2d} position of the renderable object
-	 * @param {int} object width
-	 * @param {int} object height
+	 * @param {me.Vector2d} pos position of the renderable object
+	 * @param {int} width object width
+	 * @param {int} height object height
 	 */
 	me.Renderable = me.Rect.extend(
 	/** @scope me.Renderable.prototype */
@@ -58,7 +58,7 @@
 		alwaysUpdate : false,
 
 		/**
-		 * make the renderable object persistent over level changes
+		 * make the renderable object persistent over level changes<br>
 		 * default value : false
 		 * @public
 		 * @readonly

@@ -22,7 +22,7 @@
 	 * @constructor
 	 * @param {int} x x position (relative to the HUD position)
 	 * @param {int} y y position (relative to the HUD position)
-	 * @param {int} [val="0"] default value
+	 * @param {int} [val=0] default value
 	 * @example
 	 * // create a "score object" that will use a Bitmap font
 	 * // to display the score value
@@ -121,8 +121,8 @@
 		 * @function
 		 * @protected
 		 * @param {Context2D} context 2D context
-		 * @param {x} x
-		 * @param {y} y
+		 * @param {Number} x
+		 * @param {Number} y
 		 */
 		draw : function(context, x, y) {
 			;// to be extended
@@ -133,10 +133,12 @@
 	/**
 	 * HUD Object<br>
 	 * There is no constructor function for me.HUD_Object<br>
-	 * Object instance is accessible through me.game.HUD if previously initialized using me.game.addHUD(...);
+	 * Object instance is accessible through {@link me.game.HUD} if previously initialized using me.game.addHUD(...);
 	 * @class
 	 * @extends Object
 	 * @memberOf me
+	 * @protected
+	 * @see me.game.addHUD
 	 * @example
 	 * // create a "score object" that will use a Bitmap font
 	 * // to display the score value

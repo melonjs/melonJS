@@ -15,7 +15,7 @@
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
-	 * @param {me.loader#getImage} image reference to the Sprite Image
+	 * @param {Image} image reference to the Sprite Image. See {@link me.loader#getImage}
 	 * @param {int} [spritewidth] sprite width
 	 * @param {int} [spriteheigth] sprite height
 	 * @example
@@ -121,7 +121,8 @@
 		 * @name setTransparency
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {String} color color key in rgb format (rrggbb or #rrggbb)
+		 * @deprecated Use PNG or GIF with transparency instead
+		 * @param {String} color color key in "#RRGGBB" format
 		 */
 		setTransparency : function(col) {
 			// remove the # if present
@@ -135,7 +136,7 @@
 		 * @name isFlickering
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @return Boolean
+		 * @return {Boolean}
 		 */
 		isFlickering : function() {
 			return this.flickering;
@@ -147,8 +148,8 @@
 		 * @name flicker
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Int} duration
-		 * @param {Function} callback
+		 * @param {Int} duration expressed in frames
+		 * @param {Function} callback Function to call when flickering ends
 		 * @example
 		 * // make the object flicker for 60 frame
 		 * // and then remove it
@@ -228,7 +229,7 @@
 		 * @name getOpacity
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @return current opacity value between 0 and 1
+		 * @return {Number} current opacity value between 0 and 1
 		 */
 		getOpacity : function() {
 			return this.alpha;
@@ -368,9 +369,9 @@
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
 	 * @param {int} y the y coordinates of the sprite object
-	 * @param {me.loader#getImage} Image reference of the animation sheet
+	 * @param {Image} image reference of the animation sheet
 	 * @param {int} spritewidth width of a single sprite within the spritesheet
-	 * @param {int} [spriteheight] height of a single sprite within the spritesheet (value will be set to the image height if not specified)
+	 * @param {int} [spriteheight=image.height] height of a single sprite within the spritesheet
 	 */
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
@@ -480,8 +481,9 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
-		 * @param {Int[]|String[]}  list of sprite index or name defining the animaton
-		 * @param {Int} [speed=@see me.AnimationSheet.animationspeed], cycling speed for animation in fps (lower is faster).
+		 * @param {Int[]|String[]} index list of sprite index or name defining the animaton
+		 * @param {Int} [animationspeed] cycling speed for animation in fps (lower is faster).
+		 * @see me.AnimationSheet#animationspeed
 		 * @example
 		 * // walking animatin
 		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
@@ -531,14 +533,16 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
-		 * @param {Object} [onComplete] animation id to switch to when complete, or callback
+		 * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
 		 * @example
 		 * // set "walk" animation
 		 * this.setCurrentAnimation("walk");
 		 * // set "eat" animation, and switch to "walk" when complete
 		 * this.setCurrentAnimation("eat", "walk");
 		 * // set "die" animation, and remove the object when finished
-		 * this.setCurrentAnimation("die", function(){me.game.remove(this)});
+		 * this.setCurrentAnimation("die", (function () {
+		 *    me.game.remove(this);
+		 * }).bind(this));
 		 **/
 
 		setCurrentAnimation : function(name, resetAnim) {
@@ -557,6 +561,7 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
+		 * @return {Boolean}
 		 * @example
 		 * if (!this.isCurrentAnimation("walk"))
 		 * {
@@ -572,7 +577,7 @@
 		 * @name setAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @param {int} [index=0]
+		 * @param {int} [index=0] animation frame index
 		 * @example
 		 * //reset the current animation to the first frame
 		 * this.setAnimationFrame();
@@ -591,7 +596,7 @@
 		 * @name getCurrentAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @param {int} index
+		 * @return {int} current animation frame index
 		 */
 		getCurrentAnimationFrame : function() {
 			return this.current.idx;

@@ -12,7 +12,7 @@
 
 	/**
 	 * a TMX Map Reader
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
@@ -220,7 +220,7 @@
 	
 	/**
 	 * a XML Map Reader
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
@@ -422,7 +422,7 @@
 	
 	/**
 	 * a JSON Map Reader
-	 * Tile QT 0.7.x format
+	 * Tiled QT 0.7.x format
 	 * @class
 	 * @memberOf me
 	 * @constructor
