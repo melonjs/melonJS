@@ -1,5 +1,7 @@
 Version History
 ---------------
+0.9.8
+
 0.9.7
 * General : melonJS now uses Grunt, the task manager, for the build system
 * General : game objects will not update unless inside the viewport or `obj.alwaysUpdate` flag is enabled
