@@ -33,6 +33,9 @@
 		var keyLock = {};
 		// actual lock status of each key
 		var keyLocked = {};
+		
+		// list of registered Event handlers
+		var evtHandlers = {};
 
 		// some usefull flags
 		var keyboardInitialized = false;
@@ -187,7 +190,7 @@
 		 */
 		function dispatchEvent(e) {
 			var handled = false;
-			var handlers = obj.mouse.handlers[e.type];
+			var handlers = evtHandlers[e.type];
 			if (handlers) {
 				var vpos = me.game.viewport.pos;
 				var map_pos = me.game.currentLevel.pos;
@@ -386,8 +389,7 @@
 			MIDDLE: 1,
 			RIGHT:	2,
 			// bind list for mouse buttons
-			bind: [ 0, 0, 0 ],
-			handlers:{} 
+			bind: [ 0, 0, 0 ]
 		};
 		
 		/**
@@ -698,8 +700,8 @@
 		    // check if this is supported event
 		    if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
 		        // register the event
-		        if (!obj.mouse.handlers[eventType]) {
-		            obj.mouse.handlers[eventType] = [];
+		        if (!evtHandlers[eventType]) {
+		            evtHandlers[eventType] = [];
 		        }
 		        // check if this is a floating object or not
 		        var _float = rect.floating === true ? true : false;
@@ -709,7 +711,7 @@
 		            _float = floating === true ? true : false;
 		        }
 		        // initialize the handler
-		        obj.mouse.handlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
+		        evtHandlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
 		        return;
 		    }
 		    throw "melonJS : invalid event type : " + eventType;
@@ -737,16 +739,16 @@
 		    // check if this is supported event
 		    if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
 				// unregister the event
-				if (!obj.mouse.handlers[eventType]) {
-					obj.mouse.handlers[eventType] = [];
+				if (!evtHandlers[eventType]) {
+					evtHandlers[eventType] = [];
  				}
-				var handlers = obj.mouse.handlers[eventType];
+				var handlers = evtHandlers[eventType];
 				if (handlers) {
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						if (handler.rect === rect) {
 							// make sure all references are null
 							handler.rect = handler.cb = handler.floating = null;
-							obj.mouse.handlers[eventType].splice(i, 1);
+							evtHandlers[eventType].splice(i, 1);
 						}
 					}
 				}
