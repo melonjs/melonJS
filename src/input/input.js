@@ -724,15 +724,13 @@
 		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
 		 */
 		obj.releaseMouseEvent = function(eventType, rect) {
-			// convert the mouse event into a touch event 
-			// if we are on a touch device
-			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
-				eventType = touchEventList[mouseEventList.indexOf(eventType)];
-			}			
-			// check if this is supported event
-			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
-				(touchEventList.indexOf(eventType) !== -1))) {
-				
+			// convert mouse events to iOS/MSPointer equivalent
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.sys.touch || window.navigator.msPointerEnabled)) {
+		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
+		    }
+			
+		    // check if this is supported event
+		    if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
 				// unregister the event
 				if (!obj.mouse.handlers[eventType]) {
 					obj.mouse.handlers[eventType] = [];
