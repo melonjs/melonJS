@@ -1,0 +1,153 @@
+{"frames": [
+	{
+		"filename": "coin.png",
+		"frame": {"x":258,"y":196,"w":35,"h":35},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":35,"h":35},
+		"sourceSize": {"w":35,"h":35}
+	},
+	{
+		"filename": "fly_dead.png",
+		"frame": {"x":0,"y":196,"w":69,"h":32},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":69,"h":32},
+		"sourceSize": {"w":69,"h":32}
+	},
+	{
+		"filename": "fly_fly.png",
+		"frame": {"x":71,"y":196,"w":69,"h":31},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":69,"h":31},
+		"sourceSize": {"w":69,"h":31}
+	},
+	{
+		"filename": "fly_normal.png",
+		"frame": {"x":142,"y":196,"w":69,"h":32},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":69,"h":32},
+		"sourceSize": {"w":69,"h":32}
+	},
+	{
+		"filename": "slime_dead.png",
+		"frame": {"x":0,"y":230,"w":54,"h":8},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":54,"h":8},
+		"sourceSize": {"w":54,"h":8}
+	},
+	{
+		"filename": "slime_normal.png",
+		"frame": {"x":213,"y":196,"w":43,"h":28},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":43,"h":28},
+		"sourceSize": {"w":43,"h":28}
+	},
+	{
+		"filename": "slime_walk.png",
+		"frame": {"x":213,"y":226,"w":43,"h":26},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":43,"h":26},
+		"sourceSize": {"w":43,"h":26}
+	},
+	{
+		"filename": "walk0001.png",
+		"frame": {"x":77,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0002.png",
+		"frame": {"x":77,"y":98,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0003.png",
+		"frame": {"x":154,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0004.png",
+		"frame": {"x":154,"y":98,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0005.png",
+		"frame": {"x":308,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0006.png",
+		"frame": {"x":231,"y":98,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0007.png",
+		"frame": {"x":308,"y":98,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0008.png",
+		"frame": {"x":0,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0009.png",
+		"frame": {"x":0,"y":98,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0010.png",
+		"frame": {"x":231,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{
+		"filename": "walk0011.png",
+		"frame": {"x":77,"y":0,"w":75,"h":96},
+		"rotated": false,
+		"trimmed": true,
+		"spriteSourceSize": {"x":0,"y":0,"w":75,"h":96},
+		"sourceSize": {"w":75,"h":96}
+	},
+	{"EOL":"true"}
+],
+"meta": {
+	"app": "ShoeBox",
+	"exporter": "melonJS",
+	"size": {"w":512,"h":256}
+}
+}

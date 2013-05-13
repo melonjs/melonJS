@@ -14,7 +14,10 @@
 	var nhPI = -(Math.PI / 2);
 
 	/**
-	 * A Texture atlas object.
+	 * A Texture atlas object<br>
+	 * Currently support : <br>
+	 * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
+	 * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the melonJS setting [file]{@link https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx}
 	 * @class
 	 * @extends Object
 	 * @memberOf me
@@ -53,16 +56,28 @@
 		 * @ignore
 		 */
 		init : function(atlas, texture) {
-			if (atlas && atlas.meta && atlas.meta.app.contains("texturepacker")) {
-				this.format = "texturepacker";
-				// set the texture
-				if (texture===undefined) {
-					var name = me.utils.getBasename(atlas.meta.image);
-					this.texture = me.loader.getImage(name);
-					if (this.texture === null) {
-						throw "melonjs: Atlas texture '" + name + "' not found";
+			if (atlas && atlas.meta) {
+				// Texture Packer
+				if (atlas.meta.app.contains("texturepacker")) {
+					this.format = "texturepacker";
+					// set the texture
+					if (texture===undefined) {
+						var name = me.utils.getBasename(atlas.meta.image);
+						this.texture = me.loader.getImage(name);
+						if (this.texture === null) {
+							throw "melonjs: Atlas texture '" + name + "' not found";
+						}
+					} else {
+						this.texture = texture;
 					}
-				} else {
+				}
+				// ShoeBox
+				if (atlas.meta.app.contains("ShoeBox")) {
+					if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
+						throw "melonjs: ShoeBox requires the JSON exporter : https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx";
+					}
+					this.format = "ShoeBox";
+					// set the texture
 					this.texture = texture;
 				}
 				// initialize the atlas
@@ -81,20 +96,23 @@
 		initFromTexturePacker : function (data) {
 			var atlas = {};
 			data.frames.forEach(function(frame) {
-				atlas[frame.filename] = {
-					frame: new me.Rect( 
-						new me.Vector2d(frame.frame.x, frame.frame.y),
-						frame.frame.w, frame.frame.h
-					),
-					source: new me.Rect(
-						new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
-						frame.spriteSourceSize.w, frame.spriteSourceSize.h
-					),
-					// non trimmed size, but since we don't support trimming both value are the same
-					//sourceSize: new me.Vector2d(frame.sourceSize.w,frame.sourceSize.h),
-					rotated : frame.rotated===true,
-					trimmed : frame.trimmed===true
-				};
+				// fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
+				if (frame.hasOwnProperty("filename")) {
+					atlas[frame.filename] = {
+						frame: new me.Rect( 
+							new me.Vector2d(frame.frame.x, frame.frame.y),
+							frame.frame.w, frame.frame.h
+						),
+						source: new me.Rect(
+							new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
+							frame.spriteSourceSize.w, frame.spriteSourceSize.h
+						),
+						// non trimmed size, but since we don't support trimming both value are the same
+						//sourceSize: new me.Vector2d(frame.sourceSize.w,frame.sourceSize.h),
+						rotated : frame.rotated===true,
+						trimmed : frame.trimmed===true
+					};
+				}
 			});
 			return atlas;
 		},

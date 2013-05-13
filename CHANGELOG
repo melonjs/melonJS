@@ -1,6 +1,7 @@
 Version History
 ---------------
 0.9.8
+* Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 
 0.9.7
 * General : melonJS now uses Grunt, the task manager, for the build system

@@ -23,6 +23,9 @@ var game = {
 		// texturePacker
 		{name: "texture",		type: "tps",	src: "data/gfx/texture.json"},
 		{name: "texture",		type:"image",	src: "data/gfx/texture.png"}
+		// ShoeBox
+		//{name: "texture",		type: "tps",	src: "data/gfx/shoebox.json"},
+		//{name: "texture",		type:"image",	src: "data/gfx/shoebox.png"}
 	],
 	
 	/* ---
