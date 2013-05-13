@@ -97,7 +97,7 @@
 
 			// scale factor of the object
 			this.scale = new me.Vector2d(1.0, 1.0);
-			this.lastflipX = this.lastflipY = false,
+			this.lastflipX = this.lastflipY = false;
 			this.scaleFlag = false;
 
 			// set the default sprite index & offset
