@@ -41,9 +41,10 @@
 		
 	    // list of supported mouse & touch events
 		var activeEventList = null;
-		var mouseEventList = [  'mousewheel',   'mousemove',        'mousedown',    'mouseup',      'click',    'dblclick'];
-		var touchEventList = [  undefined,      'touchmove',        'touchstart',   'touchend',     'tap' ,     'dbltap'];
-		var pointerEventList = [undefined,      'MSPointerMove',    'MSPointerDown', 'MSPointerUp']
+		var mouseEventList =   ['mousewheel', 'mousemove',     'mousedown',     'mouseup',     'click',        'dblclick'];
+		var touchEventList =   [undefined,    'touchmove',     'touchstart',    'touchend',    'tap' ,         'dbltap'];
+		// (a polyfill will probably be required at some stage, once this will be fully standardized0
+		var pointerEventList = [undefined,    'MSPointerMove', 'MSPointerDown', 'MSPointerUp', 'MSGestureTap', undefined ];
 		
 		/**
 		 * enable keyboard event
