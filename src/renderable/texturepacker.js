@@ -17,7 +17,7 @@
 	 * A Texture atlas object<br>
 	 * Currently support : <br>
 	 * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
-	 * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the melonJS setting [file]{@link https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx}
+	 * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx}
 	 * @class
 	 * @extends Object
 	 * @memberOf me
