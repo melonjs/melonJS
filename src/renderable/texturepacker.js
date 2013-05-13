@@ -22,12 +22,12 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {Object} atlas atlas information. See {@link me.loader#getAtlas}
+	 * @param {Object} atlas atlas information. See {@link me.loader#getJSON}
 	 * @param {Image} [texture=atlas.meta.image] texture name
 	 * @example
 	 * // create a texture atlas
 	 * texture = new me.TextureAtlas (
-	 *    me.loader.getAtlas("texture"), 
+	 *    me.loader.getJSON("texture"), 
 	 *    me.loader.getImage("texture")
 	 * );
 	 */
@@ -161,7 +161,7 @@
 		 * @example
 		 * // create a new texture atlas object under the `game` namespace
 		 * game.texture = new me.TextureAtlas(
-		 *    me.loader.getAtlas("texture"), 
+		 *    me.loader.getJSON("texture"), 
 		 *    me.loader.getImage("texture")
 		 * );
 		 * ...
@@ -205,7 +205,7 @@
 		 * @example
 		 * // create a new texture atlas object under the `game` namespace
 		 * game.texture = new me.TextureAtlas(
-		 *    me.loader.getAtlas("texture"), 
+		 *    me.loader.getJSON("texture"), 
 		 *    me.loader.getImage("texture")
 		 * );
 		 * ...
