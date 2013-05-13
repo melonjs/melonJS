@@ -4,7 +4,7 @@
 /*		a player entity																*/
 /*																					*/
 /************************************************************************************/
-var PlayerEntity = me.ObjectEntity.extend({	
+game.PlayerEntity = me.ObjectEntity.extend({	
 	init: function(x, y, settings) {
 		// call the constructor
 		this.parent(x, y , settings);
@@ -146,7 +146,7 @@ var PlayerEntity = me.ObjectEntity.extend({
 /**
  * a coin (collectable) entiry
  */
-var CoinEntity = me.CollectableEntity.extend({	
+game.CoinEntity = me.CollectableEntity.extend({	
 	/** 
 	 * constructor
 	 */
@@ -183,7 +183,7 @@ var CoinEntity = me.CollectableEntity.extend({
  * An enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-var PathEnemyEntity = me.ObjectEntity.extend({	
+game.PathEnemyEntity = me.ObjectEntity.extend({	
 	/**
 	 * constructor
 	 */
@@ -268,7 +268,7 @@ var PathEnemyEntity = me.ObjectEntity.extend({
  * An Slime enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-var SlimeEnemyEntity = PathEnemyEntity.extend({	
+game.SlimeEnemyEntity = game.PathEnemyEntity.extend({	
 	/**
 	 * constructor
 	 */
@@ -303,7 +303,7 @@ var SlimeEnemyEntity = PathEnemyEntity.extend({
  * An Fly enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-var FlyEnemyEntity = PathEnemyEntity.extend({	
+game.FlyEnemyEntity = game.PathEnemyEntity.extend({	
 	/**
 	 * constructor
 	 */
@@ -339,7 +339,7 @@ var FlyEnemyEntity = PathEnemyEntity.extend({
  * a GUI object 
  * display score on screen
  */
-var ScoreObject = me.HUD_Item.extend( {	
+game.ScoreObject = me.HUD_Item.extend( {	
 	/** 
 	 * constructor
 	 */
