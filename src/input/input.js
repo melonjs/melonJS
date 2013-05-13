@@ -39,10 +39,10 @@
 		var mouseInitialized = false;
 		var accelInitialized = false;
 		
-		// list of supported mouse & touch events
-		var mouseEventList = ['mousewheel', 'mousemove', 'mousedown',  'mouseup', 'click', 'dblclick'];
-		var touchEventList = [ undefined,   'touchmove', 'touchstart', 'touchend', 'tap' , 'dbltap'];
-		
+	    // list of supported mouse & touch events
+		var mouseEventList = [  'mousewheel',   'mousemove',        'mousedown',    'mouseup',      'click',    'dblclick'];
+		var touchEventList = [  undefined,      'touchmove',        'touchstart',   'touchend',     'tap' ,     'dbltap'];
+		var pointerEventList = [undefined,      'MSPointerMove',    'MSPointerDown', 'MSPointerUp']
 		
 		/**
 		 * enable keyboard event
@@ -69,18 +69,30 @@
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
 				
-				// add event listener for mouse & touch event
-				if (me.sys.touch) {
-					me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false );
-					for (var x = 2; x < touchEventList.length;++x) {
-						me.video.getScreenCanvas().addEventListener(touchEventList[x], onTouchEvent, false );
-					}
+			    // MSPointer can hold Mouse & Touch events
+				if (window.navigator.msPointerEnabled) {
+				    me.video.getScreenCanvas().addEventListener('MSPointerMove', onMSPointerMove, false);
+				    for (var x = 2; x < pointerEventList.length; ++x) {
+				        me.video.getScreenCanvas().addEventListener(pointerEventList[x], onMSPointerEvent, false);
+				    }
+                    // MSGesture Try !!!
+				    var Gesture = new MSGesture();
+				    Gesture.target = me.video.getScreenCanvas();
+				    me.video.getScreenCanvas().addEventListener("MSGestureTap", onMSPointerEvent, false);
 				} else {
-					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-					$.addEventListener('mousewheel', onMouseWheel, false );
-					for (var x = 2; x < mouseEventList.length;++x) {
-						me.video.getScreenCanvas().addEventListener(mouseEventList[x], onMouseEvent, false );
-					}
+                    // Regular events for non-ms devices
+				    if (me.sys.touch) {
+				        me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false);
+				        for (var x = 2; x < touchEventList.length; ++x) {
+				            me.video.getScreenCanvas().addEventListener(touchEventList[x], onTouchEvent, false);
+				        }
+				    } else {
+				        me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
+				        $.addEventListener('mousewheel', onMouseWheel, false);
+				        for (var x = 2; x < mouseEventList.length; ++x) {
+				            me.video.getScreenCanvas().addEventListener(mouseEventList[x], onMouseEvent, false);
+				        }
+				    }
 				}
 				mouseInitialized = true;
 			}
@@ -302,6 +314,16 @@
 			updateCoordFromEvent(e);
 			// reuse the mouse event function
 			return onMouseEvent(e);
+		}
+
+		function onMSPointerEvent(e) {
+		    if (e.pointerType == e.MSPOINTER_TYPE_TOUCH)
+		        return onTouchEvent(e);
+		    return onMouseEvent(e);
+		}
+
+		function onMSPointerMove(e) {
+		    return onMouseMove(e);
 		}
 
 		/**
@@ -657,36 +679,39 @@
 		 * // register on the 'mousemove' event
 		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
 		 */
-		obj.registerMouseEvent = function(eventType, rect, callback, floating) {
-			// make sure the mouse is initialized
-			enableMouseEvent();
-			
-			// convert the mouse event into a touch event 
-			// if we are on a touch device
-			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
-				eventType = touchEventList[mouseEventList.indexOf(eventType)];
-			}
-			
-			// check if this is supported event
-			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
-				(touchEventList.indexOf(eventType) !== -1))) {
-				
-				// register the event
-				if (!obj.mouse.handlers[eventType]) {
-					obj.mouse.handlers[eventType] = [];
- 				}
-				// check if this is a floating object or not
-				var _float = rect.floating===true?true:false;
-				// check if there is a given parameter
-				if (floating) {
-					// ovveride the previous value
-					_float = floating===true?true:false;
-				}
-				// initialize the handler
-				obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:_float});
-				return;
-			}
-			throw "melonJS : invalid event type : " + eventType;
+		obj.registerMouseEvent = function (eventType, rect, callback, floating) {
+		    // make sure the mouse is initialized
+		    enableMouseEvent();
+
+		    // convert the mouse event into a touch event 
+		    // If MS Pointers are available
+		    if (window.navigator.msPointerEnabled && (mouseEventList.indexOf(eventType) !== -1)) {
+		        eventType = pointerEventList[mouseEventList.indexOf(eventType)];
+		    } else if (me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
+                // If we are on touch device
+		        eventType = touchEventList[mouseEventList.indexOf(eventType)];
+		    }
+		    // check if this is supported event
+		    if (eventType && ((mouseEventList.indexOf(eventType) !== -1) ||
+				(touchEventList.indexOf(eventType) !== -1) ||
+                (pointerEventList.indexOf(eventType !== -1)))) {
+
+		        // register the event
+		        if (!obj.mouse.handlers[eventType]) {
+		            obj.mouse.handlers[eventType] = [];
+		        }
+		        // check if this is a floating object or not
+		        var _float = rect.floating === true ? true : false;
+		        // check if there is a given parameter
+		        if (floating) {
+		            // ovveride the previous value
+		            _float = floating === true ? true : false;
+		        }
+		        // initialize the handler
+		        obj.mouse.handlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
+		        return;
+		    }
+		    throw "melonJS : invalid event type : " + eventType;
 		};
 		
 		/**

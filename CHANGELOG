@@ -3,6 +3,7 @@ Version History
 0.9.8
 * Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 * Loader : the `tps` data type has been changed to a more generic `json` data type (agmcleaod)
+* Input : added MSPointer support (Halfman)
 
 0.9.7
 * General : melonJS now uses Grunt, the task manager, for the build system
