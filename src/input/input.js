@@ -5,7 +5,7 @@
  *
  */
 
-(function($) {
+(function(window) {
 
 	/**
 	 * There is no constructor function for me.input.
@@ -36,7 +36,7 @@
 
 		// some usefull flags
 		var keyboardInitialized = false;
-		var mouseInitialized = false;
+		var pointerInitialized = false;
 		var accelInitialized = false;
 		
 	    // list of supported mouse & touch events
@@ -53,18 +53,18 @@
 
 		function enableKeyboardEvent() {
 			if (!keyboardInitialized) {
-				$.addEventListener('keydown', keydown, false);
-				$.addEventListener('keyup', keyup, false);
+				window.addEventListener('keydown', keydown, false);
+				window.addEventListener('keyup', keyup, false);
 				keyboardInitialized = true;
 			}
 		}
 		
 		/**
-		 * enable mouse event
+		 * enable pointer event (MSPointer/Mouse/Touch)
 		 * @ignore
 		 */
-		function enableMouseEvent() {
-			if (!mouseInitialized) {
+		function enablePointerEvent() {
+			if (!pointerInitialized) {
 				// initialize mouse pos (0,0)
 				obj.touches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
@@ -73,35 +73,39 @@
 				
 			    // MSPointer can hold Mouse & Touch events
 				if (window.navigator.msPointerEnabled) {
-				    me.video.getScreenCanvas().addEventListener('MSPointerMove', onMouseMove, false);
 					activeEventList = pointerEventList;
-				    for (var x = 2; x < activeEventList.length; ++x) {
-				        me.video.getScreenCanvas().addEventListener(activeEventList[x], onMSPointerEvent, false);
-				    }
-                    // MSGesture Try !!!
+					// chec if MSGesture is supported !
 					if (window.MSGesture) {
 						var Gesture = new MSGesture();
 						Gesture.target = me.video.getScreenCanvas();
-						me.video.getScreenCanvas().addEventListener("MSGestureTap", onMSPointerEvent, false);
+					} else {
+						// set as not suppported
+						activeEventList[4] = undefined;
 					}
+				    for (var x = 2; x < activeEventList.length; ++x) {
+						if (activeEventList[x] !== undefined) {
+							me.video.getScreenCanvas().addEventListener(activeEventList[x], onMSPointerEvent, false);
+						}
+				    }
 				} else {
-                    // Regular events for non-ms devices
+                    // Regular events for iOS/Android devices
 				    if (me.sys.touch) {
-				        me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false);
 						activeEventList = touchEventList;
 				        for (var x = 2; x < activeEventList.length; ++x) {
 				            me.video.getScreenCanvas().addEventListener(activeEventList[x], onTouchEvent, false);
 				        }
 				    } else {
-				        me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-				        $.addEventListener('mousewheel', onMouseWheel, false);
-						activeEventList = mouseEventList;
-				        for (var x = 2; x < activeEventList.length; ++x) {
+						// Regular Mouse events
+				        activeEventList = mouseEventList;
+						window.addEventListener('mousewheel', onMouseWheel, false);
+						for (var x = 2; x < activeEventList.length; ++x) {
 				            me.video.getScreenCanvas().addEventListener(activeEventList[x], onMouseEvent, false);
 				        }
 				    }
 				}
-				mouseInitialized = true;
+				// set the MSPointerMove/touchMove/MouseMove event
+				me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
+				pointerInitialized = true;
 			}
 		}
 
@@ -181,7 +185,7 @@
 		 * propagate mouse event to registed object 
 		 * @ignore
 		 */
-		function dispatchMouseEvent(e) {
+		function dispatchEvent(e) {
 			var handled = false;
 			var handlers = obj.mouse.handlers[e.type];
 			if (handlers) {
@@ -261,7 +265,7 @@
 		function onMouseWheel(e) {
 			if (e.target == me.video.getScreenCanvas()) {
 				// dispatch mouse event to registered object
-				if (dispatchMouseEvent(e)) {
+				if (dispatchEvent(e)) {
 					// prevent default action
 					return preventDefault(e);
 				}
@@ -275,11 +279,11 @@
 		 * mouse event management (mousemove)
 		 * @ignore
 		 */
-		function onMouseMove(e) {
+		function onMoveEvent(e) {
 			// update position
 			updateCoordFromEvent(e);
 			// dispatch mouse event to registered object
-			if (dispatchMouseEvent(e)) {
+			if (dispatchEvent(e)) {
 				// prevent default action
 				return preventDefault(e);
 			}
@@ -293,7 +297,7 @@
 		 */
 		function onMouseEvent(e) {
 			// dispatch event to registered objects
-			if (dispatchMouseEvent(e)) {
+			if (dispatchEvent(e)) {
 				// prevent default action
 				return preventDefault(e);
 			}
@@ -608,7 +612,7 @@
 		obj.bindMouse = function (button, keyCode)
 		{
 			// make sure the mouse is initialized
-			enableMouseEvent();
+			enablePointerEvent();
 			
 			// throw an exception if no action is defined for the specified keycode
 			if (!KeyBinding[keyCode])
@@ -684,7 +688,7 @@
 		 */
 		obj.registerMouseEvent = function (eventType, rect, callback, floating) {
 		    // make sure the mouse is initialized
-		    enableMouseEvent();
+		    enablePointerEvent();
 
 		    // convert mouse events to iOS/MSPointer equivalent
 		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.sys.touch || window.navigator.msPointerEnabled)) {
@@ -760,10 +764,10 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function() {
-			if ($.sys.gyro) {
+			if (window.sys.gyro) {
 				if (!accelInitialized) {
 					// add a listener for the mouse
-					$.addEventListener('devicemotion', onDeviceMotion, false);
+					window.addEventListener('devicemotion', onDeviceMotion, false);
 					accelInitialized = true;
 				}
 				return true;
@@ -781,7 +785,7 @@
 		obj.unwatchAccelerometer = function() {
 			if (accelInitialized) {
 				// add a listener for the mouse
-				$.removeEventListener('devicemotion', onDeviceMotion, false);
+				window.removeEventListener('devicemotion', onDeviceMotion, false);
 				accelInitialized = false;
 			}
 		};
