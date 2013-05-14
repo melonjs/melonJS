@@ -787,6 +787,14 @@ var me = me || {};
 		// detect audio capabilities
 		me.audio.detectCapabilities();
 		
+		// future proofing MS feature detection
+		if (window.navigator.msPointerEnabled) {
+			window.navigator.pointerEnabled = window.navigator.msPointerEnabled;
+            window.navigator.maxTouchPoints = window.navigator.msMaxTouchPoints;
+        }
+		// me.sys.touch should include the following one if defined ?
+		window.gesture = window.gesture || window.MSGesture;
+		
 		// detect touch capabilities
 		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || (navigator.isCocoonJS);
 		
