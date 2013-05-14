@@ -346,6 +346,12 @@
 		}
 
 		function onPointerEvent(e) {
+			// the following is needed in developer preview to 
+			// stop implicit pan/zoom, and has been replaced by
+			// the 'msTouchAction' style property. Do we then keep it ?
+			if (e.preventManipulation) {
+				e.preventManipulation();
+			}
 			// manage the old & new spec (...)
 		    if (e.pointerType === 2 || "touch") {
 		        return onTouchEvent(e);
