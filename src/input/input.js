@@ -97,7 +97,7 @@
 							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
 						}
 					}
-					// chec if Gesture is supported !
+					// check if Gesture is supported !
 					if (window.Gesture) {
 						var Gesture = new Gesture();
 						Gesture.target = me.video.getScreenCanvas();
@@ -105,6 +105,9 @@
 						// set as not suppported
 						activeEventList[4] = undefined;
 					}
+					// disable panning/zooming when touching the canvas 
+					me.video.getScreenCanvas().style.msTouchAction = "none";
+					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
 				} else {
                     // Regular events for iOS/Android devices
