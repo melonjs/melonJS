@@ -85,7 +85,7 @@
 				obj.touches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
-				obj.mouse.offset = me.video.getPos();
+				obj.offset = me.video.getPos();
 				
 			    // MSPointer can hold Mouse & Touch events
 				if (window.navigator.pointerEnabled) {
@@ -240,14 +240,15 @@
 		 * @ignore
 		 */
 		function updateCoordFromEvent(e) {
-
 			// reset the touch array cache
 			obj.touches.length=0;
-			// non touch event (mouse)
-			if (!e.touches) {
-				var offset = obj.mouse.offset;
-				var x = e.pageX - offset.x;
-				var y = e.pageY - offset.y;
+			
+			// single touch PointerEvent
+			// or standard mouse event
+			if (e.isPrimary || !e.touches) {
+				var offset = obj.offset;
+				var x = e.clientX - offset.left;
+				var y = e.clientY - offset.top;
 				var scale = me.sys.scale;
 				if (scale.x != 1.0 || scale.y != 1.0) {
 					x/=scale.x;
@@ -255,13 +256,13 @@
 				}
 				obj.touches.push({ x: x, y: y, id: 0});
 			}
-			// touch event
+			// iOS/Android like touch event
 			else {
-				var offset = obj.mouse.offset;
+				var offset = obj.offset;
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
 					var t = e.changedTouches[i];
-					var x = t.clientX - offset.x;
-					var y = t.clientY - offset.y;
+					var x = t.clientX - offset.left;
+					var y = t.clientY - offset.top;
 					var scale = me.sys.scale;
 					if (scale.x != 1.0 || scale.y != 1.0) {
 						x/=scale.x; 
@@ -397,8 +398,6 @@
 		 obj.mouse = {
 			// mouse position
 			pos : null,
-			// canvas offset
-			offset : null,
 			// button constants (W3C)
 			LEFT:	0,
 			MIDDLE: 1,
@@ -406,7 +405,13 @@
 			// bind list for mouse buttons
 			bind: [ 0, 0, 0 ]
 		};
-		
+
+		/**
+		 * cache value for the offset of the canvas position within the page
+		 * @private
+		 */
+		obj.offset = null;
+			
 		/**
 		 * Array of object containing touch information<br>
 		 * properties : <br>
