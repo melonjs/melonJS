@@ -105,8 +105,6 @@
 						// set as not suppported
 						activeEventList[4] = undefined;
 					}
-					// disable panning/zooming when touching the canvas
-					me.video.getScreenCanvas().style.msTouchAction = "none";
 					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
 				} else {
