@@ -86,7 +86,7 @@
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.mouse.offset = me.video.getPos();
-
+				
 			    // MSPointer can hold Mouse & Touch events
 				if (window.navigator.pointerEnabled) {
 					activeEventList = pointerEventList;
@@ -97,20 +97,20 @@
 							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
 						}
 					}
-					// check if Gesture is supported !
-					if (window.Gesture) {
+					// check if multi-touch & Gesture is supported !
+					if (me.sys.touch & window.Gesture) {
 						var Gesture = new Gesture();
 						Gesture.target = me.video.getScreenCanvas();
 					} else {
 						// set as not suppported
 						activeEventList[4] = undefined;
 					}
-					// disable panning/zooming when touching the canvas 
+					// disable panning/zooming when touching the canvas
 					me.video.getScreenCanvas().style.msTouchAction = "none";
 					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
 				} else {
-                    // Regular events for iOS/Android devices
+                    // Regular `touch****` events for iOS/Android devices
 				    if (me.sys.touch) {
 						activeEventList = touchEventList;
 						registerEventListener(activeEventList, onTouchEvent);
