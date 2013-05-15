@@ -1,32 +1,52 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
-<head>
-	<title>Whack-a-mole Demo</title>
-	<meta name="viewport" content="width=device-width, user-scalable=no">
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<style type="text/css">
-		html,
-		body {
-			background: #000;
-			display: block;
-			margin: 0;
-			padding: 0;
-		}
-		canvas {
-			image-rendering: optimizeSpeed;
-			image-rendering: -moz-crisp-edges;
-			image-rendering: -o-crisp-edges;
-			image-rendering: -webkit-optimize-contrast;
-			image-rendering: optimize-contrast;
-			-ms-interpolation-mode: nearest-neighbor;
-		}
-	</style>
-</head>
-<body>
-<center>
-	<div id="jsapp"></div>
-	<script type="text/javascript" src="../../build/melonJS-0.9.8-min.js"></script>
-	<script type="text/javascript" src="main.js"></script>
-</center>
-</body>
+    <head>
+        <title>Whack-a-mole Demo</title>
+        <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+        <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    </head>
+    <body>
+        <div id="screen"></div>
+            <script type="text/javascript" src="../../build/melonJS-0.9.8-min.js"></script>
+            <script type="text/javascript" src="js/game.js"></script>
+            <script type="text/javascript" src="js/resources.js"></script>
+			<script type="text/javascript" src="js/entities/entities.js"></script>
+            <script type="text/javascript" src="js/screens/play.js"></script>
+            <script type="text/javascript">
+				/* Bootstrap */
+				window.onReady(function onReady() {
+					game.onload();
+
+					// Mobile browser hacks
+					if (me.sys.isMobile && !navigator.isCocoonJS) {
+						// Prevent the webview from moving on a swipe
+						window.document.addEventListener("touchmove", function (e) {
+							e.preventDefault();
+							window.scroll(0, 0);
+							return false;
+						}, false);
+
+						// Scroll away mobile GUI
+						(function () {
+							window.scrollTo(0, 1);
+						}).defer();
+
+						me.event.subscribe(me.event.WINDOW_ONRESIZE, function (e) {
+							window.scrollTo(0, 1);
+						})
+
+						// Retina viewport settings
+						if (window.devicePixelRatio > 1) {
+							document.getElementById("viewport").setAttribute(
+								"content",
+								"width=device-width, initial-scale=0.5, maximum-scale=0.5, user-scalable=0"
+							);
+						}
+					}
+				});
+            </script>
+        </div>
+    </body>
 </html>
