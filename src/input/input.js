@@ -243,9 +243,8 @@
 			// reset the touch array cache
 			obj.touches.length=0;
 			
-			// single touch PointerEvent
-			// or standard mouse event
-			if (e.isPrimary || !e.touches) {
+			// PointerEvent or standard Mouse event
+			if (!e.touches) {
 				var offset = obj.offset;
 				var x = e.clientX - offset.left;
 				var y = e.clientY - offset.top;
@@ -271,6 +270,11 @@
 					obj.touches.push({ x: x, y: y, id: t.identifier });
 				}
 			}
+			// if event.isPrimary is defined and false, return
+			if (e.isPrimary === false) {
+				return;
+			}
+			// Else use the first entry to simulate mouse event
 			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
 		}
 
