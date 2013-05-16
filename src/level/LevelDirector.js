@@ -113,9 +113,9 @@
 			if (levels[levelId] instanceof me.TMXTileMap) {
 
 				// check the status of the state mngr
-				var isRunning = me.state.isRunning();
+				var wasRunning = me.state.isRunning();
 
-				if (isRunning) {
+				if (wasRunning) {
 					// pause the game loop to avoid 
 					// some silly side effects
 					me.state.pause();
@@ -142,10 +142,10 @@
 				// add the specified level to the game manager
 				me.game.loadTMXLevel(levels[levelId]);
 				
-				if (isRunning) {
+				if (wasRunning) {
 					// resume the game loop if it was
 					// previously running
-					me.state.resume();
+					me.state.resume.defer();
 				}
 			} else
 				throw "melonJS: no level loader defined";
