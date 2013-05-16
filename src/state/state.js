@@ -252,31 +252,41 @@
 
 	});
 
-	// requestAnimationFrame polyfill by Erik Möller
-	// fixes from Paul Irish and Tino Zijdel
+	// based on the requestAnimationFrame polyfill by Erik Möller
 	(function() {
 		var lastTime = 0;
 		var vendors = ['ms', 'moz', 'webkit', 'o'];
-		for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-			window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-			window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] ||
-										window[vendors[x]+'CancelRequestAnimationFrame'];
+		// get unprefixed rAF and cAF, if present
+		var requestAnimationFrame = window.requestAnimationFrame;
+		var cancelAnimationFrame = window.cancelAnimationFrame;
+		for(var x = 0; x < vendors.length; ++x) {
+			if ( requestAnimationFrame && cancelAnimationFrame ) {
+				break;
+			}
+			requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+			cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] ||
+								   window[vendors[x]+'CancelRequestAnimationFrame'];
 		}
 
-		if (!window.requestAnimationFrame)
-			window.requestAnimationFrame = function(callback, element) {
+		if (!requestAnimationFrame || !cancelAnimationFrame) {
+			requestAnimationFrame = function(callback, element) {
 				var currTime = Date.now();
 				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-				var id = window.setTimeout(function() { callback(currTime + timeToCall); },
-				  timeToCall);
+				var id = window.setTimeout(function() { 
+					callback(currTime + timeToCall); 
+				}, timeToCall);
 				lastTime = currTime + timeToCall;
 				return id;
 			};
 
-		if (!window.cancelAnimationFrame)
-			window.cancelAnimationFrame = function(id) {
-				clearTimeout(id);
+			cancelAnimationFrame = function(id) {
+				window.clearTimeout(id);
 			};
+		}
+		
+		 // put back in global namespace
+		window.requestAnimationFrame = requestAnimationFrame;
+		window.cancelAnimationFrame = cancelAnimationFrame;
 	}());
 
 	
@@ -342,9 +352,7 @@
 		 */
 		function _renderFrame() {
 			_activeUpdateFrame();
-			if (_animFrameId !== -1) {
-				_animFrameId = window.requestAnimationFrame(_renderFrame);
-			}
+			_animFrameId = window.requestAnimationFrame(_renderFrame);
 		};
 
 		/**
@@ -581,7 +589,7 @@
 		 * @param {Boolean} true if a "process is running"
 		 */
 		obj.isRunning = function() {
-			return (_animFrameId != -1)
+			return (_animFrameId !== -1)
 		};
 
 		/**
