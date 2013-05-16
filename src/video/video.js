@@ -325,7 +325,7 @@
 		 */
 		api.getPos = function(c) {
 			var c = c || canvas;
-			return c.getBoundingClientRect();
+			return c.getBoundingClientRect?c.getBoundingClientRect():{left:0,top:0};
 		};
 
 		/**
