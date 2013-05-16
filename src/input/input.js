@@ -344,12 +344,17 @@
 			return onMouseEvent(e);
 		}
 
+		/**
+		 * PointerEvent management (pointerdown, pointerup)
+		 * @ignore
+		 */
 		function onPointerEvent(e) {
-			// manage the old & new spec (...)
-			if (e.pointerType === 2 || "touch") {
-				return onTouchEvent(e);
+			// manage the new ("touch") and old {1) spec
+			if (e.pointerType === "mouse" || e.pointerType === 1) {
+				return onMouseEvent(e);
 			}
-			return onMouseEvent(e);
+			// reuse onTouchEvent for "touch" and "pen" type
+			return onTouchEvent(e);
 		}
 
 		/**
