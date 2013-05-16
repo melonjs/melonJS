@@ -254,7 +254,7 @@
 					x/=scale.x;
 					y/=scale.y;
 				}
-				obj.touches.push({ x: x, y: y, id: 0});
+				obj.touches.push({ x: x, y: y, id: e.pointerId || 1});
 			}
 			// iOS/Android like touch event
 			else {
