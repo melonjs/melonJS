@@ -104,6 +104,9 @@
 		addAsObject	: false,
 		/** @ignore */
 		z : 999,
+		/**@ignore*/
+		frame : 0,
+		maxfps : 0,
 
 		/**
 		 * initialization function
@@ -123,6 +126,10 @@
 
 			// reset the game manager
 			me.game.reset();
+			
+			// reset the frame counter
+			this.frame = 0;
+			this.frameRate = Math.round(60/me.sys.fps);
 
 			// call the onReset Function
 			this.onResetEvent.apply(this, arguments);
@@ -184,17 +191,23 @@
 		 * @ignore
 		 */
 		onUpdateFrame : function() {
-			// update the frame counter
-			me.timer.update();
+			// handle frame skipping if required
+			if (!(++this.frame%this.frameRate)) {
+				// reset the frame counter
+				this.frame = 0;
+				
+				// update the timer
+				me.timer.update();
 
-			// update all games object
-			me.game.update();
+				// update all games object
+				me.game.update();
 
-			// draw the game objects
-			me.game.draw();
+				// draw the game objects
+				me.game.draw();
 
-			// blit our frame
-			me.video.blitSurface();
+				// blit our frame
+				me.video.blitSurface();
+			}
 		},
 
 		/**
