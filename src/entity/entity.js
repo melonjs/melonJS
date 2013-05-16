@@ -369,6 +369,10 @@
 		// z position (for ordering display)
 		z : 0,
 		
+		// just to keep track of when we flip
+		lastflipX : false,
+		lastflipY : false,
+		
 		
 		/** @ignore */
 		init : function(x, y, settings) {
@@ -523,20 +527,20 @@
 			this.disableTopLadderCollision = false;
 
 			// to enable collision detection			
-			this.collidable = typeof(settings.collidable) !== "undefined" ?
-				settings.collidable : true;
-			//this.collectable = false;
-
+			this.collidable = typeof(settings.collidable) !== "undefined" ?	settings.collidable : true;
+			
+			// default objec type
 			this.type = settings.type || 0;
 			
-
+			// default flip value
+			this.lastflipX = this.lastflipY = false;
+			
 			// ref to the collision map
 			this.collisionMap = me.game.collisionMap;
 			
 			// create a a default collision rectangle
 			this.collisionBox = new me.Rect(this.pos, this.width, this.height);
 			
-			// to know if our object can break tiles
 			/**
 			 * Define if an entity can go through breakable tiles<br>
 			 * default value : false<br>
@@ -647,11 +651,11 @@
 		 */
 		flipX : function(flip) {
 			if (flip != this.lastflipX) {
-				if (this.renderable) {
+				this.lastflipX = flip;
+				if (this.renderable && this.renderable.flipX) {
 					// flip the animation
 					this.renderable.flipX(flip);
 				}
-
 				// flip the collision box
 				this.collisionBox.flipX(this.width);
 			}
@@ -666,7 +670,8 @@
 		 */
 		flipY : function(flip) {
 			if (flip != this.lastflipY) {
-				if (this.renderable) {
+				this.lastflipY = flip;
+				if (this.renderable  && this.renderable.flipY) {
 					// flip the animation
 					this.renderable.flipY(flip);
 				}

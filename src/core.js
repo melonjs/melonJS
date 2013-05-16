@@ -779,8 +779,14 @@ var me = me || {};
 		// detect audio capabilities
 		me.audio.detectCapabilities();
 		
+		// future proofing (MS) feature detection
+		navigator.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
+		navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+		window.gesture = window.gesture || window.MSGesture;
+		
 		// detect touch capabilities
-		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || (navigator.isCocoonJS);
+		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || 
+		               (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 		
 		// detect platform
 		me.sys.isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i);

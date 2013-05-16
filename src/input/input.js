@@ -5,7 +5,7 @@
  *
  */
 
-(function($) {
+(function(window) {
 
 	/**
 	 * There is no constructor function for me.input.
@@ -33,16 +33,21 @@
 		var keyLock = {};
 		// actual lock status of each key
 		var keyLocked = {};
+		
+		// list of registered Event handlers
+		var evtHandlers = {};
 
 		// some usefull flags
 		var keyboardInitialized = false;
-		var mouseInitialized = false;
+		var pointerInitialized = false;
 		var accelInitialized = false;
 		
-		// list of supported mouse & touch events
-		var mouseEventList = ['mousewheel', 'mousemove', 'mousedown',  'mouseup', 'click', 'dblclick'];
-		var touchEventList = [ undefined,   'touchmove', 'touchstart', 'touchend', 'tap' , 'dbltap'];
-		
+	    // list of supported mouse & touch events
+		var activeEventList = null;
+		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
+		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'tap', 'dbltap'];
+		// (a polyfill will probably be required at some stage, once this will be fully standardized0
+		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', 'MSGestureTap', undefined ];
 		
 		/**
 		 * enable keyboard event
@@ -51,38 +56,72 @@
 
 		function enableKeyboardEvent() {
 			if (!keyboardInitialized) {
-				$.addEventListener('keydown', keydown, false);
-				$.addEventListener('keyup', keyup, false);
+				window.addEventListener('keydown', keydown, false);
+				window.addEventListener('keyup', keyup, false);
 				keyboardInitialized = true;
 			}
 		}
 		
+		/** 
+		 * addEventListerner for the specified event list and callback
+		 * @private
+		 */
+		function registerEventListener(eventList, callback) {
+			for (var x = 2; x < eventList.length; ++x) {
+				if (eventList[x] !== undefined) {
+					me.video.getScreenCanvas().addEventListener(eventList[x], callback, false);
+				}
+			}
+		}
+		
+		
 		/**
-		 * enable mouse event
+		 * enable pointer event (MSPointer/Mouse/Touch)
 		 * @ignore
 		 */
-		function enableMouseEvent() {
-			if (!mouseInitialized) {
+		function enablePointerEvent() {
+			if (!pointerInitialized) {
 				// initialize mouse pos (0,0)
 				obj.touches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
-				obj.mouse.offset = me.video.getPos();
+				obj.offset = me.video.getPos();
 				
-				// add event listener for mouse & touch event
-				if (me.sys.touch) {
-					me.video.getScreenCanvas().addEventListener('touchmove', onMouseMove, false );
-					for (var x = 2; x < touchEventList.length;++x) {
-						me.video.getScreenCanvas().addEventListener(touchEventList[x], onTouchEvent, false );
+			    // MSPointer can hold Mouse & Touch events
+				if (window.navigator.pointerEnabled) {
+					activeEventList = pointerEventList;
+					// check for backward compatibility with the 'MS' prefix
+					var useMSPrefix = window.navigator.msPointerEnabled;
+					for(var x = 0; x < activeEventList.length; ++x) {
+						if (activeEventList[x] && !activeEventList[x].contains('MS')) {
+							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
+						}
 					}
+					// check if multi-touch & Gesture is supported !
+					if (me.sys.touch & window.Gesture) {
+						var Gesture = new Gesture();
+						Gesture.target = me.video.getScreenCanvas();
+					} else {
+						// set as not suppported
+						activeEventList[4] = undefined;
+					}
+					// register PointerEvents
+					registerEventListener(activeEventList, onPointerEvent);
 				} else {
-					me.video.getScreenCanvas().addEventListener('mousemove', onMouseMove, false);
-					$.addEventListener('mousewheel', onMouseWheel, false );
-					for (var x = 2; x < mouseEventList.length;++x) {
-						me.video.getScreenCanvas().addEventListener(mouseEventList[x], onMouseEvent, false );
-					}
+                    // Regular `touch****` events for iOS/Android devices
+				    if (me.sys.touch) {
+						activeEventList = touchEventList;
+						registerEventListener(activeEventList, onTouchEvent);
+				    } else {
+						// Regular Mouse events
+				        activeEventList = mouseEventList;
+						window.addEventListener('mousewheel', onMouseWheel, false);
+						registerEventListener(activeEventList, onMouseEvent);
+				    }
 				}
-				mouseInitialized = true;
+				// set the PointerMove/touchMove/MouseMove event
+				me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
+				pointerInitialized = true;
 			}
 		}
 
@@ -162,9 +201,9 @@
 		 * propagate mouse event to registed object 
 		 * @ignore
 		 */
-		function dispatchMouseEvent(e) {
+		function dispatchEvent(e) {
 			var handled = false;
-			var handlers = obj.mouse.handlers[e.type];
+			var handlers = evtHandlers[e.type];
 			if (handlers) {
 				var vpos = me.game.viewport.pos;
 				var map_pos = me.game.currentLevel.pos;
@@ -201,28 +240,28 @@
 		 * @ignore
 		 */
 		function updateCoordFromEvent(e) {
-
 			// reset the touch array cache
 			obj.touches.length=0;
-			// non touch event (mouse)
+			
+			// PointerEvent or standard Mouse event
 			if (!e.touches) {
-				var offset = obj.mouse.offset;
-				var x = e.pageX - offset.x;
-				var y = e.pageY - offset.y;
+				var offset = obj.offset;
+				var x = e.clientX - offset.left;
+				var y = e.clientY - offset.top;
 				var scale = me.sys.scale;
 				if (scale.x != 1.0 || scale.y != 1.0) {
 					x/=scale.x;
 					y/=scale.y;
 				}
-				obj.touches.push({ x: x, y: y, id: 0});
+				obj.touches.push({ x: x, y: y, id: e.pointerId || 1});
 			}
-			// touch event
+			// iOS/Android like touch event
 			else {
-				var offset = obj.mouse.offset;
+				var offset = obj.offset;
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
 					var t = e.changedTouches[i];
-					var x = t.clientX - offset.x;
-					var y = t.clientY - offset.y;
+					var x = t.clientX - offset.left;
+					var y = t.clientY - offset.top;
 					var scale = me.sys.scale;
 					if (scale.x != 1.0 || scale.y != 1.0) {
 						x/=scale.x; 
@@ -231,6 +270,11 @@
 					obj.touches.push({ x: x, y: y, id: t.identifier });
 				}
 			}
+			// if event.isPrimary is defined and false, return
+			if (e.isPrimary === false) {
+				return;
+			}
+			// Else use the first entry to simulate mouse event
 			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
 		}
 
@@ -242,7 +286,7 @@
 		function onMouseWheel(e) {
 			if (e.target == me.video.getScreenCanvas()) {
 				// dispatch mouse event to registered object
-				if (dispatchMouseEvent(e)) {
+				if (dispatchEvent(e)) {
 					// prevent default action
 					return preventDefault(e);
 				}
@@ -256,11 +300,11 @@
 		 * mouse event management (mousemove)
 		 * @ignore
 		 */
-		function onMouseMove(e) {
+		function onMoveEvent(e) {
 			// update position
 			updateCoordFromEvent(e);
 			// dispatch mouse event to registered object
-			if (dispatchMouseEvent(e)) {
+			if (dispatchEvent(e)) {
 				// prevent default action
 				return preventDefault(e);
 			}
@@ -274,7 +318,7 @@
 		 */
 		function onMouseEvent(e) {
 			// dispatch event to registered objects
-			if (dispatchMouseEvent(e)) {
+			if (dispatchEvent(e)) {
 				// prevent default action
 				return preventDefault(e);
 			}
@@ -284,7 +328,7 @@
 
 			// check if mapped to a key
 			if (keycode) {
-				if (e.type === 'mousedown' || e.type === 'touchstart')
+				if (e.type === activeEventList[3])
 					return keydown(e, keycode);
 				else // 'mouseup' or 'touchend'
 					return keyup(e, keycode);
@@ -302,6 +346,19 @@
 			updateCoordFromEvent(e);
 			// reuse the mouse event function
 			return onMouseEvent(e);
+		}
+
+		/**
+		 * PointerEvent management (pointerdown, pointerup)
+		 * @ignore
+		 */
+		function onPointerEvent(e) {
+			// manage the new ("mouse") and old {1) spec
+			if (e.pointerType === "mouse" || e.pointerType === 1) {
+				return onMouseEvent(e);
+			}
+			// reuse onTouchEvent for "touch" and "pen" type
+			return onTouchEvent(e);
 		}
 
 		/**
@@ -350,17 +407,20 @@
 		 obj.mouse = {
 			// mouse position
 			pos : null,
-			// canvas offset
-			offset : null,
 			// button constants (W3C)
 			LEFT:	0,
 			MIDDLE: 1,
 			RIGHT:	2,
 			// bind list for mouse buttons
-			bind: [ 0, 0, 0 ],
-			handlers:{} 
+			bind: [ 0, 0, 0 ]
 		};
-		
+
+		/**
+		 * cache value for the offset of the canvas position within the page
+		 * @private
+		 */
+		obj.offset = null;
+			
 		/**
 		 * Array of object containing touch information<br>
 		 * properties : <br>
@@ -583,7 +643,7 @@
 		obj.bindMouse = function (button, keyCode)
 		{
 			// make sure the mouse is initialized
-			enableMouseEvent();
+			enablePointerEvent();
 			
 			// throw an exception if no action is defined for the specified keycode
 			if (!KeyBinding[keyCode])
@@ -657,36 +717,34 @@
 		 * // register on the 'mousemove' event
 		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
 		 */
-		obj.registerMouseEvent = function(eventType, rect, callback, floating) {
-			// make sure the mouse is initialized
-			enableMouseEvent();
+		obj.registerMouseEvent = function (eventType, rect, callback, floating) {
+		    // make sure the mouse/touch events are initialized
+		    enablePointerEvent();
+
+		    // convert mouse events to iOS/PointerEvent equivalent
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.sys.touch || window.navigator.msPointerEnabled)) {
+		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
+		    }
+			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
 			
-			// convert the mouse event into a touch event 
-			// if we are on a touch device
-			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
-				eventType = touchEventList[mouseEventList.indexOf(eventType)];
-			}
-			
-			// check if this is supported event
-			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
-				(touchEventList.indexOf(eventType) !== -1))) {
-				
-				// register the event
-				if (!obj.mouse.handlers[eventType]) {
-					obj.mouse.handlers[eventType] = [];
- 				}
-				// check if this is a floating object or not
-				var _float = rect.floating===true?true:false;
-				// check if there is a given parameter
-				if (floating) {
-					// ovveride the previous value
-					_float = floating===true?true:false;
-				}
-				// initialize the handler
-				obj.mouse.handlers[eventType].push({rect:rect||null,cb:callback,floating:_float});
-				return;
-			}
-			throw "melonJS : invalid event type : " + eventType;
+		    // check if this is supported event
+		    if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
+		        // register the event
+		        if (!evtHandlers[eventType]) {
+		            evtHandlers[eventType] = [];
+		        }
+		        // check if this is a floating object or not
+		        var _float = rect.floating === true ? true : false;
+		        // check if there is a given parameter
+		        if (floating) {
+		            // ovveride the previous value
+		            _float = floating === true ? true : false;
+		        }
+		        // initialize the handler
+		        evtHandlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
+		        return;
+		    }
+		    throw "melonJS : invalid event type : " + eventType;
 		};
 		
 		/**
@@ -703,26 +761,25 @@
 		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
 		 */
 		obj.releaseMouseEvent = function(eventType, rect) {
-			// convert the mouse event into a touch event 
-			// if we are on a touch device
-			if ( me.sys.touch && (mouseEventList.indexOf(eventType) !== -1)) {
-				eventType = touchEventList[mouseEventList.indexOf(eventType)];
-			}			
-			// check if this is supported event
-			if (eventType && ((mouseEventList.indexOf(eventType) !== -1) || 
-				(touchEventList.indexOf(eventType) !== -1))) {
-				
+			// convert mouse events to iOS/MSPointer equivalent
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.sys.touch || window.navigator.msPointerEnabled)) {
+		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
+		    }
+			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
+			
+		    // check if this is supported event
+		    if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
 				// unregister the event
-				if (!obj.mouse.handlers[eventType]) {
-					obj.mouse.handlers[eventType] = [];
+				if (!evtHandlers[eventType]) {
+					evtHandlers[eventType] = [];
  				}
-				var handlers = obj.mouse.handlers[eventType];
+				var handlers = evtHandlers[eventType];
 				if (handlers) {
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						if (handler.rect === rect) {
 							// make sure all references are null
 							handler.rect = handler.cb = handler.floating = null;
-							obj.mouse.handlers[eventType].splice(i, 1);
+							evtHandlers[eventType].splice(i, 1);
 						}
 					}
 				}
@@ -740,10 +797,10 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function() {
-			if ($.sys.gyro) {
+			if (window.sys.gyro) {
 				if (!accelInitialized) {
 					// add a listener for the mouse
-					$.addEventListener('devicemotion', onDeviceMotion, false);
+					window.addEventListener('devicemotion', onDeviceMotion, false);
 					accelInitialized = true;
 				}
 				return true;
@@ -761,7 +818,7 @@
 		obj.unwatchAccelerometer = function() {
 			if (accelInitialized) {
 				// add a listener for the mouse
-				$.removeEventListener('devicemotion', onDeviceMotion, false);
+				window.removeEventListener('devicemotion', onDeviceMotion, false);
 				accelInitialized = false;
 			}
 		};
