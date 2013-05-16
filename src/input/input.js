@@ -349,7 +349,7 @@
 		 * @ignore
 		 */
 		function onPointerEvent(e) {
-			// manage the new ("touch") and old {1) spec
+			// manage the new ("mouse") and old {1) spec
 			if (e.pointerType === "mouse" || e.pointerType === 1) {
 				return onMouseEvent(e);
 			}
