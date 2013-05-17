@@ -13,7 +13,7 @@
  * You generally should not add new properties to this namespace as it may be overwritten in future versions.
  * @namespace
  */
-var me = me || {};
+window.me = window.me || {};
 
 (function($) {
 	// Use the correct document accordingly to window argument
