@@ -527,6 +527,26 @@ var me = me || {};
 			return bound;
 		};
 	}
+
+	if (!window.throttle) {
+		/**
+		 * a simple throttle function 
+		 * use same fct signature as the one in prototype
+		 * in case it's already defined before
+		 * @ignore
+		 */
+		window.throttle = function( delay, no_trailing, callback, debounce_mode ) {
+			var last = Date.now();
+			return function () {
+				var now = Date.now();
+				if (now - last < delay) {
+					return false;
+				}
+				last = now;
+				return callback.apply(null, arguments);
+			}
+		};
+	};
 	
 	
 	if (typeof Date.now === "undefined") {

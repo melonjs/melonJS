@@ -112,7 +112,7 @@
 				    }
 				}
 				// set the PointerMove/touchMove/MouseMove event
-				me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
+				me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(100, false, function(e){onMoveEvent(e)}), false);
 				pointerInitialized = true;
 			}
 		}
@@ -305,7 +305,6 @@
 				// prevent default action
 				return preventDefault(e);
 			}
-
 			return true;
 		}
 		
