@@ -536,14 +536,28 @@ var me = me || {};
 		 * @ignore
 		 */
 		window.throttle = function( delay, no_trailing, callback, debounce_mode ) {
-			var last = Date.now();
+			var last = Date.now(), deferTimer;
+			// `no_trailing` defaults to false.
+			if ( typeof no_trailing !== 'boolean' ) {
+			  no_trailing = false;
+			}
 			return function () {
 				var now = Date.now();
-				if (now - last < delay) {
-					return false;
+				var elasped = now - last;
+				var args = arguments;
+				if (elasped < delay) {
+					if (no_trailing === false) {
+						// hold on to it
+						clearTimeout(deferTimer);
+						deferTimer = setTimeout(function () {
+							last = now;
+							return callback.apply(null, args);
+						}, elasped);
+					}
+				} else {
+					last = now;
+					return callback.apply(null, args);
 				}
-				last = now;
-				return callback.apply(null, arguments);
 			}
 		};
 	};
