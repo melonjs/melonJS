@@ -198,7 +198,7 @@
 		}
 		
 		/**
-		 * propagate mouse event to registed object 
+		 * propagate events to registered objects 
 		 * @ignore
 		 */
 		function dispatchEvent(e) {
@@ -207,6 +207,8 @@
 			if (handlers) {
 				var vpos = me.game.viewport.pos;
 				var map_pos = me.game.currentLevel.pos;
+				// set pointerId if not defined (e.g. iOS touch)
+				e.pointerId = e.pointerId || obj.touches[0].id;
 				for(var t=0, l=obj.touches.length; t<l; t++) {
 					// cache the x/y coordinates
 					var x = obj.touches[t].x;
@@ -228,15 +230,19 @@
 							}
 						}
 					}
+					// overwrite pointerId with next touch identifier if defined 
+					if (obj.touches[t+1]) {
+						//(this will only happen with the iOS event model)
+						e.pointerId = obj.touches[t+1].id;
+					}
 				} 
 			}
-
 			return handled;
 		}
 
 		
 		/**
-		 * translate Mouse Coordinates
+		 * translate event coordinates
 		 * @ignore
 		 */
 		function updateCoordFromEvent(e) {
@@ -291,7 +297,6 @@
 					return preventDefault(e);
 				}
 			}
-
 			return true;
 		}
 
