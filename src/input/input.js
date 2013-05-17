@@ -47,7 +47,7 @@
 		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
 		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'tap', 'dbltap'];
 		// (a polyfill will probably be required at some stage, once this will be fully standardized0
-		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', 'MSGestureTap', undefined ];
+		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', undefined, undefined ];
 		
 		/**
 		 * enable keyboard event
@@ -96,14 +96,6 @@
 						if (activeEventList[x] && !activeEventList[x].contains('MS')) {
 							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
 						}
-					}
-					// check if multi-touch & Gesture is supported !
-					if (me.sys.touch & window.Gesture) {
-						var Gesture = new Gesture();
-						Gesture.target = me.video.getScreenCanvas();
-					} else {
-						// set as not suppported
-						activeEventList[4] = undefined;
 					}
 					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
