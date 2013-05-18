@@ -82,7 +82,7 @@
 		function enablePointerEvent() {
 			if (!pointerInitialized) {
 				// initialize mouse pos (0,0)
-				obj.touches.push({ x: 0, y: 0 });
+				obj.changedTouches.push({ x: 0, y: 0 });
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.offset = me.video.getPos();
@@ -200,11 +200,11 @@
 				var vpos = me.game.viewport.pos;
 				var map_pos = me.game.currentLevel.pos;
 				// set pointerId if not defined (e.g. iOS touch)
-				e.pointerId = e.pointerId || obj.touches[0].id;
-				for(var t=0, l=obj.touches.length; t<l; t++) {
+				e.pointerId = e.pointerId || obj.changedTouches[0].id;
+				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
 					// cache the x/y coordinates
-					var x = obj.touches[t].x;
-					var y = obj.touches[t].y;
+					var x = obj.changedTouches[t].x;
+					var y = obj.changedTouches[t].y;
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						// adjust to world coordinates if not a floating object
 						if (handler.floating===false) {
@@ -223,9 +223,9 @@
 						}
 					}
 					// overwrite pointerId with next touch identifier if defined 
-					if (obj.touches[t+1]) {
+					if (obj.changedTouches[t+1]) {
 						//(this will only happen with the iOS event model)
-						e.pointerId = obj.touches[t+1].id;
+						e.pointerId = obj.changedTouches[t+1].id;
 					}
 				} 
 			}
@@ -239,7 +239,7 @@
 		 */
 		function updateCoordFromEvent(e) {
 			// reset the touch array cache
-			obj.touches.length=0;
+			obj.changedTouches.length=0;
 			
 			// PointerEvent or standard Mouse event
 			if (!e.touches) {
@@ -251,7 +251,7 @@
 					x/=scale.x;
 					y/=scale.y;
 				}
-				obj.touches.push({ x: x, y: y, id: e.pointerId || 1});
+				obj.changedTouches.push({ x: x, y: y, id: e.pointerId || 1});
 			}
 			// iOS/Android like touch event
 			else {
@@ -265,7 +265,7 @@
 						x/=scale.x; 
 						y/=scale.y;
 					}
-					obj.touches.push({ x: x, y: y, id: t.identifier });
+					obj.changedTouches.push({ x: x, y: y, id: t.identifier });
 				}
 			}
 			// if event.isPrimary is defined and false, return
@@ -273,7 +273,7 @@
 				return;
 			}
 			// Else use the first entry to simulate mouse event
-			obj.mouse.pos.set(obj.touches[0].x,obj.touches[0].y);
+			obj.mouse.pos.set(obj.changedTouches[0].x,obj.changedTouches[0].y);
 		}
 
 	
@@ -397,7 +397,7 @@
 		obj.offset = null;
 			
 		/**
-		 * Array of object containing touch information<br>
+		 * Array of object containing changed touch information (iOS event model)<br>
 		 * properties : <br>
 		 * x : x position of the touch event in the canvas (screen coordinates)<br>
 		 * y : y position of the touch event in the canvas (screen coordinates)<br>
@@ -407,7 +407,7 @@
 		 * @name touches
 		 * @memberOf me.input
 		 */		
-		obj.touches = [];
+		obj.changedTouches = [];
 		
 		/**
 		 * list of mappable keys :
