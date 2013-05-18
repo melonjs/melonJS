@@ -103,12 +103,12 @@
                     // Regular `touch****` events for iOS/Android devices
 				    if (me.sys.touch) {
 						activeEventList = touchEventList;
-						registerEventListener(activeEventList, onTouchEvent);
+						registerEventListener(activeEventList, onPointerEvent);
 				    } else {
 						// Regular Mouse events
 				        activeEventList = mouseEventList;
 						window.addEventListener('mousewheel', onMouseWheel, false);
-						registerEventListener(activeEventList, onMouseEvent);
+						registerEventListener(activeEventList, onPointerEvent);
 				    }
 				}
 				// set the PointerMove/touchMove/MouseMove event
@@ -294,7 +294,7 @@
 
 		
 		/**
-		 * mouse event management (mousemove)
+		 * mouse/touch/pointer event management (move)
 		 * @ignore
 		 */
 		function onMoveEvent(e) {
@@ -309,10 +309,13 @@
 		}
 		
 		/**
-		 * mouse event management (mousedown, mouseup)
+		 * mouse/touch/pointer event management (start/down, end/up)
 		 * @ignore
 		 */
-		function onMouseEvent(e) {
+		function onPointerEvent(e) {
+			// update the pointer position
+			updateCoordFromEvent(e);
+		
 			// dispatch event to registered objects
 			if (dispatchEvent(e)) {
 				// prevent default action
@@ -331,30 +334,6 @@
 			}
 
 			return true;
-		}
-		
-		/**
-		 * mouse event management (touchstart, touchend)
-		 * @ignore
-		 */
-		function onTouchEvent(e) {
-			// update the new touch position
-			updateCoordFromEvent(e);
-			// reuse the mouse event function
-			return onMouseEvent(e);
-		}
-
-		/**
-		 * PointerEvent management (pointerdown, pointerup)
-		 * @ignore
-		 */
-		function onPointerEvent(e) {
-			// manage the new ("mouse") and old {1) spec
-			if (e.pointerType === "mouse" || e.pointerType === 1) {
-				return onMouseEvent(e);
-			}
-			// reuse onTouchEvent for "touch" and "pen" type
-			return onTouchEvent(e);
 		}
 
 		/**
