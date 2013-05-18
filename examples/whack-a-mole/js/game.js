@@ -20,9 +20,6 @@ var game = {
 		// we don't need the default 60fps for a whack-a-mole !
 		me.sys.fps = 30;
 		
-		// use requestAnimationFrame if available
-		//me.sys.useNativeAnimFrame = true;
-		
 		// debug flags
 		//me.debug.renderDirty = true;
 		//me.debug.renderHitBox = true;
