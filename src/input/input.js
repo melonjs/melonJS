@@ -47,7 +47,7 @@
 		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
 		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'tap', 'dbltap'];
 		// (a polyfill will probably be required at some stage, once this will be fully standardized0
-		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', 'MSGestureTap', undefined ];
+		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', undefined, undefined ];
 		
 		/**
 		 * enable keyboard event
@@ -97,14 +97,6 @@
 							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
 						}
 					}
-					// check if multi-touch & Gesture is supported !
-					if (me.sys.touch & window.Gesture) {
-						var Gesture = new Gesture();
-						Gesture.target = me.video.getScreenCanvas();
-					} else {
-						// set as not suppported
-						activeEventList[4] = undefined;
-					}
 					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
 				} else {
@@ -120,7 +112,7 @@
 				    }
 				}
 				// set the PointerMove/touchMove/MouseMove event
-				me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
+				me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(100, false, function(e){onMoveEvent(e)}), false);
 				pointerInitialized = true;
 			}
 		}
@@ -198,7 +190,7 @@
 		}
 		
 		/**
-		 * propagate mouse event to registed object 
+		 * propagate events to registered objects 
 		 * @ignore
 		 */
 		function dispatchEvent(e) {
@@ -207,6 +199,8 @@
 			if (handlers) {
 				var vpos = me.game.viewport.pos;
 				var map_pos = me.game.currentLevel.pos;
+				// set pointerId if not defined (e.g. iOS touch)
+				e.pointerId = e.pointerId || obj.touches[0].id;
 				for(var t=0, l=obj.touches.length; t<l; t++) {
 					// cache the x/y coordinates
 					var x = obj.touches[t].x;
@@ -228,15 +222,19 @@
 							}
 						}
 					}
+					// overwrite pointerId with next touch identifier if defined 
+					if (obj.touches[t+1]) {
+						//(this will only happen with the iOS event model)
+						e.pointerId = obj.touches[t+1].id;
+					}
 				} 
 			}
-
 			return handled;
 		}
 
 		
 		/**
-		 * translate Mouse Coordinates
+		 * translate event coordinates
 		 * @ignore
 		 */
 		function updateCoordFromEvent(e) {
@@ -291,7 +289,6 @@
 					return preventDefault(e);
 				}
 			}
-
 			return true;
 		}
 
@@ -308,7 +305,6 @@
 				// prevent default action
 				return preventDefault(e);
 			}
-
 			return true;
 		}
 		
