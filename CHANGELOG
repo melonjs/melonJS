@@ -4,6 +4,8 @@ Version History
 * Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 * Loader : the `tps` data type has been changed to a more generic `json` data type (agmcleaod)
 * Input : added MSPointer support (Halfman)
+* Input : normalized management of all event models and enabled multi-touch for PointerEvent 
+* Input : added throttling support for `****move` events
 * Core : main loop now uses requestAnimationFrame by default with a fallback to setTimeout
 
 0.9.7
