@@ -202,15 +202,16 @@
 				// set pointerId if not defined (e.g. iOS touch)
 				e.pointerId = e.pointerId || obj.changedTouches[0].id;
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
-					// cache the x/y coordinates
-					var x = obj.changedTouches[t].x;
-					var y = obj.changedTouches[t].y;
+					// set two new properties in the Event object containing
+					// the touch/click position translated in local coordinates
+					e.localX = obj.changedTouches[t].x;
+					e.localY = obj.changedTouches[t].y;
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
 						// adjust to world coordinates if not a floating object
 						if (handler.floating===false) {
-							var v = {x: x + vpos.x - map_pos.x, y: y + vpos.y - map_pos.y };
+							var v = {x: e.localX + vpos.x - map_pos.x, y: e.localY + vpos.y - map_pos.y };
 						} else {
-							var v = {x: x, y: y};
+							var v = {x: e.localX, y: e.localy};
 						}
 						// call the defined handler
 						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
