@@ -232,7 +232,6 @@
 			}
 			return handled;
 		}
-
 		
 		/**
 		 * translate event coordinates
@@ -244,29 +243,16 @@
 			
 			// PointerEvent or standard Mouse event
 			if (!e.touches) {
-				var offset = obj.offset;
-				var x = e.clientX - offset.left;
-				var y = e.clientY - offset.top;
-				var scale = me.sys.scale;
-				if (scale.x != 1.0 || scale.y != 1.0) {
-					x/=scale.x;
-					y/=scale.y;
-				}
-				obj.changedTouches.push({ x: x, y: y, id: e.pointerId || 1});
+				var local = obj.globalToLocal(e.clientX, e.clientY);
+				local.id =  e.pointerId || 1;
+				obj.changedTouches.push(local);
 			}
 			// iOS/Android like touch event
 			else {
-				var offset = obj.offset;
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
-					var t = e.changedTouches[i];
-					var x = t.clientX - offset.left;
-					var y = t.clientY - offset.top;
-					var scale = me.sys.scale;
-					if (scale.x != 1.0 || scale.y != 1.0) {
-						x/=scale.x; 
-						y/=scale.y;
-					}
-					obj.changedTouches.push({ x: x, y: y, id: t.identifier });
+					var local = obj.globalToLocal(t.clientX, t.clientY);
+					local.id =  t.identifier;
+					obj.changedTouches.push(local);
 				}
 			}
 			// if event.isPrimary is defined and false, return
@@ -597,6 +583,35 @@
 			keyLock[KeyBinding[keycode]] = false;
 			// remove the key binding
 			KeyBinding[keycode] = null;
+		};
+		
+		/** 
+		 * Translate the specified x and y values from the global (absolute) 
+		 * coordinate to local (viewport) relative coordinate.
+		 * @name globalToLocal
+		 * @memberOf me.input
+		 * @public
+		 * @function
+		 * @param {Number} x the global x coordinate to be translated.
+		 * @param {Number} y the global y coordinate to be translated.
+		 * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
+		 * @example
+		 * onMouseEvent : function(e) {
+		 *    // convert the given into local (viewport) relative coordinates
+		 *    var pos = me.input.globalToLocal(e.clientX, e,clientY);
+		 *    // do something with pos !
+		 * };
+		 */
+		obj.globalToLocal = function (x, y) {
+			var offset = obj.offset;
+			x -= offset.left;
+			y -= offset.top;
+			var scale = me.sys.scale;
+			if (scale.x != 1.0 || scale.y != 1.0) {
+				x/=scale.x;
+				y/=scale.y;
+			}
+			return new me.Vector2d(x, y);
 		};
 
 		/**
