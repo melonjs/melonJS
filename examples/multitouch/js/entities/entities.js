@@ -18,24 +18,13 @@ game.square = me.Renderable.extend({
 		this.pointerId = null;
 		
 		// register required events
-		me.event.subscribe("mousemove", this.onMoveEvent.bind(this));
+		this.moveCallback = this.onMoveEvent.bind(this);
+		me.event.subscribe("mousemove", this.moveCallback);
 		me.input.registerMouseEvent('mousedown', this, this.onStartEvent.bind(this));
 		me.input.registerMouseEvent('mouseup', this, this.onEndEvent.bind(this));
 
 	},
 
-	/**
-	 * return the corresponding "local" touch position
-	 */	
-	getTouchPosition : function (pointerId) {
-		for(var i=0, l=me.input.changedTouches.length; i<l; i++) {
-			if (me.input.changedTouches[i].id === pointerId) {
-				return me.input.changedTouches[i];
-			}
-		}
-		return null;
-	},
-	
 	/**
 	 * callback for move event
 	 */
@@ -43,7 +32,8 @@ game.square = me.Renderable.extend({
 		if (this.selected === true) {
 			if (this.pointerId === e.pointerId) {
 				// follow the mouse/finger
-				this.pos.setV(this.getTouchPosition(e.pointerId));
+				// e.localX/e.localY are in screen coordinates
+				this.pos.set(e.localX, e.localY);
 				this.pos.sub(this.grabOffset);
 				// don't propagate this event furthemore
 				return false;
@@ -59,7 +49,8 @@ game.square = me.Renderable.extend({
 			this.pointerId = e.pointerId;
 			this.selected = true;
 			this.color = "red";
-			this.grabOffset.setV(this.getTouchPosition(e.pointerId));
+			// e.localX/e.localY are in screen coordinates
+			this.grabOffset.set(e.localX, e.localY);
 			this.grabOffset.sub(this.pos);
 			// don't propagate this event furthemore
 			return false;
@@ -99,6 +90,7 @@ game.square = me.Renderable.extend({
 	 */
 	destroy : function() {
 		// unregister events
+		me.event.unsubscribe("mousemove", this.moveCallback);
 		me.input.releaseMouseEvent('mousedown', this);
 		me.input.releaseMouseEvent('mouseup', this);
 	}
