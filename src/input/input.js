@@ -211,7 +211,7 @@
 						if (handler.floating===false) {
 							var v = {x: e.localX + vpos.x - map_pos.x, y: e.localY + vpos.y - map_pos.y };
 						} else {
-							var v = {x: e.localX, y: e.localy};
+							var v = {x: e.localX, y: e.localY};
 						}
 						// call the defined handler
 						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
