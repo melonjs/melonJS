@@ -6,6 +6,7 @@ Version History
 * Input : added MSPointer support (Halfman)
 * Input : normalized management of all event models and enabled multi-touch for PointerEvent 
 * Input : added throttling support for `****move` events
+* Input : API renaming to "normalize" function names (see the uppgrade guide in the melonJS wiki)
 * Core : main loop now uses requestAnimationFrame by default with a fallback to setTimeout
 
 0.9.7
