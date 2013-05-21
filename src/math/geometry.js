@@ -801,17 +801,29 @@
 		
 		/**
 		 * check if this rectangle contains the specified point
-		 * @name containsPoint
+		 * @name containsPointV
 		 * @memberOf me.Rect
 		 * @function
 		 * @param  {me.Vector2d} point
 		 * @return {boolean} true if contains
 		 */
-		containsPoint: function(v) {
-			return  (v.x >= this.left && v.x <= this.right && 
-					(v.y >= this.top) && v.y <= this.bottom)
+		containsPointV: function(v) {
+			return this.containsPoint(v.x, v.y);
 		},
 
+		/**
+		 * check if this rectangle contains the specified point
+		 * @name containsPoint
+		 * @memberOf me.Rect
+		 * @function
+		 * @param  {Number} x x coordinate
+		 * @param  {Number} y y coordinate
+		 * @return {boolean} true if contains
+		 */
+		containsPoint: function(x, y) {
+			return  (x >= this.left && x <= this.right && 
+					(y >= this.top) && y <= this.bottom)
+		},
 
 		/**
 		 * AABB vs AABB collission dectection<p>
