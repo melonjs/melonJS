@@ -197,8 +197,7 @@
 			var handled = false;
 			var handlers = evtHandlers[e.type];
 			if (handlers) {
-				var vpos = me.game.viewport.pos;
-				var map_pos = me.game.currentLevel.pos;
+				var offset = me.game.viewport.pos.clone().sub(me.game.currentLevel.pos);
 				// set pointerId if not defined (e.g. iOS touch)
 				e.pointerId = e.pointerId || obj.changedTouches[0].id;
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
@@ -207,14 +206,17 @@
 					e.localX = obj.changedTouches[t].x;
 					e.localY = obj.changedTouches[t].y;
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-						// adjust to world coordinates if not a floating object
-						if (handler.floating===false) {
-							var v = {x: e.localX + vpos.x - map_pos.x, y: e.localY + vpos.y - map_pos.y };
+						if (handler.floating===true) {
+							// set to screen coordinates
+							e.worldX = e.localX;
+							e.worldY = e.localY;
 						} else {
-							var v = {x: e.localX, y: e.localY};
+							// adjust coordinates with viewport/map pos
+							e.worldX = e.localX + offset.x;
+							e.worldY = e.localY + offset.y;
 						}
 						// call the defined handler
-						if ((handler.rect === null) || handler.rect.containsPoint(v)) {
+						if ((handler.rect === null) || handler.rect.containsPoint(e.worldX, e.worldY)) {
 							// trigger the corresponding callback
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
