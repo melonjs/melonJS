@@ -4,9 +4,7 @@
  */
 game.MoleEntity = me.AnimationSheet.extend(
 {	
-	init:function (x, y)
-	{
-		
+	init:function (x, y) {
 		// call the constructor
 		this.parent(x, y , me.loader.getImage("mole"), 178, 140);
 		
@@ -32,7 +30,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 		this.hideTween = null;
 		
 		// register on mouse event
-		me.input.registerMouseEvent('mousedown', this, this.onMouseDown.bind(this));
+		me.input.registerPointerEvent('mousedown', this, this.onMouseDown.bind(this));
 
 	},
 	

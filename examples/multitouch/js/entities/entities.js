@@ -20,8 +20,8 @@ game.square = me.Renderable.extend({
 		// register required events
 		this.moveCallback = this.onMoveEvent.bind(this);
 		me.event.subscribe("mousemove", this.moveCallback);
-		me.input.registerMouseEvent('mousedown', this, this.onStartEvent.bind(this));
-		me.input.registerMouseEvent('mouseup', this, this.onEndEvent.bind(this));
+		me.input.registerPointerEvent('mousedown', this, this.onStartEvent.bind(this));
+		me.input.registerPointerEvent('mouseup', this, this.onEndEvent.bind(this));
 
 	},
 
@@ -91,7 +91,7 @@ game.square = me.Renderable.extend({
 	destroy : function() {
 		// unregister events
 		me.event.unsubscribe("mousemove", this.moveCallback);
-		me.input.releaseMouseEvent('mousedown', this);
-		me.input.releaseMouseEvent('mouseup', this);
+		me.input.releasePointerEvent('mousedown', this);
+		me.input.releasePointerEvent('mouseup', this);
 	}
 });

@@ -696,21 +696,21 @@
 
 			
 		/**
-		 * register on a mouse event for a given region
+		 * allows registration of event listeners on the object target. 
 		 * note : on a touch enabled device mouse event will automatically be converted to touch event
-		 * @name registerMouseEvent
+		 * @name registerPointerEvent
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
-		 * @param {me.Rect} rect (object must inherits from me.Rect)
-		 * @param {Function} callback
+		 * @param {String} eventType  The event type for which the object is registering ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
+		 * @param {me.Rect} rect object target (or corresponding region defined through me.Rect)
+		 * @param {Function} callback methods to be called when the event occurs.
 		 * @param {Boolean} [floating="floating property of the given object"] specify if the object is a floating object (if yes, screen coordinates are used, if not mouse/touch coordinates will be converted to world coordinates)
 		 * @example
 		 * // register on the 'mousemove' event
-		 * me.input.registerMouseEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
+		 * me.input.registerPointerEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
 		 */
-		obj.registerMouseEvent = function (eventType, rect, callback, floating) {
+		obj.registerPointerEvent = function (eventType, rect, callback, floating) {
 		    // make sure the mouse/touch events are initialized
 		    enablePointerEvent();
 
@@ -741,19 +741,19 @@
 		};
 		
 		/**
-		 * release the previously registered mouse event callback
+		 * allows the removal of event listeners from the object target.
 		 * note : on a touch enabled device mouse event will automatically be converted to touch event
-		 * @name releaseMouseEvent
+		 * @name releasePointerEvent
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {String} eventType ('mousemove', 'mousedown', 'mouseup', 'mousewheel', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap')
-		 * @param {me.Rect} region
+		 * @param {String} eventType  The event type for which the object is registering ('mousemove', 'mousedown', 'mouseup', 'mousewheel', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap')
+		 * @param {me.Rect} region object target (or corresponding region defined through me.Rect)
 		 * @example
-		 * // release the registered callback on the 'mousemove' event
-		 * me.input.releaseMouseEvent('mousemove', this.collisionBox);
+		 * // release the registered object/region on the 'mousemove' event
+		 * me.input.releasePointerEvent('mousemove', this.collisionBox);
 		 */
-		obj.releaseMouseEvent = function(eventType, rect) {
+		obj.releasePointerEvent = function(eventType, rect) {
 			// convert mouse events to iOS/MSPointer equivalent
 		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.sys.touch || window.navigator.msPointerEnabled)) {
 		        eventType = activeEventList[mouseEventList.indexOf(eventType)];

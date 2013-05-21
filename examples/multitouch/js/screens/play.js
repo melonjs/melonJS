@@ -11,7 +11,7 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.game.add(new game.square(750,600),1);
 		
 		// register on the mousemove event using the viewport		
-		me.input.registerMouseEvent("mousemove", me.game.viewport, function(event) {
+		me.input.registerPointerEvent("mousemove", me.game.viewport, function(event) {
 			// publish a "mousemove" message
 			me.event.publish("mousemove", [event]);
 		});
@@ -22,6 +22,6 @@ game.PlayScreen = me.ScreenObject.extend({
 	 *  action to perform when leaving this screen (state change)
 	 */
 	onDestroyEvent: function() {
-	  me.input.releaseMouseEvent("mousemove", me.game.viewport);
+	  me.input.releasePointerEvent("mousemove", me.game.viewport);
 	}
 });

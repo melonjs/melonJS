@@ -75,7 +75,7 @@
 			this.floating = true;
 			
 			// register on mouse event
-			me.input.registerMouseEvent('mousedown', this, this.clicked.bind(this));
+			me.input.registerPointerEvent('mousedown', this, this.clicked.bind(this));
 
 		},
 
@@ -127,7 +127,7 @@
 		 * @function
 		 */
 		onDestroyEvent : function() {
-			me.input.releaseMouseEvent('mousedown', this);
+			me.input.releasePointerEvent('mousedown', this);
 		}
 
 	});
