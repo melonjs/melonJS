@@ -41,7 +41,10 @@
 		var keyboardInitialized = false;
 		var pointerInitialized = false;
 		var accelInitialized = false;
-		
+
+		// Track last event timestamp to prevent firing events out of order
+		var lastTimeStamp = 0;
+
 	    // list of supported mouse & touch events
 		var activeEventList = null;
 		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
@@ -199,6 +202,12 @@
 			if (handlers) {
 				var offset = me.game.viewport.pos.clone().sub(me.game.currentLevel.pos);
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
+					// Do not fire older events
+					if (typeof(e.timeStamp) !== "undefined") {
+						if (e.timeStamp < lastTimeStamp) continue;
+						lastTimeStamp = e.timeStamp;
+					}
+
 					// Update pointerId
 					e.pointerId = obj.changedTouches[t].id;
 
