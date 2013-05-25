@@ -198,9 +198,10 @@
 			var handlers = evtHandlers[e.type];
 			if (handlers) {
 				var offset = me.game.viewport.pos.clone().sub(me.game.currentLevel.pos);
-				// set pointerId if not defined (e.g. iOS touch)
-				e.pointerId = e.pointerId || obj.changedTouches[0].id;
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
+					// Update pointerId
+					e.pointerId = obj.changedTouches[t].id;
+
 					// set two new properties in the Event object containing
 					// the touch/click position translated in local coordinates
 					e.localX = obj.changedTouches[t].x;
@@ -224,11 +225,6 @@
 								break;
 							}
 						}
-					}
-					// overwrite pointerId with next touch identifier if defined 
-					if (obj.changedTouches[t+1]) {
-						//(this will only happen with the iOS event model)
-						e.pointerId = obj.changedTouches[t+1].id;
 					}
 				} 
 			}
