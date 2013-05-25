@@ -27,7 +27,7 @@
 	/** @scope me.debug.Panel.prototype */
 	{
 
-	   // Object "Game Unique Identifier"
+		// Object "Game Unique Identifier"
 		GUID : null,
 
 		// to hold the debug options 
@@ -105,7 +105,7 @@
 					me.game.sort();
 				}
 				// register a mouse event for the checkboxes
-				me.input.registerMouseEvent('mousedown', this.rect, this.onClick.bind(this), true);
+				me.input.registerPointerEvent('mousedown', this.rect, this.onClick.bind(this), true);
 				// make it visible
 				this.visible = true;
 				// force repaint
@@ -119,7 +119,7 @@
 		hide : function() {
 			if (this.visible) {
 				// release the mouse event for the checkboxes
-				me.input.releaseMouseEvent('mousedown', this.rect);
+				me.input.releasePointerEvent('mousedown', this.rect);
 				// make it visible
 				this.visible = false;
 				// force repaint
@@ -147,13 +147,13 @@
 		},
 		
 		/** @private */
-		onClick : function()  {
+		onClick : function(e)  {
 			// check the clickable areas
-			if (this.area.renderHitBox.containsPoint(me.input.mouse.pos)) {
+			if (this.area.renderHitBox.containsPoint(e.localX, e.localY)) {
 				me.debug.renderHitBox = !me.debug.renderHitBox;
-			} else if (this.area.renderDirty.containsPoint(me.input.mouse.pos)) {
+			} else if (this.area.renderDirty.containsPoint(e.localX, e.localY)) {
 				me.debug.renderDirty = !me.debug.renderDirty;
-			} else if (this.area.renderCollisionMap.containsPoint(me.input.mouse.pos)) {
+			} else if (this.area.renderCollisionMap.containsPoint(e.localX, e.localY)) {
 				me.debug.renderCollisionMap = !me.debug.renderCollisionMap;
 				/*
 					// not working with dynamic rendering since
@@ -170,7 +170,7 @@
 						me.debug.renderCollisionMap = false;
 					}
 				*/	
-			} else if (this.area.renderVelocity.containsPoint(me.input.mouse.pos)) {
+			} else if (this.area.renderVelocity.containsPoint(e.localX, e.localY)) {
 				// does nothing for now, since velocity is
 				// rendered together with hitboxes (is a global debug flag required?)
 				me.debug.renderVelocity = !me.debug.renderVelocity;
