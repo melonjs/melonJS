@@ -537,14 +537,28 @@
 		 * @example
 		 * // set "walk" animation
 		 * this.setCurrentAnimation("walk");
+		 *
 		 * // set "eat" animation, and switch to "walk" when complete
 		 * this.setCurrentAnimation("eat", "walk");
+		 *
 		 * // set "die" animation, and remove the object when finished
 		 * this.setCurrentAnimation("die", (function () {
 		 *    me.game.remove(this);
+		 *	  return false; // do not reset to first frame
+		 * }).bind(this));
+		 *
+		 * // set "attack" animation, and pause for a short duration
+		 * this.setCurrentAnimation("die", (function () {
+		 *    this.animationpause = true;
+		 *
+		 *    // back to "standing" animation after 1 second
+		 *    setTimeout(function () {
+		 *        this.setCurrentAnimation("standing");
+		 *    }, 1000);
+		 *
+		 *	  return false; // do not reset to first frame
 		 * }).bind(this));
 		 **/
-
 		setCurrentAnimation : function(name, resetAnim) {
 			if (this.anim[name]) {
 				this.current = this.anim[name];
@@ -623,8 +637,11 @@
 					if (typeof(this.resetAnim) == "string")
 						this.setCurrentAnimation(this.resetAnim);
 					// if function (callback) call it
-					else if (typeof(this.resetAnim) == "function")
-						this.resetAnim();
+					else if (typeof(this.resetAnim) == "function" && this.resetAnim() === false) {
+						this.current.idx = this.current.length - 1;
+						this.parent();
+						return false;
+					}
 				}
 				return this.parent() || true;
 			}
