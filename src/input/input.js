@@ -252,8 +252,8 @@
 			// iOS/Android like touch event
 			else {
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
-					var local = obj.globalToLocal(t.clientX, t.clientY);
-					local.id =  t.identifier;
+					var local = obj.globalToLocal(e.clientX, e.clientY);
+					local.id =  e.identifier;
 					obj.changedTouches.push(local);
 				}
 			}
