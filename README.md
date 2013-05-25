@@ -8,7 +8,7 @@ Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
 About melonJS
 -------------------------------------------------------------------------------
 
-[melonJS](http://melonjs.org/) is the result of our enthusiasm & experiments with Javascript, 
+[melonJS](http://melonjs.org/) is the result of our enthusiasm & experiments with Javascript,
 and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
@@ -51,10 +51,10 @@ To build your own version of melonJS you will need to install :
 - the [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
 - the [Grunt](http://gruntjs.com/) task manager
 
-Once the Node.js package manager has been installed (using the installer from their website), 
+Once the Node.js package manager has been installed (using the installer from their website),
 we need to install Grunt and the Grunt CLI (Command Line Interface), by doing the following :
 
-Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and 
+Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
 	$ npm install -g grunt-cli
@@ -76,6 +76,10 @@ Building the documentation
 melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed, and a special `JAVA_HOME` environment variable to be set. E.g. for Mac OS X :
 
 	$ export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+
+And for Ubuntu:
+
+    $ export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 
 
 JSDoc also requires specific dependencies to be installed :
