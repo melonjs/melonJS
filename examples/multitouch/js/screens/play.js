@@ -14,6 +14,8 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.input.registerPointerEvent("mousemove", me.game.viewport, function(event) {
 			// publish a "mousemove" message
 			me.event.publish("mousemove", [event]);
+			// don't propagate this event furthermore
+			return false;
 		});
 	},
 	

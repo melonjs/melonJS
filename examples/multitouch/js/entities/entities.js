@@ -35,8 +35,6 @@ game.square = me.Renderable.extend({
 				// e.localX/e.localY are in screen coordinates
 				this.pos.set(e.localX, e.localY);
 				this.pos.sub(this.grabOffset);
-				// don't propagate this event furthemore
-				return false;
 			}
 		}
 	},
