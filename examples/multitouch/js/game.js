@@ -22,9 +22,5 @@ var game = {
         // switch to the Play Screen.
 		me.state.set(me.state.PLAY, new game.PlayScreen());
         me.state.change(me.state.PLAY);
-		
-		me.sys.fps = 30;
-		
-		me.input.throttlingInterval = 30;
     }
 };
