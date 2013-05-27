@@ -45,7 +45,7 @@
 		visible : false,
 		
 		// minimum melonJS version expected
-		version : "0.9.5",
+		version : "0.9.8",
 
 		/** @private */
 		init : function(showKey, hideKey) {
