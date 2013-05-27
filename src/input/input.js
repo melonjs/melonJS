@@ -208,8 +208,11 @@
 						lastTimeStamp = e.timeStamp;
 					}
 
-					// Update pointerId
-					e.pointerId = obj.changedTouches[t].id;
+					// if property undefined, not a PointerEvent implementation
+					if (typeof(e.isPrimary) !== "boolean") {	
+						// -> define pointerId to match PointerEvent standard
+						e.pointerId = obj.changedTouches[t].id;
+					}
 
 					// set two new properties in the Event object containing
 					// the touch/click position translated in local coordinates
