@@ -356,6 +356,7 @@
 				for ( var c = 0,len = string.length; c < len; c++) {
 					// calculate the char index
 					var idx = string.charCodeAt(c) - this.firstChar;
+					if (idx < 0) continue;
 					// draw it
 					context.drawImage(this.font,
 							this.size.x * (idx % this.charCount), 
