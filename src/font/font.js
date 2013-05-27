@@ -356,14 +356,15 @@
 				for ( var c = 0,len = string.length; c < len; c++) {
 					// calculate the char index
 					var idx = string.charCodeAt(c) - this.firstChar;
-					if (idx < 0) continue;
-					// draw it
-					context.drawImage(this.font,
+					if (idx >= 0) {
+						// draw it
+						context.drawImage(this.font,
 							this.size.x * (idx % this.charCount), 
 							this.size.y * ~~(idx / this.charCount), 
 							this.size.x, this.size.y, 
 							~~x, ~~y, 
 							this.sSize.x, this.sSize.y);
+					}
 					x += this.sSize.x;
 				}
 				// increment line
