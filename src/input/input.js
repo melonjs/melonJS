@@ -115,7 +115,17 @@
 				    }
 				}
 				// set the PointerMove/touchMove/MouseMove event
-				me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(100, false, function(e){onMoveEvent(e)}), false);
+				if (obj.throttlingInterval === undefined) {
+					// set the default value
+					obj.throttlingInterval = Math.floor(1000/me.sys.fps);
+				}
+				// if time interval <= 16, disable the feature
+				if (obj.throttlingInterval < 17) {
+					me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
+				}
+				else {
+					me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(100, false, function(e){onMoveEvent(e)}), false);
+				}
 				pointerInitialized = true;
 			}
 		}
@@ -393,6 +403,17 @@
 		 * @private
 		 */
 		obj.offset = null;
+		
+		/**
+		 * time interval for event throttling in milliseconds<br>
+		 * default value : "1000/me.sys.fps" ms<br>
+		 * set to 0 ms to disable the feature
+		 * @public
+		 * @type Number
+		 * @name throttlingInterval
+		 * @memberOf me.input
+		 */
+		obj.throttlingInterval = undefined;
 			
 		/**
 		 * Array of object containing changed touch information (iOS event model)<br>
