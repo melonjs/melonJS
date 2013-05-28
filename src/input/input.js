@@ -218,9 +218,9 @@
 						lastTimeStamp = e.timeStamp;
 					}
 
-					// if property undefined, not a PointerEvent implementation
-					if (typeof(e.isPrimary) !== "boolean") {	
-						// -> define pointerId to match PointerEvent standard
+					// if PointerEvent is not supported 
+					if (!navigator.pointerEnabled) {	
+						// -> define pointerId to simulate the PointerEvent standard
 						e.pointerId = obj.changedTouches[t].id;
 					}
 
