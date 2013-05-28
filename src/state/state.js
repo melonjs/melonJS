@@ -348,8 +348,8 @@
 		 * @ignore
 		 */
 		function _startRunLoop() {
-			// ensure nothing is running first
-			if (_animFrameId === -1) {
+			// ensure nothing is running first && valid state
+			if ((_animFrameId === -1) && (_state !== -1)) {
 
 				// reset the timer
 				me.timer.reset();
