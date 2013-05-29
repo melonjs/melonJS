@@ -32,8 +32,7 @@ game.square = me.Renderable.extend({
 		if (this.selected === true) {
 			if (this.pointerId === e.pointerId) {
 				// follow the mouse/finger
-				// e.localX/e.localY are in screen coordinates
-				this.pos.set(e.localX, e.localY);
+				this.pos.set(e.gameX, e.gameY);
 				this.pos.sub(this.grabOffset);
 			}
 		}
@@ -47,8 +46,8 @@ game.square = me.Renderable.extend({
 			this.pointerId = e.pointerId;
 			this.selected = true;
 			this.color = "red";
-			// e.localX/e.localY are in screen coordinates
-			this.grabOffset.set(e.localX, e.localY);
+			// e.gameX/e.gameY are the game canvas coordinates
+			this.grabOffset.set(e.gameX, e.gameY);
 			this.grabOffset.sub(this.pos);
 			// don't propagate this event furthemore
 			return false;

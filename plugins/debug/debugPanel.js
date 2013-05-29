@@ -149,11 +149,11 @@
 		/** @private */
 		onClick : function(e)  {
 			// check the clickable areas
-			if (this.area.renderHitBox.containsPoint(e.localX, e.localY)) {
+			if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
 				me.debug.renderHitBox = !me.debug.renderHitBox;
-			} else if (this.area.renderDirty.containsPoint(e.localX, e.localY)) {
+			} else if (this.area.renderDirty.containsPoint(e.gameX, e.gameY)) {
 				me.debug.renderDirty = !me.debug.renderDirty;
-			} else if (this.area.renderCollisionMap.containsPoint(e.localX, e.localY)) {
+			} else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
 				me.debug.renderCollisionMap = !me.debug.renderCollisionMap;
 				/*
 					// not working with dynamic rendering since
@@ -170,7 +170,7 @@
 						me.debug.renderCollisionMap = false;
 					}
 				*/	
-			} else if (this.area.renderVelocity.containsPoint(e.localX, e.localY)) {
+			} else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
 				// does nothing for now, since velocity is
 				// rendered together with hitboxes (is a global debug flag required?)
 				me.debug.renderVelocity = !me.debug.renderVelocity;

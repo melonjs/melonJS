@@ -224,22 +224,23 @@
 						e.pointerId = obj.changedTouches[t].id;
 					}
 
-					// set two new properties in the Event object containing
-					// the touch/click position translated in local coordinates
-					e.localX = obj.changedTouches[t].x;
-					e.localY = obj.changedTouches[t].y;
+					/* Initialize the two coordinate space properties. */
+					e.gameScreenX = obj.changedTouches[t].x;
+					e.gameScreenY = obj.changedTouches[t].y;
+					e.gameWorldX = e.gameScreenX + offset.x;
+					e.gameWorldY = e.gameScreenY + offset.y;
+					// parse all handlers
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-						if (handler.floating===true) {
-							// set to screen coordinates
-							e.worldX = e.localX;
-							e.worldY = e.localY;
+						/* Set gameX and gameY depending on floating. */
+						if (handler.floating === true) {
+							e.gameX = e.gameScreenX;
+							e.gameY = e.gameScreenY;
 						} else {
-							// adjust coordinates with viewport/map pos
-							e.worldX = e.localX + offset.x;
-							e.worldY = e.localY + offset.y;
+							e.gameX = e.gameWorldX;
+							e.gameY = e.gameWorldY;
 						}
 						// call the defined handler
-						if ((handler.rect === null) || handler.rect.containsPoint(e.worldX, e.worldY)) {
+						if ((handler.rect === null) || handler.rect.containsPoint(e.gameX, e.gameY)) {
 							// trigger the corresponding callback
 							if (handler.cb(e) === false) {
 								// stop propagating the event if return false 
