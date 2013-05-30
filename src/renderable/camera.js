@@ -413,7 +413,33 @@
 		},
 
 		/**
-		 *	render the camera effects
+		 * convert the given screen coordinates into world coordinates
+		 * @name screenToWorld
+		 * @memberOf me.Viewport
+		 * @function
+		 * @param {Number} x
+		 * @param {Number} y
+		 * @return {me.Vector2d}
+		 */
+		screenToWorld : function(x, y) {
+			return (new me.Vector2d(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
+		},
+		
+		/**
+		 * convert the given world coordinates into screen coordinates
+		 * @name worldToScreen
+		 * @memberOf me.Viewport
+		 * @function
+		 * @param {Number} x
+		 * @param {Number} y
+		 * @return {me.Vector2d}
+		 */
+		worldToScreen : function(x, y) {
+			return (new me.Vector2d(x,y)).add(this.pos).add(me.game.currentLevel.pos);
+		},
+		
+		/**
+		 * render the camera effects
 		 * @ignore
 		 */
 		draw : function(context) {
@@ -440,7 +466,7 @@
 					this._fadeOut.tween = null;
 			}
 		}
-
+		
 	});
 
 	/*---------------------------------------------------------*/

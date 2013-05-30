@@ -210,7 +210,8 @@
 			var handled = false;
 			var handlers = evtHandlers[e.type];
 			if (handlers) {
-				var offset = me.game.viewport.pos.clone().sub(me.game.currentLevel.pos);
+				// get the current screen to world offset 
+				var offset = me.game.viewport.screenToWorld(0,0);
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
 					// Do not fire older events
 					if (typeof(e.timeStamp) !== "undefined") {
