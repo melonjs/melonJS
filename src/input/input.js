@@ -728,8 +728,13 @@
 
 			
 		/**
-		 * allows registration of event listeners on the object target. 
-		 * note : on a touch enabled device mouse event will automatically be converted to touch event
+		 * allows registration of event listeners on the object target. <br>
+		 * (on a touch enabled device mouse event will automatically be converted to touch event)<br>
+		 * <br>
+		 * melonJS also define an additional `gameX/gameY` property in the Event object <br>
+		 * (accessible as parameter from the callback function) <br>
+		 * that allows to get the object coordinates whithin the canvas itself<br>
+		 * <img src="images/event_coord.png"/>
 		 * @name registerPointerEvent
 		 * @memberOf me.input
 		 * @public
