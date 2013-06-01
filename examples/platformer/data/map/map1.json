@@ -2,7 +2,7 @@
  "layers":[
         {
          "height":17,
-         "image":"..\/gfx\/background.png",
+         "image":"..\/img\/background.png",
          "name":"gradient_background",
          "opacity":1,
          "type":"imagelayer",
@@ -265,7 +265,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "image":"..\/gfx\/tileset.png",
+         "image":"..\/img\/tileset.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -280,7 +280,7 @@
         }, 
         {
          "firstgid":197,
-         "image":"..\/gfx\/metatiles35x35.png",
+         "image":"..\/img\/metatiles35x35.png",
          "imageheight":35,
          "imagewidth":210,
          "margin":0,

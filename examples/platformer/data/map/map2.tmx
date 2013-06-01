@@ -4,10 +4,10 @@
   <property name="backgroundcolor" value="#aa55ff"/>
  </properties>
  <tileset firstgid="1" name="tileset" tilewidth="35" tileheight="35">
-  <image source="../gfx/tileset.png" width="512" height="512"/>
+  <image source="../img/tileset.png" width="512" height="512"/>
  </tileset>
  <tileset firstgid="197" name="metatiles35x35" tilewidth="35" tileheight="35">
-  <image source="../gfx/metatiles35x35.png" width="210" height="35"/>
+  <image source="../img/metatiles35x35.png" width="210" height="35"/>
   <tile id="0">
    <properties>
     <property name="type" value="solid"/>
@@ -40,7 +40,7 @@
   </tile>
  </tileset>
  <imagelayer name="gradient_background" width="49" height="17">
-  <image source="../gfx/background.png"/>
+  <image source="../img/background.png"/>
  </imagelayer>
  <layer name="back layer" width="49" height="17">
   <data encoding="base64">
