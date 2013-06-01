@@ -119,7 +119,17 @@
 		 * @name me.event#WINDOW_ONRESIZE
 		 */
 		obj.WINDOW_ONRESIZE = "window.onresize";
-		
+
+		/**
+		 * Channel Constant for when the (browser) window is scrolled <br>
+		 * Data passed : {Event} Event object <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#WINDOW_ONSCROLL
+		 */
+		obj.WINDOW_ONSCROLL = "window.onscroll";
+
 		/**
 		 * Publish some data on a channel
 		 * @name me.event#publish

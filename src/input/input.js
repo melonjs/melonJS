@@ -89,6 +89,13 @@
 				obj.mouse.pos = new me.Vector2d(0,0);
 				// get relative canvas position in the page
 				obj.offset = me.video.getPos();
+				// Automatically update relative canvas position on scroll
+				window.addEventListener("scroll", throttle(100, false,
+					function (e) {
+						obj.offset = me.video.getPos();
+						me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
+					}
+				), false);
 				
 			    // MSPointer can hold Mouse & Touch events
 				if (window.navigator.pointerEnabled) {
