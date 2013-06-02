@@ -18,7 +18,7 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {Boolean} [addAsObject] add the object in the game manager object pool<br>
-	 * @param {Boolean} [isPersistent] make the screen persistent over level changes<br>
+	 * @param {Boolean} [isPersistent] make the screen persistent over level changes; requires addAsObject=true<br>
 	 * @see me.state
 	 * @example
 	 * // create a custom loading screen
@@ -101,12 +101,13 @@
 	/** @scope me.ScreenObject.prototype */	
 	{
 		/** @ignore */
-		addAsObject	: false,
+		addAsObject : false,
+		/** @ignore */
+		visible : false,
 		/** @ignore */
 		z : 999,
-		/**@ignore*/
+		/** @ignore */
 		frame : 0,
-		maxfps : 0,
 
 		/**
 		 * initialization function

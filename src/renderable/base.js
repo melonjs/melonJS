@@ -24,7 +24,7 @@
 		 * to identify the object as a renderable object
 		 * @ignore
 		 */
-		isRenderable: true,
+		isRenderable : true,
 		
 		/**
 		 * the visible state of the renderable object<br>
@@ -61,7 +61,6 @@
 		 * make the renderable object persistent over level changes<br>
 		 * default value : false
 		 * @public
-		 * @readonly
 		 * @type Boolean
 		 * @name isPersistent
 		 * @memberOf me.Renderable
@@ -77,7 +76,17 @@
 		 * @name floating
 		 * @memberOf me.Renderable
 		 */
-		floating: false,
+		floating : false,
+
+		/**
+		 * Z-order for object sorting<br>
+		 * default value : 0
+		 * @private
+		 * @type Number
+		 * @name z
+		 * @memberOf me.Renderable
+		 */
+		z : 0,
 
 		/**
 		 * @ignore

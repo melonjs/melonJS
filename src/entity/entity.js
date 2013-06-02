@@ -308,7 +308,7 @@
 	 * or when calling the parent constructor
 	 *
 	 * @class
-	 * @extends me.Rect
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {int} x the x coordinates of the sprite object
@@ -365,9 +365,6 @@
 		 * @memberOf me.ObjectEntity
 		 */
 		renderable : null,
-		
-		// z position (for ordering display)
-		z : 0,
 		
 		// just to keep track of when we flip
 		lastflipX : false,
