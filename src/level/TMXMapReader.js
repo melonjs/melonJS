@@ -397,6 +397,11 @@
 			
 			// check if we have any properties 
 			me.TMXUtils.applyTMXPropertiesFromXML(imageLayer, data);
+			
+			// make sure ratio is a vector (backward compatibility)
+			if (typeof(imageLayer.ratio) === "number") {
+				imageLayer.ratio = new me.Vector2d(parseFloat(imageLayer.ratio), parseFloat(imageLayer.ratio));
+			}
 
 			// add the new layer
 			return imageLayer;
@@ -547,9 +552,10 @@
 			// check if we have any additional properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);
 			
-			// make sure ratio is a float
-			imageLayer.ratio = parseFloat(imageLayer.ratio);
-			
+			// make sure ratio is a vector (backward compatibility)
+			if (typeof(imageLayer.ratio) === "number") {
+				imageLayer.ratio = new me.Vector2d(parseFloat(imageLayer.ratio), parseFloat(imageLayer.ratio));
+			}
 			
 			return imageLayer;
 		},
