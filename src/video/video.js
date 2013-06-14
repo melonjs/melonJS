@@ -173,6 +173,10 @@
 		var auto_scale = false;
 		var maintainAspectRatio = true;
 		
+		// max display size
+		var maxWidth = Infinity;
+		var maxHeight = Infinity;
+		
 		/**
 		 * return a vendor specific canvas type
 		 * @ignore
@@ -284,6 +288,13 @@
 				backBufferContext2D = context2D;
 			}
 			
+			/* set the default max size (if defined)
+			if (canvas.parentNode.style) {
+				// NOT WORKING for NOW
+				me.video.setMaxSize(canvas.parentNode.style.maxWidth, canvas.parentNode.style.maxHeight);
+			}
+			*/
+			
 			// trigger an initial resize();
 			if (auto_scale) {
 				me.video.onresize(null);
@@ -338,6 +349,21 @@
 		api.getHeight = function() {
 			return backBufferCanvas.height;
 		};
+		
+		/**
+		 * set the max canvas display size (when scaling)
+		 * @name setMaxSize
+		 * @memberOf me.video
+		 * @function
+		 * @param {Int} width width
+		 * @param {Int} height height
+		 */
+		api.setMaxSize = function(w, h) {
+			// max display size
+			maxWidth = w || Infinity;
+			maxHeight = h || Infinity;
+		};
+
 
 		/**
 		 * Create and return a new Canvas
@@ -439,8 +465,8 @@
 			if (auto_scale) {
 				// get the parent container max size
 				var parent = me.video.getScreenCanvas().parentNode;
-				var max_width = parent.width || window.innerWidth;
-				var max_height = parent.height || window.innerHeight;
+				var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
+				var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
 				
 				if (deferResizeId) {
 					// cancel any previous pending resize
@@ -450,19 +476,19 @@
 				if (maintainAspectRatio) {
 					// make sure we maintain the original aspect ratio
 					var designRatio = me.video.getWidth() / me.video.getHeight();
-					var screenRatio = max_width / max_height;
+					var screenRatio = _max_width / _max_height;
 					if (screenRatio < designRatio)
-						var scale = max_width / me.video.getWidth();
+						var scale = _max_width / me.video.getWidth();
 					else
-						var scale = max_height / me.video.getHeight();
+						var scale = _max_height / me.video.getHeight();
 		
 					// update the "front" canvas size
 					deferResizeId = me.video.updateDisplaySize.defer(scale,scale);
 				} else {
 					// scale the display canvas to fit with the parent container
 					deferResizeId = me.video.updateDisplaySize.defer( 
-						max_width / me.video.getWidth(),
-						max_height / me.video.getHeight()
+						_max_width / me.video.getWidth(),
+						_max_height / me.video.getHeight()
 					);
 				}
 				return;
