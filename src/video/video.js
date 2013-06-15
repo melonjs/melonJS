@@ -288,12 +288,11 @@
 				backBufferContext2D = context2D;
 			}
 			
-			/* set the default max size (if defined)
-			if (canvas.parentNode.style) {
-				// NOT WORKING for NOW
-				me.video.setMaxSize(canvas.parentNode.style.maxWidth, canvas.parentNode.style.maxHeight);
+			// set max the canvas max size if CSS values are defined 
+			if (window.getComputedStyle) {
+				var style = window.getComputedStyle(canvas, null);
+				me.video.setMaxSize(parseInt(style.maxWidth), parseInt(style.maxHeight));
 			}
-			*/
 			
 			// trigger an initial resize();
 			if (auto_scale) {
