@@ -373,7 +373,9 @@
 		 */
 		function _renderFrame() {
 			_activeUpdateFrame();
-			_animFrameId = window.requestAnimationFrame(_renderFrame);
+			if (_animFrameId != -1) {
+		           _animFrameId = window.requestAnimationFrame(_renderFrame);
+		    }
 		};
 
 		/**
