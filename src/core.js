@@ -476,6 +476,10 @@ window.me = window.me || {};
 		};
 	};
 
+	/**
+	 * The built in Function Object
+	 * @external Function
+	 */
 	
 	if (!Function.prototype.bind) {
 		/** @ignore */
@@ -485,6 +489,8 @@ window.me = window.me || {};
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
 		 * Also optionally curries arguments for the function.
+		 * @memberof! external:Function#
+		 * @alias bind
 		 * @param {Object} context the object to bind to.
 		 * @param {} [arguments...] Optional additional arguments to curry for the function.
 		 * @example
@@ -579,13 +585,13 @@ window.me = window.me || {};
 
 	/**
 	 * Executes a function as soon as the interpreter is idle (stack empty).
+	 * @memberof! external:Function#
+	 * @alias defer
 	 * @param {} [arguments...] Optional additional arguments to curry for the function.
 	 * @return {Int} id that can be used to clear the deferred function using clearTimeout
 	 * @example
-	 *
-	 *   // execute myFunc() when the stack is empty, with 'myArgument' as parameter
-	 *   myFunc.defer('myArgument');
-	 *
+	 * // execute myFunc() when the stack is empty, with 'myArgument' as parameter
+	 * myFunc.defer('myArgument');
 	 */
 	Function.prototype.defer = function() {
 		var fn = this, args = Array.prototype.slice.call(arguments);
@@ -618,11 +624,16 @@ window.me = window.me || {};
 		}
 	};
 
-
+	/**
+	 * The built in String Object
+	 * @external String
+	 */
+	
 	if(!String.prototype.trim) {  
 		/**
 		 * returns the string stripped of whitespace from both ends
-		 * @extends String
+		 * @memberof! external:String#
+		 * @alias trim
 		 * @return {String} trimmed string
 		 */
 		String.prototype.trim = function () {  
@@ -632,7 +643,8 @@ window.me = window.me || {};
 	
 	/**
 	 * add isNumeric fn to the string object
-	 * @extends String
+	 * @memberof! external:String#
+	 * @alias isNumeric
 	 * @return {Boolean} true if string contains only digits
 	 */
 	String.prototype.isNumeric = function() {
@@ -641,7 +653,8 @@ window.me = window.me || {};
 
 	/**
 	 * add a isBoolean fn to the string object
-	 * @extends String
+	 * @memberof! external:String#
+	 * @alias isBoolean
 	 * @return {Boolean} true if the string is either true or false
 	 */
 	String.prototype.isBoolean = function() {
@@ -650,8 +663,9 @@ window.me = window.me || {};
 
 	/**
 	 * add a contains fn to the string object
+	 * @memberof! external:String#
+	 * @alias contains
 	 * @param {String} string to test for
-	 * @extends String
 	 * @return {Boolean} true if contains the specified string
 	 */
 	String.prototype.contains = function(word) {
@@ -660,7 +674,8 @@ window.me = window.me || {};
 
 	/**
 	 * convert the string to hex value
-	 * @extends String
+	 * @memberof! external:String#
+	 * @alias toHex
 	 * @return {String}
 	 */
 	String.prototype.toHex = function() {
@@ -671,12 +686,17 @@ window.me = window.me || {};
 		return res;
 	};
 
-
+	/**
+	 * The built in Number Object
+	 * @external Number
+	 */
+	 
 	/**
 	 * add a clamp fn to the Number object
+	 * @memberof! external:Number#
+	 * @alias clamp
 	 * @param {Number} low lower limit
 	 * @param {Number} high higher limit
-	 * @extends Number
 	 * @return {Number} clamped value
 	 */
 	Number.prototype.clamp = function(low, high) {
@@ -685,9 +705,10 @@ window.me = window.me || {};
 
 	/**
 	 * return a random between min, max
+	 * @memberof! external:Number#
+	 * @alias random
 	 * @param {Number} min minimum value.
 	 * @param {Number} max maximum value.
-	 * @extends Number
 	 * @return {Number} random value
 	 */
 	Number.prototype.random = function(min, max) {
@@ -696,9 +717,10 @@ window.me = window.me || {};
 
 	/**
 	 * round a value to the specified number of digit
+	 * @memberof! external:Number#
+	 * @alias round
 	 * @param {Number} [num="Object value"] value to be rounded.
 	 * @param {Number} dec number of decimal digit to be rounded to.
-	 * @extends Number
 	 * @return {Number} rounded value
 	 * @example
 	 * // round a specific value to 2 digits
@@ -717,7 +739,8 @@ window.me = window.me || {};
 	/**
 	 * a quick toHex function<br>
 	 * given number <b>must</b> be an int, with a value between 0 and 255
-	 * @extends Number
+	 * @memberof! external:Number#
+	 * @alias toHex
 	 * @return {String} converted hexadecimal value
 	 */
 	Number.prototype.toHex = function() {
@@ -726,7 +749,8 @@ window.me = window.me || {};
 
 	/**
 	 * Returns a value indicating the sign of a number<br>
-	 * @extends Number
+	 * @memberof! external:Number#
+	 * @alias sign
 	 * @return {Number} sign of a the number
 	 */
 	Number.prototype.sign = function() {
@@ -735,8 +759,9 @@ window.me = window.me || {};
 
 	/**
 	 * Converts an angle in degrees to an angle in radians
+	 * @memberof! external:Number#
+	 * @alias degToRad
 	 * @param {Number} [angle="angle"] angle in degrees
-	 * @extends Number
 	 * @return {Number} corresponding angle in radians
 	 * @example
 	 * // convert a specific angle
@@ -751,8 +776,9 @@ window.me = window.me || {};
 
 	/**
 	 * Converts an angle in radians to an angle in degrees.
+	 * @memberof! external:Number#
+	 * @alias radToDeg
 	 * @param {Number} [angle="angle"] angle in radians
-	 * @extends Number
 	 * @return {Number} corresponding angle in degrees
 	 * @example
 	 * // convert a specific angle
@@ -765,10 +791,17 @@ window.me = window.me || {};
 		return (angle||this) * (180.0 / Math.PI);
 	};
 	
+	
+	/**
+	 * The built in Array Object
+	 * @external Array
+	 */
+	
 	/**
 	 * Remove the specified object from the Array<br>
+	 * @memberof! external:Array#
+	 * @alias remove
 	 * @param {Object} object to be removed
-	 * @extends Array
 	 */
 	Array.prototype.remove = function(obj) {
 		var i = Array.prototype.indexOf.call(this, obj);
