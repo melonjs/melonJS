@@ -2,6 +2,67 @@
 
 This file describes notable changes in each version of JSDoc 3. To download a specific version of JSDoc 3, see [GitHub's tags page](https://github.com/jsdoc3/jsdoc/tags).
 
+
+## 3.2.0 (May 2013)
+
+### Major changes
++ JSDoc can now parse any valid [Google Closure Compiler type expression](https://developers.google.com/closure/compiler/docs/js-for-compiler#types). **Note**: As a result of this change, JSDoc quits if a file contains an invalid type expression. To prevent JSDoc from quitting, run JSDoc with the `--lenient` (`-l`) command-line option. (Multiple issues)
++ You can now use the new `@listens` tag to indicate that a symbol listens for an event. (#273)
+
+### Enhancements
++ The parser now fires a `parseBegin` event before it starts parsing files, as well as a `parseComplete` event after all files have been parsed. Plugins can define event handlers for these events, and `parseBegin` handlers can modify the list of files to parse. (#299)
++ Event handlers for `jsdocCommentFount` events can now modify the JSDoc comment. (#228)
++ You can now exclude tags from Markdown processing using the new option `markdown.excludeTags` in the configuration file. (#337)
++ You can now use the [marked](https://github.com/chjj/marked) Markdown parser by setting the configuration property `markdown.parser` to `marked`. In addition, if `markdown.parser` is set to `gfm`, JSDoc will now use the "marked" parser instead. (#385)
++ The `@typedef` tag no longer requires a name when used with a Closure Compiler-style type definition. For example, the following type definition will automatically get the name `Foo.Bar`:
+
+    ```javascript
+        /** @typedef {string} */
+        Foo.Bar;
+    ```
+
+    (#391)
++ You can now use an inline `{@type}` tag in a parameter's description. If this tag is present, JSDoc will assume that the parameter uses the type specified in the inline `{@type}` tag. For example, the following `@param` tag would cause `myParam`'s type to be documented as `Foo`:
+
+    ```
+    @param {(boolean|string)} myParam - My special parameter. {@type Foo}
+    ```
+
+    (#152)
++ The `console.log` function now behaves the same way as on Node.js. In addition, the functions `console.info`, `console.error`, `console.warn`, and `console.trace` have been implemented. (#298)
++ You can now use npm to install JSDoc globally by running `npm install -g`. **Note**: JSDoc will still run under Mozilla Rhino, not Node.js. (#374)
++ The `jsVersion` configuration property has been removed. (#390)
+
+
+### Bug fixes
++ JSDoc now quits if the configuration file cannot be loaded. (#407)
++ JSDoc's `--explain` (`-X`) option now runs much more quickly, and it outputs valid JSON to the console. (#298)
++ JSDoc's `--lenient` (`-l`) option now prints warnings on STDERR rather than STDOUT. (#298)
++ The parser now assigns the correct scope to object properties whose names include single quotes. (#386)
++ The parser now recognizes CommonJS modules that export a single function rather than an object. (#384)
++ The inline `{@link}` tag now works correctly when `@link` is followed by a tab. (#359)
++ On POSIX systems, quoted command-line arguments are no longer split on spaces. (#397)
+
+### Plugins
++ The new `overloadHelper` plugin makes it easier to link to overloaded methods. (#179)
++ The `markdown` plugin now converts Markdown links in the `@see` tag. (#297)
+
+### Default template enhancements
++ You can now use the configuration property `templates.default.staticFiles` to copy additional static files to the output directory. (#393)
++ All output files now use human-readable filenames. (#339)
++ The documentation for events now lists the symbols that listen to that event. (#273)
++ Links to source files now allow you to jump to the line where a symbol is defined. (#316)
++ The output files now link to individual types within a Closure Compiler type expression. (Multiple issues)
++ CommonJS modules that export a single function, rather than an object, are now documented more clearly. (#384)
++ Functions that can throw multiple types of errors are now documented more clearly. (#389)
++ If a `@property` tag does not identify the property's name, the template no longer throws an error. (#373)
++ The type of each `@typedef` is now displayed. (#391)
++ If a `@see` tag contains a URL (for example, `@see http://example.com` or `@see <http://example.com>`), the tag text is now converted to a link. (#371)
++ Repeatable parameters are now identified. (#381)
++ The "Classes" header is no longer repeated in the navigation bar. (#361)
++ When the only documented symbols in global scope are type definitions, you can now click the "Global" header to view their documentation. (#261)
+
+
 ## 3.1.1 (February 2013)
 
 + Resolved a crash when no input files contain JSDoc comments. (#329)
@@ -21,29 +82,29 @@ This file describes notable changes in each version of JSDoc 3. To download a sp
 ### Major changes
 + You can now use the new `@callback` tag to provide information about a callback function's signature. To document a callback function, create a standalone JSDoc comment, as shown in the following example:
 
-```javascript
-/**
- * @class
- */
-function MyClass() {}
+    ```javascript
+    /**
+     * @class
+     */
+    function MyClass() {}
 
-/**
- * Send a request.
- *
- * @param {MyClass~responseCb} cb - Called after a response is received.
- */
-MyClass.prototype.sendRequest = function(cb) {
-    // code
-};
+    /**
+     * Send a request.
+     *
+     * @param {MyClass~responseCb} cb - Called after a response is received.
+     */
+    MyClass.prototype.sendRequest = function(cb) {
+        // code
+    };
 
-/**
- * Callback for sending a request.
- *
- * @callback MyClass~responseCb
- * @param {?string} error - Information about the error.
- * @param {?string} response - Body of the response.
- */
-```
+    /**
+     * Callback for sending a request.
+     *
+     * @callback MyClass~responseCb
+     * @param {?string} error - Information about the error.
+     * @param {?string} response - Body of the response.
+     */
+    ```
 + The inline link tag, `{@link}`, has been improved:
     + You can now use a space as the delimiter between the link target and link text.
     + In your `conf.json` file, you can now enable the option `templates.cleverLinks` to display code links in a monospace font and URL links in plain text. You can also enable the option `templates.monospaceLinks` to display all links in a monospace font. **Note**: JSDoc templates must be updated to respect these options.

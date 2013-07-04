@@ -1,5 +1,5 @@
 /*global afterEach: true, beforeEach: true, describe: true, expect: true, env: true, it: true,
-spyOn: true, xdescribe: true */
+jasmine: true, spyOn: true, xdescribe: true */
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 describe("jsdoc/util/templateHelper", function() {
@@ -202,6 +202,11 @@ describe("jsdoc/util/templateHelper", function() {
 
             expect( filename1.toLowerCase() ).not.toBe( filename2.toLowerCase() );
         });
+
+        it('should remove variations from the longname before generating the filename', function() {
+            var filename = helper.getUniqueFilename('MyClass(foo, bar)');
+            expect(filename).toBe('MyClass.html');
+        });
     });
 
     describe("longnameToUrl", function() {
@@ -308,6 +313,25 @@ describe("jsdoc/util/templateHelper", function() {
         it('returns a link with link text if a URL and link text are specified', function() {
             var link = helper.linkto('http://example.com', 'text');
             expect(link).toBe('<a href="http://example.com">text</a>');
+        });
+
+        it('returns a link with a fragment ID if a URL and fragment ID are specified', function() {
+            var link = helper.linkto('LinktoFakeClass', null, null, 'fragment');
+            expect(link).toBe('<a href="fakeclass.html#fragment">LinktoFakeClass</a>');
+        });
+
+        it('returns the original text if an inline {@link} tag is specified', function() {
+            var link;
+            var text = '{@link Foo}';
+
+            function getLink() {
+                link = helper.linkto(text);
+            }
+            
+            // make sure we're not trying to parse the inline link as a type expression
+            expect(getLink).not.toThrow();
+            // linkto doesn't process {@link} tags
+            expect(link).toBe(text);
         });
     });
 
@@ -935,7 +959,7 @@ describe("jsdoc/util/templateHelper", function() {
         });
     });
 
-    xdescribe("toTutorial", function() {
+    describe("toTutorial", function() {
         var lenient = !!env.opts.lenient;
 
         function missingParam() {
@@ -967,32 +991,32 @@ describe("jsdoc/util/templateHelper", function() {
         // missing tutorials
         it("returns the tutorial name if it's missing and no missingOpts is provided", function() {
             helper.setTutorials(resolver.root);
-            var link = helper.toTutorial('asdf');
-            expect(link).toBe('asdf');
+            var link = helper.toTutorial('qwerty');
+            expect(link).toBe('qwerty');
         });
 
         it("returns the tutorial name wrapped in missingOpts.tag if provided and the tutorial is missing", function() {
-            var link = helper.toTutorial('asdf', 'lkjklasdf', {tag: 'span'});
-            expect(link).toBe('<span>asdf</span>');
+            var link = helper.toTutorial('qwerty', 'lkjklqwerty', {tag: 'span'});
+            expect(link).toBe('<span>qwerty</span>');
         });
 
         it("returns the tutorial name wrapped in missingOpts.tag with class missingOpts.classname if provided and the tutorial is missing", function() {
-            var link = helper.toTutorial('asdf', 'lkjklasdf', {classname: 'missing'});
-            expect(link).toBe('asdf');
+            var link = helper.toTutorial('qwerty', 'lkjklqwerty', {classname: 'missing'});
+            expect(link).toBe('qwerty');
 
-            link = helper.toTutorial('asdf', 'lkjklasdf', {tag: 'span', classname: 'missing'});
-            expect(link).toBe('<span class="missing">asdf</span>');
+            link = helper.toTutorial('qwerty', 'lkjklqwerty', {tag: 'span', classname: 'missing'});
+            expect(link).toBe('<span class="missing">qwerty</span>');
         });
 
         it("prefixes the tutorial name with missingOpts.prefix if provided and the tutorial is missing", function() {
-            var link = helper.toTutorial('asdf', 'lkjklasdf', {tag: 'span', classname: 'missing', prefix: 'TODO-'});
-            expect(link).toBe('<span class="missing">TODO-asdf</span>');
+            var link = helper.toTutorial('qwerty', 'lkjklqwerty', {tag: 'span', classname: 'missing', prefix: 'TODO-'});
+            expect(link).toBe('<span class="missing">TODO-qwerty</span>');
 
-            link = helper.toTutorial('asdf', 'lkjklasdf', {prefix: 'TODO-'});
-            expect(link).toBe('TODO-asdf');
+            link = helper.toTutorial('qwerty', 'lkjklqwerty', {prefix: 'TODO-'});
+            expect(link).toBe('TODO-qwerty');
 
-            link = helper.toTutorial('asdf', 'lkjklasdf', {prefix: 'TODO-', classname: 'missing'});
-            expect(link).toBe('TODO-asdf');
+            link = helper.toTutorial('qwerty', 'lkjklqwerty', {prefix: 'TODO-', classname: 'missing'});
+            expect(link).toBe('TODO-qwerty');
         });
 
         // now we do non-missing tutorials.

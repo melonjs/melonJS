@@ -1,36 +1,36 @@
 /**
-    @module jsdoc/src/handlers
+ * @module jsdoc/src/handlers
  */
 
 
 var currentModule = null;
 
-function getNewDoclet(parser, comment, e) {
+function getNewDoclet(comment, e) {
     var jsdoc = {doclet: require('jsdoc/doclet')};
     var util = require('util');
     var err;
 
     try {
-        return new jsdoc.doclet.Doclet(e.comment, e);
+        return new jsdoc.doclet.Doclet(comment, e);
     }
     catch (error) {
-        err = new Error( util.format('cannot create a doclet in the file %s for the comment ' +
-            '"%s": %s', parser._currentSourceName, comment.replace(/[\r\n]/g, ''), error.message) );
+        err = new Error( util.format('cannot create a doclet for the comment "%s": %s',
+            comment.replace(/[\r\n]/g, ''), error.message) );
         require('jsdoc/util/error').handle(err);
         return new jsdoc.doclet.Doclet('', {});
     }
 }
 
 /**
-    Attach these event handlers to a particular instance of a parser.
-    @param parser
+ * Attach these event handlers to a particular instance of a parser.
+ * @param parser
  */
 exports.attachTo = function(parser) {
     var jsdoc = {doclet: require('jsdoc/doclet'), name: require('jsdoc/name')};
-
+    
     // handles JSDoc comments that include a @name tag -- the code is ignored in such a case
     parser.on('jsdocCommentFound', function(e) {
-        var newDoclet = getNewDoclet(parser, e.comment, e);
+        var newDoclet = getNewDoclet(e.comment, e);
 
         if (!newDoclet.name) {
             return false; // only interested in virtual comments (with a @name) here
@@ -57,13 +57,13 @@ exports.attachTo = function(parser) {
     // TODO: for clarity, decompose into smaller functions
     function newSymbolDoclet(docletSrc, e) {
         var memberofName = null,
-            newDoclet = getNewDoclet(parser, docletSrc, e);
+            newDoclet = getNewDoclet(docletSrc, e);
 
         // an undocumented symbol right after a virtual comment? rhino mistakenly connected the two
         if (newDoclet.name) { // there was a @name in comment
             // try again, without the comment
             e.comment = '@undocumented';
-            newDoclet = getNewDoclet(parser, e.comment, e);
+            newDoclet = getNewDoclet(e.comment, e);
         }
 
         if (newDoclet.alias) {
@@ -120,14 +120,14 @@ exports.attachTo = function(parser) {
                 }
                 else {
                     memberofName = this.astnodeToMemberof(e.astnode);
-                    if(memberofName instanceof Array) {
+                    if( Array.isArray(memberofName) ) {
                         basename = memberofName[1];
                         memberofName = memberofName[0];
                     }
                 }
 
                 if (memberofName) {
-                    newDoclet.addTag( 'memberof', memberofName);
+                    newDoclet.addTag('memberof', memberofName);
                     if (basename) {
                         newDoclet.name = newDoclet.name.replace(new RegExp('^' + RegExp.escape(basename) + '.'), '');
                     }
@@ -177,10 +177,8 @@ exports.attachTo = function(parser) {
             e = { doclet: newDoclet };
             this.emit('newDoclet', e);
 
-            if (!e.defaultPrevented) {
-                if ( !filter(newDoclet) ) {
-                    this.addResult(newDoclet);
-                }
+            if ( !e.defaultPrevented && !filter(newDoclet) ) {                
+                this.addResult(newDoclet);
             }
         }
     }
@@ -200,4 +198,3 @@ exports.attachTo = function(parser) {
 
     function resolveProperties(newDoclet) {}
 };
-

@@ -6,110 +6,102 @@
  */
 
 /**
- * Information about the result of extracting an inline tag from a text string.
+ * Information about an inline tag that was found within a string.
  *
  * @typedef {Object} InlineTagInfo
  * @memberof module:jsdoc/tag/inline
- * @property {?string} tag - The tag whose text was found, or `null` if no tag was specified.
- * @property {string} text - The tag text that was found.
- * @property {string} newString - The updated text string after extracting or replacing the inline
- * tag.
+ * @property {?string} completeTag - The entire inline tag, including its enclosing braces.
+ * @property {?string} tag - The tag whose text was found.
+ * @property {?string} text - The tag text that was found.
  */
 
 /**
- * Function that replaces an inline tag with other text.
+ * Information about the results of replacing inline tags within a string.
+ *
+ * @typedef {Object} InlineTagResult
+ * @memberof module:jsdoc/tag/inline
+ * @property {Array.<module:jsdoc/tag/inline.InlineTagInfo>} tags - The inline tags that were found.
+ * @property {string} newString - The updated text string after extracting or replacing the inline
+ * tags.
+ */
+
+/**
+ * Text-replacing function for strings that contain an inline tag.
  *
  * @callback InlineTagReplacer
  * @memberof module:jsdoc/tag/inline
  * @param {string} string - The complete string containing the inline tag.
- * @param {string} completeTag - The entire inline tag, including its enclosing braces.
- * @param {string} tagText - The text contained in the inline tag.
- * @return {string} An updated version of the string that contained the inline tag.
+ * @param {module:jsdoc/tag/inline.InlineTagInfo} tagInfo - Information about the inline tag.
+ * @return {string} An updated version of the complete string.
  */
-
-/** @private */
-function unescapeBraces(text) {
-    return text.replace(/\\\{/g, '{')
-        .replace(/\\\}/g, '}');
-}
 
 /**
- * Replace an inline tag with other text.
+ * Replace all instances of multiple inline tags with other text.
  *
- * To replace untagged text that is enclosed in braces, set the `tag` parameter to `null`.
- *
- * @param {string} string - The string in which to replace the inline tag.
- * @param {?string} tag - The inline tag that must follow the opening brace (for example, `@link`).
- * @param {module:jsdoc/tag/inline.InlineTagReplacer} replacer - The function that is used to
- * replace text in the string.
- * @return {module:jsdoc/tag/inline.InlineTagInfo} The updated string, as well as information about
- * the inline tag.
+ * @param {string} string - The string in which to replace the inline tags.
+ * @param {Object} replacers - The functions that are used to replace text in the string. The keys
+ * must contain tag names (for example, `link`), and the values must contain functions with the
+ * type {@link module:jsdoc/tag/inline.InlineTagReplacer}.
+ * @return {module:jsdoc/tag/inline.InlineTagResult} The updated string, as well as information
+ * about the inline tags that were found.
  */
-exports.replaceInlineTag = function(string, tag, replacer) {
-    string = string || '';
-    tag = tag || '';
+exports.replaceInlineTags = function(string, replacers) {
+    var tagInfo = [];
 
-    var count = 0;
-    var position = 0;
-    var completeTag = '';
-    var text = '';
-    var start = '{' + tag;
-    var startIndex = string.indexOf(start);
-    var textStartIndex;
+    function replaceMatch(replacer, tag, match, text) {
+        var matchedTag = {
+            completeTag: match,
+            tag: tag,
+            text: text
+        };
+        tagInfo.push(matchedTag);
 
-    if (startIndex !== -1) {
-        // advance to the first character after `start`
-        position = textStartIndex = startIndex + start.length;
-        count++;
-
-        while (position < string.length) {
-            switch (string[position]) {
-                case '\\':
-                    // backslash is an escape character, so skip the next character
-                    position++;
-                    break;
-                case '{':
-                    count++;
-                    break;
-                case '}':
-                    count--;
-                    break;
-                default:
-                    // do nothing
-            }
-
-            if (count === 0) {
-                completeTag = string.slice(startIndex, position + 1);
-                text = string.slice(textStartIndex, position).trim();
-                break;
-            }
-
-            position++;
-        }
+        return replacer.call(this, string, matchedTag);
     }
 
-    string = replacer.call(this, string, completeTag, text);
-
-    return {
-        tag: tag || null,
-        text: unescapeBraces(text),
+    string = string || '';
+    Object.keys(replacers).forEach(function(replacer) {
+        var tagRegExp = new RegExp('\\{@' + replacer + '\\s+(.+?)\\}', 'gi');
+        var matches;
+        // call the replacer once for each match
+        while ( (matches = tagRegExp.exec(string)) !== null ) {
+            string = replaceMatch(replacers[replacer], replacer, matches[0], matches[1]);
+        }
+    });
+    
+   return {
+        tags: tagInfo,
         newString: string.trim()
     };
 };
 
 /**
- * Extract the first portion of a string that is enclosed in braces, with the `tag` parameter
- * immediately following the opening brace.
+ * Replace all instances of an inline tag with other text.
  *
- * To extract untagged text that is enclosed in braces, omit the `tag` parameter.
+ * @param {string} string - The string in which to replace the inline tag.
+ * @param {string} tag - The name of the inline tag to replace.
+ * @param {module:jsdoc/tag/inline.InlineTagReplacer} replacer - The function that is used to
+ * replace text in the string.
+ * @return {module:jsdoc/tag/inline.InlineTagResult} The updated string, as well as information
+ * about the inline tags that were found.
+ */
+exports.replaceInlineTag = function(string, tag, replacer) {
+    var replacers = {};
+    replacers[tag] = replacer;
+
+    return exports.replaceInlineTags(string, replacers);
+};
+
+/**
+ * Extract inline tags from a string, replacing them with an empty string.
  *
  * @param {string} string - The string from which to extract text.
- * @param {?string} tag - The inline tag that must follow the opening brace (for example, `@link`).
- * @return {module:jsdoc/tag/inline.InlineTagInfo} Information about the string and inline tag.
+ * @param {?string} tag - The inline tag to extract.
+ * @return {module:jsdoc/tag/inline.InlineTagResult} The updated string, as well as information
+ * about the inline tags that were found.
  */
 exports.extractInlineTag = function(string, tag) {
-    return exports.replaceInlineTag(string, tag, function(string, completeTag,
-        tagText) {
-        return string.replace(completeTag, '');
+    return exports.replaceInlineTag(string, tag, function(str, tagInfo) {
+        return str.replace(tagInfo.completeTag, '');
     });
 };

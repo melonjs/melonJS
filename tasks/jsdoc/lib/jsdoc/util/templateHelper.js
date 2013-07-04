@@ -54,6 +54,10 @@ function makeFilenameUnique(filename, str) {
 // compute it here just once
 var nsprefix = /^(event|module|external):/;
 
+var htmlsafe = exports.htmlsafe = function(str) {
+    return str.replace(/</g, '&lt;');
+};
+
 /**
  * Convert a string to a unique filename, including an extension.
  *
@@ -68,8 +72,10 @@ var nsprefix = /^(event|module|external):/;
 var getUniqueFilename = exports.getUniqueFilename = function(str) {
     // allow for namespace prefix
     var basename = str.replace(nsprefix, '$1-')
-        // and use - instead of ~ to denote 'inner'
-        .replace(/~/g, '-');
+        // use - instead of ~ to denote 'inner'
+        .replace(/~/g, '-')
+        // remove the variation, if any
+        .replace(/\([\s\S]*\)$/, '');
     
     // if the basename includes characters that we can't use in a filepath, remove everything up to
     // and including the last bad character
@@ -114,64 +120,290 @@ function parseType(longname) {
     }
 }
 
+function stringifyType(parsedType, cssClass, linkMap) {
+    return require('catharsis').stringify(parsedType, {
+        cssClass: cssClass,
+        htmlSafe: true,
+        links: linkMap
+    });
+}
+
 function hasUrlPrefix(text) {
     return (/^(http|ftp)s?:\/\//).test(text);
 }
 
 /**
- * Retrieve an HTML link to the member with the specified longname. If the longname is not
- * associated with a URL, this method returns the link text, if provided, or the longname.
+ * Build an HTML link to the symbol with the specified longname. If the longname is not
+ * associated with a URL, this method simply returns the link text, if provided, or the longname.
+ *
+ * The `longname` parameter can also contain a URL rather than a symbol's longname.
  *
  * This method supports type applications that can contain one or more types, such as
  * `Array.<MyClass>` or `Array.<(MyClass|YourClass)>`. In these examples, the method attempts to
  * replace `Array`, `MyClass`, and `YourClass` with links to the appropriate types. The link text
  * is ignored for type applications.
  *
- * @param {string} longname - The longname that is the target of the link.
- * @param {string=} linktext - The text to display for the link, or `longname` if no text is
+ * @param {string} longname - The longname (or URL) that is the target of the link.
+ * @param {string=} linkText - The text to display for the link, or `longname` if no text is
  * provided.
- * @param {string=} cssClass - The CSS class (or classes) to include in the link's `<a>` tag.
- * @return {string} The HTML link, or a plain-text string if the link is not available.
+ * @param {Object} options - Options for building the link.
+ * @param {string=} options.cssClass - The CSS class (or classes) to include in the link's `<a>`
+ * tag.
+ * @param {string=} options.fragmentId - The fragment identifier (for example, `name` in
+ * `foo.html#name`) to append to the link target.
+ * @param {string=} options.linkMap - The link map in which to look up the longname.
+ * @param {boolean=} options.monospace - Indicates whether to display the link text in a monospace
+ * font.
+ * @return {string} The HTML link, or the link text if the link is not available.
  */
-var linkto = exports.linkto = function(longname, linktext, cssClass) {
+function buildLink(longname, linkText, options) {
     var catharsis = require('catharsis');
 
-    var classString = cssClass ? util.format(' class="%s"', cssClass) : '';
-    var text = linktext || longname;
-    var url = hasOwnProp.call(longnameToUrl, longname) && longnameToUrl[longname];
+    var classString = options.cssClass ? util.format(' class="%s"', options.cssClass) : '';
+    var fragmentString = options.fragmentId ? '#' + options.fragmentId : '';
+    var stripped;
+    var text;
+    var url;
     var parsedType;
 
     // handle cases like:
     // @see <http://example.org>
     // @see http://example.org
-    var stripped = longname && longname.replace(/^<|>$/g, '');
+    stripped = longname ? longname.replace(/^<|>$/g, '') : '';
     if ( hasUrlPrefix(stripped) ) {
         url = stripped;
-        // remove the angle brackets from the link text if necessary
-        if (longname === text) {
-            text = stripped;
-        }
+        text = linkText || stripped;
     }
     // handle complex type expressions that may require multiple links
-    else if (longname && longname.search(/[<{(]/) !== -1) {
+    // (but skip anything that looks like an inline tag)
+    else if (longname && longname.search(/[<{(]/) !== -1 && /\{\@.+\}/.test(longname) === false) {
         parsedType = parseType(longname);
-        return catharsis.stringify(parsedType, {
-            cssClass: cssClass,
-            htmlSafe: true,
-            links: longnameToUrl
-        });
+        return stringifyType(parsedType, options.cssClass, options.linkMap);
     }
+    else {
+        url = hasOwnProp.call(options.linkMap, longname) ? options.linkMap[longname] : '';
+        text = linkText || longname;
+    }
+
+    text = options.monospace ? '<code>' + text + '</code>' : text;
 
     if (!url) {
         return text;
     }
     else {
-        return util.format('<a href="%s"%s>%s</a>', url, classString, text);
+        return util.format('<a href="%s%s"%s>%s</a>', url, fragmentString, classString, text);
     }
+}
+
+/**
+ * Retrieve an HTML link to the symbol with the specified longname. If the longname is not
+ * associated with a URL, this method simply returns the link text, if provided, or the longname.
+ *
+ * The `longname` parameter can also contain a URL rather than a symbol's longname.
+ *
+ * This method supports type applications that can contain one or more types, such as
+ * `Array.<MyClass>` or `Array.<(MyClass|YourClass)>`. In these examples, the method attempts to
+ * replace `Array`, `MyClass`, and `YourClass` with links to the appropriate types. The link text
+ * is ignored for type applications.
+ *
+ * @param {string} longname - The longname (or URL) that is the target of the link.
+ * @param {string=} linkText - The text to display for the link, or `longname` if no text is
+ * provided.
+ * @param {string=} cssClass - The CSS class (or classes) to include in the link's `<a>` tag.
+ * @param {string=} fragmentId - The fragment identifier (for example, `name` in `foo.html#name`) to
+ * append to the link target.
+ * @return {string} The HTML link, or a plain-text string if the link is not available.
+ */
+var linkto = exports.linkto = function(longname, linkText, cssClass, fragmentId) {
+    return buildLink(longname, linkText, {
+        cssClass: cssClass,
+        fragmentId: fragmentId,
+        linkMap: longnameToUrl
+    });
 };
 
-var htmlsafe = exports.htmlsafe = function(str) {
-    return str.replace(/</g, '&lt;');
+function useMonospace(tag, text) {
+    var cleverLinks;
+    var monospaceLinks;
+    var result;
+
+    if ( hasUrlPrefix(text) ) {
+        result = false;
+    }
+    else if (tag === 'linkplain') {
+        result = false;
+    }
+    else if (tag === 'linkcode') {
+        result = true;
+    }
+    else {
+        cleverLinks = env.conf.templates.cleverLinks;
+        monospaceLinks = env.conf.templates.monospaceLinks;
+
+        if (monospaceLinks || cleverLinks) {
+            result = true;
+        }
+    }
+
+    return result || false;
+}
+
+function splitLinkText(text) {
+    var linkText;
+    var target;
+    var splitIndex;
+
+    // if a pipe is not present, we split on the first space
+    splitIndex = text.indexOf('|');
+    if (splitIndex === -1) {
+        splitIndex = text.indexOf(' ');
+    }
+
+    if (splitIndex !== -1) {
+        linkText = text.substr(splitIndex + 1);
+        target = text.substr(0, splitIndex);
+    }
+
+    return {
+        linkText: linkText,
+        target: target || text
+    };
+}
+
+var tutorialToUrl = exports.tutorialToUrl = function(tutorial) {
+    var node = tutorials.getByName(tutorial);
+    // no such tutorial
+    if (!node) {
+        require('jsdoc/util/error').handle( new Error('No such tutorial: '+tutorial) );
+        return;
+    }
+
+    var url;
+    // define the URL if necessary
+    if (!hasOwnProp.call(tutorialLinkMap.nameToUrl, node.name)) {
+        url = 'tutorial-' + getUniqueFilename(node.name);
+        tutorialLinkMap.nameToUrl[node.name] = url;
+        tutorialLinkMap.urlToName[url] = node.name;
+    }
+
+    return tutorialLinkMap.nameToUrl[node.name];
+};
+
+/**
+ * Retrieve a link to a tutorial, or the name of the tutorial if the tutorial is missing. If the
+ * `missingOpts` parameter is supplied, the names of missing tutorials will be prefixed by the
+ * specified text and wrapped in the specified HTML tag and CSS class.
+ *
+ * @todo Deprecate missingOpts once we have a better error-reporting mechanism.
+ * @param {string} tutorial The name of the tutorial.
+ * @param {string} content The link text to use.
+ * @param {object} [missingOpts] Options for displaying the name of a missing tutorial.
+ * @param {string} missingOpts.classname The CSS class to wrap around the tutorial name.
+ * @param {string} missingOpts.prefix The prefix to add to the tutorial name.
+ * @param {string} missingOpts.tag The tag to wrap around the tutorial name.
+ * @return {string} An HTML link to the tutorial, or the name of the tutorial with the specified
+ * options.
+ */
+var toTutorial = exports.toTutorial = function(tutorial, content, missingOpts) {
+    if (!tutorial) {
+        require('jsdoc/util/error').handle( new Error('Missing required parameter: tutorial') );
+        return;
+    }
+
+    var node = tutorials.getByName(tutorial);
+    // no such tutorial
+    if (!node) {
+        missingOpts = missingOpts || {};
+        var tag = missingOpts.tag;
+        var classname = missingOpts.classname;
+        
+        var link = tutorial;
+        if (missingOpts.prefix) {
+            link = missingOpts.prefix + link;
+        }
+        if (tag) {
+            link = '<' + tag + (classname ? (' class="' + classname + '">') : '>') + link;
+            link += '</' + tag + '>';
+        }
+        return link;
+    }
+
+    content = content || node.title;
+
+    return '<a href="' + tutorialToUrl(tutorial) + '">' + content + '</a>';
+};
+
+/** Find symbol {@link ...} and {@tutorial ...} strings in text and turn into html links */
+exports.resolveLinks = function(str) {
+    var replaceInlineTags = require('jsdoc/tag/inline').replaceInlineTags;
+
+    function extractLeadingText(string, completeTag) {
+        var tagIndex = string.indexOf(completeTag);
+        var leadingText = null;
+        var leadingTextInfo = /\[(.+?)\]/.exec(string);
+
+        // did we find leading text, and if so, does it immediately precede the tag?
+        if ( leadingTextInfo && leadingTextInfo.index && 
+            (leadingTextInfo.index + leadingTextInfo[0].length === tagIndex) ) {
+            string = string.replace(leadingTextInfo[0], '');
+            leadingText = leadingTextInfo[1];
+        }
+
+        return {
+            leadingText: leadingText,
+            string: string
+        };
+    }
+
+    function processLink(string, tagInfo) {
+        var leading = extractLeadingText(string, tagInfo.completeTag);
+        var linkText = leading.leadingText;
+        var monospace;
+        var split;
+        var target;
+        string = leading.string;
+
+        split = splitLinkText(tagInfo.text);
+        target = split.target;
+        linkText = linkText || split.linkText;
+
+        monospace = useMonospace(tagInfo.tag, tagInfo.text);
+
+        return string.replace( tagInfo.completeTag, buildLink(target, linkText, {
+            linkMap: longnameToUrl,
+            monospace: monospace
+        }) );
+    }
+
+    function processTutorial(string, tagInfo) {
+        var leading = extractLeadingText(string, tagInfo.completeTag);
+        string = leading.string;
+
+        return string.replace( tagInfo.completeTag, toTutorial(tagInfo.text, leading.leadingText) );
+    }
+
+    var replacers = {
+        link: processLink,
+        linkcode: processLink,
+        linkplain: processLink,
+        tutorial: processTutorial
+    };
+
+    return replaceInlineTags(str, replacers).newString;
+};
+
+/** Convert tag text like "Jane Doe <jdoe@example.org>" into a mailto link */
+exports.resolveAuthorLinks = function(str) {
+    var author;
+    var matches = str.match(/^\s?([\s\S]+)\b\s+<(\S+@\S+)>\s?$/);
+    if (matches && matches.length === 3) {
+        author = '<a href="mailto:' + matches[2] + '">' + htmlsafe(matches[1]) + '</a>';
+    }
+    else {
+        author = htmlsafe(str);
+    }
+
+    return author;
 };
 
 /**
@@ -443,165 +675,6 @@ var registerLink = exports.registerLink = function(longname, url) {
     linkMap.urlToLongname[url] = longname;
 };
 
-function toLink(longname, content, monospace) {
-    if (!longname) {
-        // if this happens, there's something wrong with the caller itself; the user can't fix this
-        throw new Error('Missing required parameter: url');
-    }
-    var monospaceLinks = env.conf.templates.monospaceLinks;
-    var cleverLinks = env.conf.templates.cleverLinks;
-  
-    // Split into URL and content.
-    // Has link text been specified {@link link|content}, e.g.
-    // {@link http://github.com|Github} or {@link MyNamespace.method|Method}
-    // Note: only do if `content` has not been supplied, i.e. in the case of
-    // [content]{@link ...} we use `content`.
-    //
-    // If pipe is not present we use the first space.
-    var split = longname.indexOf('|');
-    if (split === -1) {
-       split = longname.indexOf(' ');
-    }
-    if (split !== -1 && !content) {
-        content = longname.substr(split + 1);
-        longname = longname.substr(0, split);
-    }
-
-    var url;
-    var isURL = false;
-    // Has link been specified manually?
-    if ( hasUrlPrefix(longname) ) {
-        isURL = true;
-        url = longname;
-    }
-    else {
-        // the actual longname is stored in `url` if there was a delimiter.
-        url = hasOwnProp.call(linkMap.longnameToUrl, longname) && linkMap.longnameToUrl[longname];
-    }
-
-    content = content || longname;
-    
-    if (!url) {
-        return content;
-    }
-    else {
-        if (monospace === undefined) {
-            // cleverLinks takes precedence. if cleverLinks is true
-            // we ignore monospaceLinks.
-            // If it's a symbol we use monospace font.
-            // Otherwise if cleverLinks is `false` we use monospaceLinks.
-            if (cleverLinks) {
-                monospace = !isURL;
-            } else {
-                monospace = monospaceLinks;
-            }
-        }
-        if (monospace) {
-            content = '<code>' + content + '</code>';
-        }
-        return '<a href="'+url+'">'+content+'</a>';
-    }
-}
-
-var tutorialToUrl = exports.tutorialToUrl = function(tutorial) {
-    var node = tutorials.getByName(tutorial);
-    // no such tutorial
-    if (!node) {
-        require('jsdoc/util/error').handle( new Error('No such tutorial: '+tutorial) );
-        return;
-    }
-
-    var url;
-    // define the URL if necessary
-    if (!hasOwnProp.call(tutorialLinkMap.nameToUrl, node.name)) {
-        url = 'tutorial-' + getUniqueFilename(node.name);
-        tutorialLinkMap.nameToUrl[node.name] = url;
-        tutorialLinkMap.urlToName[url] = node.name;
-    }
-
-    return tutorialLinkMap.nameToUrl[node.name];
-};
-
-/**
- * Retrieve a link to a tutorial, or the name of the tutorial if the tutorial is missing. If the
- * `missingOpts` parameter is supplied, the names of missing tutorials will be prefixed by the
- * specified text and wrapped in the specified HTML tag and CSS class.
- * @param {string} tutorial The name of the tutorial.
- * @param {string} content The link text to use.
- * @param {object} [missingOpts] Options for displaying the name of a missing tutorial.
- * @param {string} missingOpts.classname The CSS class to wrap around the tutorial name.
- * @param {string} missingOpts.prefix The prefix to add to the tutorial name.
- * @param {string} missingOpts.tag The tag to wrap around the tutorial name.
- * @return {string} An HTML link to the tutorial, or the name of the tutorial with the specified
- * options.
- */
-var toTutorial = exports.toTutorial = function(tutorial, content, missingOpts) {
-    if (!tutorial) {
-        require('jsdoc/util/error').handle( new Error('Missing required parameter: tutorial') );
-        return;
-    }
-
-    var node = tutorials.getByName(tutorial);
-    // no such tutorial
-    if (!node) {
-        missingOpts = missingOpts || {};
-        var tag = missingOpts.tag;
-        var classname = missingOpts.classname;
-        
-        var link = tutorial;
-        if (missingOpts.prefix) {
-            link = missingOpts.prefix + link;
-        }
-        if (tag) {
-            link = '<' + tag + (classname ? (' class="' + classname + '">') : '>') + link;
-            link += '</' + tag + '>';
-        }
-        return link;
-    }
-
-    content = content || node.title;
-
-    return '<a href="' + tutorialToUrl(tutorial) + '">' + content + '</a>';
-};
-
-/** Find symbol {@link ...} and {@tutorial ...} strings in text and turn into html links */
-exports.resolveLinks = function(str) {
-    str = str.replace(/(?:\[(.+?)\])?\{@link(plain|code)?\s+(.+?)\}/gi,
-        function(match, content, monospace, longname) {
-            if (monospace === 'plain') {
-                monospace = false;
-            } else if (monospace === 'code') {
-                monospace = true;
-            } else {
-                monospace = undefined;
-            }
-            return toLink(longname, content, monospace);
-        }
-    );
-
-    str = str.replace(/(?:\[(.+?)\])?\{@tutorial +(.+?)\}/gi,
-        function(match, content, tutorial) {
-            return toTutorial(tutorial, content);
-        }
-    );
-
-    return str;
-};
-
-/** Convert tag text like "Jane Doe <jdoe@example.org>" into a mailto link */
-exports.resolveAuthorLinks = function(str) {
-    var author;
-    var matches = str.match(/^\s?([\s\S]+)\b\s+<(\S+@\S+)>\s?$/);
-    if (matches && matches.length === 3) {
-        author = '<a href="mailto:' + matches[2] + '">' + htmlsafe(matches[1]) + '</a>';
-    }
-    else {
-        author = htmlsafe(str);
-    }
-
-    return author;
-};
-
 /**
  * Get a longname's filename if one has been registered; otherwise, generate a unique filename, then
  * register the filename.
@@ -623,17 +696,14 @@ function getFilename(longname) {
 /** Turn a doclet into a URL. */
 exports.createLink = function(doclet) {
     var url = '';
-    var longname;
+    var longname = doclet.longname;
     var filename;
     
     if ( containers.indexOf(doclet.kind) !== -1 || isModuleFunction(doclet) ) {
-        longname = doclet.longname;
         url = getFilename(longname);
     }
     else {
-        longname = doclet.longname;
         filename = getFilename(doclet.memberof || exports.globalName);
-        
         url = filename + '#' + getNamespace(doclet.kind) + doclet.name;
     }
     

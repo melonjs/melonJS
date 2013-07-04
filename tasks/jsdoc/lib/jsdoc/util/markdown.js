@@ -15,10 +15,14 @@ var parsers = {
     /** The "[markdown-js](https://github.com/evilstreak/markdown-js)" (aka "evilstreak") parser. */
     evilstreak: "markdown",
     /**
-     * The "[GitHub-flavored Markdown](https://github.com/hegemonic/github-flavored-markdown)"
-     * parser.
+     * The "GitHub-flavored Markdown" parser.
+     * @deprecated Replaced by "marked."
      */
-    gfm: "github-flavored-markdown"
+    gfm: "marked",
+    /**
+     * The "[Marked](https://github.com/chjj/marked)" parser.
+     */
+    marked: "marked"
 };
 
 /**
@@ -50,23 +54,24 @@ function getParseFunction(parser, conf) {
     conf = conf || {};
     var parse;
 
-    if (parser === parsers.gfm) {
+    if (parser === parsers.marked) {
         parser = require(parser);
-
-        var githubConf = {
-            repoName: conf.githubRepoName
-        };
-        if (conf.githubRepoOwner && conf.githubRepoName) {
-            githubConf.nameWithOwner = conf.githubRepoOwner + "/" + conf.githubRepoName;
-        }
-
-        parser.hardwrap = !!conf.hardwrap;
-
+        parser.setOptions({
+                gfm: true,
+                tables: true,
+                breaks: false,
+                pedantic: false,
+                sanitize: true,
+                smartLists: true,
+                langPrefix: 'lang-'
+            });
         parse = function(source) {
             source = escapeUnderscores(source);
-            return parser.parse(source, githubConf);
+            return parser(source)
+                .replace(/\s+$/, '')
+                .replace(/&#39;/g, "'");
         };
-        parse._parser = parsers.gfm;
+        parse._parser = parsers.marked;
         return parse;
     } else if (parser === parsers.evilstreak) {
         parser = require(parser).markdown;
