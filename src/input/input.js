@@ -6,6 +6,37 @@
  */
 
 (function(window) {
+	
+	/**
+	 * The built in Event Object
+	 * @external Event
+	 * @see {@link https://developer.mozilla.org/en/docs/Web/API/Event|Event}
+	 */
+	 
+	 /**
+	  * Event normalized X coordinates whithin the game canvas itself<br>
+	  * <img src="images/event_coord.png"/>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameX
+	  * @type {Number}
+	  */
+	  
+	 /**
+	  * Event normalized Y coordinates whithin the game canvas itself<br>
+	  * <img src="images/event_coord.png"/>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameY
+	  * @type {Number}
+	  */
+	  
+	 /**
+	  * The unique identifier of the contact for a touch, mouse or pen <br>
+	  * (This id is also defined on non Pointer Event Compatible platform like pure mouse or iOS-like touch event) 
+	  * @memberof! external:Event#
+	  * @name external:Event#pointerId
+	  * @type {Number}
+	  * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh466123.aspx
+	  */
 
 	/**
 	 * There is no constructor function for me.input.
@@ -738,10 +769,9 @@
 		 * allows registration of event listeners on the object target. <br>
 		 * (on a touch enabled device mouse event will automatically be converted to touch event)<br>
 		 * <br>
-		 * melonJS also define an additional `gameX/gameY` property in the Event object <br>
-		 * (accessible as parameter from the callback function) <br>
-		 * that allows to get the object coordinates whithin the canvas itself<br>
-		 * <img src="images/event_coord.png"/>
+		 * melonJS defines the additional `gameX` and `gameY` properties when passing the Event object <br>
+		 * to the defined callback (see below)<br>
+		 * @see external:Event
 		 * @name registerPointerEvent
 		 * @memberOf me.input
 		 * @public
