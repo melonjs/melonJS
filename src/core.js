@@ -479,6 +479,7 @@ window.me = window.me || {};
 	/**
 	 * The built in Function Object
 	 * @external Function
+	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function|Function}
 	 */
 	
 	if (!Function.prototype.bind) {
@@ -627,6 +628,7 @@ window.me = window.me || {};
 	/**
 	 * The built in String Object
 	 * @external String
+	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String|String}
 	 */
 	
 	if(!String.prototype.trim) {  
@@ -689,6 +691,7 @@ window.me = window.me || {};
 	/**
 	 * The built in Number Object
 	 * @external Number
+	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number|Number}
 	 */
 	 
 	/**
@@ -795,6 +798,7 @@ window.me = window.me || {};
 	/**
 	 * The built in Array Object
 	 * @external Array
+	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array|Array}
 	 */
 	
 	/**
