@@ -864,7 +864,7 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function() {
-			if (window.sys.gyro) {
+			if (me.sys.gyro) {
 				if (!accelInitialized) {
 					// add a listener for the mouse
 					window.addEventListener('devicemotion', onDeviceMotion, false);
