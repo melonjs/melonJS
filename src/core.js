@@ -1567,7 +1567,7 @@ window.me = window.me || {};
 			} else {
 				// normal loop, game isn't paused
 				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-			`		// check for previous rect before position change
+					// check for previous rect before position change
 					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
 					// check if object is visible

@@ -58,7 +58,7 @@
 		alwaysUpdate : false,
 
 		/**
-		 * Whether to update this object when the end is paused.
+		 * Whether to update this object when the game is paused.
 		 * default value : false
 		 * @public
 		 * @type Boolean
