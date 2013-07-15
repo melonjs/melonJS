@@ -48,6 +48,26 @@
 		 * @name me.event#STATE_RESUME
 		 */		
 		obj.STATE_RESUME = "me.state.onResume";
+
+		/**
+		 * Channel Constant when the game is stopped <br>
+		 * Data passed : none <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#STATE_STOP
+		 */		
+		obj.STATE_STOP = "me.state.onStop";
+		
+		/**
+		 * Channel Constant for when the game is restarted <br>
+		 * Data passed : none <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#STATE_RESTART
+		 */		
+		obj.STATE_RESTART = "me.state.onRestart";
 		
 		/**
 		 * Channel Constant for when the game manager is initialized <br>
