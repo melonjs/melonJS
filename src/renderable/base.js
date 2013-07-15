@@ -58,6 +58,16 @@
 		alwaysUpdate : false,
 
 		/**
+		 * Whether to update this object when the end is paused.
+		 * default value : false
+		 * @public
+		 * @type Boolean
+		 * @name updateWhenPaused
+		 * @memberOf me.Renderable
+		 */
+		updateWhenPaused: false,
+
+		/**
 		 * make the renderable object persistent over level changes<br>
 		 * default value : false
 		 * @public

@@ -168,12 +168,29 @@ window.me = window.me || {};
 		stopOnAudioError : true,
 
 		/**
-		 * Specify either to pause the game when losing focus or not<br>
+		 * Specify whether to pause the game when losing focus.<br>
 		 * default value : true<br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
+
+		/**
+		 * Specify whether to unpause the game when gaining focus.<br>
+		 * default value : true<br>
+		 * @type Boolean
+		 * @memberOf me.sys
+		 */
+		unpauseOnFocus : true,
+
+		/**
+		 * Specify whether to stop the game when losing focus or not<br>
+		 * The engine restarts on focus if this is enabled.
+		 * default value : true<br>
+		 * @type Boolean
+		 * @memberOf me.sys
+		 */
+		stopOnBlur : true,
 
 		/**
 		 * Specify the rendering method for layers <br>
@@ -1527,8 +1544,13 @@ window.me = window.me || {};
 			
 			// previous rect (if any)
 			var oldRect = null;
+			// pause state
+			var isPaused = me.state.isPaused();
 			// loop through our objects
 			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+				// no update if paused and flag isn't set
+				if (isPaused && !obj.updateWhenPaused)
+					continue;
 				// check for previous rect before position change
 				oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
