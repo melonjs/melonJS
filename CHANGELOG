@@ -1,5 +1,10 @@
 Version History
 ---------------
+0.9.9
+* Core : improved game pause management (by swmuron)
+* Input : fixed accelerometer event registration when supported
+
+
 0.9.8
 * Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 * Loader : the `tps` data type has been changed to a more generic `json` data type (agmcleaod)
