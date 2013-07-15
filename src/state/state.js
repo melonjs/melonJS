@@ -370,6 +370,7 @@
 		};
 
 		/**
+		 * Resume the game loop after a pause.
 		 * @ignore
 		 */
 		function _resumeRunLoop() {
@@ -383,7 +384,7 @@
 		};
 
 		/**
-		 * Stop the loop for most screen objects
+		 * Pause the loop for most screen objects.
 		 * @ignore
 		 */
 		function _pauseRunLoop() {
@@ -564,7 +565,7 @@
 		/**
 		 * onRestart callback
 		 * @callback
-		 * @name onPause
+		 * @name onRestart
 		 * @memberOf me.state
 		 */
 		obj.onRestart = null;

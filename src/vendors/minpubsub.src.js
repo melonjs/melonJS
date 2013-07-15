@@ -55,7 +55,7 @@
 		 * @public
 		 * @constant
 		 * @type String
-		 * @name me.event#STATE_PAUSE
+		 * @name me.event#STATE_STOP
 		 */		
 		obj.STATE_STOP = "me.state.onStop";
 		
@@ -65,7 +65,7 @@
 		 * @public
 		 * @constant
 		 * @type String
-		 * @name me.event#STATE_RESUME
+		 * @name me.event#STATE_RESTART
 		 */		
 		obj.STATE_RESTART = "me.state.onRestart";
 		
