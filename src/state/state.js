@@ -358,10 +358,9 @@
 		/**
 		 * @ignore
 		 */
-		function _restartRunLoop() {
+		function _startRunLoop() {
 			// ensure nothing is running first and in valid state
 			if ((_animFrameId === -1) && (_state !== -1)) {
-
 				// reset the timer
 				me.timer.reset();
 
@@ -376,7 +375,6 @@
 		function _resumeRunLoop() {
 			// ensure game is actually paused and in valid state
 			if (_isPaused && (_state !== -1)) {
-
 				// reset the timer
 				me.timer.reset();
 
@@ -607,19 +605,6 @@
 			$.addEventListener("focus", function() {
 				// only in case we are not loading stuff
 				if (_state != obj.LOADING) {
-					if (me.sys.stopOnBlur) {
-						obj.restart(true);
-
-						// force repaint
-						me.game.repaint();
-
-						// callback?
-						if (obj.onRestart)
-							obj.onRetart();
-
-						// publish the resume notification
-						me.event.publish(me.event.STATE_RESTART);
-					}
 					// note: separate boolean so we can stay paused if user prefers
 					if (me.sys.resumeOnFocus) {
 						obj.resume(true);
@@ -630,6 +615,19 @@
 
 						// publish the resume notification
 						me.event.publish(me.event.STATE_RESUME);
+					}
+					if (me.sys.stopOnBlur) {
+						obj.restart(true);
+
+						// force repaint
+						me.game.repaint();
+
+						// callback?
+						if (obj.onRestart)
+							obj.onRestart();
+
+						// publish the resume notification
+						me.event.publish(me.event.STATE_RESTART);
 					}
 				}
 
@@ -681,7 +679,7 @@
 		 */
 		obj.restart = function(music) {
 			// restart the main loop
-			_restartRunLoop();
+			_startRunLoop();
 			// current music stop
 			if (music)
 				me.audio.resumeTrack();

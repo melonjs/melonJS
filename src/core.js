@@ -181,7 +181,7 @@ window.me = window.me || {};
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		unpauseOnFocus : true,
+		resumeOnFocus : true,
 
 		/**
 		 * Specify whether to stop the game when losing focus or not<br>
@@ -1547,24 +1547,44 @@ window.me = window.me || {};
 			// pause state
 			var isPaused = me.state.isPaused();
 			// loop through our objects
-			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				// no update if paused and flag isn't set
-				if (isPaused && !obj.updateWhenPaused)
-					continue;
-				// check for previous rect before position change
-				oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
+			if (me.state.isPaused()) {
+				// game is paused so include an extra check
+				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+					if (obj.updateWhenPaused)
+						continue;
+					// check for previous rect before position change
+					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
-				// check if object is visible
-				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getRect && api.viewport.isVisible(obj))
-				);
+					// check if object is visible
+					obj.inViewport = obj.visible && (
+						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
+					);
 
-				// update our object
-				var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
+					// update our object
+					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
 
-				// add it to the draw manager
-				drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+					// add it to the draw manager
+					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+				}
+			} else {
+				// normal loop, game isn't paused
+				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+					// check for previous rect before position change
+					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
+
+					// check if object is visible
+					obj.inViewport = obj.visible && (
+						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
+					);
+
+					// update our object
+					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
+
+					// add it to the draw manager
+					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+				}
 			}
+			
 			// update the camera/viewport
 			if (api.viewport.update(drawManager.isDirty)) {
 				drawManager.makeAllDirty();
