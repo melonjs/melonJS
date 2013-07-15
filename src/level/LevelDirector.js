@@ -116,9 +116,9 @@
 				var wasRunning = me.state.isRunning();
 
 				if (wasRunning) {
-					// pause the game loop to avoid 
+					// stop the game loop to avoid 
 					// some silly side effects
-					me.state.pause();
+					me.state.stop();
 				}
 
 				// reset the gameObject Manager (just in case!)
@@ -145,7 +145,7 @@
 				if (wasRunning) {
 					// resume the game loop if it was
 					// previously running
-					me.state.resume.defer();
+					me.state.restart.defer();
 				}
 			} else
 				throw "melonJS: no level loader defined";

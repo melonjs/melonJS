@@ -168,12 +168,29 @@ window.me = window.me || {};
 		stopOnAudioError : true,
 
 		/**
-		 * Specify either to pause the game when losing focus or not<br>
+		 * Specify whether to pause the game when losing focus.<br>
 		 * default value : true<br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
+
+		/**
+		 * Specify whether to unpause the game when gaining focus.<br>
+		 * default value : true<br>
+		 * @type Boolean
+		 * @memberOf me.sys
+		 */
+		resumeOnFocus : true,
+
+		/**
+		 * Specify whether to stop the game when losing focus or not<br>
+		 * The engine restarts on focus if this is enabled.
+		 * default value : true<br>
+		 * @type Boolean
+		 * @memberOf me.sys
+		 */
+		stopOnBlur : true,
 
 		/**
 		 * Specify the rendering method for layers <br>
@@ -1528,21 +1545,44 @@ window.me = window.me || {};
 			// previous rect (if any)
 			var oldRect = null;
 			// loop through our objects
-			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-				// check for previous rect before position change
-				oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
+			if (me.state.isPaused()) {
+				// game is paused so include an extra check
+				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+					if (obj.updateWhenPaused)
+						continue;
+					// check for previous rect before position change
+					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
 
-				// check if object is visible
-				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getRect && api.viewport.isVisible(obj))
-				);
+					// check if object is visible
+					obj.inViewport = obj.visible && (
+						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
+					);
 
-				// update our object
-				var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
+					// update our object
+					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
 
-				// add it to the draw manager
-				drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+					// add it to the draw manager
+					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+				}
+			} else {
+				// normal loop, game isn't paused
+				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+			`		// check for previous rect before position change
+					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
+
+					// check if object is visible
+					obj.inViewport = obj.visible && (
+						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
+					);
+
+					// update our object
+					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
+
+					// add it to the draw manager
+					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
+				}
 			}
+			
 			// update the camera/viewport
 			if (api.viewport.update(drawManager.isDirty)) {
 				drawManager.makeAllDirty();

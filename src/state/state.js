@@ -333,6 +333,9 @@
 		// requestAnimeFrame Id
 		var _animFrameId = -1;
 
+		// whether the game state is "paused"
+		var _isPaused = false;
+
 		// list of screenObject
 		var _screenObject = {};
 
@@ -356,15 +359,37 @@
 		 * @ignore
 		 */
 		function _startRunLoop() {
-			// ensure nothing is running first && valid state
+			// ensure nothing is running first and in valid state
 			if ((_animFrameId === -1) && (_state !== -1)) {
-
 				// reset the timer
 				me.timer.reset();
 
 				// start the main loop
 				_animFrameId = window.requestAnimationFrame(_renderFrame);
 			}
+		};
+
+		/**
+		 * Resume the game loop after a pause.
+		 * @ignore
+		 */
+		function _resumeRunLoop() {
+			// ensure game is actually paused and in valid state
+			if (_isPaused && (_state !== -1)) {
+				// reset the timer
+				me.timer.reset();
+
+				_isPaused = false;
+			}
+		};
+
+		/**
+		 * Pause the loop for most screen objects.
+		 * @ignore
+		 */
+		function _pauseRunLoop() {
+			// Set the paused boolean to stop updates on (most) entities
+			_isPaused = true;
 		};
 
 		/**
@@ -530,43 +555,101 @@
 		obj.onResume = null;
 
 		/**
+		 * onStop callback
+		 * @callback
+		 * @name onStop
+		 * @memberOf me.state
+		 */
+		obj.onStop = null;
+
+		/**
+		 * onRestart callback
+		 * @callback
+		 * @name onRestart
+		 * @memberOf me.state
+		 */
+		obj.onRestart = null;
+
+		/**
 		 * @ignore
 		 */
 		obj.init = function() {
 			// set the embedded loading screen
 			obj.set(obj.LOADING, me.loadingScreen);
 
-			// set pause action on losing focus
+			// set pause/stop action on losing focus
 			$.addEventListener("blur", function() {
 				// only in case we are not loading stuff
-				if (me.sys.pauseOnBlur && (_state != obj.LOADING)) {
-					obj.pause(true);
+				if (_state != obj.LOADING) {
+					if (me.sys.stopOnBlur) {
+						obj.stop(true);	
+
+						// callback?
+						if (obj.onStop)
+							obj.onStop();
+
+						// publish the pause notification
+						me.event.publish(me.event.STATE_STOP);
+					}
+					if (me.sys.pauseOnBlur) {
+							obj.pause(true);	
+						// callback?
+						if (obj.onPause)
+							obj.onPause();
+
+						// publish the pause notification
+						me.event.publish(me.event.STATE_PAUSE);
+					}
 				}
-				// callback?
-				if (obj.onPause)
-					obj.onPause();
-
-				// publish the pause notification
-				me.event.publish(me.event.STATE_PAUSE);
-
 			}, false);
-			// set play action on gaining focus
+			// set restart/resume action on gaining focus
 			$.addEventListener("focus", function() {
 				// only in case we are not loading stuff
-				if (me.sys.pauseOnBlur && (_state != obj.LOADING)) {
-					obj.resume(true);
+				if (_state != obj.LOADING) {
+					// note: separate boolean so we can stay paused if user prefers
+					if (me.sys.resumeOnFocus) {
+						obj.resume(true);
 
-					// force repaint
-					me.game.repaint();
+						// callback?
+						if (obj.onResume)
+							obj.onResume();
+
+						// publish the resume notification
+						me.event.publish(me.event.STATE_RESUME);
+					}
+					if (me.sys.stopOnBlur) {
+						obj.restart(true);
+
+						// force repaint
+						me.game.repaint();
+
+						// callback?
+						if (obj.onRestart)
+							obj.onRestart();
+
+						// publish the resume notification
+						me.event.publish(me.event.STATE_RESTART);
+					}
 				}
-				// callback?
-				if (obj.onResume)
-					obj.onResume();
-
-				// publish the resume notification
-				me.event.publish(me.event.STATE_RESUME);
 
 			}, false);
+
+		};
+
+		/**
+		 * Stop the current screen object.
+		 * @name stop
+		 * @memberOf me.state
+		 * @public
+		 * @function
+		 * @param {Boolean} pauseTrack pause current track on screen stop.
+		 */
+		obj.stop = function(music) {
+			// stop the main loop
+			_stopRunLoop();
+			// current music stop
+			if (music)
+				me.audio.pauseTrack();
 
 		};
 
@@ -580,7 +663,7 @@
 		 */
 		obj.pause = function(music) {
 			// stop the main loop
-			_stopRunLoop();
+			_pauseRunLoop();
 			// current music stop
 			if (music)
 				me.audio.pauseTrack();
@@ -588,7 +671,23 @@
 		};
 
 		/**
-		 * resume the resume screen object
+		 * Restart the screen object from a full stop.
+		 * @name restart
+		 * @memberOf me.state
+		 * @public
+		 * @function
+		 * @param {Boolean} resumeTrack resume current track on screen resume
+		 */
+		obj.restart = function(music) {
+			// restart the main loop
+			_startRunLoop();
+			// current music stop
+			if (music)
+				me.audio.resumeTrack();
+		};
+
+		/**
+		 * resume the screen object
 		 * @name resume
 		 * @memberOf me.state
 		 * @public
@@ -596,8 +695,8 @@
 		 * @param {Boolean} resumeTrack resume current track on screen resume
 		 */
 		obj.resume = function(music) {
-			// start the main loop
-			_startRunLoop();
+			// resume the main loop
+			_resumeRunLoop();
 			// current music stop
 			if (music)
 				me.audio.resumeTrack();
@@ -613,6 +712,18 @@
 		 */
 		obj.isRunning = function() {
 			return (_animFrameId !== -1)
+		};
+
+		/**
+		 * Return the pause state of the state manager
+		 * @name isPaused
+		 * @memberOf me.state
+		 * @public
+		 * @function
+		 * @param {Boolean} true if the game is paused
+		 */
+		obj.isPaused = function() {
+			return _isPaused;
 		};
 
 		/**
