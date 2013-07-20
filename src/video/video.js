@@ -387,7 +387,12 @@
 		 * @return {Context2D}
 		 */
 		api.getContext2d = function(canvas) {
-			var _context = canvas.getContext('2d');
+			if (navigator.isCocoonJS) {
+				// cocoonJS specific extension
+				var _context = canvas.getContext('2d', { "antialias" : me.sys.scalingInterpolation });
+			} else {
+				var _context = canvas.getContext('2d');				
+			}
 			if (!_context.canvas) {
 				_context.canvas = canvas;
 			}
