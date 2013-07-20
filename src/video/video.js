@@ -542,23 +542,6 @@
 			context.fillRect(0, 0, w, h);
 			context.restore();
 		};
-
-		/**
-		 * scale & keep canvas centered<p>
-		 * useful for zooming effect
-		 * @name scale
-		 * @memberOf me.video
-		 * @function
-		 * @param {Context2D} context Canvas context
-		 * @param {Number} scale Scaling multiplier
-		 */
-		api.scale = function(context, scale) {
-			context.translate(
-							-(((context.canvas.width * scale) - context.canvas.width) >> 1),
-							-(((context.canvas.height * scale) - context.canvas.height) >> 1));
-			context.scale(scale, scale);
-
-		};
 		
 		/**
 		 * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
