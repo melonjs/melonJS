@@ -277,9 +277,11 @@
 		 */
 		api.getPixels = function(arg) {
 			if (arg instanceof HTMLImageElement) {
-				var c = me.video.createCanvasSurface(arg.width, arg.height);
-				c.drawImage(arg, 0, 0);
-				return c.getImageData(0, 0, arg.width, arg.height);
+				var _context = me.video.getContext2d(
+					me.video.createCanvas(arg.width, arg.height)
+				);
+				_context.drawImage(arg, 0, 0);
+				return _context.getImageData(0, 0, arg.width, arg.height);
 			} else { 
 				// canvas !
 				return arg.getContext('2d').getImageData(0, 0, arg.width, arg.height);

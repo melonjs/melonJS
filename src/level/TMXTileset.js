@@ -294,9 +294,11 @@
 		//return an Image Object with the specified tile
 		getTileImage : function(tmxTile) {
 			// create a new image object
-			var image = me.video.createCanvasSurface(this.tilewidth, this.tileheight);
-			this.drawTile(image, 0, 0, tmxTile);
-			return image.canvas;
+			var _context = me.video.getContext2d(
+					me.video.createCanvas(this.tilewidth, this.tileheight)
+			);
+			this.drawTile(_context, 0, 0, tmxTile);
+			return _context.canvas;
 		},
 		
 		// e.g. getTileProperty (gid)	

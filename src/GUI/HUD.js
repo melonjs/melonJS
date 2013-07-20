@@ -198,9 +198,7 @@
 
 			// create a canvas where to draw everything
 			this.HUDCanvas = me.video.createCanvas(this.width, this.height);
-			this.HUDCanvasSurface = this.HUDCanvas.getContext('2d');
-			// set scaling interpolation filter
-			me.video.setImageSmoothing(this.HUDCanvasSurface, me.sys.scalingInterpolation);
+			this.HUDCanvasSurface = me.video.getContext2d(this.HUDCanvas);
 			
 			// this is a little hack to ensure the HUD is always the first draw
 			this.z = 999;

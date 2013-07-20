@@ -566,12 +566,16 @@
 			if (elt in imgList) {
 				if (me.sys.cacheImage === true) {
 					// build a new canvas
-					var tempCanvas = me.video.createCanvasSurface(
-							imgList[elt].width, imgList[elt].height);
+					var _context = me.video.getContext2d(
+						me.video.createCanvas(
+							imgList[elt].width, 
+							imgList[elt].height
+						)
+					);
 					// draw the image into the canvas context
-					tempCanvas.drawImage(imgList[elt], 0, 0);
+					_context.drawImage(imgList[elt], 0, 0);
 					// return our canvas
-					return tempCanvas.canvas;
+					return _context.canvas;
 				} else {
 					// return the corresponding Image object
 					return imgList[elt];

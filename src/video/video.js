@@ -267,22 +267,12 @@
 				return false;
 				
 			// get the 2D context
-			context2D = canvas.getContext('2d');
-			if (!context2D.canvas) {
-				context2D.canvas = canvas;
-			}
-			// set scaling interpolation filter
-			me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
+			context2D = api.getContext2d(canvas);
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
 				backBufferCanvas = api.createCanvas(game_width, game_height, false);
-				backBufferContext2D = backBufferCanvas.getContext('2d');
-				if (!backBufferContext2D.canvas) {
-					backBufferContext2D.canvas = backBufferCanvas;
-				}
-				// set scaling interpolation filter
-				me.video.setImageSmoothing(backBufferContext2D, me.sys.scalingInterpolation);
+				backBufferContext2D = api.getContext2d(backBufferCanvas);
 			} else {
 				backBufferCanvas = canvas;
 				backBufferContext2D = context2D;
@@ -388,20 +378,18 @@
 		};
 
 		/**
-		 * Create and return a new 2D Context
-		 * @name createCanvasSurface
+		 * Returns the 2D Context object of the given Canvas
+		 * `getContext2d` will also enable/disable antialiasing features based on global settings.
+		 * @name getContext2D
 		 * @memberOf me.video
 		 * @function
-		 * @deprecated
-		 * @param {Int} width width
-		 * @param {Int} height height
+		 * @param {Canvas}
 		 * @return {Context2D}
 		 */
-		api.createCanvasSurface = function(width, height) {
-			var _canvas = api.createCanvas(width, height, false);
-			var _context = _canvas.getContext('2d');
+		api.getContext2d = function(canvas) {
+			var _context = canvas.getContext('2d');
 			if (!_context.canvas) {
-				_context.canvas = _canvas;
+				_context.canvas = canvas;
 			}
 			me.video.setImageSmoothing(_context, me.sys.scalingInterpolation);
 			return _context;
@@ -616,7 +604,7 @@
 		 */
 		api.applyRGBFilter = function(object, effect, option) {
 			//create a output canvas using the given canvas or image size
-			var fcanvas = api.createCanvasSurface(object.width, object.height, false);
+			var _context = api.getContext2d(api.createCanvas(object.width, object.height, false));
 			// get the pixels array of the give parameter
 			var imgpix = me.utils.getPixels(object);
 			// pointer to the pixels data
@@ -660,10 +648,10 @@
 			}
 
 			// put our modified image back in the new filtered canvas
-			fcanvas.putImageData(imgpix, 0, 0);
+			_context.putImageData(imgpix, 0, 0);
 
 			// return it
-			return fcanvas;
+			return _context;
 		};
 
 		// return our api

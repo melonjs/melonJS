@@ -497,10 +497,8 @@
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-				this.layerSurface = this.layerCanvas.getContext('2d');
-				// set scaling interpolation filter
-				me.video.setImageSmoothing(this.layerSurface, me.sys.scalingInterpolation);
-					
+				this.layerSurface = me.video.getContext2d(this.layerCanvas);
+
 				// set alpha value for this layer
 				this.layerSurface.globalAlpha = this.opacity;
 			}	
@@ -539,9 +537,7 @@
 			// if pre-rendering method is use, create the offline canvas
 			if (this.preRender) {
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-				this.layerSurface = this.layerCanvas.getContext('2d');
-				// set scaling interpolation filter
-				me.video.setImageSmoothing(this.layerSurface, me.sys.scalingInterpolation);				
+				this.layerSurface = me.video.getContext2d(this.layerCanvas);
 				
 				// set alpha value for this layer
 				this.layerSurface.globalAlpha = this.opacity;
