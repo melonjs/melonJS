@@ -36,7 +36,7 @@
 	 *	
 	 *    // output something in the console
 	 *    // when the object is clicked
-	 *    onClick:function()
+	 *    onClick:function(event)
 	 *    {
 	 *       console.log("clicked!");
 	 *       // don't propagate the event
@@ -96,10 +96,10 @@
 		 * function callback for the mousedown event
 		 * @ignore
 		 */
-		clicked : function() {
+		clicked : function(event) {
 			if (this.isClickable) {
 				this.updated = true;
-				return this.onClick();
+				return this.onClick(event);
 			}
 		},
 	
@@ -111,10 +111,10 @@
 		 * @memberOf me.GUI_Object
 		 * @public
 		 * @function
+		 * @param {Event} event the event object
 		 */
-		onClick : function() {
-			
-			return true;
+		onClick : function(event) {
+			return false;
 		},
 		
 		/**
