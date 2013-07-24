@@ -44,14 +44,6 @@
 					me.event.subscribe(me.event.WINDOW_ONRESIZE, function (e) {
 						window.scrollTo(0, 1);
 					})
-
-					// Retina viewport settings
-					if (window.devicePixelRatio > 1) {
-						document.getElementById("viewport").setAttribute(
-							"content",
-							"width=device-width, initial-scale=0.5, maximum-scale=0.5, user-scalable=0"
-						);
-					}
 				}
 			});
 		</script>

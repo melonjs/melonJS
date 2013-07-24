@@ -164,6 +164,7 @@
 		var backBufferCanvas = null;
 		var backBufferContext2D = null;
 		var wrapper = null;
+
 		
 		var deferResizeId = -1;
 
@@ -172,6 +173,7 @@
 		var game_height_zoom = 0;
 		var auto_scale = false;
 		var maintainAspectRatio = true;
+		var devicePixelRatio = null;
 		
 		// max display size
 		var maxWidth = Infinity;
@@ -285,9 +287,7 @@
 			}
 			
 			// trigger an initial resize();
-			if (auto_scale) {
-				me.video.onresize(null);
-			}
+			me.video.onresize(null);
 			
 			return true;
 		};
@@ -450,39 +450,64 @@
 		};
 		
 		/**
+		 * return the device pixel ratio
+		 * @name getDevicePixelRatio
+		 * @memberOf me.video
+		 * @function
+		 */
+		api.getDevicePixelRatio = function() {
+			
+			if (devicePixelRatio===null) {
+				var _context = me.video.getScreenContext();
+				var _devicePixelRatio = window.devicePixelRatio || 1,
+					_backingStoreRatio = _context.webkitBackingStorePixelRatio ||
+										_context.mozBackingStorePixelRatio ||
+										_context.msBackingStorePixelRatio ||
+										_context.oBackingStorePixelRatio ||
+										_context.backingStorePixelRatio || 1;
+				devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
+			}
+			return devicePixelRatio;
+		};
+		
+		/**
 		 * callback for window resize event
 		 * @ignore
 		 */
 		api.onresize = function(event){
+			// default (no scaling)
+			var scaleX = 1, scaleY = 1;
+			
 			if (auto_scale) {
 				// get the parent container max size
 				var parent = me.video.getScreenCanvas().parentNode;
 				var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
 				var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
-				
-				if (deferResizeId) {
-					// cancel any previous pending resize
-					clearTimeout(deferResizeId);
-				}
 
 				if (maintainAspectRatio) {
 					// make sure we maintain the original aspect ratio
 					var designRatio = me.video.getWidth() / me.video.getHeight();
 					var screenRatio = _max_width / _max_height;
 					if (screenRatio < designRatio)
-						var scale = _max_width / me.video.getWidth();
+						scaleX = scaleY = _max_width / me.video.getWidth();
 					else
-						var scale = _max_height / me.video.getHeight();
-		
-					// update the "front" canvas size
-					deferResizeId = me.video.updateDisplaySize.defer(scale,scale);
+						scaleX = scaleY = _max_height / me.video.getHeight();
 				} else {
 					// scale the display canvas to fit with the parent container
-					deferResizeId = me.video.updateDisplaySize.defer( 
-						_max_width / me.video.getWidth(),
-						_max_height / me.video.getHeight()
-					);
+					scaleX = _max_width / me.video.getWidth();
+					scaleY = _max_height / me.video.getHeight();
 				}
+			}
+			// adjust scaling ratio based on the device pixel ratio
+			scaleX *= me.video.getDevicePixelRatio();
+			scaleY *= me.video.getDevicePixelRatio();
+			// scale if required
+			if (scaleX!==1 || scaleY !==1) {
+				if (deferResizeId) {
+					// cancel any previous pending resize
+					clearTimeout(deferResizeId);
+				}
+				deferResizeId = me.video.updateDisplaySize.defer(scaleX , scaleY);
 				return;
 			}
 			// make sure we have the correct relative canvas position cached
@@ -500,10 +525,16 @@
 		api.updateDisplaySize = function(scaleX, scaleY) {
 			// update the global scale variable
 			me.sys.scale.set(scaleX,scaleY);
+			
 			// apply the new value
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
-			
+			// adjust CSS style for High-DPI devices
+			if (me.video.getDevicePixelRatio()>1) {
+				canvas.style.width = (canvas.width / me.video.getDevicePixelRatio()) + 'px';
+				canvas.style.height = (canvas.height / me.video.getDevicePixelRatio()) + 'px';
+			}
+			 
 			// make sure we have the correct relative canvas position cached
 			me.input.offset = me.video.getPos();
 
