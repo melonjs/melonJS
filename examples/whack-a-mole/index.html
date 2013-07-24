@@ -31,6 +31,7 @@
 					// Scroll away mobile GUI
 					(function () {
 						window.scrollTo(0, 1);
+						me.video.onresize(null);
 					}).defer();
 
 					me.event.subscribe(me.event.WINDOW_ONRESIZE, function (e) {
