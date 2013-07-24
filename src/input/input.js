@@ -678,7 +678,7 @@
 			var offset = obj.offset;
 			x -= offset.left;
 			y -= offset.top;
-			var scale = me.sys.scale;
+			var scale = me.sys.scale.clone().div(me.video.getDevicePixelRatio());
 			if (scale.x != 1.0 || scale.y != 1.0) {
 				x/=scale.x;
 				y/=scale.y;
