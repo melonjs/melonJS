@@ -70,6 +70,10 @@
 		_limitwidth : 0,
 		_limitheight : 0,
 
+		// cache the screen rendering position
+		screenX : 0,
+		screenY : 0,
+
 		/** @ignore */
 		init : function(minX, minY, maxX, maxY, realw, realh) {
 			// viewport coordinates

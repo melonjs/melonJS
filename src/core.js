@@ -901,202 +901,6 @@ window.me = window.me || {};
 
 	}
 
-	/******************************************/
-	/*		OBJECT DRAWING MANAGEMENT           */
-	/*		hold & manage app/game objects		*/
-	/******************************************/
-
-	/**
-	 * a object drawing manager
-	 * only used by the game manager
-	 * @ignore
-	 */
-	var drawManager = (function() {
-		// hold public stuff in our singletong
-		var api = {};
-
-		// list of region to redraw
-		// valid for any updated object
-		var dirtyRects = [];
-
-		// cache the full screen area rect
-		var fullscreen_rect;
-
-		// list of object to redraw
-		// only valid for visible and update object
-		var dirtyObjects = [];
-		
-		var drawCount = 0;
-
-		// a flag indicating if we need a redraw
-		api.isDirty = false;
-
-		/**
-		 * init function
-		 */
-		api.reset = function() {
-			// make sure it's empty
-			dirtyRects.length = 0;
-			dirtyObjects.length = 0;
-
-			// set our cached rect to the actual screen size
-			fullscreen_rect = me.game.viewport.getRect();
-
-			// make everything dirty
-			api.makeAllDirty();
-		};
-
-		/**
-		 * add a dirty object
-		 * I should find a cleaner way to manage old/new object rect
-		 */
-		api.makeDirty = function(obj, updated, oldRect) {
-			// object updated ?
-			if (updated) {
-				// yeah some drawing job to do !
-				api.isDirty = true;
-
-				// add a dirty rect if feature enable
-				if (me.sys.dirtyRegion) {
-					// TODO : HOW DO WE MANAGE COORDINATES 
-					// OF FLOATING OBJECT'S RECTS ?
-					
-					// some stuff to optimize the amount
-					// of dirty rect would be nice here
-					// instead of adding everything :)
-					// this is for later I guess !
-					if (oldRect) {
-						// merge both rect, and add it to the list
-						// directly pass object, since anyway it inherits from rect
-						dirtyRects.push(oldRect.union(obj));
-					} else if (obj.getRect) {
-						dirtyRects.push(obj.getRect());
-					}
-				}
-			}
-
-			// if obj is in the viewport add it to the list of obj to draw
-			if (obj.inViewport) {
-				// add obj at index 0, so that we can keep
-				// our inverted loop later
-				dirtyObjects.unshift(obj);
-			}
-		};
-
-		/**
-		 * make all object dirty
-		 */
-		api.makeAllDirty = function() {
-			//empty the dirty rect list
-			dirtyRects.length = 0;
-			//and add a dirty region with the screen area size
-			dirtyRects.push(fullscreen_rect);
-			// make sure it's dirty
-			api.isDirty = true;
-			// they are maybe too much call to this function
-			// to be checked later...
-			//console.log("making everything dirty!");
-		};
-
-		/**
-		 * remove an object
-		 */
-		api.remove = function(obj) {
-			var idx = dirtyObjects.indexOf(obj);
-			if (idx !== -1) {
-				// remove the object from the list of obj to draw
-				dirtyObjects.splice(idx, 1);
-
-				// mark the object as not within the viewport
-				// so it won't be added (again) in the list object to be draw
-				obj.inViewport = false;
-
-				// and flag the area as dirty
-				api.makeDirty(obj, true);
-			}
- 		};
-		
-		/**
-		 * return the amount of draw object per frame
-		 */
-		api.getDrawCount = function() {
-			return drawCount;
- 		};
-		
-		/**
-		 * draw all dirty objects/regions
-		 */
-		api.draw = function(context) {
-			// cache viewport position vector
-			var posx = me.game.viewport.pos.x + ~~me.game.viewport.offset.x;
-			var posy = me.game.viewport.pos.y + ~~me.game.viewport.offset.y;
-						
-			// save the current context
-			context.save();
-			// translate by default to screen coordinates
-			context.translate(-posx, -posy);
-			
-			// substract the map offset to current the current pos
-			posx -= me.game.currentLevel.pos.x;
-			posy -= me.game.currentLevel.pos.y;
-			
-			// if feature disable, we only have one dirty rect (the viewport area)
-			for ( var r = dirtyRects.length, rect; r--, rect = dirtyRects[r];) {
-				// parse all objects
-				for ( var o = dirtyObjects.length, obj; o--, obj = dirtyObjects[o];) {
-					// if dirty region enabled, make sure the object is in the area to be refreshed
-					if (me.sys.dirtyRegion && obj.isSprite && !obj.overlaps(rect)) {
-						continue;
-					}
-
-					if (obj.floating===true) {
-						context.save();
-						// cancel the previous translate
-						context.translate(posx, posy);
-					}
-
-					// draw the object using the dirty area to be updated
-					obj.draw(context, rect);
-
-					if (obj.floating===true) {
-						context.restore();
-					}
-
-					drawCount++;
-				}
-				// some debug stuff
-				if (me.debug.renderDirty) {
-					rect.draw(context, "white");
-				}
-			}
-			
-			// restore initial context
-			context.restore();
-		};
-
-		/**
-		 * flush all rect
-		 */
-		api.flush = function() {
-			// only empty dirty area list if dirtyRec feature is enable
-			// allows to keep the viewport area as a default dirty rect
-			if (me.sys.dirtyRegion) {
-				dirtyRects.length = 0;
-			}
-			// empty the dirty object list
-			dirtyObjects.length = 0;
-
-			// clear the flag
-			api.isDirty = false;
-
-			// reset draw count for debug panel
-			drawCount = 0;
-		};
-
-		return api;
-
-	})();
-
 	/**
 	 * me.game represents your current game, it contains all the objects, tilemap layers,<br>
 	 * HUD information, current viewport, collision map, etc..<br>
@@ -1117,26 +921,18 @@ window.me = window.me || {};
 		// ref to the "system" context
 		var frameBuffer = null;
 
-		// hold all the objects
-		var gameObjects = [];
-
 		// flag to redraw the sprites
 		var initialized = false;
 
 		// to keep track of deferred stuff
 		var pendingRemove = null;
 		var pendingSort = null;
-		
-		/**
-		 * a default sort function
-		 * @private
-		 * @ignore
-		 */
-		var default_sort_func = function(a, b) {
-			// sort order is inverted,
-			// since we use a reverse loop for the display
-			return (b.z - a.z);
-		};
+
+		// to know when we have to refresh the display
+		var isDirty = true;
+
+		// cached value of the full screen rect
+		var fullscreen_rect;
 
 		/*---------------------------------------------
 
@@ -1159,6 +955,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.HUD = null;
+		
 		/**
 		 * a reference to the game collision Map
 		 * @public
@@ -1167,6 +964,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.collisionMap = null;
+		
 		/**
 		 * a reference to the game current level
 		 * @public
@@ -1175,6 +973,16 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.currentLevel = null;
+
+		/**
+		 * a reference to the game objects
+		 * @public
+		 * @type me.EntityContainer
+		 * @name container
+		 * @memberOf me.game
+		 */
+		api.container = null;
+
 
 		/**
 		 * default layer renderer
@@ -1251,12 +1059,22 @@ window.me = window.me || {};
 				// create a defaut viewport of the same size
 				api.viewport = new me.Viewport(0, 0, width, height);
 
+				// set our cached rect to the actual screen size
+				fullscreen_rect = me.game.viewport.getRect();
+
+				//entity container
+				api.container = new me.EntityContainer(0,0, width, height);
+
 				// get a ref to the screen buffer
 				frameBuffer = me.video.getSystemContext();
 
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);
 
+				// make display dirty by default
+				isDirty = true;
+
+				// set as initialized
 				initialized = true;
 			}
 		};
@@ -1284,9 +1102,9 @@ window.me = window.me || {};
 			if (api.viewport) {
 				api.viewport.reset();
 			}
-			
-			// also reset the draw manager
-			drawManager.reset();
+
+			// make sure the object container is empty too
+			api.container.reset();
 
 			// reset the transform matrix to the normal one
 			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
@@ -1373,10 +1191,9 @@ window.me = window.me || {};
 		 * me.game.sort();
 		 */
 		api.add = function(object, zOrder) {
-			object.z = (zOrder) ? zOrder : object.z;
 
 			// add the object in the game obj list
-			gameObjects.push(object);
+			api.container.addChildAt(object, zOrder !== undefined ? zOrder : object.z);
 
 		};
 
@@ -1411,7 +1228,7 @@ window.me = window.me || {};
 		{
 			var objList = [];
 			entityName = entityName.toLowerCase();
-			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
 				if(obj.name && obj.name.toLowerCase() === entityName) {
 					objList.push(obj);
 				}
@@ -1430,7 +1247,7 @@ window.me = window.me || {};
 		 */
 		api.getObjectCount = function()
 		{
-			return gameObjects.length;
+			return api.container.children.length;
 		};
 
 		/**
@@ -1444,7 +1261,7 @@ window.me = window.me || {};
 		 */
 		api.getDrawCount = function()
 		{
-			return drawManager.getDrawCount();
+			return api.container.drawCount;
 		};
 
 		
@@ -1461,7 +1278,7 @@ window.me = window.me || {};
 		 */
 		api.getEntityByGUID = function(guid)
 		{
-			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
 				if(obj.isEntity && obj.GUID == guid) {
 					return obj;
 				}
@@ -1484,7 +1301,7 @@ window.me = window.me || {};
 		api.getEntityByProp = function(prop, value)
 		{
 			var objList = [];
-			for (var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
+			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
 				if(obj.isEntity && obj[prop] == value) {
 					objList.push(obj);
 				}
@@ -1532,64 +1349,6 @@ window.me = window.me || {};
 			}
 		};
 
-		/**
-		 * update all objects of the game manager
-		 * @name update
-		 * @memberOf me.game
-		 * @private
-		 * @ignore
-		 * @function
-		 */
-		api.update = function() {
-			
-			// previous rect (if any)
-			var oldRect = null;
-			// loop through our objects
-			if (me.state.isPaused()) {
-				// game is paused so include an extra check
-				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-					if (obj.updateWhenPaused)
-						continue;
-					// check for previous rect before position change
-					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
-
-					// check if object is visible
-					obj.inViewport = obj.visible && (
-						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
-					);
-
-					// update our object
-					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
-
-					// add it to the draw manager
-					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
-				}
-			} else {
-				// normal loop, game isn't paused
-				for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];) {
-					// check for previous rect before position change
-					oldRect = (me.sys.dirtyRegion && obj.isSprite) ? obj.getRect() : null;
-
-					// check if object is visible
-					obj.inViewport = obj.visible && (
-						obj.floating || (obj.getRect && api.viewport.isVisible(obj))
-					);
-
-					// update our object
-					var updated = (obj.inViewport || obj.alwaysUpdate) && obj.update();
-
-					// add it to the draw manager
-					drawManager.makeDirty(obj, updated, updated ? oldRect : null);
-				}
-			}
-			
-			// update the camera/viewport
-			if (api.viewport.update(drawManager.isDirty)) {
-				drawManager.makeAllDirty();
-			}
-			
-		};
-		
 		
 		/**
 		 * remove an object
@@ -1610,23 +1369,20 @@ window.me = window.me || {};
 					target.destroy();
 				}
 
-				// remove the object from the object to draw
-				drawManager.remove(target);
-
 				// Remove the object
-				gameObjects.remove(target);
+				api.container.removeChild(target);
 				me.entityPool.freeInstance(target);
 			}
 
-			if (gameObjects.indexOf(obj) > -1) {
+			if (api.container.children.indexOf(obj) > -1) {
 				// remove the object from the object list
 				if (force===true) {
 					// force immediate object deletion
 					removeNow(obj);
 				} else {
 					// make it invisible (this is bad...)
-					obj.visible = false;
-					// else wait the end of the current loop
+					obj.visible = obj.inViewport = false;
+					// wait the end of the current loop
 					/** @ignore */
 					pendingRemove = (function (obj) {
 						removeNow(obj);
@@ -1657,17 +1413,14 @@ window.me = window.me || {};
 			}
 			
 			// inform all object they are about to be deleted
-			for (var i = gameObjects.length ; i-- ;) {
-				if (gameObjects[i].isPersistent) {
+			for (var i = api.container.children.length ; i-- ;) {
+				if (api.container.children[i].isPersistent) {
                    // don't remove persistent objects
 				   continue;
 				}
 				// remove the entity
-				api.remove(gameObjects[i], force);
+				api.remove(api.container.children[i], force);
 			}
-			// make sure it's empty there as well
-			if (force === true)
-				drawManager.flush();
 		};
 
 		/**
@@ -1694,15 +1447,16 @@ window.me = window.me || {};
 			// do nothing if there is already 
 			// a previous pending sort
 			if (pendingSort === null) {
-				// use the default sort function if
-				// the specified one is not valid
+				
 				if (typeof(sort_func) !== "function") {
-					sort_func = default_sort_func;
+					// do nothing by default, as object are
+					// automatically sorted when added
+					return;
 				}
 				/** @ignore */
 				pendingSort = (function (sort_func) {
 					// sort everything
-					gameObjects.sort(sort_func);
+					api.container.children.sort(sort_func);
 					// clear the defer id
 					pendingSort = null;
 					// make sure we redraw everything
@@ -1756,7 +1510,7 @@ window.me = window.me || {};
 				var mres = [], r = 0;
 			} 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
+			for ( var i = api.container.children.length, obj; i--, obj = api.container.children[i];)//for (var i = objlist.length; i-- ;)
 			{
 				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj!=objA))
 				{
@@ -1798,7 +1552,7 @@ window.me = window.me || {};
 				var mres = [], r = 0;
 			} 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = gameObjects.length, obj; i--, obj = gameObjects[i];)//for (var i = objlist.length; i-- ;)
+			for ( var i = api.container.children.length, obj; i--, obj = api.container.children[i];)//for (var i = objlist.length; i-- ;)
 			{
 				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj.type === type) && (obj!=objA))
 				{
@@ -1830,8 +1584,30 @@ window.me = window.me || {};
 		 */
 
 		api.repaint = function() {
-			drawManager.makeAllDirty();
+			isDirty = true;
 		};
+
+
+		/**
+		 * update all objects of the game manager
+		 * @name update
+		 * @memberOf me.game
+		 * @private
+		 * @ignore
+		 * @function
+		 */
+		api.update = function() {
+			
+			// update all objects
+			isDirty = api.container.update();
+			
+			// update the camera/viewport
+			isDirty |= api.viewport.update(isDirty);
+
+			return isDirty;
+			
+		};
+		
 
 		/**
 		 * draw all existing objects
@@ -1843,15 +1619,30 @@ window.me = window.me || {};
 		 */
 
 		api.draw = function() {
-			if (drawManager.isDirty) {
-				// draw our objects
-				drawManager.draw(frameBuffer);
+			if (isDirty) {
+				// cache viewport position vector	
+				api.viewport.screenX = api.viewport.pos.x + ~~api.viewport.offset.x;
+				api.viewport.screenY = api.viewport.pos.y + ~~api.viewport.offset.y;
+							
+				// save the current context
+				frameBuffer.save();
+				// translate by default to screen coordinates
+				frameBuffer.translate(-api.viewport.screenX, -api.viewport.screenY);
+				
+				// substract the map offset to current the current pos
+				api.viewport.screenX -= api.currentLevel.pos.x;
+				api.viewport.screenY -= api.currentLevel.pos.y;
 
+				// update all objects
+				api.container.draw(frameBuffer, fullscreen_rect);
+
+				//restore context
+				frameBuffer.restore();
+				
 				// call the viewport draw function (for effects)
-				api.viewport.draw(frameBuffer)
+				api.viewport.draw(frameBuffer);
 			}
-			// clean everything for next frame
-			drawManager.flush();
+			isDirty = false;
 		};
 
 		// return our object

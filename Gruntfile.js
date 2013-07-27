@@ -16,6 +16,7 @@ module.exports = function(grunt) {
 				'src/renderable/texturepacker.js',
 				'src/renderable/camera.js',
 				'src/entity/entity.js',
+				'src/entity/entitycontainer.js',
 				'src/state/state.js',
 				'src/loader/loadingscreen.js',
 				'src/loader/loader.js',
