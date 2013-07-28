@@ -1191,9 +1191,8 @@ window.me = window.me || {};
 		 * me.game.sort();
 		 */
 		api.add = function(object, zOrder) {
-
 			// add the object in the game obj list
-			api.container.addChildAt(object, zOrder !== undefined ? zOrder : object.z);
+			api.container.addChildAt(object, typeof(zOrder) !== undefined ? zOrder : undefined);
 
 		};
 
@@ -1227,8 +1226,9 @@ window.me = window.me || {};
 		api.getEntityByName = function(entityName)
 		{
 			var objList = [];
+			var children = api.container.children;
 			entityName = entityName.toLowerCase();
-			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
+			for (var i = children.length, obj; i--, obj = children[i];) {
 				if(obj.name && obj.name.toLowerCase() === entityName) {
 					objList.push(obj);
 				}
@@ -1278,7 +1278,8 @@ window.me = window.me || {};
 		 */
 		api.getEntityByGUID = function(guid)
 		{
-			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
+			var children = api.container.children;
+			for (var i = children.length, obj; i--, obj = children[i];) {
 				if(obj.isEntity && obj.GUID == guid) {
 					return obj;
 				}
@@ -1301,7 +1302,8 @@ window.me = window.me || {};
 		api.getEntityByProp = function(prop, value)
 		{
 			var objList = [];
-			for (var i = api.container.children.length, obj; i--, obj = api.container.children[i];) {
+			var children = api.container.children;
+			for (var i = children.length, obj; i--, obj = children[i];) {
 				if(obj.isEntity && obj[prop] == value) {
 					objList.push(obj);
 				}
@@ -1413,13 +1415,14 @@ window.me = window.me || {};
 			}
 			
 			// inform all object they are about to be deleted
-			for (var i = api.container.children.length ; i-- ;) {
-				if (api.container.children[i].isPersistent) {
+			var children = api.container.children;
+			for (var i = children.length ; i-- ;) {
+				if (children[i].isPersistent) {
                    // don't remove persistent objects
 				   continue;
 				}
 				// remove the entity
-				api.remove(api.container.children[i], force);
+				api.remove(children[i], force);
 			}
 		};
 
@@ -1509,8 +1512,9 @@ window.me = window.me || {};
 			if (multiple===true) {
 				var mres = [], r = 0;
 			} 
+			var children = api.container.children;
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = api.container.children.length, obj; i--, obj = api.container.children[i];)//for (var i = objlist.length; i-- ;)
+			for ( var i = children.length, obj; i--, obj = children[i];)//for (var i = objlist.length; i-- ;)
 			{
 				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj!=objA))
 				{
@@ -1551,8 +1555,9 @@ window.me = window.me || {};
 			if (multiple===true) {
 				var mres = [], r = 0;
 			} 
+			var children = api.container.children;
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = api.container.children.length, obj; i--, obj = api.container.children[i];)//for (var i = objlist.length; i-- ;)
+			for ( var i = children.length, obj; i--, obj = children[i];)//for (var i = objlist.length; i-- ;)
 			{
 				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj.type === type) && (obj!=objA))
 				{
@@ -1620,7 +1625,8 @@ window.me = window.me || {};
 
 		api.draw = function() {
 			if (isDirty) {
-				// cache viewport position vector	
+				// cache the viewport rendering position, so that other object
+				// can access it later (e,g. entityContainer when drawing floating objects)
 				api.viewport.screenX = api.viewport.pos.x + ~~api.viewport.offset.x;
 				api.viewport.screenY = api.viewport.pos.y + ~~api.viewport.offset.y;
 							

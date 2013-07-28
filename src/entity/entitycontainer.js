@@ -52,7 +52,8 @@
 		 * @function
 		 */
 		reset : function() {
-			//todo
+			this.children = [];
+			this.propertyToSortOn = "z";
 		},
 
 		/**
@@ -72,18 +73,18 @@
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param {me.ObjectEntity} child 
-		 * @param {Number} [index]
+		 * @param {Number} [index="Object Property based on the `me.EntityContainer.propertyToSortOn` setting"]
 		 */
 		addChildAt : function(child, index) {
 
 			var index = index;
 
-			if (index === undefined) {
+			if (typeof(index) === undefined) {
 				index = child[this.propertyToSortOn];
 			}
 
 
-			if(child.ancestor !== undefined) {
+			if(typeof(child.ancestor) !== undefined) {
 				child.ancestor.removeChild(child);
 			}
 
@@ -196,50 +197,50 @@
 
 		/**
 		 * Move the child in the group one step forward (depth).
-		 * @name moveForward
+		 * @name moveUp
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
-		moveForward : function(child) {
+		moveUp : function(child) {
 			// TODO : move one depth to the front
-			throw "melonJS (me.EntityContainer): function moveForward() not implemented";
+			throw "melonJS (me.EntityContainer): function moveUp() not implemented";
 		},
 
 		/**
 		 * Move the child in the group one step backward (depth).
-		 * @name moveBackward
+		 * @name moveDown
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
-		moveBackward : function(child) {
+		moveDown : function(child) {
 			// TODO : move one depth to the back
-			throw "melonJS (me.EntityContainer): function moveBackward() not implemented";
+			throw "melonJS (me.EntityContainer): function moveDown() not implemented";
 		},
 
 		/**
 		 * Move the child in the group to the front(depth).
-		 * @name moveToFront
+		 * @name moveToTop
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
-		moveToFront : function(child) {
+		moveToTop : function(child) {
 			// TODO : move to the top
-			throw "melonJS (me.EntityContainer): function moveToFront() not implemented";
+			throw "melonJS (me.EntityContainer): function moveToTop() not implemented";
 		},
 
 		/**
 		 * Move the child in the group to the back(depth).
-		 * @name moveToBack
+		 * @name moveToBottom
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
-		moveToBack : function(child) {
+		moveToBottom : function(child) {
 			// TODO : move to the bottom
-			throw "melonJS (me.EntityContainer): function moveToBack() not implemented";
+			throw "melonJS (me.EntityContainer): function moveToBottom() not implemented";
 		},
 
 		/**
