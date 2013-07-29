@@ -318,7 +318,10 @@
 		 */
 		draw : function(context, rect) {
 			this.drawCount = 0;			
-
+			
+			// translate to the container position
+			context.translate(this.pos.x, this.pos.y);
+			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				
 				if (obj.inViewport && obj.isRenderable) {
@@ -326,7 +329,7 @@
 					if (obj.floating==true) {
 						context.save();
 						// translate back object
-						context.translate(me.game.viewport.screenX, me.game.viewport.screenY);
+						context.translate(me.game.viewport.screenX -this.pos.x, me.game.viewport.screenY -this.pos.y);
 					}
 
 					// draw the object
@@ -339,6 +342,9 @@
 					this.drawCount++;
 				}
 			}
+			
+			// translate back to origin
+			context.translate(-this.pos.x, -this.pos.y);
 		}
 
 	});
