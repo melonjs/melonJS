@@ -13,6 +13,10 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
+	 * @param {Number} [x=0] position of the container
+	 * @param {Number} [y=0] position of the container
+	 * @param {Number} [w=me.game.viewport.width] width of the container
+	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
 
 	me.EntityContainer = me.Renderable.extend(
