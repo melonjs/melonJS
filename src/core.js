@@ -1212,31 +1212,6 @@ window.me = window.me || {};
 		};
 
 		/**
-		 * returns the list of entities with the specified name<br>
-		 * as defined in Tiled (Name field of the Object Properties)<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @name getEntityByName
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} entityName entity name
-		 * @return {me.ObjectEntity[]} Array of object entities
-		 */
-		api.getEntityByName = function(entityName)
-		{
-			var objList = [];
-			var children = api.container.children;
-			entityName = entityName.toLowerCase();
-			for (var i = children.length, obj; i--, obj = children[i];) {
-				if(obj.name && obj.name.toLowerCase() === entityName) {
-					objList.push(obj);
-				}
-			}
-			return objList;
-		};
-
-		/**
 		 * returns the amount of existing objects<br>
 		 * @name getObjectCount
 		 * @memberOf me.game
@@ -1263,7 +1238,22 @@ window.me = window.me || {};
 		{
 			return api.container.drawCount;
 		};
-
+	
+		/**
+		 * returns the list of entities with the specified name<br>
+		 * as defined in Tiled (Name field of the Object Properties)<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name getEntityByName
+		 * @memberOf me.game
+		 * @public
+		 * @function
+		 * @param {String} entityName entity name
+		 * @return {me.ObjectEntity[]} Array of object entities
+		 */
+		api.getEntityByName = function(entityName) {
+			return api.container.getEntityByProp("name", entityName);
+		};
 		
 		/**
 		 * return the entity corresponding to the specified GUID<br>
@@ -1276,18 +1266,12 @@ window.me = window.me || {};
 		 * @param {String} GUID entity GUID
 		 * @return {me.ObjectEntity} Object Entity (or null if not found)
 		 */
-		api.getEntityByGUID = function(guid)
-		{
-			var children = api.container.children;
-			for (var i = children.length, obj; i--, obj = children[i];) {
-				if(obj.isEntity && obj.GUID == guid) {
-					return obj;
-				}
-			}
-			return null;
+		api.getEntityByGUID = function(guid) {
+			var obj = api.container.getEntityByProp("GUID", guid);
+			return (obj.length>0)?obj[0]:null;
 		};
 		
-		/**
+			/**
 		 * return the entity corresponding to the property and value<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
@@ -1299,18 +1283,10 @@ window.me = window.me || {};
 		 * @param {String} value Value of the property
 		 * @return {me.ObjectEntity[]} Array of object entities
 		 */
-		api.getEntityByProp = function(prop, value)
-		{
-			var objList = [];
-			var children = api.container.children;
-			for (var i = children.length, obj; i--, obj = children[i];) {
-				if(obj.isEntity && obj[prop] == value) {
-					objList.push(obj);
-				}
-			}
-			return objList;
+		api.getEntityByProp = function(prop, value) {
+			return api.container.getEntityByProp(prop, value);
 		};
-
+		
 		/**
 		 * add a HUD obj to the game manager
 		 * @name addHUD

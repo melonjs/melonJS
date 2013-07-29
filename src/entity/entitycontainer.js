@@ -79,12 +79,12 @@
 
 			var index = index;
 
-			if (typeof(index) === undefined) {
+			if (typeof(index) === 'undefined') {
 				index = child[this.propertyToSortOn];
 			}
 
 
-			if(typeof(child.ancestor) !== undefined) {
+			if(typeof(child.ancestor) !== 'undefined') {
 				child.ancestor.removeChild(child);
 			}
 
@@ -169,7 +169,39 @@
 		getParent : function(child) {
 			return child.ancestor;
 		},
-
+		
+		/**
+		 * return the entity corresponding to the property and value<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object tree each time
+		 * @name getEntityByProp
+		 * @memberOf me.EntityContainer
+		 * @public
+		 * @function
+		 * @param {String} prop Property name
+		 * @param {String} value Value of the property
+		 * @return {me.ObjectEntity[]} Array of object entities
+		 */
+		getEntityByProp : function(prop, value)	{
+			var objList = [];	
+			// for string comparaisons
+			var _regExp = new RegExp(value, "i");
+			for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+				if (obj instanceof me.EntityContainer) {
+					objList = objList.concat(obj.getEntityByProp(prop, value));
+				} else if (obj.isEntity) {
+					if (typeof (obj[prop]) === 'string') {
+						if (obj[prop].match(_regExp)) {
+							objList.push(obj);
+						}
+					} else if (obj[prop] == value) {
+						objList.push(obj);
+					}
+				}
+			}
+			return objList;
+		},
+		
 		/**
 		 * Removes a child from the container.
 		 * @name removeChild
