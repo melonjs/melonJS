@@ -22,20 +22,37 @@
 	me.EntityContainer = me.Renderable.extend(
 		/** @scope me.EntityContainer.prototype */ {
 
-		/* The property of entity that should be used to sort on (default: "z")
+		/**
+		 * The property of entity that should be used to sort on <br>
+		 * value : "x", "y", "z" (default: me.game.propertyToSortOn)
 		 * @public
 		 * @type String
 		 * @name propertyToSortOn
 		 * @memberOf me.EntityContainer
 		 */
 		propertyToSortOn : "z",
+		
+		/** 
+		 * Specify if the entity list should be automatically sorted when adding a new child
+		 * @public
+		 * @type String
+		 * @name autoSort
+		 * @memberOf me.EntityContainer
+		 */
+		autoSort : true,
+		
+		/** 
+		 * keep track of pending sort
+		 * @private
+		 */
+		pendingSort : null,
 
 		/**
 		 * [read-only] The array of children of this container.
 		 * @property children {Array}
 		 */	
 		children : null,
-
+		
 
 		// constructor
 		init : function(x, y, width, height) {
@@ -45,70 +62,65 @@
 				width || me.game.viewport.width,  // which default value here ?
 				height || me.game.viewport.height 
 			);
-			//init the children array
-			this.children = [];
+			// reset everything
+			this.reset();
 		},
 
 		/**
-		 * reset the object.
+		 * reset the container.
 		 * @name reset
 		 * @memberOf me.EntityContainer
 		 * @function
 		 */
 		reset : function() {
 			this.children = [];
-			this.propertyToSortOn = "z";
+			// by default reuse the global me.game.setting
+			this.propertyToSortOn = me.game.propertyToSortOn;
+			this.autoSort = true;
 		},
 
 		/**
-		 * Adds a child to the container.
+		 * Add a child to the container <br>
+		 * if auto-sort is disable, the object will be appended at the bottom of the list
 		 * @name addChild
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param {me.ObjectEntity} child
 		 */
 		addChild : function(child) {
-			this.addChildAt(child, child[this.propertyToSortOn]);
-		},
-
-		/**
-		 * Adds a child to the container at a specified index. 
-		 * @name addChildAt
-		 * @memberOf me.EntityContainer
-		 * @function
-		 * @param {me.ObjectEntity} child 
-		 * @param {Number} [index="Object Property based on the `me.EntityContainer.propertyToSortOn` setting"]
-		 */
-		addChildAt : function(child, index) {
-
-			var index = index;
-
-			if (typeof(index) === 'undefined') {
-				index = child[this.propertyToSortOn];
-			}
-
-
 			if(typeof(child.ancestor) !== 'undefined') {
 				child.ancestor.removeChild(child);
 			}
 
 			child.ancestor = this;
-			child.childIndex = index;
 			
-			//reuse index
-			index =0;
-
-			for (var i=0, l=this.children.length; i < l; i++) {
-				// the list is indexed using the childIndex property
-				// update/draw loop are inverted, so test sith "<"
-				if (this.children[i].childIndex < child.childIndex) {
-					break;
+			this.children[this.children.length] = child;
+			
+			this.sort(this.autoSort===false);
+		},
+		
+		/**
+		 * Add a child to the container at the specified index<br>
+		 * (the list won't be sorted after insertion)
+		 * @name addChildAt
+		 * @memberOf me.EntityContainer
+		 * @function
+		 * @param {me.ObjectEntity} child
+		 */
+		addChildAt : function(child, index) {
+			if((index >= 0) && (index < this.children.length)) {
+				
+				if(typeof(child.ancestor) !== 'undefined') {
+					child.ancestor.removeChild(child);
 				}
-				index++;
-			}
-
-			this.children.splice(index, 0, child);
+				
+				child.ancestor = this;
+				
+				this.children.splice(index, 0, child);
 			
+			} else {
+				throw "melonJS (me.EntityContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
+			}
 		},
 
 		/**
@@ -120,14 +132,11 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		swapChildren : function(child, child2) {
-			var index = this.children.indexOf( child );
-			var index2 = this.children.indexOf( child2 );
+			var index = this.getChildIndex( child );
+			var index2 = this.getChildIndex( child2 );
 			
 			if ((index !== -1) && (index2 !== -1)) {
 				
-				// swap the indexes..
-				child.childIndex = child2.childIndex;
-				child2.childIndex = child.childIndex;
 				// swap the positions..
 				this.children[index] = child2;
 				this.children[index2] = child;
@@ -148,8 +157,19 @@
 			if((index >= 0) && (index < this.children.length)) {
 				return this.children[index];
 			} else {
-				throw "melonJS (me.EntityContainer): " + child + " Both the supplied entities must be a child of the caller " + this;
+				throw "melonJS (me.EntityContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
 			}
+		},
+		
+		/**
+		 * Returns the index of the Child
+		 * @name getChildAt
+		 * @memberOf me.EntityContainer
+		 * @function
+		 * @param {me.ObjectEntity} child
+		 */
+		getChildIndex : function(child) {
+			return this.children.indexOf( child );
 		},
 
 		/**
@@ -222,10 +242,6 @@
 
 				this.children.splice( index, 1 );
 			
-				// update indexes!
-				for(var i=index,j=this.children.length; i<j; i++) {
-					this.children[i].childIndex -= 1;
-				}
 			} else {
 				throw "melonJS (me.EntityContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
@@ -278,6 +294,69 @@
 			// TODO : move to the bottom
 			throw "melonJS (me.EntityContainer): function moveToBottom() not implemented";
 		},
+		
+		/**
+		 * Sort the object list in the current container
+		 * @name add
+		 * @memberOf me.game
+		 * @param {me.ObjectEntity} obj Object to be added
+		 * @param {int} [z="obj.z"] z index
+		 * @public
+		 * @function
+		 * @example
+		 * // create a new object
+		 * var obj = new MyObject(x, y)
+		 * // add the object and give the z index of the current object
+		 * me.game.add(obj, this.z);
+		 * // sort the object list (to ensure the object is properly displayed)
+		 * me.game.sort();
+		 */
+		sort : function(force) {
+			if (force===false && this.autoSort===true) {
+				// don't do anything if not an "internal" call
+				// and if auto-sort is enabled
+				return;
+			}
+			// do nothing if there is already 
+			// a previous pending sort
+			if (this.pendingSort === null) {
+				/** @ignore */
+				this.pendingSort = (function (self) {
+					// sort everything
+					self.children.sort(self["_sort"+self.propertyToSortOn.toUpperCase()]);
+					// clear the defer id
+					self.pendingSort = null;
+					// make sure we redraw everything
+					me.game.repaint();
+				}).defer(this);
+			};
+		},
+		
+		/**
+		 * Z Sorting function
+		 * @private
+		 */
+		_sortZ : function (a,b) {
+			return (b.z) - (a.z);
+		},
+		/**
+		 * X Sorting function
+		 * @private
+		 */
+		_sortX : function(a,b) { 
+			/* ? */
+			var result = (b.z - a.z);
+			return (result ? result : ((b.pos && b.pos.x) - (a.pos && a.pos.x)) || 0);
+		},
+		/**
+		 * Y Sorting function
+		 * @private
+		 */
+		_sortY : function(a,b) {
+			var result = (b.z - a.z);
+			return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
+		},
+		
 
 		/**
 		 * @private

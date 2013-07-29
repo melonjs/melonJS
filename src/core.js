@@ -926,7 +926,6 @@ window.me = window.me || {};
 
 		// to keep track of deferred stuff
 		var pendingRemove = null;
-		var pendingSort = null;
 
 		// to know when we have to refresh the display
 		var isDirty = true;
@@ -984,6 +983,16 @@ window.me = window.me || {};
 		api.container = null;
 
 
+		/**
+		 * The property of should be used when sorting entities <br>
+		 * value : "x", "y", "z" (default: "z")
+		 * @public
+		 * @type String
+		 * @name propertyToSortOn
+		 * @memberOf me.game
+		 */
+		api.propertyToSortOn = "z";
+		
 		/**
 		 * default layer renderer
 		 * @private
@@ -1123,6 +1132,10 @@ window.me = window.me || {};
 		 */
 
 		api.loadTMXLevel = function(level) {
+			
+			// disable auto-sort
+			api.container.autoSort = false;
+			
 			// load our map
 			api.currentLevel = level;
 
@@ -1163,7 +1176,10 @@ window.me = window.me || {};
 			}
 
 			// sort all our stuff !!
-			api.sort();
+			api.container.sort();
+			
+			// re-enable auto-sort
+			api.container.autoSort = true;
 
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
@@ -1185,14 +1201,15 @@ window.me = window.me || {};
 		 * @example
 		 * // create a new object
 		 * var obj = new MyObject(x, y)
-		 * // add the object and give the z index of the current object
+		 * // add the object and force the z index of the current object
 		 * me.game.add(obj, this.z);
-		 * // sort the object list (to ensure the object is properly displayed)
-		 * me.game.sort();
 		 */
 		api.add = function(object, zOrder) {
+			if (typeof(zOrder) !== 'undefined') {
+				object.z = zOrder;
+			}
 			// add the object in the game obj list
-			api.container.addChildAt(object, typeof(zOrder) !== undefined ? zOrder : undefined);
+			api.container.addChild(object);
 
 		};
 
@@ -1271,7 +1288,7 @@ window.me = window.me || {};
 			return (obj.length>0)?obj[0]:null;
 		};
 		
-			/**
+		/**
 		 * return the entity corresponding to the property and value<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
@@ -1385,9 +1402,10 @@ window.me = window.me || {};
 				clearTimeout(pendingRemove);
 				pendingRemove = null;
 			}
-			if (pendingSort) {
-				clearTimeout(pendingSort);
-				pendingSort = null;
+			// TODO : not good !
+			if (api.container.pendingSort) {
+				clearTimeout(api.container.pendingSort);
+				api.container.pendingSort = null;
 			}
 			
 			// inform all object they are about to be deleted
@@ -1403,45 +1421,21 @@ window.me = window.me || {};
 		};
 
 		/**
-		 * <p>Sort all the game objects.</p>
-		 * <p>Normally all objects loaded through the LevelDirector are automatically sorted.
-		 * this function is however usefull if you create and add object during the game,
-		 * or need a specific sorting algorithm.<p>
+		 * Manually trigger the sort all the game objects.</p>
+		 * Since version 0.9.9, all objects are automatically sorted, <br>
+		 * except if a container autoSort property is set to false.
 		 * @name sort
 		 * @memberOf me.game
 		 * @public
 		 * @function
-		 * @param {Function} [sort_func="sorted on z property value"] sort function
 		 * @example
-		 * // user defined sort funtion (Z sort based on Y value)
-		 * function mySort(a, b) {
-		 *    var result = (b.z - a.z);
-		 *    return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
-		 * } </p>
+		 * // change the default sort property
+		 * me.game.propertyToSortOn = "y";
 		 * // call me.game.sort with our sorting function
-		 * me.game.sort(mySort);
+		 * me.game.sort();
 		 */
-
-		api.sort = function(sort_func) {
-			// do nothing if there is already 
-			// a previous pending sort
-			if (pendingSort === null) {
-				
-				if (typeof(sort_func) !== "function") {
-					// do nothing by default, as object are
-					// automatically sorted when added
-					return;
-				}
-				/** @ignore */
-				pendingSort = (function (sort_func) {
-					// sort everything
-					api.container.children.sort(sort_func);
-					// clear the defer id
-					pendingSort = null;
-					// make sure we redraw everything
-					me.game.repaint();
-				}).defer(sort_func);
-			};
+		api.sort = function() {
+			api.container.sort();
 		};
 
 		/**
