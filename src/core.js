@@ -72,11 +72,11 @@ window.me = window.me || {};
 		 */
 		localStorage : (typeof($.localStorage) === 'object'),
 		/**
-		 * Browser Gyroscopic Motion Event capabilities (read-only) <br>
+		 * Browser accelerometer capabilities (read-only) <br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		gyro : (($.DeviceMotionEvent !== undefined) || (typeof (Windows.Devices.Sensors.Accelerometer) === 'function')),
+		hasAccelerometer : false,
 
 		/**
 		 * Browser Base64 decoding capability (read-only) <br>
@@ -878,6 +878,14 @@ window.me = window.me || {};
 		
 		// detect platform
 		me.sys.isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i);
+
+		// accelerometer detection
+		me.sys.hasAccelerometer = (
+			(window.DeviceMotionEvent !== undefined) || (
+				(window.Windows !== undefined) && 
+				(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
+			)
+		);
 
 		// init the FPS counter if needed
 		me.timer.init();

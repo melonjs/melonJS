@@ -871,11 +871,11 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function () {
-		    if ($.sys.gyro) {
+		    if (me.sys.hasAccelerometer) {
 		        if (!accelInitialized) {
-		            if (typeof Windows == 'undefined') {
-		                // add a listener for the mouse
-		                $.addEventListener('devicemotion', onDeviceMotion, false);
+		            if (typeof(Windows) == 'undefined') {
+		                // add a listener for the devicemotion event
+		                window.addEventListener('devicemotion', onDeviceMotion, false);
 		            } else {
 		                // On Windows 8 Device
 		                var accelerometer = Windows.Devices.Sensors.Accelerometer.getDefault();
@@ -906,7 +906,7 @@
 		    if (accelInitialized) {
 		        if (typeof Windows == 'undefined') {
 		            // add a listener for the mouse
-		            $.removeEventListener('devicemotion', onDeviceMotion, false);
+		            window.removeEventListener('devicemotion', onDeviceMotion, false);
 		        } else {
                     // On Windows 8 Devices
 		            var accelerometer = Windows.Device.Sensors.Accelerometer.getDefault();
