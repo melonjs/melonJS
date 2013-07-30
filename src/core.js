@@ -893,9 +893,6 @@ window.me = window.me || {};
 		// create a new map reader instance
 		me.mapReader = new me.TMXMapReader();
 
-		// create a default loading screen
-		me.loadingScreen = new me.DefaultLoadingScreen();
-
 		// init the App Manager
 		me.state.init();
 

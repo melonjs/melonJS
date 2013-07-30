@@ -575,7 +575,7 @@
 		 */
 		obj.init = function() {
 			// set the embedded loading screen
-			obj.set(obj.LOADING, me.loadingScreen);
+			obj.set(obj.LOADING, new me.DefaultLoadingScreen());
 
 			// set pause/stop action on losing focus
 			$.addEventListener("blur", function() {
