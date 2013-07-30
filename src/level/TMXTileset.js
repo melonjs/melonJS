@@ -340,10 +340,11 @@
 		 * @ignore
 		 */
 		getTileOffsetX : function(tileId) {
-			if (this.tileXOffset[tileId] == null) {
+			var offset = this.tileXOffset[tileId];
+			if (offset == undefined) {
 				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
 			}
-			return this.tileXOffset[tileId];
+			return offset;
 		},
 		
 		/**
@@ -351,10 +352,11 @@
 		 * @ignore
 		 */
 		getTileOffsetY : function(tileId) {
-			if (this.tileYOffset[tileId] == null) {
+			var offset = this.tileYOffset[tileId];
+			if (offset == undefined) {
 				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
 			}
-			return this.tileYOffset[tileId];
+			return offset;
 		},
 
 
