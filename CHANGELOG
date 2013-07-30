@@ -6,6 +6,7 @@ Version History
 * Loader : refreshed the loader a bit, and added the new logo
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
+* Input : added support for windows 8 accelerometer (Halfman)
 
 
 0.9.8
