@@ -236,17 +236,28 @@
 		removeChild : function(child) {
 			var index = this.children.indexOf( child );
 			
-			if ( index !== -1 )  {
+			if ( child.isPersistent ) {
+				// dont remove persistent objects
+				return;
+			}
+			
+			if  ( index !== -1 ) {
 				
 				child.ancestor = undefined;
-
+				
+				if (typeof (child.destroy) == 'function') {
+					child.destroy();
+				}
+				
 				this.children.splice( index, 1 );
+				
+				me.entityPool.freeInstance(child);
 			
 			} else {
 				throw "melonJS (me.EntityContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
 		},
-
+		
 		/**
 		 * Move the child in the group one step forward (depth).
 		 * @name moveUp
@@ -355,6 +366,23 @@
 		_sortY : function(a,b) {
 			var result = (b.z - a.z);
 			return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
+		},
+		
+		
+		/**
+		 * Destroy function<br>
+		 * @ignore
+		 */
+		destroy : function() {
+			// cancel any sort operation
+			if (this.pendingSort) {
+				clearTimeout(this.pendingSort);
+				this.pendingSort = null;
+			}
+			// delete all childs
+			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+				this.removeChild(obj);
+			}
 		},
 		
 

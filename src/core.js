@@ -1356,31 +1356,18 @@ window.me = window.me || {};
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 */
 		api.remove = function(obj, force) {
-
-			// Private function to do object removal
-			function removeNow(target) {
-				// notify the object it will be destroyed
-				if (target.destroy) {
-					target.destroy();
-				}
-
-				// Remove the object
-				api.container.removeChild(target);
-				me.entityPool.freeInstance(target);
-			}
-
-			if (api.container.children.indexOf(obj) > -1) {
+			if (api.container.hasChild(obj)) {
 				// remove the object from the object list
 				if (force===true) {
 					// force immediate object deletion
-					removeNow(obj);
+					api.container.removeChild(obj);
 				} else {
 					// make it invisible (this is bad...)
 					obj.visible = obj.inViewport = false;
 					// wait the end of the current loop
 					/** @ignore */
 					pendingRemove = (function (obj) {
-						removeNow(obj);
+						me.game.container.removeChild(obj);
 						pendingRemove = null;
 					}).defer(obj);
 				}
@@ -1402,22 +1389,8 @@ window.me = window.me || {};
 				clearTimeout(pendingRemove);
 				pendingRemove = null;
 			}
-			// TODO : not good !
-			if (api.container.pendingSort) {
-				clearTimeout(api.container.pendingSort);
-				api.container.pendingSort = null;
-			}
-			
-			// inform all object they are about to be deleted
-			var children = api.container.children;
-			for (var i = children.length ; i-- ;) {
-				if (children[i].isPersistent) {
-                   // don't remove persistent objects
-				   continue;
-				}
-				// remove the entity
-				api.remove(children[i], force);
-			}
+			// destroy all objects in the root container
+			api.container.destroy();
 		};
 
 		/**
