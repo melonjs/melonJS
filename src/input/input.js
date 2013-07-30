@@ -312,8 +312,14 @@
 		 * @private		
 		 */
 		function onDeviceMotion(e) {
-			// Accelerometer information  
-			obj.accel = e.accelerationIncludingGravity;
+		    if (e.reading) {
+		        obj.accel.x = e.reading.accelerationX;
+		        obj.accel.y = e.reading.accelerationY;
+		        obj.accel.z = e.reading.accelerationZ;
+		    } else {
+		        // Accelerometer information  
+		        obj.accel = e.accelerationIncludingGravity;
+		    }
 		}
 
 		/*---------------------------------------------
@@ -725,9 +731,22 @@
 		 */
 		obj.watchAccelerometer = function() {
 			if ($.sys.gyro) {
-				if (!accelInitialized) {
-					// add a listener for the mouse
-					$.addEventListener('devicemotion', onDeviceMotion, false);
+			    if (!accelInitialized) {
+			        if (typeof Windows == 'undefined') {
+			            // add a listener for the mouse
+			            $.addEventListener('devicemotion', onDeviceMotion, false);
+			        } else {
+			            // On Windows 8 Device
+			            var accelerometer = Windows.Devices.Sensors.Accelerometer.getDefault();
+			            if (accelerometer) {
+                            // Capture event at regular intervals
+			                var minInterval = accelerometer.minimumReportInterval;
+			                var Interval = minInterval > 15 ? minInterval : 25;
+			                accelerometer.reportInterval = Interval;
+
+			                accelerometer.addEventListener('readingchanged', onDeviceMotion, false);
+			            }
+			        }
 					accelInitialized = true;
 				}
 				return true;
@@ -742,10 +761,16 @@
 		 * @function
 		 */
 		obj.unwatchAccelerometer = function() {
-			if (accelInitialized) {
-				// add a listener for the mouse
-				$.removeEventListener('devicemotion', onDeviceMotion, false);
-				accelInitialized = false;
+		    if (accelInitialized) {
+		        if (typeof Windows == 'undefined') {
+		            // add a listener for the mouse
+		            $.removeEventListener('devicemotion', onDeviceMotion, false);
+		        } else {
+		            var accelerometer = Windows.Device.Sensors.Accelerometer.getDefault();
+
+		            accelerometer.removeEventListener('readingchanged', onDeviceMotion, false);
+		        }
+		        accelInitialized = false;
 			}
 		};
 
