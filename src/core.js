@@ -76,7 +76,7 @@ window.me = window.me || {};
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		gyro : ($.DeviceMotionEvent !== undefined),
+		gyro : (($.DeviceMotionEvent !== undefined) || (typeof (Windows.Devices.Sensors.Accelerometer) === 'function')),
 
 		/**
 		 * Browser Base64 decoding capability (read-only) <br>
