@@ -1105,15 +1105,12 @@ window.me = window.me || {};
 			}
 
 			// remove all objects
-			api.removeAll(true);
+			api.removeAll();
 
 			// reset the viewport to zero ?
 			if (api.viewport) {
 				api.viewport.reset();
 			}
-
-			// make sure the object container is empty too
-			api.container.reset();
 
 			// reset the transform matrix to the normal one
 			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
@@ -1383,7 +1380,7 @@ window.me = window.me || {};
 		 * @public
 		 * @function
 		 */
-		api.removeAll = function(force) {
+		api.removeAll = function() {
 			//cancel any pending tasks
 			if (pendingRemove) {
 				clearTimeout(pendingRemove);

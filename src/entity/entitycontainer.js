@@ -62,22 +62,13 @@
 				width || me.game.viewport.width,  // which default value here ?
 				height || me.game.viewport.height 
 			);
-			// reset everything
-			this.reset();
-		},
-
-		/**
-		 * reset the container.
-		 * @name reset
-		 * @memberOf me.EntityContainer
-		 * @function
-		 */
-		reset : function() {
 			this.children = [];
 			// by default reuse the global me.game.setting
 			this.propertyToSortOn = me.game.propertyToSortOn;
 			this.autoSort = true;
+
 		},
+
 
 		/**
 		 * Add a child to the container <br>
@@ -236,10 +227,6 @@
 		removeChild : function(child) {
 			var index = this.children.indexOf( child );
 			
-			if ( child.isPersistent ) {
-				// dont remove persistent objects
-				return;
-			}
 			
 			if  ( index !== -1 ) {
 				
@@ -381,7 +368,10 @@
 			}
 			// delete all childs
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-				this.removeChild(obj);
+				// don't remove it if a persistent object
+				if ( !obj.isPersistent ) {
+					this.removeChild(obj);
+				}	
 			}
 		},
 		
