@@ -128,6 +128,10 @@
 			
 			if ((index !== -1) && (index2 !== -1)) {
 				
+				// swap z index
+				var _z = child.z;
+				child.z = child2.z;
+				child2.z = _z;
 				// swap the positions..
 				this.children[index] = child2;
 				this.children[index2] = child;
@@ -246,51 +250,67 @@
 		},
 		
 		/**
-		 * Move the child in the group one step forward (depth).
+		 * Move the child in the group one step forward (z depth).
 		 * @name moveUp
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
 		moveUp : function(child) {
-			// TODO : move one depth to the front
-			throw "melonJS (me.EntityContainer): function moveUp() not implemented";
+			var childIndex = getChildIndex(child);
+			if (childIndex -1 >= 0) {
+				// note : we use an inverted loop
+				this.swapChildren(child, this.getChildAt(childIndex-1));
+			}
 		},
 
 		/**
-		 * Move the child in the group one step backward (depth).
+		 * Move the child in the group one step backward (z depth).
 		 * @name moveDown
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
 		moveDown : function(child) {
-			// TODO : move one depth to the back
-			throw "melonJS (me.EntityContainer): function moveDown() not implemented";
+			var childIndex = getChildIndex(child);
+			if (childIndex+1 < this.children.length) {
+				// note : we use an inverted loop
+				this.swapChildren(child, this.getChildAt(childIndex+1));
+			}
 		},
 
 		/**
-		 * Move the child in the group to the front(depth).
+		 * Move the specified child to the top(z depth).
 		 * @name moveToTop
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
 		moveToTop : function(child) {
-			// TODO : move to the top
-			throw "melonJS (me.EntityContainer): function moveToTop() not implemented";
+			var childIndex = getChildIndex(child);
+			if (childIndex > 0) {
+				// note : we use an inverted loop
+				this.splice(0, 0, this.splice(childIndex, 1)[0]);
+				// increment our child z value based on the previous child depth
+				child.z = this.children[1].z + 1;
+			}
 		},
 
 		/**
-		 * Move the child in the group to the back(depth).
+		 * Move the specified child the bottom (z depth).
 		 * @name moveToBottom
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param  {me.ObjectEntity} child
 		 */
 		moveToBottom : function(child) {
-			// TODO : move to the bottom
-			throw "melonJS (me.EntityContainer): function moveToBottom() not implemented";
+			var childIndex = getChildIndex(child);
+			if (childIndex < (this.children.length -1)) {
+				// note : we use an inverted loop
+				this.splice((this.children.length -1), 0, this.splice(childIndex, 1)[0]);
+				// increment our child z value based on the next child depth
+				child.z = this.children[(this.children.length -2)].z - 1;
+			}
 		},
 		
 		/**
