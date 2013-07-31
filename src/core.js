@@ -881,8 +881,8 @@ window.me = window.me || {};
 
 		// accelerometer detection
 		me.sys.hasAccelerometer = (
-			(window.DeviceMotionEvent !== undefined) || (
-				(window.Windows !== undefined) && 
+			(typeof (window.DeviceMotionEvent) !== 'undefined') || (
+				(typeof (window.Windows) !== 'undefined') && 
 				(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
 			)
 		);
