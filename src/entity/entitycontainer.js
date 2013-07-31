@@ -394,44 +394,29 @@
 				}	
 			}
 		},
-		
 
 		/**
 		 * @private
 		 */
 		update : function() {
 			var isDirty = false;
-
-			if (me.state.isPaused()) {
-				// game is paused so include an extra check
-				for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-					if (obj.updateWhenPaused)
-						continue;
+			var isPaused = me.state.isPaused();
 			
-					// check if object is visible
-					obj.inViewport = obj.visible && (
-						obj.floating || (obj.getRect && me.game.viewport.isVisible(obj))
-					);
-
-					// update our object
-					isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+				if (isPaused && (!obj.updateWhenPaused)) {
+					// skip this object
+					continue;
 				}
-			} else {
-				// normal loop, game isn't paused
-				for ( var i = this.children.length, obj; i--, obj =this.children[i];) {
-
-					// check if object is visible
-					obj.inViewport = obj.visible && (
-						obj.floating || (obj.getRect && me.game.viewport.isVisible(obj))
-					);
-
-					// update our object
-					isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
-				}
+	
+				// check if object is visible
+				obj.inViewport = obj.visible && (
+					obj.floating || (obj.getRect && me.game.viewport.isVisible(obj))
+				);
+				
+				// update our object
+				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
 			}
-
 			return isDirty;
-
 		},
 
 		/**
