@@ -85,7 +85,7 @@
 
 			child.ancestor = this;
 			
-			this.children[this.children.length] = child;
+			this.children.push(child);
 			
 			this.sort(this.autoSort===false);
 		},
