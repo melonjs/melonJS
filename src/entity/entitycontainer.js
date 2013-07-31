@@ -179,13 +179,13 @@
 		},
 
 		/**
-		 * Returns the Parent of the specified Child
-		 * @name getParent
+		 * Returns the container of the specified Child
+		 * @name getContainer
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @return {me.ObjectEntity}
+		 * @return {me.EntityContainer}
 		 */
-		getParent : function(child) {
+		getContainer : function(child) {
 			return child.ancestor;
 		},
 		
