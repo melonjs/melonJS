@@ -8,7 +8,7 @@
 (function(window) {
 
 	/**
-	 * EntityContainer represents a collection of entity objects.<br>	 *
+	 * EntityContainer represents a collection of entity objects
 	 * @class
 	 * @extends me.Renderable
 	 * @memberOf me
@@ -48,8 +48,8 @@
 		pendingSort : null,
 
 		/**
-		 * [read-only] The array of children of this container.
-		 * @property children {Array}
+		 * The array of children of this container.
+		 * @private
 		 */	
 		children : null,
 		
@@ -115,7 +115,7 @@
 		},
 
 		/**
-		 * Swaps the depth of 2 childs
+		 * Swaps the position (z depth) of 2 childs
 		 * @name swapChildren
 		 * @memberOf me.EntityContainer
 		 * @function
@@ -226,7 +226,7 @@
 		 * @name removeChild
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param  {me.ObjectEntity} child
+		 * @param {me.ObjectEntity} child
 		 */
 		removeChild : function(child) {
 			var index = this.children.indexOf( child );
@@ -254,7 +254,7 @@
 		 * @name moveUp
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param  {me.ObjectEntity} child
+		 * @param {me.ObjectEntity} child
 		 */
 		moveUp : function(child) {
 			var childIndex = getChildIndex(child);
@@ -269,7 +269,7 @@
 		 * @name moveDown
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param  {me.ObjectEntity} child
+		 * @param {me.ObjectEntity} child
 		 */
 		moveDown : function(child) {
 			var childIndex = getChildIndex(child);
@@ -284,7 +284,7 @@
 		 * @name moveToTop
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param  {me.ObjectEntity} child
+		 * @param {me.ObjectEntity} child
 		 */
 		moveToTop : function(child) {
 			var childIndex = getChildIndex(child);
@@ -301,7 +301,7 @@
 		 * @name moveToBottom
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param  {me.ObjectEntity} child
+		 * @param {me.ObjectEntity} child
 		 */
 		moveToBottom : function(child) {
 			var childIndex = getChildIndex(child);
@@ -314,20 +314,11 @@
 		},
 		
 		/**
-		 * Sort the object list in the current container
-		 * @name add
-		 * @memberOf me.game
-		 * @param {me.ObjectEntity} obj Object to be added
-		 * @param {int} [z="obj.z"] z index
+		 * Manually trigger the sort of all the objects in the container</p>
+		 * @name sort
+		 * @memberOf me.EntityContainer
 		 * @public
 		 * @function
-		 * @example
-		 * // create a new object
-		 * var obj = new MyObject(x, y)
-		 * // add the object and give the z index of the current object
-		 * me.game.add(obj, this.z);
-		 * // sort the object list (to ensure the object is properly displayed)
-		 * me.game.sort();
 		 */
 		sort : function(force) {
 			if (force===false && this.autoSort===true) {
