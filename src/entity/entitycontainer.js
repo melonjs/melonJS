@@ -326,12 +326,21 @@
 				// and if auto-sort is enabled
 				return;
 			}
+						
 			// do nothing if there is already 
 			// a previous pending sort
 			if (this.pendingSort === null) {
+				// trigger other child container sort function (if any)
+				for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+					if (obj instanceof me.EntityContainer) {
+						// note : this will generate one defered sorting function
+						// for each existing containe
+						obj.sort(force);
+					}
+				}
 				/** @ignore */
 				this.pendingSort = (function (self) {
-					// sort everything
+					// sort everything in this container
 					self.children.sort(self["_sort"+self.sortOn.toUpperCase()]);
 					// clear the defer id
 					self.pendingSort = null;
