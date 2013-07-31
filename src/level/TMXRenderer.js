@@ -86,13 +86,13 @@
 		 * draw the tile map
 		 * @ignore
 		 */
-		drawTileLayer : function(context, layer, viewport, rect) {
+		drawTileLayer : function(context, layer, rect) {
 			// get top-left and bottom-right tile position
-			var start = this.pixelToTileCoords(viewport.x + rect.pos.x, 
-											   viewport.y + rect.pos.y).floorSelf();
+			var start = this.pixelToTileCoords(rect.pos.x, 
+											   rect.pos.y).floorSelf();
 				
-			var end = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + this.tilewidth, 
-											 viewport.y + rect.pos.y + rect.height + this.tileheight).ceilSelf();
+			var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth, 
+											 rect.pos.y + rect.height + this.tileheight).ceilSelf();
 			
 			//ensure we are in the valid tile range
 			end.x = end.x > this.cols ? this.cols : end.x;
@@ -206,17 +206,17 @@
 		 * draw the tile map
 		 * @ignore
 		 */
-		drawTileLayer : function(context, layer, viewport, rect) {
+		drawTileLayer : function(context, layer, rect) {
 		
 			// cache a couple of useful references
 			var tileset = layer.tileset;
 			var offset  = tileset.tileoffset;
 
 			// get top-left and bottom-right tile position
-			var rowItr = this.pixelToTileCoords(viewport.x + rect.pos.x - tileset.tilewidth, 
-											    viewport.y + rect.pos.y - tileset.tileheight).floorSelf();
-			var TileEnd = this.pixelToTileCoords(viewport.x + rect.pos.x + rect.width + tileset.tilewidth, 
-												 viewport.y + rect.pos.y + rect.height + tileset.tileheight).ceilSelf();
+			var rowItr = this.pixelToTileCoords(rect.pos.x - tileset.tilewidth, 
+											    rect.pos.y - tileset.tileheight).floorSelf();
+			var TileEnd = this.pixelToTileCoords(rect.pos.x + rect.width + tileset.tilewidth, 
+												 rect.pos.y + rect.height + tileset.tileheight).ceilSelf();
 			
 			var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y);
 			

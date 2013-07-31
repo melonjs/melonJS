@@ -935,9 +935,6 @@ window.me = window.me || {};
 		// to know when we have to refresh the display
 		var isDirty = true;
 
-		// cached value of the full screen rect
-		var fullscreen_rect;
-
 		/*---------------------------------------------
 
 			PUBLIC STUFF
@@ -1072,9 +1069,6 @@ window.me = window.me || {};
 
 				// create a defaut viewport of the same size
 				api.viewport = new me.Viewport(0, 0, width, height);
-
-				// set our cached rect to the actual screen size
-				fullscreen_rect = me.game.viewport.getRect();
 
 				//entity container
 				api.container = new me.EntityContainer(0,0, width, height);
@@ -1584,8 +1578,10 @@ window.me = window.me || {};
 				api.viewport.screenX -= api.currentLevel.pos.x;
 				api.viewport.screenY -= api.currentLevel.pos.y;
 
-				// update all objects
-				api.container.draw(frameBuffer, fullscreen_rect);
+				// update all objects, 
+				// specifying the viewport as the rectangle area to redraw
+
+				api.container.draw(frameBuffer, api.viewport);
 
 				//restore context
 				frameBuffer.restore();

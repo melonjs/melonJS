@@ -26,9 +26,8 @@
 			
 			this.opacity = 1.0;
 			
-			this.floating = true;
-			
-			this.parent(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
+			this.parent(new me.Vector2d(0, 0), Infinity, Infinity);
+
 		},
 
 		/**
@@ -482,7 +481,7 @@
 			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
 			
 			// check for the correct rendering method
-			if (this.preRender === undefined) {
+			if (typeof (this.preRender) == 'undefined') {
 				this.preRender = me.sys.preRender;
 			}
 			
@@ -495,7 +494,7 @@
 
 
 			// if pre-rendering method is use, create the offline canvas
-			if (this.preRender) {
+			if (this.preRender === true) {
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = me.video.getContext2d(this.layerCanvas);
 
@@ -523,10 +522,10 @@
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, layer);
 			
 			// check for the correct rendering method
-			if (this.preRender === undefined) {
+			if (typeof (this.preRender) == 'undefined') {
 				this.preRender = me.sys.preRender;
 			}
-			
+
 			// detect if the layer is a collision map
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
@@ -535,7 +534,7 @@
 			}
 
 			// if pre-rendering method is use, create the offline canvas
-			if (this.preRender) {
+			if (this.preRender === true) {
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = me.video.getContext2d(this.layerCanvas);
 				
@@ -750,10 +749,7 @@
 		 * @ignore
 		 */
 		draw : function(context, rect) {
-			
-			// get a reference to the viewport
-			var vpos = me.game.viewport.pos;
-			
+						
 			// use the offscreen canvas
 			if (this.preRender) {
 			
@@ -762,11 +758,11 @@
 			
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 
-								  vpos.x + rect.pos.x, //sx
-								  vpos.y + rect.pos.y, //sy
+								  rect.pos.x, //sx
+								  rect.pos.y, //sy
 								  width, height,    //sw, sh
-								  vpos.x + rect.pos.x, //dx
-								  vpos.y + rect.pos.y, //dy
+								  rect.pos.x, //dx
+								  rect.pos.y, //dy
 								  width, height);   //dw, dh
 			}
 			// dynamically render the layer
@@ -776,7 +772,7 @@
 				context.globalAlpha = this.opacity;
 
 				// draw the layer
-				this.renderer.drawTileLayer(context, this, vpos, rect);
+				this.renderer.drawTileLayer(context, this, rect);
 				
 				// restore context to initial state
 				context.globalAlpha = _alpha;
