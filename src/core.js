@@ -993,10 +993,10 @@ window.me = window.me || {};
 		 * value : "x", "y", "z" (default: "z")
 		 * @public
 		 * @type String
-		 * @name propertyToSortOn
+		 * @name sortOn
 		 * @memberOf me.game
 		 */
-		api.propertyToSortOn = "z";
+		api.sortOn = "z";
 		
 		/**
 		 * default layer renderer
@@ -1405,8 +1405,8 @@ window.me = window.me || {};
 		 * @function
 		 * @example
 		 * // change the default sort property
-		 * me.game.propertyToSortOn = "y";
-		 * // call me.game.sort with our sorting function
+		 * me.game.sortOn = "y";
+		 * // manuallly call me.game.sort with our sorting function
 		 * me.game.sort();
 		 */
 		api.sort = function() {

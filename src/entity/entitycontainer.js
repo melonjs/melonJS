@@ -24,13 +24,13 @@
 
 		/**
 		 * The property of entity that should be used to sort on <br>
-		 * value : "x", "y", "z" (default: me.game.propertyToSortOn)
+		 * value : "x", "y", "z" (default: me.game.sortOn)
 		 * @public
 		 * @type String
-		 * @name propertyToSortOn
+		 * @name sortOn
 		 * @memberOf me.EntityContainer
 		 */
-		propertyToSortOn : "z",
+		sortOn : "z",
 		
 		/** 
 		 * Specify if the entity list should be automatically sorted when adding a new child
@@ -64,7 +64,7 @@
 			);
 			this.children = [];
 			// by default reuse the global me.game.setting
-			this.propertyToSortOn = me.game.propertyToSortOn;
+			this.sortOn = me.game.sortOn;
 			this.autoSort = true;
 
 		},
@@ -341,7 +341,7 @@
 				/** @ignore */
 				this.pendingSort = (function (self) {
 					// sort everything
-					self.children.sort(self["_sort"+self.propertyToSortOn.toUpperCase()]);
+					self.children.sort(self["_sort"+self.sortOn.toUpperCase()]);
 					// clear the defer id
 					self.pendingSort = null;
 					// make sure we redraw everything
