@@ -342,7 +342,7 @@
 		getTileOffsetX : function(tileId) {
 			var offset = this.tileXOffset[tileId];
 			if (typeof(offset) === 'undefined') {
-				this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
+				offset = this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
 			}
 			return offset;
 		},
@@ -354,7 +354,7 @@
 		getTileOffsetY : function(tileId) {
 			var offset = this.tileYOffset[tileId];
 			if (typeof(offset) === 'undefined') {
-				this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
+				offset = this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)	* ~~(tileId / this.hTileCount);
 			}
 			return offset;
 		},
