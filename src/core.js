@@ -149,15 +149,6 @@ window.me = window.me || {};
 		cacheImage : false,
 
 		/**
-		 * Enable dirtyRegion Feature <br>
-		 * default value : false<br>
-		 * (!) not fully implemented/supported (!)
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		dirtyRegion : false,
-
-		/**
 		 * Specify either to stop on audio loading error or not<br>
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>

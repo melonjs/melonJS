@@ -45,7 +45,7 @@
 		visible : false,
 		
 		// minimum melonJS version expected
-		version : "0.9.8",
+		version : "0.9.9",
 
 		/** @private */
 		init : function(showKey, hideKey) {
@@ -151,9 +151,8 @@
 			// check the clickable areas
 			if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
 				me.debug.renderHitBox = !me.debug.renderHitBox;
-			} else if (this.area.renderDirty.containsPoint(e.gameX, e.gameY)) {
-				me.debug.renderDirty = !me.debug.renderDirty;
-			} else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
+			}
+			else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
 				me.debug.renderCollisionMap = !me.debug.renderCollisionMap;
 				/*
 					// not working with dynamic rendering since
@@ -228,7 +227,7 @@
 			this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]", 	100, 5);
 			this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]", 	100, 18);
 			
-			this.font.draw(context, "?dirtyRect  ["+ (me.debug.renderDirty?"x":" ") +"]", 		200, 5);
+			this.font.draw(context, "?dirtyRect  [ ]",	200, 5);
 			this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 18);
 
 			// draw the memory heap usage 
