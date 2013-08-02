@@ -35,7 +35,7 @@
 		/** 
 		 * Specify if the entity list should be automatically sorted when adding a new child
 		 * @public
-		 * @type String
+		 * @type Boolean
 		 * @name autoSort
 		 * @memberOf me.EntityContainer
 		 */
@@ -43,13 +43,13 @@
 		
 		/** 
 		 * keep track of pending sort
-		 * @private
+		 * @ignore
 		 */
 		pendingSort : null,
 
 		/**
 		 * The array of children of this container.
-		 * @private
+		 * @ignore
 		 */	
 		children : null,
 		
@@ -172,6 +172,7 @@
 		 * @name hasChild
 		 * @memberOf me.EntityContainer
 		 * @function
+		 * @param {String} value Value of the property
 		 * @return {Boolean}
 		 */
 		hasChild : function(child) {
@@ -183,6 +184,7 @@
 		 * @name getContainer
 		 * @memberOf me.EntityContainer
 		 * @function
+		 * @param {me.ObjectEntity} child
 		 * @return {me.EntityContainer}
 		 */
 		getContainer : function(child) {
@@ -200,6 +202,11 @@
 		 * @param {String} prop Property name
 		 * @param {String} value Value of the property
 		 * @return {me.ObjectEntity[]} Array of object entities
+		 * @example
+		 * // get the first entity called "mainPlayer" in a specific container :
+		 * ent = myContainer.getEntityByProp("name", "mainPlayer");
+		 * // or query the whole world :
+		 * ent = me.game.world.getEntityByProp("name", "mainPlayer");
 		 */
 		getEntityByProp : function(prop, value)	{
 			var objList = [];	
@@ -424,14 +431,14 @@
 		
 		/**
 		 * Z Sorting function
-		 * @private
+		 * @ignore
 		 */
 		_sortZ : function (a,b) {
 			return (b.z) - (a.z);
 		},
 		/**
 		 * X Sorting function
-		 * @private
+		 * @ignore
 		 */
 		_sortX : function(a,b) { 
 			/* ? */
@@ -440,7 +447,7 @@
 		},
 		/**
 		 * Y Sorting function
-		 * @private
+		 * @ignore
 		 */
 		_sortY : function(a,b) {
 			var result = (b.z - a.z);
@@ -468,7 +475,7 @@
 		},
 
 		/**
-		 * @private
+		 * @ignore
 		 */
 		update : function() {
 			var isDirty = false;
@@ -492,7 +499,7 @@
 		},
 
 		/**
-		 * @private
+		 * @ignore
 		 */
 		draw : function(context, rect) {
 			this.drawCount = 0;			

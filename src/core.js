@@ -1219,38 +1219,11 @@ window.me = window.me || {};
 		};
 
 		/**
-		 * returns the amount of existing objects<br>
-		 * @name getObjectCount
-		 * @memberOf me.game
-		 * @protected
- 		 * @ignore
-		 * @function
-		 * @return {Number} the amount of object
-		 */
-		api.getObjectCount = function()
-		{
-			return api.world.children.length;
-		};
-
-		/**
-		 * returns the amount of object being drawn per frame<br>
-		 * @name getDrawCount
-		 * @memberOf me.game
-		 * @protected
- 		 * @ignore
-		 * @function
-		 * @return {Number} the amount of object draws
-		 */
-		api.getDrawCount = function()
-		{
-			return api.world.drawCount;
-		};
-	
-		/**
 		 * returns the list of entities with the specified name<br>
 		 * as defined in Tiled (Name field of the Object Properties)<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
+		 * @deprecated use me.game.world.getEntityByProp();
 		 * @name getEntityByName
 		 * @memberOf me.game
 		 * @public
@@ -1266,6 +1239,7 @@ window.me = window.me || {};
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
+		 * @deprecated use me.game.world.getEntityByProp();
 		 * @name getEntityByGUID
 		 * @memberOf me.game
 		 * @public
@@ -1282,6 +1256,7 @@ window.me = window.me || {};
 		 * return the entity corresponding to the property and value<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
+		 * @deprecated use me.game.world.getEntityByProp();
 		 * @name getEntityByProp
 		 * @memberOf me.game
 		 * @public
@@ -1387,6 +1362,7 @@ window.me = window.me || {};
 		 * Manually trigger the sort all the game objects.</p>
 		 * Since version 0.9.9, all objects are automatically sorted, <br>
 		 * except if a container autoSort property is set to false.
+		 * @deprecated use me.game.world.sort();
 		 * @name sort
 		 * @memberOf me.game
 		 * @public
@@ -1403,6 +1379,7 @@ window.me = window.me || {};
 
 		/**
 		 * Checks if the specified entity collides with others entities.
+		 * @deprecated use me.game.world.collide();
 		 * @name collide
 		 * @memberOf me.game
 		 * @public
@@ -1444,6 +1421,7 @@ window.me = window.me || {};
 
 		/**
 		 * Checks if the specified entity collides with others entities of the specified type.
+		 * @deprecated use me.game.world.collideType();
 		 * @name collideType
 		 * @memberOf me.game
 		 * @public
