@@ -220,8 +220,8 @@
 		    context.globalAlpha = 1.0;
 
 			// # entities / draw
-			this.font.draw(context, "#objects : " + me.game.getObjectCount(), 5, 5);
-			this.font.draw(context, "#draws   : " + me.game.getDrawCount(), 5, 18);
+			this.font.draw(context, "#objects : " + me.game.world.children.length, 5, 5);
+			this.font.draw(context, "#draws   : " + me.game.world.world.drawCount, 5, 18);
 			
 			// debug checkboxes
 			this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]", 	100, 5);
