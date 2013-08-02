@@ -967,13 +967,14 @@ window.me = window.me || {};
 		api.currentLevel = null;
 
 		/**
-		 * a reference to the game objects
+		 * a reference to the game world <br>
+		 * a world is a virtual environment containing all the game objects
 		 * @public
 		 * @type me.EntityContainer
-		 * @name container
+		 * @name world
 		 * @memberOf me.game
 		 */
-		api.container = null;
+		api.world = null;
 
 
 		/**
@@ -1061,8 +1062,10 @@ window.me = window.me || {};
 				// create a defaut viewport of the same size
 				api.viewport = new me.Viewport(0, 0, width, height);
 
-				//entity container
-				api.container = new me.EntityContainer(0,0, width, height);
+				//the root object of our world is an entity container
+				api.world = new me.EntityContainer(0,0, width, height);
+				// give it a name
+				api.world.name = 'rootContainer';
 
 				// get a ref to the screen buffer
 				frameBuffer = me.video.getSystemContext();
@@ -1121,7 +1124,7 @@ window.me = window.me || {};
 		api.loadTMXLevel = function(level) {
 			
 			// disable auto-sort
-			api.container.autoSort = false;
+			api.world.autoSort = false;
 			
 			// load our map
 			api.currentLevel = level;
@@ -1163,10 +1166,10 @@ window.me = window.me || {};
 			}
 
 			// sort all our stuff !!
-			api.container.sort();
+			api.world.sort();
 			
 			// re-enable auto-sort
-			api.container.autoSort = true;
+			api.world.autoSort = true;
 
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
@@ -1196,7 +1199,7 @@ window.me = window.me || {};
 				object.z = zOrder;
 			}
 			// add the object in the game obj list
-			api.container.addChild(object);
+			api.world.addChild(object);
 
 		};
 
@@ -1226,7 +1229,7 @@ window.me = window.me || {};
 		 */
 		api.getObjectCount = function()
 		{
-			return api.container.children.length;
+			return api.world.children.length;
 		};
 
 		/**
@@ -1240,7 +1243,7 @@ window.me = window.me || {};
 		 */
 		api.getDrawCount = function()
 		{
-			return api.container.drawCount;
+			return api.world.drawCount;
 		};
 	
 		/**
@@ -1256,7 +1259,7 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity[]} Array of object entities
 		 */
 		api.getEntityByName = function(entityName) {
-			return api.container.getEntityByProp("name", entityName);
+			return api.world.getEntityByProp("name", entityName);
 		};
 		
 		/**
@@ -1271,7 +1274,7 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity} Object Entity (or null if not found)
 		 */
 		api.getEntityByGUID = function(guid) {
-			var obj = api.container.getEntityByProp("GUID", guid);
+			var obj = api.world.getEntityByProp("GUID", guid);
 			return (obj.length>0)?obj[0]:null;
 		};
 		
@@ -1288,7 +1291,7 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity[]} Array of object entities
 		 */
 		api.getEntityByProp = function(prop, value) {
-			return api.container.getEntityByProp(prop, value);
+			return api.world.getEntityByProp(prop, value);
 		};
 		
 		/**
@@ -1343,18 +1346,18 @@ window.me = window.me || {};
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 */
 		api.remove = function(obj, force) {
-			if (api.container.hasChild(obj)) {
+			if (api.world.hasChild(obj)) {
 				// remove the object from the object list
 				if (force===true) {
 					// force immediate object deletion
-					api.container.removeChild(obj);
+					api.world.removeChild(obj);
 				} else {
 					// make it invisible (this is bad...)
 					obj.visible = obj.inViewport = false;
 					// wait the end of the current loop
 					/** @ignore */
 					pendingRemove = (function (obj) {
-						me.game.container.removeChild(obj);
+						me.game.world.removeChild(obj);
 						pendingRemove = null;
 					}).defer(obj);
 				}
@@ -1377,7 +1380,7 @@ window.me = window.me || {};
 				pendingRemove = null;
 			}
 			// destroy all objects in the root container
-			api.container.destroy();
+			api.world.destroy();
 		};
 
 		/**
@@ -1395,7 +1398,7 @@ window.me = window.me || {};
 		 * me.game.sort();
 		 */
 		api.sort = function() {
-			api.container.sort();
+			api.world.sort();
 		};
 
 		/**
@@ -1436,7 +1439,7 @@ window.me = window.me || {};
 		 * }
 		 */
 		api.collide = function(objA, multiple) {
-			return api.container.collide (objA, multiple);
+			return api.world.collide (objA, multiple);
 		};
 
 		/**
@@ -1451,7 +1454,7 @@ window.me = window.me || {};
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 */
 		api.collideType = function(objA, type, multiple) {
-			return api.container.collideType (objA, type, multiple);
+			return api.world.collideType (objA, type, multiple);
 		};
 
 		/**
@@ -1478,7 +1481,7 @@ window.me = window.me || {};
 		api.update = function() {
 			
 			// update all objects
-			isDirty = api.container.update();
+			isDirty = api.world.update();
 			
 			// update the camera/viewport
 			isDirty |= api.viewport.update(isDirty);
@@ -1516,7 +1519,7 @@ window.me = window.me || {};
 				// update all objects, 
 				// specifying the viewport as the rectangle area to redraw
 
-				api.container.draw(frameBuffer, api.viewport);
+				api.world.draw(frameBuffer, api.viewport);
 
 				//restore context
 				frameBuffer.restore();
