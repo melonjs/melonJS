@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/melonjs/melonJS.png)](https://waffle.io/melonjs/melonJS)  
 melonJS - a fresh & lightweight HTML5 game engine
 ========================================================================
 
