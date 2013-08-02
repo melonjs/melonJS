@@ -1436,35 +1436,7 @@ window.me = window.me || {};
 		 * }
 		 */
 		api.collide = function(objA, multiple) {
-			var res;
-			// make sure we have a boolean
-			multiple = multiple===true ? true : false;
-			if (multiple===true) {
-				var mres = [], r = 0;
-			} 
-			var children = api.container.children;
-			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = children.length, obj; i--, obj = children[i];)//for (var i = objlist.length; i-- ;)
-			{
-				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj!=objA))
-				{
-					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
-					if (res.x != 0 || res.y != 0) {
-						// notify the object
-						obj.onCollision.call(obj, res, objA);
-						// return the type (deprecated)
-						res.type = obj.type;
-						// return a reference of the colliding object
-						res.obj  = obj;
-						// stop here if we don't look for multiple collision detection
-						if (!multiple) {
-							return res;
-						}
-						mres[r++] = res;
-					}
-				}
-			}
-			return multiple?mres:null;
+			return api.container.collide (objA, multiple);
 		};
 
 		/**
@@ -1474,40 +1446,12 @@ window.me = window.me || {};
 		 * @public
 		 * @function
 		 * @param {me.ObjectEntity} obj Object to be tested for collision
-		 * @param {String} type Entity type to be tested for collision
+		 * @param {String} type Entity type to be tested for collision (null to disable type check)
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 */
 		api.collideType = function(objA, type, multiple) {
-			var res;
-			// make sure we have a boolean
-			multiple = multiple===true ? true : false;
-			if (multiple===true) {
-				var mres = [], r = 0;
-			} 
-			var children = api.container.children;
-			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
-			for ( var i = children.length, obj; i--, obj = children[i];)//for (var i = objlist.length; i-- ;)
-			{
-				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj.type === type) && (obj!=objA))
-				{
-					res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
-					if (res.x != 0 || res.y != 0) {
-						// notify the object
-						obj.onCollision.call(obj, res, objA);
-						// return the type (deprecated)
-						res.type = obj.type;
-						// return a reference of the colliding object
-						res.obj  = obj;
-						// stop here if we don't look for multiple collision detection
-						if (!multiple) {
-							return res;
-						}
-						mres[r++] = res;
-					}
-				}
-			}
-			return multiple?mres:null;
+			return api.container.collideType (objA, type, multiple);
 		};
 
 		/**

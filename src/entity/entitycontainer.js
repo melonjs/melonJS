@@ -314,6 +314,78 @@
 		},
 		
 		/**
+		 * Checks if the specified entity collides with others entities in this container
+		 * @name collideType
+		 * @memberOf me.EntityContainer
+		 * @public
+		 * @function
+		 * @param {me.ObjectEntity} obj Object to be tested for collision
+		 * @param {Boolean} [multiple=false] check for multiple collision
+		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+		 */
+		collide : function(objA, multiple) {
+			return this.collideType(objA, null, multiple);
+		},
+		
+		/**
+		 * Checks if the specified entity collides with others entities in this container
+		 * @name collideType
+		 * @memberOf me.EntityContainer
+		 * @public
+		 * @function
+		 * @param {me.ObjectEntity} obj Object to be tested for collision
+		 * @param {String} [type=undefined] Entity type to be tested for collision
+		 * @param {Boolean} [multiple=false] check for multiple collision
+		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+		 */
+		collideType : function(objA, type, multiple) {
+			var res;
+			// make sure we have a boolean
+			multiple = multiple===true ? true : false;
+			if (multiple===true) {
+				var mres = [];
+			} 
+
+			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
+			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+			
+				if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable && (obj!=objA) && (!type || (obj.type === type))) {
+					
+					// recursivly check through
+					if (obj instanceof me.EntityContainer) {
+					
+						res = obj.collideType(objA, type, multiple); 
+						if (multiple) {
+							mres.concat(res);
+						} else if (res) {
+							// the child container returned collision information
+							return res;
+						}
+						
+					} else {
+			
+						res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
+						
+						if (res.x != 0 || res.y != 0) {
+							// notify the object
+							obj.onCollision.call(obj, res, objA);
+							// return the type (deprecated)
+							res.type = obj.type;
+							// return a reference of the colliding object
+							res.obj = obj;
+							// stop here if we don't look for multiple collision detection
+							if (!multiple) {
+								return res;
+							}
+							mres.push(res);
+						}
+					}
+				}
+			}
+			return multiple?mres:null;
+		},
+		
+		/**
 		 * Manually trigger the sort of all the objects in the container</p>
 		 * @name sort
 		 * @memberOf me.EntityContainer
