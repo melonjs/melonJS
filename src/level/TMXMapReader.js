@@ -418,7 +418,7 @@
    
 		readObjectGroup: function(map, data, z) {
 			var name = this.TMXParser.getStringAttribute(data, me.TMX_TAG_NAME);
-			var group = new me.TMXOBjectGroup();
+			var group = new me.TMXObjectGroup();
 			group.initFromXML(name, data, map.tilesets, z);
 			return group;
 		}
@@ -567,7 +567,7 @@
 		},
 		
 		readObjectGroup: function(map, data, z) {
-			var group = new me.TMXOBjectGroup();
+			var group = new me.TMXObjectGroup();
 			group.initFromJSON(data[me.TMX_TAG_NAME], data, map.tilesets, z);
 			return group;
 		}

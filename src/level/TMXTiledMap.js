@@ -119,8 +119,11 @@
 		},
 		
 		/**
-		 * return the specified object group
-		 * @ignore	
+		 * return the corresponding object group definition
+		 * @name me.TMXTileMap#getObjectGroupByName
+		 * @public
+		 * @function
+		 * @return {me.TMXObjectGroup} group
 		 */
 		getObjectGroupByName : function(name) {
 			var objectGroup = null;
@@ -136,8 +139,11 @@
 		},
 
 		/**
-		 * return all the object group
-		 * @ignore		
+		 * return all the existing object group definition
+		 * @name me.TMXTileMap#getObjectGroups
+		 * @public
+		 * @function
+		 * @return {me.TMXObjectGroup[]} Array of Groups
 		 */
 		getObjectGroups : function() {
 			return this.objectGroups;

@@ -11,18 +11,77 @@
 (function($) {
 	
 	/**
-	 * TMX Group Object
+	 * TMX Object Group <br>
+	 * contains the object group definition as defined in Tiled. <br>
+	 * note : object group definition is translated into the virtual `me.game.world` using `me.EntityContainer`.
+	 * @see me.EntityContainer
 	 * @class
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @ignore
 	 */
-	me.TMXOBjectGroup = Object.extend(
-	{
-
+	me.TMXObjectGroup = Object.extend({
 		
-		// constructor from XML content
+		/**
+		 * group name
+		 * @public
+		 * @type String
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		name : null,
+		
+		/**
+		 * group width
+		 * @public
+		 * @type Number
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		width : 0,
+		
+		/**
+		 * group height
+		 * @public
+		 * @type Number
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		height : 0,
+		
+		/**
+		 * group visibility state
+		 * @public
+		 * @type Boolean
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		visible : false,
+		
+		/**
+		 * group z order
+		 * @public
+		 * @type Number
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		z : 0,
+		
+		/**
+		 * group objects list definition
+		 * @see me.TMXObject
+		 * @public
+		 * @type Array
+		 * @name name
+		 * @memberOf me.TMXObjectGroup
+		 */
+		objects : [],
+
+		/**
+		 * constructor from XML content
+		 * @ignore
+		 * @function
+		 */
 		initFromXML : function(name, tmxObjGroup, tilesets, z) {
 			
 			this.name    = name;
@@ -39,13 +98,17 @@
 			
 			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
 			for ( var i = 0; i < data.length; i++) {
-				var object = new me.TMXOBject();
+				var object = new me.TMXObject();
 				object.initFromXML(data[i], tilesets, z);
 				this.objects.push(object);
 			}
 		},
 		
-		// constructor from XML content
+		/**
+		 * constructor from JSON content
+		 * @ignore
+		 * @function
+		 */
 		initFromJSON : function(name, tmxObjGroup, tilesets, z) {
 			var self = this;
 			
@@ -61,7 +124,7 @@
 			
 			// parse all TMX objects
 			tmxObjGroup["objects"].forEach(function(tmxObj) {
-				var object = new me.TMXOBject();
+				var object = new me.TMXObject();
 				object.initFromJSON(tmxObj, tilesets, z);
 				self.objects.push(object);
 			});
@@ -77,26 +140,133 @@
 			this.objects = null;
 		},
 		
+		/**
+		 * return the object count
+		 * @ignore
+		 * @function
+		 */
 		getObjectCount : function() {
 			return this.objects.length;
 		},
 
+		/**
+		 * returns the object at the specified index
+		 * @ignore
+		 * @function
+		 */
 		getObjectByIndex : function(idx) {
 			return this.objects[idx];
 		}
 	});
 
 	/**
-	 * a TMX Object
+	 * a TMX Object defintion, as defined in Tiled. <br>
+	 * note : object definition are translated into the virtual `me.game.world` using `me.ObjectEntity`.
+	 * @see me.ObjectEntity
 	 * @class
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @ignore
 	 */
 
-	me.TMXOBject = Object.extend(
-	{
+	me.TMXObject = Object.extend({
+
+		/**
+		 * object name
+		 * @public
+		 * @type String
+		 * @name name
+		 * @memberOf me.TMXObject
+		 */
+		name : null, 
+		
+		/**
+		 * object x position
+		 * @public
+		 * @type Number
+		 * @name x
+		 * @memberOf me.TMXObject
+		 */
+		x : 0,
+
+		/**
+		 * object y position
+		 * @public
+		 * @type Number
+		 * @name y
+		 * @memberOf me.TMXObject
+		 */
+		y : 0,
+
+		/**
+		 * object width
+		 * @public
+		 * @type Number
+		 * @name width
+		 * @memberOf me.TMXObject
+		 */
+		width : 0,
+
+		/**
+		 * object height
+		 * @public
+		 * @type Number
+		 * @name height
+		 * @memberOf me.TMXObject
+		 */
+		height : 0,
+		
+		/**
+		 * object z order
+		 * @public
+		 * @type Number
+		 * @name z
+		 * @memberOf me.TMXObject
+		 */
+		z : 0,
+
+		/**
+		 * object gid value
+		 * when defined the object is a tiled object
+		 * @public
+		 * @type Number
+		 * @name gid
+		 * @memberOf me.TMXObject
+		 */
+		gid : undefined,
+
+		/**
+		 * if true, the object is a polygone
+		 * @public
+		 * @type Boolean
+		 * @name isPolygon
+		 * @memberOf me.TMXObject
+		 */
+		isPolygon : false,
+		
+		/**
+		 * f true, the object is a polygone
+		 * @public
+		 * @type Boolean
+		 * @name isPolyline
+		 * @memberOf me.TMXObject
+		 */
+		isPolyline : false,
+		
+		/**
+		 * object point list (for polygone and polyline)
+		 * @public
+		 * @type Vector2d[]
+		 * @name points
+		 * @memberOf me.TMXObject
+		 */
+		points : undefined,
+
+		/**
+		 * constructor from XML content
+		 * @ignore
+		 * @function
+		 */
 		initFromXML :  function(tmxObj, tilesets, z) {
 			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
 			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
@@ -116,6 +286,7 @@
 				if (!polygon.length) {
 					polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
 					this.isPolygon = false;
+					this.isPolyline = true;
 				}
 
 				if (polygon.length) {
@@ -136,6 +307,12 @@
 			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
 		},
 		
+
+		/**
+		 * constructor from JSON content
+		 * @ignore
+		 * @function
+		 */
 		initFromJSON :  function(tmxObj, tilesets, z) {
 			
 			
@@ -177,6 +354,11 @@
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
 		},
 		
+		/**
+		 * set the object image (for Tiled Object)
+		 * @ignore
+		 * @function
+		 */
 		setImage : function(gid, tilesets) {
 			// get the corresponding tileset
 			var tileset = tilesets.getTilesetByGid(this.gid);
@@ -195,6 +377,11 @@
 			this.image = tileset.getTileImage(tmxTile);
 		},
 		
+		/**
+		 * getObjectPropertyByName
+		 * @ignore
+		 * @function
+		 */
 		getObjectPropertyByName : function(name) {
 			return this[name];
 		}
