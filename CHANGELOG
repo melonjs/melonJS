@@ -7,6 +7,9 @@ Version History
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
 * Input : added support for windows 8 accelerometer (Halfman)
+* TMX : fixed default group opacity value not being applied to child objects.
+* Entity : added an Entity Container Object (me.EntityContainer) and reorganise `me.game` accordingly
+* General : added `me.game.world` as a reference to the game world root entity container.
 
 
 0.9.8
@@ -105,7 +108,7 @@ Version History
 * TMX : fixed the `getObjectGroupByName()` function
 * TMX : added support for custom tile type
 * Tutorial : fixed camel case issue in resource names 
-* Tutoroal : update the parallax part to reflect last changes in melonJS (Image Layer)
+* Tutorial : update the parallax part to reflect last changes in melonJS (Image Layer)
 * Video : added support for display scaling
 * Video : added a setImageSmoothing function
 * Example : added "whack-a-mole" as an official example
