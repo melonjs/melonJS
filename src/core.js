@@ -1365,6 +1365,19 @@ window.me = window.me || {};
 			}
 		};
 
+
+		/**
+		 * Returns the entity container of the specified Child in the game world
+		 * @name getEntityContainer
+		 * @memberOf me.game
+		 * @function
+		 * @param {me.ObjectEntity} child
+		 * @return {me.EntityContainer}
+		 */
+		api.getEntityContainer = function(child) {
+			return child.ancestor;
+		};
+
 		
 		/**
 		 * remove an object from the world

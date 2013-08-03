@@ -185,19 +185,7 @@
 		 * @return {Boolean}
 		 */
 		hasChild : function(child) {
-			return (this.children.indexOf( child ) !== -1);
-		},
-
-		/**
-		 * Returns the container of the specified Child
-		 * @name getContainer
-		 * @memberOf me.EntityContainer
-		 * @function
-		 * @param {me.ObjectEntity} child
-		 * @return {me.EntityContainer}
-		 */
-		getContainer : function(child) {
-			return child.ancestor;
+			return (this == child.ancestor);
 		},
 		
 		/**
@@ -245,9 +233,8 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		removeChild : function(child) {
-			var index = this.children.indexOf( child );
-			
-			if  ( index !== -1 ) {
+
+			if  (this.hasChild(child)) {
 				
 				child.ancestor = undefined;
 				
@@ -255,7 +242,7 @@
 					child.destroy();
 				}
 				
-				this.children.splice( index, 1 );
+				this.children.splice( this.getChildIndex(child), 1 );
 				
 				me.entityPool.freeInstance(child);
 			
@@ -272,7 +259,7 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		moveUp : function(child) {
-			var childIndex = getChildIndex(child);
+			var childIndex = this.getChildIndex(child);
 			if (childIndex -1 >= 0) {
 				// note : we use an inverted loop
 				this.swapChildren(child, this.getChildAt(childIndex-1));
@@ -287,7 +274,7 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		moveDown : function(child) {
-			var childIndex = getChildIndex(child);
+			var childIndex = this.getChildIndex(child);
 			if (childIndex+1 < this.children.length) {
 				// note : we use an inverted loop
 				this.swapChildren(child, this.getChildAt(childIndex+1));
@@ -302,7 +289,7 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		moveToTop : function(child) {
-			var childIndex = getChildIndex(child);
+			var childIndex = this.getChildIndex(child);
 			if (childIndex > 0) {
 				// note : we use an inverted loop
 				this.splice(0, 0, this.splice(childIndex, 1)[0]);
@@ -319,7 +306,7 @@
 		 * @param {me.ObjectEntity} child
 		 */
 		moveToBottom : function(child) {
-			var childIndex = getChildIndex(child);
+			var childIndex = this.getChildIndex(child);
 			if (childIndex < (this.children.length -1)) {
 				// note : we use an inverted loop
 				this.splice((this.children.length -1), 0, this.splice(childIndex, 1)[0]);
