@@ -978,6 +978,17 @@ window.me = window.me || {};
 
 
 		/**
+		 * when true, all objects will be added under the root world container <br>
+		 * when false, a `me.EntityContainer` object will be created for each corresponding `TMXObjectGroup`
+		 * default value : true
+		 * @public
+		 * @type Boolean
+		 * @name mergeGroup
+		 * @memberOf me.game
+		 */
+		api.mergeGroup = true;
+
+		/**
 		 * The property of should be used when sorting entities <br>
 		 * value : "x", "y", "z" (default: "z")
 		 * @public
@@ -1148,28 +1159,86 @@ window.me = window.me || {};
 			api.viewport.setBounds(Math.max(api.currentLevel.width, api.viewport.width),
 								   Math.max(api.currentLevel.height, api.viewport.height));
 
-			// load all game entities
+			// game world as default container
+			var targetContainer = api.world;
+
+			// load all ObjectGroup and Object definition
 			var objectGroups = api.currentLevel.getObjectGroups();
-			for ( var group = 0; group < objectGroups.length; group++) {
-				// only add corresponding objects it the group is visible
-				if (objectGroups[group].visible) {
-					for ( var entity = 0; entity < objectGroups[group].objects.length; entity++) {
-						api.addEntity(objectGroups[group].objects[entity], objectGroups[group].z);
-					}
-				}
-			}
 			
-			// check if the map has different default (0,0) screen coordinates
-			if (api.currentLevel.pos.x !== api.currentLevel.pos.y) {
-				// translate the display accordingly
-				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
-			}
+			for ( var g = 0; g < objectGroups.length; g++) {
+				
+				var group = objectGroups[g];
+
+				if (api.mergeGroup === false) {
+
+					// create a new container with Infinite size (?)
+					// note: initial position and size seems to be meaningless in Tiled
+					// https://github.com/bjorn/tiled/wiki/TMX-Map-Format :
+					// x: Defaults to 0 and can no longer be changed in Tiled Qt.
+					// y: Defaults to 0 and can no longer be changed in Tiled Qt.
+					// width: The width of the object group in tiles. Meaningless.
+					// height: The height of the object group in tiles. Meaningless.
+					targetContainer = new me.EntityContainer();
+					
+					// set additional properties
+					targetContainer.name = group.name;
+					targetContainer.visible = group.visible;
+					targetContainer.z = group.z;
+
+					// disable auto-sort
+					targetContainer.autoSort = false;
+				}
+
+				// iterate through the group and add all object into their
+				// corresponding target Container
+				for ( var o = 0; o < group.objects.length; o++) {
+					
+					// TMX Object
+					var obj = group.objects[o];
+
+					// create the corresponding entity
+					var entity = me.entityPool.newInstanceOf(obj.name, obj.x, obj.y, obj);
+
+					// set the entity z order correspondingly to its parent container/group
+					entity.z = group.z;
+
+					//apply group default opacity value if defined
+					if (entity.renderable && typeof(entity.renderable.setOpacity) == 'function') {
+						entity.renderable.setOpacity(group.opacity);
+					};
+
+					// add the entity into the target container
+					targetContainer.addChild(entity);
+				}
+
+				// if we created a new container
+				if (api.mergeGroup === false) {
+					
+					// sort everything
+					targetContainer.sort();
+					
+					// re-enable auto-sort
+					targetContainer.autoSort = true;	
+				
+					// add our container to the world
+					api.world.addChild(targetContainer)
+				}
+
+			};
+
 
 			// sort all our stuff !!
 			api.world.sort();
 			
 			// re-enable auto-sort
 			api.world.autoSort = true;
+
+			
+			// check if the map has different default (0,0) screen coordinates
+			if (api.currentLevel.pos.x !== api.currentLevel.pos.y) {
+				// translate the display accordingly
+				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
+			}
 
 			// fire the callback if defined
 			if (api.onLevelLoaded) {
@@ -1182,6 +1251,7 @@ window.me = window.me || {};
 
 		/**
 		 * Manually add object to the game manager
+		 * @deprecated @see me.game.world.addChild()
 		 * @name add
 		 * @memberOf me.game
 		 * @param {me.ObjectEntity} obj Object to be added
@@ -1203,20 +1273,6 @@ window.me = window.me || {};
 
 		};
 
-		/**
-		 * add an entity to the game manager
-		 * @name addEntity
-		 * @memberOf me.game
-		 * @private
-		 * @ignore
-		 * @function
-		 */
-		api.addEntity = function(ent, zOrder) {
-			var obj = me.entityPool.newInstanceOf(ent.name, ent.x, ent.y, ent);
-			if (obj) {
-				api.add(obj, zOrder);
-			}
-		};
 
 		/**
 		 * returns the list of entities with the specified name<br>
@@ -1311,7 +1367,7 @@ window.me = window.me || {};
 
 		
 		/**
-		 * remove an object
+		 * remove an object from the world
 		 * @name remove
 		 * @memberOf me.game
 		 * @public
@@ -1321,18 +1377,18 @@ window.me = window.me || {};
 		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
 		 */
 		api.remove = function(obj, force) {
-			if (api.world.hasChild(obj)) {
+			if (obj.ancestor) {
 				// remove the object from the object list
 				if (force===true) {
 					// force immediate object deletion
-					api.world.removeChild(obj);
+					obj.ancestor.removeChild(obj);
 				} else {
 					// make it invisible (this is bad...)
 					obj.visible = obj.inViewport = false;
 					// wait the end of the current loop
 					/** @ignore */
 					pendingRemove = (function (obj) {
-						me.game.world.removeChild(obj);
+						obj.ancestor.removeChild(obj);
 						pendingRemove = null;
 					}).defer(obj);
 				}
