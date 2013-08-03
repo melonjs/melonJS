@@ -52,6 +52,15 @@
 		 * @ignore
 		 */	
 		children : null,
+
+		/**
+		 * Enable collision detection for this container (default true)<br>
+		 * @public
+		 * @type Boolean
+		 * @name collidable
+		 * @memberOf me.EntityContainer
+		 */
+		collidable : true,
 		
 
 		// constructor
@@ -355,7 +364,7 @@
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 			
-				if ( obj.inViewport || obj.alwaysUpdate ) {
+				if ( (obj.inViewport || obj.alwaysUpdate ) && obj.collidable ) {
 					
 					// recursivly check through
 					if (obj instanceof me.EntityContainer) {
@@ -368,7 +377,7 @@
 							return res;
 						}
 						
-					} else if (obj.collidable && (obj!=objA) && (!type || (obj.type === type))) {
+					} else if ( (obj!=objA) && (!type || (obj.type === type)) ) {
 			
 						res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
 						
