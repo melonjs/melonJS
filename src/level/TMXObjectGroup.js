@@ -88,6 +88,7 @@
 			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
 			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.opacity = me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects = [];
 		
@@ -116,6 +117,7 @@
 			this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
 			this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
 			this.visible = tmxObjGroup[me.TMX_TAG_VISIBLE];
+			this.opacity = parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects  = [];
 			
