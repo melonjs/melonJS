@@ -59,8 +59,8 @@
 			// call the parent constructor
 			this.parent(
 				new me.Vector2d(x || 0, y || 0),
-				width || me.game.viewport.width,  // which default value here ?
-				height || me.game.viewport.height 
+				width || Infinity, 
+				height || Infinity 
 			);
 			this.children = [];
 			// by default reuse the global me.game.setting
