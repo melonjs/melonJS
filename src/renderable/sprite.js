@@ -639,6 +639,7 @@
 					// if function (callback) call it
 					else if (typeof(this.resetAnim) == "function" && this.resetAnim() === false) {
 						this.current.idx = this.current.length - 1;
+						this.setAnimationFrame(this.current.idx);
 						this.parent();
 						return false;
 					}
