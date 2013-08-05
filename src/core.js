@@ -1528,7 +1528,7 @@ window.me = window.me || {};
 		api.update = function() {
 			
 			// update all objects
-			isDirty = api.world.update();
+			isDirty |= api.world.update();
 			
 			// update the camera/viewport
 			isDirty |= api.viewport.update(isDirty);
