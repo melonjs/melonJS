@@ -170,7 +170,7 @@ game.CoinEntity = me.CollectableEntity.extend({
 		// do something when collide
 		me.audio.play("cling", false);
 		// give some score
-		me.game.HUD.updateItemValue("score", 250);
+		game.data.score += 250;
 		
 		//avoid further collision and delete it
 		this.collidable = false;
@@ -258,7 +258,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score
-			me.game.HUD.updateItemValue("score", 150);
+			game.data.score += 150;
 		}
 	}
 

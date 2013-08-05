@@ -1,19 +1,21 @@
-/* -----
-
-	main 
-	
-	------*/
-	
-
+/**
+ * main
+ */
 var game = {
+
+	/** 
+	 * object where  to store game global data
+	 */
+	data : {
+		score : 0
+	},
 	
-	/* ---
+	/**
+	 *
+	 * Initialize the application
+	 */
+	onload: function() {
 	
-		Initialize the application
-		
-		---										*/
-	onload: function()
-	{
 		// init the video
 		if (!me.video.init('screen', 800, 600, true, 'auto')) {
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
@@ -37,12 +39,11 @@ var game = {
 	},
 	
 	
-	/* ---
-	
-		callback when everything is loaded
-		
-		---										*/
+	/**
+	 * callback when everything is loaded
+	 */
 	loaded: function ()	{
+	
 		// set the "Play/Ingame" Screen Object
 		me.state.set(me.state.PLAY, new game.PlayScreen());
 		
