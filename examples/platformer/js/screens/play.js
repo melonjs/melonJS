@@ -10,8 +10,7 @@ game.PlayScreen = me.ScreenObject.extend({
 		game.data.score = 0;
 		
 		// add our HUD to the game world	
-		this.HUDInstance = new game.HUD.Container();
-		me.game.add(this.HUDInstance);
+		me.game.add(new game.HUD.Container());
 		
 		// play some music
 		me.audio.playTrack("DST-GameForest");
@@ -21,11 +20,9 @@ game.PlayScreen = me.ScreenObject.extend({
 	 *  action to perform on state change
 	 */
 	onDestroyEvent: function() {	
-		
-		// toggle the `isPersistent` flag 
-		// add remove our HUD from game world
-		this.HUDInstance.isPersistent = false
-		me.game.remove(this.HUDInstance);
+	
+		// remove the HUD from the game world
+		me.game.world.removeChild(me.game.world.getEntityByProp("name", "HUD")[0]);
 		
 		// stop some music
 		me.audio.stopTrack("DST-GameForest");

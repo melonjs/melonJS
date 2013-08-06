@@ -4,9 +4,10 @@
 var game = {
 
 	/** 
-	 * object where  to store game global data
+	 * object where to store game global data
 	 */
 	data : {
+		// score
 		score : 0
 	},
 	
