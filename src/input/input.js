@@ -72,6 +72,9 @@
 		var keyboardInitialized = false;
 		var pointerInitialized = false;
 		var accelInitialized = false;
+		
+		// to keep track of the supported wheel event
+		var wheeltype = null
 
 		// Track last event timestamp to prevent firing events out of order
 		var lastTimeStamp = 0;
@@ -148,7 +151,9 @@
 				    } else {
 						// Regular Mouse events
 				        activeEventList = mouseEventList;
-						window.addEventListener('mousewheel', onMouseWheel, false);
+						// // Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
+						wheeltype = "onwheel" in document.createElement("div") ? "wheel" : "mousewheel";
+						window.addEventListener(wheeltype, onMouseWheel, false);
 						registerEventListener(activeEventList, onPointerEvent);
 				    }
 				}
@@ -331,6 +336,18 @@
 		 */
 		function onMouseWheel(e) {
 			if (e.target == me.video.getScreenCanvas()) {
+				// normalize the event object
+				e.deltaMode = (e.type == "MozMousePixelScroll") ? 0 : 1;
+				e.type = "wheel";
+				e.deltaX = e.deltaX || 0;
+				e.deltaY = e.deltaY || 0;
+				if ( wheeltype == "mousewheel" ) {
+					e.deltaY = - 1/40 * originalEvent.wheelDelta;
+					// Webkit also support wheelDeltaX
+					e.wheelDeltaX && ( e.deltaX = - 1/40 * e.wheelDeltaX );
+				} else {
+					e.deltaY = e.detail;
+				}
 				// dispatch mouse event to registered object
 				if (dispatchEvent(e)) {
 					// prevent default action
