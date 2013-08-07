@@ -342,7 +342,7 @@
 				e.deltaX = e.deltaX || 0;
 				e.deltaY = e.deltaY || 0;
 				if ( wheeltype == "mousewheel" ) {
-					e.deltaY = - 1/40 * originalEvent.wheelDelta;
+					e.deltaY = - 1/40 * e.wheelDelta;
 					// Webkit also support wheelDeltaX
 					e.wheelDeltaX && ( e.deltaX = - 1/40 * e.wheelDeltaX );
 				} else {
