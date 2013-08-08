@@ -7,6 +7,7 @@ Version History
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
 * Input : added support for windows 8 accelerometer (Halfman)
+* Input : Improved mouse wheel event support to be compatible with all recent browsers
 * TMX : fixed default group opacity value not being applied to child objects.
 * Entity : added an Entity Container Object (me.EntityContainer) and reorganise `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root entity container.
