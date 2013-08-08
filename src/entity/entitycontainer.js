@@ -8,7 +8,7 @@
 (function(window) {
 
 	/**
-	 * EntityContainer represents a collection of entity objects
+	 * EntityContainer represents a collection of child objects
 	 * @class
 	 * @extends me.Renderable
 	 * @memberOf me
@@ -63,7 +63,10 @@
 		collidable : true,
 		
 
-		// constructor
+		/** 
+		 * constructor
+		 * @ignore
+		 */
 		init : function(x, y, width, height) {
 			// call the parent constructor
 			this.parent(
@@ -85,7 +88,7 @@
 		 * @name addChild
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		addChild : function(child) {
 			if(typeof(child.ancestor) !== 'undefined') {
@@ -105,7 +108,7 @@
 		 * @name addChildAt
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		addChildAt : function(child, index) {
 			if((index >= 0) && (index < this.children.length)) {
@@ -128,8 +131,8 @@
 		 * @name swapChildren
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
+		 * @param {me.Renderable} child
 		 */
 		swapChildren : function(child, child2) {
 			var index = this.getChildIndex( child );
@@ -170,7 +173,7 @@
 		 * @name getChildAt
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		getChildIndex : function(child) {
 			return this.children.indexOf( child );
@@ -189,7 +192,7 @@
 		},
 		
 		/**
-		 * return the entity corresponding to the property and value<br>
+		 * return the child corresponding to the given property and value.<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object tree each time
 		 * @name getEntityByProp
@@ -198,7 +201,7 @@
 		 * @function
 		 * @param {String} prop Property name
 		 * @param {String} value Value of the property
-		 * @return {me.ObjectEntity[]} Array of object entities
+		 * @return {me.Renderable[]} Array of childs
 		 * @example
 		 * // get the first entity called "mainPlayer" in a specific container :
 		 * ent = myContainer.getEntityByProp("name", "mainPlayer");
@@ -230,7 +233,7 @@
 		 * @name removeChild
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		removeChild : function(child) {
 
@@ -256,7 +259,7 @@
 		 * @name moveUp
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		moveUp : function(child) {
 			var childIndex = this.getChildIndex(child);
@@ -271,7 +274,7 @@
 		 * @name moveDown
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		moveDown : function(child) {
 			var childIndex = this.getChildIndex(child);
@@ -286,7 +289,7 @@
 		 * @name moveToTop
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		moveToTop : function(child) {
 			var childIndex = this.getChildIndex(child);
@@ -303,7 +306,7 @@
 		 * @name moveToBottom
 		 * @memberOf me.EntityContainer
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 */
 		moveToBottom : function(child) {
 			var childIndex = this.getChildIndex(child);
@@ -321,7 +324,7 @@
 		 * @memberOf me.EntityContainer
 		 * @public
 		 * @function
-		 * @param {me.ObjectEntity} obj Object to be tested for collision
+		 * @param {me.Renderable} obj Object to be tested for collision
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 */
@@ -335,7 +338,7 @@
 		 * @memberOf me.EntityContainer
 		 * @public
 		 * @function
-		 * @param {me.ObjectEntity} obj Object to be tested for collision
+		 * @param {me.Renderable} obj Object to be tested for collision
 		 * @param {String} [type=undefined] Entity type to be tested for collision
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
@@ -388,7 +391,7 @@
 		},
 		
 		/**
-		 * Manually trigger the sort of all the objects in the container</p>
+		 * Manually trigger the sort of all the childs in the container</p>
 		 * @name sort
 		 * @memberOf me.EntityContainer
 		 * @public
