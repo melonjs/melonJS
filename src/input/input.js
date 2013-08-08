@@ -74,7 +74,7 @@
 		var accelInitialized = false;
 		
 		// to keep track of the supported wheel event
-		var wheeltype = null
+		var wheeltype = 'mousewheel';
 
 		// Track last event timestamp to prevent firing events out of order
 		var lastTimeStamp = 0;
@@ -84,7 +84,7 @@
 		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
 		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'tap', 'dbltap'];
 		// (a polyfill will probably be required at some stage, once this will be fully standardized0
-		var pointerEventList = [undefined, 'PointerMove', 'PointerDown', 'PointerUp', undefined, undefined ];
+		var pointerEventList = ['mousewheel', 'PointerMove', 'PointerDown', 'PointerUp', undefined, undefined ];
 		
 		/**
 		 * enable keyboard event
@@ -136,10 +136,12 @@
 					activeEventList = pointerEventList;
 					// check for backward compatibility with the 'MS' prefix
 					var useMSPrefix = window.navigator.msPointerEnabled;
-					for(var x = 0; x < activeEventList.length; ++x) {
+					for(var x = 1; x < activeEventList.length; ++x) {
 						if (activeEventList[x] && !activeEventList[x].contains('MS')) {
 							activeEventList[x] = useMSPrefix ? 'MS' + activeEventList[x] : activeEventList[x].toLowerCase();
 						}
+						// register mouse wheel event
+						window.addEventListener(activeEventList[0], onMouseWheel, false);
 					}
 					// register PointerEvents
 					registerEventListener(activeEventList, onPointerEvent);
@@ -151,10 +153,12 @@
 				    } else {
 						// Regular Mouse events
 				        activeEventList = mouseEventList;
-						// // Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
-						wheeltype = "onwheel" in document.createElement("div") ? "wheel" : "mousewheel";
-						window.addEventListener(wheeltype, onMouseWheel, false);
 						registerEventListener(activeEventList, onPointerEvent);
+						
+						// detect wheel event support
+						// Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
+						wheeltype = "onwheel" in document.createElement("div") ? "wheel" : "mousewheel";
+						window.addEventListener(wheeltype, onMouseWheel, false);						
 				    }
 				}
 				// set the PointerMove/touchMove/MouseMove event
@@ -336,20 +340,21 @@
 		 */
 		function onMouseWheel(e) {
 			if (e.target == me.video.getScreenCanvas()) {
-				// normalize the event object
-				e.deltaMode = (e.type == "MozMousePixelScroll") ? 0 : 1;
-				e.type = "wheel";
-				e.deltaX = e.deltaX || 0;
-				e.deltaY = e.deltaY || 0;
+				// create a (fake) normalized event object
+				var _event = {
+					deltaMode : 1,
+					type : "mousewheel",
+					deltaX: e.deltaX,
+					deltaY: e.deltaY,
+					deltaZ: e.deltaZ
+				};
 				if ( wheeltype == "mousewheel" ) {
-					e.deltaY = - 1/40 * e.wheelDelta;
+					_event.deltaY = - 1/40 * e.wheelDelta;
 					// Webkit also support wheelDeltaX
-					e.wheelDeltaX && ( e.deltaX = - 1/40 * e.wheelDeltaX );
-				} else {
-					e.deltaY = e.detail;
+					e.wheelDeltaX && ( _event.deltaX = - 1/40 * e.wheelDeltaX );
 				}
 				// dispatch mouse event to registered object
-				if (dispatchEvent(e)) {
+				if (dispatchEvent(_event)) {
 					// prevent default action
 					return preventDefault(e);
 				}
