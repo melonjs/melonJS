@@ -469,8 +469,10 @@
 				if (this._fadeOut.alpha==0.0)
 					this._fadeOut.tween = null;
 			}
+			
+			// blit our frame
+			me.video.blitSurface();
 		}
-		
 	});
 
 	/*---------------------------------------------------------*/

@@ -213,9 +213,6 @@
 
 				// draw the game objects
 				me.game.draw();
-
-				// blit our frame
-				me.video.blitSurface();
 			}
 		},
 

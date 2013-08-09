@@ -1571,7 +1571,7 @@ window.me = window.me || {};
 				//restore context
 				frameBuffer.restore();
 				
-				// call the viewport draw function (for effects)
+				// draw our camera/viewport
 				api.viewport.draw(frameBuffer);
 			}
 			isDirty = false;
