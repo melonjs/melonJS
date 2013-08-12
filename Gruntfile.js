@@ -22,7 +22,6 @@ module.exports = function(grunt) {
 				'src/loader/loader.js',
 				'src/font/font.js',
 				'src/GUI/GUI.js',
-				'src/GUI/HUD.js',
 				'src/audio/audio.js',
 				'src/video/video.js',
 				'src/input/input.js',

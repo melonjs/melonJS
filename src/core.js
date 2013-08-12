@@ -899,7 +899,7 @@ window.me = window.me || {};
 
 	/**
 	 * me.game represents your current game, it contains all the objects, tilemap layers,<br>
-	 * HUD information, current viewport, collision map, etc..<br>
+	 * current viewport, collision map, etc...<br>
 	 * me.game is also responsible for updating (each frame) the object status and draw them<br>
 	 * @namespace me.game
 	 * @memberOf me
@@ -939,14 +939,6 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.viewport = null;
-		/**
-		 * a reference to the game HUD (if defined).
-		 * @public
-		 * @type me.HUD_Object
-		 * @name HUD
-		 * @memberOf me.game
-		 */
-		api.HUD = null;
 		
 		/**
 		 * a reference to the game collision Map
@@ -1094,8 +1086,7 @@ window.me = window.me || {};
 
 		/**
 		 * reset the game Object manager<p>
-		 * destroy all current object except the HUD
-		 * @see me.game#disableHUD
+		 * destroy all current objects
 		 * @name reset
 		 * @memberOf me.game
 		 * @public
@@ -1324,47 +1315,6 @@ window.me = window.me || {};
 		api.getEntityByProp = function(prop, value) {
 			return api.world.getEntityByProp(prop, value);
 		};
-		
-		/**
-		 * add a HUD obj to the game manager
-		 * @name addHUD
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {int} x x position of the HUD
-		 * @param {int} y y position of the HUD
-		 * @param {int} w width of the HUD
-		 * @param {int} h height of the HUD
-		 * @param {String} [bg] a CSS string specifying the background color (e.g. "#0000ff" or "rgb(0,0,255)")
-		 */
-		api.addHUD = function(x, y, w, h, bg) {
-			// if no HUD existing
-			if (api.HUD == null) {
-				// create a new default HUD object
-				api.HUD = new me.HUD_Object(x, y, w, h, bg);
-				api.add(api.HUD);
-			}
-		};
-
-		/**
-		 * disable the current HUD
-		 * @name disableHUD
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 */
-		api.disableHUD = function() {
-
-			// if no HUD existing
-			if (api.HUD != null) {
-				// remove the HUD object
-				api.remove(api.HUD);
-				// nullify it
-				api.HUD = null;
-
-			}
-		};
-
 
 		/**
 		 * Returns the entity container of the specified Child in the game world
