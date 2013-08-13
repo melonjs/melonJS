@@ -165,7 +165,6 @@
 		var backBufferContext2D = null;
 		var wrapper = null;
 
-		
 		var deferResizeId = -1;
 
 		var double_buffering = false;
@@ -174,7 +173,10 @@
 		var auto_scale = false;
 		var maintainAspectRatio = true;
 		var devicePixelRatio = null;
-		
+
+		var originalWidth = 0;
+		var originalHeight = 0;
+
 		// max display size
 		var maxWidth = Infinity;
 		var maxHeight = Infinity;
@@ -502,7 +504,12 @@
 			scaleX *= me.video.getDevicePixelRatio();
 			scaleY *= me.video.getDevicePixelRatio();
 			// scale if required
-			if (scaleX!==1 || scaleY !==1) {
+			if ((scaleX!==1 || scaleY !==1) && originalWidth==0 && originalHeight==0) {
+
+				// record original canvas size before scaling
+				originalWidth = canvas.width;
+				originalHeight = canvas.height;
+
 				if (deferResizeId >= 0) {
 					// cancel any previous pending resize
 					clearTimeout(deferResizeId);
@@ -525,7 +532,7 @@
 		api.updateDisplaySize = function(scaleX, scaleY) {
 			// update the global scale variable
 			me.sys.scale.set(scaleX,scaleY);
-			
+
 			// apply the new value
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
