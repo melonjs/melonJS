@@ -206,14 +206,6 @@
 		};
 		
 		/**
-		 * enable the nocache mechanism
-		 * @ignore
-		 */
-		api.setNocache = function(enable) {
-			me.nocache = enable ? "?" + parseInt(Math.random() * 10000000) : '';
-		};
-
-		/**
 		 * a Hex to RGB color function
 		 * @public
 		 * @function

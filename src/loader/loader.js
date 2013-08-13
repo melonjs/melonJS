@@ -32,6 +32,7 @@
 		var resourceCount = 0;
 		var loadCount = 0;
 		var timerId = 0;
+		
 
 		/**
 		 * check the loading status
@@ -73,7 +74,7 @@
 			imgList[img.name] = new Image();
 			imgList[img.name].onload = onload;
 			imgList[img.name].onerror = onerror;
-			imgList[img.name].src = img.src + me.nocache;
+			imgList[img.name].src = img.src + obj.nocache;
 		};
 
 		/**
@@ -93,7 +94,7 @@
 				}
 			}
 			
-			xmlhttp.open("GET", tmxData.src + me.nocache, true);
+			xmlhttp.open("GET", tmxData.src + obj.nocache, true);
 
 			// add the tmx to the levelDirector
 			if (tmxData.type === "tmx") {
@@ -164,7 +165,7 @@
 				xmlhttp.overrideMimeType('application/json');
 			}
 			
-			xmlhttp.open("GET", data.src + me.nocache, true);
+			xmlhttp.open("GET", data.src + obj.nocache, true);
 						
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
@@ -194,7 +195,7 @@
 			var httpReq = new XMLHttpRequest();
 
 			// load our file
-			httpReq.open("GET", data.src + me.nocache, false);
+			httpReq.open("GET", data.src + obj.nocache, false);
 			httpReq.responseType = "arraybuffer";
 			httpReq.onerror = onerror;
 			httpReq.onload = function(event){
@@ -213,6 +214,12 @@
 			};
 			httpReq.send();
 		};
+		
+		/**
+		 * to enable/disable caching
+		 * @ignore
+		 */
+		obj.nocache = '';
 
 
 		/* ---
@@ -274,6 +281,14 @@
 		 */
 		obj.onLoadingError = function(res) {
 			throw "melonJS: Failed loading resource " + res.src;
+		};
+		
+		/**
+		 * enable the nocache mechanism
+		 * @ignore
+		 */
+		obj.setNocache = function(enable) {
+			obj.nocache = enable ? "?" + parseInt(Math.random() * 10000000) : '';
 		};
 
 

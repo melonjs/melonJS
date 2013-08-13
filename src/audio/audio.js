@@ -399,7 +399,7 @@
 				eventname = "canplay";
 			}
 
-			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.nocache);
+			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.loader.nocache);
 			soundclip.preload = 'auto';
 			soundclip.addEventListener(eventname, function(e) {
 				soundclip.removeEventListener(eventname, arguments.callee, false);

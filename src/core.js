@@ -24,27 +24,9 @@ window.me = window.me || {};
 	 * @ignore
 	 */
 	me = {
-		// settings & configuration
 		// library name & version
 		mod : "melonJS",
-		version : "@VERSION",
-		nocache : '',
-
-		// Public Object (To be completed)
-		audio : null,
-		video : null,
-		timer : null,
-		input : null,
-		state : null,
-		game : null,
-		entityPool : null,
-		levelDirector : null,
-		// System Object (instances)
-		TMXParser : null,
-		loadingScreen : null,
-		// TMX Stuff
-		TMXTileMap : null
-
+		version : "@VERSION"
 	};
 
 	/**
@@ -853,7 +835,7 @@ window.me = window.me || {};
 		}
 
 		// enable/disable the cache
-		me.utils.setNocache(document.location.href.match(/\?nocache/)||false);
+		me.loader.setNocache(document.location.href.match(/\?nocache/)||false);
 	
 		// detect audio capabilities
 		me.audio.detectCapabilities();
