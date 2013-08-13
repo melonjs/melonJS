@@ -503,7 +503,7 @@
 			scaleY *= me.video.getDevicePixelRatio();
 			// scale if required
 			if (scaleX!==1 || scaleY !==1) {
-				if (deferResizeId) {
+				if (deferResizeId >= 0) {
 					// cancel any previous pending resize
 					clearTimeout(deferResizeId);
 				}
