@@ -507,12 +507,15 @@
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				
-				if (obj.inViewport && obj.isRenderable) {
+				if ((obj.inViewport || this.floating) && obj.isRenderable) {
 
 					if (obj.floating==true) {
 						context.save();
 						// translate back object
-						context.translate(me.game.viewport.screenX -this.pos.x, me.game.viewport.screenY -this.pos.y);
+						context.translate(
+							me.game.viewport.screenX -this.pos.x, 
+							me.game.viewport.screenY -this.pos.y
+						);
 					}
 
 					// draw the object
