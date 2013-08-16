@@ -705,14 +705,15 @@
 		 */
 		obj.globalToLocal = function (x, y) {
 			var offset = obj.offset;
+			var pixelRatio = me.video.getDevicePixelRatio();
 			x -= offset.left;
 			y -= offset.top;
 			var scale = me.sys.scale;
 			if (scale.x != 1.0 || scale.y != 1.0) {
-				x/=(scale.x / me.video.getDevicePixelRatio());
-				y/=(scale.y / me.video.getDevicePixelRatio());
+				x/= scale.x;
+				y/= scale.y;
 			}
-			return new me.Vector2d(x, y);
+			return new me.Vector2d(x * pixelRatio, y * pixelRatio);
 		};
 
 		/**

@@ -272,6 +272,12 @@
 				
 			// get the 2D context
 			context2D = api.getContext2d(canvas);
+			
+			// adjust CSS style for High-DPI devices
+			if (me.video.getDevicePixelRatio()>1) {
+				canvas.style.width = (canvas.width / me.video.getDevicePixelRatio()) + 'px';
+				canvas.style.height = (canvas.height / me.video.getDevicePixelRatio()) + 'px';
+			}
 
 			// create the back buffer if we use double buffering
 			if (double_buffering) {
@@ -499,23 +505,25 @@
 					scaleX = _max_width / me.video.getWidth();
 					scaleY = _max_height / me.video.getHeight();
 				}
-			}
-			// adjust scaling ratio based on the device pixel ratio
-			scaleX *= me.video.getDevicePixelRatio();
-			scaleY *= me.video.getDevicePixelRatio();
-			// scale if required
-			if ((scaleX!==1 || scaleY !==1) && originalWidth==0 && originalHeight==0) {
+				
+				// adjust scaling ratio based on the device pixel ratio
+				scaleX *= me.video.getDevicePixelRatio();
+				scaleY *= me.video.getDevicePixelRatio();
+			
+				// scale if required
+				if ((scaleX!==1 || scaleY !==1) && originalWidth==0 && originalHeight==0) {
 
-				// record original canvas size before scaling
-				originalWidth = canvas.width;
-				originalHeight = canvas.height;
+					// record original canvas size before scaling
+					originalWidth = canvas.width;
+					originalHeight = canvas.height;
 
-				if (deferResizeId >= 0) {
-					// cancel any previous pending resize
-					clearTimeout(deferResizeId);
+					if (deferResizeId >= 0) {
+						// cancel any previous pending resize
+						clearTimeout(deferResizeId);
+					}
+					deferResizeId = me.video.updateDisplaySize.defer(scaleX , scaleY);
+					return;
 				}
-				deferResizeId = me.video.updateDisplaySize.defer(scaleX , scaleY);
-				return;
 			}
 			// make sure we have the correct relative canvas position cached
 			me.input.offset = me.video.getPos();
