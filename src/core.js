@@ -1312,7 +1312,9 @@ window.me = window.me || {};
 
 		
 		/**
-		 * remove an object from the world
+		 * remove the specificd object from the world<br>
+		 * `me.game.remove` will preserve object that defines the `isPersistent` flag
+		 * `me.game.remove` will remove object at the end of the current frame
 		 * @name remove
 		 * @memberOf me.game
 		 * @public

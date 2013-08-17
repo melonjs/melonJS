@@ -229,7 +229,8 @@
 		},
 		
 		/**
-		 * Removes a child from the container.
+		 * Removes a child from the container.<br>
+		 * (action is immediate and unconditional)
 		 * @name removeChild
 		 * @memberOf me.EntityContainer
 		 * @function
