@@ -100,13 +100,13 @@
 	 * A pool of Object entity <br>
 	 * This object is used for object pooling - a technique that might speed up your game
 	 * if used properly. <br>
-	 * If some of your classes will be instanciated and removed a lot at a time, it is a 
+	 * If some of your classes will be instantiated and removed a lot at a time, it is a
 	 * good idea to add the class to this entity pool. A separate pool for that class
-	 * will be created, which will reuse objects of the class. That way they won't be instanciated
+	 * will be created, which will reuse objects of the class. That way they won't be instantiated
 	 * each time you need a new one (slowing your game), but stored into that pool and taking one
-	 * already instanciated when you need it.<br><br>
-	 * This object is also used by the engine to instanciate objects defined in the map, 
-	 * which means, that on level loading the engine will try to instanciate every object 
+	 * already instantiated when you need it.<br><br>
+	 * This object is also used by the engine to instantiate objects defined in the map,
+	 * which means, that on level loading the engine will try to instantiate every object
 	 * found in the map, based on the user defined name in each Object Properties<br>
 	 * <img src="images/object_properties.png"/><br>
 	 * There is no constructor function for me.entityPool, this is a static object
@@ -146,14 +146,14 @@
 		/**
 		 * Add an object to the pool. <br>
 		 * Pooling must be set to true if more than one such objects will be created. <br>
-		 * (note) If pooling is enabled, you shouldn't instanciate objects with `new`.
+		 * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
 		 * See examples in {@link me.entityPool#newInstanceOf}
 		 * @name add
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {String} className as defined in the Name fied of the Object Properties (in Tiled)
-		 * @param {Object} class corresponding Class to be instanciated
+		 * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
+		 * @param {Object} class corresponding Class to be instantiated
 		 * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
 		 * - speeds up the game by reusing existing objects
 		 * @example
@@ -186,7 +186,7 @@
 		 * @public
 		 * @function
 		 * @param {String} className as used in {@link me.entityPool#add}
-		 * @param {} [arguments...] arguments to be passed when instanciating/reinitializing the object
+		 * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
 		 * @example
 		 * me.entityPool.add("player", PlayerEntity);
 		 * var player = me.entityPool.newInstanceOf("player");
@@ -231,7 +231,7 @@
 			}
 
 			// Tile objects can be created with a GID attribute;
-			// The TMX parser will use it to create the image dataerty.
+			// The TMX parser will use it to create the image property.
 			var settings = arguments[3];
 			if (settings && settings.image) {
 				return new me.SpriteObject(settings.x, settings.y, settings.image);
@@ -244,7 +244,7 @@
 		};
 
 		/**
-		 * purge the entity pool from any unactive object <br>
+		 * purge the entity pool from any inactive object <br>
 		 * Object pooling must be enabled for this function to work<br>
 		 * note: this will trigger the garbage collector
 		 * @name purge
@@ -261,7 +261,7 @@
 		/**
 		 * Remove object from the entity pool <br>
 		 * Object pooling for the object class must be enabled,
-		 * and object must have been instanciated using {@link me.entityPool#newInstanceOf},
+		 * and object must have been instantiated using {@link me.entityPool#newInstanceOf},
 		 * otherwise this function won't work
 		 * @name freeInstance
 		 * @memberOf me.entityPool
@@ -273,7 +273,6 @@
 
 			var name = obj.className;
 			if (!name || !entityClass[name]) {
-				//console.error("Cannot free object: unknown class");
 				return;
 			}
 
@@ -287,7 +286,6 @@
 			}
 
 			if (notFound) {
-				//console.error("Cannot free object: not found in the active pool");
 				return;
 			}
 
