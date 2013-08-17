@@ -2,7 +2,7 @@ melonJS
 ========================================================================
 [![Stories in Ready](https://badge.waffle.io/melonjs/melonJS.png)](http://waffle.io/melonjs/melonJS)
 
-A fresh & lightweight HTML5 game engine
+> A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 
 Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
