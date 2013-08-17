@@ -81,10 +81,10 @@
 
 	    // list of supported mouse & touch events
 		var activeEventList = null;
-		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', 'click', 'dblclick'];
-		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'tap', 'dbltap'];
-		// (a polyfill will probably be required at some stage, once this will be fully standardized0
-		var pointerEventList = ['mousewheel', 'PointerMove', 'PointerDown', 'PointerUp', undefined, undefined ];
+		var mouseEventList =   ['mousewheel', 'mousemove', 'mousedown', 'mouseup', undefined, 'click', 'dblclick'];
+		var touchEventList =   [undefined, 'touchmove', 'touchstart', 'touchend', 'touchcancel', 'tap', 'dbltap'];
+		// (a polyfill will probably be required at some stage, once this will be fully standardized
+		var pointerEventList = ['mousewheel', 'PointerMove', 'PointerDown', 'PointerUp', 'PointerCancel', undefined, undefined ];
 		
 		/**
 		 * enable keyboard event
@@ -256,6 +256,18 @@
 		function dispatchEvent(e) {
 			var handled = false;
 			var handlers = evtHandlers[e.type];
+
+			// Convert touchcancel -> touchend, and PointerCancel -> PointerEnd
+			if (!handlers) {
+				if (e.type == "touchcancel") {
+					e.type = "touchend";
+				}
+				else if (e.type == "PointerCancel") {
+					e.type = "PointerUp";
+				}
+				handlers = evtHandlers[e.type];
+			}
+
 			if (handlers) {
 				// get the current screen to world offset 
 				var offset = me.game.viewport.screenToWorld(0,0);
