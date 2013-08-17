@@ -165,7 +165,10 @@
 		 */
 		obj.add = function(className, entityObj, pooling) {
 			if (!pooling) {
-				entityClass[className.toLowerCase()] = entityObj;
+				entityClass[className.toLowerCase()] = {
+					"class" : entityObj,
+					"pool" : undefined
+				};
 				return;
 			}
 
@@ -208,7 +211,7 @@
 			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
 			if (name && entityClass[name]) {
 				if (!entityClass[name]['pool']) {
-					var proto = entityClass[name];
+					var proto = entityClass[name]["class"];
 					arguments[0] = proto;
 					return new (proto.bind.apply(proto, arguments))();
 				}
