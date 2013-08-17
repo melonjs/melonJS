@@ -229,26 +229,30 @@
 		},
 		
 		/**
-		 * Removes a child from the container.<br>
-		 * (action is immediate and unconditional)
+		 * Removes (and optionally destroys) a child from the container.<br>
+		 * (removal is immediate and unconditional)<br>
+		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
 		 * @name removeChild
 		 * @memberOf me.EntityContainer
 		 * @function
 		 * @param {me.Renderable} child
+		 * @param {Boolean} keepalive True to prevent calling child.destroy()
 		 */
-		removeChild : function(child) {
+		removeChild : function(child, keepalive) {
 
 			if  (this.hasChild(child)) {
 				
 				child.ancestor = undefined;
-				
-				if (typeof (child.destroy) == 'function') {
-					child.destroy();
+
+				if (!keepalive) {
+					if (typeof (child.destroy) === 'function') {
+						child.destroy();
+					}
+
+					me.entityPool.freeInstance(child);
 				}
 				
 				this.children.splice( this.getChildIndex(child), 1 );
-				
-				me.entityPool.freeInstance(child);
 			
 			} else {
 				throw "melonJS (me.EntityContainer): " + child + " The supplied entity must be a child of the caller " + this;
@@ -464,7 +468,7 @@
 				clearTimeout(this.pendingSort);
 				this.pendingSort = null;
 			}
-			// delete all childs
+			// delete all children
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				// don't remove it if a persistent object
 				if ( !obj.isPersistent ) {
