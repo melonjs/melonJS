@@ -260,12 +260,13 @@
 			// Convert touchcancel -> touchend, and PointerCancel -> PointerEnd
 			if (!handlers) {
 				if (e.type == "touchcancel") {
-					e.type = "touchend";
+					handlers = evtHandlers["touchend"];
 				}
 				else if (e.type == "PointerCancel") {
-					e.type = "PointerUp";
+					handlers = evtHandlers["PointerUp"];
+				} else {
+					handlers = evtHandlers[e.type];
 				}
-				handlers = evtHandlers[e.type];
 			}
 
 			if (handlers) {
