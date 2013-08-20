@@ -28,6 +28,8 @@
 		var atlasList = {};
 		// contains all the JSON files
 		var jsonList = {};
+		// contains all of the text files
+		var textList = {};
 		// flag to check loading status
 		var resourceCount = 0;
 		var loadCount = 0;
@@ -75,6 +77,35 @@
 			imgList[img.name].onload = onload;
 			imgList[img.name].onerror = onerror;
 			imgList[img.name].src = img.src + obj.nocache;
+		};
+
+		function preloadText(data, onload, onerror) {
+			var xmlhttp = new XMLHttpRequest();
+			
+			if (xmlhttp.overrideMimeType) {
+				xmlhttp.overrideMimeType('text/plain');
+			}
+			
+			xmlhttp.open("GET", data.src + obj.nocache, true);
+						
+			// set the callbacks
+			xmlhttp.ontimeout = onerror;
+			xmlhttp.onreadystatechange = function() {
+				if (xmlhttp.readyState==4) {
+					// status = 0 when file protocol is used, or cross-domain origin,
+					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
+					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+						// get the Texture Packer Atlas content
+						textList[data.name] = xmlhttp.responseText;
+						// fire the callback
+						onload();
+					} else {
+						onerror();
+					}
+				}
+			};
+			// send the request
+			xmlhttp.send(null);
 		};
 
 		/**
@@ -326,6 +357,8 @@
 		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
 		 *   // JSON file (used for texturePacker) 
 		 *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+		 *   // Text file
+		 *   {name: "text-data", type: "text", src: "data/list.txt" }
 		 * ];
 		 * ...
 		 *
@@ -391,7 +424,9 @@
 				case "json":
 					preloadJSON.call(this, res, onload, onerror);
 					return 1;
-
+				case "text":
+					preloadText.call(this, res, onload, onerror);
+					return 1;
 				case "tmx":
 				case "tsx":
 					preloadTMX.call(this, res, onload, onerror);
@@ -450,6 +485,13 @@
 
 					delete jsonList[res.name];
 					return true;
+
+				case "text":
+					if(!(res.name in textList))
+						return false;
+
+					delete textList[res.name];
+					return true;
 					
 				case "tmx":
 				case "tsx":
@@ -496,6 +538,10 @@
 
 			// unload all in json resources
 			for (name in jsonList)
+				obj.unload(name);
+
+			// unload all of the text resources
+			for (name in textList)
 				obj.unload(name);
 
 			// unload all audio resources
@@ -615,6 +661,25 @@
 			elt = elt.toLowerCase();
 			if(elt in jsonList) {
 				return jsonList[elt];
+			}
+			else {
+				return null;
+			}
+		}
+
+		/**
+		 * return the specified Text string
+		 * @name getTextFile
+		 * @memberOf me.loader
+		 * @public
+		 * @function
+		 * @param {String} Name for the text file to load
+		 * @return {Object} 
+		 */
+		obj.getTextFile = function(elt) {
+			elt = elt.toLowerCase();
+			if(elt in textList) {
+				return textList[elt];
 			}
 			else {
 				return null;
