@@ -111,7 +111,7 @@
  <objectgroup color="#ff0000" name="flies" width="50" height="17">
   <object name="FlyEntity" x="280" y="280" width="350" height="35">
    <properties>
-    <property name="animationspeed" value="12"/>
+    <property name="animationspeed" value="200"/>
     <property name="gravity" value="0"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="70"/>
@@ -120,7 +120,7 @@
   </object>
   <object name="FlyEntity" x="945" y="140" width="595" height="35">
    <properties>
-    <property name="animationspeed" value="12"/>
+    <property name="animationspeed" value="200"/>
     <property name="gravity" value="0"/>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="70"/>

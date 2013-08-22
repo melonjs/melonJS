@@ -209,7 +209,7 @@
                  "name":"FlyEntity",
                  "properties":
                     {
-                     "animationspeed":"12",
+                     "animationspeed":"200",
                      "gravity":"0",
                      "spriteheight":"35",
                      "spritewidth":"70",
@@ -226,7 +226,7 @@
                  "name":"FlyEntity",
                  "properties":
                     {
-                     "animationspeed":"12",
+                     "animationspeed":"200",
                      "gravity":"0",
                      "spriteheight":"35",
                      "spritewidth":"70",
