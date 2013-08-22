@@ -103,10 +103,10 @@
 		};
 
 		/**
-		 * return the current time
+		 * Return the current time, in milliseconds elapsed between midnight, January 1, 1970, and the current date and time.
 		 * @name getTime
 		 * @memberOf me.timer
-		 * @return {Date}
+		 * @return {Number}
 		 * @function
 		 */
 		api.getTime = function() {
