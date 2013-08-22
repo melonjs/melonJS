@@ -11,6 +11,7 @@ Version History
 * TMX : fixed default group opacity value not being applied to child objects.
 * Entity : added an Entity Container Object (me.EntityContainer) and reorganise `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root entity container.
+* Animation : the `animationspeed` property, now defines the delay between frames in terms of milliseconds (as opposed to framecount)
 
 
 0.9.8

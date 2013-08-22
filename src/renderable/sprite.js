@@ -375,13 +375,7 @@
 	 */
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
-	{
-		/** 
-		 * count the fps and manage animation change
-		 * @ignore
-		 */
-		fpscount : 0,
-		
+	{		
 		// Spacing and margin
 		spacing: 0,
 		margin: 0,
@@ -396,13 +390,13 @@
 		animationpause : false,
 
 		/**
-		 * animation cycling speed<br>
-		 * default value : me.sys.fps / 10;
+		 * animation cycling speed (delay between frame in ms)<br>
+		 * default value : 100ms;
 		 * @public
 		 * @type Number
 		 * @name me.AnimationSheet#animationspeed
 		 */
-		animationspeed : 0,
+		animationspeed : 100,
 
 		/** @ignore */
 		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
@@ -415,8 +409,8 @@
 			// default animation sequence
 			this.current = null;
 						
-			// default animation speed
-			this.animationspeed = me.sys.fps / 10;
+			// default animation speed (ms)
+			this.animationspeed = 100;
 
 			// Spacing and margin
 			this.spacing = spacing || 0;
@@ -482,7 +476,7 @@
 		 * @function
 		 * @param {String} name animation id
 		 * @param {Int[]|String[]} index list of sprite index or name defining the animaton
-		 * @param {Int} [animationspeed] cycling speed for animation in fps (lower is faster).
+		 * @param {Int} [animationspeed] cycling speed for animation in ms (delay between each frame).
 		 * @see me.AnimationSheet#animationspeed
 		 * @example
 		 * // walking animatin
@@ -492,7 +486,7 @@
 		 * // rolling animatin
 		 * this.addAnimation ("roll", [7,8,9,10]);
 		 * // slower animation
-		 * this.addAnimation ("roll", [7,8,9,10], 10);
+		 * this.addAnimation ("roll", [7,8,9,10], 200);
 		 */
 		addAnimation : function(name, index, animationspeed) {
 			this.anim[name] = {
@@ -500,8 +494,10 @@
 				frame : [],
 				idx : 0,
 				length : 0,
-				animationspeed: animationspeed || this.animationspeed
+				animationspeed: animationspeed || this.animationspeed,
+				nextFrame : 0
 			};
+			
 
 			if (index == null) {
 				index = [];
@@ -564,6 +560,7 @@
 				this.current = this.anim[name];
 				this.resetAnim = resetAnim || null;
 				this.setAnimationFrame(this.current.idx); // or 0 ?
+				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
 			} else {
 				throw "melonJS: animation id '" + name + "' not defined";
 			}
@@ -626,9 +623,9 @@
 		 */
 		update : function() {
 			// update animation if necessary
-			if (!this.animationpause && (this.fpscount++ > this.current.animationspeed)) {
+			if (!this.animationpause && (me.timer.getTime() >= this.current.nextFrame)) {
 				this.setAnimationFrame(++this.current.idx);
-				this.fpscount = 0;
+				
 
 				// switch animation if we reach the end of the strip
 				// and a callback is defined
@@ -644,6 +641,10 @@
 						return false;
 					}
 				}
+				
+				// set next frame timestamp
+				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
+
 				return this.parent() || true;
 			}
 			return this.parent();
