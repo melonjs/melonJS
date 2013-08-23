@@ -62,7 +62,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	display : function() {
 		var finalpos = this.initialPos - 140;
 		this.displayTween = new me.Tween(this.pos).to({y: finalpos }, 200);
-		this.displayTween.easing(me.Tween.Easing.Quadratic.EaseOut);
+		this.displayTween.easing(me.Tween.Easing.Quadratic.Out);
 		this.displayTween.onComplete(this.onDisplayed.bind(this));
 		this.displayTween.start();
 		// the mole is visible
@@ -84,7 +84,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	hide : function() {
 		var finalpos = this.initialPos;
 		this.displayTween = new me.Tween(this.pos).to({y: finalpos }, 200);
-		this.displayTween.easing(me.Tween.Easing.Quadratic.EaseIn);
+		this.displayTween.easing(me.Tween.Easing.Quadratic.In);
 		this.displayTween.onComplete(this.onHidden.bind(this));
 		this.displayTween.start()
 	},
