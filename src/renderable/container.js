@@ -19,8 +19,8 @@
 	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
 
-	me.EntityContainer = me.Renderable.extend(
-		/** @scope me.EntityContainer.prototype */ {
+	me.ObjectContainer = me.Renderable.extend(
+		/** @scope me.ObjectContainer.prototype */ {
 
 		/**
 		 * The property of entity that should be used to sort on <br>
@@ -28,7 +28,7 @@
 		 * @public
 		 * @type String
 		 * @name sortOn
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 */
 		sortOn : "z",
 		
@@ -37,7 +37,7 @@
 		 * @public
 		 * @type Boolean
 		 * @name autoSort
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 */
 		autoSort : true,
 		
@@ -58,7 +58,7 @@
 		 * @public
 		 * @type Boolean
 		 * @name collidable
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 */
 		collidable : true,
 		
@@ -86,7 +86,7 @@
 		 * Add a child to the container <br>
 		 * if auto-sort is disable, the object will be appended at the bottom of the list
 		 * @name addChild
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -106,7 +106,7 @@
 		 * Add a child to the container at the specified index<br>
 		 * (the list won't be sorted after insertion)
 		 * @name addChildAt
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -122,14 +122,14 @@
 				this.children.splice(index, 0, child);
 			
 			} else {
-				throw "melonJS (me.EntityContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
+				throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
 			}
 		},
 
 		/**
 		 * Swaps the position (z depth) of 2 childs
 		 * @name swapChildren
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 * @param {me.Renderable} child
@@ -149,14 +149,14 @@
 				this.children[index2] = child;
 				
 			} else {
-				throw "melonJS (me.EntityContainer): " + child + " Both the supplied entities must be a child of the caller " + this;
+				throw "melonJS (me.ObjectContainer): " + child + " Both the supplied entities must be a child of the caller " + this;
 			}
 		},
 
 		/**
 		 * Returns the Child at the specified index
 		 * @name getChildAt
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {Number} index
 		 */
@@ -164,14 +164,14 @@
 			if((index >= 0) && (index < this.children.length)) {
 				return this.children[index];
 			} else {
-				throw "melonJS (me.EntityContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
+				throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
 			}
 		},
 		
 		/**
 		 * Returns the index of the Child
 		 * @name getChildAt
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -182,7 +182,7 @@
 		/**
 		 * Returns true if contains the specified Child
 		 * @name hasChild
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {String} value Value of the property
 		 * @return {Boolean}
@@ -196,7 +196,7 @@
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object tree each time
 		 * @name getEntityByProp
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {String} prop Property name
@@ -213,7 +213,7 @@
 			// for string comparaisons
 			var _regExp = new RegExp(value, "i");
 			for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-				if (obj instanceof me.EntityContainer) {
+				if (obj instanceof me.ObjectContainer) {
 					objList = objList.concat(obj.getEntityByProp(prop, value));
 				} else if (obj.isEntity) {
 					if (typeof (obj[prop]) === 'string') {
@@ -233,7 +233,7 @@
 		 * (removal is immediate and unconditional)<br>
 		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
 		 * @name removeChild
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 * @param {Boolean} keepalive True to prevent calling child.destroy()
@@ -255,14 +255,14 @@
 				this.children.splice( this.getChildIndex(child), 1 );
 			
 			} else {
-				throw "melonJS (me.EntityContainer): " + child + " The supplied entity must be a child of the caller " + this;
+				throw "melonJS (me.ObjectContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
 		},
 		
 		/**
 		 * Move the child in the group one step forward (z depth).
 		 * @name moveUp
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -277,7 +277,7 @@
 		/**
 		 * Move the child in the group one step backward (z depth).
 		 * @name moveDown
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -292,7 +292,7 @@
 		/**
 		 * Move the specified child to the top(z depth).
 		 * @name moveToTop
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -309,7 +309,7 @@
 		/**
 		 * Move the specified child the bottom (z depth).
 		 * @name moveToBottom
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
 		 */
@@ -326,7 +326,7 @@
 		/**
 		 * Checks if the specified entity collides with others entities in this container
 		 * @name collideType
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {me.Renderable} obj Object to be tested for collision
@@ -340,7 +340,7 @@
 		/**
 		 * Checks if the specified entity collides with others entities in this container
 		 * @name collideType
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {me.Renderable} obj Object to be tested for collision
@@ -362,7 +362,7 @@
 				if ( (obj.inViewport || obj.alwaysUpdate ) && obj.collidable ) {
 					
 					// recursivly check through
-					if (obj instanceof me.EntityContainer) {
+					if (obj instanceof me.ObjectContainer) {
 					
 						res = obj.collideType(objA, type, multiple); 
 						if (multiple) {
@@ -398,7 +398,7 @@
 		/**
 		 * Manually trigger the sort of all the childs in the container</p>
 		 * @name sort
-		 * @memberOf me.EntityContainer
+		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 */
@@ -414,7 +414,7 @@
 			if (this.pendingSort === null) {
 				// trigger other child container sort function (if any)
 				for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-					if (obj instanceof me.EntityContainer) {
+					if (obj instanceof me.ObjectContainer) {
 						// note : this will generate one defered sorting function
 						// for each existing containe
 						obj.sort(force);

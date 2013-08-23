@@ -12,7 +12,8 @@ Version History
 * Entity : added an Entity Container Object (me.EntityContainer) and reorganise `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root entity container.
 * Animation : the `animationspeed` property, now defines the delay between frames in terms of milliseconds (as opposed to framecount)
-* Tween : the tween implementation has been updated to the last official r11 version. 
+* Tween : the tween implementation has been updated to the last official r11 version.
+* General : added `me.ObjectContainer`, a container for group of renderables/entities
 
 
 0.9.8

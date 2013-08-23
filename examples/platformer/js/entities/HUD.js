@@ -7,7 +7,7 @@
 game.HUD = game.HUD || {};
 
  
-game.HUD.Container = me.EntityContainer.extend({
+game.HUD.Container = me.ObjectContainer.extend({
 
 	init: function() {
 		// call the constructor

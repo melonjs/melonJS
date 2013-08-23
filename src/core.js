@@ -944,7 +944,7 @@ window.me = window.me || {};
 		 * a reference to the game world <br>
 		 * a world is a virtual environment containing all the game objects
 		 * @public
-		 * @type me.EntityContainer
+		 * @type me.ObjectContainer
 		 * @name world
 		 * @memberOf me.game
 		 */
@@ -953,7 +953,7 @@ window.me = window.me || {};
 
 		/**
 		 * when true, all objects will be added under the root world container <br>
-		 * when false, a `me.EntityContainer` object will be created for each corresponding `TMXObjectGroup`
+		 * when false, a `me.ObjectContainer` object will be created for each corresponding `TMXObjectGroup`
 		 * default value : true
 		 * @public
 		 * @type Boolean
@@ -1048,7 +1048,7 @@ window.me = window.me || {};
 				api.viewport = new me.Viewport(0, 0, width, height);
 
 				//the root object of our world is an entity container
-				api.world = new me.EntityContainer(0,0, width, height);
+				api.world = new me.ObjectContainer(0,0, width, height);
 				// give it a name
 				api.world.name = 'rootContainer';
 
@@ -1151,7 +1151,7 @@ window.me = window.me || {};
 					// y: Defaults to 0 and can no longer be changed in Tiled Qt.
 					// width: The width of the object group in tiles. Meaningless.
 					// height: The height of the object group in tiles. Meaningless.
-					targetContainer = new me.EntityContainer();
+					targetContainer = new me.ObjectContainer();
 					
 					// set additional properties
 					targetContainer.name = group.name;
@@ -1304,7 +1304,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 * @function
 		 * @param {me.ObjectEntity} child
-		 * @return {me.EntityContainer}
+		 * @return {me.ObjectContainer}
 		 */
 		api.getEntityContainer = function(child) {
 			return child.ancestor;
