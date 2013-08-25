@@ -1075,12 +1075,6 @@ window.me = window.me || {};
 		 * @function
 		 */
 		api.reset = function() {
-
-			// initialized the object if not yet done
-			if (!initialized) {
-				api.init();
-			}
-
 			// remove all objects
 			api.removeAll();
 

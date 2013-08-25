@@ -62,8 +62,12 @@
 
 			// persistent
 			this.isPersistent = true;
+
 			// a floating object
 			this.floating = true;
+
+			// renderable
+			this.isRenderable = true;
 			
 			// create a default font, with fixed char width
 			this.font = new me.Font('courier', 10, 'white');
@@ -221,7 +225,7 @@
 
 			// # entities / draw
 			this.font.draw(context, "#objects : " + me.game.world.children.length, 5, 5);
-			this.font.draw(context, "#draws   : " + me.game.world.world.drawCount, 5, 18);
+			this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5, 18);
 			
 			// debug checkboxes
 			this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]", 	100, 5);

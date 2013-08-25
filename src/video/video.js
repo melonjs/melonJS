@@ -293,6 +293,8 @@
 			
 			// trigger an initial resize();
 			me.video.onresize(null);
+
+			me.game.init();
 			
 			return true;
 		};
