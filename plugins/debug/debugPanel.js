@@ -68,6 +68,9 @@
 
 			// renderable
 			this.isRenderable = true;
+
+			// always update, even when not visible
+			this.alwaysUpdate = true;
 			
 			// create a default font, with fixed char width
 			this.font = new me.Font('courier', 10, 'white');
