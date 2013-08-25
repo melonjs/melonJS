@@ -524,6 +524,7 @@
 			'RIGHT' : 39,
 			'DOWN' : 40,
 			'ENTER' : 13,
+			'TAB' : 9,
 			'SHIFT' : 16,
 			'CTRL' : 17,
 			'ALT' : 18,
