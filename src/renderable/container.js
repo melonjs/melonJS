@@ -46,7 +46,7 @@
 		 * @ignore
 		 */
 		pendingSort : null,
-
+		
 		/**
 		 * The array of children of this container.
 		 * @ignore
@@ -78,7 +78,6 @@
 			// by default reuse the global me.game.setting
 			this.sortOn = me.game.sortOn;
 			this.autoSort = true;
-
 		},
 
 
@@ -99,7 +98,9 @@
 			
 			this.children.push(child);
 			
-			this.sort(this.autoSort===false);
+			if (this.autoSort === true) {
+				this.sort();
+			}
 		},
 		
 		/**
@@ -401,23 +402,20 @@
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
+		 * @param {Boolean} recursive recursively sort all containers if true
 		 */
-		sort : function(force) {
-			if (force===false && this.autoSort===true) {
-				// don't do anything if not an "internal" call
-				// and if auto-sort is enabled
-				return;
-			}
+		sort : function(recursive) {
 						
-			// do nothing if there is already 
-			// a previous pending sort
+			// do nothing if there is already a pending sort
 			if (this.pendingSort === null) {
-				// trigger other child container sort function (if any)
-				for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-					if (obj instanceof me.ObjectContainer) {
-						// note : this will generate one defered sorting function
-						// for each existing containe
-						obj.sort(force);
+				if (recursive === true) {
+					// trigger other child container sort function (if any)
+					for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+						if (obj instanceof me.ObjectContainer) {
+							// note : this will generate one defered sorting function
+							// for each existing containe
+							obj.sort(recursive);
+						}
 					}
 				}
 				/** @ignore */

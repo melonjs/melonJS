@@ -1180,22 +1180,19 @@ window.me = window.me || {};
 
 				// if we created a new container
 				if (api.mergeGroup === false) {
-					
-					// sort everything
-					targetContainer.sort();
+										
+					// add our container to the world
+					api.world.addChild(targetContainer);
 					
 					// re-enable auto-sort
 					targetContainer.autoSort = true;	
 				
-					// add our container to the world
-					api.world.addChild(targetContainer)
 				}
 
 			};
 
-
-			// sort all our stuff !!
-			api.world.sort();
+			// sort everything (recursively)
+			api.world.sort(true);
 			
 			// re-enable auto-sort
 			api.world.autoSort = true;
