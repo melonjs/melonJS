@@ -97,8 +97,56 @@
 			// memory heap sample points
 			this.samples = [];
 
+			//patch patch patch !
+			this.patchSystemFn();
+
 			// make it visible
 			this.show();
+		},
+
+		
+		/**
+		 * patch system fn to draw debug information
+		 */
+		patchSystemFn : function() {
+			// patch sprite.js
+			me.plugin.patch(me.SpriteObject, "draw", function (context) { 
+				// call the original me.game.draw function
+				this.parent(context);
+
+				// draw the sprite rectangle
+				if (me.debug.renderHitBox) {
+					context.strokeStyle =  "green";
+					context.strokeRect(this.left, this.top, this.width, this.height);
+				}
+			});
+
+			// patch entities.js
+			me.plugin.patch(me.ObjectEntity, "draw", function (context) { 
+				// call the original me.game.draw function
+				this.parent(context);
+
+				// check if debug mode is enabled
+				if (me.debug.renderHitBox && this.collisionBox) {
+					// draw the collisionBox
+					this.collisionBox.draw(context, "red");
+				}
+				if (me.debug.renderVelocity) {
+					// draw entity current velocity
+					var x = ~~(this.pos.x + this.hWidth);
+					var y = ~~(this.pos.y + this.hHeight);
+
+					context.strokeStyle = "blue";
+					context.lineWidth = 1;
+					context.beginPath();
+					context.moveTo(x, y);
+					context.lineTo(
+						x + ~~(this.vel.x * this.hWidth),
+						y + ~~(this.vel.y * this.hHeight)
+					);
+					context.stroke();
+				}
+			});
 		},
 		
 		/**

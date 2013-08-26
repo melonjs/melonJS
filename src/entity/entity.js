@@ -1126,26 +1126,6 @@
 				this.renderable.draw(context);
 				context.translate(-x, -y);
 			}
-			// check if debug mode is enabled
-			if (me.debug.renderHitBox && this.collisionBox) {
-				// draw the collisionBox
-				this.collisionBox.draw(context, "red");
-			}
-			if (me.debug.renderVelocity) {
-				// draw entity current velocity
-				var x = ~~(this.pos.x + this.hWidth);
-				var y = ~~(this.pos.y + this.hHeight);
-
-				context.strokeStyle = "blue";
-				context.lineWidth = 1;
-				context.beginPath();
-				context.moveTo(x, y);
-				context.lineTo(
-					x + ~~(this.vel.x * this.hWidth),
-					y + ~~(this.vel.y * this.hHeight)
-				);
-				context.stroke();
-			}
 		},
 		
 		/**

@@ -332,11 +332,6 @@
 			
 			// restore the context
 			context.restore();
-				
-			if (me.debug.renderHitBox) {
-				// draw the sprite rectangle
-				this.parent(context, 'green');
-			}
 		},
 
 		/**
