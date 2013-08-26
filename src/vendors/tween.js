@@ -212,7 +212,9 @@
 		 * @param {me.Tween#Easing} easing easing function
 		 */
 		this.easing = function ( easing ) {
-
+			if (typeof easing !== 'function') {
+				throw "melonJS: invalid easing function for me.Tween.easing()";
+			}
 			_easingFunction = easing;
 			return this;
 
