@@ -117,6 +117,15 @@
 			me.debug.renderHitBox = me.debug.renderHitBox || false;
 			me.debug.renderVelocity = me.debug.renderVelocity || false;
 		
+			// patch video.js
+			me.plugin.patch(me.timer, "update", function (context) { 
+				// call the original me.game.draw function
+				this.parent();
+
+				// call the FPS counter
+				me.timer.countFPS();
+			});
+
 			// patch sprite.js
 			me.plugin.patch(me.SpriteObject, "draw", function (context) { 
 				// call the original me.game.draw function

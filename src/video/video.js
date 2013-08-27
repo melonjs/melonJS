@@ -24,8 +24,6 @@
 			---------------------------------------------*/
 
 		//hold element to display fps
-		var htmlCounter = null;
-		var debug = false;
 		var framecount = 0;
 		var framedelta = 0;
 
@@ -37,15 +35,6 @@
 		// define some step with some margin
 		var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?
 
-		/**
-		 * draw the fps counter
-		 * @ignore
-		 */
-		function draw(fps) {
-			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/"
-					+ me.sys.fps + " fps)"), htmlCounter.firstChild);
-		};
-		
 
 		/*---------------------------------------------
 			
@@ -76,12 +65,6 @@
 		 * @ignore
 		 */
 		api.init = function() {
-			// check if we have a fps counter display in the HTML
-			htmlCounter = document.getElementById("framecounter");
-			if (htmlCounter !== null) {
-				me.debug.displayFPS = true;
-			}
-
 			// reset variables to initial state
 			api.reset();
 		};
@@ -113,6 +96,24 @@
 			return now;
 		};
 
+
+		/**
+		 * compute the actual frame time and fps rate
+		 * @name computeFPS
+		 * @ignore
+		 * @memberOf me.timer
+		 * @function
+		 */
+		api.countFPS = function() {
+			framecount++;
+			framedelta += delta;
+			if (framecount % 10 == 0) {
+				this.fps = (~~((1000 * framecount) / framedelta)).clamp(0, me.sys.fps);
+				framedelta = 0;
+				framecount = 0;
+			}
+		};
+
 		/**
 		 * update game tick
 		 * should be called once a frame
@@ -124,20 +125,6 @@
 
 			delta = (now - last);
 
-			// only draw the FPS on in the HTML page 
-			if (me.debug.displayFPS) {
-				framecount++;
-				framedelta += delta;
-				if (framecount % 10 == 0) {
-					this.fps = (~~((1000 * framecount) / framedelta)).clamp(0, me.sys.fps);
-					framedelta = 0;
-					framecount = 0;
-				}
-				// set the element in the HTML
-				if (htmlCounter !== null) {
-					draw(this.fps);
-				}
-			}
 			// get the game tick
 			api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
 		};

@@ -14,14 +14,6 @@
 	me.debug = {
 		
 		/**
-		 * enable the FPS counter <br>
-		 * default value : false
-		 * @type Boolean
-		 * @memberOf me.debug
-		 */
-		displayFPS : false,
-
-		/**
 		 * render Collision Map layer<br>
 		 * default value : false
 		 * @type Boolean
