@@ -15,7 +15,10 @@
  */
 
 (function($) {
-
+	
+	// ensure that me.debug is defined
+	me.debug = me.debug || {};
+	
 	/**
 	 * @class
 	 * @public
@@ -109,6 +112,11 @@
 		 * patch system fn to draw debug information
 		 */
 		patchSystemFn : function() {
+			
+			// add a few new debug flag (if not yet defined)
+			me.debug.renderHitBox = me.debug.renderHitBox || false;
+			me.debug.renderVelocity = me.debug.renderVelocity || false;
+		
 			// patch sprite.js
 			me.plugin.patch(me.SpriteObject, "draw", function (context) { 
 				// call the original me.game.draw function

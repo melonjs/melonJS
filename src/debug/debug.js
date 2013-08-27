@@ -22,29 +22,12 @@
 		displayFPS : false,
 
 		/**
-		 * render object Rectangle & Collision Box<br>
-		 * default value : false
-		 * @type Boolean
-		 * @memberOf me.debug
-		 */
-		renderHitBox : false,
-
-		/**
 		 * render Collision Map layer<br>
 		 * default value : false
 		 * @type Boolean
 		 * @memberOf me.debug
 		 */
-		renderCollisionMap : false,
-	
-		/**
-		 * render entities current velocity<br>
-		 * default value : false<br>
-		 * @type Boolean
-		 * @memberOf me.debug
-		 */
-		renderVelocity : false
-		
+		renderCollisionMap : false
 	};
 
 
