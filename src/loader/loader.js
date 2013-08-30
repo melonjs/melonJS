@@ -195,7 +195,7 @@
 			var httpReq = new XMLHttpRequest();
 
 			// load our file
-			httpReq.open("GET", data.src + obj.nocache, false);
+			httpReq.open("GET", data.src + obj.nocache, true);
 			httpReq.responseType = "arraybuffer";
 			httpReq.onerror = onerror;
 			httpReq.onload = function(event){
@@ -203,11 +203,10 @@
 				if (arrayBuffer) {
 					var byteArray = new Uint8Array(arrayBuffer);
 					var buffer = [];
-					binList[data.name] = new dataType();
 					for (var i = 0; i < byteArray.byteLength; i++) { 
 						buffer[i] = String.fromCharCode(byteArray[i]);
 					}
-					binList[data.name].data = buffer.join("");
+					binList[data.name] = buffer.join("");
 					// callback
 					onload();
 				}
