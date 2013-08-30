@@ -19,5 +19,5 @@ docs/*
 *.sw*
 
 *.sublime-project
-
+!melonjs.sublime-project
 melonjs.sublime-workspace

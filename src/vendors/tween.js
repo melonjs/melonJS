@@ -5,826 +5,826 @@
 
 (function() {
 
-	/**
-	 * Javascript Tweening Engine<p>
-	 * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
-	 * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
-	 * author sole / http://soledadpenades.com<br>
-	 * author mr.doob / http://mrdoob.com<br>
-	 * author Robert Eisele / http://www.xarg.org<br>
-	 * author Philippe / http://philippe.elsass.me<br>
-	 * author Robert Penner / http://www.robertpenner.com/easing_terms_of_use.html<br>
-	 * author Paul Lewis / http://www.aerotwist.com/<br>
-	 * author lechecacharro<br>
-	 * author Josh Faul / http://jocafa.com/
-	 * @class
-	 * @memberOf me
-	 * @constructor
-	 * @param {Object} object object on which to apply the tween
-	 * @example
-	 * // add a tween to change the object pos.y variable to 200 in 3 seconds
-	 * tween = new me.Tween(myObject.pos).to({y: 200}, 3000).onComplete(myFunc);
-	 * tween.easing(me.Tween.Easing.Bounce.Out);
-	 * tween.start();
-	 */
-	me.Tween = function ( object ) {
-
-		var _object = object;
-		var _valuesStart = {};
-		var _valuesEnd = {};
-		var _valuesStartRepeat = {};
-		var _duration = 1000;
-		var _repeat = 0;
-		var _yoyo = false;
-		var _reversed = false;
-		var _delayTime = 0;
-		var _startTime = null;
-		var _pauseTime = 0;
-		var _easingFunction = me.Tween.Easing.Linear.None;
-		var _interpolationFunction = me.Tween.Interpolation.Linear;
-		var _chainedTweens = [];
-		var _onStartCallback = null;
-		var _onStartCallbackFired = false;
-		var _onUpdateCallback = null;
-		var _onCompleteCallback = null;
-		
-		/**
-		 * Always update the tween (it's never in viewport)
-		 * @ignore
-		 */
-		this.alwaysUpdate = true;
-
-		// Set all starting values present on the target object
-		for ( var field in object ) {
-
-			_valuesStart[ field ] = parseFloat(object[field], 10);
-
-		}
-
-		
-		/**
-		 * object properties to be updated and duration
-		 * @name me.Tween#to
-		 * @public
-		 * @function
-		 * @param {Properties} prop list of properties
-		 * @param {int} duration tween duration
-		 */
-		this.to = function ( properties, duration ) {
-
-			if ( duration !== undefined ) {
-
-				_duration = duration;
-
-			}
-
-			_valuesEnd = properties;
-
-			return this;
-
-		};
-
-		/**
-		 * start the tween
-		 * @name me.Tween#start
-		 * @public
-		 * @function
-		 */
-		this.start = function ( time ) {
-
-			_onStartCallbackFired = false;
-
-			// add the tween to the object pool on start
-			me.game.add(this, 999);
-
-			_startTime = me.timer.getTime() + _delayTime;
-			_pauseTime = 0;
-		
-			for ( var property in _valuesEnd ) {
-
-				// check if an Array was provided as property value
-				if ( _valuesEnd[ property ] instanceof Array ) {
-
-					if ( _valuesEnd[ property ].length === 0 ) {
-
-						continue;
-
-					}
-
-					// create a local copy of the Array with the start value at the front
-					_valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
-
-				}
-
-				_valuesStart[ property ] = _object[ property ];
-
-				if( ( _valuesStart[ property ] instanceof Array ) === false ) {
-					_valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
-				}
-
-				_valuesStartRepeat[ property ] = _valuesStart[ property ] || 0;
-
-			}
-
-			return this;
-
-		};
-
-		/**
-		 * stop the tween
-		 * @name me.Tween#stop
-		 * @public
-		 * @function
-		 */
-		this.stop = function () {
-
-			me.game.remove(this, true);
-			return this;
-
-		};
-
-		/**
-		 * delay the tween
-		 * @name me.Tween#delay
-		 * @public
-		 * @function
-		 * @param {int} amount delay amount expressed in milliseconds
-		 */
-		this.delay = function ( amount ) {
-
-			_delayTime = amount;
-			return this;
-
-		};
-		
-		/**
-		 * Calculate delta to pause the tween
-		 * @ignore
-		 */
-		me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
-			if (_startTime) {
-				_pauseTime = me.timer.getTime();
-			}
-		});
-
-		/**
-		 * Calculate delta to resume the tween
-		 * @ignore
-		 */
-		me.event.subscribe(me.event.STATE_RESUME, function onResume() {
-			if (_startTime && _pauseTime) {
-				_startTime += me.timer.getTime() - _pauseTime;
-			}
-		});
-
-		/**
-		 * Repeat the tween 
-		 * @name me.Tween#repeat
-		 * @public
-		 * @function
-		 * @param {int} times amount of times the tween should be repeated
-		 */
-		this.repeat = function ( times ) {
-
-			_repeat = times;
-			return this;
-
-		};
-		
-		/**
-		 * allows the tween to bounce back to their original value when finished
-		 * @name me.Tween#yoyo
-		 * @public
-		 * @function
-		 * @param {Boolean} yoyo
-		 */
-		this.yoyo = function( yoyo ) {
-
-			_yoyo = yoyo;
-			return this;
-
-		};
-
-		/**
-		 * set the easing function
-		 * @name me.Tween#easing
-		 * @public
-		 * @function
-		 * @param {me.Tween#Easing} easing easing function
-		 */
-		this.easing = function ( easing ) {
-			if (typeof easing !== 'function') {
-				throw "melonJS: invalid easing function for me.Tween.easing()";
-			}
-			_easingFunction = easing;
-			return this;
-
-		};
-
-		/**
-		 * set the interpolation function
-		 * @name me.Tween#interpolation
-		 * @public
-		 * @function
-		 * @param {me.Tween#Interpolation} easing easing function
-		 */
-		this.interpolation = function ( interpolation ) {
-
-			_interpolationFunction = interpolation;
-			return this;
+    /**
+     * Javascript Tweening Engine<p>
+     * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
+     * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
+     * author sole / http://soledadpenades.com<br>
+     * author mr.doob / http://mrdoob.com<br>
+     * author Robert Eisele / http://www.xarg.org<br>
+     * author Philippe / http://philippe.elsass.me<br>
+     * author Robert Penner / http://www.robertpenner.com/easing_terms_of_use.html<br>
+     * author Paul Lewis / http://www.aerotwist.com/<br>
+     * author lechecacharro<br>
+     * author Josh Faul / http://jocafa.com/
+     * @class
+     * @memberOf me
+     * @constructor
+     * @param {Object} object object on which to apply the tween
+     * @example
+     * // add a tween to change the object pos.y variable to 200 in 3 seconds
+     * tween = new me.Tween(myObject.pos).to({y: 200}, 3000).onComplete(myFunc);
+     * tween.easing(me.Tween.Easing.Bounce.Out);
+     * tween.start();
+     */
+    me.Tween = function ( object ) {
+
+        var _object = object;
+        var _valuesStart = {};
+        var _valuesEnd = {};
+        var _valuesStartRepeat = {};
+        var _duration = 1000;
+        var _repeat = 0;
+        var _yoyo = false;
+        var _reversed = false;
+        var _delayTime = 0;
+        var _startTime = null;
+        var _pauseTime = 0;
+        var _easingFunction = me.Tween.Easing.Linear.None;
+        var _interpolationFunction = me.Tween.Interpolation.Linear;
+        var _chainedTweens = [];
+        var _onStartCallback = null;
+        var _onStartCallbackFired = false;
+        var _onUpdateCallback = null;
+        var _onCompleteCallback = null;
+        
+        /**
+         * Always update the tween (it's never in viewport)
+         * @ignore
+         */
+        this.alwaysUpdate = true;
+
+        // Set all starting values present on the target object
+        for ( var field in object ) {
+
+            _valuesStart[ field ] = parseFloat(object[field], 10);
+
+        }
+
+        
+        /**
+         * object properties to be updated and duration
+         * @name me.Tween#to
+         * @public
+         * @function
+         * @param {Properties} prop list of properties
+         * @param {int} duration tween duration
+         */
+        this.to = function ( properties, duration ) {
+
+            if ( duration !== undefined ) {
+
+                _duration = duration;
+
+            }
+
+            _valuesEnd = properties;
+
+            return this;
+
+        };
+
+        /**
+         * start the tween
+         * @name me.Tween#start
+         * @public
+         * @function
+         */
+        this.start = function ( time ) {
+
+            _onStartCallbackFired = false;
+
+            // add the tween to the object pool on start
+            me.game.add(this, 999);
+
+            _startTime = me.timer.getTime() + _delayTime;
+            _pauseTime = 0;
+        
+            for ( var property in _valuesEnd ) {
+
+                // check if an Array was provided as property value
+                if ( _valuesEnd[ property ] instanceof Array ) {
+
+                    if ( _valuesEnd[ property ].length === 0 ) {
+
+                        continue;
+
+                    }
+
+                    // create a local copy of the Array with the start value at the front
+                    _valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
+
+                }
+
+                _valuesStart[ property ] = _object[ property ];
+
+                if( ( _valuesStart[ property ] instanceof Array ) === false ) {
+                    _valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
+                }
+
+                _valuesStartRepeat[ property ] = _valuesStart[ property ] || 0;
+
+            }
+
+            return this;
+
+        };
+
+        /**
+         * stop the tween
+         * @name me.Tween#stop
+         * @public
+         * @function
+         */
+        this.stop = function () {
+
+            me.game.remove(this, true);
+            return this;
+
+        };
+
+        /**
+         * delay the tween
+         * @name me.Tween#delay
+         * @public
+         * @function
+         * @param {int} amount delay amount expressed in milliseconds
+         */
+        this.delay = function ( amount ) {
+
+            _delayTime = amount;
+            return this;
+
+        };
+        
+        /**
+         * Calculate delta to pause the tween
+         * @ignore
+         */
+        me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
+            if (_startTime) {
+                _pauseTime = me.timer.getTime();
+            }
+        });
+
+        /**
+         * Calculate delta to resume the tween
+         * @ignore
+         */
+        me.event.subscribe(me.event.STATE_RESUME, function onResume() {
+            if (_startTime && _pauseTime) {
+                _startTime += me.timer.getTime() - _pauseTime;
+            }
+        });
+
+        /**
+         * Repeat the tween 
+         * @name me.Tween#repeat
+         * @public
+         * @function
+         * @param {int} times amount of times the tween should be repeated
+         */
+        this.repeat = function ( times ) {
+
+            _repeat = times;
+            return this;
+
+        };
+        
+        /**
+         * allows the tween to bounce back to their original value when finished
+         * @name me.Tween#yoyo
+         * @public
+         * @function
+         * @param {Boolean} yoyo
+         */
+        this.yoyo = function( yoyo ) {
+
+            _yoyo = yoyo;
+            return this;
+
+        };
+
+        /**
+         * set the easing function
+         * @name me.Tween#easing
+         * @public
+         * @function
+         * @param {me.Tween#Easing} easing easing function
+         */
+        this.easing = function ( easing ) {
+            if (typeof easing !== 'function') {
+                throw "melonJS: invalid easing function for me.Tween.easing()";
+            }
+            _easingFunction = easing;
+            return this;
+
+        };
+
+        /**
+         * set the interpolation function
+         * @name me.Tween#interpolation
+         * @public
+         * @function
+         * @param {me.Tween#Interpolation} easing easing function
+         */
+        this.interpolation = function ( interpolation ) {
+
+            _interpolationFunction = interpolation;
+            return this;
 
-		};
-
-		/**
-		 * chain the tween
-		 * @name me.Tween#chain
-		 * @public
-		 * @function
-		 * @param {me.Tween} chainedTween Tween to be chained
-		 */
-		this.chain = function () {
-
-			_chainedTweens = arguments;
-			return this;
+        };
+
+        /**
+         * chain the tween
+         * @name me.Tween#chain
+         * @public
+         * @function
+         * @param {me.Tween} chainedTween Tween to be chained
+         */
+        this.chain = function () {
+
+            _chainedTweens = arguments;
+            return this;
 
-		};
+        };
 
-		/**
-		 * onStart callback
-		 * @name me.Tween#onStart
-		 * @public
-		 * @function
-		 * @param {Function} onStartCallback callback
-		 */
-		this.onStart = function ( callback ) {
+        /**
+         * onStart callback
+         * @name me.Tween#onStart
+         * @public
+         * @function
+         * @param {Function} onStartCallback callback
+         */
+        this.onStart = function ( callback ) {
 
-			_onStartCallback = callback;
-			return this;
+            _onStartCallback = callback;
+            return this;
 
-		};
+        };
 
-		/**
-		 * onUpdate callback
-		 * @name me.Tween#onUpdate
-		 * @public
-		 * @function
-		 * @param {Function} onUpdateCallback callback
-		 */
-		this.onUpdate = function ( callback ) {
+        /**
+         * onUpdate callback
+         * @name me.Tween#onUpdate
+         * @public
+         * @function
+         * @param {Function} onUpdateCallback callback
+         */
+        this.onUpdate = function ( callback ) {
 
-			_onUpdateCallback = callback;
-			return this;
+            _onUpdateCallback = callback;
+            return this;
 
-		};
+        };
 
-		/**
-		 * onComplete callback
-		 * @name me.Tween#onComplete
-		 * @public
-		 * @function
-		 * @param {Function} onCompleteCallback callback
-		 */
-		this.onComplete = function ( callback ) {
+        /**
+         * onComplete callback
+         * @name me.Tween#onComplete
+         * @public
+         * @function
+         * @param {Function} onCompleteCallback callback
+         */
+        this.onComplete = function ( callback ) {
 
-			_onCompleteCallback = callback;
-			return this;
+            _onCompleteCallback = callback;
+            return this;
 
-		};
-		
-		/** @ignore*/
-		this.update = function ( /*time*/ ) {
+        };
+        
+        /** @ignore*/
+        this.update = function ( /*time*/ ) {
 
-			var property;
-			
-			var time = me.timer.getTime();
+            var property;
+            
+            var time = me.timer.getTime();
 
-			if ( time < _startTime ) {
+            if ( time < _startTime ) {
 
-				return true;
+                return true;
 
-			}
+            }
 
-			if ( _onStartCallbackFired === false ) {
+            if ( _onStartCallbackFired === false ) {
 
-				if ( _onStartCallback !== null ) {
+                if ( _onStartCallback !== null ) {
 
-					_onStartCallback.call( _object );
+                    _onStartCallback.call( _object );
 
-				}
+                }
 
-				_onStartCallbackFired = true;
+                _onStartCallbackFired = true;
 
-			}
+            }
 
-			var elapsed = ( time - _startTime ) / _duration;
-			elapsed = elapsed > 1 ? 1 : elapsed;
+            var elapsed = ( time - _startTime ) / _duration;
+            elapsed = elapsed > 1 ? 1 : elapsed;
 
-			var value = _easingFunction( elapsed );
+            var value = _easingFunction( elapsed );
 
-			for ( property in _valuesEnd ) {
+            for ( property in _valuesEnd ) {
 
-				var start = _valuesStart[ property ] || 0;
-				var end = _valuesEnd[ property ];
+                var start = _valuesStart[ property ] || 0;
+                var end = _valuesEnd[ property ];
 
-				if ( end instanceof Array ) {
+                if ( end instanceof Array ) {
 
-					_object[ property ] = _interpolationFunction( end, value );
+                    _object[ property ] = _interpolationFunction( end, value );
 
-				} else {
+                } else {
 
-					// Parses relative end values with start as base (e.g.: +10, -3)
-					if ( typeof(end) === "string" ) {
-						end = start + parseFloat(end, 10);
-					}
+                    // Parses relative end values with start as base (e.g.: +10, -3)
+                    if ( typeof(end) === "string" ) {
+                        end = start + parseFloat(end, 10);
+                    }
 
-					// protect against non numeric properties.
-					if ( typeof(end) === "number" ) {
-						_object[ property ] = start + ( end - start ) * value;
-					}
+                    // protect against non numeric properties.
+                    if ( typeof(end) === "number" ) {
+                        _object[ property ] = start + ( end - start ) * value;
+                    }
 
-				}
+                }
 
-			}
+            }
 
-			if ( _onUpdateCallback !== null ) {
+            if ( _onUpdateCallback !== null ) {
 
-				_onUpdateCallback.call( _object, value );
+                _onUpdateCallback.call( _object, value );
 
-			}
-
-			if ( elapsed == 1 ) {
+            }
+
+            if ( elapsed == 1 ) {
 
-				if ( _repeat > 0 ) {
-
-					if( isFinite( _repeat ) ) {
-						_repeat--;
-					}
+                if ( _repeat > 0 ) {
+
+                    if( isFinite( _repeat ) ) {
+                        _repeat--;
+                    }
 
-					// reassign starting values, restart by making startTime = now
-					for( property in _valuesStartRepeat ) {
+                    // reassign starting values, restart by making startTime = now
+                    for( property in _valuesStartRepeat ) {
 
-						if ( typeof( _valuesEnd[ property ] ) === "string" ) {
-							_valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ], 10);
-						}
+                        if ( typeof( _valuesEnd[ property ] ) === "string" ) {
+                            _valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ], 10);
+                        }
 
-						if (_yoyo) {
-							var tmp = _valuesStartRepeat[ property ];
-							_valuesStartRepeat[ property ] = _valuesEnd[ property ];
-							_valuesEnd[ property ] = tmp;
-							_reversed = !_reversed;
-						}
-						_valuesStart[ property ] = _valuesStartRepeat[ property ];
+                        if (_yoyo) {
+                            var tmp = _valuesStartRepeat[ property ];
+                            _valuesStartRepeat[ property ] = _valuesEnd[ property ];
+                            _valuesEnd[ property ] = tmp;
+                            _reversed = !_reversed;
+                        }
+                        _valuesStart[ property ] = _valuesStartRepeat[ property ];
 
-					}
+                    }
 
-					_startTime = time + _delayTime;
+                    _startTime = time + _delayTime;
 
-					return true;
+                    return true;
 
-				} else {
-				
-					// remove the tween from the object pool
-					me.game.remove(this, true);
+                } else {
+                
+                    // remove the tween from the object pool
+                    me.game.remove(this, true);
 
-					if ( _onCompleteCallback !== null ) {
+                    if ( _onCompleteCallback !== null ) {
 
-						_onCompleteCallback.call( _object );
+                        _onCompleteCallback.call( _object );
 
-					}
+                    }
 
-					for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i ++ ) {
+                    for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i ++ ) {
 
-						_chainedTweens[ i ].start( time );
+                        _chainedTweens[ i ].start( time );
 
-					}
+                    }
 
-					return false;
+                    return false;
 
-				}
+                }
 
-			}
+            }
 
-			return true;
+            return true;
 
-		};
+        };
 
-	};
+    };
 
-	/**
-	 * Easing Function :<br>
-	 * <p>
-	 * me.Tween.Easing.Linear.None<br>
-	 * me.Tween.Easing.Quadratic.In<br>
-	 * me.Tween.Easing.Quadratic.Out<br>
-	 * me.Tween.Easing.Quadratic.InOut<br>
-	 * me.Tween.Easing.Cubic.In<br>
-	 * me.Tween.Easing.Cubic.Out<br>
-	 * me.Tween.Easing.Cubic.InOut<br>
-	 * me.Tween.Easing.Quartic.In<br>
-	 * me.Tween.Easing.Quartic.Out<br>
-	 * me.Tween.Easing.Quartic.InOut<br>
-	 * me.Tween.Easing.Quintic.In<br>
-	 * me.Tween.Easing.Quintic.Out<br>
-	 * me.Tween.Easing.Quintic.InOut<br>
-	 * me.Tween.Easing.Sinusoidal.In<br>
-	 * me.Tween.Easing.Sinusoidal.Out<br>
-	 * me.Tween.Easing.Sinusoidal.InOut<br>
-	 * me.Tween.Easing.Exponential.In<br>
-	 * me.Tween.Easing.Exponential.Out<br>
-	 * me.Tween.Easing.Exponential.InOut<br>
-	 * me.Tween.Easing.Circular.In<br>
-	 * me.Tween.Easing.Circular.Out<br>
-	 * me.Tween.Easing.Circular.InOut<br>
-	 * me.Tween.Easing.Elastic.In<br>
-	 * me.Tween.Easing.Elastic.Out<br>
-	 * me.Tween.Easing.Elastic.InOut<br>
-	 * me.Tween.Easing.Back.In<br>
-	 * me.Tween.Easing.Back.Out<br>
-	 * me.Tween.Easing.Back.InOut<br>
-	 * me.Tween.Easing.Bounce.In<br>
-	 * me.Tween.Easing.Bounce.Out<br>
-	 * me.Tween.Easing.Bounce.InOut
-	 * </p>
-	 * @public
-	 * @constant
-	 * @type enum
-	 * @name me.Tween#Easing
-	 */
-	me.Tween.Easing = {
+    /**
+     * Easing Function :<br>
+     * <p>
+     * me.Tween.Easing.Linear.None<br>
+     * me.Tween.Easing.Quadratic.In<br>
+     * me.Tween.Easing.Quadratic.Out<br>
+     * me.Tween.Easing.Quadratic.InOut<br>
+     * me.Tween.Easing.Cubic.In<br>
+     * me.Tween.Easing.Cubic.Out<br>
+     * me.Tween.Easing.Cubic.InOut<br>
+     * me.Tween.Easing.Quartic.In<br>
+     * me.Tween.Easing.Quartic.Out<br>
+     * me.Tween.Easing.Quartic.InOut<br>
+     * me.Tween.Easing.Quintic.In<br>
+     * me.Tween.Easing.Quintic.Out<br>
+     * me.Tween.Easing.Quintic.InOut<br>
+     * me.Tween.Easing.Sinusoidal.In<br>
+     * me.Tween.Easing.Sinusoidal.Out<br>
+     * me.Tween.Easing.Sinusoidal.InOut<br>
+     * me.Tween.Easing.Exponential.In<br>
+     * me.Tween.Easing.Exponential.Out<br>
+     * me.Tween.Easing.Exponential.InOut<br>
+     * me.Tween.Easing.Circular.In<br>
+     * me.Tween.Easing.Circular.Out<br>
+     * me.Tween.Easing.Circular.InOut<br>
+     * me.Tween.Easing.Elastic.In<br>
+     * me.Tween.Easing.Elastic.Out<br>
+     * me.Tween.Easing.Elastic.InOut<br>
+     * me.Tween.Easing.Back.In<br>
+     * me.Tween.Easing.Back.Out<br>
+     * me.Tween.Easing.Back.InOut<br>
+     * me.Tween.Easing.Bounce.In<br>
+     * me.Tween.Easing.Bounce.Out<br>
+     * me.Tween.Easing.Bounce.InOut
+     * </p>
+     * @public
+     * @constant
+     * @type enum
+     * @name me.Tween#Easing
+     */
+    me.Tween.Easing = {
 
-		Linear: {
-			/** @ignore */
-			None: function ( k ) {
+        Linear: {
+            /** @ignore */
+            None: function ( k ) {
 
-				return k;
+                return k;
 
-			}
+            }
 
-		},
+        },
 
-		Quadratic: {
-			/** @ignore */
-			In: function ( k ) {
+        Quadratic: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return k * k;
+                return k * k;
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return k * ( 2 - k );
+                return k * ( 2 - k );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
-				return - 0.5 * ( --k * ( k - 2 ) - 1 );
+                if ( ( k *= 2 ) < 1 ) return 0.5 * k * k;
+                return - 0.5 * ( --k * ( k - 2 ) - 1 );
 
-			}
+            }
 
-		},
+        },
 
-		Cubic: {
-			/** @ignore */
-			In: function ( k ) {
+        Cubic: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return k * k * k;
+                return k * k * k;
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return --k * k * k + 1;
+                return --k * k * k + 1;
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
-				return 0.5 * ( ( k -= 2 ) * k * k + 2 );
+                if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k;
+                return 0.5 * ( ( k -= 2 ) * k * k + 2 );
 
-			}
+            }
 
-		},
+        },
 
-		Quartic: {
-			/** @ignore */
-			In: function ( k ) {
+        Quartic: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return k * k * k * k;
+                return k * k * k * k;
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return 1 - ( --k * k * k * k );
+                return 1 - ( --k * k * k * k );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
-				return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
+                if ( ( k *= 2 ) < 1) return 0.5 * k * k * k * k;
+                return - 0.5 * ( ( k -= 2 ) * k * k * k - 2 );
 
-			}
+            }
 
-		},
+        },
 
-		Quintic: {
-			/** @ignore */
-			In: function ( k ) {
+        Quintic: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return k * k * k * k * k;
+                return k * k * k * k * k;
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return --k * k * k * k * k + 1;
+                return --k * k * k * k * k + 1;
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
-				return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
+                if ( ( k *= 2 ) < 1 ) return 0.5 * k * k * k * k * k;
+                return 0.5 * ( ( k -= 2 ) * k * k * k * k + 2 );
 
-			}
+            }
 
-		},
+        },
 
-		Sinusoidal: {
-			/** @ignore */
-			In: function ( k ) {
+        Sinusoidal: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return 1 - Math.cos( k * Math.PI / 2 );
+                return 1 - Math.cos( k * Math.PI / 2 );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return Math.sin( k * Math.PI / 2 );
+                return Math.sin( k * Math.PI / 2 );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
+                return 0.5 * ( 1 - Math.cos( Math.PI * k ) );
 
-			}
+            }
 
-		},
+        },
 
-		Exponential: {
-			/** @ignore */
-			In: function ( k ) {
+        Exponential: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return k === 0 ? 0 : Math.pow( 1024, k - 1 );
+                return k === 0 ? 0 : Math.pow( 1024, k - 1 );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
+                return k === 1 ? 1 : 1 - Math.pow( 2, - 10 * k );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( k === 0 ) return 0;
-				if ( k === 1 ) return 1;
-				if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
-				return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
+                if ( k === 0 ) return 0;
+                if ( k === 1 ) return 1;
+                if ( ( k *= 2 ) < 1 ) return 0.5 * Math.pow( 1024, k - 1 );
+                return 0.5 * ( - Math.pow( 2, - 10 * ( k - 1 ) ) + 2 );
 
-			}
+            }
 
-		},
+        },
 
-		Circular: {
-			/** @ignore */
-			In: function ( k ) {
+        Circular: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return 1 - Math.sqrt( 1 - k * k );
+                return 1 - Math.sqrt( 1 - k * k );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				return Math.sqrt( 1 - ( --k * k ) );
+                return Math.sqrt( 1 - ( --k * k ) );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
-				return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
+                if ( ( k *= 2 ) < 1) return - 0.5 * ( Math.sqrt( 1 - k * k) - 1);
+                return 0.5 * ( Math.sqrt( 1 - ( k -= 2) * k) + 1);
 
-			}
+            }
 
-		},
+        },
 
-		Elastic: {
-			/** @ignore */
-			In: function ( k ) {
+        Elastic: {
+            /** @ignore */
+            In: function ( k ) {
 
-				var s, a = 0.1, p = 0.4;
-				if ( k === 0 ) return 0;
-				if ( k === 1 ) return 1;
-				if ( !a || a < 1 ) { a = 1; s = p / 4; }
-				else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-				return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+                var s, a = 0.1, p = 0.4;
+                if ( k === 0 ) return 0;
+                if ( k === 1 ) return 1;
+                if ( !a || a < 1 ) { a = 1; s = p / 4; }
+                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+                return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				var s, a = 0.1, p = 0.4;
-				if ( k === 0 ) return 0;
-				if ( k === 1 ) return 1;
-				if ( !a || a < 1 ) { a = 1; s = p / 4; }
-				else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-				return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+                var s, a = 0.1, p = 0.4;
+                if ( k === 0 ) return 0;
+                if ( k === 1 ) return 1;
+                if ( !a || a < 1 ) { a = 1; s = p / 4; }
+                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+                return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				var s, a = 0.1, p = 0.4;
-				if ( k === 0 ) return 0;
-				if ( k === 1 ) return 1;
-				if ( !a || a < 1 ) { a = 1; s = p / 4; }
-				else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-				if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
-				return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
+                var s, a = 0.1, p = 0.4;
+                if ( k === 0 ) return 0;
+                if ( k === 1 ) return 1;
+                if ( !a || a < 1 ) { a = 1; s = p / 4; }
+                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
+                if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
+                return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
 
-			}
+            }
 
-		},
+        },
 
-		Back: {
-			/** @ignore */
-			In: function ( k ) {
+        Back: {
+            /** @ignore */
+            In: function ( k ) {
 
-				var s = 1.70158;
-				return k * k * ( ( s + 1 ) * k - s );
+                var s = 1.70158;
+                return k * k * ( ( s + 1 ) * k - s );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				var s = 1.70158;
-				return --k * k * ( ( s + 1 ) * k + s ) + 1;
+                var s = 1.70158;
+                return --k * k * ( ( s + 1 ) * k + s ) + 1;
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				var s = 1.70158 * 1.525;
-				if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
-				return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
+                var s = 1.70158 * 1.525;
+                if ( ( k *= 2 ) < 1 ) return 0.5 * ( k * k * ( ( s + 1 ) * k - s ) );
+                return 0.5 * ( ( k -= 2 ) * k * ( ( s + 1 ) * k + s ) + 2 );
 
-			}
+            }
 
-		},
+        },
 
-		Bounce: {
-			/** @ignore */
-			In: function ( k ) {
+        Bounce: {
+            /** @ignore */
+            In: function ( k ) {
 
-				return 1 - me.Tween.Easing.Bounce.Out( 1 - k );
+                return 1 - me.Tween.Easing.Bounce.Out( 1 - k );
 
-			},
-			/** @ignore */
-			Out: function ( k ) {
+            },
+            /** @ignore */
+            Out: function ( k ) {
 
-				if ( k < ( 1 / 2.75 ) ) {
+                if ( k < ( 1 / 2.75 ) ) {
 
-					return 7.5625 * k * k;
+                    return 7.5625 * k * k;
 
-				} else if ( k < ( 2 / 2.75 ) ) {
+                } else if ( k < ( 2 / 2.75 ) ) {
 
-					return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
+                    return 7.5625 * ( k -= ( 1.5 / 2.75 ) ) * k + 0.75;
 
-				} else if ( k < ( 2.5 / 2.75 ) ) {
+                } else if ( k < ( 2.5 / 2.75 ) ) {
 
-					return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
+                    return 7.5625 * ( k -= ( 2.25 / 2.75 ) ) * k + 0.9375;
 
-				} else {
+                } else {
 
-					return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
+                    return 7.5625 * ( k -= ( 2.625 / 2.75 ) ) * k + 0.984375;
 
-				}
+                }
 
-			},
-			/** @ignore */
-			InOut: function ( k ) {
+            },
+            /** @ignore */
+            InOut: function ( k ) {
 
-				if ( k < 0.5 ) return me.Tween.Easing.Bounce.In( k * 2 ) * 0.5;
-				return me.Tween.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
+                if ( k < 0.5 ) return me.Tween.Easing.Bounce.In( k * 2 ) * 0.5;
+                return me.Tween.Easing.Bounce.Out( k * 2 - 1 ) * 0.5 + 0.5;
 
-			}
+            }
 
-		}
+        }
 
-	};
+    };
 
-	/* Interpolation Function :<br>
-	 * <p>
-	 * me.Tween.Interpolation.Linear<br>
-	 * me.Tween.Interpolation.Bezier<br>
-	 * me.Tween.Interpolation.CatmullRom<br>
-	 * </p>
-	 * @public
-	 * @constant
-	 * @type enum
-	 * @name me.Tween#Interpolation
-	 */
-	me.Tween.Interpolation = {
-		/** @ignore */
-		Linear: function ( v, k ) {
+    /* Interpolation Function :<br>
+     * <p>
+     * me.Tween.Interpolation.Linear<br>
+     * me.Tween.Interpolation.Bezier<br>
+     * me.Tween.Interpolation.CatmullRom<br>
+     * </p>
+     * @public
+     * @constant
+     * @type enum
+     * @name me.Tween#Interpolation
+     */
+    me.Tween.Interpolation = {
+        /** @ignore */
+        Linear: function ( v, k ) {
 
-			var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = me.Tween.Interpolation.Utils.Linear;
+            var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = me.Tween.Interpolation.Utils.Linear;
 
-			if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
-			if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
+            if ( k < 0 ) return fn( v[ 0 ], v[ 1 ], f );
+            if ( k > 1 ) return fn( v[ m ], v[ m - 1 ], m - f );
 
-			return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
+            return fn( v[ i ], v[ i + 1 > m ? m : i + 1 ], f - i );
 
-		},
-		/** @ignore */
-		Bezier: function ( v, k ) {
+        },
+        /** @ignore */
+        Bezier: function ( v, k ) {
 
-			var b = 0, n = v.length - 1, pw = Math.pow, bn = me.Tween.Interpolation.Utils.Bernstein, i;
+            var b = 0, n = v.length - 1, pw = Math.pow, bn = me.Tween.Interpolation.Utils.Bernstein, i;
 
-			for ( i = 0; i <= n; i++ ) {
-				b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
-			}
+            for ( i = 0; i <= n; i++ ) {
+                b += pw( 1 - k, n - i ) * pw( k, i ) * v[ i ] * bn( n, i );
+            }
 
-			return b;
+            return b;
 
-		},
-		/** @ignore */
-		CatmullRom: function ( v, k ) {
+        },
+        /** @ignore */
+        CatmullRom: function ( v, k ) {
 
-			var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = me.Tween.Interpolation.Utils.CatmullRom;
+            var m = v.length - 1, f = m * k, i = Math.floor( f ), fn = me.Tween.Interpolation.Utils.CatmullRom;
 
-			if ( v[ 0 ] === v[ m ] ) {
+            if ( v[ 0 ] === v[ m ] ) {
 
-				if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
+                if ( k < 0 ) i = Math.floor( f = m * ( 1 + k ) );
 
-				return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
+                return fn( v[ ( i - 1 + m ) % m ], v[ i ], v[ ( i + 1 ) % m ], v[ ( i + 2 ) % m ], f - i );
 
-			} else {
+            } else {
 
-				if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
-				if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
+                if ( k < 0 ) return v[ 0 ] - ( fn( v[ 0 ], v[ 0 ], v[ 1 ], v[ 1 ], -f ) - v[ 0 ] );
+                if ( k > 1 ) return v[ m ] - ( fn( v[ m ], v[ m ], v[ m - 1 ], v[ m - 1 ], f - m ) - v[ m ] );
 
-				return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
+                return fn( v[ i ? i - 1 : 0 ], v[ i ], v[ m < i + 1 ? m : i + 1 ], v[ m < i + 2 ? m : i + 2 ], f - i );
 
-			}
+            }
 
-		},
+        },
 
-		Utils: {
-			/** @ignore */
-			Linear: function ( p0, p1, t ) {
+        Utils: {
+            /** @ignore */
+            Linear: function ( p0, p1, t ) {
 
-				return ( p1 - p0 ) * t + p0;
+                return ( p1 - p0 ) * t + p0;
 
-			},
-			/** @ignore */
-			Bernstein: function ( n , i ) {
+            },
+            /** @ignore */
+            Bernstein: function ( n , i ) {
 
-				var fc = me.Tween.Interpolation.Utils.Factorial;
-				return fc( n ) / fc( i ) / fc( n - i );
+                var fc = me.Tween.Interpolation.Utils.Factorial;
+                return fc( n ) / fc( i ) / fc( n - i );
 
-			},
-			/** @ignore */
-			Factorial: ( function () {
+            },
+            /** @ignore */
+            Factorial: ( function () {
 
-				var a = [ 1 ];
+                var a = [ 1 ];
 
-				return function ( n ) {
+                return function ( n ) {
 
-					var s = 1, i;
-					if ( a[ n ] ) return a[ n ];
-					for ( i = n; i > 1; i-- ) s *= i;
-					return a[ n ] = s;
+                    var s = 1, i;
+                    if ( a[ n ] ) return a[ n ];
+                    for ( i = n; i > 1; i-- ) s *= i;
+                    return a[ n ] = s;
 
-				};
+                };
 
-			} )(),
-			/** @ignore */
-			CatmullRom: function ( p0, p1, p2, p3, t ) {
+            } )(),
+            /** @ignore */
+            CatmullRom: function ( p0, p1, p2, p3, t ) {
 
-				var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
-				return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
+                var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
+                return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
 
-			}
+            }
 
-		}
+        }
 
-	};
+    };
 
 })();

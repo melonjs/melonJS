@@ -1,0 +1,29 @@
+{
+    "folders":
+    [
+        {
+            "follow_symlinks": true,
+            "path": "."
+        }
+    ],
+
+    "settings": {
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true
+    },
+
+    "build_systems": [
+        {
+            "name": "Default",
+            "cmd": ["grunt", "default"]
+        },
+        {
+            "name": "Lint",
+            "cmd": ["grunt", "lint"]
+        },
+        {
+            "name": "Documentation",
+            "cmd": ["grunt", "doc"]
+        }
+    ]
+}
