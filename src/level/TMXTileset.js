@@ -373,7 +373,7 @@
 				// set initial value to zero since we use a transform matrix
 				dx = dy = 0;
 				
-				context.save()
+				context.save();
 								
 				if (tmxTile.flipAD){
 					// Use shearing to swap the X/Y axis
@@ -411,7 +411,7 @@
 
 			if  (tmxTile.flipped)  {
 				// restore the context to the previous state
-				context.restore()
+				context.restore();
 			}
 		}
 

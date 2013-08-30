@@ -82,7 +82,7 @@
 				}
 				// initialize the atlas
 				this.atlas = this.initFromTexturePacker(atlas);
-			};
+			}
 			
 			// if format not recognized
 			if (this.atlas === null) {
@@ -146,7 +146,7 @@
 					width: region.frame.width,
 					height: region.frame.height,
 					angle : (region.rotated===true) ? nhPI : 0
-				}
+				};
 			}
 			return null;
 		},
