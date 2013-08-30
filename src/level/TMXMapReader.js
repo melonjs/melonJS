@@ -29,9 +29,9 @@
 		
 		readMap: function (map) {
 			// if already loaded, do nothing
-			if (map.initialized)
+			if (map.initialized) {
 				return;
-			
+			}
 			if (me.loader.getTMXFormat(map.levelId) === 'xml') {
 				// create an instance of the XML Reader
 				if  (this.XMLReader === null) {
@@ -49,7 +49,7 @@
 				}
 				this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));
 			
-			};
+			}
 			
 			
 			// center the map if smaller than the current viewport
@@ -76,11 +76,9 @@
 			switch (obj.orientation) {
 				case "orthogonal": {
 				  return new me.TMXOrthogonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
-				  break;
 				}
 				case "isometric": {
 				  return new me.TMXIsometricRenderer(obj.cols, obj.rows , obj.tilewidth, obj.tileheight);
-				  break;
 				}
 				// if none found, throw an exception
 				default : {
@@ -136,7 +134,6 @@
 				  
 				default:
 					throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-					break;
 			}
 					
 
@@ -156,7 +153,7 @@
 						if (!layer.tileset.contains(tmxTile.tileId)) {
 							layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
 						}
-					   	// draw the corresponding tile
+						// draw the corresponding tile
 						if (layer.visible && layer.preRender) {
 							layer.renderer.drawTile(layer.layerSurface, x, y, tmxTile, layer.tileset);
 						}
@@ -207,7 +204,7 @@
 
 			getBooleanAttribute : function(elt, str, val) {
 				var ret = this.getStringAttribute(elt, str, val);
-				return ret ? (ret == "true") : val;
+				return ret ? (ret === "true") : val;
 			},
 
 			// free the allocated parser
@@ -356,10 +353,10 @@
 			var encoding = this.TMXParser.getStringAttribute(layerData, me.TMX_TAG_ENCODING, null);
 			var compression = this.TMXParser.getStringAttribute(layerData, me.TMX_TAG_COMPRESSION, null);
 			// make sure this is not happening
-			if (encoding == '') {
+			if (encoding === '') {
 				encoding = null;
 			}
-			if (compression == '') {
+			if (compression === '') {
 				compression = null;
 			}
 			
@@ -438,7 +435,7 @@
 		readJSONMap: function (map, data) {
 			if (!data) {
 				throw "melonJS:" + map.levelId + " TMX map not found";
-			};
+			}
 			
 			// to automatically increment z index
 			var zOrder = 0;

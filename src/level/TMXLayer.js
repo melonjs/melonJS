@@ -36,7 +36,7 @@
 		 * @function
 		 */
 		reset : function() {
-			;// nothing to do here
+			// nothing to do here
 		},
 
 		/**
@@ -78,7 +78,7 @@
 		 */
 		draw : function(context, rect) {
 			// set layer opacity
-			var _alpha = context.globalAlpha
+			var _alpha = context.globalAlpha;
 			context.globalAlpha = this.opacity;
 			
 			// set layer color
@@ -283,7 +283,7 @@
 					this.lastpos.setV(vpos);
 					return true;
 				}
-				return false
+				return false;
 			}
 		},
 		
@@ -301,7 +301,7 @@
 				context.translate (
 					~~(this.anchorPoint.x * (this.viewport.width - this.imagewidth)),
 					~~(this.anchorPoint.y * (this.viewport.height - this.imageheight))
-				)
+				);
 			}
 			
 			// set the layer alpha value
@@ -333,11 +333,13 @@
 				  
 				do {
 					do {
-						context.drawImage(this.image, 
-										  sx, sy, 		// sx, sy
-										  sw, sh,
-										  dx, dy,		// dx, dy
-										  sw, sh);
+						context.drawImage(
+							this.image, 
+							sx, sy, // sx, sy
+							sw, sh,
+							dx, dy, // dx, dy
+							sw, sh
+						);
 						
 						sy = 0;
 						dy += sh;
@@ -384,7 +386,7 @@
 		 * @function
 		 */
 		reset : function() {
-			; // nothing to do here
+			// nothing to do here
 		},
 
 		/**
@@ -481,7 +483,7 @@
 			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
 			
 			// check for the correct rendering method
-			if (typeof (this.preRender) == 'undefined') {
+			if (typeof (this.preRender) === 'undefined') {
 				this.preRender = me.sys.preRender;
 			}
 			

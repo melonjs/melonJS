@@ -45,7 +45,7 @@
 			
 			/** @ignore */
 			init : function() {
-				; //empty for now !
+				//empty for now !
 			}
 		});
 
@@ -62,10 +62,10 @@
 		 * @example 
 		 * // redefine the me.game.update function with a new one
 		 * me.plugin.patch(me.game, "update", function () { 
-		 * 	 // display something in the console
+		 *   // display something in the console
 		 *   console.log("duh");
 		 *   // call the original me.game.update function
-		 *	 this.parent();
+		 *   this.parent();
 		 * });
 		 */
 		singleton.patch = function(proto, name, fn){
@@ -74,7 +74,7 @@
 				var proto = proto.prototype;
 			}
 			// reuse the logic behind Object.extend
-			if (typeof(proto[name]) == "function") {
+			if (typeof(proto[name]) === "function") {
 				// save the original function
 				var _parent = proto[name];
 				// override the function with the new one
@@ -108,7 +108,7 @@
 		 * me.plugin.register(TestPlugin, "testPlugin");
 		 * // the plugin then also become available
 		 * // under then me.plugin namespace
- 		 * me.plugin.testPlugin.myFunction();
+		 * me.plugin.testPlugin.myFunction();
 		 */
 		singleton.register = function(plugin, name){
 			// ensure me.plugin[name] is not already "used"

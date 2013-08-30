@@ -36,7 +36,7 @@
 			
 			PUBLIC STUFF
 				
-  		  ---------------------------------------------*/
+		 ---------------------------------------------*/
 		/**
 		 * reset the level director 
 		 * @ignore
@@ -74,9 +74,9 @@
 			}
 			
 			// call the callback if defined
-			if (callback)
+			if (callback) {
 				callback();
-			
+			}
 			// true if level loaded
 			return true;
 		};
@@ -147,9 +147,9 @@
 					// previously running
 					me.state.restart.defer();
 				}
-			} else
+			} else {
 				throw "melonJS: no level loader defined";
-			
+			}
 			return true;
 		};
 
