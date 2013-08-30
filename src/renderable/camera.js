@@ -439,7 +439,7 @@
 		 * @return {me.Vector2d}
 		 */
 		worldToScreen : function(x, y) {
-			return (new me.Vector2d(x,y)).add(this.pos).add(me.game.currentLevel.pos);
+			return (new me.Vector2d(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
 		},
 		
 		/**
