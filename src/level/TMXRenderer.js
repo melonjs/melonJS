@@ -230,8 +230,8 @@
 			 * up due to those tiles being visible as well. How we go up one row
 			 * depends on whether we're in the left or right half of the tile.
 			 */
-			var inUpperHalf = startPos.y - rect.pos.y + viewport.y > this.hTileheight;
-			var inLeftHalf  = rect.pos.x + viewport.x - startPos.x < this.hTilewidth;
+			var inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+			var inLeftHalf  = rect.pos.x - startPos.x < this.hTilewidth;
 
 			if (inUpperHalf) {
 				if (inLeftHalf) {
