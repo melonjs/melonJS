@@ -375,7 +375,7 @@
 						
 					} else if ( (obj!=objA) && (!type || (obj.type === type)) ) {
 			
-						res = obj.collisionBox.collideVsAABB.call(obj.collisionBox, objA.collisionBox);
+						res = obj.collisionBox["collideWith"+objA.shapeType].call(obj.collisionBox, objA.collisionBox);
 						
 						if (res.x != 0 || res.y != 0) {
 							// notify the object

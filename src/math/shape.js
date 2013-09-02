@@ -107,6 +107,9 @@
 		// half width/height
 		hWidth : 0,
 		hHeight : 0,
+
+		// the shape type
+		shapeType : "Rectangle",
 		
 		
 		/** @ignore */
@@ -453,7 +456,7 @@
 		 * @param {me.Rect} rect
 		 * @return {me.Vector2d} 
 		 */
-		collideVsAABB : function(/** {me.Rect} */ rect) {
+		collideWithRectangle : function(/** {me.Rect} */ rect) {
 			// response vector
 			var p = new me.Vector2d(0, 0);
 
