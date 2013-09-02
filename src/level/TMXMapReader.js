@@ -211,7 +211,7 @@
 			free : function() {
 				this.tmxDoc = null;
 			}
-		}
+		};
 		return parserObj;
 	};
 	

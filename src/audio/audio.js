@@ -49,7 +49,7 @@
 		var settings = {
 			volume : 1.0,
 			muted : false
-		}
+		};
 
 		// synchronous loader for mobile user agents
 		var sync_loading = false;

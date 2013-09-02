@@ -171,7 +171,7 @@
 					me.video.getScreenCanvas().addEventListener(activeEventList[1], onMoveEvent, false);
 				}
 				else {
-					me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(obj.throttlingInterval, false, function(e){onMoveEvent(e)}), false);
+					me.video.getScreenCanvas().addEventListener(activeEventList[1], throttle(obj.throttlingInterval, false, function(e){onMoveEvent(e);}), false);
 				}
 				pointerInitialized = true;
 			}

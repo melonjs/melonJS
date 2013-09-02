@@ -38,7 +38,7 @@
 					value = JSON.parse(match);
 				}
 				catch (e) {
-					throw "Unable to parse JSON: " + match
+					throw "Unable to parse JSON: " + match;
 				}
 			}
 			// return the interpreted value

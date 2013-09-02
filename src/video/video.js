@@ -217,7 +217,7 @@
 			maintainAspectRatio = (aspectRatio !== undefined) ? aspectRatio : true;
 			
 			// normalize scale
-			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0
+			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0;
 			me.sys.scale = new me.Vector2d(scale, scale);
 			
 			// force double buffering if scaling is required
@@ -230,8 +230,8 @@
 			game_height_zoom = game_height * me.sys.scale.y;
 			
 			//add a channel for the onresize/onorientationchange event
-			window.addEventListener('resize', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event])}, false);
-			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event])}, false);
+			window.addEventListener('resize', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}, false);
+			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}, false);
 			
 			// register to the channel
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));

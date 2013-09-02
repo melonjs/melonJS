@@ -113,7 +113,7 @@
 			this.isPersistent = false;
 			
 			// and not flickering
-			this.flickering = false
+			this.flickering = false;
 		},
 
 		/**
