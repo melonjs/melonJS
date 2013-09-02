@@ -177,16 +177,28 @@
 			this.hHeight = ~~(h / 2);
 		},
 
-		/**
-		 * return a new Rect with this rectangle coordinates
-		 * @name getRect
-		 * @memberOf me.Rect
-		 * @function
-		 * @return {me.Rect} new rectangle	
-		 */
-		getRect : function() {
-			return new me.Rect(this.pos.clone(), this.width, this.height);
-		},
+        /**
+         * returns the bounding box for this shape, the smallest rectangle object completely containing this shape.
+         * @name getBounds
+         * @memberOf me.Rect
+         * @function
+         * @return {me.Rect} new rectangle	
+         */
+        getBounds : function() {
+            // return this or a a cloned object ?
+            return this.clone();
+        },
+        
+        /**
+         * clone this rectangle
+         * @name clone
+         * @memberOf me.Rect
+         * @function
+         * @return {me.Rect} new rectangle	
+         */
+        clone : function() {
+            return new me.Rect(this.pos.clone(), this.width, this.height);
+        },
 		
 		/**
 		 * translate the rect by the specified offset

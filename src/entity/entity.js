@@ -1095,11 +1095,11 @@
 		/**
 		 * @ignore	
 		 */
-		getRect : function() {
+		getBounds : function() {
 			if (this.renderable) {
 				// translate the renderable position since its 
 				// position is relative to this entity
-				return this.renderable.getRect().translateV(this.pos);
+				return this.renderable.getBounds().translateV(this.pos);
 			}
 			return null;
 		},

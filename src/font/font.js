@@ -127,7 +127,7 @@
 		 * FIX ME !
 		 * @ignore
 		 */
-		getRect : function() {
+		getBounds : function() {
 			return new me.Rect(new Vector2d(0, 0), 0, 0);
 		},
 

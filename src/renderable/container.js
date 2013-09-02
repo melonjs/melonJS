@@ -490,7 +490,7 @@
 	
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getRect && me.game.viewport.isVisible(obj))
+					obj.floating || (obj.getBounds && me.game.viewport.isVisible(obj))
 				);
 				
 				// update our object
