@@ -351,12 +351,24 @@
 		
 		/**
 		 * Entity collision Box<br>
+		 * (reference to me.ObjectEntity.shapes[0].getBounds)
 		 * @public
+		 * @deprecated
 		 * @type me.Rect
 		 * @name collisionBox
 		 * @memberOf me.ObjectEntity
 		 */
 		collisionBox : null,
+
+		/**
+		 * Entity collision shapes<br>
+		 * (RFU - Reserved for Future Usage)
+		 * @public
+		 * @type Object[]
+		 * @name shapes
+		 * @memberOf me.ObjectEntity
+		 */
+		shapes : null,
 
 		/**
 		 * The entity renderable object (if defined)
@@ -535,10 +547,7 @@
 			
 			// ref to the collision map
 			this.collisionMap = me.game.collisionMap;
-			
-			// create a a default collision rectangle
-			this.collisionBox = new me.Rect(this.pos, this.width, this.height);
-			
+						
 			/**
 			 * Define if an entity can go through breakable tiles<br>
 			 * default value : false<br>
@@ -557,6 +566,16 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.onTileBreak = null;
+
+			// set the entity default collision shape
+			this.shapes = [];
+			
+			// default for now is a rectangle
+			this.shapes[0] = new me.Rect(this.pos, this.width, this.height);
+
+			// set collisionBox
+			this.collisionBox = this.shapes[0].getBounds();
+
 		},
 
 		/**
