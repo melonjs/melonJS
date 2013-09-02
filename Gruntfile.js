@@ -2,7 +2,8 @@
 module.exports = function(grunt) {
     var sourceFiles = [
         'src/core.js',
-        'src/math/geometry.js',
+        'src/math/vector.js',
+        'src/math/shape.js',
         'src/debug/debug.js',
         'src/renderable/base.js',
         'src/renderable/sprite.js',
