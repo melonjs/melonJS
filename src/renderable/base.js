@@ -97,6 +97,20 @@
 		 * @memberOf me.Renderable
 		 */
 		z : 0,
+        
+        /**
+		 * Define the object anchoring point<br>
+		 * This is used when positioning, or scaling the object<br>
+		 * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>
+		 * (0, 0) means the top-left corner, <br> 
+		 * (1, 1) means the bottom-right corner, <br>
+		 * default anchoring point is the center (0.5, 0.5) of the object.
+		 * @public
+		 * @type me.Vector2d
+		 * @name anchorPoint
+		 * @memberOf me.Renderable
+		 */
+		anchorPoint: null,
 
 		/**
 		 * @ignore
@@ -104,6 +118,9 @@
 		init : function(pos, width, height) {
 			// call the parent constructor
 			this.parent(pos, width, height);
+            
+            // set the default anchor point (middle of the renderable)
+			this.anchorPoint = new me.Vector2d(0.5, 0.5);
 		},
 
 		/**

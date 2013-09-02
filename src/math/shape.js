@@ -48,20 +48,6 @@
 		colPos : null,
 		
 		/**
-		 * Define the object anchoring point<br>
-		 * This is used when positioning, or scaling the object<br>
-		 * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>
-		 * (0, 0) means the top-left corner, <br> 
-		 * (1, 1) means the bottom-right corner, <br>
-		 * default anchoring point is the center (0.5, 0.5) of the object.
-		 * @public
-		 * @type me.Vector2d
-		 * @name anchorPoint
-		 * @memberOf me.Rect
-		 */
-		anchorPoint: null,
-				
-		/**
 		 * left coordinate of the Rectange<br>
 		 * takes in account the adjusted size of the rectangle (if set)
 		 * @public
@@ -141,9 +127,6 @@
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
 			
-			// set the default anchor point (middle of the sprite)
-			this.anchorPoint = new me.Vector2d(0.5, 0.5);
-
 			// redefine some properties to ease our life when getting the rectangle coordinates
 			Object.defineProperty(this, "left", {
 				get : function() {
