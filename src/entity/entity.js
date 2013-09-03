@@ -363,7 +363,7 @@
 		/**
 		 * Entity collision shapes<br>
 		 * (RFU - Reserved for Future Usage)
-		 * @public
+		 * @protected
 		 * @type Object[]
 		 * @name shapes
 		 * @memberOf me.ObjectEntity
@@ -567,14 +567,8 @@
 			 */
 			this.onTileBreak = null;
 
-			// set the entity default collision shape
-			this.shapes = [];
-			
-			// default for now is a rectangle
-			this.shapes[0] = new me.Rect(this.pos, this.width, this.height);
-
-			// set collisionBox
-			this.collisionBox = this.shapes[0].getBounds();
+            // add a default shape rectangle
+            this.addShape(new me.Rect(this.pos, this.width, this.height));
 
 		},
 
@@ -595,6 +589,29 @@
 			this.collisionBox.adjustSize(x, w, y, h);
 		},
 
+        /**
+		 * add a collision shape to this entity<
+		 * @name addShape
+		 * @memberOf me.ObjectEntity
+         * @public
+		 * @function
+		 * @param {me.objet} shape a shape object
+		 */
+		addShape : function(shape) {
+			if (this.shapes === null) {
+                this.shapes = [];
+            }
+            this.shapes.push(shape);
+            
+            // some hack to get the collisionBox working in this branch
+            // to be removed once the ticket #103 will be done
+            if (this.shapes.length == 1) {
+                this.collisionBox = this.shapes[0].getBounds();
+                // collisionBox pos vector is a reference to this pos vector
+                this.collisionBox.pos = this.pos;
+            }
+		},
+         
 		/**
 		 * onCollision Event function<br>
 		 * called by the game manager when the object collide with shtg<br>
@@ -1160,6 +1177,7 @@
 			this.onDestroyEvent.apply(this, arguments);
 			this.pos = null;
 			this.collisionBox = null;
+            this.shapes = [];
 		},
 
 		/**

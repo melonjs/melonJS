@@ -188,11 +188,7 @@
          * @return {me.Rect} new rectangle	
          */
         getBounds : function() {
-        	// don't clone the pos vector, as the current implementation 
-        	// in master relies on the fact that the collisionBox pos vector
-        	// is a reference to the entity pos vector
-            //return this.clone();
-            return new me.Rect(this.pos, this.width, this.height);
+            return this.clone();
         },
         
         /**
