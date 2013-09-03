@@ -568,10 +568,18 @@
 			this.onTileBreak = null;
 
             // add a default shape 
-            if (settings.isEllipse) {
+            if (settings.isEllipse===true) {
                 // ellipse
                 this.addShape(new me.Ellipse(new me.Vector2d(0,0), this.width, this.height));
-            } else {
+            } 
+            else if ((settings.isPolygon===true) || (settings.isPolyline===true)) {
+            	// add a polyshape
+                this.addShape(new me.PolyShape(new me.Vector2d(0,0), settings.points, settings.isPolygon));
+            	// set the entity object based on the bounding box size ?
+            	this.width = this.collisionBox.width;
+            	this.height = this.collisionBox.height;
+            } 
+            else {
                 // add a rectangle
                 this.addShape(new me.Rect(new me.Vector2d(0,0), this.width, this.height));
             }

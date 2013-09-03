@@ -293,23 +293,25 @@
                 if (tmxObj.getElementsByTagName(me.TMX_TAG_ELLIPSE).length) {
                     this.isEllipse = true;
                 } else {
-                    var polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
-                    this.isPolygon = true;
-                    if (!polygon.length) {
-                        polygon = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
-                        this.isPolygon = false;
-                        this.isPolyline = true;
+                	// polygone || polyline
+                	var points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
+                    if (points.length) {
+                    	this.isPolygon = true;
+                    } else {
+                    	points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
+                    	if (points.length) {
+                    		this.isPolyline = true;
+                    	}
                     }
-
-                    if (polygon.length) {
+                    if (points.length) {
                         this.points = [];
-                        var points = me.mapReader.TMXParser.getStringAttribute(polygon[0], me.TMX_TAG_POINTS);
+                        var points = me.mapReader.TMXParser.getStringAttribute(points[0], me.TMX_TAG_POINTS);
                         var point = points.split(" ");
                         for (var i = 0, v; i < point.length; i++) {
                             v = point[i].split(",");
-                            this.points[i] = new me.Vector2d(+v[0], +v[1]);
+                            this.points.push(new me.Vector2d(+v[0], +v[1]));
                         }
-                    }
+                    }	
                 }
 			}
 			
@@ -350,18 +352,20 @@
                     this.isEllipse = true;
                 } 
                 else {
-                    var polygon = tmxObj[me.TMX_TAG_POLYGON];
-                    this.isPolygon = polygon!==undefined;
-                    if (!polygon) {
-                        polygon = tmxObj[me.TMX_TAG_POLYLINE];
-                        this.isPolygon = false;
+                    var points = tmxObj[me.TMX_TAG_POLYGON];
+                    if (points !== undefined) {
+                    	this.isPolygon = true;
+                    } else {
+                    	points = tmxObj[me.TMX_TAG_POLYLINE];
+                    	if (points !== undefined) {
+                    		this.isPolyline = true;
+                    	}
                     }
-                    if (polygon) {
+                    if (points !== undefined) {
                         this.points = [];
                         var self = this;
-                        var i = 0;
-                        polygon.forEach(function(point) {
-                            self.points[i++] = new me.Vector2d(parseInt(point.x), parseInt(point.y));
+                        points.forEach(function(point) {
+                            self.points.push(new me.Vector2d(parseInt(point.x), parseInt(point.y)));
                         });
                     }
                    }
