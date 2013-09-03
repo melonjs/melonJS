@@ -505,7 +505,7 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {me.Vector2d} v x,y position of the elipse
+	 * @param {me.Vector2d} v top-left origin position of the Ellipse
 	 * @param {int} w width of the elipse
 	 * @param {int} h height of the elipse
 	 */
@@ -513,7 +513,7 @@
 	/** @scope me.Ellipse.prototype */	{
 	
 		/**
-		 * top-left position of the Ellispe
+		 * center point of the Ellipse
 		 * @public
 		 * @type me.Vector2d
 		 * @name pos
@@ -545,15 +545,15 @@
 		/**
 		 * set new value to the Ellipse
 		 * @name set
-		 * @memberOf me.Rect
+		 * @memberOf me.Ellipse
 		 * @function
-		 * @param {me.Vector2d} v x,y center position for the Ellipse
+		 * @param {me.Vector2d} v top-left origin position of the Ellipse
 		 * @param {int} w width of the Ellipse
 		 * @param {int} h height of the Ellipse	 
 		 */
 		set : function(v, w, h) {
-			this.pos.setV(v); 
- 			this.radius.set(w/2, h/2);
+			this.radius.set(w/2, h/2);
+            this.pos.setV(v).add(this.radius); 
 		},
 
         /**
@@ -566,7 +566,7 @@
         getBounds : function() {
             //will return a rect, with pos being the top-left coordinates 
             return new me.Rect(
-                this.pos.clone(), 
+                this.pos.clone().sub(this.radius), 
                 this.radius.x * 2, 
                 this.radius.y * 2
             );
@@ -589,8 +589,8 @@
 		 * @ignore
 		 */
 		draw : function(context, color) {
-                var centerX = this.pos.x + this.radius.x;
-                var centerY = this.pos.y + this.radius.y;
+                var centerX = this.pos.x;
+                var centerY = this.pos.y;
                 
                 var width = this.radius.x * 2;
                 var height = this.radius.y * 2;
