@@ -494,6 +494,127 @@
 		}
 	});
 
+    /************************************************************************************/
+	/*                                                                                  */
+	/*      a Ellipse Class Object                                                      */
+	/*                                                                                  */
+	/************************************************************************************/
+	/**
+	 * a ellipse Object
+	 * @class
+	 * @extends Object
+	 * @memberOf me
+	 * @constructor
+	 * @param {me.Vector2d} v x,y position of the elipse
+	 * @param {int} w width of the elipse
+	 * @param {int} h height of the elipse
+	 */
+	me.Ellipse = Object.extend(
+	/** @scope me.Ellipse.prototype */	{
+	
+		/**
+		 * top-left position of the Ellispe
+		 * @public
+		 * @type me.Vector2d
+		 * @name pos
+		 * @memberOf me.Ellipse
+		 */
+		pos : null,
+		 
+		/**
+		 * radius (x/y) of the ellipse
+		 * @public
+		 * @type me.Vector2d
+		 * @name radius
+		 * @memberOf me.Ellipse
+		 */
+		radius : null,
+        
+
+		// the shape type
+		shapeType : "Ellipse",
+		
+		
+		/** @ignore */
+		init : function(v, w, h) {
+            this.pos = new me.Vector2d();
+            this.radius = new me.Vector2d();
+			this.set(v, w, h);
+		},
+
+		/**
+		 * set new value to the Ellipse
+		 * @name set
+		 * @memberOf me.Rect
+		 * @function
+		 * @param {me.Vector2d} v x,y center position for the Ellipse
+		 * @param {int} w width of the Ellipse
+		 * @param {int} h height of the Ellipse	 
+		 */
+		set : function(v, w, h) {
+			this.pos.setV(v); 
+ 			this.radius.set(w/2, h/2);
+		},
+
+        /**
+         * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+         * @name getBounds
+         * @memberOf me.Ellipse
+         * @function
+         * @return {me.Rect} the bounding box Rectangle	object
+         */
+        getBounds : function() {
+            //will return a rect, with pos being the top-left coordinates 
+            return new me.Rect(
+                this.pos.clone(), 
+                this.radius.x * 2, 
+                this.radius.y * 2
+            );
+        },
+        
+        /**
+         * clone this Ellipse
+         * @name clone
+         * @memberOf me.Ellipse
+         * @function
+         * @return {me.Ellipse} new Ellipse	
+         */
+        clone : function() {
+            return new me.Ellipse(this.pos.clone(), this.radius.x * 2, this.radius.y * 2);
+        },
+
+
+		/**
+		 * debug purpose
+		 * @ignore
+		 */
+		draw : function(context, color) {
+                var centerX = this.pos.x + this.radius.x;
+                var centerY = this.pos.y + this.radius.y;
+                
+                var width = this.radius.x * 2;
+                var height = this.radius.y * 2;
+                
+                context.beginPath();
+
+                context.moveTo(centerX, centerY - height/2); // A1
+
+                context.bezierCurveTo(
+                    centerX + width/2, centerY - height/2, // C1
+                    centerX + width/2, centerY + height/2, // C2
+                    centerX, centerY + height/2); // A2
+
+                context.bezierCurveTo(
+                    centerX - width/2, centerY + height/2, // C3
+                    centerX - width/2, centerY - height/2, // C4
+                    centerX, centerY - height/2); // A1
+
+                context.strokeStyle = color || "red";
+                context.fill();
+                context.closePath();	
+		}
+	});
+    
 	/*---------------------------------------------------------*/
 	// END END END
 	/*---------------------------------------------------------*/

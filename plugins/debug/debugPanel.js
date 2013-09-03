@@ -147,7 +147,10 @@
 				if (me.debug.renderHitBox && this.collisionBox) {
 					// draw the collisionBox
 					this.collisionBox.draw(context, "red");
+                    // draw the original shape as well
+                    this.shapes[0].draw(context, "red");
 				}
+                
 				if (me.debug.renderVelocity) {
 					// draw entity current velocity
 					var x = ~~(this.pos.x + this.hWidth);
