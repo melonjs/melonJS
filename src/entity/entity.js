@@ -570,10 +570,10 @@
             // add a default shape 
             if (settings.isEllipse) {
                 // ellipse
-                this.addShape(new me.Ellipse(this.pos, this.width, this.height));
+                this.addShape(new me.Ellipse(new me.Vector2d(0,0), this.width, this.height));
             } else {
                 // add a rectangle
-                this.addShape(new me.Rect(this.pos, this.width, this.height));
+                this.addShape(new me.Rect(new me.Vector2d(0,0), this.width, this.height));
             }
              
             
