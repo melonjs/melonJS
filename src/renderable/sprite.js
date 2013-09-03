@@ -372,7 +372,9 @@
 	/** @scope me.AnimationSheet.prototype */
 	{		
 		// Spacing and margin
+		/** @ignore */
 		spacing: 0,
+		/** @ignore */
 		margin: 0,
 
 		/**
