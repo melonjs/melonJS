@@ -500,7 +500,8 @@
 	/*                                                                                  */
 	/************************************************************************************/
 	/**
-	 * a ellipse Object
+	 * an ellipse Object
+	 * (Tiled specifies top-left coordinates, and width and height of the ellipse)
 	 * @class
 	 * @extends Object
 	 * @memberOf me
@@ -589,29 +590,17 @@
 		 * @ignore
 		 */
 		draw : function(context, color) {
-                var centerX = this.pos.x;
-                var centerY = this.pos.y;
-                
-                var width = this.radius.x * 2;
-                var height = this.radius.y * 2;
-                
-                context.beginPath();
+			// http://tinyurl.com/opnro2r
+			context.save();
+			context.beginPath();
 
-                context.moveTo(centerX, centerY - height/2); // A1
+			context.translate(this.pos.x-this.radius.x, this.pos.y-this.radius.y);
+			context.scale(this.radius.x, this.radius.y);
+			context.arc(1, 1, 1, 0, 2 * Math.PI, false);
 
-                context.bezierCurveTo(
-                    centerX + width/2, centerY - height/2, // C1
-                    centerX + width/2, centerY + height/2, // C2
-                    centerX, centerY + height/2); // A2
-
-                context.bezierCurveTo(
-                    centerX - width/2, centerY + height/2, // C3
-                    centerX - width/2, centerY - height/2, // C4
-                    centerX, centerY - height/2); // A1
-
-                context.strokeStyle = color || "red";
-                context.fill();
-                context.closePath();	
+			context.restore();
+			context.strokeStyle = color || "red";
+			context.stroke();
 		}
 	});
     
