@@ -683,25 +683,14 @@
          * @return {me.Rect} the bounding box Rectangle	object
          */
         getBounds : function() {
-			if(this.points.length){
-				var l = this.points.length;
-				var p = this.points[0];
-
-            	var rect = new me.Rect(
-                	new me.Vector2d(p.x, p.y), 
-                	p.x, 
-                	p.y
-            	);
-    			for(var i = 1; i < l; ++i){
-					p = this.points[i];
-					if(rect.pos.x > p.x) rect.pos.x = p.x;
-					if(rect.right < p.x) rect.width = p.x - rect.pos.x;
-					if(rect.pos.y > p.y) rect.pos.y = p.y;
-					if(rect.bottom < p.y) rect.height = rect.pos.y - p.y;
-				}
-			}
-			return rect;
-
+            var pos = new me.Vector2d(), right = 0, bottom = 0;
+            this.points.forEach(function(point) {
+                pos.x = Math.min(pos.x, point.x);
+                pos.y = Math.min(pos.y, point.y);
+                right = Math.max(right, point.x);
+                bottom = Math.max(bottom, point.y)
+            });
+            return new me.Rect(pos, right - pos.x, bottom - pos.y);
         },
         
         /**
