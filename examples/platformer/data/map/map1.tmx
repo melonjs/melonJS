@@ -93,11 +93,18 @@
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="140" y="140" width="210" height="35">
+  <object name="SlimeEntity" x="245" y="140" width="105" height="35">
    <properties>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
+  </object>
+  <object name="SlimeEntity" x="140" y="175">
+   <properties>
+    <property name="spriteheight" value="35"/>
+    <property name="spritewidth" value="55"/>
+   </properties>
+   <polygon points="0,0 35,-70 70,0"/>
   </object>
  </objectgroup>
  <objectgroup color="#ffff00" name="coins" width="50" height="17">
@@ -109,15 +116,6 @@
   </data>
  </layer>
  <objectgroup color="#ff0000" name="flies" width="50" height="17">
-  <object name="FlyEntity" x="280" y="280" width="350" height="35">
-   <properties>
-    <property name="animationspeed" value="200"/>
-    <property name="gravity" value="0"/>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="70"/>
-    <property name="velX" value="2"/>
-   </properties>
-  </object>
   <object name="FlyEntity" x="945" y="140" width="595" height="35">
    <properties>
     <property name="animationspeed" value="200"/>
