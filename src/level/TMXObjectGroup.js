@@ -305,8 +305,12 @@
                     }
                     if (points.length) {
                         this.points = [];
-                        var points = me.mapReader.TMXParser.getStringAttribute(points[0], me.TMX_TAG_POINTS);
-                        var point = points.split(" ");
+                        // get a point array
+                        var point = me.mapReader.TMXParser.getStringAttribute(
+                        	points[0], 
+                        	me.TMX_TAG_POINTS
+                        ).split(" ");
+                        // and normalize them into an array of vectors
                         for (var i = 0, v; i < point.length; i++) {
                             v = point[i].split(",");
                             this.points.push(new me.Vector2d(+v[0], +v[1]));
