@@ -126,7 +126,7 @@
 		 */
 		setTransparency : function(col) {
 			// remove the # if present
-			col = (col.charAt(0) == "#") ? col.substring(1, 7) : col;
+			col = (col.charAt(0) === "#") ? col.substring(1, 7) : col;
 			// applyRGB Filter (return a context object)
 			this.image = me.video.applyRGBFilter(this.image, "transparent", col.toUpperCase()).canvas;
 		},
@@ -178,14 +178,14 @@
 		 * @param {Boolean} flip enable/disable flip
 		 */
 		flipX : function(flip) {
-			if (flip != this.lastflipX) {
+			if (flip !== this.lastflipX) {
 				this.lastflipX = flip;
 
 				// invert the scale.x value
 				this.scale.x = -this.scale.x;
 
 				// set the scaleFlag
-				this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
+				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
 			}
 		},
 
@@ -197,14 +197,14 @@
 		 * @param {Boolean} flip enable/disable flip
 		 */
 		flipY : function(flip) {
-			if (flip != this.lastflipY) {
+			if (flip !== this.lastflipY) {
 				this.lastflipY = flip;
 
 				// invert the scale.x value
 				this.scale.y = -this.scale.y;
 
 				// set the scaleFlag
-				this.scaleFlag = ((this.scale.x != 1.0) || (this.scale.y != 1.0))
+				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
 			}
 		},
 
@@ -220,7 +220,7 @@
 				this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
 				this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
 				// set the scaleFlag
-				this.scaleFlag = ((this.scale.x!= 1.0)  || (this.scale.y!= 1.0))
+				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
 			}
 		},
 
@@ -315,12 +315,17 @@
 
 				if (this._sourceAngle!==0) {
 					// swap w and h for rotated source images
-					w = this.height, h = this.width;
-					xpos = -ay, ypos = -ax;
+					w = this.height;
+					h = this.width;
+					
+					xpos = -ay;
+					ypos = -ax;
 				}
-				else
+				else {
 					// reset coordinates back to upper left coordinates
-					xpos = -ax, ypos = -ay;
+					xpos = -ax;
+					ypos = -ay;
+				}
 			}
 
 			context.drawImage(this.image,
@@ -350,7 +355,7 @@
 		 * @function
 		 */
 		onDestroyEvent : function() {
-			;// to be extended !
+			// to be extended !
 		}
 
 	});
@@ -498,10 +503,10 @@
 
 			if (index == null) {
 				index = [];
-				var i = 0;
+				var j = 0;
 				// create a default animation with all frame
 				this.textureAtlas.forEach(function() {
-					index[i] = i++;
+					index[j] = j++;
 				});
 			}
 
@@ -577,7 +582,7 @@
 		 * }
 		 */
 		isCurrentAnimation : function(name) {
-			return (this.current.name == name);
+			return this.current.name === name;
 		},
 
 		/**
@@ -626,12 +631,12 @@
 
 				// switch animation if we reach the end of the strip
 				// and a callback is defined
-				if ((this.current.idx == 0) && this.resetAnim)  {
+				if (this.current.idx === 0 && this.resetAnim)  {
 					// if string, change to the corresponding animation
-					if (typeof(this.resetAnim) == "string")
+					if (typeof this.resetAnim === "string")
 						this.setCurrentAnimation(this.resetAnim);
 					// if function (callback) call it
-					else if (typeof(this.resetAnim) == "function" && this.resetAnim() === false) {
+					else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
 						this.current.idx = this.current.length - 1;
 						this.setAnimationFrame(this.current.idx);
 						this.parent();

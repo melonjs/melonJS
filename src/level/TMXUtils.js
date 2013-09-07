@@ -43,7 +43,7 @@
 			}
 			// return the interpreted value
 			return value;
-		};
+		}
 	
 		// hold public stuff in our singleton
 		var api = {};

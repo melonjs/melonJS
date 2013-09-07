@@ -212,8 +212,9 @@
 		 */
 		obj.unsubscribe = function(handle, callback){
 			var subs = cache[callback ? handle : handle[0]],
-				callback = callback || handle[1],
 				len = subs ? subs.length : 0;
+			
+			callback = callback || handle[1];
 			
 			while(len--){
 				if(subs[len] === callback){

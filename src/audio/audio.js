@@ -88,7 +88,7 @@
 			}
 
 			return result;
-		};
+		}
 
 		/**
 		 * return the specified sound
@@ -110,7 +110,7 @@
 			channels[0].pause();
 			channels[0].currentTime = reset_val;
 			return channels[0];
-		};
+		}
 
 		/**
 		 * event listener callback on load error
@@ -139,7 +139,7 @@
 			} else {
 				audio_channels[sound_id][0].load();
 			}
-		};
+		}
 
 		/**
 		 * event listener callback when a sound is loaded
@@ -164,7 +164,7 @@
 			if (onload_cb) {
 				onload_cb();
 			}
-		};
+		}
 
 		/**
 		 * play the specified sound
@@ -179,7 +179,7 @@
 		 * @param {Function}
 		 *            [callback] callback function
 		 * @param {Number}
-		 * 			  [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+		 *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example
 		 * // play the "cling" audio clip 
 		 * me.audio.play("cling"); 
@@ -212,7 +212,7 @@
 			}			
 			return soundclip;
 
-		};
+		}
 
 		/**
 		 * play_audio with simulated callback
@@ -226,7 +226,7 @@
 				setTimeout(callback, 2000); // 2 sec as default timer ?
 			}
 			return null;
-		};
+		}
 
 		/*
 		 *---------------------------------------------
@@ -300,7 +300,7 @@
 				throw "melonJS: me.audio.init() called before engine initialization.";
 			}
 			// if no param is given to init we use mp3 by default
-			audioFormat = new String(audioFormat?audioFormat:"mp3");
+			audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
 			// convert it into an array
 			audioFormat = audioFormat.split(',');
 			// detect the prefered audio format
@@ -379,7 +379,7 @@
 		 */
 		obj.load = function(sound, onload_cb, onerror_cb) {
 			// do nothing if no compatible format is found
-			if (activeAudioExt == -1)
+			if (activeAudioExt === -1)
 				return 0;
 
 			// check for specific platform
@@ -557,7 +557,7 @@
 			for ( var i = 0, soundclip; soundclip = channels[i++];) {
 				soundclip.muted = mute;
 			}
-		},
+		};
 
 		/**
 		 * unmute the specified sound
@@ -569,7 +569,7 @@
 		 */
 		obj.unmute = function(sound_id) {
 			obj.mute(sound_id, false);
-		},
+		};
 
 		/**
 		 * mute all audio 

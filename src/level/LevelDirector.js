@@ -163,7 +163,7 @@
 		 */
 		obj.getCurrentLevelId = function() {
 			return levelIdx[currentLevelIdx];
-		},
+		};
 
 		/**
 		 * reload the current level<br>
@@ -176,7 +176,7 @@
 			// reset the level to initial state
 			//levels[currentLevel].reset();
 			return obj.loadLevel(obj.getCurrentLevelId());
-		},
+		};
 
 		/**
 		 * load the next level<br>
