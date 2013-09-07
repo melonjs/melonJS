@@ -112,11 +112,11 @@
 			for (var i = 0; i < font_names.length; i++) {
 				font_names[i] = "'" + font_names[i] + "'";
 			}
-			this.height = parseInt(size);
+			this.height = parseInt(size, 10);
 			if (typeof size === "number") {
-				size = "" + size + "px"
+				size = "" + size + "px";
 			}
-			this.font = size + " " + font_names.join(",");;
+			this.font = size + " " + font_names.join(",");
 			this.color = color;
 			if (textAlign) {
 				this.textAlign = textAlign;
@@ -128,7 +128,7 @@
 		 * @ignore
 		 */
 		getBounds : function() {
-			return new me.Rect(new Vector2d(0, 0), 0, 0);
+			return new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
 		/**
@@ -319,7 +319,7 @@
 			var lX = x;
 			var height = this.sSize.y * this.lineHeight;
 			for (var i = 0; i < strings.length; i++) {
-				var x = lX, y = y;
+				x = lX;
 				var string = strings[i].trim();
 				// adjust x pos based on alignment value
 				var width = string.length * this.sSize.x;
@@ -334,7 +334,7 @@
 						
 					default : 
 						break;
-				};
+				}
 				 
 				// adjust y pos based on alignment value
 				switch(this.textBaseline) {
@@ -350,7 +350,7 @@
 					
 					default : 
 						break;
-				};
+				}
 				
 				// draw the string
 				for ( var c = 0,len = string.length; c < len; c++) {

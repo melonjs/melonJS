@@ -42,7 +42,7 @@ module.exports = function(grunt) {
         concat: {
             dist: {
                 src: sourceFiles,
-            dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
+                dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
 

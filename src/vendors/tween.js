@@ -352,7 +352,7 @@
 
 			}
 
-			if ( elapsed == 1 ) {
+			if ( elapsed === 1 ) {
 
 				if ( _repeat > 0 ) {
 

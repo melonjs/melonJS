@@ -46,10 +46,10 @@
 
 					output.push(String.fromCharCode(chr1));
 
-					if (enc3 != 64) {
+					if (enc3 !== 64) {
 						output.push(String.fromCharCode(chr2));
 					}
-					if (enc4 != 64) {
+					if (enc4 !== 64) {
 						output.push(String.fromCharCode(chr3));
 					}
 				}
@@ -127,10 +127,11 @@
 			var dec = Base64.decode(input), i, j, len;
 			
 			// use a typed array if supported
+			var ar;
 			if (typeof window.Uint32Array === 'function') {
-				var ar = new Uint32Array(dec.length / bytes);
+				ar = new Uint32Array(dec.length / bytes);
 			} else {
-				var ar = [];
+				ar = [];
 			}
 			
 			for (i = 0, len = dec.length / bytes; i < len; i++) {
@@ -171,7 +172,7 @@
 
 			var result = [];
 			for ( var i = 0; i < input.length; i++) {
-				entries = input[i].split(",", limit);
+				var entries = input[i].split(",", limit);
 				for ( var e = 0; e < entries.length; e++) {
 					result.push(+entries[e]);
 				}
@@ -226,16 +227,17 @@
 			// check if we already have the converted value cached
 			if (rgbCache[h] == null) {
 				// else add it (format : "r,g,b")
+				var h1, h2, h3;
 				if (h.length < 6)  {
 					// 3 char shortcut is used, double each char
-					var h1 = h.charAt(0)+h.charAt(0);
-					var h2 = h.charAt(1)+h.charAt(1);
-					var h3 = h.charAt(2)+h.charAt(2);
+					h1 = h.charAt(0)+h.charAt(0);
+					h2 = h.charAt(1)+h.charAt(1);
+					h3 = h.charAt(2)+h.charAt(2);
 				}
 				else {
-					var h1 = h.substring(0, 2);
-					var h2 = h.substring(2, 4);
-					var h3 = h.substring(4, 6);
+					h1 = h.substring(0, 2);
+					h2 = h.substring(2, 4);
+					h3 = h.substring(4, 6);
 				}
 				// set the value in our cache
 				rgbCache[h] = parseInt(h1, 16) + "," + parseInt(h2, 16) + "," + parseInt(h3, 16);

@@ -74,16 +74,14 @@
 		 */
 		getNewDefaultRenderer: function (obj) {
 			switch (obj.orientation) {
-				case "orthogonal": {
-				  return new me.TMXOrthogonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
-				}
-				case "isometric": {
-				  return new me.TMXIsometricRenderer(obj.cols, obj.rows , obj.tilewidth, obj.tileheight);
-				}
+				case "orthogonal":
+					return new me.TMXOrthogonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
+				case "isometric":
+					return new me.TMXIsometricRenderer(obj.cols, obj.rows , obj.tilewidth, obj.tileheight);
+
 				// if none found, throw an exception
-				default : {
+				default:
 					throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
-				}
 			}
 		},
 		
@@ -100,7 +98,7 @@
 			switch (encoding) {
 				// XML encoding
 				case null:
-					var data = data.getElementsByTagName(me.TMX_TAG_TILE);
+					data = data.getElementsByTagName(me.TMX_TAG_TILE);
 					break;
 				// json encoding
 				case 'json':
@@ -109,19 +107,19 @@
 				// CSV encoding
 				case me.TMX_TAG_CSV:
 				// Base 64 encoding
-				case me.TMX_TAG_ATTR_BASE64: {
+				case me.TMX_TAG_ATTR_BASE64:
 					// Merge all childNodes[].nodeValue into a single one
 					var nodeValue = '';
 					for ( var i = 0, len = data.childNodes.length; i < len; i++) {
 						nodeValue += data.childNodes[i].nodeValue;
 					}
 					// and then decode them
-					if (encoding == me.TMX_TAG_CSV) {
+					if (encoding === me.TMX_TAG_CSV) {
 						// CSV decode
-						var data = me.utils.decodeCSV(nodeValue, layer.cols);
+						data = me.utils.decodeCSV(nodeValue, layer.cols);
 					} else {
 						// Base 64 decode
-						var data = me.utils.decodeBase64AsArray(nodeValue, 4);
+						data = me.utils.decodeBase64AsArray(nodeValue, 4);
 						// check if data is compressed
 						if (compression !== null) {
 							data = me.utils.decompress(data, compression);
@@ -130,8 +128,8 @@
 					// ensure nodeValue is deallocated
 					nodeValue = null;
 					break;
-				}
-				  
+
+
 				default:
 					throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
 			}
@@ -194,7 +192,7 @@
 
 			getIntAttribute : function(elt, str, val) {
 				var ret = this.getStringAttribute(elt, str, val);
-				return ret ? parseInt(ret) : val;
+				return ret ? parseInt(ret, 10) : val;
 			},
 
 			getFloatAttribute : function(elt, str, val) {
@@ -213,7 +211,7 @@
 			}
 		};
 		return parserObj;
-	};
+	}
 	
 	/**
 	 * a XML Map Reader
@@ -240,7 +238,7 @@
 		readXMLMap : function(map, data) {
 			if (!data) {
 				throw "melonJS:" + map.levelId + " TMX map not found";
-			};
+			}
 			
 			// to automatically increment z index
 			var zOrder = 0;
@@ -257,7 +255,7 @@
 				// check each Tag
 				switch (xmlElements.item(i).nodeName) {
 					// get the map information
-					case me.TMX_TAG_MAP: {
+					case me.TMX_TAG_MAP:
 						var elements = xmlElements.item(i);
 						map.version = this.TMXParser.getStringAttribute(elements, me.TMX_TAG_VERSION);
 						map.orientation = this.TMXParser.getStringAttribute(elements, me.TMX_TAG_ORIENTATION);
@@ -290,16 +288,15 @@
 																  zOrder++));
 						}
 						
-					 	// initialize a default renderer
+						// initialize a default renderer
 						if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
 							me.game.renderer = this.getNewDefaultRenderer(map);
 						}
 						
 						break;
-					};
 
 					// get the tileset information
-					case me.TMX_TAG_TILESET: {
+					case me.TMX_TAG_TILESET:
 					   // Initialize our object if not yet done
 					   if (!map.tilesets) {
 						  map.tilesets = new me.TMXTilesetGroup();
@@ -307,31 +304,26 @@
 					   // add the new tileset
 					   map.tilesets.add(this.readTileset(xmlElements.item(i)));
 					   break;
-					};
 					
 					// get image layer information
-					case me.TMX_TAG_IMAGE_LAYER: {
+					case me.TMX_TAG_IMAGE_LAYER:
 						map.mapLayers.push(this.readImageLayer(map, xmlElements.item(i), zOrder++));
 						break;
-					};
 					
 					// get the layer(s) information
-					case me.TMX_TAG_LAYER: {
+					case me.TMX_TAG_LAYER:
 						// regular layer or collision layer
 						map.mapLayers.push(this.readLayer(map, xmlElements.item(i), zOrder++));
 						break;
-					};
 					
 					// get the object groups information
-					case me.TMX_TAG_OBJECTGROUP: {
+					case me.TMX_TAG_OBJECTGROUP:
 					   map.objectGroups.push(this.readObjectGroup(map, xmlElements.item(i), zOrder++));
 					   break;
-					};
 					
-					default : {
+					default:
 						// ignore unrecognized tags
 						break;
-					};
 					
 				} // end switch 
 			
@@ -389,7 +381,7 @@
 			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
 			
 			// set some additional flags
-			imageLayer.visible = (this.TMXParser.getIntAttribute(data, me.TMX_TAG_VISIBLE, 1) == 1);
+			imageLayer.visible = (this.TMXParser.getIntAttribute(data, me.TMX_TAG_VISIBLE, 1) === 1);
 			imageLayer.opacity = this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0);
 			
 			// check if we have any properties 
@@ -446,10 +438,10 @@
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
-			map.cols = parseInt(data[me.TMX_TAG_WIDTH]);
-			map.rows = parseInt(data[me.TMX_TAG_HEIGHT]);
-			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH]);
-			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT]);
+			map.cols = parseInt(data[me.TMX_TAG_WIDTH], 10);
+			map.rows = parseInt(data[me.TMX_TAG_HEIGHT], 10);
+			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH], 10);
+			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT], 10);
 			map.width = map.cols * map.tilewidth;
 			map.height = map.rows * map.tileheight;
 			map.backgroundcolor = data[me.TMX_BACKGROUND_COLOR];
@@ -494,20 +486,20 @@
 			// get layers information
 			data["layers"].forEach(function(layer) {
 				switch (layer.type) {
-					case me.TMX_TAG_IMAGE_LAYER : {
+					case me.TMX_TAG_IMAGE_LAYER :
 						map.mapLayers.push(self.readImageLayer(map, layer, zOrder++));
 						break;
-					}
-					case me.TMX_TAG_TILE_LAYER : {
+
+					case me.TMX_TAG_TILE_LAYER :
 						map.mapLayers.push(self.readLayer(map, layer, zOrder++));
 						break;
-					}
+
 					// get the object groups information
-					case me.TMX_TAG_OBJECTGROUP: {
-					   map.objectGroups.push(self.readObjectGroup(map, layer, zOrder++));
-					   break;
-					};
-					default : break;
+					case me.TMX_TAG_OBJECTGROUP:
+						map.objectGroups.push(self.readObjectGroup(map, layer, zOrder++));
+						break;
+
+					default: break;
 				}
 			});
 			
@@ -535,8 +527,8 @@
 		readImageLayer: function(map, data, z) {
 			// extract layer information
 			var iln = data[me.TMX_TAG_NAME];
-			var ilw = parseInt(data[me.TMX_TAG_WIDTH]);
-			var ilh = parseInt(data[me.TMX_TAG_HEIGHT]);
+			var ilw = parseInt(data[me.TMX_TAG_WIDTH], 10);
+			var ilh = parseInt(data[me.TMX_TAG_HEIGHT], 10);
 			var ilsrc = data[me.TMX_TAG_IMAGE];
 			
 			// create the layer

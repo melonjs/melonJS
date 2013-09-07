@@ -71,7 +71,7 @@
 		singleton.patch = function(proto, name, fn){
 			// use the object prototype if possible
 			if (proto.prototype!==undefined) {
-				var proto = proto.prototype;
+				proto = proto.prototype;
 			}
 			// reuse the logic behind Object.extend
 			if (typeof(proto[name]) === "function") {

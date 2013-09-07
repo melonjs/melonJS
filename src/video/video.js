@@ -107,7 +107,7 @@
 		api.countFPS = function() {
 			framecount++;
 			framedelta += delta;
-			if (framecount % 10 == 0) {
+			if (framecount % 10 === 0) {
 				this.fps = (~~((1000 * framecount) / framedelta)).clamp(0, me.sys.fps);
 				framedelta = 0;
 				framecount = 0;
@@ -177,7 +177,7 @@
 				}
 			}
 			return 'canvas';
-		};
+		}
 		
 
 		/*---------------------------------------------
@@ -275,7 +275,7 @@
 			// set max the canvas max size if CSS values are defined 
 			if (window.getComputedStyle) {
 				var style = window.getComputedStyle(canvas, null);
-				me.video.setMaxSize(parseInt(style.maxWidth), parseInt(style.maxHeight));
+				me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
 			}
 			
 			// trigger an initial resize();
@@ -318,7 +318,7 @@
 		 * @return {me.Vector2d}
 		 */
 		api.getPos = function(c) {
-			var c = c || canvas;
+			c = c || canvas;
 			return c.getBoundingClientRect?c.getBoundingClientRect():{left:0,top:0};
 		};
 
@@ -381,11 +381,12 @@
 		 * @return {Context2D}
 		 */
 		api.getContext2d = function(canvas) {
+			var _context;
 			if (navigator.isCocoonJS) {
 				// cocoonJS specific extension
-				var _context = canvas.getContext('2d', { "antialias" : me.sys.scalingInterpolation });
+				_context = canvas.getContext('2d', { "antialias" : me.sys.scalingInterpolation });
 			} else {
-				var _context = canvas.getContext('2d');				
+				_context = canvas.getContext('2d');				
 			}
 			if (!_context.canvas) {
 				_context.canvas = canvas;
@@ -580,7 +581,7 @@
 				if (context[vendors[x]+'ImageSmoothingEnabled'] !== undefined) {
 					context[vendors[x]+'ImageSmoothingEnabled'] = (enable===true);
 				}
-			};
+			}
 			// generic one (if implemented)
 			context.imageSmoothingEnabled = (enable===true);
 		};
@@ -644,40 +645,38 @@
 			var pix = imgpix.data;
 
 			// apply selected effect
+			var i, n;
 			switch (effect) {
-			case "b&w": {
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-					var grayscale = (3 * pix[i] + 4 * pix[i + 1] + pix[i + 2]) >>> 3;
-					pix[i] = grayscale; // red
-					pix[i + 1] = grayscale; // green
-					pix[i + 2] = grayscale; // blue
-				}
-				break;
-			}
-
-			case "brightness": {
-				// make sure it's between 0.0 and 1.0
-				var brightness = Math.abs(option).clamp(0.0, 1.0);
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-
-					pix[i] *= brightness; // red
-					pix[i + 1] *= brightness; // green
-					pix[i + 2] *= brightness; // blue
-				}
-				break;
-			}
-
-			case "transparent": {
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-					if (me.utils.RGBToHex(pix[i], pix[i + 1], pix[i + 2]) === option) {
-						pix[i + 3] = 0;
+				case "b&w":
+					for (i = 0, n = pix.length; i < n; i += 4) {
+						var grayscale = (3 * pix[i] + 4 * pix[i + 1] + pix[i + 2]) >>> 3;
+						pix[i] = grayscale; // red
+						pix[i + 1] = grayscale; // green
+						pix[i + 2] = grayscale; // blue
 					}
-				}
-				break;
-			}
+					break;
 
-			default:
-				return null;
+				case "brightness":
+					// make sure it's between 0.0 and 1.0
+					var brightness = Math.abs(option).clamp(0.0, 1.0);
+					for (i = 0, n = pix.length; i < n; i += 4) {
+
+						pix[i] *= brightness; // red
+						pix[i + 1] *= brightness; // green
+						pix[i + 2] *= brightness; // blue
+					}
+					break;
+
+				case "transparent":
+					for (i = 0, n = pix.length; i < n; i += 4) {
+						if (me.utils.RGBToHex(pix[i], pix[i + 1], pix[i + 2]) === option) {
+							pix[i + 3] = 0;
+						}
+					}
+					break;
+
+				default:
+					return null;
 			}
 
 			// put our modified image back in the new filtered canvas

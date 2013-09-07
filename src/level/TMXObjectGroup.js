@@ -87,7 +87,7 @@
 			this.name    = name;
 			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
-			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) == 1);
+			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) === 1);
 			this.opacity = me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects = [];
@@ -270,7 +270,7 @@
 		 * @function
 		 */
 		initFromXML :  function(tmxObj, tilesets, z) {
-     		this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
+			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
 			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
 			this.y = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
 			this.z = z;
@@ -293,22 +293,22 @@
                 if (tmxObj.getElementsByTagName(me.TMX_TAG_ELLIPSE).length) {
                     this.isEllipse = true;
                 } else {
-                	// polygone || polyline
-                	var points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
-                    if (points.length) {
-                    	this.isPolygon = true;
-                    } else {
-                    	points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
-                    	if (points.length) {
-                    		this.isPolyline = true;
-                    	}
-                    }
+					// polygone || polyline
+					var points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
+					if (points.length) {
+						this.isPolygon = true;
+					} else {
+						points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
+						if (points.length) {
+							this.isPolyline = true;
+						}
+					}
                     if (points.length) {
                         this.points = [];
                         // get a point array
                         var point = me.mapReader.TMXParser.getStringAttribute(
-                        	points[0], 
-                        	me.TMX_TAG_POINTS
+							points[0], 
+							me.TMX_TAG_POINTS
                         ).split(" ");
                         // and normalize them into an array of vectors
                         for (var i = 0, v; i < point.length; i++) {
@@ -335,13 +335,13 @@
 		initFromJSON :  function(tmxObj, tilesets, z) {
 			
 			this.name = tmxObj[me.TMX_TAG_NAME];
-			this.x = parseInt(tmxObj[me.TMX_TAG_X]);
-			this.y = parseInt(tmxObj[me.TMX_TAG_Y]);
-			this.z = parseInt(z);
+			this.x = parseInt(tmxObj[me.TMX_TAG_X], 10);
+			this.y = parseInt(tmxObj[me.TMX_TAG_Y], 10);
+			this.z = parseInt(z, 10);
 
-			this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0);
-			this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0);
-			this.gid = parseInt(tmxObj[me.TMX_TAG_GID]) || null;
+			this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0, 10);
+			this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0, 10);
+			this.gid = parseInt(tmxObj[me.TMX_TAG_GID], 10) || null;
 			
 			this.isEllipse = false;
             this.isPolygon = false;
@@ -358,18 +358,18 @@
                 else {
                     var points = tmxObj[me.TMX_TAG_POLYGON];
                     if (points !== undefined) {
-                    	this.isPolygon = true;
+						this.isPolygon = true;
                     } else {
-                    	points = tmxObj[me.TMX_TAG_POLYLINE];
-                    	if (points !== undefined) {
-                    		this.isPolyline = true;
-                    	}
+						points = tmxObj[me.TMX_TAG_POLYLINE];
+						if (points !== undefined) {
+							this.isPolyline = true;
+						}
                     }
                     if (points !== undefined) {
                         this.points = [];
                         var self = this;
                         points.forEach(function(point) {
-                            self.points.push(new me.Vector2d(parseInt(point.x), parseInt(point.y)));
+                            self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
                         });
                     }
                    }

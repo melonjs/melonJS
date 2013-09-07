@@ -189,7 +189,7 @@
 		 * @return {Boolean}
 		 */
 		hasChild : function(child) {
-			return (this == child.ancestor);
+			return this === child.ancestor;
 		},
 		
 		/**
@@ -221,7 +221,7 @@
 						if (obj[prop].match(_regExp)) {
 							objList.push(obj);
 						}
-					} else if (obj[prop] == value) {
+					} else if (obj[prop] === value) {
 						objList.push(obj);
 					}
 				}
@@ -350,11 +350,11 @@
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 */
 		collideType : function(objA, type, multiple) {
-			var res;
+			var res, mres;
 			// make sure we have a boolean
 			multiple = multiple===true ? true : false;
 			if (multiple===true) {
-				var mres = [];
+				mres = [];
 			} 
 
 			// this should be replace by a list of the 4 adjacent cell around the object requesting collision
@@ -373,11 +373,11 @@
 							return res;
 						}
 						
-					} else if ( (obj!=objA) && (!type || (obj.type === type)) ) {
+					} else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
 			
 						res = obj.collisionBox["collideWith"+objA.shapeType].call(obj.collisionBox, objA.collisionBox);
 						
-						if (res.x != 0 || res.y != 0) {
+						if (res.x !== 0 || res.y !== 0) {
 							// notify the object
 							obj.onCollision.call(obj, res, objA);
 							// return the type (deprecated)
@@ -426,8 +426,8 @@
 					self.pendingSort = null;
 					// make sure we redraw everything
 					me.game.repaint();
-				}).defer(this);
-			};
+				}.defer(this));
+			}
 		},
 		
 		/**
@@ -512,7 +512,7 @@
 				
 				if ((obj.inViewport || this.floating) && obj.isRenderable) {
 
-					if (obj.floating==true) {
+					if (obj.floating === true) {
 						context.save();
 						// translate back object
 						context.translate(
@@ -524,7 +524,7 @@
 					// draw the object
 					obj.draw(context, rect);
 
-					if (obj.floating==true) {
+					if (obj.floating === true) {
 						context.restore();
 					}
 

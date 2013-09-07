@@ -192,7 +192,7 @@
 				// load TSX
 				src = me.utils.getBasename(src);
 				// replace tiletset with a local variable
-				var tileset = me.loader.getTMX(src);
+				tileset = me.loader.getTMX(src);
 
 				if (!tileset) {
 					throw "melonJS:" + src + " TSX tileset not found";
@@ -202,17 +202,17 @@
 			}
 			
 			this.name = tileset[me.TMX_TAG_NAME];
-			this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH]);
-			this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT]);
-			this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0);
-			this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] ||0);
+			this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH], 10);
+			this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT], 10);
+			this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0, 10);
+			this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] ||0, 10);
 		
 			// set tile offset properties (if any)
 			this.tileoffset = new me.Vector2d(0,0);
 			var offset = tileset[me.TMX_TAG_TILEOFFSET];
 			if (offset) {
-				this.tileoffset.x = parseInt(offset[me.TMX_TAG_X]);
-				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y]);
+				this.tileoffset.x = parseInt(offset[me.TMX_TAG_X], 10);
+				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y], 10);
 			}
 			
 			var tileInfo = tileset["tileproperties"];
@@ -220,7 +220,7 @@
 			for(var i in tileInfo) {
 				var prop = {};
 				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
-				this.setTileProperty(parseInt(i) + this.firstgid, prop);
+				this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
 			}
 			
 			// check for the texture corresponding image
@@ -288,7 +288,7 @@
 		 * @return {boolean}
 		 */
 		contains : function(gid) {
-			return (gid >= this.firstgid && gid <= this.lastgid)
+			return gid >= this.firstgid && gid <= this.lastgid;
 		},
 		
 		//return an Image Object with the specified tile
@@ -457,14 +457,14 @@
 				if (this.tilesets[i].contains(gid))
 					return this.tilesets[i];
 				// typically indicates a layer with no asset loaded (collision?)
-				if (this.tilesets[i].firstgid == this.tilesets[i].lastgid) {
+				if (this.tilesets[i].firstgid === this.tilesets[i].lastgid) {
 					if (gid >= this.tilesets[i].firstgid)
 					// store the id if the [firstgid .. lastgid] is invalid
 					invalidRange = i;
 				}
 			}
 			// return the tileset with the invalid range
-			if (invalidRange!=-1)
+			if (invalidRange !== -1)
 				return this.tilesets[invalidRange];
 			else
 			throw "no matching tileset found for gid " + gid;

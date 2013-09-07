@@ -39,7 +39,7 @@
 		 * @ignore
 		 */
 		function checkLoadStatus() {
-			if (loadCount == resourceCount) {
+			if (loadCount === resourceCount) {
 				// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
 				if (obj.onload) {
 					// make sure we clear the timer
@@ -54,7 +54,7 @@
 			} else {
 				timerId = setTimeout(checkLoadStatus, 100);
 			}
-		};
+		}
 
 		/**
 		 * load Images
@@ -63,7 +63,7 @@
 		 *	
 		 *	preloadImages(
 		 *				 [{name: 'image1', src: 'images/image1.png'},
-		 * 				  {name: 'image2', src: 'images/image2.png'},
+		 *				  {name: 'image2', src: 'images/image2.png'},
 		 *				  {name: 'image3', src: 'images/image3.png'},
 		 *				  {name: 'image4', src: 'images/image4.png'}]);
 		 * @ignore
@@ -75,7 +75,7 @@
 			imgList[img.name].onload = onload;
 			imgList[img.name].onerror = onerror;
 			imgList[img.name].src = img.src + obj.nocache;
-		};
+		}
 
 		/**
 		 * preload TMX files
@@ -104,16 +104,16 @@
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
 			xmlhttp.onreadystatechange = function() {
-				if (xmlhttp.readyState==4) {
+				if (xmlhttp.readyState === 4) {
 					// status = 0 when file protocol is used, or cross-domain origin,
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
-					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+					if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
 						var result = null;
 						
 						// parse response
 						switch (format) {
-							case 'xml' : 
-							case 'tmx' : {
+							case 'xml': 
+							case 'tmx':
 								// ie9 does not fully implement the responseXML
 								if (me.sys.ua.match(/msie/i) || !xmlhttp.responseXML) {
 									// manually create the XML DOM
@@ -124,15 +124,13 @@
 								// change the data format
 								format = 'xml';
 								break;
-							}
-							case 'json' : {
+
+							case 'json':
 								result = JSON.parse(xmlhttp.responseText);
 								break;
-							}
 							
-							default : {
+							default:
 								throw "melonJS: TMX file format " + format + "not supported !";
-							}
 						}
 												
 						// get the TMX content
@@ -151,7 +149,7 @@
 			};
 			// send the request
 			xmlhttp.send(null);
-		};
+		}
 		
 		
 		/**
@@ -170,10 +168,10 @@
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
 			xmlhttp.onreadystatechange = function() {
-				if (xmlhttp.readyState==4) {
+				if (xmlhttp.readyState === 4) {
 					// status = 0 when file protocol is used, or cross-domain origin,
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
-					if ((xmlhttp.status==200) || ((xmlhttp.status==0) && xmlhttp.responseText)){
+					if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)){
 						// get the Texture Packer Atlas content
 						jsonList[data.name] = JSON.parse(xmlhttp.responseText);
 						// fire the callback
@@ -185,7 +183,7 @@
 			};
 			// send the request
 			xmlhttp.send(null);
-		};
+		}
 			
 		/**
 		 * preload Binary files
@@ -212,7 +210,7 @@
 				}
 			};
 			httpReq.send();
-		};
+		}
 		
 		/**
 		 * to enable/disable caching
@@ -275,7 +273,7 @@
 		};
 		
 		/**
-		 * on error callback for image loading 	
+		 * on error callback for image loading
 		 * @ignore
 		 */
 		obj.onLoadingError = function(res) {
@@ -287,7 +285,7 @@
 		 * @ignore
 		 */
 		obj.setNocache = function(enable) {
-			obj.nocache = enable ? "?" + parseInt(Math.random() * 10000000) : '';
+			obj.nocache = enable ? "?" + parseInt(Math.random() * 10000000, 10) : '';
 		};
 
 
@@ -335,7 +333,7 @@
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
 				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
-			};
+			}
 			// check load status
 			checkLoadStatus();
 		};
@@ -406,8 +404,7 @@
 
 				default:
 					throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
-					break;
-			};
+			}
 			return 0;
 		};
 
@@ -618,7 +615,7 @@
 			else {
 				return null;
 			}
-		}
+		};
 
 		/**
 		 * Return the loading progress in percent

@@ -364,7 +364,7 @@
 				// start the main loop
 				_animFrameId = window.requestAnimationFrame(_renderFrame);
 			}
-		};
+		}
 
 		/**
 		 * Resume the game loop after a pause.
@@ -378,7 +378,7 @@
 
 				_isPaused = false;
 			}
-		};
+		}
 
 		/**
 		 * Pause the loop for most screen objects.
@@ -387,7 +387,7 @@
 		function _pauseRunLoop() {
 			// Set the paused boolean to stop updates on (most) entities
 			_isPaused = true;
-		};
+		}
 
 		/**
 		 * this is only called when using requestAnimFrame stuff
@@ -395,10 +395,10 @@
 		 */
 		function _renderFrame() {
 			_activeUpdateFrame();
-			if (_animFrameId != -1) {
+			if (_animFrameId !== -1) {
 		           _animFrameId = window.requestAnimationFrame(_renderFrame);
 		    }
-		};
+		}
 
 		/**
 		 * stop the SO main loop
@@ -408,7 +408,7 @@
 			// cancel any previous animationRequestFrame
 			window.cancelAnimationFrame(_animFrameId);
 			_animFrameId = -1;
-		};
+		}
 
 		/**
 		 * start the SO main loop
@@ -452,11 +452,11 @@
 				// force repaint
 				me.game.repaint();
 			 }
-		};
+		}
 
 		/*---------------------------------------------
 			PUBLIC STUFF
- 		 ---------------------------------------------*/
+		 ---------------------------------------------*/
 		
 		/**
 		 * default state value for Loading Screen
@@ -577,7 +577,7 @@
 			// set pause/stop action on losing focus
 			$.addEventListener("blur", function() {
 				// only in case we are not loading stuff
-				if (_state != obj.LOADING) {
+				if (_state !== obj.LOADING) {
 					if (me.sys.stopOnBlur) {
 						obj.stop(true);	
 
@@ -602,7 +602,7 @@
 			// set restart/resume action on gaining focus
 			$.addEventListener("focus", function() {
 				// only in case we are not loading stuff
-				if (_state != obj.LOADING) {
+				if (_state !== obj.LOADING) {
 					// note: separate boolean so we can stay paused if user prefers
 					if (me.sys.resumeOnFocus) {
 						obj.resume(true);
@@ -708,7 +708,7 @@
 		 * @param {Boolean} true if a "process is running"
 		 */
 		obj.isRunning = function() {
-			return (_animFrameId !== -1)
+			return _animFrameId !== -1;
 		};
 
 		/**
@@ -762,7 +762,7 @@
 		 * @param {Int} [duration=1000] expressed in milliseconds
 		 */
 		obj.transition = function(effect, color, duration) {
-			if (effect == "fade") {
+			if (effect === "fade") {
 				_fade.color = color;
 				_fade.duration = duration;
 			}
@@ -833,7 +833,7 @@
 		 * @param {Int} state @see me.state#Constant
 		 */
 		obj.isCurrent = function(state) {
-			return _state == state;
+			return _state === state;
 		};
 
 		// return our object
