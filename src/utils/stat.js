@@ -21,7 +21,7 @@
 		this.defaultvalue = val || 0;
 		this.value = val || 0;
 		this.updated = true;
-	};
+	}
 
 	/**
 	 * reset to default value
@@ -179,7 +179,7 @@
 		 * @param {String} [name="all"] name of the item
 		 */
 		singleton.reset = function(name) {
-			if (name != undefined) {
+			if (name !== undefined) {
 				// only reset the specified one
 				if (items[name])
 					items[name].reset();

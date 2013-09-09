@@ -98,16 +98,18 @@
 		 */
 		reset : function() {
 			if (this.initialized === true) {
+				var i;
+
 				// reset/clear all layers
-				for ( var i = this.mapLayers.length; i--;) {
+				for (i = this.mapLayers.length; i--;) {
 					this.mapLayers[i].reset();
 					this.mapLayers[i] = null;
-				};
+				}
 				// reset object groups
-				for ( var i = this.objectGroups.length; i--;) {
+				for (i = this.objectGroups.length; i--;) {
 					this.objectGroups[i].reset();
 					this.objectGroups[i] = null;
-				};
+				}
 				// call parent reset function
 				this.tilesets = null;
 				this.mapLayers.length = 0;
@@ -134,7 +136,7 @@
 						objectGroup = this.objectGroups[i];
 						break;
 					}
-				};
+				}
 			return objectGroup;
 		},
 
@@ -178,7 +180,7 @@
 					layer = this.mapLayers[i];
 					break;
 				}
-			};
+			}
 
 			// return a fake collision layer if not found
 			if ((name.toLowerCase().contains(me.COLLISION_LAYER)) && (layer == null)) {
@@ -206,7 +208,7 @@
 				if (this.mapLayers[i] instanceof me.TMXLayer) {
 					this.mapLayers[i].clearTile(x, y);
 				}
-			};
+			}
 		}
 
 

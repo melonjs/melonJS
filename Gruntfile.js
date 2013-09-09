@@ -42,7 +42,7 @@ module.exports = function(grunt) {
         concat: {
             dist: {
                 src: sourceFiles,
-            dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
+                dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
             }
         },
 
@@ -102,7 +102,7 @@ module.exports = function(grunt) {
 
         jsdoc : {
             dist : {
-                src: ['build/<%= pkg.name %>-<%= pkg.version %>.js', 'README.md'],
+                src: [sourceFiles, 'README.md'],
                 options: {
                     configure: 'jsdoc_conf.json',
                     destination: 'docs',

@@ -259,10 +259,10 @@
 
 			// Convert touchcancel -> touchend, and PointerCancel -> PointerEnd
 			if (!handlers) {
-				if (e.type == "touchcancel") {
+				if (e.type === "touchcancel") {
 					handlers = evtHandlers["touchend"];
 				}
-				else if (e.type == "PointerCancel") {
+				else if (e.type === "PointerCancel") {
 					handlers = evtHandlers["PointerUp"];
 				} else {
 					handlers = evtHandlers[e.type];
@@ -320,12 +320,14 @@
 		 * @ignore
 		 */
 		function updateCoordFromEvent(e) {
+			var local;
+
 			// reset the touch array cache
 			obj.changedTouches.length=0;
 			
 			// PointerEvent or standard Mouse event
 			if (!e.touches) {
-				var local = obj.globalToLocal(e.clientX, e.clientY);
+				local = obj.globalToLocal(e.clientX, e.clientY);
 				local.id =  e.pointerId || 1;
 				obj.changedTouches.push(local);
 			}
@@ -333,7 +335,7 @@
 			else {
 				for(var i=0, l=e.changedTouches.length; i<l; i++) {
 					var t = e.changedTouches[i];
-					var local = obj.globalToLocal(t.clientX, t.clientY);
+					local = obj.globalToLocal(t.clientX, t.clientY);
 					local.id = t.identifier;
 					obj.changedTouches.push(local);
 				}
@@ -352,7 +354,8 @@
 		 * @ignore
 		 */
 		function onMouseWheel(e) {
-			if (e.target == me.video.getScreenCanvas()) {
+			/* jshint expr:true */
+			if (e.target === me.video.getScreenCanvas()) {
 				// create a (fake) normalized event object
 				var _event = {
 					deltaMode : 1,
@@ -361,7 +364,7 @@
 					deltaY: e.deltaY,
 					deltaZ: e.deltaZ
 				};
-				if ( wheeltype == "mousewheel" ) {
+				if ( wheeltype === "mousewheel" ) {
 					_event.deltaY = - 1/40 * e.wheelDelta;
 					// Webkit also support wheelDeltaX
 					e.wheelDeltaX && ( _event.deltaX = - 1/40 * e.wheelDeltaX );
@@ -723,7 +726,7 @@
 			x -= offset.left;
 			y -= offset.top;
 			var scale = me.sys.scale;
-			if (scale.x != 1.0 || scale.y != 1.0) {
+			if (scale.x !== 1.0 || scale.y !== 1.0) {
 				x/= scale.x;
 				y/= scale.y;
 			}
@@ -883,7 +886,7 @@
 				// unregister the event
 				if (!evtHandlers[eventType]) {
 					evtHandlers[eventType] = [];
- 				}
+				}
 				var handlers = evtHandlers[eventType];
 				if (handlers) {
 					for (var i = handlers.length, handler; i--, handler = handlers[i];) {
@@ -910,7 +913,7 @@
 		obj.watchAccelerometer = function () {
 		    if (me.sys.hasAccelerometer) {
 		        if (!accelInitialized) {
-		            if (typeof(Windows) == 'undefined') {
+		            if (typeof Windows === 'undefined') {
 		                // add a listener for the devicemotion event
 		                window.addEventListener('devicemotion', onDeviceMotion, false);
 		            } else {
@@ -941,7 +944,7 @@
 		 */
 		obj.unwatchAccelerometer = function() {
 		    if (accelInitialized) {
-		        if (typeof Windows == 'undefined') {
+		        if (typeof Windows === 'undefined') {
 		            // add a listener for the mouse
 		            window.removeEventListener('devicemotion', onDeviceMotion, false);
 		        } else {

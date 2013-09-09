@@ -281,12 +281,12 @@
 					}
 				}
 				else {
-					if (this._shake.axis == this.AXIS.BOTH ||
-						this._shake.axis == this.AXIS.HORIZONTAL) {
+					if (this._shake.axis === this.AXIS.BOTH ||
+						this._shake.axis === this.AXIS.HORIZONTAL) {
 						this.offset.x = (Math.random() - 0.5) * this._shake.intensity;
 					}
-					if (this._shake.axis == this.AXIS.BOTH ||
-						this._shake.axis == this.AXIS.VERTICAL) {
+					if (this._shake.axis === this.AXIS.BOTH ||
+						this._shake.axis === this.AXIS.VERTICAL) {
 						this.offset.y = (Math.random() - 0.5) * this._shake.intensity;
 					}
 				}
@@ -455,7 +455,7 @@
 				// set back full opacity
 				context.globalAlpha = 1.0;
 				// remove the tween if over
-				if (this._fadeIn.alpha==1.0)
+				if (this._fadeIn.alpha === 1.0)
 					this._fadeIn.tween = null;
 			}
 			
@@ -466,7 +466,7 @@
 				// set back full opacity
 				context.globalAlpha = 1.0;
 				// remove the tween if over
-				if (this._fadeOut.alpha==0.0)
+				if (this._fadeOut.alpha === 0.0)
 					this._fadeOut.tween = null;
 			}
 			

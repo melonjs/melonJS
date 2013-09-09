@@ -1,5 +1,5 @@
 {
-    "curly": true,
+    "curly": false,
     "eqeqeq": true,
     "immed": true,
     "latedef": true,
@@ -14,6 +14,9 @@
     "smarttabs": true,
     "globals": {
         "me": true,
-        "console": true
+        "console": true,
+        "throttle": true,
+        "Windows": true,
+        "alert": true
     }
 }
