@@ -72,6 +72,7 @@
 		var keyboardInitialized = false;
 		var pointerInitialized = false;
 		var accelInitialized = false;
+		var deviceOrientationInitialized = false;
 		
 		// to keep track of the supported wheel event
 		var wheeltype = 'mousewheel';
@@ -440,6 +441,12 @@
 		    }
 		}
 
+		function onDeviceRotate(e) {
+			obj.orientation.tiltLeftRight = e.gamma;
+			obj.orientation.tiltFrontBack = e.beta;
+			obj.orientation.direction = e.alpha;
+		}
+
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
@@ -458,6 +465,19 @@
 			x: 0, 
 			y: 0, 
 			z: 0
+		};
+
+		/** 
+		 * Device Orientation. Stores angle in degrees for each axis.
+		 * properties : tiltLeftRight, tiltFrontBack, direction
+		 * @public
+		 * @name orientation
+		 * @memberOf me.input
+		 */
+		obj.orientation = {
+			tiltLeftRight: 0,
+			tiltFrontBack: 0,
+			direction: 0
 		};
 		
 		/**
@@ -956,6 +976,36 @@
 		        accelInitialized = false;
 		    }
 		};
+
+		/**
+		 * watch the device orientation event 
+		 * @name watchDeviceOrientation
+		 * @memberOf me.input
+		 * @public
+		 * @function
+		 * @return {boolean} false if not supported by the device
+		 */
+		obj.watchDeviceOrientation = function() {
+			if(me.sys.hasDeviceOrientation && !deviceOrientationInitialized) {
+				window.addEventListener('deviceorientation', onDeviceRotate, false);
+				deviceOrientationInitialized = true;
+			}
+			return false;
+		}
+
+		/**
+		 * unwatch Device orientation event 
+		 * @name unwatchAccelerometer
+		 * @memberOf me.input
+		 * @public
+		 * @function
+		 */
+		obj.unwatchDeviceOrientation = function() {
+			if(deviceOrientationInitialized) {
+				window.removeEventListener('deviceorientation', onDeviceRotate, false);
+				deviceOrientationInitialized = false;
+			}
+		}
 
 	    // return our object
 		return obj;
