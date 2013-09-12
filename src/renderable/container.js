@@ -90,13 +90,14 @@
 		 * @param {me.Renderable} child
 		 */
 		addChild : function(child) {
-			if(typeof(child.ancestor) !== 'undefined') {
+			if (typeof(child.ancestor) !== 'undefined') {
 				child.ancestor.removeChild(child);
 			}
 
 			child.ancestor = this;
 			
 			this.children.push(child);
+			me.entityPool.addInstance(child);
 			
 			if (this.autoSort === true) {
 				this.sort();
@@ -119,8 +120,9 @@
 				}
 				
 				child.ancestor = this;
-				
+
 				this.children.splice(index, 0, child);
+				me.entityPool.addInstance(child);
 			
 			} else {
 				throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
@@ -171,7 +173,7 @@
 		
 		/**
 		 * Returns the index of the Child
-		 * @name getChildAt
+		 * @name getChildIndex
 		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
@@ -240,21 +242,15 @@
 		 * @param {Boolean} keepalive True to prevent calling child.destroy()
 		 */
 		removeChild : function(child, keepalive) {
-
 			if  (this.hasChild(child)) {
-				
 				child.ancestor = undefined;
 
-				if (!keepalive) {
-					if (typeof (child.destroy) === 'function') {
-						child.destroy();
-					}
-
-					me.entityPool.freeInstance(child);
+				if (!keepalive && typeof (child.destroy) === 'function') {
+					child.destroy();
 				}
 				
 				this.children.splice( this.getChildIndex(child), 1 );
-			
+				me.entityPool.freeInstance(child);
 			} else {
 				throw "melonJS (me.ObjectContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
