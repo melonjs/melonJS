@@ -988,6 +988,7 @@
 		obj.watchDeviceOrientation = function() {
 			if(me.sys.hasDeviceOrientation && !deviceOrientationInitialized) {
 				window.addEventListener('deviceorientation', onDeviceRotate, false);
+				deviceOrientationInitialized = true;
 			}
 			return false;
 		}
@@ -1001,7 +1002,8 @@
 		 */
 		obj.unwatchDeviceOrientation = function() {
 			if(deviceOrientationInitialized) {
-				accelerometer.removeEventListener('deviceorientation', onDeviceRotate, false);
+				window.removeEventListener('deviceorientation', onDeviceRotate, false);
+				deviceOrientationInitialized = false;
 			}
 		}
 
