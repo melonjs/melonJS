@@ -112,16 +112,19 @@
 		 */
 		anchorPoint: null,
 
-		/**
-		 * @ignore
-		 */
-		init : function(pos, width, height) {
-			// call the parent constructor
-			this.parent(pos, width, height);
-            
+        /**
+         * @ignore
+         */
+        init : function(pos, width, height) {
+            // call the parent constructor
+            this.parent(pos, width, height);
+
             // set the default anchor point (middle of the renderable)
-			this.anchorPoint = new me.Vector2d(0.5, 0.5);
-		},
+            if (this.anchorPoint === null) {
+                this.anchorPoint = new me.Vector2d();
+            }
+            this.anchorPoint.set(0.5, 0.5);
+        },
 
 		/**
 		 * update function
