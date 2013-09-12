@@ -201,8 +201,8 @@
 
 			// set a callback if defined
 			if (callback && !loop) {
-				soundclip.addEventListener('ended', function(event) {
-					soundclip.removeEventListener('ended', arguments.callee,
+				soundclip.addEventListener('ended', function callbackFn(event) {
+					soundclip.removeEventListener('ended', callbackFn,
 							false);
 					// soundclip.pause();
 					// soundclip.currentTime = reset_val;
@@ -401,8 +401,8 @@
 
 			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.loader.nocache);
 			soundclip.preload = 'auto';
-			soundclip.addEventListener(eventname, function(e) {
-				soundclip.removeEventListener(eventname, arguments.callee, false);
+			soundclip.addEventListener(eventname, function callbackFn(e) {
+				soundclip.removeEventListener(eventname, callbackFn, false);
 				sync_loading = false;
 				soundLoaded.call(
 					me.audio,

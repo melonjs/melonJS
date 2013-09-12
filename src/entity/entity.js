@@ -519,9 +519,13 @@
 		
 		/** @ignore */
 		init : function(x, y, settings) {
-			
+            // instantiate pos here to avoid
+            // later re-instantiation
+            if (this.pos === null) {
+                this.pos = new me.Vector2d();
+            }            
 			// call the parent constructor
-			this.parent(new me.Vector2d(x, y),
+			this.parent(this.pos.set(x,y),
 						~~settings.spritewidth  || ~~settings.width,
 						~~settings.spriteheight || ~~settings.height);
 			
@@ -545,41 +549,53 @@
 			// set the object entity name
 			this.name = settings.name?settings.name.toLowerCase():"";
 
-			/**
-			 * entity current velocity<br>
-			 * @public
-			 * @type me.Vector2d
-			 * @name vel
-			 * @memberOf me.ObjectEntity
-			 */
-			this.vel = new me.Vector2d();
+            /**
+             * entity current velocity<br>
+             * @public
+             * @type me.Vector2d
+             * @name vel
+             * @memberOf me.ObjectEntity
+             */
+            if (this.vel === undefined) {
+                this.vel = new me.Vector2d();
+            }    
+            this.vel.set(0,0);
 
-			/**
-			 * entity current acceleration<br>
-			 * @public
-			 * @type me.Vector2d
-			 * @name accel
-			 * @memberOf me.ObjectEntity
-			 */
-			this.accel = new me.Vector2d();
+            /**
+             * entity current acceleration<br>
+             * @public
+             * @type me.Vector2d
+             * @name accel
+             * @memberOf me.ObjectEntity
+             */
+            if (this.accel === undefined) {
+                this.accel = new me.Vector2d();
+            }    
+            this.accel.set(0,0);
+            
+            /**
+             * entity current friction<br>
+             * @public
+             * @name friction
+             * @memberOf me.ObjectEntity
+             */
+            if (this.friction === undefined) {
+                this.friction = new me.Vector2d();
+            }    
+            this.friction.set(0,0);
 
-			/**
-			 * entity current friction<br>
-			 * @public
-			 * @name friction
-			 * @memberOf me.ObjectEntity
-			 */
-			this.friction = new me.Vector2d();
-
-			/**
-			 * max velocity (to limit entity velocity)<br>
-			 * @public
-			 * @type me.Vector2d
-			 * @name maxVel
-			 * @memberOf me.ObjectEntity
-			 */
-			this.maxVel = new me.Vector2d(1000,1000);
-
+            /**
+             * max velocity (to limit entity velocity)<br>
+             * @public
+             * @type me.Vector2d
+             * @name maxVel
+             * @memberOf me.ObjectEntity
+             */
+            if (this.maxVel === undefined) {
+                this.maxVel = new me.Vector2d();
+            }    
+            this.maxVel.set(1000, 1000);
+        
 			// some default contants
 			/**
 			 * Default gravity value of the entity<br>
@@ -597,7 +613,6 @@
 			// just to identify our object
 			this.isEntity = true;
 			
-			// dead state :)
 			/**
 			 * dead/living state of the entity<br>
 			 * default value : true
