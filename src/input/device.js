@@ -19,15 +19,15 @@
 
 		/** 
 		 * Device Orientation. Stores angle in degrees for each axis.
-		 * properties : tiltLeftRight, tiltFrontBack, direction
+		 * properties : gamma, beta, alpha
 		 * @public
 		 * @name orientation
 		 * @memberOf me.device
 		 */
 		obj.orientation = {
-			tiltLeftRight: 0,
-			tiltFrontBack: 0,
-			direction: 0
+			gamma: 0,
+			beta: 0,
+			alpha: 0
 		};
 
 		/**
