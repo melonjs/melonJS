@@ -145,15 +145,17 @@
 					if (gid !== 0) {
 						// create a new tile object
 						var tmxTile = new me.Tile(x, y, layer.tilewidth, layer.tileheight, gid);
-						// set the tile in the data array
-						layer.layerData[x][y] = tmxTile;
-						// switch to the right tileset
-						if (!layer.tileset.contains(tmxTile.tileId)) {
-							layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+                        // set a reference to the corresonding/required tileset
+                        if (!layer.tileset.contains(tmxTile.tileId)) {
+							tmxTile.tileset = layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
+                        } else {
+                            tmxTile.tileset = layer.tileset;
 						}
+                        // set the tile in the data array
+						layer.layerData[x][y] = tmxTile;
 						// draw the corresponding tile
 						if (layer.visible && layer.preRender) {
-							layer.renderer.drawTile(layer.layerSurface, x, y, tmxTile, layer.tileset);
+							layer.renderer.drawTile(layer.layerSurface, x, y, tmxTile, tmxTile.tileset);
 						}
 					}
 				}

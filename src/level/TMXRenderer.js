@@ -103,10 +103,7 @@
 				for ( var x = start.x; x < end.x; x++) {
 					var tmxTile = layer.layerData[x][y];
 					if (tmxTile) {
-						if (!layer.tileset.contains(tmxTile.tileId)) {
-							layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
-						}
-						this.drawTile(context, x, y, tmxTile, layer.tileset);
+						this.drawTile(context, x, y, tmxTile, tmxTile.tileset);
 					}
 				}
 			}
@@ -260,11 +257,9 @@
 					{
 						var tmxTile = layer.layerData[columnItr.x][columnItr.y];
 						if (tmxTile) {
-							if (!tileset.contains(tmxTile.tileId)) {
-								tileset = layer.tileset = layer.tilesets.getTilesetByGid(tmxTile.tileId);
-								// offset could be different per tileset
-								offset  = tileset.tileoffset;
-							}
+							tileset = tmxTile.tileset;
+							// offset could be different per tileset
+							offset  = tileset.tileoffset;
 							// draw our tile
 							tileset.drawTile(context, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
 						}
