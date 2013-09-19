@@ -200,7 +200,8 @@
 	 */
     me.BitmapFont = me.Font.extend(
     /** @scope me.BitmapFont.prototype */ {
-		// font scale;
+		/** @ignore */
+        // font scale;
 		sSize : null,
 		// first char in the ascii table
 		firstChar : 0x20,
