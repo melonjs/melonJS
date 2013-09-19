@@ -25,15 +25,15 @@
 	 * @param {String} color a CSS color value
 	 * @param {String} [textAlign="left"] horizontal alignment
 	 */
-	me.Font = Object.extend(
-	/** @scope me.Font.prototype */
-	{
+    me.Font = me.Renderable.extend(
+    /** @scope me.Font.prototype */ {
 
 		// private font properties
 		/** @ignore */
 		font : null,
-		height : null,
-		color : null,
+        fontSize : null,
+        color : null,
+        
 		
 		/**
 		 * Set the default text alignment (or justification),<br>
@@ -64,13 +64,17 @@
 		 * @name me.Font#lineHeight
 		 */
 		lineHeight : 1.0,
-
+        
 		/** @ignore */
 		init : function(font, size, color, textAlign) {
-
+            this.pos = new me.Vector2d();
+            this.fontSize = new me.Vector2d();
+            
 			// font name and type
 			this.set(font, size, color, textAlign);
 			
+            // parent constructor
+            this.parent(this.pos, 0, this.fontSize.y);
 		},
 
 		/**
@@ -112,8 +116,11 @@
 			for (var i = 0; i < font_names.length; i++) {
 				font_names[i] = "'" + font_names[i] + "'";
 			}
-			this.height = parseInt(size, 10);
-			if (typeof size === "number") {
+			
+            this.fontSize.y = parseInt(size, 10);
+			this.height = this.fontSize.y;
+            
+            if (typeof size === "number") {
 				size = "" + size + "px";
 			}
 			this.font = size + " " + font_names.join(",");
@@ -121,14 +128,6 @@
 			if (textAlign) {
 				this.textAlign = textAlign;
 			}
-		},
-
-		/**
-		 * FIX ME !
-		 * @ignore
-		 */
-		getBounds : function() {
-			return new me.Rect(new me.Vector2d(0, 0), 0, 0);
 		},
 
 		/**
@@ -146,14 +145,15 @@
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
-
+            
+            this.height = this.width = 0;
+            
 			var strings = (""+text).split("\n");
-			var width = 0, height = 0;
 			for (var i = 0; i < strings.length; i++) {
-				width = Math.max(context.measureText(strings[i].trim()).width, width);
-				height += this.height * this.lineHeight;
+				this.width = Math.max(context.measureText(strings[i].trim()).width, this.width);
+				this.height += this.fontSize.y * this.lineHeight;
 			}
-			return {width: width, height: height};
+			return {width: this.width, height: this.height};
 		},
 
 		/**
@@ -167,18 +167,21 @@
 		 * @param {int} y
 		 */
 		draw : function(context, text, x, y) {
-			// draw the text
+			// update initial position
+            this.pos.set(x,y);
+            
+            // draw the text
 			context.font = this.font;
 			context.fillStyle = this.color;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
-			
+		           
 			var strings = (""+text).split("\n");
 			for (var i = 0; i < strings.length; i++) {
 				// draw the string
 				context.fillText(strings[i].trim(), ~~x, ~~y);
 				// add leading space
-				y += this.height * this.lineHeight;
+				y += this.fontSize.y * this.lineHeight;
 			}
 			
 		}
@@ -194,14 +197,9 @@
 	 * @param {int/Object} size either an int value, or an object like {x:16,y:16}
 	 * @param {int} [scale="1.0"]
 	 * @param {String} [firstChar="0x20"]
-
 	 */
-	me.BitmapFont = me.Font.extend(
-	/** @scope me.BitmapFont.prototype */
-	{
-		// character size;
-		/** @ignore */
-		size : null,
+    me.BitmapFont = me.Font.extend(
+    /** @scope me.BitmapFont.prototype */ {
 		// font scale;
 		sSize : null,
 		// first char in the ascii table
@@ -214,9 +212,6 @@
 		init : function(font, size, scale, firstChar) {
 			// font name and type
 			this.parent(font, null, null);
-
-			// font characters size;
-			this.size = new me.Vector2d();
 			
 			// font scaled size;
 			this.sSize = new me.Vector2d();
@@ -246,12 +241,13 @@
 			this.font = me.loader.getImage(font);
 
 			// some cheap metrics
-			this.size.x = size.x || size;
-			this.size.y = size.y || this.font.height;
-			this.sSize.copy(this.size);
-			
+			this.fontSize.x = size.x || size;
+			this.fontSize.y = size.y || this.font.height;
+			this.sSize.copy(this.fontSize);
+			this.height = this.sSize.y;
+            
 			// #char per row  
-			this.charCount = ~~(this.font.width / this.size.x);
+			this.charCount = ~~(this.font.width / this.fontSize.x);
 		},
 
 		/**
@@ -279,10 +275,11 @@
 		 */
 		resize : function(scale) {
 			// updated scaled Size
-			this.sSize.setV(this.size);
+			this.sSize.setV(this.fontSize);
 			this.sSize.x *= scale;
 			this.sSize.y *= scale;
-		},
+            this.height = this.sSize.y;
+        },
 
 		/**
 		 * measure the given text size in pixels
@@ -296,12 +293,14 @@
 		measureText : function(context, text) {
 			
 			var strings = (""+text).split("\n");
-			var width = 0, height = 0;
+            
+            this.height = this.width = 0;
+            
 			for (var i = 0; i < strings.length; i++) {
-				width = Math.max((strings[i].trim().length * this.sSize.x), width);
-				height += this.sSize.y * this.lineHeight;
+				this.width = Math.max((strings[i].trim().length * this.sSize.x), this.width);
+				this.height += this.sSize.y * this.lineHeight;
 			}
-			return {width: width, height: height};
+			return {width: this.width, height: this.height};
 		},
 
 		/**
@@ -318,7 +317,9 @@
 			var strings = (""+text).split("\n");
 			var lX = x;
 			var height = this.sSize.y * this.lineHeight;
-			for (var i = 0; i < strings.length; i++) {
+			// update initial position
+            this.pos.set(x,y);
+            for (var i = 0; i < strings.length; i++) {
 				x = lX;
 				var string = strings[i].trim();
 				// adjust x pos based on alignment value
@@ -359,9 +360,9 @@
 					if (idx >= 0) {
 						// draw it
 						context.drawImage(this.font,
-							this.size.x * (idx % this.charCount), 
-							this.size.y * ~~(idx / this.charCount), 
-							this.size.x, this.size.y, 
+							this.fontSize.x * (idx % this.charCount), 
+							this.fontSize.y * ~~(idx / this.charCount), 
+							this.fontSize.x, this.fontSize.y, 
 							~~x, ~~y, 
 							this.sSize.x, this.sSize.y);
 					}
