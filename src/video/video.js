@@ -532,7 +532,8 @@
 				canvas.style.width = (canvas.width / me.video.getDevicePixelRatio()) + 'px';
 				canvas.style.height = (canvas.height / me.video.getDevicePixelRatio()) + 'px';
 			}
-			 
+			me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
+
 			// make sure we have the correct relative canvas position cached
 			me.input.offset = me.video.getPos();
 
