@@ -642,6 +642,8 @@
                 this.collisionBox = this.shapes[0].getBounds();
                 // collisionBox pos vector is a reference to this pos vector
                 this.collisionBox.pos = this.pos;
+                // offset position vector
+                this.pos.add(this.shapes[0].offset);
             }
 		},
          

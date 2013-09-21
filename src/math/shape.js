@@ -134,6 +134,8 @@
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
 			
+			this.offset = new me.Vector2d();
+
 			// redefine some properties to ease our life when getting the rectangle coordinates
 			Object.defineProperty(this, "left", {
 				get : function() {
@@ -182,6 +184,8 @@
 			
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
+
+			this.offset = new me.Vector2d();
 		},
 
         /**
@@ -558,6 +562,7 @@
 		set : function(v, w, h) {
 			this.radius.set(w/2, h/2);
             this.pos.setV(v).add(this.radius); 
+            this.offset = new me.Vector2d();
 		},
 
         /**
@@ -678,6 +683,8 @@
 			this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
+            this.offset = new me.Vector2d();
+            this.getBounds();
 		},
 
         /**
@@ -688,7 +695,7 @@
          * @return {me.Rect} the bounding box Rectangle	object
          */
         getBounds : function() {
-            var pos = new me.Vector2d(), right = 0, bottom = 0;
+            var pos = this.offset, right = 0, bottom = 0;
             this.points.forEach(function(point) {
                 pos.x = Math.min(pos.x, point.x);
                 pos.y = Math.min(pos.y, point.y);
@@ -716,6 +723,7 @@
 		 */
 		draw : function(context, color) {
 			context.save();
+			context.translate(-this.offset.x, -this.offset.y);
 			context.strokeStyle = color || "red";
 			context.beginPath();
 			context.moveTo(this.points[0].x, this.points[0].y);

@@ -193,11 +193,13 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		
 		// apply gravity setting if specified
 		this.gravity = settings.gravity || me.sys.gravity;
-		
+
 		// set start/end position
+		x = this.pos.x;
+		var width = settings.width || this.width;
 		this.startX = x;
-		this.endX   = x + settings.width - settings.spritewidth
-		this.pos.x  = x + settings.width - settings.spritewidth;
+		this.endX   = x + width - settings.spritewidth
+		this.pos.x  = x + width - settings.spritewidth;
 		
 		this.walkLeft = false;
 
