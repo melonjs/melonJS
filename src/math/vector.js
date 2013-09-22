@@ -49,7 +49,7 @@
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		set : function(x, y) {
 			this.x = x;
@@ -62,7 +62,7 @@
 		 * @name setZero
 		 * @memberOf me.Vector2d
 		 * @function
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		setZero : function() {
 			return this.set(0, 0);
@@ -74,7 +74,7 @@
 		 * @memberOf me.Vector2d
 		 * @function
 		 * @param {me.Vector2d} v
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		setV : function(v) {
 			this.x = v.x;
@@ -88,7 +88,7 @@
 		 * @memberOf me.Vector2d
 		 * @function
 		 * @param {me.Vector2d} v
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		add : function(v) {
 			this.x += v.x;
@@ -102,7 +102,7 @@
 		 * @memberOf me.Vector2d
 		 * @function
 		 * @param {me.Vector2d} v
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		sub : function(v) {
 			this.x -= v.x;
@@ -116,7 +116,7 @@
 		 * @memberOf me.Vector2d
 		 * @function
 		 * @param {me.Vector2d} v
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		scale : function(v) {
 			this.x *= v.x;
@@ -130,7 +130,7 @@
 		 * @memberOf me.Vector2d
 		 * @function
 		 * @param {Number} value
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		div : function(n) {
 			this.x /= n;
@@ -143,7 +143,7 @@
 		 * @name abs
 		 * @memberOf me.Vector2d
 		 * @function
-		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
 		abs : function() {
 			if (this.x < 0)
