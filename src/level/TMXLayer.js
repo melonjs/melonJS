@@ -132,7 +132,7 @@
 		 * @type me.Vector2d
 		 * @name me.ImageLayer#ratio
 		 */
-		ratio: new me.Vector2d(1.0, 1.0),
+		//ratio: new me.Vector2d(1.0, 1.0),
 	 
 		/**
 		 * constructor
@@ -156,7 +156,7 @@
 			this.z = z;
 			
 			// default ratio for parallax
-			this.ratio.set(1.0, 1.0);
+			this.ratio = new me.Vector2d(1.0, 1.0);
 
 			if (ratio) {
 				// little hack for backward compatiblity
