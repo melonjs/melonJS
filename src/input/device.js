@@ -5,31 +5,60 @@
 		var accelInitialized = false;
 		var deviceOrientationInitialized = false;
 		/**
-		 * Accelerometer information<br>
-		 * properties : x, y, z
+		 * Accelerometer X coordinate. Stores the acceleration in the direction of side to side.
 		 * @public
-		 * @enum {number}
-		 * @name accel
+		 * @float
+		 * @name accelrationX
 		 * @memberOf me.device
 		 */
-		obj.accel = {
-			x: 0, 
-			y: 0, 
-			z: 0
-		};
+		obj.accelerationX = 0;
 
-		/** 
-		 * Device Orientation. Stores angle in degrees for each axis.
-		 * properties : gamma, beta, alpha
+		/**
+		 * Accelerometer Y coordinate. Stores the acceleration in the direction of up and down the phone.
 		 * @public
-		 * @name orientation
+		 * @float
+		 * @name accelrationY
 		 * @memberOf me.device
 		 */
-		obj.orientation = {
-			gamma: 0,
-			beta: 0,
-			alpha: 0
-		};
+		obj.accelerationY = 0;
+
+		/**
+		 * Accelerometer Z coordinate. Stores the acceleration in the direction the phone faces, coming out from the screen.
+		 * @public
+		 * @float
+		 * @name accelrationZ
+		 * @memberOf me.device
+		 */
+		obj.accelerationZ = 0;
+
+
+		/**
+		 * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
+		 * @public
+		 * @float
+		 * @name gamma
+		 * @memberOf me.device
+		 */
+		obj.gamma = 0;
+
+		/**
+		 * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
+		 * @public
+		 * @float
+		 * @name beta
+		 * @memberOf me.device
+		 */
+		obj.beta = 0;
+
+		/**
+		 * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis. 
+		 * The z-axis is perpendicular to the phone, facing out from the center of the screen.
+		 * @public
+		 * @float
+		 * @name alpha
+		 * @memberOf me.device
+		 */
+		obj.alpha = 0;
 
 		/**
 		 * event management (Accelerometer)
@@ -40,19 +69,21 @@
 		function onDeviceMotion(e) {
 			if (e.reading) {
 				// For Windows 8 devices
-				obj.accel.x = e.reading.accelerationX;
-				obj.accel.y = e.reading.accelerationY;
-				obj.accel.z = e.reading.accelerationZ;
+				obj.accelerationX = e.reading.accelerationX;
+				obj.accelerationY = e.reading.accelerationY;
+				obj.accelerationZ = e.reading.accelerationZ;
 			} else {
 				// Accelerometer information
-				obj.accel = e.accelerationIncludingGravity;
+				obj.accelerationX = e.accelerationIncludingGravity.x;
+				obj.accelerationY = e.accelerationIncludingGravity.y;
+				obj.accelerationZ = e.accelerationIncludingGravity.z;
 			}
 		}
 
 		function onDeviceRotate(e) {
-			obj.orientation.gamma = e.gamma;
-			obj.orientation.beta = e.beta;
-			obj.orientation.alpha = e.alpha;
+			obj.gamma = e.gamma;
+			obj.beta = e.beta;
+			obj.alpha = e.alpha;
 		}
 
 		/**
