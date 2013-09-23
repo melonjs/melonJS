@@ -90,7 +90,7 @@
 		 * @public
 		 * @function
 		 */
-		this.start = function ( time ) {
+		this.start = function () {
 
 			_onStartCallbackFired = false;
 
