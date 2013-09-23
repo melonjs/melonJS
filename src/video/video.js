@@ -172,9 +172,7 @@
 		function getCanvasType() {
 			// cocoonJS specific canvas extension
 			if (navigator.isCocoonJS) {
-				if (!me.sys.dirtyRegion) {
 					return 'screencanvas';
-				}
 			}
 			return 'canvas';
 		}
