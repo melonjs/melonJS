@@ -122,7 +122,40 @@
 			PRIVATE STUFF
 
 		---------------------------------------------*/
-		var entityClass = {};
+		var pools = {};
+
+		// private class for storing inactive objects
+		function Pool() {
+			this.length = 0;
+			this.elements = {};
+		}
+
+		Pool.prototype.add = function(obj) {
+			this.elements[obj.GUID] = obj;
+			this.length++;
+		};
+
+		Pool.prototype.peek = function() {
+			if (this.length === 0) return null;
+
+			var key, i, elements = this.elements;
+			for (i in elements) {
+				key = i;
+				break;
+			}
+
+			return elements[key];
+		};
+
+		Pool.prototype.remove = function(elem) {
+			delete this.elements[elem.GUID];
+			this.length--;
+		};
+
+		Pool.prototype.purge = function() {
+			this.elements = {};
+			this.length = 0;
+		};
 
 		/*---------------------------------------------
 
@@ -144,15 +177,15 @@
 		};
 
 		/**
-		 * Add an object to the pool. <br>
-		 * Pooling must be set to true if more than one such objects will be created. <br>
-		 * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
-		 * See examples in {@link me.entityPool#newInstanceOf}
+		 * Add a class to the pool. <br>
+		 * Enable pooling if more than one instances will be created. <br>
+		 * (note) If pooling is enabled, you shouldn't instantiate objects with <i>new</i>.
+		 * See examples in {@link me.entityPool.newInstanceOf|newInstanceOf}
 		 * @name add
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
+		 * @param {String} className how to reference the class later
 		 * @param {Object} class corresponding Class to be instantiated
 		 * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
 		 * - speeds up the game by reusing existing objects
@@ -163,19 +196,18 @@
 		 * me.entityPool.add("heartentity", HeartEntity, true);
 		 * me.entityPool.add("starentity", StarEntity, true);
 		 */
-		obj.add = function(className, entityObj, pooling) {
-			if (!pooling) {
-				entityClass[className.toLowerCase()] = {
-					"class" : entityObj,
-					"pool" : undefined
-				};
-				return;
+		obj.add = function(className, classProto, pooling) {
+			if (className in pools) {
+				throw new Error("Trying to override class pool '" + className + "'");
 			}
 
-			entityClass[className.toLowerCase()] = {
-				"class" : entityObj,
-				"pool" : [],
-				"active" : []
+			pools[className] = {
+				classProto: classProto,
+				inactivePool: pooling ? new Pool() : undefined
+			};
+
+			classProto.new = function() {
+				return obj.newInstanceOf(className, Array.prototype.slice.call(arguments));
 			};
 		};
 
@@ -185,8 +217,9 @@
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {String} className as used in {@link me.entityPool#add}
-		 * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
+		 * @param {String} className as used in {@link me.entityPool.add|add}
+		 * @param {Array} [arguments] Arguments to be passed when instantiating/reinitializing the object. <br>
+		 *                            First value of the array will become first argument to init() and so on.
 		 * @example
 		 * me.entityPool.add("player", PlayerEntity);
 		 * var player = me.entityPool.newInstanceOf("player");
@@ -195,108 +228,206 @@
 		 * me.entityPool.add("enemy", EnemyEntity, true);
 		 * // ...
 		 * // when we need to manually create a new bullet:
-		 * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
+		 * var bullet = me.entityPool.newInstanceOf("bullet", [x, y, direction]);
 		 * // ...
-		 * // params aren't a fixed number
-		 * // when we need new enemy we can add more params, that the object construct requires:
-		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
+		 * var enemy = me.entityPool.newInstanceOf("enemy", [x, y, direction, speed, power, life]);
 		 * // ...
 		 * // when we want to destroy existing object, the remove 
 		 * // function will ensure the object can then be reallocated later
-		 * me.game.remove(enemy);
-		 * me.game.remove(bullet);
+		 * me.game.world.removeChild(enemy);
+		 * me.game.world.removeChild(bullet);
+		 * // ...
+		 * // if a class is added to the entityPool, the following 2 statements are identical
+		 * bullet = me.entityPool.newInstanceOf("bullet", [x, y, direction]);
+		 * bullet = BulletEntity.new(x, y, direction);
 		 */
+		obj.newInstanceOf = function(className, args) {
+			if (!(className in pools)) {
+				throw new Error("Cannot instantiate entity of type '" + className + "': Class not found!");
+			}
 
-		obj.newInstanceOf = function(data) {
-			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
-			if (name && entityClass[name]) {
-				var proto;
-				if (!entityClass[name]['pool']) {
-					proto = entityClass[name]["class"];
-					arguments[0] = proto;
-					return new (proto.bind.apply(proto, arguments))();
-				}
-				
-				var obj, entity = entityClass[name];
-				proto = entity["class"];
-				if (entity["pool"].length > 0) {
-					obj = entity["pool"].pop();
-					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
+			var classProto = pools[ className ].classProto;
+			var inactive   = pools[ className ].inactivePool;
+			var pooling    = inactive !== undefined;
+
+			args = args || [];
+			args.unshift(classProto);
+			
+			if (pooling) {
+				var obj = inactive.peek();
+
+				if (obj === null) {
+					obj = new (classProto.bind.apply(classProto, args))();
+					obj._className = className;
+					inactive.add(obj);
 				} else {
-					arguments[0] = proto;
-					obj = new (proto.bind.apply(proto, arguments))();
-					obj.className = name;
+					obj.init.apply(obj, args);
 				}
 
-				entity["active"].push(obj);
 				return obj;
+			} else {
+				return new (classProto.bind.apply(classProto, args))();
 			}
-
-			// Tile objects can be created with a GID attribute;
-			// The TMX parser will use it to create the image property.
-			var settings = arguments[3];
-			if (settings && settings.image) {
-				return new me.SpriteObject(settings.x, settings.y, settings.image);
-			}
-
-			if (name) {
-				console.error("Cannot instantiate entity of type '" + data + "': Class not found!");
-			}
-			return null;
 		};
 
 		/**
-		 * purge the entity pool from any inactive object <br>
-		 * Object pooling must be enabled for this function to work<br>
-		 * note: this will trigger the garbage collector
+		 * Create a batch of instances for a given class to avoid later creation. <br>
+		 * The class should have been {@link me.entityPool.add|added} with pooling option set to true.
+		 * @name preAllocate
+		 * @memberOf me.entityPool
+		 * @public
+		 * @function
+		 * @param  {String} className as used in {@link me.entityPool.add|add}
+		 * @param  {Number} amount    how many objects to preallocate
+		 * @param  {Array}  [args]    Arguments to be passed when instantiating the objects. <br>
+		 *                            First value of the array will become first argument to init() and so on.
+		 */
+		obj.preAllocate = function(className, amount, args) {
+			if (!(className in pools)) {
+				throw new Error("Cannot preallocate entities of type '" + className + "': Class not found!");
+			}
+
+			var proto    = pools[className].classProto;
+			var inactive = pools[className].inactivePool;
+			var obj;
+
+			args = args || [];
+			args.unshift(proto);
+
+			while (amount--) {
+				obj = new (proto.bind.apply(proto, args))();
+				obj._className = className;
+				inactive.add(obj);
+			}
+		};
+
+		/**
+		 * Purge the entity pool from any inactive object.<br>
+		 * Object pooling must be enabled for this function to work.<br>
+		 * (note) this will trigger the garbage collector
 		 * @name purge
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
+		 * @param {String} [className] If passed, only objects in the pool of <i>className</i> will be purged
 		 */
-		obj.purge = function() {
-			for (var className in entityClass) {
-				entityClass[className]["pool"] = [];
+		obj.purge = function(className) {
+			if (className === undefined) {
+				for (className in pools) {
+					if (pools[className].inactivePool !== undefined) {
+						pools[className].inactivePool.purge();
+					}
+				}
+			}
+
+			if (!(className in pools)) {
+				throw new Error("Cannot purge entities of type '" + className + "': Class not found!");
+			}
+
+			if (pools[className].inactivePool === undefined) {
+				throw new Error("Cannot purge entities of type '" + className + "': Pooling is disabled!");
+			}
+			
+			pools[className].inactivePool.purge();			
+		};
+
+		/**
+		 * Enable or disable pooling for a class. <br>
+		 * (note) disabling pooling for a pooled class will trigger garbage collector.
+		 * @name setPooling
+		 * @memberOf me.entityPool
+		 * @public
+		 * @function
+		 * @param  {String} className for which class should the pooling be set
+		 * @param  {Boolean} pooling  enable/disable pooling
+		 */
+		obj.setPooling = function(className, pooling) {
+			if (!(className in pools)) {
+				throw new Error("Cannot change pooling of '" + className + "': Class not found!");
+			}
+
+			var current = pools[className].inactivePool !== undefined;
+			pooling = !!pooling;
+
+			if (pooling !== current) {
+				pools[className].inactivePool = pooling ? new Pool() : undefined;
 			}
 		};
 
 		/**
-		 * Remove object from the entity pool <br>
-		 * Object pooling for the object class must be enabled,
-		 * and object must have been instantiated using {@link me.entityPool#newInstanceOf},
-		 * otherwise this function won't work
-		 * @name freeInstance
+		 * Called by the engine when an object is about to be added
+		 * @name addInstance
 		 * @memberOf me.entityPool
-		 * @public
+		 * @ignore
 		 * @function
-		 * @param {Object} instance to be removed 
+		 * @param  {Object} obj
 		 */
-		obj.freeInstance = function(obj) {
-
-			var name = obj.className;
-			if (!name || !entityClass[name]) {
+		obj.addInstance = function(obj) {
+			var className = obj._className;
+			if (!className || !(className in pools)) {
 				return;
 			}
 
-			var notFound = true;
-			for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
-				if (entityClass[name]["active"][i] === obj) {
-					notFound = false;
-					entityClass[name]["active"].splice(i, 1);
-					break;
+			pools[className].inactivePool.remove(obj);
+		};
+
+		/**
+		 * Called by the engine when an object is about to be removed
+		 * @name freeInstance
+		 * @memberOf me.entityPool
+		 * @ignore
+		 * @function
+		 * @param {Object} instance to be removed
+		 */
+		obj.freeInstance = function(obj) {
+			var className = obj._className;
+			if (!className || !(className in pools)) {
+				return;
+			}
+
+			pools[className].inactivePool.add(obj);
+		};
+
+		/**
+		 * Get inactive pool for a class.
+		 * Should be used for debugging purposes.
+		 * @name getInactivePool
+		 * @memberOf me.entityPool
+		 * @ignore
+		 * @function
+		 */
+		obj.getInactivePool = function(className) {
+			if (className === undefined || !(className in pools) ||
+				pools[className].inactivePool === undefined) {
+				return false;
+			}
+
+			return pools[className].inactivePool;
+		};
+
+		/**
+		 * Get all inactive pools.
+		 * Should be used for debugging purposes.
+		 * @name getInactivePools
+		 * @memberOf me.entityPool
+		 * @ignore
+		 * @function
+		 */
+		obj.getInactivePools = function() {
+			var returnPools = {}, empty = true;
+
+			for (var i in pools) {
+				if (pools[i].inactivePool !== undefined) {
+					returnPools[i] = pools[i].inactivePool;
+					empty = false;
 				}
 			}
 
-			if (notFound) {
-				return;
-			}
-
-			entityClass[name]["pool"].push(obj);
+			return empty ? false : returnPools;
 		};
 
 		// return our object
 		return obj;
-
 	})();
 
 
@@ -1205,14 +1336,11 @@
 		 * @ignore
 		 */
 		destroy : function() {
-			// free some property objects
 			if (this.renderable) {
 				this.renderable.destroy.apply(this.renderable, arguments);
-				this.renderable = null;
 			}
+
 			this.onDestroyEvent.apply(this, arguments);
-            this.collisionBox = null;
-            this.shapes = [];
 		},
 
 		/**
