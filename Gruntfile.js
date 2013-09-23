@@ -19,6 +19,7 @@ module.exports = function(grunt) {
         'src/audio/audio.js',
         'src/video/video.js',
         'src/input/input.js',
+        'src/input/device.js',
         'src/utils/utils.js',
         'src/utils/stat.js',
         'src/level/TMXConstants.js',
