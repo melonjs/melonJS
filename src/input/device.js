@@ -2,7 +2,8 @@
 	me.device = (function() {
 		// defines object for holding public information/functionality.
 		var obj = {};
-
+		var accelInitialized = false;
+		var deviceOrientationInitialized = false;
 		/**
 		 * Accelerometer information<br>
 		 * properties : x, y, z
@@ -29,6 +30,30 @@
 			beta: 0,
 			alpha: 0
 		};
+
+		/**
+		 * event management (Accelerometer)
+		 * http://www.mobilexweb.com/samples/ball.html
+		 * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
+		 * @ignore
+		 */
+		function onDeviceMotion(e) {
+			if (e.reading) {
+				// For Windows 8 devices
+				obj.accel.x = e.reading.accelerationX;
+				obj.accel.y = e.reading.accelerationY;
+				obj.accel.z = e.reading.accelerationZ;
+			} else {
+				// Accelerometer information
+				obj.accel = e.accelerationIncludingGravity;
+			}
+		}
+
+		function onDeviceRotate(e) {
+			obj.orientation.gamma = e.gamma;
+			obj.orientation.beta = e.beta;
+			obj.orientation.alpha = e.alpha;
+		}
 
 		/**
 		 * watch Accelerator event 
