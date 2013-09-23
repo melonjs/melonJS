@@ -68,7 +68,7 @@
 		 * @public
 		 * @function
 		 * @param {Properties} prop list of properties
-		 * @param {int} duration tween duration
+		 * @param {int} [duration=1000] tween duration
 		 */
 		this.to = function ( properties, duration ) {
 
