@@ -34,61 +34,6 @@ window.me = window.me || {};
 	 * @namespace
 	 */
 	me.sys = {
-		// Browser capabilities
-		/**
-		 * Browser User Agent (read-only)
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		ua : navigator.userAgent,
-		/**
-		 * Browser Audio capabilities (read-only) <br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		sound : false,
-		/**
-		 * Browser Local Storage capabilities (read-only) <br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		localStorage : (typeof($.localStorage) === 'object'),
-		/**
-		 * Browser accelerometer capabilities (read-only) <br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		hasAccelerometer : false,
-
-		/**
-		 * Browser device orientation
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		hasDeviceOrientation : false,
-
-		/**
-		 * Browser Base64 decoding capability (read-only) <br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		nativeBase64 : (typeof($.atob) === 'function'),
-
-		/**
-		 * Touch capabilities <br>
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		touch : false,
-		
-		/**
-		 * equals to true if a mobile device (read-only) <br>
-		 * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone)
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		isMobile : false,
-
 
 		// Global settings
 		/**
@@ -853,14 +798,14 @@ window.me = window.me || {};
 		window.gesture = window.gesture || window.MSGesture;
 		
 		// detect touch capabilities
-		me.sys.touch = ('createTouch' in document) || ('ontouchstart' in $) || 
+		me.device.touch = ('createTouch' in document) || ('ontouchstart' in $) || 
 		               (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 		
 		// detect platform
-		me.sys.isMobile = me.sys.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i);
+		me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i);
 
 		// accelerometer detection
-		me.sys.hasAccelerometer = (
+		me.device.hasAccelerometer = (
 			(typeof (window.DeviceMotionEvent) !== 'undefined') || (
 				(typeof (window.Windows) !== 'undefined') && 
 				(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
@@ -868,7 +813,7 @@ window.me = window.me || {};
 		);
 
 		if (window.DeviceOrientationEvent) {
-			me.sys.hasDeviceOrientation = true;
+			me.device.hasDeviceOrientation = true;
 		}
 
 		// init the FPS counter if needed

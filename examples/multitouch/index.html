@@ -28,7 +28,7 @@
 				game.onload();
 
 				// Mobile browser hacks
-				if (me.sys.isMobile && !navigator.isCocoonJS) {
+				if (me.device.isMobile && !navigator.isCocoonJS) {
 					// Prevent the webview from moving on a swipe
 					window.document.addEventListener("touchmove", function (e) {
 						e.preventDefault();

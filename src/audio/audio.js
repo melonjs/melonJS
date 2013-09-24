@@ -64,7 +64,7 @@
 			var len = requestedFormat.length;
 
 			// check for sound support by the browser
-			if (me.sys.sound) {
+			if (me.device.sound) {
 				var ext = "";
 				for (var i = 0; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
@@ -273,7 +273,7 @@
 						obj.capabilities[c].canPlayType = canPlayType;
 					}
 					// enable sound if any of the audio format is supported
-					me.sys.sound |= obj.capabilities[c].canPlay;					
+					me.device.sound |= obj.capabilities[c].canPlay;					
 				}
 			}
 		};
@@ -307,7 +307,7 @@
 			activeAudioExt = getSupportedAudioFormat(audioFormat);
 
 			// Disable audio on Mobile devices for now. (ARGH!)
-			if (me.sys.isMobile && !navigator.isCocoonJS) {
+			if (me.device.isMobile && !navigator.isCocoonJS) {
 				sound_enable = false;
 			}
 
@@ -343,7 +343,7 @@
 		 * @function
 		 */
 		obj.enable = function() {
-			sound_enable = me.sys.sound;
+			sound_enable = me.device.sound;
 
 			if (sound_enable)
 				obj.play = _play_audio_enable;
@@ -383,7 +383,7 @@
 				return 0;
 
 			// check for specific platform
-			if (me.sys.isMobile && !navigator.isCocoonJS) {
+			if (me.device.isMobile && !navigator.isCocoonJS) {
 				if (sync_loading) {
 					sync_loader.push([ sound, onload_cb, onerror_cb ]);
 					return;
@@ -394,7 +394,7 @@
 			var channels = sound.channel || 1;
 			var eventname = "canplaythrough";
 
-			if (sound.stream === true && !me.sys.isMobile) {
+			if (sound.stream === true && !me.device.isMobile) {
 				channels = 1;
 				eventname = "canplay";
 			}

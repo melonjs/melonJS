@@ -26,7 +26,7 @@
 			// make sure our input string has the right format
 			input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 			
-			if (me.sys.nativeBase64) {
+			if (me.device.nativeBase64) {
 				// use native decoder
 				return $.atob(input);
 			}

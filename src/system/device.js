@@ -18,10 +18,73 @@
 		var accelInitialized = false;
 		var deviceOrientationInitialized = false;
 		
+		// Browser capabilities
+		/**
+		 * Browser User Agent (read-only)
+		 * @type Boolean
+		 * @name ua
+		 * @memberOf me.device
+		 */
+		obj.ua = navigator.userAgent;
+		/**
+		 * Browser Audio capabilities (read-only) <br>
+		 * @type Boolean
+		 * @name sound
+		 * @memberOf me.device
+		 */
+		obj.sound = false;
+		/**
+		 * Browser Local Storage capabilities (read-only) <br>
+		 * @type Boolean
+		 * @name localStorage
+		 * @memberOf me.device
+		 */
+		obj.localStorage = (typeof(window.localStorage) === 'object');
+		/**
+		 * Browser accelerometer capabilities (read-only) <br>
+		 * @type Boolean
+		 * @name hasAccelerometer
+		 * @memberOf me.device
+		 */
+		obj.hasAccelerometer = false;
+
+		/**
+		 * Browser device orientation
+		 * @type Boolean
+		 * @name hasDeviceOrientation
+		 * @memberOf me.device
+		 */
+		obj.hasDeviceOrientation = false;
+
+		/**
+		 * Browser Base64 decoding capability (read-only) <br>
+		 * @type Boolean
+		 * @name nativeBase64
+		 * @memberOf me.device
+		 */
+		obj.nativeBase64 = (typeof(window.atob) === 'function');
+
+		/**
+		 * Touch capabilities <br>
+		 * @type Boolean
+		 * @name touch
+		 * @memberOf me.device
+		 */
+		obj.touch = false;
+
+		/**
+		 * equals to true if a mobile device (read-only) <br>
+		 * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone)
+		 * @type Boolean
+		 * @name isMobile
+		 * @memberOf me.device
+		 */
+		obj.isMobile = false;
+
 		/**
 		 * contains the g-force acceleration along the x-axis.
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name accelerationX
 		 * @memberOf me.device
 		 */
@@ -30,7 +93,7 @@
 		/**
 		 * contains the g-force acceleration along the y-axis.
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name accelerationY
 		 * @memberOf me.device
 		 */
@@ -39,7 +102,7 @@
 		/**
 		 * contains the g-force acceleration along the z-axis.
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name accelerationZ
 		 * @memberOf me.device
 		 */
@@ -49,7 +112,7 @@
 		/**
 		 * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name gamma
 		 * @memberOf me.device
 		 */
@@ -58,7 +121,7 @@
 		/**
 		 * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name beta
 		 * @memberOf me.device
 		 */
@@ -68,7 +131,7 @@
 		 * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis. 
 		 * The z-axis is perpendicular to the phone, facing out from the center of the screen.
 		 * @public
-		 * @float
+		 * @type Number
 		 * @name alpha
 		 * @memberOf me.device
 		 */
@@ -109,7 +172,7 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function () {
-			if (me.sys.hasAccelerometer) {
+			if (me.device.hasAccelerometer) {
 				if (!accelInitialized) {
 					if (typeof Windows === 'undefined') {
 						// add a listener for the devicemotion event
@@ -164,7 +227,7 @@
 		 * @return {boolean} false if not supported by the device
 		 */
 		obj.watchDeviceOrientation = function() {
-			if(me.sys.hasDeviceOrientation && !deviceOrientationInitialized) {
+			if(me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
 				window.addEventListener('deviceorientation', onDeviceRotate, false);
 				deviceOrientationInitialized = true;
 			}
