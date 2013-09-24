@@ -61,6 +61,13 @@ window.me = window.me || {};
 		hasAccelerometer : false,
 
 		/**
+		 * Browser device orientation
+		 * @type Boolean
+		 * @memberOf me.sys
+		 */
+		hasDeviceOrientation : false,
+
+		/**
 		 * Browser Base64 decoding capability (read-only) <br>
 		 * @type Boolean
 		 * @memberOf me.sys
@@ -859,6 +866,10 @@ window.me = window.me || {};
 				(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
 			)
 		);
+
+		if (window.DeviceOrientationEvent) {
+			me.sys.hasDeviceOrientation = true;
+		}
 
 		// init the FPS counter if needed
 		me.timer.init();
