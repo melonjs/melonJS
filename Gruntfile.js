@@ -2,6 +2,7 @@
 module.exports = function(grunt) {
     var sourceFiles = [
         'src/core.js',
+        'src/system/device.js',
         'src/math/vector.js',
         'src/math/shape.js',
         'src/debug/debug.js',
@@ -19,7 +20,6 @@ module.exports = function(grunt) {
         'src/audio/audio.js',
         'src/video/video.js',
         'src/input/input.js',
-        'src/input/device.js',
         'src/utils/utils.js',
         'src/utils/stat.js',
         'src/level/TMXConstants.js',

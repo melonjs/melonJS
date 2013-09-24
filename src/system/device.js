@@ -1,32 +1,46 @@
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2013 melonJS
+ * http://www.melonjs.org
+ *
+ */
 (function(window) {
+
+	/**	
+	 * A singleton object representing the device capabilities and specific events
+	 * @namespace me.device
+	 * @memberOf me
+	 */
 	me.device = (function() {
+		
 		// defines object for holding public information/functionality.
 		var obj = {};
 		var accelInitialized = false;
 		var deviceOrientationInitialized = false;
+		
 		/**
-		 * Accelerometer X coordinate. Stores the acceleration in the direction of side to side.
+		 * contains the g-force acceleration along the x-axis.
 		 * @public
 		 * @float
-		 * @name accelrationX
+		 * @name accelerationX
 		 * @memberOf me.device
 		 */
 		obj.accelerationX = 0;
 
 		/**
-		 * Accelerometer Y coordinate. Stores the acceleration in the direction of up and down the phone.
+		 * contains the g-force acceleration along the y-axis.
 		 * @public
 		 * @float
-		 * @name accelrationY
+		 * @name accelerationY
 		 * @memberOf me.device
 		 */
 		obj.accelerationY = 0;
 
 		/**
-		 * Accelerometer Z coordinate. Stores the acceleration in the direction the phone faces, coming out from the screen.
+		 * contains the g-force acceleration along the z-axis.
 		 * @public
 		 * @float
-		 * @name accelrationZ
+		 * @name accelerationZ
 		 * @memberOf me.device
 		 */
 		obj.accelerationZ = 0;
