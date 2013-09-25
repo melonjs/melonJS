@@ -201,7 +201,7 @@
 		 */
 		onUpdateFrame : function() {
 			// handle frame skipping if required
-			if (!(++this.frame%this.frameRate)) {
+			if ((++this.frame%this.frameRate)===0) {
 				// reset the frame counter
 				this.frame = 0;
 				
