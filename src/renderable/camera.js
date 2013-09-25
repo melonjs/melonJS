@@ -417,28 +417,28 @@
 		},
 
 		/**
-		 * convert the given screen coordinates into world coordinates
-		 * @name screenToWorld
+		 * convert the given "local" (screen) coordinates into world coordinates
+		 * @name localToWorld
 		 * @memberOf me.Viewport
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
 		 * @return {me.Vector2d}
 		 */
-		screenToWorld : function(x, y) {
+		localToWorld : function(x, y) {
 			return (new me.Vector2d(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
 		},
 		
 		/**
-		 * convert the given world coordinates into screen coordinates
-		 * @name worldToScreen
+		 * convert the given world coordinates into "local" (screen) coordinates
+		 * @name worldToLocal
 		 * @memberOf me.Viewport
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
 		 * @return {me.Vector2d}
 		 */
-		worldToScreen : function(x, y) {
+		worldToLocal : function(x, y) {
 			return (new me.Vector2d(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
 		},
 		

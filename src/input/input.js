@@ -270,7 +270,7 @@
 
 			if (handlers) {
 				// get the current screen to world offset 
-				var offset = me.game.viewport.screenToWorld(0,0);
+				var offset = me.game.viewport.localToWorld(0,0);
 				for(var t=0, l=obj.changedTouches.length; t<l; t++) {
 					// Do not fire older events
 					if (typeof(e.timeStamp) !== "undefined") {
