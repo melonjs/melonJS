@@ -210,10 +210,9 @@
 
 				// update all games object
 				me.game.update();
-
-				// draw the game objects
-				me.game.draw();
 			}
+			// draw the game objects
+			me.game.draw();
 		},
 
 		/**
