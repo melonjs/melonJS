@@ -575,22 +575,8 @@
 			// avoid case issue
 			elt = elt.toLowerCase();
 			if (elt in imgList) {
-				if (me.sys.cacheImage === true) {
-					// build a new canvas
-					var _context = me.video.getContext2d(
-						me.video.createCanvas(
-							imgList[elt].width, 
-							imgList[elt].height
-						)
-					);
-					// draw the image into the canvas context
-					_context.drawImage(imgList[elt], 0, 0);
-					// return our canvas
-					return _context.canvas;
-				} else {
-					// return the corresponding Image object
-					return imgList[elt];
-				}
+				// return the corresponding Image object
+				return imgList[elt];
 			} else {
 				//console.log ("warning %s resource not yet loaded!",name);
 				return null;

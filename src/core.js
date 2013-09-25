@@ -74,15 +74,6 @@ window.me = window.me || {};
 		gravity : undefined,
 
 		/**
-		 * cache Image using a Canvas element, instead of directly using the Image Object<br>
-		 * using this, performances are lower on OSX desktop (others, including mobile untested)<br>
-		 * default value : false
-		 * @type Boolean
-		 * @memberOf me.sys
-		 */
-		cacheImage : false,
-
-		/**
 		 * Specify either to stop on audio loading error or not<br>
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
