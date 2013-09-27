@@ -131,7 +131,6 @@
 
 		/**
 		 * Channel Constant for when the (browser) window is resized <br>
-		 * note the `orientationchange` event will also trigger this channel<br>
 		 * Data passed : {Event} Event object <br>
 		 * @public
 		 * @constant
@@ -139,6 +138,16 @@
 		 * @name me.event#WINDOW_ONRESIZE
 		 */
 		obj.WINDOW_ONRESIZE = "window.onresize";
+        
+        /**
+		 * Channel Constant for when the device is rotated <br>
+		 * Data passed : {Event} Event object <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#WINDOW_ONORIENTATION_CHANGE
+		 */
+		obj.WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
 
 		/**
 		 * Channel Constant for when the (browser) window is scrolled <br>

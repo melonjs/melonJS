@@ -80,6 +80,18 @@
 		 * @memberOf me.device
 		 */
 		obj.isMobile = false;
+        
+        /**
+         * The device current orientation status. <br>
+         *   0 : default orientation<br>
+         *  90 : 90 degrees clockwise from default<br>
+         * -90 : 90 degrees anti-clockwise from default<br>
+         * 180 : 180 degrees from default
+         * @type Number
+         * @name orientation
+         * @memberOf me.device
+         */
+        obj.orientation = 0;
 
 		/**
 		 * contains the g-force acceleration along the x-axis.

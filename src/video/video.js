@@ -101,10 +101,11 @@
 			
 			//add a channel for the onresize/onorientationchange event
 			window.addEventListener('resize', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}, false);
-			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}, false);
+			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [event]);}, false);
 			
 			// register to the channel
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
+			me.event.subscribe(me.event.WINDOW_ONORIENTATION_CHANGE, me.video.onresize.bind(me.video));
 			
 			// create the main canvas
 			canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
@@ -342,6 +343,15 @@
 		api.onresize = function(event){
 			// default (no scaling)
 			var scaleX = 1, scaleY = 1;
+            
+            // check for orientation information
+            if (typeof window.orientation !== undefined) {
+                me.device.orientation = window.orientation;
+            } else {
+                // is this actually not the best option since default "portrait"
+                // orientation might vary between for example an ipad and and android tab
+                me.device.orientation = (window.outerWidth > window.outerHeight) ? 90 : 0;
+            }
 			
 			if (auto_scale) {
 				// get the parent container max size
