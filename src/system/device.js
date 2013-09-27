@@ -20,29 +20,33 @@
 		
 		// Browser capabilities
 		/**
-		 * Browser User Agent (read-only)
+		 * Browser User Agent
 		 * @type Boolean
+         * @readonly
 		 * @name ua
 		 * @memberOf me.device
 		 */
 		obj.ua = navigator.userAgent;
 		/**
-		 * Browser Audio capabilities (read-only) <br>
+		 * Browser Audio capabilities
 		 * @type Boolean
+         * @readonly
 		 * @name sound
 		 * @memberOf me.device
 		 */
 		obj.sound = false;
 		/**
-		 * Browser Local Storage capabilities (read-only) <br>
+		 * Browser Local Storage capabilities
 		 * @type Boolean
+         * @readonly
 		 * @name localStorage
 		 * @memberOf me.device
 		 */
 		obj.localStorage = (typeof(window.localStorage) === 'object');
 		/**
-		 * Browser accelerometer capabilities (read-only) <br>
+		 * Browser accelerometer capabilities
 		 * @type Boolean
+         * @readonly
 		 * @name hasAccelerometer
 		 * @memberOf me.device
 		 */
@@ -51,31 +55,35 @@
 		/**
 		 * Browser device orientation
 		 * @type Boolean
+         * @readonly
 		 * @name hasDeviceOrientation
 		 * @memberOf me.device
 		 */
 		obj.hasDeviceOrientation = false;
 
 		/**
-		 * Browser Base64 decoding capability (read-only) <br>
+		 * Browser Base64 decoding capability
 		 * @type Boolean
+         * @readonly
 		 * @name nativeBase64
 		 * @memberOf me.device
 		 */
 		obj.nativeBase64 = (typeof(window.atob) === 'function');
 
 		/**
-		 * Touch capabilities <br>
+		 * Touch capabilities
 		 * @type Boolean
+         * @readonly
 		 * @name touch
 		 * @memberOf me.device
 		 */
 		obj.touch = false;
 
 		/**
-		 * equals to true if a mobile device (read-only) <br>
+		 * equals to true if a mobile device <br>
 		 * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone)
 		 * @type Boolean
+         * @readonly
 		 * @name isMobile
 		 * @memberOf me.device
 		 */
@@ -88,6 +96,7 @@
          * -90 : 90 degrees anti-clockwise from default<br>
          * 180 : 180 degrees from default
          * @type Number
+         * @readonly
          * @name orientation
          * @memberOf me.device
          */
@@ -97,6 +106,7 @@
 		 * contains the g-force acceleration along the x-axis.
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name accelerationX
 		 * @memberOf me.device
 		 */
@@ -106,6 +116,7 @@
 		 * contains the g-force acceleration along the y-axis.
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name accelerationY
 		 * @memberOf me.device
 		 */
@@ -115,6 +126,7 @@
 		 * contains the g-force acceleration along the z-axis.
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name accelerationZ
 		 * @memberOf me.device
 		 */
@@ -125,6 +137,7 @@
 		 * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name gamma
 		 * @memberOf me.device
 		 */
@@ -134,6 +147,7 @@
 		 * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name beta
 		 * @memberOf me.device
 		 */
@@ -144,6 +158,7 @@
 		 * The z-axis is perpendicular to the phone, facing out from the center of the screen.
 		 * @public
 		 * @type Number
+         * @readonly
 		 * @name alpha
 		 * @memberOf me.device
 		 */
