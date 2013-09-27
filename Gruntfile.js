@@ -3,6 +3,7 @@ module.exports = function(grunt) {
     var sourceFiles = [
         'src/core.js',
         'src/system/device.js',
+        'src/system/timer.js',
         'src/math/vector.js',
         'src/math/shape.js',
         'src/debug/debug.js',
