@@ -15,10 +15,49 @@
 		
 		// defines object for holding public information/functionality.
 		var obj = {};
+		// private properties
 		var accelInitialized = false;
 		var deviceOrientationInitialized = false;
-		
+		var devicePixelRatio = null;
+
+		/**
+		 * check the device capapbilities
+		 * @ignore
+		 */
+		obj._check = function() {
+
+			// detect audio capabilities (should be moved here too)
+			me.audio.detectCapabilities();
+
+			// future proofing (MS) feature detection
+			navigator.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
+			navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+			window.gesture = window.gesture || window.MSGesture;
+
+			// detect touch capabilities
+			me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) || 
+							  (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
+
+			// detect platform
+			me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i);
+
+			// accelerometer detection
+			me.device.hasAccelerometer = (
+				(typeof (window.DeviceMotionEvent) !== 'undefined') || (
+					(typeof (window.Windows) !== 'undefined') && 
+					(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
+				)
+			);
+
+			if (window.DeviceOrientationEvent) {
+				me.device.hasDeviceOrientation = true;
+			}
+		}
+
+		// ----- PUBLIC Properties & Functions -----
+
 		// Browser capabilities
+
 		/**
 		 * Browser User Agent
 		 * @type Boolean
@@ -165,6 +204,28 @@
 		obj.alpha = 0;
 
 		/**
+		* return the device pixel ratio
+		* @name getPixelRatio
+		* @memberOf me.device
+		* @function
+		*/
+		obj.getPixelRatio = function() {
+
+			if (devicePixelRatio===null) {
+				var _context = me.video.getScreenContext();
+				var _devicePixelRatio = window.devicePixelRatio || 1,
+					_backingStoreRatio = _context.webkitBackingStorePixelRatio ||
+					_context.mozBackingStorePixelRatio ||
+					_context.msBackingStorePixelRatio ||
+					_context.oBackingStorePixelRatio ||
+					_context.backingStorePixelRatio || 1;
+				devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
+			}
+			return devicePixelRatio;
+		};
+
+
+		/**
 		 * event management (Accelerometer)
 		 * http://www.mobilexweb.com/samples/ball.html
 		 * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
@@ -263,7 +324,7 @@
 
 		/**
 		 * unwatch Device orientation event 
-		 * @name unwatchAccelerometer
+		 * @name unwatchDeviceOrientation
 		 * @memberOf me.device
 		 * @public
 		 * @function

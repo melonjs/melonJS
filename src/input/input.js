@@ -689,7 +689,7 @@
 		 */
 		obj.globalToLocal = function (x, y) {
 			var offset = obj.offset;
-			var pixelRatio = me.video.getDevicePixelRatio();
+			var pixelRatio = me.device.getPixelRatio();
 			x -= offset.left;
 			y -= offset.top;
 			var scale = me.sys.scale;

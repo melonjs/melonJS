@@ -31,7 +31,6 @@
 		var game_height_zoom = 0;
 		var auto_scale = false;
 		var maintainAspectRatio = true;
-		var devicePixelRatio = null;
 
 		// max display size
 		var maxWidth = Infinity;
@@ -129,9 +128,9 @@
 			context2D = api.getContext2d(canvas);
 			
 			// adjust CSS style for High-DPI devices
-			if (me.video.getDevicePixelRatio()>1) {
-				canvas.style.width = (canvas.width / me.video.getDevicePixelRatio()) + 'px';
-				canvas.style.height = (canvas.height / me.video.getDevicePixelRatio()) + 'px';
+			if (me.device.getPixelRatio()>1) {
+				canvas.style.width = (canvas.width / me.device.getPixelRatio()) + 'px';
+				canvas.style.height = (canvas.height / me.device.getPixelRatio()) + 'px';
 			}
 
 			// create the back buffer if we use double buffering
@@ -315,26 +314,6 @@
 			return backBufferContext2D;
 		};
 		
-		/**
-		 * return the device pixel ratio
-		 * @name getDevicePixelRatio
-		 * @memberOf me.video
-		 * @function
-		 */
-		api.getDevicePixelRatio = function() {
-			
-			if (devicePixelRatio===null) {
-				var _context = me.video.getScreenContext();
-				var _devicePixelRatio = window.devicePixelRatio || 1,
-					_backingStoreRatio = _context.webkitBackingStorePixelRatio ||
-										_context.mozBackingStorePixelRatio ||
-										_context.msBackingStorePixelRatio ||
-										_context.oBackingStorePixelRatio ||
-										_context.backingStorePixelRatio || 1;
-				devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
-			}
-			return devicePixelRatio;
-		};
 		
 		/**
 		 * callback for window resize event
@@ -374,8 +353,8 @@
 				}
 				
 				// adjust scaling ratio based on the device pixel ratio
-				scaleX *= me.video.getDevicePixelRatio();
-				scaleY *= me.video.getDevicePixelRatio();
+				scaleX *= me.device.getPixelRatio();
+				scaleY *= me.device.getPixelRatio();
 			
 				// scale if required
 				if (scaleX!==1 || scaleY !==1) {
@@ -408,9 +387,9 @@
 			canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
 			canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
 			// adjust CSS style for High-DPI devices
-			if (me.video.getDevicePixelRatio()>1) {
-				canvas.style.width = (canvas.width / me.video.getDevicePixelRatio()) + 'px';
-				canvas.style.height = (canvas.height / me.video.getDevicePixelRatio()) + 'px';
+			if (me.device.getPixelRatio()>1) {
+				canvas.style.width = (canvas.width / me.device.getPixelRatio()) + 'px';
+				canvas.style.height = (canvas.height / me.device.getPixelRatio()) + 'px';
 			}
 			me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
 

@@ -777,36 +777,12 @@ window.me = window.me || {};
 			return;
 		}
 
+		// check the device capabilites
+		me.device._check();
+
 		// enable/disable the cache
 		me.loader.setNocache(document.location.href.match(/\?nocache/)||false);
 	
-		// detect audio capabilities
-		me.audio.detectCapabilities();
-		
-		// future proofing (MS) feature detection
-		navigator.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
-		navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-		window.gesture = window.gesture || window.MSGesture;
-		
-		// detect touch capabilities
-		me.device.touch = ('createTouch' in document) || ('ontouchstart' in $) || 
-		               (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
-		
-		// detect platform
-		me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i);
-
-		// accelerometer detection
-		me.device.hasAccelerometer = (
-			(typeof (window.DeviceMotionEvent) !== 'undefined') || (
-				(typeof (window.Windows) !== 'undefined') && 
-				(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
-			)
-		);
-
-		if (window.DeviceOrientationEvent) {
-			me.device.hasDeviceOrientation = true;
-		}
-
 		// init the FPS counter if needed
 		me.timer.init();
 
