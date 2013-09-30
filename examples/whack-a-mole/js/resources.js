@@ -32,6 +32,14 @@ game.resources = [
 		type: "image",	
 		src:  "data/img/sprites/mole.png"
 	},
+
+	// a basic ASCII font
+	{
+		name: "atascii",
+		type:"image",
+		src: "data/img/sprites/atascii_24px.png"
+	},
+
 	// main music track 
 	{  
 		name: "whack",

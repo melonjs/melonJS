@@ -3,7 +3,9 @@ game.PlayScreen = me.ScreenObject.extend({
 	 *  action to perform on state change
 	 */
 	onResetEvent: function() {	
-      me.game.reset();
+      	
+      	me.game.reset();
+		
 		// add the background & foreground
 		// add the foreground
 		var background_sprite10 = new me.SpriteObject (0, 0,   me.loader.getImage("background"));
@@ -43,9 +45,9 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.game.add (grass_lower_3, 60);
 		me.game.add (moleManager, 0);
 		
-		// make sure everything is sorted
-		me.game.sort();
-		
+		// add our HUD (scores/hiscore)
+		me.game.add (new game.HUD.Container());
+
 		// start the main soundtrack
 		me.audio.playTrack("whack");
 	},

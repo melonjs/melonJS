@@ -10,20 +10,23 @@
 var game = {
 
 	/**
+	 * local game data 
+	 */
+	data : {
+		// score information
+		score : 0,
+		hiscore : 0,
+	},
+
+	/**
 	 * some Initialization
 	 */
 	onload: function() {
 		
-		// enable dirtyRegion
-		me.sys.dirtyRegion = true;
 		
 		// we don't need the default 60fps for a whack-a-mole !
 		me.sys.fps = 30;
-		
-		// debug flags
-		//me.debug.renderDirty = true;
-		//me.debug.renderHitBox = true;
-		
+				
 		// initialize the video
 		if (!me.video.init('screen', 1024, 768, true ,'auto')) {
 			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
@@ -32,6 +35,11 @@ var game = {
 					
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
+
+		// get a refernce to localStorage and add a hiScore var if not defined
+		me.save.init({hiscore : 0});
+		// set the local hiscore value
+		game.data.hiscore = me.save.hiscore;
 		
 		// set all ressources to be loaded
 		me.loader.onload = this.loaded.bind(this);

@@ -39,7 +39,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	 * callback for mouse click
 	 */
 	onMouseDown : function() {
-		if (this.isOut == true) {
+		if (this.isOut === true) {
 			this.isOut = false;
 			// set touch animation
 			this.setCurrentAnimation("touch", this.hide.bind(this));
@@ -47,6 +47,19 @@ game.MoleEntity = me.AnimationSheet.extend(
 			this.flicker(20);
 			// play ow FX
 			me.audio.play("ow");
+
+			// add some points
+			game.data.score += 100;
+
+			if (game.data.hiscore < game.data.score) {
+				// i could save direclty to me.save
+				// but that allows me to only have one
+				// simple HUD Score Object
+				game.data.hiscore = game.data.score;
+				// save to local storage
+				console.log(me.save);
+				me.save.hiscore = game.data.hiscore;
+			}
 
 			// stop propagating the event
 			return false;
@@ -117,7 +130,15 @@ game.MoleEntity = me.AnimationSheet.extend(
 					this.hide();
 					// play laugh FX
 					//me.audio.play("laugh");
+					
+					// decrease score by 25 pts
+					game.data.score -= 25;
+					if (game.data.score < 0) {
+						game.data.score = 0;
+						
+					}
 				}
+				return true;
 			}
 		}
 		return this.isVisible;
