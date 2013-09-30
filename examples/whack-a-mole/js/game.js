@@ -36,8 +36,8 @@ var game = {
 		// initialize the "sound engine"
 		me.audio.init("mp3,ogg");
 
-		// get a refernce to localStorage and add a hiScore var if not defined
-		me.save.init({hiscore : 0});
+		// add a new hiscore key if not yet defined
+		me.save.add({hiscore : 0});
 		// set the local hiscore value
 		game.data.hiscore = me.save.hiscore;
 		

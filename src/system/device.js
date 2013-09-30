@@ -52,7 +52,7 @@
 			if (window.DeviceOrientationEvent) {
 				me.device.hasDeviceOrientation = true;
 			}
-		}
+		};
 
 		// ----- PUBLIC Properties & Functions -----
 
@@ -204,11 +204,11 @@
 		obj.alpha = 0;
 
 		/**
-		* return the device pixel ratio
-		* @name getPixelRatio
-		* @memberOf me.device
-		* @function
-		*/
+		 * return the device pixel ratio
+		 * @name getPixelRatio
+		 * @memberOf me.device
+		 * @function
+		 */
 		obj.getPixelRatio = function() {
 
 			if (devicePixelRatio===null) {
@@ -225,26 +225,23 @@
 		};
 
 		/**
-		* return the device storage
-		* @name getStorage
-		* @memberOf me.device
-		* @function
-		* @param {String} [type="local"]
-		* @return me.save object
-		*/
+		 * return the device storage
+		 * @name getStorage
+		 * @memberOf me.device
+		 * @function
+		 * @param {String} [type="local"]
+		 * @return me.save object
+		 */
 		obj.getStorage = function(type) {
 
-			var type = type || "local"
+			type = type || "local";
 
 			switch (type) {
 				case "local" :
-					me.save.init() 
 					return me.save;
-					break;
 
 				default :
 					break;
-
 			}
 			throw "melonJS : storage type " + type + " not supported";
 		};
@@ -344,7 +341,7 @@
 				deviceOrientationInitialized = true;
 			}
 			return false;
-		}
+		};
 
 		/**
 		 * unwatch Device orientation event 
@@ -358,7 +355,7 @@
 				window.removeEventListener('deviceorientation', onDeviceRotate, false);
 				deviceOrientationInitialized = false;
 			}
-		}
+		};
 
 		return obj;
 	})();

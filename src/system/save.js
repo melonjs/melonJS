@@ -38,11 +38,27 @@
             data[key] = JSON.parse(localStorage.getItem("me.save." + key));
         });
 
+        // a fucntion to check if the given key is a reserved word
+        function isReserved (key) {
+            return (key === "add" || key === "delete");
+        }
+
         // Public API
         var api = {
-            init : function (props) {
+
+            /**
+             * add new keys to localStorage and set them to the given default values 
+             * @name add
+             * @memberOf me.save
+             * @function
+             * @param {Object} props key and corresponding values
+             * @example
+             * // Initialize "score" and "lives" with default values
+             * me.save.init({ score : 0, lives : 3 });
+             */
+            add : function (props) {
                 Object.keys(props).forEach(function (key) {
-                    if (key == "init") return;
+                    if (isReserved(key)) return;
 
                     (function (prop) {
                         Object.defineProperty(api, prop, {
@@ -65,11 +81,25 @@
                         api[key] = props[key];
                     }
                 });
+            },
 
-                // Update keys in localStorage
-                localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+            /**
+             * remove a key from localStorage 
+             * @name delete
+             * @memberOf me.save
+             * @function
+             * @param {String} key key to be removed
+             * @example
+             * // remove the "hiscore" key from localStorage
+             * me.save.delete("score");
+             */
+            delete : function (key) {
+                if (isReserved(key)) return;
+                localStorage.removeItem("me.save." + key);
             }
         };
+
         return api;
+
     })();
 })(window);
