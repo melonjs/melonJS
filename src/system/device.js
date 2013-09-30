@@ -224,6 +224,30 @@
 			return devicePixelRatio;
 		};
 
+		/**
+		* return the device storage
+		* @name getStorage
+		* @memberOf me.device
+		* @function
+		* @param {String} [type="local"]
+		* @return me.save object
+		*/
+		obj.getStorage = function(type) {
+
+			var type = type || "local"
+
+			switch (type) {
+				case "local" :
+					me.save.init() 
+					return me.save;
+					break;
+
+				default :
+					break;
+
+			}
+			throw "melonJS : storage type " + type + " not supported";
+		};
 
 		/**
 		 * event management (Accelerometer)

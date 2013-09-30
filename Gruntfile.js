@@ -22,7 +22,7 @@ module.exports = function(grunt) {
         'src/video/video.js',
         'src/input/input.js',
         'src/utils/utils.js',
-        'src/utils/stat.js',
+        'src/system/save.js',
         'src/level/TMXConstants.js',
         'src/level/TMXUtils.js',
         'src/level/TMXObjectGroup.js',
