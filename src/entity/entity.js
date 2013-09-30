@@ -235,7 +235,7 @@
 			// Tile objects can be created with a GID attribute;
 			// The TMX parser will use it to create the image property.
 			var settings = arguments[3];
-			if (settings && settings.image) {
+			if (settings && settings.gid && settings.image) {
 				return new me.SpriteObject(settings.x, settings.y, settings.image);
 			}
 

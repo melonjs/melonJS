@@ -1089,16 +1089,20 @@ window.me = window.me || {};
 					// create the corresponding entity
 					var entity = me.entityPool.newInstanceOf(obj.name, obj.x, obj.y, obj);
 
-					// set the entity z order correspondingly to its parent container/group
-					entity.z = group.z;
+					// ignore if the newInstanceOf function does not return a corresponding object
+					if (entity) {
+						
+						// set the entity z order correspondingly to its parent container/group
+						entity.z = group.z;
 
-					//apply group default opacity value if defined
-					if (entity.renderable && typeof entity.renderable.setOpacity === 'function') {
-						entity.renderable.setOpacity(group.opacity);
+						//apply group default opacity value if defined
+						if (entity.renderable && typeof entity.renderable.setOpacity === 'function') {
+							entity.renderable.setOpacity(group.opacity);
+						}
+
+						// add the entity into the target container
+						targetContainer.addChild(entity);
 					}
-
-					// add the entity into the target container
-					targetContainer.addChild(entity);
 				}
 
 				// if we created a new container
