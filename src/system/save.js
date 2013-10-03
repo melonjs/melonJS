@@ -68,7 +68,7 @@
                             },
                             set : function (value) {
                                 // don't overwrite if it was already defined
-                                if (typeof data[prop] !== undefined) {
+                                if (data[prop] !== Object) {
                                     data[prop] = value;
                                     localStorage.setItem("me.save." + prop, JSON.stringify(data[prop]));
                                 }
@@ -94,8 +94,12 @@
              * me.save.delete("score");
              */
             delete : function (key) {
-                if (isReserved(key)) return;
-                localStorage.removeItem("me.save." + key);
+                if (!isReserved(key)) {
+                    if (typeof data[key] !== undefined) {
+                        delete data[key];
+                        localStorage.removeItem("me.save." + key);
+                    }
+                }
             }
         };
 

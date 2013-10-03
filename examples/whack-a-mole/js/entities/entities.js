@@ -57,7 +57,6 @@ game.MoleEntity = me.AnimationSheet.extend(
 				// simple HUD Score Object
 				game.data.hiscore = game.data.score;
 				// save to local storage
-				console.log(me.save);
 				me.save.hiscore = game.data.hiscore;
 			}
 
