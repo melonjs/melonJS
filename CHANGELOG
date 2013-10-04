@@ -2,24 +2,26 @@ Version History
 ---------------
 0.9.9
 * General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)
+* General : added a renderable container object (me.ObjectContainer) and reorganise `me.game` accordingly
+* General : added `me.game.world` as a reference to the game world root object container.
+* General : added a new me.save class to manage localStorage, and moved (deprectaed) the old me.stat to the plugin repository
 * Core : improved game pause management (by swmuron)
 * Core : added a `me.device` object containing device specific capabilities and events (agmcleod)
+* Core : moved all device read-only flags to the new me.device object
 * Input : fixed accelerometer event registration when supported
+* Input : added support for windows 8 accelerometer (Halfman)
+* Input : Improved mouse wheel event support to be compatible with all recent browsers
+* Input : added support for the touchCancel and mousecancel events
 * Loader : refreshed the loader a bit, and added the new logo
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
-* Input : added support for windows 8 accelerometer (Halfman)
-* Input : Improved mouse wheel event support to be compatible with all recent browsers
 * TMX : fixed default group opacity value not being applied to child objects.
 * TMX : optimized tile rendering, by using a tileset reference in Tile object
 * TMX : added preliminary support for non rectangular shapes in Tiled (although currently converted to me.Rect)
 * Font : Font objects now properly extend me.Renderable
-* Entity : added an Entity Container Object (me.EntityContainer) and reorganise `me.game` accordingly
-* General : added `me.game.world` as a reference to the game world root entity container.
 * Animation : the `animationspeed` property, now defines the delay between frames in terms of milliseconds (as opposed to framecount)
 * Tween : the tween implementation has been updated to the last official r11 version.
-* General : added `me.ObjectContainer`, a container for group of renderables/entities
-
+* Camera : renamed the mislabeled worldToScreen and ScreenToWorld, and fixed a bug in one of the function.
 
 0.9.8
 * Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
