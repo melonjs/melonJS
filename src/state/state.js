@@ -423,9 +423,10 @@
 					// persistent or not, make sure we remove it
 					// from the current object list
 					me.game.remove.call(me.game, _screenObject[_state].screen, true);
+				} else {
+					// just notify the object
+					_screenObject[_state].screen.destroy();
 				}
-				// notify the object
-				_screenObject[_state].screen.destroy();
 			}
 
 			if (_screenObject[state])

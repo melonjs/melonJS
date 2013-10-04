@@ -1253,7 +1253,11 @@ window.me = window.me || {};
 					// wait the end of the current loop
 					/** @ignore */
 					pendingRemove = (function (obj) {
-						obj.ancestor.removeChild(obj);
+						// safety check in case the
+						// object was removed meanwhile
+						if (typeof obj.ancestor !== undefined) {
+							obj.ancestor.removeChild(obj);
+						}
 						pendingRemove = null;
 					}.defer(obj));
 				}
