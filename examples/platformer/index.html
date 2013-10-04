@@ -1,59 +1,56 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-  <title>melonJS - plateformer demo</title>
-  <meta name="description" content="melonJS homepage" />
-  <meta name="keywords" content="melonJS, HTML5, javascript, game, engine, framework" />
-  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
-	<style type="text/css">
-		canvas {
-			display: block;
-			image-rendering: optimizeSpeed;
-			image-rendering: -moz-crisp-edges;
-			image-rendering: -o-crisp-edges;
-			image-rendering: -webkit-optimize-contrast;
-			image-rendering: optimize-contrast;
-			-ms-interpolation-mode: nearest-neighbor;
-		}
-	</style>
-  </head>
-<body>
-  <div id="main">
-    <div id="header">
-      <div id="logo">
-        <div id="logo_text">
-          <!-- class="logo_colour", allows you to change the colour of the text -->
-          <h1><a href="http://www.melonjs.org">melon<span class="logo_colour">JS</span></a></h1>
-          <h2>A lightweight HTML5 game engine</h2>
-        </div>
-      </div>
-     </div>
-    <div id="site_content">
-		<center>
-		<div id="content">
-			<h1>A plateformer demo</h1>
-			<p>instructions : arrow keys to move, X to jump</p>
-			<div id="screen"></div>
-			<script type="text/javascript" src="../../build/melonJS-0.9.9.js"></script>
-			<script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
-			<script type="text/javascript" src="js/game.js"></script>
-            <script type="text/javascript" src="js/resources.js"></script>
-			<script type="text/javascript" src="js/entities/entities.js"></script>
-			<script type="text/javascript" src="js/entities/HUD.js"></script>
-            <script type="text/javascript" src="js/screens/play.js"></script>
-			<script type="text/javascript">
-				/* Bootstrap */
-				window.onReady(function onReady() {
-					game.onload();
-				});
-            </script>
-			</div>
-		</center>
-		(graphics by Kenney Vleugels : www.kenney.nl)
-    </div>
-    <div id="footer">
-      Copyright &copy; melonJS 2012
-    </div>
-  </div>
-</body>
+    <head>
+        <title>melonJS - Platformer example</title>
+        <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+        <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    </head>
+    <body>
+        <!-- Canvas placeholder -->
+		<div id="screen"></div>
+        
+		<!-- melonJS Library -->
+		<script type="text/javascript" src="../../build/melonJS-0.9.9-min.js"></script>
+        
+		<!-- Plugin(s) -->
+		<script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+		
+		<!-- Game Scripts -->
+        <script type="text/javascript" src="js/game.js"></script>
+        <script type="text/javascript" src="js/resources.js"></script>
+		
+		<script type="text/javascript" src="js/entities/entities.js"></script>
+		<script type="text/javascript" src="js/entities/HUD.js"></script>
+
+        <script type="text/javascript" src="js/screens/play.js"></script>
+		
+		<!-- Bootstrap & Mobile optimization tricks -->
+		<script type="text/javascript">
+			window.onReady(function onReady() {
+				game.onload();
+
+				// Mobile browser hacks
+				if (me.device.isMobile && !navigator.isCocoonJS) {
+					// Prevent the webview from moving on a swipe
+					window.document.addEventListener("touchmove", function (e) {
+						e.preventDefault();
+						window.scroll(0, 0);
+						return false;
+					}, false);
+
+					// Scroll away mobile GUI
+					(function () {
+						window.scrollTo(0, 1);
+						me.video.onresize(null);
+					}).defer();
+
+					me.event.subscribe(me.event.WINDOW_ONRESIZE, function (e) {
+						window.scrollTo(0, 1);
+					});
+				}
+			});
+		</script>
+    </body>
 </html>
