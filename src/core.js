@@ -1255,7 +1255,7 @@ window.me = window.me || {};
 					pendingRemove = (function (obj) {
 						// safety check in case the
 						// object was removed meanwhile
-						if (typeof obj.ancestor !== undefined) {
+						if (typeof obj.ancestor !== 'undefined') {
 							obj.ancestor.removeChild(obj);
 						}
 						pendingRemove = null;
