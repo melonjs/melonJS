@@ -52,6 +52,13 @@
 			if (window.DeviceOrientationEvent) {
 				me.device.hasDeviceOrientation = true;
 			}
+
+			try {
+				obj.localStorage = (typeof window.localStorage !== 'undefined');
+			} catch (e) {
+				// the above generates an exception when cookies are blocked
+				obj.localStorage = false;
+			}
 		};
 
 		// ----- PUBLIC Properties & Functions -----
@@ -75,13 +82,14 @@
 		 */
 		obj.sound = false;
 		/**
-		 * Browser Local Storage capabilities
+		 * Browser Local Storage capabilities <br>
+		 * (this flag will be set to false if cookies are blocked) 
 		 * @type Boolean
          * @readonly
 		 * @name localStorage
 		 * @memberOf me.device
 		 */
-		obj.localStorage = (typeof(window.localStorage) === 'object');
+		obj.localStorage = false;
 		/**
 		 * Browser accelerometer capabilities
 		 * @type Boolean

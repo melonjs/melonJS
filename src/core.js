@@ -780,6 +780,9 @@ window.me = window.me || {};
 		// check the device capabilites
 		me.device._check();
 
+		// initialize me.save
+		me.save._init();
+
 		// enable/disable the cache
 		me.loader.setNocache(document.location.href.match(/\?nocache/)||false);
 	
