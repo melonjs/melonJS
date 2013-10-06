@@ -324,7 +324,7 @@
 			var scaleX = 1, scaleY = 1;
             
             // check for orientation information
-            if (typeof window.orientation !== undefined) {
+            if (typeof window.orientation !== 'undefined') {
                 me.device.orientation = window.orientation;
             } else {
                 // is this actually not the best option since default "portrait"

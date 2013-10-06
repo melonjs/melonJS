@@ -12,6 +12,7 @@ game.PlayScreen = me.ScreenObject.extend({
     this.font.draw(ctx, "X: " + o.accelerationX, 10, 90);
     this.font.draw(ctx, "Y: " + o.accelerationY, 10, 120);
     this.font.draw(ctx, "Z: " + o.accelerationZ, 10, 150);
+    this.font.draw(ctx, "orientation: " + me.device.orientation + " degrees", 10, 180);
   },
   onResetEvent: function() {  
     me.device.watchDeviceOrientation();
