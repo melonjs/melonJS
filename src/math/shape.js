@@ -110,7 +110,12 @@
 
 		// the shape type
 		shapeType : "Rectangle",
-		
+
+		/*
+		 * will be replaced by pos and replace colPos in 1.0.0 :)
+		 * @ignore
+		 */
+		offset: null,
 		
 		/** @ignore */
 		init : function(v, w, h) {
@@ -118,6 +123,11 @@
                 this.pos = new me.Vector2d();
             }
             this.pos.setV(v);
+
+            if (this.offset === null) {
+                this.offset = new me.Vector2d();
+            }
+            this.offset.set(0, 0);
 
             // allow to reduce the hitbox size
             // while on keeping the original pos vector
@@ -134,8 +144,6 @@
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
 			
-			this.offset = new me.Vector2d();
-
 			// redefine some properties to ease our life when getting the rectangle coordinates
 			Object.defineProperty(this, "left", {
 				get : function() {
@@ -185,7 +193,8 @@
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
 
-			this.offset = new me.Vector2d();
+			//reset offset
+			this.offset.set(0, 0);
 		},
 
         /**
@@ -631,6 +640,11 @@
 	/** @scope me.PolyShape.prototype */	{
 	
 		/**
+		 * @ignore
+		 */
+		offset : null,
+
+		/**
 		 * origin point of the PolyShape
 		 * @public
 		 * @type me.Vector2d
@@ -667,6 +681,11 @@
             if (this.pos === null) {
                 this.pos = new me.Vector2d();
             }
+
+            if (this.offset === null) {
+                this.offset = new me.Vector2d();
+            }
+ 
             this.set(v, points, closed);
 		},
 
@@ -683,7 +702,7 @@
 			this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
-            this.offset = new me.Vector2d();
+            this.offset.set(0, 0);
             this.getBounds();
 		},
 
