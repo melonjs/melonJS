@@ -8,6 +8,8 @@ Version History
 * Core : improved game pause management (by swmuron)
 * Core : added a `me.device` object containing device specific capabilities and events (agmcleod)
 * Core : moved all device read-only flags to the new me.device object
+* Core : fixed Opera Mobile detection when sniffing user agent
+* Core : improved orientation change detection, added me.device.orientation and a specific minpubsub channel
 * Input : fixed accelerometer event registration when supported
 * Input : added support for windows 8 accelerometer (Halfman)
 * Input : Improved mouse wheel event support to be compatible with all recent browsers
