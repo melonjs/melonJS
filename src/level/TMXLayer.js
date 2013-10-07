@@ -166,9 +166,6 @@
 					this.ratio.setV(ratio);
 				}
 			}
-
-			this.isDirty = false;
-
 			
 			// a cached reference to the viewport
 			var viewport = me.game.viewport;
@@ -272,7 +269,6 @@
 		updateLayer : function(vpos) {
 			if (0 === this.ratio.x && 0 === this.ratio.y) {
 				// static image
-				this.isDirty = false;
 				return;
 			} else {
 				// parallax / scrolling image
@@ -283,10 +279,8 @@
 					this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
 					this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
 					this.lastpos.setV(vpos);
-					this.isDirty = true;
 					return;
 				}
-				this.isDirty = false;
 			}
 		},
 
@@ -296,7 +290,11 @@
 		 * @function
 		 */
 		update : function() {
-			return this.isDirty;
+			// this one will be repainted anyway
+			// if the viewport change
+			// note : this will not work later if
+			// we re-introduce a dirty rect algorithm ?
+			return false;
 		},		
 
 		/**
