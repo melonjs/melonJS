@@ -29,18 +29,18 @@ and currently features :
 - Standard spritesheet and Packed Textures (Texture Packer, ShoeBox) support
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
-	- Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
-	- Orthogonal tilemap with built-in collision management
-	- Isometric, Perspective tilemap support
-	- Multiple layers (multiple background/Foreground, collision and Image layers)
-	- Multiple Tileset support
-	- Tileset Transparency settings
-	- Layers Alpha settings
-	- Tiled Objects
-	- Flipped & rotated Tiles
-	- Dynamic Layer and Object/Group ordering
-	- Dynamic Entity loading
-	- Solid, Platform, Slope and Breakable Tiles
+    - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
+    - Orthogonal tilemap with built-in collision management
+    - Isometric, Perspective tilemap support
+    - Multiple layers (multiple background/Foreground, collision and Image layers)
+    - Multiple Tileset support
+    - Tileset Transparency settings
+    - Layers Alpha settings
+    - Tiled Objects
+    - Flipped & rotated Tiles
+    - Dynamic Layer and Object/Group ordering
+    - Dynamic Entity loading
+    - Solid, Platform, Slope and Breakable Tiles
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
 - Built-in support for cocoonJS
@@ -61,17 +61,17 @@ we need to install Grunt and the Grunt CLI (Command Line Interface), by doing th
 Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
-	$ npm install -g grunt-cli
+    $ npm install -g grunt-cli
 
 then we can install the melonJS required dependencies, by typing :
 
-	$ cd melonJS
-	$ npm install
+    $ cd melonJS
+    $ npm install
 
 Once all the above done, we are ready to build melonJS :
 
-	$ cd melonJS
-	$ grunt
+    $ cd melonJS
+    $ grunt
 
 Both plain and minified library will be available under the "build" directory.
 
@@ -79,7 +79,7 @@ Building the documentation
 -------------------------------------------------------------------------------
 melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed, and a special `JAVA_HOME` environment variable to be set. E.g. for Mac OS X :
 
-	$ export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
+    $ export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
 
 And for Ubuntu:
 
@@ -88,15 +88,15 @@ And for Ubuntu:
 
 JSDoc also requires specific dependencies to be installed :
 
-	$ cd melonJS
-	$ cd tasks
-	$ cd jsdoc
-	$ npm install
+    $ cd melonJS
+    $ cd tasks
+    $ cd jsdoc
+    $ npm install
 
 Then do the following to actually build the documentation :
 
-	$ cd melonJS
-	$ grunt doc
+    $ cd melonJS
+    $ grunt doc
 
 The generated documentation will be then available under the "docs" directory
 
