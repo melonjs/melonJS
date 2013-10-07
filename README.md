@@ -88,9 +88,7 @@ And for Ubuntu:
 
 JSDoc also requires specific dependencies to be installed :
 
-    $ cd melonJS
-    $ cd tasks
-    $ cd jsdoc
+    $ cd melonJS/tasks/jsdoc
     $ npm install
 
 Then do the following to actually build the documentation :
