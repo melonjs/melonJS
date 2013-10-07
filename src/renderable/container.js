@@ -237,7 +237,7 @@
 		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
-		 * @param {Boolean} keepalive True to prevent calling child.destroy()
+		 * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
 		 */
 		removeChild : function(child, keepalive) {
 
