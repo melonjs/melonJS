@@ -5,23 +5,34 @@ Version History
 * General : added a renderable container object (me.ObjectContainer) and reorganise `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root object container.
 * General : added a new me.save class to manage localStorage, and moved (deprectaed) the old me.stat to the plugin repository
+* General : Improved build process and added lint (nvlbg)
 * Core : improved game pause management (by swmuron)
 * Core : added a `me.device` object containing device specific capabilities and events (agmcleod)
 * Core : moved all device read-only flags to the new me.device object
 * Core : fixed Opera Mobile detection when sniffing user agent
 * Core : improved orientation change detection, added me.device.orientation and a specific minpubsub channel
+* Core : Moved debug flags to the debugPanel plugin
 * Input : fixed accelerometer event registration when supported
 * Input : added support for windows 8 accelerometer (Halfman)
 * Input : Improved mouse wheel event support to be compatible with all recent browsers
 * Input : added support for the touchCancel and mousecancel events
+* Input : Added TAB key definition to key bindings (agmcleod)
 * Loader : refreshed the loader a bit, and added the new logo
+* Loader : Fixed binary loader (agmcleod)
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
+* Video : Fix `me.sys.scalingInterpolation` when display is resized.
 * TMX : fixed default group opacity value not being applied to child objects.
 * TMX : optimized tile rendering, by using a tileset reference in Tile object
 * TMX : added preliminary support for non rectangular shapes in Tiled (although currently converted to me.Rect)
+* TMX : Fixed multiple image backgrounds with `ratio` properties that are different values
+* TMX : fixed me.ImageLayer drawing being delayed by one frame
 * Font : Font objects now properly extend me.Renderable
+* GUI : `HUD` objects have been completely replaced by me.ObjectContainer; See Platformer example for new HUD implementation pattern.
 * Animation : the `animationspeed` property, now defines the delay between frames in terms of milliseconds (as opposed to framecount)
+* Animation : Allow animation callback to prevent resetting to first frame by returning `false` *really fixed this time*
+* Shapes : New shapes added for future expansion: me.Ellipse, me.PolyShape
+* Shapes : `me.Rect.getRect()` renamed `getBounds()`
 * Tween : the tween implementation has been updated to the last official r11 version.
 * Camera : renamed the mislabeled worldToScreen and ScreenToWorld, and fixed a bug in one of the function.
 
