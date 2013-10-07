@@ -123,28 +123,26 @@
 
 		/** @ignore */
 		_followH : function(target) {
+			var _x = this.pos.x;
 			if ((target.x - this.pos.x) > (this._deadwidth)) {
 				this.pos.x = ~~MIN((target.x) - (this._deadwidth), this._limitwidth);
-				return true;
 			}
 			else if ((target.x - this.pos.x) < (this.deadzone.x)) {
 				this.pos.x = ~~MAX((target.x) - this.deadzone.x, 0);
-				return true;
 			}
-			return false;
+			return (_x !== this.pos.x);
 		},
 
 		/** @ignore */
 		_followV : function(target) {
+			var _y = this.pos.y;
 			if ((target.y - this.pos.y) > (this._deadheight)) {
 				this.pos.y = ~~MIN((target.y) - (this._deadheight),	this._limitheight);
-				return true;
 			}
 			else if ((target.y - this.pos.y) < (this.deadzone.y)) {
 				this.pos.y = ~~MAX((target.y) - this.deadzone.y, 0);
-				return true;
 			}
-			return false;
+			return (_y !== this.pos.y);
 		},
 
 		// -- public function ---

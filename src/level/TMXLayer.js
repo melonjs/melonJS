@@ -272,15 +272,11 @@
 				return;
 			} else {
 				// parallax / scrolling image
-				if (!this.lastpos.equals(vpos)) {
-					// viewport changed
-					this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
-					this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
-					this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
-					this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
-					this.lastpos.setV(vpos);
-					return;
-				}
+				this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
+				this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
+				this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
+				this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
+				this.lastpos.setV(vpos);
 			}
 		},
 
