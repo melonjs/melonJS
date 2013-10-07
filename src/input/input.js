@@ -14,7 +14,7 @@
 	 */
 	 
 	 /**
-	  * Event normalized X coordinates whithin the game canvas itself<br>
+	  * Event normalized X coordinate within the game canvas itself<br>
 	  * <img src="images/event_coord.png"/>
 	  * @memberof! external:Event#
 	  * @name external:Event#gameX
@@ -22,10 +22,38 @@
 	  */
 	  
 	 /**
-	  * Event normalized Y coordinates whithin the game canvas itself<br>
+	  * Event normalized Y coordinate within the game canvas itself<br>
 	  * <img src="images/event_coord.png"/>
 	  * @memberof! external:Event#
 	  * @name external:Event#gameY
+	  * @type {Number}
+	  */
+
+	 /**
+	  * Event X coordinate relative to the viewport<br>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameScreenX
+	  * @type {Number}
+	  */
+
+	 /**
+	  * Event Y coordinate relative to the viewport<br>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameScreenY
+	  * @type {Number}
+	  */
+
+	 /**
+	  * Event X coordinate relative to the map<br>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameWorldX
+	  * @type {Number}
+	  */
+
+	 /**
+	  * Event Y coordinate relative to the map<br>
+	  * @memberof! external:Event#
+	  * @name external:Event#gameWorldY
 	  * @type {Number}
 	  */
 	  
