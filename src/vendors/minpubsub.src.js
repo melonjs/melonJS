@@ -160,6 +160,16 @@
 		obj.WINDOW_ONSCROLL = "window.onscroll";
 
 		/**
+		 * Channel Constant for when the viewport position is updated <br>
+		 * Data passed : {me.Vector2d} viewport position vector <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#VIEWPORT_ONCHANGE
+		 */
+		obj.VIEWPORT_ONCHANGE = "viewport.onchange";
+
+		/**
 		 * Publish some data on a channel
 		 * @name me.event#publish
 		 * @public

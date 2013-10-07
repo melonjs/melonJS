@@ -167,17 +167,19 @@
 				}
 			}
 
+			this.isDirty = false;
+
 			
 			// a cached reference to the viewport
-			this.viewport = me.game.viewport;
+			var viewport = me.game.viewport;
 			
 			// last position of the viewport
-			this.lastpos = this.viewport.pos.clone();
+			this.lastpos = viewport.pos.clone();
 			
 			
 			// set layer width & height 
-			width  = width ? Math.min(this.viewport.width, width)   : this.viewport.width;
-			height = height? Math.min(this.viewport.height, height) : this.viewport.height;
+			width  = width ? Math.min(viewport.width, width)   : viewport.width;
+			height = height? Math.min(viewport.height, height) : viewport.height;
 			this.parent(new me.Vector2d(0, 0), width, height);
 			
 			// default opacity
@@ -221,6 +223,9 @@
 			
 			// default origin position
 			this.anchorPoint.set(0, 0);
+
+			// register to the viewport change notification
+			this.handle = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
 			
 		},
 		
@@ -233,7 +238,6 @@
 			// clear all allocated objects
 			this.image = null;
 			this.lastpos = null;
-			this.viewport = null;
 		},
 
 		/**
@@ -261,18 +265,16 @@
 		},
 		
 		/**
-		 * update function
+		 * updateLayer function
 		 * @ignore
 		 * @function
 		 */
-		update : function() {
+		updateLayer : function(vpos) {
 			if (0 === this.ratio.x && 0 === this.ratio.y) {
 				// static image
-				return false;
-			}
-			else {
-				// reference to the viewport
-				var vpos = this.viewport.pos;
+				this.isDirty = false;
+				return;
+			} else {
 				// parallax / scrolling image
 				if (!this.lastpos.equals(vpos)) {
 					// viewport changed
@@ -281,12 +283,21 @@
 					this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
 					this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
 					this.lastpos.setV(vpos);
-					return true;
+					this.isDirty = true;
+					return;
 				}
-				return false;
+				this.isDirty = false;
 			}
 		},
-		
+
+		/**
+		 * update function
+		 * @ignore
+		 * @function
+		 */
+		update : function() {
+			return this.isDirty;
+		},		
 
 		/**
 		 * draw the image layer
@@ -363,7 +374,16 @@
 			
 			// restore context state
 			context.restore();
-		}
+		},
+
+		// called when the layer is destroyed
+		destroy : function() {
+			// cancel the event subscription
+			if (this.handle)  {
+				me.event.unsubscribe(this.handle);
+				this.handle = null;
+			}
+		},
 	});	
 	
 	

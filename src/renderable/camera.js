@@ -242,11 +242,15 @@
 			
 			this.pos.x = newx.clamp(0,this._limitwidth);
 			this.pos.y = newy.clamp(0,this._limitheight);
+
+			//publish the corresponding message
+			me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
 		},
 
 		/** @ignore */
 		update : function(updateTarget) {
-
+			var updated = false;
+			
 			if (this.target && updateTarget) {
 				switch (this.follow_axis) {
 				case this.AXIS.NONE:
@@ -254,16 +258,16 @@
 					break;
 
 				case this.AXIS.HORIZONTAL:
-					updateTarget = this._followH(this.target);
+					updated = this._followH(this.target);
 					break;
 
 				case this.AXIS.VERTICAL:
-					updateTarget = this._followV(this.target);
+					updated = this._followV(this.target);
 					break;
 
 				case this.AXIS.BOTH:
-					updateTarget = this._followH(this.target);
-					updateTarget = this._followV(this.target) || updateTarget;
+					updated = this._followH(this.target);
+					updated = this._followV(this.target) || updated;
 					break;
 
 				default:
@@ -271,7 +275,7 @@
 				}
 			}
 
-			if (this.shaking) {
+			if (this.shaking===true) {
 				var delta = me.timer.getTime() - this._shake.start;
 				if (delta >= this._shake.duration) {
 					this.shaking = false;
@@ -291,18 +295,20 @@
 					}
 				}
 				// updated!
-				updateTarget = true;
+				updated = true;
+			}
+
+			if (updated === true) {
+				//publish the corresponding message
+				me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
 			}
 
 			// check for fade/flash effect
 			if ((this._fadeIn.tween!=null) || (this._fadeOut.tween!=null)) {
-				updateTarget = true;
+				updated = true;
 			}
 
-			// return same value that the one given
-			// so that we only force it to true
-			// if we used any effect (e.g. shake, fading, etc...)
-			return updateTarget;
+			return updated;
 		},
 
 		/**
