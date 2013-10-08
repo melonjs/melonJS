@@ -4,7 +4,7 @@ Version History
 * General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)
 * General : added a renderable container object (me.ObjectContainer) and reorganise `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root object container.
-* General : added a new me.save class to manage localStorage, and moved (deprectaed) the old me.stat to the plugin repository
+* General : added a new me.save class to manage localStorage, and moved (deprecated) the old me.stat to the plugin repository
 * Core : improved game pause management (by swmuron)
 * Core : added a `me.device` object containing device specific capabilities and events (agmcleod)
 * Core : moved all device read-only flags to the new me.device object
