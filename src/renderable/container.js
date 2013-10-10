@@ -185,7 +185,7 @@
 		 * @name hasChild
 		 * @memberOf me.ObjectContainer
 		 * @function
-		 * @param {String} value Value of the property
+		 * @param {me.Renderable} child
 		 * @return {Boolean}
 		 */
 		hasChild : function(child) {
