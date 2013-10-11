@@ -834,6 +834,17 @@ window.me = window.me || {};
 		// to know when we have to refresh the display
 		var isDirty = true;
 
+        // to translate global (frequently used) pointer events
+        // which should be catched at root level, into system events
+        var translatePointerEvents = function () {
+            // listen to mouse move (and touch move) events on the viewport
+            // and convert them to a system event by default
+            me.input.registerPointerEvent('mousemove', me.game.viewport, function (e) {
+                me.event.publish('mousemove', [e]);
+                return false;
+            });
+        };
+
 		/*---------------------------------------------
 
 			PUBLIC STUFF
@@ -983,6 +994,9 @@ window.me = window.me || {};
 
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);
+
+                // translate global pointer events
+                translatePointerEvents();
 
 				// make display dirty by default
 				isDirty = true;
