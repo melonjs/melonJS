@@ -62,6 +62,16 @@ describe('entity.droptarget', function () {
                 null, null, null, null, 0, null);
             dispatchMouseEvent(canvas, 'mouseup', true, true, window, 1, 0, 0, moveTo.x, moveTo.y,
                 null, null, null, null, 0, null);
+        },
+        // removes all test entities from the game
+        removeEntities = function () {
+            // remove entities if they are created
+            if (draggable) {
+                me.game.remove(draggable);
+            }
+            if (droptarget) {
+                me.game.remove(droptarget);
+            }
         };
 
     beforeAll(function () {
@@ -72,17 +82,43 @@ describe('entity.droptarget', function () {
     afterEach(function () {
         // reset dropped
         dropped = false;
-        // remove entities if they are created
-        if (draggable) {
-            me.game.remove(draggable);
-        }
-        if (droptarget) {
-            me.game.remove(droptarget);
-        }
+        // remove leftover test entities
+        removeEntities();
+    });
+
+    describe('checkmethod: contains', function () {
+        it('Should be able to detect a valid drop of a draggable', function () {
+            var startFrom = {x: 70, y: 70},
+                moveTo = {x: 220, y: 220};
+            // create a draggable
+            createDraggable({x: 0, y: 0}, {x: 100, y: 100});
+            // create a droptarget
+            createDroptarget({x: 100, y: 100}, {x: 200, y: 200});
+            // enable the contains check method
+            droptarget.enableContains();
+            // drag the draggable entity to a new location
+            drag(startFrom, moveTo);
+
+            expect(dropped).toBeTruthy();
+        });
+        it('Should not accept a drop outside of the check area', function () {
+            var startFrom = {x: 70, y: 70},
+                moveTo = {x: 100, y: 100};
+            // create a draggable
+            createDraggable({x: 0, y: 0}, {x: 100, y: 100});
+            // create a droptarget
+            createDroptarget({x: 100, y: 100}, {x: 200, y: 200});
+            // enable the contains check method
+            droptarget.enableContains();
+            // drag the draggable entity to a new location
+            drag(startFrom, moveTo);
+
+            expect(dropped).toBeFalsy();
+        });
     });
 
     describe('checkmethod: overlap', function () {
-        it('Should be able to detect a drop of a draggable', function () {
+        it('Should be able to detect a valid drop of a draggable', function () {
             var startFrom = {x: 70, y: 70},
                 moveTo = {x: 100, y: 100};
             // create a draggable
@@ -92,7 +128,7 @@ describe('entity.droptarget', function () {
             // drag the draggable entity to a new location
             drag(startFrom, moveTo);
 
-            expect(dropped).toEqual(true);
+            expect(dropped).toBeTruthy();
         });
         it('Should not accept a drop outside of the check area', function () {
             var startFrom = {x: 70, y: 70},
@@ -100,20 +136,11 @@ describe('entity.droptarget', function () {
             // create a draggable
             createDraggable({x: 0, y: 0}, {x: 100, y: 100});
             // create a droptarget
-            createDraggable({x: 100, y: 100}, {x: 200, y: 200});
+            createDroptarget({x: 100, y: 100}, {x: 200, y: 200});
             // drag the draggable entity to a new location
             drag(startFrom, moveTo);
 
-            expect(dropped).toEqual(false);
-        });
-    });
-
-    describe('checkmethod: contains', function () {
-        it('Should be able to detect a drop of a draggable', function () {
-            expect(1).toEqual(1);
-        });
-        it('Should not accept a drop outside of the check area', function () {
-            expect(1).toEqual(1);
+            expect(dropped).toBeFalsy();
         });
     });
 });
