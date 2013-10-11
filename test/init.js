@@ -24,33 +24,27 @@
                  */
                 onResetEvent: function() {
                     // clear the background
-                    me.game.add(new me.ColorLayer("background", "#000000", 0), 0);
+                    me.game.add(new me.ColorLayer('background', '#000000', 0), 0);
                     if (!showCanvas) {
                         me.video.getScreenCanvas().style.display = 'none';
                     }
                     callback();
-                },
-                /** 
-                 *  action to perform when leaving this screen (state change)
-                 */
-                onDestroyEvent: function() {
-                    me.input.releasePointerEvent("mousemove", me.game.viewport);
                 }
             });
 
             // Initialize the video, set scale to 1 to get accurate test results
-            if (!me.video.init("screen", 1024, 768, true, 1)) {
-                alert("Your browser does not support HTML5 canvas.");
+            if (!me.video.init('screen', 1024, 768, true, 1)) {
+                alert('Your browser does not support HTML5 canvas.');
                 return;
             }
-            // add "#debug" to the URL to enable the debug Panel
-            if (document.location.hash === "#debug") {
+            // add '#debug' to the URL to enable the debug Panel
+            if (document.location.hash === '#debug') {
                 window.onReady(function () {
-                    me.plugin.register.defer(debugPanel, "debug");
+                    me.plugin.register.defer(debugPanel, 'debug');
                 });
             }
             // Initialize the audio
-            me.audio.init("mp3,ogg");
+            me.audio.init('mp3,ogg');
             // switch to the Play Screen
             me.state.set(me.state.PLAY, new game.PlayScreen());
             me.state.change(me.state.PLAY);
