@@ -14,7 +14,7 @@
             'spec/entity/draggable.js',
             'spec/entity/droptarget.js'
         ],
-        showCanvas = false,
+        showCanvas = true,
         loadCount = 0,
         game = {},
         initMelon = function (callback) {
@@ -38,8 +38,8 @@
                 }
             });
 
-            // Initialize the video.
-            if (!me.video.init("screen", 1024, 768, true, 'auto')) {
+            // Initialize the video, set scale to 1 to get accurate test results
+            if (!me.video.init("screen", 1024, 768, true, 1)) {
                 alert("Your browser does not support HTML5 canvas.");
                 return;
             }
