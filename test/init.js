@@ -14,7 +14,7 @@
             'spec/entity/draggable.js',
             'spec/entity/droptarget.js'
         ],
-        showCanvas = true,
+        showCanvas = false,
         loadCount = 0,
         game = {},
         initMelon = function (callback) {
@@ -49,9 +49,9 @@
                     me.plugin.register.defer(debugPanel, "debug");
                 });
             }
-            // Initialize the audio.
+            // Initialize the audio
             me.audio.init("mp3,ogg");
-            // switch to the Play Screen.
+            // switch to the Play Screen
             me.state.set(me.state.PLAY, new game.PlayScreen());
             me.state.change(me.state.PLAY);
         },

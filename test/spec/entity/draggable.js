@@ -52,8 +52,7 @@ describe('entity.draggable', function () {
         // drag the draggable entity to a new location
         drag(startFrom, moveTo);
 
-        // We need the greater than check because browsers have slightly different end postions
-        expect(draggable.pos.x).toBeGreaterThan(moveTo.x - draggable.width * 2);
-        expect(draggable.pos.y).toBeGreaterThan(moveTo.y - draggable.height * 2);
+        expect(draggable.pos.x).toEqual(640);
+        expect(draggable.pos.y).toEqual(440);
     });
 });
