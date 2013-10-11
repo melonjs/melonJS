@@ -12,9 +12,9 @@
             'spec/spechelper.js',
             // specs (functional tests)
             'spec/entity/draggable.js',
-            //'spec/entity/droptarget.js'
+            'spec/entity/droptarget.js'
         ],
-        showCanvas = true,
+        showCanvas = false,
         loadCount = 0,
         game = {},
         initMelon = function (callback) {
