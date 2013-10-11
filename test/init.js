@@ -2,14 +2,15 @@
     var i, l,
         //  Add includes and test specification scripts here
         testScripts = [
-            // includes
+            // melon
             '../build/melonJS-0.9.9.js',
             '../plugins/debug/debugPanel.js',
-            'spec/spechelper.js',
+            // jasmine
             'lib/jasmine-1.3.1/jasmine.js',
             'lib/jasmine-1.3.1/plugins.js',
             'lib/jasmine-1.3.1/jasmine-html.js',
-            // specs
+            'spec/spechelper.js',
+            // specs (functional tests)
             'spec/entity/draggable.js',
             'spec/entity/droptarget.js'
         ],
