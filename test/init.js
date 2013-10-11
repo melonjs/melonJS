@@ -12,7 +12,7 @@
             'spec/spechelper.js',
             // specs (functional tests)
             'spec/entity/draggable.js',
-            'spec/entity/droptarget.js'
+            //'spec/entity/droptarget.js'
         ],
         showCanvas = true,
         loadCount = 0,
