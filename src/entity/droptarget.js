@@ -88,7 +88,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @function
          */
         destroy: function () {
-            Event.unsubscribe('dragend', this.drop);
+            Event.unsubscribe(Event.DRAGEND, this.checkOnMe);
         }
     });
 }(me.ObjectEntity, me.event, me.Rect));

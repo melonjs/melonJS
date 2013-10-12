@@ -16,28 +16,51 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @param {Object} settings the additional entity settings
          */
         init: function (x, y, settings) {
-            var self = this;
             this.parent(x, y, settings);
             this.dragging = false;
             this.dragId = null;
             this.grabOffset = new Vector(0,0);
             this.onPointerEvent = Input.registerPointerEvent;
             this.removePointerEvent = Input.releasePointerEvent;
+            this.initEvents();
+        },
+        /**
+         * Initializes the events the modules needs to listen to
+         * It translates the pointer events to me.events
+         * in order to make them pass through the system and to make
+         * this module testable. Then we subscribe this module to the
+         * transformed events.
+         * @name init
+         * @memberOf me.DraggableEntity
+         * @function
+         */
+         initEvents: function () {
+            var self = this;
+            this.mouseDown = function (e) {
+                this.translatePointerEvent(e, Event.DRAGSTART);
+            };
+            this.mouseUp = function (e) {
+                this.translatePointerEvent(e, Event.DRAGEND);
+            };
             // we translate the pointer events to me.events
             // in order to make them pass through the system and to make
             // this module testable
-            this.onPointerEvent('mousedown', this, function (e) {
-                self.translatePointerEvent(e, Event.DRAGSTART);
-            });
-            this.onPointerEvent('mouseup', this, function (e) {
-                self.translatePointerEvent(e, Event.DRAGEND);
-            });
-            // subscribe to the mousemove event
+            this.onPointerEvent('mousedown', this, this.mouseDown.bind(this));
+            this.onPointerEvent('mouseup', this, this.mouseUp.bind(this));
+            // subscribe to the viewport mousemove event
             Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
             // subscribe to the transformed events
-            Event.subscribe(Event.DRAGSTART, this.dragStart.bind(this));
-            Event.subscribe(Event.DRAGEND, this.dragEnd.bind(this));
-        },
+            Event.subscribe(Event.DRAGSTART, function (e, draggable) {
+                if (draggable === self) {
+                    self.dragStart(e);
+                }
+            });
+            Event.subscribe(Event.DRAGEND, function (e, draggable) {
+                if (draggable === self) {
+                    self.dragEnd(e);
+                }
+            });
+         },
         /**
          * Translates a pointer event to a me.event
          * @name init
@@ -102,7 +125,9 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @function
          */
         destroy: function () {
-            Event.unsubscribe('mousemove', this.dragMove);
+            Event.unsubscribe(Event.MOUSEMOVE, this.dragMove);
+            Event.unsubscribe(Event.DRAGSTART, this.dragStart);
+            Event.unsubscribe(Event.DRAGEND, this.dragEnd);
             this.removePointerEvent('mousedown', this);
             this.removePointerEvent('mouseup', this);
         }
