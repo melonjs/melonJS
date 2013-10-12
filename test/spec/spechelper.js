@@ -25,6 +25,14 @@
         it(false, fn);
     };
     // Cross-browser helper for triggering events on elements
+    /*
+        mouse event parameters:
+        type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY
+        
+        example:
+        dispatchMouseEvent(canvas, 'mousedown', true, true, win, 1, 0, 0, 100,
+            100, null, null, null, null, 0, null);
+    */
     w.dispatchMouseEvent = function(target) {
         var e = document.createEvent('MouseEvents');
         e.initMouseEvent.apply(e, Array.prototype.slice.call(arguments, 1));

@@ -16,14 +16,39 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @param {Object} settings the additional entity settings
          */
         init: function (x, y, settings) {
+            var self = this;
             this.parent(x, y, settings);
             this.dragging = false;
             this.dragId = null;
             this.grabOffset = new Vector(0,0);
             this.onPointerEvent = Input.registerPointerEvent;
+            this.removePointerEvent = Input.releasePointerEvent;
+            // we translate the pointer events to me.events
+            // in order to make them pass through the system and to make
+            // this module testable
+            this.onPointerEvent('mousedown', this, function (e) {
+                self.translatePointerEvent(e, 'dragstart');
+            });
+            this.onPointerEvent('mouseup', this, function (e) {
+                self.translatePointerEvent(e, 'dragend');
+            });
+            // subscribe to the mousemove event
             Event.subscribe('mousemove', this.dragMove.bind(this));
-            this.onPointerEvent('mousedown', this, this.dragStart.bind(this));
-            this.onPointerEvent('mouseup', this, this.dragEnd.bind(this));
+            // subscribe to the transformed events
+            Event.subscribe('dragstart', this.dragStart.bind(this));
+            Event.subscribe('dragend', this.dragEnd.bind(this));
+        },
+        /**
+         * Translates a pointer event to a me.event
+         * @name init
+         * @memberOf me.DraggableEntity
+         * @function
+         * @param {Object} e the pointer event you want to translate
+         * @param {String} translation the me.event you want to translate
+         * the event to
+         */
+        translatePointerEvent: function (e, translation) {
+            Event.publish(translation, [e, this]);
         },
         /**
          * Gets called when the user starts dragging the entity
@@ -50,6 +75,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         dragMove: function (e) {
             if (this.dragging === true) {
+                console.log(this.dragId, e.pointerId)
                 if (this.dragId === e.pointerId) {
                     this.pos.set(e.gameX, e.gameY);
                     this.pos.sub(this.grabOffset);
@@ -67,7 +93,6 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             if (this.dragging === true) {
                 this.pointerId = undefined;
                 this.dragging = false;
-                Event.publish('dragend', [this]);
                 return false;
             }
         },
@@ -79,8 +104,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         destroy: function () {
             Event.unsubscribe('mousemove', this.dragMove);
-            this.onPointerEvent('mousedown', this);
-            this.onPointerEvent('mouseup', this);
+            this.removePointerEvent('mousedown', this);
+            this.removePointerEvent('mouseup', this);
         }
     });
 }(me.ObjectEntity, me.input, me.event, me.Vector2d));

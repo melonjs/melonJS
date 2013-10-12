@@ -14,7 +14,7 @@
                 var Draggable = me.DraggableEntity.extend({
                     init: function (x, y, settings) {
                         this.parent(x, y, settings);
-                        this.color = "white";
+                        this.color = 'white';
                     },
                     update: function () {
                         return true;
@@ -32,14 +32,10 @@
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
-                // mouse event parameters:
-                // type, canBubble, cancelable, view, detail, screenX, screenY, clientX, clientY
-                dispatchMouseEvent(canvas, 'mousedown', true, true, win, 1, 0, 0, startFrom.x,
-                    startFrom.y, null, null, null, null, 0, null);
-                dispatchMouseEvent(canvas, 'mousemove', true, true, win, 1, 0, 0, moveTo.x, moveTo.y,
-                    null, null, null, null, 0, null);
-                dispatchMouseEvent(canvas, 'mouseup', true, true, win, 1, 0, 0, moveTo.x, moveTo.y,
-                    null, null, null, null, 0, null);
+                // mock user drag events
+                me.event.publish('dragstart', [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 1}, draggable]);
+                me.event.publish('mousemove', [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
+                me.event.publish('dragend', [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
             };
 
         beforeAll(function () {

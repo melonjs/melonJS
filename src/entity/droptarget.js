@@ -65,7 +65,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @function
          * @param {Object} draggableEntity the draggable entity that is dropped
          */
-        checkOnMe: function (draggableEntity) {
+        checkOnMe: function (e, draggableEntity) {
             if (draggableEntity && this.checkMethod(draggableEntity.collisionBox)) {
                 // call the drop method on the current entity
                 this.drop(draggableEntity);
