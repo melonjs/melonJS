@@ -27,16 +27,16 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             // in order to make them pass through the system and to make
             // this module testable
             this.onPointerEvent('mousedown', this, function (e) {
-                self.translatePointerEvent(e, 'dragstart');
+                self.translatePointerEvent(e, Event.DRAGSTART);
             });
             this.onPointerEvent('mouseup', this, function (e) {
-                self.translatePointerEvent(e, 'dragend');
+                self.translatePointerEvent(e, Event.DRAGEND);
             });
             // subscribe to the mousemove event
-            Event.subscribe('mousemove', this.dragMove.bind(this));
+            Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
             // subscribe to the transformed events
-            Event.subscribe('dragstart', this.dragStart.bind(this));
-            Event.subscribe('dragend', this.dragEnd.bind(this));
+            Event.subscribe(Event.DRAGSTART, this.dragStart.bind(this));
+            Event.subscribe(Event.DRAGEND, this.dragEnd.bind(this));
         },
         /**
          * Translates a pointer event to a me.event
@@ -75,7 +75,6 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         dragMove: function (e) {
             if (this.dragging === true) {
-                console.log(this.dragId, e.pointerId)
                 if (this.dragId === e.pointerId) {
                     this.pos.set(e.gameX, e.gameY);
                     this.pos.sub(this.grabOffset);

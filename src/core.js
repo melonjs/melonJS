@@ -813,7 +813,7 @@ window.me = window.me || {};
 	 * @memberOf me
 	 */
 	me.game = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var api = {};
 
 		/*---------------------------------------------
@@ -840,7 +840,7 @@ window.me = window.me || {};
             // listen to mouse move (and touch move) events on the viewport
             // and convert them to a system event by default
             me.input.registerPointerEvent('mousemove', me.game.viewport, function (e) {
-                me.event.publish('mousemove', [e]);
+                me.event.publish(me.event.MOUSEMOVE, [e]);
                 return false;
             });
         };

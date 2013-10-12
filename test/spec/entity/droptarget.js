@@ -64,9 +64,9 @@
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
                 // mock user drag events
-                me.event.publish('dragstart', [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 2}, draggable]);
-                me.event.publish('mousemove', [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
-                me.event.publish('dragend', [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
+                me.event.publish(me.event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 2}, draggable]);
+                me.event.publish(me.event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
+                me.event.publish(me.event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
             },
             // removes all test entities from the game
             removeEntities = function () {
