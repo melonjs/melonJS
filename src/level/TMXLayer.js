@@ -232,6 +232,11 @@
 		 * @function
 		 */
 		reset : function() {
+			// cancel the event subscription
+			if (this.handle)  {
+				me.event.unsubscribe(this.handle);
+				this.handle = null;
+			}
 			// clear all allocated objects
 			this.image = null;
 			this.lastpos = null;
@@ -372,11 +377,7 @@
 
 		// called when the layer is destroyed
 		destroy : function() {
-			// cancel the event subscription
-			if (this.handle)  {
-				me.event.unsubscribe(this.handle);
-				this.handle = null;
-			}
+			this.reset();
 		},
 	});	
 	
