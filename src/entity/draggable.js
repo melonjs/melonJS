@@ -42,14 +42,9 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this.mouseUp = function (e) {
                 this.translatePointerEvent(e, Event.DRAGEND);
             };
-            // we translate the pointer events to me.events
-            // in order to make them pass through the system and to make
-            // this module testable
             this.onPointerEvent('mousedown', this, this.mouseDown.bind(this));
             this.onPointerEvent('mouseup', this, this.mouseUp.bind(this));
-            // subscribe to the viewport mousemove event
             Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
-            // subscribe to the transformed events
             Event.subscribe(Event.DRAGSTART, function (e, draggable) {
                 if (draggable === self) {
                     self.dragStart(e);

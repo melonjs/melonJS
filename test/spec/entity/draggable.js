@@ -3,15 +3,15 @@
  * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  * @desc Tests if a draggable entity can be dragged to a different location
- * by simulating mouse events
+ * by simulating the system events that would have been triggered by pointer events
  */
 
-(function (win) {
+(function (Game, DraggableEntity, Event, Video) {
     describe('entity.draggable', function () {
         var draggable,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
-                var Draggable = me.DraggableEntity.extend({
+                var Draggable = DraggableEntity.extend({
                     init: function (x, y, settings) {
                         this.parent(x, y, settings);
                         this.color = 'white';
@@ -28,24 +28,24 @@
                 draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
                     dimensions.y});
                 // add the test draggable entity to the game
-                me.game.add(draggable, 1);
+                Game.add(draggable, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
                 // mock user drag events
-                me.event.publish(me.event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 1}, draggable]);
-                me.event.publish(me.event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
-                me.event.publish(me.event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
+                Event.publish(Event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 1}, draggable]);
+                Event.publish(Event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
+                Event.publish(Event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
             };
 
         beforeAll(function () {
             // get a reference to the canvas element
-            canvas = me.video.getScreenCanvas();
+            canvas = Video.getScreenCanvas();
         });
 
         afterEach(function () {
             if (draggable) {
-                me.game.remove(draggable);
+                Game.remove(draggable);
             }
         });
 
@@ -61,4 +61,4 @@
             expect(draggable.pos.y).toEqual(440);
         });
     });
-}(window));
+}(me.game, me.DraggableEntity, me.event, me.video));

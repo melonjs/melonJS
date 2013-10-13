@@ -3,17 +3,18 @@
  * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  * @desc Tests if a droptarget entity is able to detect a valid drop
- * of a draggable entity by simulating mouse events
+ * of a draggable entity by simulating the system events that would have been triggered by
+ * pointer events
  */
 
-(function (win) {
+(function (Game, DraggableEntity, DroptargetEntity, Event, Video) {
     describe('entity.droptarget', function () {
         var draggable,
             droptarget,
             dropped = false,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
-                var Draggable = me.DraggableEntity.extend({
+                var Draggable = DraggableEntity.extend({
                     init: function (x, y, settings) {
                         this.parent(x, y, settings);
                         this.color = 'white';
@@ -34,10 +35,7 @@
             },
             // creates a test droptarget entity
             createDroptarget = function (position, dimensions) {
-                var Droptarget = me.DroptargetEntity.extend({
-                    /**
-                     * constructor
-                     */
+                var Droptarget = DroptargetEntity.extend({
                     init: function (x, y, settings) {
                         this.parent(x, y, settings);
                         this.color = 'red';
@@ -59,29 +57,29 @@
                 // create a new droptarget entity instance
                 droptarget = new Droptarget(100, 100, {width: 200, height: 200});
                 // add the test droptarget to the game
-                me.game.add(droptarget, 1);
+                Game.add(droptarget, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
                 // mock user drag events
-                me.event.publish(me.event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 2}, draggable]);
-                me.event.publish(me.event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
-                me.event.publish(me.event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
+                Event.publish(Event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 2}, draggable]);
+                Event.publish(Event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
+                Event.publish(Event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
             },
             // removes all test entities from the game
             removeEntities = function () {
                 // remove entities if they are created
                 if (draggable) {
-                    me.game.remove(draggable);
+                    Game.remove(draggable);
                 }
                 if (droptarget) {
-                    me.game.remove(droptarget);
+                    Game.remove(droptarget);
                 }
             };
 
         beforeAll(function () {
             // get a reference to the canvas element
-            canvas = me.video.getScreenCanvas();
+            canvas = Video.getScreenCanvas();
         });
 
         afterEach(function () {
@@ -149,4 +147,4 @@
             });
         });
     });
-}(window));
+}(me.game, me.DraggableEntity, me.DroptargetEntity, me.event, me.video));
