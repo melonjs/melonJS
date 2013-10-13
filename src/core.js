@@ -1098,6 +1098,9 @@ window.me = window.me || {};
 						// set the entity z order correspondingly to its parent container/group
 						entity.z = group.z;
 
+						//set the object visible state based on the group visible state
+						entity.visible = (group.visible === true);
+
 						//apply group default opacity value if defined
 						if (entity.renderable && typeof entity.renderable.setOpacity === 'function') {
 							entity.renderable.setOpacity(group.opacity);
