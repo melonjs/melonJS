@@ -102,11 +102,11 @@ window.me = window.me || {};
 		/**
 		 * Specify whether to stop the game when losing focus or not<br>
 		 * The engine restarts on focus if this is enabled.
-		 * default value : true<br>
+		 * default value : false<br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		stopOnBlur : true,
+		stopOnBlur : false,
 
 		/**
 		 * Specify the rendering method for layers <br>
