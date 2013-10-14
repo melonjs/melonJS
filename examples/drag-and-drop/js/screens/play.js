@@ -10,5 +10,8 @@ game.PlayScreen = me.ScreenObject.extend({
         
         // add a droptarget entity
         me.game.add(new game.droptarget(400, 200, {width: 200, height: 150}), 1);
+
+        // add another droptarget entity
+        me.game.add(new game.droptarget2(400, 400, {width: 200, height: 150}), 1);
     }
 });

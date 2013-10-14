@@ -5,6 +5,7 @@
  * @desc Used to make a game entity a droptarget
  */
 me.DroptargetEntity = (function (Entity, Event, Rect) {
+    'use strict';
     return Entity.extend({
         /**
          * constant for the overlaps method

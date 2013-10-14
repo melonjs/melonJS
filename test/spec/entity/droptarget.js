@@ -8,8 +8,10 @@
  */
 
 (function (Game, DraggableEntity, DroptargetEntity, Event, Video) {
+    'use strict';
     describe('entity.droptarget', function () {
-        var draggable,
+        var canvas,
+            draggable,
             droptarget,
             dropped = false,
             // creates a test draggable entity

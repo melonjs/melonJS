@@ -7,8 +7,10 @@
  */
 
 (function (Game, DraggableEntity, Event, Video) {
+    'use strict';
     describe('entity.draggable', function () {
-        var draggable,
+        var canvas,
+            draggable,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
                 var Draggable = DraggableEntity.extend({

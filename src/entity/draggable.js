@@ -5,6 +5,7 @@
  * @desc Used to make a game entity draggable
  */
 me.DraggableEntity = (function (Entity, Input, Event, Vector) {
+    'use strict';
     return Entity.extend({
         /**
          * Constructor

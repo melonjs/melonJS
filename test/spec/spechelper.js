@@ -13,17 +13,6 @@
             };
         };
     };
-    /*  Adding support for beforeAll and afterAll, because Jasmine doesn't
-        support them by default
-        beforeAll and afterAll will count as specs in the total spec count
-        We'll accept this to happen for now
-    */
-    w.beforeAll = function (fn) {
-        it(false, fn);
-    };
-    w.afterAll = function (fn) {
-        it(false, fn);
-    };
     // Cross-browser helper for triggering events on elements
     /*
         mouse event parameters:
@@ -32,6 +21,11 @@
         example:
         dispatchMouseEvent(canvas, 'mousedown', true, true, win, 1, 0, 0, 100,
             100, null, null, null, null, 0, null);
+
+        note:
+        to dispatch touch events you can use
+        initUIEvent('touchstart', true, true);
+        the position properties are read only so can't be set
     */
     w.dispatchMouseEvent = function(target) {
         var e = document.createEvent('MouseEvents');

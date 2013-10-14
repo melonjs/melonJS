@@ -57,10 +57,7 @@ game.droptarget = me.DroptargetEntity.extend({
         this.font = new me.Font('Verdana', 15, 'black');
         this.font.bold();
         // set the text
-        this.text = 'Drop on me\n\nAnd I\'ll turn green';
-
-        // uncomment to set the check method to 'contains' (default is 'overlap')
-        //this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
+        this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: overlap';
     },
     /**
      * update function
@@ -90,5 +87,24 @@ game.droptarget = me.DroptargetEntity.extend({
         window.setTimeout(function () {
             self.color = 'red';
         }, 1000);
+    }
+});
+
+game.droptarget2 = game.droptarget.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        // call the parent constructor
+        this.parent(x, y, settings);
+        // set the color to white
+        this.color = "red";
+        // set the font we want to use
+        this.font = new me.Font('Verdana', 15, 'black');
+        this.font.bold();
+        // set the text
+        this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: contains';
+        // set the check method to 'contains' (default is 'overlap')
+        this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
     }
 });
