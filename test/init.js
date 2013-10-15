@@ -14,6 +14,7 @@
             'spec/entity/draggable.js',
             'spec/entity/droptarget.js'
         ],
+        // enable game canvas below for debugging
         showCanvas = false,
         loadCount = 0,
         game = {},
