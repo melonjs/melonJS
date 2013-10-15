@@ -813,7 +813,7 @@ window.me = window.me || {};
 	 * @memberOf me
 	 */
 	me.game = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var api = {};
 
 		/*---------------------------------------------
@@ -983,6 +983,9 @@ window.me = window.me || {};
 
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);
+
+                // translate global pointer events
+                me.input.translatePointerEvents();
 
 				// make display dirty by default
 				isDirty = true;

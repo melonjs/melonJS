@@ -130,6 +130,40 @@
 		obj.KEYUP = "me.input.keyup";
 
 		/**
+		 * Channel Constant for mousemove or dragmove events on the game viewport <br>
+		 * Data passed : {Object} the mousemove or dragmove event <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#MOUSEMOVE
+		 */
+		obj.MOUSEMOVE = "me.game.mousemove";
+
+		/**
+		 * Channel Constant for dragstart events on a Draggable entity <br>
+		 * Data passed:
+		 * {Object} the drag event <br>
+		 * {Object} the Draggable entity <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#DRAGSTART
+		 */
+		obj.DRAGSTART = "me.game.dragstart";
+
+		/**
+		 * Channel Constant for dragend events on a Draggable entity <br>
+		 * Data passed:
+		 * {Object} the drag event <br>
+		 * {Object} the Draggable entity <br>
+		 * @public
+		 * @constant
+		 * @type String
+		 * @name me.event#DRAGEND
+		 */
+		obj.DRAGEND = "me.game.dragend";
+		
+		/**
 		 * Channel Constant for when the (browser) window is resized <br>
 		 * Data passed : {Event} Event object <br>
 		 * @public

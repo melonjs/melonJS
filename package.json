@@ -32,5 +32,9 @@
 	"grunt-contrib-uglify": "~0.2.0",
 	"grunt-contrib-nodeunit": "~0.1.2",
 	"grunt-replace": "~0.4.3"
+  },
+  "scripts": {
+    "install": "bower install;grunt",
+    "release": "grunt release"
   }
 }
