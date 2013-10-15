@@ -5,5 +5,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/melonjs/melonJS.git"
+  },
+  "dependencies": {
+    "jasmine": "https://github.com/pivotal/jasmine.git"
   }
 }

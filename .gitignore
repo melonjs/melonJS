@@ -21,3 +21,4 @@ docs/*
 *.sublime-project
 
 melonjs.sublime-workspace
+bower_components

@@ -6,9 +6,9 @@
             '../build/melonJS-0.9.9.js',
             '../plugins/debug/debugPanel.js',
             // jasmine
-            'lib/jasmine-1.3.1/jasmine.js',
-            'lib/jasmine-1.3.1/plugins.js',
-            'lib/jasmine-1.3.1/jasmine-html.js',
+            '../bower_components/jasmine/lib/jasmine-core/jasmine.js',
+            '../bower_components/jasmine/lib/jasmine-core/jasmine-html.js',
+            'plugins/plugins.js',
             'spec/spechelper.js',
             // specs (functional tests)
             'spec/entity/draggable.js',
