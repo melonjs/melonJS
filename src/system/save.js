@@ -64,7 +64,7 @@
              * @param {Object} props key and corresponding values
              * @example
              * // Initialize "score" and "lives" with default values
-             * me.save.init({ score : 0, lives : 3 });
+             * me.save.add({ score : 0, lives : 3 });
              */
             add : function (props) {
                 Object.keys(props).forEach(function (key) {
