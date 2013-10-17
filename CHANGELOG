@@ -7,6 +7,7 @@ Version History
 * documentation : fixed the parameter value of the hasChild function
 * Renderable : moved the opacity related getter/setter function into the Renderable class
 * Renderable : fixed group opacity setting fully overwritting renderable opacity settings
+* ScreenObject : fixed cases where ScreenObjects may not be considered in the viewport
 
 0.9.9
 * General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)
