@@ -53,7 +53,7 @@
 		draw : function(context, rect) {
 			// set layer opacity
 			var _alpha = context.globalAlpha;
-			context.globalAlpha = this.getOpacity();
+			context.globalAlpha *= this.getOpacity();
 			
 			// set layer color
 			context.fillStyle = this.color;
@@ -261,7 +261,7 @@
 			}
 			
 			// set the layer alpha value
-			context.globalAlpha = this.getOpacity();
+			context.globalAlpha *= this.getOpacity();
 			
 			var sw, sh;
 
@@ -690,7 +690,7 @@
 				var width = Math.min(rect.width, this.width);
 				var height = Math.min(rect.height, this.height);
                 
-				this.layerSurface.globalAlpha = this.getOpacity();
+				this.layerSurface.globalAlpha = context.globalAlpha * this.getOpacity();
             
 				// draw using the cached canvas
 				context.drawImage(this.layerCanvas, 
@@ -705,7 +705,7 @@
 			else {
 				// set the layer alpha value
 				var _alpha = context.globalAlpha;
-				context.globalAlpha = this.getOpacity();
+				context.globalAlpha *= this.getOpacity();
 
 				// draw the layer
 				this.renderer.drawTileLayer(context, this, rect);

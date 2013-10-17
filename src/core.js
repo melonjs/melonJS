@@ -1077,6 +1077,8 @@ window.me = window.me || {};
 					targetContainer.name = group.name;
 					targetContainer.visible = group.visible;
 					targetContainer.z = group.z;
+  					targetContainer.setOpacity(group.opacity);                  
+                 
 
 					// disable auto-sort
 					targetContainer.autoSort = false;
@@ -1101,8 +1103,8 @@ window.me = window.me || {};
 						//set the object visible state based on the group visible state
 						entity.visible = (group.visible === true);
 
-						//apply group opacity value to the child objects
-						if (entity.isRenderable === true) {
+						//apply group opacity value to the child objects if group are merged
+						if (api.mergeGroup === true && entity.isRenderable === true) {
 							entity.setOpacity(entity.getOpacity() * group.opacity);
 							// and to child renderables if any
 							if (entity.renderable !== null) {

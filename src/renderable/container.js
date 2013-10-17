@@ -504,7 +504,13 @@
 		 */
 		draw : function(context, rect) {
 			this.drawCount = 0;			
-			
+
+			// save the current context
+			context.save();
+            
+			// apply the group opacity
+			context.globalAlpha *= this.getOpacity();
+            
 			// translate to the container position
 			context.translate(this.pos.x, this.pos.y);
 			
@@ -531,9 +537,9 @@
 					this.drawCount++;
 				}
 			}
-			
-			// translate back to origin
-			context.translate(-this.pos.x, -this.pos.y);
+            
+			// restore the context
+			context.restore();
 		}
 
 	});

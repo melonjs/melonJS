@@ -258,7 +258,7 @@
 			context.save();
 			
 			// sprite alpha value
-			context.globalAlpha = this.getOpacity();
+			context.globalAlpha *= this.getOpacity();
             
 			// clamp position vector to pixel grid
 			var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
