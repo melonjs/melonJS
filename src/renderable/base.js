@@ -111,6 +111,16 @@
 		 * @memberOf me.Renderable
 		 */
 		anchorPoint: null,
+        
+		/**
+		 * Define the renderable opacity<br>
+		 * @see me.Renderable#setOpacity
+		 * @see me.Renderable#getOpacity 
+		 * @public
+		 * @type Number
+		 * @name me.Renderable#alpha
+		 */
+		alpha: 1.0,
 
         /**
          * @ignore
@@ -124,7 +134,34 @@
                 this.anchorPoint = new me.Vector2d();
             }
             this.anchorPoint.set(0.5, 0.5);
+            
+			// ensure it's fully opaque by default
+			this.setOpacity(1.0);	
         },
+        
+		/**
+		 * get the renderable alpha channel value<br>
+		 * @name getOpacity
+		 * @memberOf me.Renderable
+		 * @function
+		 * @return {Number} current opacity value between 0 and 1
+		 */
+		getOpacity : function() {
+			return this.alpha;
+		},
+		
+		/**
+		 * set the renderable alpha channel value<br>
+		 * @name setOpacity
+		 * @memberOf me.Renderable
+		 * @function
+		 * @param {alpha} alpha opacity value between 0 and 1
+		 */
+		setOpacity : function(alpha) {
+			if (typeof (alpha) === "number") {
+				this.alpha = alpha.clamp(0.0,1.0);
+			}
+		},
 
 		/**
 		 * update function

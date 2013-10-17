@@ -5,6 +5,8 @@ Version History
 * Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default
 * TMX : fixed the imageLayer reset bug (when unsubscribing the viewport change event)
 * documentation : fixed the parameter value of the hasChild function
+* Renderable : moved the opacity related getter/setter function into the Renderable class
+* Renderable : fixed group opacity setting fully overwritting renderable opacity settings
 
 0.9.9
 * General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)

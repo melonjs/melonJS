@@ -384,7 +384,7 @@
 			
 			// set some additional flags
 			imageLayer.visible = (this.TMXParser.getIntAttribute(data, me.TMX_TAG_VISIBLE, 1) === 1);
-			imageLayer.opacity = this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0);
+			imageLayer.setOpacity(this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0));
 			
 			// check if we have any properties 
 			me.TMXUtils.applyTMXPropertiesFromXML(imageLayer, data);
@@ -538,7 +538,7 @@
 			
 			// set some additional flags
 			imageLayer.visible = data[me.TMX_TAG_VISIBLE];
-			imageLayer.opacity = parseFloat(data[me.TMX_TAG_OPACITY]);
+			imageLayer.setOpacity(parseFloat(data[me.TMX_TAG_OPACITY]));
 			
 			// check if we have any additional properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);
