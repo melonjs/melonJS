@@ -589,9 +589,17 @@
 		 * @param {Integer} x x coordinate in tile 
 		 * @param {Integer} y y coordinate in tile
 		 * @param {Integer} tileId tileId
+		 * @return {me.Tile} the corresponding newly created tile object
 		 */
 		setTile : function(x, y, tileId) {
-			this.layerData[x][y] = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
+			var tile = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
+			if (!this.tileset.contains(tile.tileId)) {
+				tile.tileset = this.tileset = this.tilesets.getTilesetByGid(tile.tileId);
+			} else {
+				tile.tileset = this.tileset;
+			}
+			this.layerData[x][y] = tile;
+			return tile;
 		},
 		
 		/**
