@@ -897,6 +897,23 @@
 			throw "melonJS : invalid event type : " + eventType;
 		};
 
+		/**
+		 * Will translate global (frequently used) pointer events
+         * which should be catched at root level, into minipubsub system events
+		 * @name translatePointerEvents
+		 * @memberOf me.input
+		 * @public
+		 * @function
+		 */
+        obj.translatePointerEvents = function () {
+            // listen to mouse move (and touch move) events on the viewport
+            // and convert them to a system event by default
+            obj.registerPointerEvent('mousemove', me.game.viewport, function (e) {
+                me.event.publish(me.event.MOUSEMOVE, [e]);
+                return false;
+            });
+        };
+
 	    // return our object
 		return obj;
 
