@@ -5,9 +5,11 @@ game.PlayScreen = me.ScreenObject.extend({
     onResetEvent: function() {  
         // clear the background
         me.game.add(new me.ColorLayer("background", "#000000", 0), 0);
-        // add a few squares
-        me.game.add(game.square(10, 10, {width: 100, height: 100}), 1);
-        me.game.add(game.square(400, 300, {width: 100, height: 100}), 2);
-        me.game.add(game.square(750, 600, {width: 100, height: 100}), 1);
+        // add a few squares on the finger positions of the left hand
+        me.game.add(game.square(100, 400, {width: 100, height: 100}), 1);
+        me.game.add(game.square(220, 300, {width: 100, height: 100}), 1);
+        me.game.add(game.square(340, 250, {width: 100, height: 100}), 1);
+        me.game.add(game.square(460, 310, {width: 100, height: 100}), 1);
+        me.game.add(game.square(670, 500, {width: 100, height: 100}), 1);
     }
 });
