@@ -13,9 +13,7 @@ me.DroptargetEntity = (function (Event, Rectangle) {
      * @name init
      * @memberOf me.DroptargetEntity
      * @function
-     * @param {Number} x: the x postion of the entity
-     * @param {Number} y: the y postion of the entity
-     * @param {Object} settings: the additional entity settings
+     * @param {Object} obj: the entity object
      */
     return function (obj) {
         // - per instance private members -

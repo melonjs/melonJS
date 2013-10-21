@@ -15,9 +15,7 @@ me.DraggableEntity = (function (Input, Event, Vector) {
      * @name init
      * @memberOf me.DraggableEntity
      * @function
-     * @param {Number} x: the x postion of the entity
-     * @param {Number} y: the y postion of the entity
-     * @param {Object} settings: the additional entity settings
+     * @param {Object} obj: the entity object
      */
     return function (obj) {
         // - per instance private members -
