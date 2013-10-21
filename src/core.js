@@ -290,6 +290,25 @@ window.me = window.me || {};
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
 	/**
+	 * Can be used to mix modules
+	 * @name mix
+	 * @memberOf Object.prototype
+	 * @function
+	 * @param {Object} mixin: the object you want to throw in the mix
+	 */
+	 // there's not a problem we can't fix, cause we can do it in the mix
+	Object.prototype.mix = function (mixin) {
+		var i,
+			self = this;
+		for (i in mixin) {
+			if (mixin.hasOwnProperty(i)) {
+				self[i] = mixin[i];
+			}
+		}
+		return self;
+	}
+
+	/**
 	 * JavaScript Inheritance Helper <br>
 	 * Based on <a href="http://ejohn.org/">John Resig</a> Simple Inheritance<br>
 	 * MIT Licensed.<br>

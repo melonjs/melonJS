@@ -170,6 +170,15 @@ me.DraggableEntity = (function (Input, Event, Vector) {
              */
             setGrabOffset: function (x, y) {
                 grabOffset = new Vector(x, y);
+            },
+            /**
+             * Updates the entity per cycle, can be overwritten
+             * @name update
+             * @memberOf me.DraggableEntity
+             * @function
+             */
+            update: function () {
+                return true;
             }
         });
 
