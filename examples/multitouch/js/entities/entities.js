@@ -1,8 +1,11 @@
 game.square = (function (BaseEntity, DraggableEntity) {
     return function (x, y, settings) {
+            // construct a new base entity instance
         var base = new BaseEntity(x, y, settings),
+            // add the draggable ability to the mix
             draggable = base.mix(DraggableEntity(base)),
             color = 'white',
+            // mix in some custom methods
             obj = draggable.mix({
                 draw: function (context) {
                     context.fillStyle = color;
@@ -23,6 +26,7 @@ game.square = (function (BaseEntity, DraggableEntity) {
                     color = 'white';
                 }
             });
+        // return the square object
         return obj;
     }
 }(me.ObjectEntity, me.DraggableEntity));

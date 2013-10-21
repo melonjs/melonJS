@@ -135,8 +135,8 @@ me.DraggableEntity = (function (Input, Event, Vector) {
                 Event.unsubscribe(Event.MOUSEMOVE, dragMove);
                 Event.unsubscribe(Event.DRAGSTART, dragStart);
                 Event.unsubscribe(Event.DRAGEND, dragEnd);
-                removePointerEvent('mousedown', obj);
-                removePointerEvent('mouseup', obj);
+                removePointerEvent('mousedown', this);
+                removePointerEvent('mouseup', this);
             },
             /**
              * Sets a callback function which will be called when this entity is dragged
