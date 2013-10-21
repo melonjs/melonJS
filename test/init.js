@@ -10,7 +10,9 @@
             '../bower_components/jasmine/lib/jasmine-core/jasmine-html.js',
             'plugins/plugins.js',
             'spec/spechelper.js',
+
             // specs (functional tests)
+            'spec/core/import.js',
             'spec/entity/draggable.js',
             'spec/entity/droptarget.js'
         ],

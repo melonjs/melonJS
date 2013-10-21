@@ -333,7 +333,7 @@ window.me = window.me || {};
 			// get the module object from global space
 			module = $.me[dependencies[i]];
 			// check if the module is found and if the type is 'object' or 'function'
-			// the function check can be removed after all classes are refactored to modules
+			// the function check can be removed after all Class objects are refactored to modules
 			if (module && typeof module === 'object' || typeof module === 'function') {
 				// add the module to the imports array
 				imports.push(module);
