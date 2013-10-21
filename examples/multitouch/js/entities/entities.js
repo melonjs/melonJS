@@ -10,7 +10,12 @@ function (BaseEntity, DraggableEntity) {
         var base = new BaseEntity(x, y, settings),
             // add the draggable ability to the mix
             draggable = base.mix(DraggableEntity(base)),
+            // set the initial color to white
             color = 'white',
+            // set the font we want to use
+            font = new me.Font('Verdana', 15, 'black'),
+            // to hold the text we want to display
+            text = settings.text || '',
             // mix in some custom methods
             obj = draggable.mix({
                 draw: function (context) {
@@ -21,6 +26,7 @@ function (BaseEntity, DraggableEntity) {
                         this.width,
                         this.height
                     );
+                    font.draw(context, text, this.pos.x, this.pos.y);
                 },
                 dragStart: function () {
                     color = 'green';
