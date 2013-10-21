@@ -1,39 +1,28 @@
-game.square = me.DraggableEntity.extend({
-    /**
-     * constructor
-     */
-    init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
-        // set the color to white
-        this.color = "white";
-    },
-    /**
-     * update function
-     */
-    update: function () {
-        return true;
-    },
-    /**
-     * draw the square
-     */
-    draw: function (context) {
-        context.fillStyle = this.color;
-        context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-    },
-    /**
-     * dragStart overwrite function
-     */
-    dragStart: function (e) {
-        // call the parent function
-        this.parent(e);
-        // set the color to blue
-        this.color = 'blue';
-    },
-    dragEnd: function (e) {
-        // call the parent function
-        this.parent(e);
-        // set the color to white
-        this.color = 'white';
+game.square = (function (BaseEntity, DraggableEntity) {
+    return function (x, y, settings) {
+        var base = new BaseEntity(x, y, settings),
+            draggable = base.mix(DraggableEntity(base)),
+            color = 'white',
+            obj = draggable.mix({
+                draw: function (context) {
+                    context.fillStyle = color;
+                    context.fillRect(
+                        this.pos.x,
+                        this.pos.y,
+                        this.width,
+                        this.height
+                    );
+                },
+                dragStart: function () {
+                    color = 'green';
+                },
+                dragMove: function () {
+                    color = 'red';
+                },
+                dragEnd: function () {
+                    color = 'white';
+                }
+            });
+        return obj;
     }
-});
+}(me.ObjectEntity, me.DraggableEntity));
