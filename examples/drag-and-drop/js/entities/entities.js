@@ -1,4 +1,10 @@
-game.square = (function (BaseEntity, DraggableEntity) {
+game.square = me.import([
+    // import our dependencies
+    'ObjectEntity',
+    'DraggableEntity'
+],
+// the dependencies will be passed to the callback functon
+function (BaseEntity, DraggableEntity) {
     return function (x, y, settings) {
             // construct a new base entity instance
         var base = new BaseEntity(x, y, settings),
@@ -37,10 +43,16 @@ game.square = (function (BaseEntity, DraggableEntity) {
         font.bold();
         // return the square entity
         return obj;
-    }
-}(me.ObjectEntity, me.DraggableEntity));
+    };
+});
 
-game.droptarget = (function (BaseEntity, DroptargetEntity) {
+game.droptarget = me.import([
+    // import our dependencies
+    'ObjectEntity',
+    'DroptargetEntity'
+],
+// the dependencies will be passed to the callback functon
+function (BaseEntity, DroptargetEntity) {
     return function (x, y, settings) {
             // construct a new base entity instance
         var base = new BaseEntity(x, y, settings),
@@ -84,8 +96,8 @@ game.droptarget = (function (BaseEntity, DroptargetEntity) {
         font.bold();
         // return the droptarget entity
         return obj;
-    }
-}(me.ObjectEntity, me.DroptargetEntity));
+    };
+});
 
 game.droptarget2 = function(x, y, settings) {
     // construct a new droptarget instance

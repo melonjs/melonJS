@@ -290,23 +290,61 @@ window.me = window.me || {};
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
 	/**
-	 * Can be used to mix modules
+	 * Can be used to mix modules, to combine abilities
 	 * @name mix
 	 * @memberOf Object.prototype
 	 * @function
 	 * @param {Object} mixin: the object you want to throw in the mix
 	 */
-	 // there's not a problem we can't fix, cause we can do it in the mix
+	 // there ain't no problem we can't fix, cause we can do it in the mix
 	Object.prototype.mix = function (mixin) {
 		var i,
 			self = this;
+
+		// iterate over the mixin properties
 		for (i in mixin) {
+			// if the current property belongs to the mixin
 			if (mixin.hasOwnProperty(i)) {
+				// add the property to the mix
 				self[i] = mixin[i];
 			}
 		}
+		// return the mixed object
 		return self;
-	}
+	};
+
+	/**
+	 * Can be used to provide the same functionality as a self executing function used in the
+	 * module pattern. The passed dependencies will by applied to the callback function.
+	 * @name import
+	 * @memberOf me
+	 * @function
+	 * @param {Array} dependencies: the dependencies you want to import (without the 'me.' prefix)
+	 * @param {Function} callback: the callback function where the dependencies will be applied to
+	 */
+	me.import = function (dependencies, callback) {
+		var imports = [],
+			module,
+			i,
+			ln;
+
+		// iterate over the dependencies
+		for (i = 0, ln = dependencies.length; i < ln; ++i) {
+			// get the module object from global space
+			module = $.me[dependencies[i]];
+			// check if the module is found and if the type is 'object' or 'function'
+			// the function check can be removed after all classes are refactored to modules
+			if (module && typeof module === 'object' || typeof module === 'function') {
+				// add the module to the imports array
+				imports.push(module);
+			} else {
+				// throw an error if the module is not found, or is not of type 'object' or 'function'
+				throw('melonJS: Module ' + dependencies[i] + ' not found');
+			}
+		}
+		// apply the dependencies to the callback function and return it
+		return callback.apply(me, imports);
+	};
 
 	/**
 	 * JavaScript Inheritance Helper <br>

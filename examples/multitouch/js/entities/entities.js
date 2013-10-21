@@ -1,4 +1,10 @@
-game.square = (function (BaseEntity, DraggableEntity) {
+game.square = me.import([
+    // import our dependencies
+    'ObjectEntity',
+    'DraggableEntity'
+],
+// the dependencies will be passed to the callback functon
+function (BaseEntity, DraggableEntity) {
     return function (x, y, settings) {
             // construct a new base entity instance
         var base = new BaseEntity(x, y, settings),
@@ -28,5 +34,5 @@ game.square = (function (BaseEntity, DraggableEntity) {
             });
         // return the square object
         return obj;
-    }
-}(me.ObjectEntity, me.DraggableEntity));
+    };
+});
