@@ -367,7 +367,7 @@
 		/** @ignore */
 		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
 			// hold all defined animation
-			this.anim = [];
+			this.anim = {};
 
 			// a flag to reset animation
 			this.resetAnim = null;
