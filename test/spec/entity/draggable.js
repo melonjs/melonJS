@@ -6,28 +6,48 @@
  * by simulating the system events that would have been triggered by pointer events
  */
 
-(function (Game, DraggableEntity, Event, Video) {
+(function (Game, BaseEntity, DraggableEntity, Event, Video) {
     'use strict';
     describe('entity.draggable', function () {
         var canvas,
             draggable,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
-                var Draggable = DraggableEntity.extend({
-                    init: function (x, y, settings) {
-                        this.parent(x, y, settings);
-                        this.color = 'white';
-                    },
-                    update: function () {
-                        return true;
-                    },
-                    draw: function (context) {
-                        context.fillStyle = this.color;
-                        context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+                var DraggableModule = (function () {
+                    return function (x, y, settings) {
+                            // construct a new base entity instance
+                        var base = new BaseEntity(x, y, settings),
+                            // add the draggable ability to the mix
+                            draggable = base.mix(DraggableEntity(base)),
+                            color = 'white',
+                            // mix in some custom methods
+                            obj = draggable.mix({
+                                draw: function (context) {
+                                    context.fillStyle = color;
+                                    context.fillRect(
+                                        this.pos.x,
+                                        this.pos.y,
+                                        this.width,
+                                        this.height
+                                    );
+                                },
+                                dragStart: function () {
+                                    color = 'green';
+                                },
+                                dragMove: function () {
+                                    color = 'red';
+                                },
+                                dragEnd: function () {
+                                    color = 'white';
+                                }
+                            });
+                        // return the square object
+                        return obj;
                     }
-                });
+                }());
+
                 // create a new draggable entity instance
-                draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
+                draggable = DraggableModule(position.x, position.y, {width: dimensions.x, height:
                     dimensions.y});
                 // add the test draggable entity to the game
                 Game.add(draggable, 1);
@@ -63,4 +83,4 @@
             expect(draggable.pos.y).toEqual(440);
         });
     });
-}(me.game, me.DraggableEntity, me.event, me.video));
+}(me.game, me.ObjectEntity, me.DraggableEntity, me.event, me.video));
