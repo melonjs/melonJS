@@ -7,7 +7,7 @@ game.square = (function (BaseEntity, DraggableEntity) {
             // set the initial color to white
             color = 'white',
             // set the font we want to use
-            font = new me.Font('Verdana', 15, 'black');
+            font = new me.Font('Verdana', 15, 'black'),
             // set the text
             text = 'Drag me',
             // mix in some custom methods
@@ -49,7 +49,7 @@ game.droptarget = (function (BaseEntity, DroptargetEntity) {
             // set the initial color to red
             color = 'red',
             // set the font we want to use
-            font = new me.Font('Verdana', 15, 'black');
+            font = new me.Font('Verdana', 15, 'black'),
             // set the text
             text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: overlap',
             // mix in some custom methods
@@ -71,6 +71,12 @@ game.droptarget = (function (BaseEntity, DroptargetEntity) {
                     window.setTimeout(function () {
                         color = 'red';
                     }, 1000);
+                },
+                setText: function (value) {
+                    text = value;
+                },
+                setColor: function (value) {
+                    color = value;
                 }
             });
 
@@ -82,7 +88,14 @@ game.droptarget = (function (BaseEntity, DroptargetEntity) {
 }(me.ObjectEntity, me.DroptargetEntity));
 
 game.droptarget2 = function(x, y, settings) {
+    // construct a new droptarget instance
     var obj = game.droptarget(x, y, settings);
-        obj.setCheckMethod(obj.CHECKMETHOD_CONTAINS);
+    // change the text
+    obj.setText('Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: contains');
+    // change the color
+    obj.setColor('gold');
+    // change the check method
+    obj.setCheckMethod(obj.CHECKMETHOD_CONTAINS);
+    // return the droptarget2 entity
     return obj;
 };

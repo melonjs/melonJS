@@ -7,7 +7,8 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.add(new me.ColorLayer("background", "#000000", 0), 0);
         // add a few squares
         me.game.add(game.square(200, 230, {width: 100, height: 100}), 1);
-        
+        me.game.add(game.square(200, 430, {width: 100, height: 100}), 1);
+
         // add a droptarget entity
         me.game.add(game.droptarget(400, 200, {width: 200, height: 150}), 1);
 
