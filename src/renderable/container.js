@@ -19,6 +19,12 @@
 	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
 
+	/**
+	 * A global "translation context" for nested ObjectContainers
+	 * @ignore
+	 */
+	var globalTranslation = new me.Vector2d();
+
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
 
@@ -481,20 +487,36 @@
 		update : function() {
 			var isDirty = false;
 			var isPaused = me.state.isPaused();
+			var x = 0;
+			var y = 0;
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
 					// skip this object
 					continue;
 				}
-	
+
+				// Translate global context
+				if (!obj.floating) {
+					globalTranslation.add(obj.pos);
+					x = obj.pos.x;
+					y = obj.pos.y;
+					obj.pos.copy(globalTranslation);
+				}
+
 				// check if object is visible
 				obj.inViewport = obj.visible && (
 					obj.floating || (obj.getBounds && me.game.viewport.isVisible(obj))
 				);
-				
+
 				// update our object
 				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+
+				// Undo global context translation
+				if (!obj.floating) {
+					obj.pos.set(x, y);
+					globalTranslation.sub(obj.pos);
+				}
 			}
 			return isDirty;
 		},
