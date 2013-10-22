@@ -23,7 +23,7 @@
 	 * A global "translation context" for nested ObjectContainers
 	 * @ignore
 	 */
-	var globalTranslation = new me.Rect(me.Vector2d(), 0, 0);
+	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
 
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
@@ -487,7 +487,7 @@
 		update : function() {
 			var isDirty = false;
 			var isPaused = me.state.isPaused();
-			var isTranslated = false;
+			var isTranslated;
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
@@ -496,8 +496,8 @@
 				}
 
 				// Translate global context
-				if (obj.visible && !obj.floating) {
-					isTranslated = true;
+				isTranslated = (obj.visible && !obj.floating);
+				if (isTranslated) {
 					globalTranslation.translateV(obj.pos);
 					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
 				}
