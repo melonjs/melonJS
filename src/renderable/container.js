@@ -23,7 +23,7 @@
 	 * A global "translation context" for nested ObjectContainers
 	 * @ignore
 	 */
-	var globalTranslation = new me.Vector2d();
+	var globalTranslation = new me.Rect(me.Vector2d(), 0, 0);
 
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
@@ -487,8 +487,7 @@
 		update : function() {
 			var isDirty = false;
 			var isPaused = me.state.isPaused();
-			var x = 0;
-			var y = 0;
+			var isTranslated = false;
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
@@ -498,24 +497,24 @@
 
 				// Translate global context
 				if (!obj.floating) {
-					globalTranslation.add(obj.pos);
-					x = obj.pos.x;
-					y = obj.pos.y;
-					obj.pos.copy(globalTranslation);
+					isTranslated = true;
+					globalTranslation.translateV(obj.pos);
+					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
 				}
 
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getBounds && me.game.viewport.isVisible(obj))
+					obj.floating || (obj.getBounds && me.game.viewport.isVisible(
+						isTranslated ? globalTranslation : obj
+					))
 				);
 
 				// update our object
 				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
 
 				// Undo global context translation
-				if (!obj.floating) {
-					obj.pos.set(x, y);
-					globalTranslation.sub(obj.pos);
+				if (isTranslated) {
+					globalTranslation.translate(-obj.pos.x, -obj.pos.y);
 				}
 			}
 			return isDirty;
