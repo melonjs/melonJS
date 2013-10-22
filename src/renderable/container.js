@@ -496,7 +496,7 @@
 				}
 
 				// Translate global context
-				if (!obj.floating) {
+				if (obj.visible && !obj.floating) {
 					isTranslated = true;
 					globalTranslation.translateV(obj.pos);
 					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
@@ -504,9 +504,7 @@
 
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getBounds && me.game.viewport.isVisible(
-						isTranslated ? globalTranslation : obj
-					))
+					obj.floating || (obj.getBounds && me.game.viewport.isVisible(globalTranslation))
 				);
 
 				// update our object
