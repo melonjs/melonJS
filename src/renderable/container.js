@@ -488,6 +488,8 @@
 			var isDirty = false;
 			var isPaused = me.state.isPaused();
 			var isTranslated;
+			var x;
+			var y;
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
@@ -498,6 +500,8 @@
 				// Translate global context
 				isTranslated = (obj.visible && !obj.floating);
 				if (isTranslated) {
+					x = obj.pos.x;
+					y = obj.pos.y;
 					globalTranslation.translateV(obj.pos);
 					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
 				}
@@ -512,7 +516,7 @@
 
 				// Undo global context translation
 				if (isTranslated) {
-					globalTranslation.translate(-obj.pos.x, -obj.pos.y);
+					globalTranslation.translate(-x, -y);
 				}
 			}
 			return isDirty;
