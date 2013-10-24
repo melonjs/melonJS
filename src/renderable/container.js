@@ -504,6 +504,7 @@
 		 */
 		update : function() {
 			var isDirty = false;
+			var isFloating = false;
 			var isPaused = me.state.isPaused();
 			var isTranslated;
 			var x;
@@ -515,9 +516,11 @@
 					// skip this object
 					continue;
 				}
-
+                
+				isFloating = this.floating || obj.floating;
+                
 				// Translate global context
-				isTranslated = (obj.visible && !obj.floating);
+				isTranslated = (obj.visible && !isFloating);
 				if (isTranslated) {
 					x = obj.pos.x;
 					y = obj.pos.y;
@@ -527,7 +530,7 @@
 
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getBounds && viewport.isVisible(globalTranslation))
+					isFloating || (obj.getBounds && viewport.isVisible(globalTranslation))
 				);
 
 				// update our object
@@ -546,6 +549,7 @@
 		 */
 		draw : function(context, rect) {
 			var viewport = me.game.viewport;
+            var isFloating = false;
 			
 			this.drawCount = 0;			
 
@@ -561,8 +565,10 @@
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				
 				if ((obj.inViewport || this.floating) && obj.isRenderable) {
-
-					if (obj.floating === true) {
+                    
+					isFloating = this.floating || obj.floating;
+                    
+					if (isFloating === true) {
 						context.save();
 						// translate back object
 						context.translate(
@@ -574,7 +580,7 @@
 					// draw the object
 					obj.draw(context, rect);
 
-					if (obj.floating === true) {
+					if (isFloating === true) {
 						context.restore();
 					}
 
