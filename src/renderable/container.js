@@ -265,6 +265,24 @@
 				throw "melonJS (me.ObjectContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
 		},
+        
+		/**
+		 * Automatically set the specified property of all childs to the give value
+		 * @name setChildsProperty
+		 * @memberOf me.ObjectContainer
+		 * @function
+		 * @param {String} property name
+		 * @param {Oject} property value
+		 */
+		setChildsProperty : function(prop, val) {
+		    for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+		        if ( typeof(obj.setChildsProperty) !== 'undefined') {
+		            obj.setChildsProperty(prop, val);
+		        } else {
+		            obj[prop] = val;
+		        }
+		    }
+		},
 		
 		/**
 		 * Move the child in the group one step forward (z depth).
