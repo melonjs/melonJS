@@ -8,6 +8,12 @@
 (function(window) {
 
 	/**
+	 * A global "translation context" for nested ObjectContainers
+	 * @ignore
+	 */
+	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
+
+	/**
 	 * EntityContainer represents a collection of child objects
 	 * @class
 	 * @extends me.Renderable
@@ -19,12 +25,7 @@
 	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
 
-	/**
-	 * A global "translation context" for nested ObjectContainers
-	 * @ignore
-	 */
-	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
-
+	
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
 
@@ -267,20 +268,20 @@
 		},
         
 		/**
-		 * Automatically set the specified property of all childs to the give value
+		 * Automatically set the specified property of all childs to the given value
 		 * @name setChildsProperty
 		 * @memberOf me.ObjectContainer
 		 * @function
-		 * @param {String} property name
-		 * @param {Oject} property value
+		 * @param {String} property property name
+		 * @param {Object} value property value
+		 * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
 		 */
-		setChildsProperty : function(prop, val) {
+		setChildsProperty : function(prop, val, recursive) {
 		    for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-		        if ( typeof(obj.setChildsProperty) !== 'undefined') {
-		            obj.setChildsProperty(prop, val);
-		        } else {
-		            obj[prop] = val;
-		        }
+		        if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
+		            obj.setChildsProperty(prop, val, recursive);
+		        } 
+		        obj[prop] = val;
 		    }
 		},
 		
@@ -426,7 +427,7 @@
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
-		 * @param {Boolean} recursive recursively sort all containers if true
+		 * @param {Boolean} [recursive=false] recursively sort all containers if true
 		 */
 		sort : function(recursive) {
 						
