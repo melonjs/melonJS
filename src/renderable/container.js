@@ -508,6 +508,7 @@
 			var isTranslated;
 			var x;
 			var y;
+			var viewport = me.game.viewport;
 			
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
@@ -526,7 +527,7 @@
 
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getBounds && me.game.viewport.isVisible(globalTranslation))
+					obj.floating || (obj.getBounds && viewport.isVisible(globalTranslation))
 				);
 
 				// update our object
@@ -544,6 +545,8 @@
 		 * @ignore
 		 */
 		draw : function(context, rect) {
+			var viewport = me.game.viewport;
+			
 			this.drawCount = 0;			
 
 			// save the current context
@@ -563,8 +566,8 @@
 						context.save();
 						// translate back object
 						context.translate(
-							me.game.viewport.screenX -this.pos.x, 
-							me.game.viewport.screenY -this.pos.y
+							viewport.screenX -this.pos.x, 
+							viewport.screenY -this.pos.y
 						);
 					}
 
