@@ -14,6 +14,12 @@
 	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
 
 	/**
+	 * A global "floating entity" reference counter for nested ObjectContainers
+	 * @ignore
+	 */
+	var globalFloatingCounter = 0;
+
+	/**
 	 * EntityContainer represents a collection of child objects
 	 * @class
 	 * @extends me.Renderable
@@ -24,8 +30,6 @@
 	 * @param {Number} [w=me.game.viewport.width] width of the container
 	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
-
-	
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
 
@@ -511,15 +515,18 @@
 			var x;
 			var y;
 			var viewport = me.game.viewport;
-			
+
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
 					// skip this object
 					continue;
 				}
-                
-				isFloating = this.floating || obj.floating;
-                
+
+				if (obj.floating) {
+					globalFloatingCounter++;
+				}
+				isFloating = (globalFloatingCounter > 0);
+
 				// Translate global context
 				isTranslated = (obj.visible && !isFloating);
 				if (isTranslated) {
@@ -541,7 +548,12 @@
 				if (isTranslated) {
 					globalTranslation.translate(-x, -y);
 				}
+
+				if (globalFloatingCounter > 0) {
+					globalFloatingCounter--;
+				}
 			}
+
 			return isDirty;
 		},
 
@@ -562,13 +574,11 @@
             
 			// translate to the container position
 			context.translate(this.pos.x, this.pos.y);
-			
+
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-				
-				if ((obj.inViewport || this.floating) && obj.isRenderable) {
-                    
-					isFloating = this.floating || obj.floating;
-                    
+				isFloating = obj.floating;
+				if ((obj.inViewport || isFloating) && obj.isRenderable) {
+
 					if (isFloating === true) {
 						context.save();
 						// translate back object
@@ -588,7 +598,7 @@
 					this.drawCount++;
 				}
 			}
-            
+
 			// restore the context
 			context.restore();
 		}
