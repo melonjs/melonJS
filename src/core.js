@@ -102,11 +102,11 @@ window.me = window.me || {};
 		/**
 		 * Specify whether to stop the game when losing focus or not<br>
 		 * The engine restarts on focus if this is enabled.
-		 * default value : true<br>
+		 * default value : false<br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
-		stopOnBlur : true,
+		stopOnBlur : false,
 
 		/**
 		 * Specify the rendering method for layers <br>
@@ -1080,6 +1080,8 @@ window.me = window.me || {};
 					targetContainer.name = group.name;
 					targetContainer.visible = group.visible;
 					targetContainer.z = group.z;
+  					targetContainer.setOpacity(group.opacity);                  
+                 
 
 					// disable auto-sort
 					targetContainer.autoSort = false;
@@ -1101,11 +1103,17 @@ window.me = window.me || {};
 						// set the entity z order correspondingly to its parent container/group
 						entity.z = group.z;
 
-						//apply group default opacity value if defined
-						if (entity.renderable && typeof entity.renderable.setOpacity === 'function') {
-							entity.renderable.setOpacity(group.opacity);
-						}
+						//set the object visible state based on the group visible state
+						entity.visible = (group.visible === true);
 
+						//apply group opacity value to the child objects if group are merged
+						if (api.mergeGroup === true && entity.isRenderable === true) {
+							entity.setOpacity(entity.getOpacity() * group.opacity);
+							// and to child renderables if any
+							if (entity.renderable !== null) {
+								entity.renderable.setOpacity(entity.renderable.getOpacity() * group.opacity);
+							}
+						}                        
 						// add the entity into the target container
 						targetContainer.addChild(entity);
 					}

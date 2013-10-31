@@ -149,8 +149,10 @@
 			if (this.addAsObject) {
 				// make sure we are visible upon reset
 				this.visible = true;
+				// Always use screen coordinates
+				this.floating = true;
 				// update the screen size if added as an object
-				this.set(me.game.viewport.pos, me.game.viewport.width, me.game.viewport.height);
+				this.set(new me.Vector2d(), me.game.viewport.width, me.game.viewport.height);
 				// add ourself !
 				me.game.add(this, this.z);
 			}

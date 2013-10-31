@@ -8,6 +8,18 @@
 (function(window) {
 
 	/**
+	 * A global "translation context" for nested ObjectContainers
+	 * @ignore
+	 */
+	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
+
+	/**
+	 * A global "floating entity" reference counter for nested ObjectContainers
+	 * @ignore
+	 */
+	var globalFloatingCounter = 0;
+
+	/**
 	 * EntityContainer represents a collection of child objects
 	 * @class
 	 * @extends me.Renderable
@@ -18,7 +30,6 @@
 	 * @param {Number} [w=me.game.viewport.width] width of the container
 	 * @param {number} [h=me.game.viewport.height] height of the container
 	 */
-
 	me.ObjectContainer = me.Renderable.extend(
 		/** @scope me.ObjectContainer.prototype */ {
 
@@ -259,6 +270,24 @@
 				throw "melonJS (me.ObjectContainer): " + child + " The supplied entity must be a child of the caller " + this;
 			}
 		},
+        
+		/**
+		 * Automatically set the specified property of all childs to the given value
+		 * @name setChildsProperty
+		 * @memberOf me.ObjectContainer
+		 * @function
+		 * @param {String} property property name
+		 * @param {Object} value property value
+		 * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
+		 */
+		setChildsProperty : function(prop, val, recursive) {
+		    for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+		        if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
+		            obj.setChildsProperty(prop, val, recursive);
+		        } 
+		        obj[prop] = val;
+		    }
+		},
 		
 		/**
 		 * Move the child in the group one step forward (z depth).
@@ -402,7 +431,7 @@
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
-		 * @param {Boolean} recursive recursively sort all containers if true
+		 * @param {Boolean} [recursive=false] recursively sort all containers if true
 		 */
 		sort : function(recursive) {
 						
@@ -480,22 +509,51 @@
 		 */
 		update : function() {
 			var isDirty = false;
+			var isFloating = false;
 			var isPaused = me.state.isPaused();
-			
+			var isTranslated;
+			var x;
+			var y;
+			var viewport = me.game.viewport;
+
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (isPaused && (!obj.updateWhenPaused)) {
 					// skip this object
 					continue;
 				}
-	
+
+				if (obj.floating) {
+					globalFloatingCounter++;
+				}
+				isFloating = (globalFloatingCounter > 0);
+
+				// Translate global context
+				isTranslated = (obj.visible && !isFloating);
+				if (isTranslated) {
+					x = obj.pos.x;
+					y = obj.pos.y;
+					globalTranslation.translateV(obj.pos);
+					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
+				}
+
 				// check if object is visible
 				obj.inViewport = obj.visible && (
-					obj.floating || (obj.getBounds && me.game.viewport.isVisible(obj))
+					isFloating || (obj.getBounds && viewport.isVisible(globalTranslation))
 				);
-				
+
 				// update our object
 				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+
+				// Undo global context translation
+				if (isTranslated) {
+					globalTranslation.translate(-x, -y);
+				}
+
+				if (globalFloatingCounter > 0) {
+					globalFloatingCounter--;
+				}
 			}
+
 			return isDirty;
 		},
 
@@ -503,37 +561,46 @@
 		 * @ignore
 		 */
 		draw : function(context, rect) {
-			this.drawCount = 0;			
+			var viewport = me.game.viewport;
+            var isFloating = false;
 			
+			this.drawCount = 0;			
+
+			// save the current context
+			context.save();
+            
+			// apply the group opacity
+			context.globalAlpha *= this.getOpacity();
+            
 			// translate to the container position
 			context.translate(this.pos.x, this.pos.y);
-			
-			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-				
-				if ((obj.inViewport || this.floating) && obj.isRenderable) {
 
-					if (obj.floating === true) {
+			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+				isFloating = obj.floating;
+				if ((obj.inViewport || isFloating) && obj.isRenderable) {
+
+					if (isFloating === true) {
 						context.save();
 						// translate back object
 						context.translate(
-							me.game.viewport.screenX -this.pos.x, 
-							me.game.viewport.screenY -this.pos.y
+							viewport.screenX -this.pos.x, 
+							viewport.screenY -this.pos.y
 						);
 					}
 
 					// draw the object
 					obj.draw(context, rect);
 
-					if (obj.floating === true) {
+					if (isFloating === true) {
 						context.restore();
 					}
 
 					this.drawCount++;
 				}
 			}
-			
-			// translate back to origin
-			context.translate(-this.pos.x, -this.pos.y);
+
+			// restore the context
+			context.restore();
 		}
 
 	});
