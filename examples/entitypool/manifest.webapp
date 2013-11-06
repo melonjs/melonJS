@@ -1,5 +1,5 @@
 {
-  "name": "devicetest",
+  "name": "entitypool",
   "launch_path" : "./index.html",
   "version": "1",
   "developer": {
