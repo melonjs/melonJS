@@ -48,10 +48,13 @@
 					(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
 				)
 			);
-
+        
 			if (window.DeviceOrientationEvent) {
 				me.device.hasDeviceOrientation = true;
 			}
+            
+            me.device.HighResTimer = (typeof window.performance !== 'undefined') && 
+                (typeof window.performance.now !== 'undefined');
 
 			try {
 				obj.localStorage = (typeof window.localStorage !== 'undefined');
@@ -64,6 +67,16 @@
 		// ----- PUBLIC Properties & Functions -----
 
 		// Browser capabilities
+        
+        /**
+		 * High Resolution timer (typically performance.now)
+		 * @type Boolean
+         * @readonly
+		 * @name HighResTimer
+		 * @memberOf me.device
+         * @see https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HighResolutionTime/Overview.html
+		 */
+		obj.HighResTimer = false;
 
 		/**
 		 * Browser User Agent

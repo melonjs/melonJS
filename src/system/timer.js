@@ -78,20 +78,30 @@
          */
         api.reset = function() {
             // set to "now"
-            now = last = Date.now();
+            now = last = me.device.HighResTimer ? window.performance.now() : Date.now();
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
         };
 
         /**
-         * Return the current time, in milliseconds elapsed between midnight, January 1, 1970, and the current date and time.
+         * Return the current timestamp in milliseconds <br>
+         * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
          * @memberOf me.timer
          * @return {Number}
          * @function
          */
         api.getTime = function() {
+            /* ??????????
+            if (me.device.HighResTimer) {
+                // adjust time information to make it consistent
+                // across brower (time elapsed since unix epoch)
+                return (now + performance.timing.navigationStart);
+            } else {
+                return now;
+            }
+            */
             return now;
         };
 
@@ -118,10 +128,12 @@
          * should be called once a frame
          * @ignore
          */
-        api.update = function() {
+        api.update = function(time) {
+        
             last = now;
-            now = Date.now();
-
+            
+            now = time;
+                       
             delta = (now - last);
 
             // get the game tick

@@ -222,7 +222,7 @@
 		 * @protected
 		 * @return false
 		 **/
-		update : function() {
+		update : function(time) {
 			//update the "flickering" state if necessary
 			if (this.flickering) {
 				this.flickerTimer -= me.timer.tick;
@@ -586,10 +586,11 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @protected
+         * @param {Number} time current timestamp
 		 */
-		update : function() {
+		update : function(time) {
 			// update animation if necessary
-			if (!this.animationpause && (me.timer.getTime() >= this.current.nextFrame)) {
+			if (!this.animationpause && (time >= this.current.nextFrame)) {
 				this.setAnimationFrame(++this.current.idx);
 				
 
@@ -603,17 +604,17 @@
 					else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
 						this.current.idx = this.current.length - 1;
 						this.setAnimationFrame(this.current.idx);
-						this.parent();
+						this.parent(time);
 						return false;
 					}
 				}
 				
 				// set next frame timestamp
-				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
+				this.current.nextFrame = time + this.current.animationspeed;
 
-				return this.parent() || true;
+				return this.parent(time) || true;
 			}
-			return this.parent();
+			return this.parent(time);
 		}
 	});
 

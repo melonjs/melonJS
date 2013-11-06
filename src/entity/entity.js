@@ -1157,9 +1157,9 @@
 		},
 		
 		/** @ignore */
-		update : function() {
+		update : function(time) {
 			if (this.renderable) {
-				return this.renderable.update();
+				return this.renderable.update(time);
 			}
 			return false;
 		},

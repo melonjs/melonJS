@@ -1394,11 +1394,12 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
+         * @param {Number} time current timestamp
 		 */
-		api.update = function() {
+		api.update = function(time) {
 			
 			// update all objects
-			isDirty = api.world.update() || isDirty;
+			isDirty = api.world.update(time) || isDirty;
 			
 			// update the camera/viewport
 			isDirty = api.viewport.update(isDirty) || isDirty;

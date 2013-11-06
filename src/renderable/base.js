@@ -170,9 +170,10 @@
 		 * @memberOf me.Renderable
 		 * @function
 		 * @protected
+         * @param {Number} time current timestamp
 		 * @return false
 		 **/
-		update : function() {
+		update : function(time) {
 			return false;
 		},
 

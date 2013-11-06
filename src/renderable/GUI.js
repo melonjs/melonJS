@@ -83,7 +83,7 @@
 		 * return true if the object has been clicked
 		 * @ignore
 		 */
-		update : function() {
+		update : function(time) {
 			if (this.updated) {
 				// clear the flag
 				this.updated = false;

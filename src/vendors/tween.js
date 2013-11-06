@@ -292,12 +292,10 @@
 		};
 		
 		/** @ignore*/
-		this.update = function ( /*time*/ ) {
+		this.update = function ( time ) {
 
 			var property;
-			
-			var time = me.timer.getTime();
-
+            
 			if ( time < _startTime ) {
 
 				return true;

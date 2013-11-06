@@ -507,7 +507,7 @@
 		/**
 		 * @ignore
 		 */
-		update : function() {
+		update : function(time) {
 			var isDirty = false;
 			var isFloating = false;
 			var isPaused = me.state.isPaused();
@@ -542,7 +542,7 @@
 				);
 
 				// update our object
-				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(time);
 
 				// Undo global context translation
 				if (isTranslated) {
