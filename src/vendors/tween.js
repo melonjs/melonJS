@@ -90,14 +90,14 @@
 		 * @public
 		 * @function
 		 */
-		this.start = function () {
+		this.start = function ( time ) {
 
 			_onStartCallbackFired = false;
 
 			// add the tween to the object pool on start
 			me.game.add(this, 999);
 
-			_startTime = me.timer.getTime() + _delayTime;
+			_startTime = (time === undefined ? me.timer.getTime() : time) + _delayTime;
 			_pauseTime = 0;
 		
 			for ( var property in _valuesEnd ) {

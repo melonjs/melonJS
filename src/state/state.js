@@ -290,7 +290,7 @@
 
 		if (!requestAnimationFrame || !cancelAnimationFrame) {
 			requestAnimationFrame = function(callback, element) {
-				var currTime = Date.now();
+				var currTime = me.device.HighResTimer ? window.performance.now() : Date.now();
 				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
 				var id = window.setTimeout(function() { 
 					callback(currTime + timeToCall); 

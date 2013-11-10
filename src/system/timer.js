@@ -67,6 +67,7 @@
         api.init = function() {
             // reset variables to initial state
             api.reset();
+            now = last = 0;
         };
 
         /**
@@ -78,7 +79,7 @@
          */
         api.reset = function() {
             // set to "now"
-            now = last = me.device.HighResTimer ? window.performance.now() : Date.now();
+            last = now;
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
