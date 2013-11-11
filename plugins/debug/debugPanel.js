@@ -48,7 +48,7 @@
 		visible : false,
 		
 		// minimum melonJS version expected
-		version : "0.9.9",
+		version : "1.0.0",
 
 		/** @private */
 		init : function(showKey, hideKey) {
@@ -102,7 +102,10 @@
 
 			//patch patch patch !
 			this.patchSystemFn();
-
+            
+			// add the debug panel to the game world
+			me.game.world.addChild(this);
+            
 			// make it visible
 			this.show();
 		},
@@ -117,10 +120,10 @@
 			me.debug.renderHitBox = me.debug.renderHitBox || false;
 			me.debug.renderVelocity = me.debug.renderVelocity || false;
 		
-			// patch video.js
-			me.plugin.patch(me.timer, "update", function (context) { 
-				// call the original me.game.draw function
-				this.parent();
+			// patch timer.js
+			me.plugin.patch(me.timer, "update", function (time) { 
+				// call the original me.timer.update function
+				this.parent(time);
 
 				// call the FPS counter
 				me.timer.countFPS();
@@ -179,17 +182,10 @@
 		 */
 		show : function() {
 			if (!this.visible) {
-				// add the panel to the object pool if required
-				if (!me.game.getEntityByName("me.debugPanel")[0]) {
-					me.game.add(this, this.z);
-					me.game.sort();
-				}
 				// register a mouse event for the checkboxes
 				me.input.registerPointerEvent('mousedown', this.rect, this.onClick.bind(this), true);
 				// make it visible
 				this.visible = true;
-				// force repaint
-				me.game.repaint();
 			}
 		},
 	
@@ -202,8 +198,6 @@
 				me.input.releasePointerEvent('mousedown', this.rect);
 				// make it visible
 				this.visible = false;
-				// force repaint
-				me.game.repaint();
 			}
 		},
 	
@@ -222,7 +216,7 @@
 		/**
 		 * @private
 		 */
-		getRect : function() {
+		getBounds : function() {
 			return this.rect;
 		},
 		
