@@ -18,9 +18,9 @@
         var api = {};
 
         /*---------------------------------------------
-            
+
             PRIVATE STUFF
-                
+
             ---------------------------------------------*/
 
         //hold element to display fps
@@ -37,9 +37,9 @@
 
 
         /*---------------------------------------------
-            
+
             PUBLIC STUFF
-                
+
             ---------------------------------------------*/
 
         /**
@@ -59,7 +59,7 @@
          * @memberOf me.timer
          */
         api.fps = 0;
-        
+
         /**
          * init the timer
          * @ignore
@@ -130,15 +130,15 @@
          * @ignore
          */
         api.update = function(time) {
-        
+
             last = now;
-            
+
             now = time;
-                       
+
             delta = (now - last);
 
             // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
+            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step    : 1;
         };
 
         // return our apiect
