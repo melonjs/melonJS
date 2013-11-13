@@ -4,7 +4,7 @@ Version History
 * Core : fixed object `visible` flag not being set based on their parent group visible status
 * Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default
 * TMX : fixed the imageLayer reset bug (when unsubscribing the viewport change event)
-* TMX : fixed an undefined tileset issue when adding a new Tile through the `seTile` function
+* TMX : fixed an undefined tileset issue when adding a new Tile through the `setTile` function
 * documentation : fixed the parameter value of the hasChild function
 * Renderable : moved the opacity related getter/setter function into the Renderable class
 * Renderable : fixed group opacity setting fully overwritting renderable opacity settings

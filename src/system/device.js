@@ -57,7 +57,7 @@
                 (typeof window.performance.now !== 'undefined');
 
 			try {
-				obj.localStorage = (typeof window.localStorage !== 'undefined');
+				obj.localStorage = !!window.localStorage;
 			} catch (e) {
 				// the above generates an exception when cookies are blocked
 				obj.localStorage = false;
