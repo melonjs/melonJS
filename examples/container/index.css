@@ -8,10 +8,10 @@ body {
     -o-user-select: none;
     -webkit-user-select: none;
     user-select: none;
-	
-	/* disable touch panning/zooming */
-	-ms-touch-action: none;
-	touch-action: none;
+
+    /* disable touch panning/zooming */
+    -ms-touch-action: none;
+    touch-action: none;
 
     /* Allow canvas to hit the edges of the browser viewport. */
     margin: 0;
@@ -22,12 +22,12 @@ body {
 
     /* Hide the gap for font descenders. */
     display: block;
-	
-	/* disable scaling interpolation */
-	image-rendering: optimizeSpeed;
-	image-rendering: -moz-crisp-edges;
-	image-rendering: -o-crisp-edges;
-	image-rendering: -webkit-optimize-contrast;
-	image-rendering: optimize-contrast;
-	-ms-interpolation-mode: nearest-neighbor;
+
+    /* disable scaling interpolation */
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -o-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
 }

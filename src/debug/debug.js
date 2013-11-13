@@ -7,23 +7,23 @@
 
 (function($) {
 
-	/**
-	 * debug stuff.
-	 * @namespace
-	 */
-	me.debug = {
-		
-		/**
-		 * render Collision Map layer<br>
-		 * default value : false
-		 * @type Boolean
-		 * @memberOf me.debug
-		 */
-		renderCollisionMap : false
-	};
+    /**
+     * debug stuff.
+     * @namespace
+     */
+    me.debug = {
+
+        /**
+         * render Collision Map layer<br>
+         * default value : false
+         * @type Boolean
+         * @memberOf me.debug
+         */
+        renderCollisionMap : false
+    };
 
 
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
+    /*---------------------------------------------------------*/
+    // END END END
+    /*---------------------------------------------------------*/
 })(window);
