@@ -1,5 +1,8 @@
 Version History
 ---------------
+0.9.11
+* ObjectContainer : fixed rendering of nested containers (again) - Thanks to Peter Hull
+
 0.9.10
 * Core : fixed object `visible` flag not being set based on their parent group visible status
 * Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default

@@ -522,10 +522,10 @@
 					continue;
 				}
 
-				if (obj.floating) {
+				isFloating = (globalFloatingCounter > 0 || obj.floating);
+				if (isFloating) {
 					globalFloatingCounter++;
 				}
-				isFloating = (globalFloatingCounter > 0);
 
 				// Translate global context
 				isTranslated = (obj.visible && !isFloating);
