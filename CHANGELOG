@@ -1,5 +1,10 @@
 Version History
 ---------------
+0.9.11
+* General : Fix detection of localStorage on some phones (agmcleod)
+* ObjectContainer : fixed rendering of nested containers (again) - Thanks to Peter Hull
+* Animation : (quick) fixed hWidth and hHeight not being updated when the frame size is different
+
 0.9.10
 * Core : fixed object `visible` flag not being set based on their parent group visible status
 * Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default
