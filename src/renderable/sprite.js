@@ -565,6 +565,8 @@
 			this.offset = frame.offset;
 			this.width = frame.width;
 			this.height = frame.height;
+			this.hWidth = ~~(this.width / 2);
+			this.hHeight = ~~(this.height / 2);
 			this._sourceAngle = frame.angle;
 		},
 		
