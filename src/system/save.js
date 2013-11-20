@@ -8,7 +8,7 @@
 (function(window) {
     
     /** 
-     * A singleton object to access the device local Storage area
+     * A singleton object to access the device localStorage area
      * @example
      * // Initialize "score" and "lives" with default values
      * me.save.add({ score : 0, lives : 3 });
@@ -21,11 +21,13 @@
      *
      * // Also supports complex objects thanks to JSON backend
      * me.save.complexObject = { a : "b", c : [ 1, 2, 3, "d" ], e : { f : [{}] } };
+     * // DO NOT set any child properties of me.save.complexObject directly!
+     * // Changes made that way will not save. Always set the entire object value at once.
      *
      * // Print all
      * console.log(JSON.stringify(me.save));
      *
-     * // detele "score" from local Storage
+     * // Delete "score" from localStorage
      * me.save.delete('score');
      * @namespace me.save
      * @memberOf me
@@ -57,7 +59,7 @@
             },
 
             /**
-             * add new keys to localStorage and set them to the given default values 
+             * Add new keys to localStorage and set them to the given default values if they do not exist
              * @name add
              * @memberOf me.save
              * @function
@@ -72,17 +74,15 @@
 
                     (function (prop) {
                         Object.defineProperty(api, prop, {
+                            configurable : true,
                             enumerable : true,
                             get : function () {
                                 return data[prop];
                             },
                             set : function (value) {
-                                // don't overwrite if it was already defined
-                                if (typeof data[prop] !== 'object') {
-                                    data[prop] = value;
-                                    if (me.device.localStorage === true) {
-                                        localStorage.setItem("me.save." + prop, JSON.stringify(data[prop]));
-                                    }
+                                data[prop] = value;
+                                if (me.device.localStorage === true) {
+                                    localStorage.setItem("me.save." + prop, JSON.stringify(value));
                                 }
                             }
                         });
@@ -93,16 +93,21 @@
                         api[key] = props[key];
                     }
                 });
+
+                // Save keys
+                if (me.device.localStorage === true) {
+                    localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+                }
             },
 
             /**
-             * remove a key from localStorage 
+             * Remove a key from localStorage
              * @name delete
              * @memberOf me.save
              * @function
              * @param {String} key key to be removed
              * @example
-             * // remove the "hiscore" key from localStorage
+             * // Remove the "score" key from localStorage
              * me.save.delete("score");
              */
             delete : function (key) {
@@ -111,6 +116,7 @@
                         delete data[key];
                         if (me.device.localStorage === true) {
                             localStorage.removeItem("me.save." + key);
+                            localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                         }
                     }
                 }
