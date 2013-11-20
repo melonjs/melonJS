@@ -1,6 +1,7 @@
 Version History
 ---------------
 0.9.11
+* General : Fix initial loading for me.save, and update documentation
 * General : Fix detection of localStorage on some phones (agmcleod)
 * ObjectContainer : fixed rendering of nested containers (again) - Thanks to Peter Hull
 * Animation : (quick) fixed hWidth and hHeight not being updated when the frame size is different
