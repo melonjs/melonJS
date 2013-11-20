@@ -234,16 +234,21 @@
 		 */
 		function keydown(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+            keyCode = keyCode || e.keyCode || e.which;
+            var action = KeyBinding[keyCode];
+
+            // publish a message for keydown event
+            me.event.publish(me.event.KEYDOWN, [
+                action,
+                keyCode,
+                action ? !keyLocked[action] : true
+            ]);
 
 			if (action) {
 				if (!keyLocked[action]) {
 					keyStatus[action] = true;
 					// lock the key if requested
 					keyLocked[action] = keyLock[action];
-
-					// publish a message for keydown event
-					me.event.publish(me.event.KEYDOWN, [ action ]);
 				}
 				// prevent event propagation
 				return preventDefault(e);
@@ -259,15 +264,16 @@
 		 */
 		function keyup(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+            keyCode = keyCode || e.keyCode || e.which;
+            var action = KeyBinding[keyCode];
+
+            // publish a message for keydown event
+            me.event.publish(me.event.KEYUP, [ action, keyCode ]);
 
 			if (action) {
 
 				keyStatus[action] = false;
 				keyLocked[action] = false;
-
-				// publish message for keyup event
-				me.event.publish(me.event.KEYUP, [ action ]);
 
 				// prevent the event propagation
 				return preventDefault(e);
