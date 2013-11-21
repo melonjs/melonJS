@@ -163,8 +163,8 @@
 		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
-		 * @param {int} x
-		 * @param {int} y
+		 * @param {Number} x
+		 * @param {Number} y
 		 */
 		draw : function(context, text, x, y) {
 			// update initial position
@@ -194,8 +194,8 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {String} font
-	 * @param {int/Object} size either an int value, or an object like {x:16,y:16}
-	 * @param {int} [scale="1.0"]
+	 * @param {Number|Object} size either an int value, or an object like {x:16,y:16}
+	 * @param {Number} [scale="1.0"]
 	 * @param {String} [firstChar="0x20"]
 	 */
     me.BitmapFont = me.Font.extend(
@@ -257,7 +257,7 @@
 		 * @memberOf me.BitmapFont
 		 * @function
 		 * @param {String} textAlign ("left", "center", "right")
-		 * @param {int} [scale]
+		 * @param {Number} [scale]
 		 */
 		set : function(textAlign, scale) {
 			this.textAlign = textAlign;
@@ -272,7 +272,7 @@
 		 * @name resize
 		 * @memberOf me.BitmapFont
 		 * @function
-		 * @param {int} scale ratio
+		 * @param {Number} scale ratio
 		 */
 		resize : function(scale) {
 			// updated scaled Size
@@ -311,8 +311,8 @@
 		 * @function
 		 * @param {Context} context 2D Context
 		 * @param {String} text
-		 * @param {int} x
-		 * @param {int} y
+		 * @param {Number} x
+		 * @param {Number} y
 		 */
 		draw : function(context, text, x, y) {
 			var strings = (""+text).split("\n");

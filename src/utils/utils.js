@@ -118,8 +118,8 @@
 		 * @memberOf me.utils
 		 * @name decodeBase64AsArray
 		 * @param {String} input Base64 encoded data
-		 * @param {Int} [bytes] number of bytes per array entry
-		 * @return {Int[]} Array of bytes
+		 * @param {Number} [bytes] number of bytes per array entry
+		 * @return {Number[]} Array of bytes
 		 */
 		api.decodeBase64AsArray = function(input, bytes) {
 			bytes = bytes || 1;
@@ -149,9 +149,9 @@
 		 * @function
 		 * @memberOf me.utils
 		 * @name decompress
-		 * @param  {Int[]} data Array of bytes
+		 * @param  {Number[]} data Array of bytes
 		 * @param  {String} format compressed data format ("gzip","zlib")
-		 * @return {Int[]} Array of bytes
+		 * @return {Number[]} Array of bytes
 		 */
 		api.decompress = function(data, format) {
 			throw "melonJS: GZIP/ZLIB compressed TMX Tile Map not supported!";
@@ -164,8 +164,8 @@
 		 * @memberOf me.utils
 		 * @name decodeCSV
 		 * @param  {String} input CSV formatted data
-		 * @param  {Int} limit row split limit
-		 * @return {Int[]} Int Array
+		 * @param  {Number} limit row split limit
+		 * @return {Number[]} Int Array
 		 */
 		api.decodeCSV = function(input, limit) {
 			input = input.trim().split("\n");

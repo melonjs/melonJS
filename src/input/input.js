@@ -580,7 +580,7 @@
 		 * @public
 		 * @function
 		 * @param {String} action user defined corresponding action
-		 * @return {boolean} true if pressed
+		 * @return {Boolean} true if pressed
 		 * @example
 		 * if (me.input.isKeyPressed('left'))
 		 * {
@@ -612,7 +612,7 @@
 		 * @public
 		 * @function
 		 * @param {String} action user defined corresponding action
-		 * @return {boolean} down (true) or up(false)
+		 * @return {Boolean} down (true) or up(false)
 		 */
 
 		obj.keyStatus = function(action) {
@@ -627,7 +627,7 @@
 		 * @public
 		 * @function
 		 * @param {me.input#KEY} keycode
-		 * @param {boolean} true to trigger a key press, or false for key release
+		 * @param {Boolean} true to trigger a key press, or false for key release
 		 * @example
 		 * // trigger a key press
 		 * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -651,7 +651,7 @@
 		 * @function
 		 * @param {me.input#KEY} keycode
 		 * @param {String} action user defined corresponding action
-		 * @param {boolean} lock cancel the keypress event once read
+		 * @param {Boolean} lock cancel the keypress event once read
 		 * @example
 		 * // enable the keyboard
 		 * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -743,7 +743,7 @@
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+		 * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
 		 * @param {me.input#KEY} keyCode
 		 * @example
 		 * // enable the keyboard
@@ -768,7 +768,7 @@
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+		 * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
 		 * @example
 		 * me.input.unbindMouse(me.input.mouse.LEFT);
 		 */

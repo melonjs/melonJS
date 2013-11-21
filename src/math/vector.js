@@ -13,8 +13,8 @@
 	 * @extends Object
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} [x=0] x value of the vector
-	 * @param {int} [y=0] y value of the vector
+	 * @param {Number} [x=0] x value of the vector
+	 * @param {Number} [y=0] y value of the vector
 	 */
 	me.Vector2d = Object.extend(
 	/** @scope me.Vector2d.prototype */

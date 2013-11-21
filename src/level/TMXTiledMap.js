@@ -198,8 +198,8 @@
 		 * @name me.TMXTileMap#clearTile
 		 * @public
 		 * @function
-		 * @param {Integer} x x position 
-		 * @param {Integer} y y position 
+		 * @param {Number} x x position
+		 * @param {Number} y y position
 		 */
 		clearTile : function(x, y) {
 			// add all layers

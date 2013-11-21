@@ -304,7 +304,7 @@
 		 * @memberOf me.loader
 		 * @public
 		 * @function
-		 * @param {Array.<string>} resources
+		 * @param {Object[]} resources
 		 * @example
 		 * var g_resources = [ 
 		 *   // PNG tileset
@@ -415,7 +415,7 @@
 		 * @public
 		 * @function
 		 * @param {Object} resource
-		 * @return {boolean} true if unloaded
+		 * @return {Boolean} true if unloaded
 		 * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
 		 */
 		obj.unload = function(res) {

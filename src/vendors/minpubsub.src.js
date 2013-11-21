@@ -253,7 +253,7 @@
 		 * @name me.event#unsubscribe
 		 * @public
 		 * @function
-		 * @param {handle} handle The return value from a subscribe call or the
+		 * @param {Array|String} handle The return value from a subscribe call or the
 		 * name of a channel as a String
 		 * @param {Function} [callback] The return value from a subscribe call.
 		 * @example

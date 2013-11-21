@@ -56,9 +56,9 @@
 		 * @memberOf me.plugin
 		 * @public
 		 * @function
-		 * @param {Object} object target object
-		 * @param {name} name target function
-		 * @param {Function} fn function
+		 * @param {Object} proto target object
+		 * @param {String} name target function
+		 * @param {Function} fn replacement function
 		 * @example 
 		 * // redefine the me.game.update function with a new one
 		 * me.plugin.patch(me.game, "update", function () { 

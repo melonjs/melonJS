@@ -314,8 +314,8 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x the x coordinates of the sprite object
-	 * @param {int} y the y coordinates of the sprite object
+	 * @param {Number} x the x coordinates of the sprite object
+	 * @param {Number} y the y coordinates of the sprite object
 	 * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="images/object_properties.png"/>
 	 */
 	me.ObjectEntity = me.Renderable.extend(
@@ -613,10 +613,10 @@
 		 * @name updateColRect
 		 * @memberOf me.ObjectEntity
 		 * @function
-		 * @param {int} x x offset (specify -1 to not change the width)
-		 * @param {int} w width of the hit box
-		 * @param {int} y y offset (specify -1 to not change the height)
-		 * @param {int} h height of the hit box
+		 * @param {Number} x x offset (specify -1 to not change the width)
+		 * @param {Number} w width of the hit box
+		 * @param {Number} y y offset (specify -1 to not change the height)
+		 * @param {Number} h height of the hit box
 		 */
 		updateColRect : function(x, w, y, h) {
 			this.collisionBox.adjustSize(x, w, y, h);
@@ -670,8 +670,8 @@
 		 * @name setVelocity
 		 * @memberOf me.ObjectEntity
 		 * @function
-		 * @param {Int} x velocity on x axis
-		 * @param {Int} y velocity on y axis
+		 * @param {Number} x velocity on x axis
+		 * @param {Number} y velocity on y axis
 		 * @protected
 		 */
 
@@ -688,8 +688,8 @@
 		 * @name setMaxVelocity
 		 * @memberOf me.ObjectEntity
 		 * @function
-		 * @param {Int} x max velocity on x axis
-		 * @param {Int} y max velocity on y axis
+		 * @param {Number} x max velocity on x axis
+		 * @param {Number} y max velocity on y axis
 		 * @protected
 		 */
 		setMaxVelocity : function(x, y) {
@@ -702,8 +702,8 @@
 		 * @name setFriction
 		 * @memberOf me.ObjectEntity
 		 * @function
-		 * @param {Int} x horizontal friction
-		 * @param {Int} y vertical friction
+		 * @param {Number} x horizontal friction
+		 * @param {Number} y vertical friction
 		 * @protected
 		 */
 		setFriction : function(x, y) {
@@ -846,7 +846,7 @@
 		 * @memberOf me.ObjectEntity
 		 * @function
 		 * @param {me.ObjectEntity} entity Entity
-		 * @return {float} distance
+		 * @return {Number} distance
 		 */
 		distanceTo: function(e)
 		{
@@ -863,7 +863,7 @@
 		 * @memberOf me.ObjectEntity
 		 * @function
 		 * @param {me.Vector2d} vector vector
-		 * @return {float} distance
+		 * @return {Number} distance
 		 */
 		distanceToPoint: function(v)
 		{
@@ -1239,8 +1239,8 @@
 	 * @extends me.ObjectEntity
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x the x coordinates of the sprite object
-	 * @param {int} y the y coordinates of the sprite object
+	 * @param {Number} x the x coordinates of the sprite object
+	 * @param {Number} y the y coordinates of the sprite object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
 	me.CollectableEntity = me.ObjectEntity.extend(
@@ -1266,8 +1266,8 @@
 	 * @extends me.ObjectEntity
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x the x coordinates of the object
-	 * @param {int} y the y coordinates of the object
+	 * @param {Number} x the x coordinates of the object
+	 * @param {Number} y the y coordinates of the object
 	 * @param {me.ObjectSettings} settings object settings
 	 */
 	me.LevelEntity = me.ObjectEntity.extend(

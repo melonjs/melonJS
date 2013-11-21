@@ -731,7 +731,7 @@
 		 * @memberOf me.state
 		 * @public
 		 * @function
-		 * @param {Int} state @see me.state#Constant
+		 * @param {Number} state @see me.state#Constant
 		 * @param {me.ScreenObject}
 		 */
 		obj.set = function(state, so) {
@@ -761,7 +761,7 @@
 		 * @function
 		 * @param {String} effect (only "fade" is supported for now)
 		 * @param {String} color a CSS color value
-		 * @param {Int} [duration=1000] expressed in milliseconds
+		 * @param {Number} [duration=1000] expressed in milliseconds
 		 */
 		obj.transition = function(effect, color, duration) {
 			if (effect === "fade") {
@@ -787,7 +787,7 @@
 		 * @memberOf me.state
 		 * @public
 		 * @function
-		 * @param {Int} state @see me.state#Constant
+		 * @param {Number} state @see me.state#Constant
 		 * @param {} [arguments...] extra arguments to be passed to the reset functions
 		 * @example
 		 * // The onResetEvent method on the play screen will receive two args:
@@ -832,7 +832,7 @@
 		 * @memberOf me.state
 		 * @public
 		 * @function
-		 * @param {Int} state @see me.state#Constant
+		 * @param {Number} state @see me.state#Constant
 		 */
 		obj.isCurrent = function(state) {
 			return _state === state;
