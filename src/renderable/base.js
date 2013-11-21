@@ -14,8 +14,8 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {me.Vector2d} pos position of the renderable object
-	 * @param {int} width object width
-	 * @param {int} height object height
+	 * @param {Number} width object width
+	 * @param {Number} height object height
 	 */
 	me.Renderable = me.Rect.extend(
 	/** @scope me.Renderable.prototype */
@@ -155,7 +155,7 @@
 		 * @name setOpacity
 		 * @memberOf me.Renderable
 		 * @function
-		 * @param {alpha} alpha opacity value between 0 and 1
+		 * @param {Number} alpha opacity value between 0 and 1
 		 */
 		setOpacity : function(alpha) {
 			if (typeof (alpha) === "number") {

@@ -67,8 +67,8 @@
 		 * @name me.Tween#to
 		 * @public
 		 * @function
-		 * @param {Properties} prop list of properties
-		 * @param {int} [duration=1000] tween duration
+		 * @param {Object} properties hash of properties
+		 * @param {Number} [duration=1000] tween duration
 		 */
 		this.to = function ( properties, duration ) {
 
@@ -148,7 +148,7 @@
 		 * @name me.Tween#delay
 		 * @public
 		 * @function
-		 * @param {int} amount delay amount expressed in milliseconds
+		 * @param {Number} amount delay amount expressed in milliseconds
 		 */
 		this.delay = function ( amount ) {
 
@@ -182,7 +182,7 @@
 		 * @name me.Tween#repeat
 		 * @public
 		 * @function
-		 * @param {int} times amount of times the tween should be repeated
+		 * @param {Number} times amount of times the tween should be repeated
 		 */
 		this.repeat = function ( times ) {
 

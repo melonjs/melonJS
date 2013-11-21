@@ -111,21 +111,52 @@
 
 		/**
 		 * Channel Constant for pressing a binded key <br>
-		 * Data passed : {String} user-defined action <br>
+         * Data passed : {String} user-defined action, {Number} keyCode,
+         * {Boolean} edge state <br>
+         * Edge-state is for detecting "locked" key bindings. When a locked key
+         * is pressed and held, the first event will have have the third
+         * argument set true. subsequent events will continue firing with the
+         * third argument set false.
 		 * @public
 		 * @constant
 		 * @type String
 		 * @name me.event#KEYDOWN
+         * @example
+         * me.input.bindKey("jump", me.input.KEY.X, true); // Edge-triggered
+         * me.input.bindKey("shoot", me.input.KEY.Z); // Level-triggered
+         * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge)) {
+         *     // Checking bound keys
+         *     if (action === "jump") {
+         *         if (edge) {
+         *             this.doJump();
+         *         }
+         *
+         *         // Make character fall slower when holding the jump key
+         *         this.vel.y = this.gravity;
+         *     }
+         * });
 		 */
 		obj.KEYDOWN = "me.input.keydown";
 
 		/**
 		 * Channel Constant for releasing a binded key <br>
-		 * Data passed : {Number} user-defined action <br>
+         * Data passed : {String} user-defined action, {Number} keyCode <br>
 		 * @public
 		 * @constant
 		 * @type String
 		 * @name me.event#KEYUP
+         * @example
+         * me.event.subscribe(me.event.KEYUP, function (action, keyCode)) {
+         *     // Checking unbound keys
+         *     if (keyCode == me.input.KEY.ESC) {
+         *         if (me.state.isPaused()) {
+         *             me.state.resume();
+         *         }
+         *         else {
+         *             me.state.pause();
+         *         }
+         *     }
+         * });
 		 */
 		obj.KEYUP = "me.input.keyup";
 
@@ -256,7 +287,7 @@
 		 * @name me.event#unsubscribe
 		 * @public
 		 * @function
-		 * @param {handle} handle The return value from a subscribe call or the
+		 * @param {Array|String} handle The return value from a subscribe call or the
 		 * name of a channel as a String
 		 * @param {Function} [callback] The return value from a subscribe call.
 		 * @example

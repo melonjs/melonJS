@@ -19,8 +19,8 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {me.Vector2d} v x,y position of the rectange
-	 * @param {int} w width of the rectangle
-	 * @param {int} h height of the rectangle
+	 * @param {Number} w width of the rectangle
+	 * @param {Number} h height of the rectangle
 	 */
 	me.Rect = Object.extend(
 	/** @scope me.Rect.prototype */	{
@@ -181,8 +181,8 @@
 		 * @memberOf me.Rect
 		 * @function
 		 * @param {me.Vector2d} v x,y position for the rectangle
-		 * @param {int} w width of the rectangle
-		 * @param {int} h height of the rectangle	 
+		 * @param {Number} w width of the rectangle
+		 * @param {Number} h height of the rectangle
 		 */
 		set : function(v, w, h) {
 			this.pos.setV(v);
@@ -278,10 +278,10 @@
 		 * @name adjustSize
 		 * @memberOf me.Rect
 		 * @function
-		 * @param {int} x x offset (specify -1 to not change the width)
-		 * @param {int} w width of the hit box
-		 * @param {int} y y offset (specify -1 to not change the height)
-		 * @param {int} h height of the hit box
+		 * @param {Number} x x offset (specify -1 to not change the width)
+		 * @param {Number} w width of the hit box
+		 * @param {Number} y y offset (specify -1 to not change the height)
+		 * @param {Number} h height of the hit box
 		 */
 		adjustSize : function(x, w, y, h) {
 			if (x !== -1) {
@@ -379,7 +379,7 @@
 		 * @memberOf me.Rect
 		 * @function
 		 * @param  {me.Rect} rect
-		 * @return {boolean} true if overlaps
+		 * @return {Boolean} true if overlaps
 		 */
 		overlaps : function(r)	{
 			return (this.left < r.right && 
@@ -394,7 +394,7 @@
 		 * @memberOf me.Rect
 		 * @function
 		 * @param  {me.Rect} rect
-		 * @return {boolean} true if within
+		 * @return {Boolean} true if within
 		 */
 		within: function(r) {
 			return (r.left <= this.left && 
@@ -409,7 +409,7 @@
 		 * @memberOf me.Rect
 		 * @function
 		 * @param  {me.Rect} rect
-		 * @return {boolean} true if contains
+		 * @return {Boolean} true if contains
 		 */
 		contains: function(r) {
 			return (r.left >= this.left && 
@@ -424,7 +424,7 @@
 		 * @memberOf me.Rect
 		 * @function
 		 * @param  {me.Vector2d} point
-		 * @return {boolean} true if contains
+		 * @return {Boolean} true if contains
 		 */
 		containsPointV: function(v) {
 			return this.containsPoint(v.x, v.y);
@@ -437,7 +437,7 @@
 		 * @function
 		 * @param  {Number} x x coordinate
 		 * @param  {Number} y y coordinate
-		 * @return {boolean} true if contains
+		 * @return {Boolean} true if contains
 		 */
 		containsPoint: function(x, y) {
 			return  (x >= this.left && x <= this.right && 
@@ -523,8 +523,8 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {me.Vector2d} v top-left origin position of the Ellipse
-	 * @param {int} w width of the elipse
-	 * @param {int} h height of the elipse
+	 * @param {Number} w width of the elipse
+	 * @param {Number} h height of the elipse
 	 */
 	me.Ellipse = Object.extend(
 	/** @scope me.Ellipse.prototype */	{
@@ -569,8 +569,8 @@
 		 * @memberOf me.Ellipse
 		 * @function
 		 * @param {me.Vector2d} v top-left origin position of the Ellipse
-		 * @param {int} w width of the Ellipse
-		 * @param {int} h height of the Ellipse	 
+		 * @param {Number} w width of the Ellipse
+		 * @param {Number} h height of the Ellipse
 		 */
 		set : function(v, w, h) {
 			this.radius.set(w/2, h/2);
@@ -638,7 +638,7 @@
 	 * @constructor
 	 * @param {me.Vector2d} v origin point of the PolyShape
 	 * @param {me.Vector2d[]} points array of vector defining the polyshape
-	 * @param {boolean} closed true if a polygone, false if a polyline	 
+	 * @param {Boolean} closed true if a polygone, false if a polyline
 	 */
 	me.PolyShape = Object.extend(
 	/** @scope me.PolyShape.prototype */	{
@@ -700,7 +700,7 @@
 		 * @function
 		 * @param {me.Vector2d} v origin point of the PolyShape
 		 * @param {me.Vector2d[]} points array of vector defining the polyshape
-		 * @param {boolean} closed true if a polygone, false if a polyline	 
+		 * @param {Boolean} closed true if a polygone, false if a polyline
 		 */
 		set : function(v, points, closed) {
 			this.pos.setV(v);

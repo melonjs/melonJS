@@ -299,7 +299,7 @@
 		 * @memberOf me.device
 		 * @public
 		 * @function
-		 * @return {boolean} false if not supported by the device
+		 * @return {Boolean} false if not supported by the device
 		 */
 		obj.watchAccelerometer = function () {
 			if (me.device.hasAccelerometer) {
@@ -354,7 +354,7 @@
 		 * @memberOf me.device
 		 * @public
 		 * @function
-		 * @return {boolean} false if not supported by the device
+		 * @return {Boolean} false if not supported by the device
 		 */
 		obj.watchDeviceOrientation = function() {
 			if(me.device.hasDeviceOrientation && !deviceOrientationInitialized) {

@@ -13,11 +13,11 @@
 	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x the x coordinates of the sprite object
-	 * @param {int} y the y coordinates of the sprite object
+	 * @param {Number} x the x coordinates of the sprite object
+	 * @param {Number} y the y coordinates of the sprite object
 	 * @param {Image} image reference to the Sprite Image. See {@link me.loader#getImage}
-	 * @param {int} [spritewidth] sprite width
-	 * @param {int} [spriteheigth] sprite height
+	 * @param {Number} [spritewidth] sprite width
+	 * @param {Number} [spriteheigth] sprite height
 	 * @example
 	 * // create a static Sprite Object
 	 * mySprite = new me.SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
@@ -135,7 +135,7 @@
 		 * @name flicker
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Int} duration expressed in frames
+		 * @param {Number} duration expressed in frames
 		 * @param {Function} callback Function to call when flickering ends
 		 * @example
 		 * // make the object flicker for 60 frame
@@ -331,11 +331,11 @@
 	 * @extends me.SpriteObject
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x the x coordinates of the sprite object
-	 * @param {int} y the y coordinates of the sprite object
+	 * @param {Number} x the x coordinates of the sprite object
+	 * @param {Number} y the y coordinates of the sprite object
 	 * @param {Image} image reference of the animation sheet
-	 * @param {int} spritewidth width of a single sprite within the spritesheet
-	 * @param {int} [spriteheight=image.height] height of a single sprite within the spritesheet
+	 * @param {Number} spritewidth width of a single sprite within the spritesheet
+	 * @param {Number} [spriteheight=image.height] height of a single sprite within the spritesheet
 	 */
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
@@ -427,6 +427,8 @@
 						),
 						width: this.width,
 						height: this.height,
+						hWidth: this.width / 2,
+						hHeight: this.height / 2,
 						angle: 0
 					};
 				}
@@ -435,24 +437,24 @@
 
 		/**
 		 * add an animation <br>
-		 * For fixed-sized cell spritesheet, the index list must follow the logic as per the following example :<br>
+		 * For fixed-sized cell sprite sheet, the index list must follow the logic as per the following example :<br>
 		 * <img src="images/spritesheet_grid.png"/>
 		 * @name addAnimation
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @param {String} name animation id
-		 * @param {Int[]|String[]} index list of sprite index or name defining the animaton
-		 * @param {Int} [animationspeed] cycling speed for animation in ms (delay between each frame).
+		 * @param {Number[]|String[]} index list of sprite index or name defining the animation
+		 * @param {Number} [animationspeed] cycling speed for animation in ms (delay between each frame).
 		 * @see me.AnimationSheet#animationspeed
 		 * @example
-		 * // walking animatin
-		 * this.addAnimation ("walk", [0,1,2,3,4,5]);
-		 * // eating animatin
-		 * this.addAnimation ("eat", [6,6]);
-		 * // rolling animatin
-		 * this.addAnimation ("roll", [7,8,9,10]);
+		 * // walking animation
+		 * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
+		 * // eating animation
+		 * this.addAnimation("eat", [ 6, 6 ]);
+		 * // rolling animation
+		 * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
 		 * // slower animation
-		 * this.addAnimation ("roll", [7,8,9,10], 200);
+		 * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
 		 */
 		addAnimation : function(name, index, animationspeed) {
 			this.anim[name] = {
@@ -540,9 +542,8 @@
 		 * @param {String} name animation id
 		 * @return {Boolean}
 		 * @example
-		 * if (!this.isCurrentAnimation("walk"))
-		 * {
-		 *    // do something horny...
+		 * if (!this.isCurrentAnimation("walk")) {
+		 *    // do something funny...
 		 * }
 		 */
 		isCurrentAnimation : function(name) {
@@ -554,7 +555,7 @@
 		 * @name setAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @param {int} [index=0] animation frame index
+		 * @param {Number} [index=0] animation frame index
 		 * @example
 		 * //reset the current animation to the first frame
 		 * this.setAnimationFrame();
@@ -565,8 +566,8 @@
 			this.offset = frame.offset;
 			this.width = frame.width;
 			this.height = frame.height;
-			this.hWidth = ~~(this.width / 2);
-			this.hHeight = ~~(this.height / 2);
+			this.hWidth = frame.hWidth;
+			this.hHeight = frame.hHeight;
 			this._sourceAngle = frame.angle;
 		},
 		
@@ -575,7 +576,7 @@
 		 * @name getCurrentAnimationFrame
 		 * @memberOf me.AnimationSheet
 		 * @function
-		 * @return {int} current animation frame index
+		 * @return {Number} current animation frame index
 		 */
 		getCurrentAnimationFrame : function() {
 			return this.current.idx;

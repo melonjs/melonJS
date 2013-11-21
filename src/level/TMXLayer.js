@@ -14,7 +14,7 @@
 	 * @constructor
 	 * @param {String}  name    layer name
 	 * @param {String}  color   a CSS color value
-	 * @param {int}     z       z position
+	 * @param {Number}  z       z position
 	 */
 	 me.ColorLayer = me.Renderable.extend({
 		// constructor
@@ -73,10 +73,10 @@
 	 * @memberOf me
 	 * @constructor
 	 * @param {String} name        layer name
-	 * @param {int}    width       layer width in pixels
-	 * @param {int}    height      layer height in pixels
+	 * @param {Number} width       layer width in pixels
+	 * @param {Number} height      layer height in pixels
 	 * @param {String} image       image name (as defined in the asset list)
-	 * @param {int}    z           z position
+	 * @param {Number} z           z position
 	 * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
 	 */
 	 me.ImageLayer = me.Renderable.extend({
@@ -562,9 +562,9 @@
 		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
-		 * @param {Integer} x x coordinate in pixel
-		 * @param {Integer} y y coordinate in pixel
-		 * @return {Int} TileId
+		 * @param {Number} x x coordinate in pixel
+		 * @param {Number} y y coordinate in pixel
+		 * @return {Number} TileId
 		 */
 		getTileId : function(x, y) {
 			var tile = this.getTile(x,y);
@@ -577,8 +577,8 @@
 		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
-		 * @param {Integer} x x coordinate in pixel
-		 * @param {Integer} y y coordinate in pixel
+		 * @param {Number} x x coordinate in pixel
+		 * @param {Number} y y coordinate in pixel
 		 * @return {me.Tile} Tile Object
 		 */
 		getTile : function(x, y) {
@@ -591,9 +591,9 @@
 		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
-		 * @param {Integer} x x coordinate in tile
-		 * @param {Integer} y y coordinate in tile
-		 * @param {Integer} tileId tileId
+		 * @param {Number} x x coordinate in tile
+		 * @param {Number} y y coordinate in tile
+		 * @param {Number} tileId tileId
 		 * @return {me.Tile} the corresponding newly created tile object
 		 */
 		setTile : function(x, y, tileId) {
@@ -613,8 +613,8 @@
 		 * @memberOf me.TMXLayer
 		 * @public
 		 * @function
-		 * @param {Integer} x x position
-		 * @param {Integer} y y position
+		 * @param {Number} x x position
+		 * @param {Number} y y position
 		 */
 		clearTile : function(x, y) {
 			// clearing tile

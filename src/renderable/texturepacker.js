@@ -145,6 +145,8 @@
 					offset: region.frame.pos.clone(),
 					width: region.frame.width,
 					height: region.frame.height,
+					hWidth: region.frame.width / 2,
+					hHeight: region.frame.height / 2,
 					angle : (region.rotated===true) ? nhPI : 0
 				};
 			}

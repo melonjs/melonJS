@@ -234,16 +234,21 @@
 		 */
 		function keydown(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+            keyCode = keyCode || e.keyCode || e.which;
+            var action = KeyBinding[keyCode];
+
+            // publish a message for keydown event
+            me.event.publish(me.event.KEYDOWN, [
+                action,
+                keyCode,
+                action ? !keyLocked[action] : true
+            ]);
 
 			if (action) {
 				if (!keyLocked[action]) {
 					keyStatus[action] = true;
 					// lock the key if requested
 					keyLocked[action] = keyLock[action];
-
-					// publish a message for keydown event
-					me.event.publish(me.event.KEYDOWN, [ action ]);
 				}
 				// prevent event propagation
 				return preventDefault(e);
@@ -259,15 +264,16 @@
 		 */
 		function keyup(e, keyCode) {
 
-			var action = KeyBinding[keyCode || e.keyCode || e.which];
+            keyCode = keyCode || e.keyCode || e.which;
+            var action = KeyBinding[keyCode];
+
+            // publish a message for keydown event
+            me.event.publish(me.event.KEYUP, [ action, keyCode ]);
 
 			if (action) {
 
 				keyStatus[action] = false;
 				keyLocked[action] = false;
-
-				// publish message for keyup event
-				me.event.publish(me.event.KEYUP, [ action ]);
 
 				// prevent the event propagation
 				return preventDefault(e);
@@ -574,7 +580,7 @@
 		 * @public
 		 * @function
 		 * @param {String} action user defined corresponding action
-		 * @return {boolean} true if pressed
+		 * @return {Boolean} true if pressed
 		 * @example
 		 * if (me.input.isKeyPressed('left'))
 		 * {
@@ -606,7 +612,7 @@
 		 * @public
 		 * @function
 		 * @param {String} action user defined corresponding action
-		 * @return {boolean} down (true) or up(false)
+		 * @return {Boolean} down (true) or up(false)
 		 */
 
 		obj.keyStatus = function(action) {
@@ -621,7 +627,7 @@
 		 * @public
 		 * @function
 		 * @param {me.input#KEY} keycode
-		 * @param {boolean} true to trigger a key press, or false for key release
+		 * @param {Boolean} true to trigger a key press, or false for key release
 		 * @example
 		 * // trigger a key press
 		 * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -645,7 +651,7 @@
 		 * @function
 		 * @param {me.input#KEY} keycode
 		 * @param {String} action user defined corresponding action
-		 * @param {boolean} lock cancel the keypress event once read
+		 * @param {Boolean} lock cancel the keypress event once read
 		 * @example
 		 * // enable the keyboard
 		 * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -737,7 +743,7 @@
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+		 * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
 		 * @param {me.input#KEY} keyCode
 		 * @example
 		 * // enable the keyboard
@@ -762,7 +768,7 @@
 		 * @memberOf me.input
 		 * @public
 		 * @function
-		 * @param {Integer} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+		 * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
 		 * @example
 		 * me.input.unbindMouse(me.input.mouse.LEFT);
 		 */

@@ -128,7 +128,7 @@ window.me = window.me || {};
 		 * @function
 		 * @param {String} first First version string to compare
 		 * @param {String} [second="@VERSION"] Second version string to compare 
-		 * @return {Integer} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
+		 * @return {Number} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
 		 * @example
 		 * if (me.sys.checkVersion("0.9.5") > 0) {
 		 *     console.error("melonJS is too old. Expected: 0.9.5, Got: " + me.version);
@@ -522,7 +522,7 @@ window.me = window.me || {};
 	 * @memberof! external:Function#
 	 * @alias defer
 	 * @param {} [arguments...] Optional additional arguments to curry for the function.
-	 * @return {Int} id that can be used to clear the deferred function using clearTimeout
+	 * @return {Number} id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 * // execute myFunc() when the stack is empty, with 'myArgument' as parameter
 	 * myFunc.defer('myArgument');
@@ -960,8 +960,8 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
-		 * @param {int} [width="full size of the created canvas"] width of the canvas
-		 * @param {int} [height="full size of the created canvas"] width of the canvas
+		 * @param {Number} [width="full size of the created canvas"] width of the canvas
+		 * @param {Number} [height="full size of the created canvas"] width of the canvas
 		 * init function.
 		 */
 		api.init = function(width, height) {
@@ -1160,7 +1160,7 @@ window.me = window.me || {};
 		 * @name add
 		 * @memberOf me.game
 		 * @param {me.ObjectEntity} obj Object to be added
-		 * @param {int} [z="obj.z"] z index
+		 * @param {Number} [z="obj.z"] z index
 		 * @public
 		 * @function
 		 * @example

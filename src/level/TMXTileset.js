@@ -29,11 +29,11 @@
 	 * @extends me.Rect
 	 * @memberOf me
 	 * @constructor
-	 * @param {int} x x index of the Tile in the map
-	 * @param {int} y y index of the Tile in the map
-	 * @param {int} w Tile width
-	 * @param {int} h Tile height
-	 * @param {int} tileId tileId
+	 * @param {Number} x x index of the Tile in the map
+	 * @param {Number} y y index of the Tile in the map
+	 * @param {Number} w Tile width
+	 * @param {Number} h Tile height
+	 * @param {Number} tileId tileId
 	 */
 	me.Tile = me.Rect.extend({
 		/**
@@ -293,8 +293,8 @@
 		 * @name me.TMXTileset#contains
 		 * @public
 		 * @function
-		 * @param {Integer} gid 
-		 * @return {boolean}
+		 * @param {Number} gid
+		 * @return {Boolean}
 		 */
 		contains : function(gid) {
 			return gid >= this.firstgid && gid <= this.lastgid;
@@ -325,7 +325,7 @@
 		 * @name me.TMXTileset#getTileProperties
 		 * @public
 		 * @function
-		 * @param {Integer} tileId 
+		 * @param {Number} tileId
 		 * @return {Object}
 		 */
 		getTileProperties: function(tileId) {
@@ -455,7 +455,7 @@
 		 * @name me.TMXTilesetGroup#getTilesetByGid
 		 * @public
 		 * @function
-		 * @param {Integer} gid 
+		 * @param {Number} gid
 		 * @return {me.TMXTileset} corresponding tileset
 		 */
 		getTilesetByGid : function(gid) {

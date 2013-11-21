@@ -189,12 +189,12 @@
 		},
 
 		/**
-		 * set the viewport bound (real world limit)
+		 * set the viewport boundaries (world limit)
 		 * @name setBounds
 		 * @memberOf me.Viewport
 		 * @function
-		 * @param {Number} w real world width
-		 * @param {Number} h real world height
+		 * @param {Number} w world width
+		 * @param {Number} h world height
 		 */
 		setBounds : function(w, h) {
 			this.limits.set(w, h);
@@ -317,7 +317,7 @@
 		 * @param {Number} intensity maximum offset that the screen can be moved while shaking
 		 * @param {Number} duration expressed in milliseconds
 		 * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
-		 * @param {function} [onComplete] callback once shaking effect is over
+		 * @param {Function} [onComplete] callback once shaking effect is over
 		 * @example
 		 * // shake it baby !
 		 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
@@ -339,7 +339,7 @@
 
 		/**
 		 * fadeOut(flash) effect<p>
-		 * screen is filled with the specified color and slowy goes back to normal
+		 * screen is filled with the specified color and slowly goes back to normal
 		 * @name fadeOut
 		 * @memberOf me.Viewport
 		 * @function

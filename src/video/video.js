@@ -62,8 +62,8 @@
 		 * @memberOf me.video
 		 * @function
 		 * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
-		 * @param {Int} width game width
-		 * @param {Int} height game height
+		 * @param {Number} width game width
+		 * @param {Number} height game height
 		 * @param {Boolean} [double_buffering] enable/disable double buffering
 		 * @param {Number} [scale] enable scaling of the canvas ('auto' for automatic scaling)
 		 * @param {Boolean} [maintainAspectRatio] maintainAspectRatio when scaling the display
@@ -172,7 +172,7 @@
 		 * @name getWidth
 		 * @memberOf me.video
 		 * @function
-		 * @return {Int}
+		 * @return {Number}
 		 */
 		api.getWidth = function() {
 			return backBufferCanvas.width;
@@ -197,7 +197,7 @@
 		 * @name getHeight
 		 * @memberOf me.video
 		 * @function
-		 * @return {Int}
+		 * @return {Number}
 		 */
 		api.getHeight = function() {
 			return backBufferCanvas.height;
@@ -208,8 +208,8 @@
 		 * @name setMaxSize
 		 * @memberOf me.video
 		 * @function
-		 * @param {Int} width width
-		 * @param {Int} height height
+		 * @param {Number} width width
+		 * @param {Number} height height
 		 */
 		api.setMaxSize = function(w, h) {
 			// max display size
@@ -223,8 +223,8 @@
 		 * @name createCanvas
 		 * @memberOf me.video
 		 * @function
-		 * @param {Int} width width
-		 * @param {Int} height height
+		 * @param {Number} width width
+		 * @param {Number} height height
 		 * @return {Canvas}
 		 */
 		api.createCanvas = function(width, height, vendorExt) {
@@ -248,7 +248,7 @@
 		 * @memberOf me.video
 		 * @function
 		 * @param {Canvas}
-		 * @return {Context2D}
+		 * @return {Context2d}
 		 */
 		api.getContext2d = function(canvas) {
 			var _context;
@@ -286,7 +286,7 @@
 		 * @name getScreenContext
 		 * @memberOf me.video
 		 * @function
-		 * @return {Context2D}
+		 * @return {Context2d}
 		 */
 		api.getScreenContext = function() {
 			return context2D;
@@ -308,7 +308,7 @@
 		 * @name getSystemContext
 		 * @memberOf me.video
 		 * @function
-		 * @return {Context2D}
+		 * @return {Context2d}
 		 */
 		api.getSystemContext = function() {
 			return backBufferContext2D;
@@ -408,7 +408,7 @@
 		 * @name clearSurface
 		 * @memberOf me.video
 		 * @function
-		 * @param {Context2D} context Canvas context
+		 * @param {Context2d} context Canvas context
 		 * @param {String} color a CSS color string
 		 */
 		api.clearSurface = function(context, col) {
@@ -431,7 +431,7 @@
 		 * @name setImageSmoothing
 		 * @memberOf me.video
 		 * @function
-		 * @param {Context2D} context
+		 * @param {Context2d} context
 		 * @param {Boolean} [enable=false]
 		 */
 		api.setImageSmoothing = function(context, enable) {
@@ -451,7 +451,7 @@
 		 * @name setAlpha
 		 * @memberOf me.video
 		 * @function
-		 * @param {Context2D} context
+		 * @param {Context2d} context
 		 * @param {Boolean} enable
 		 */
 		api.setAlpha = function(context, enable) {
@@ -494,7 +494,7 @@
 		 * @param {Object} object Canvas or Image Object on which to apply the filter
 		 * @param {String} effect "b&w", "brightness", "transparent"
 		 * @param {String} option For "brightness" effect : level [0...1] <br> For "transparent" effect : color to be replaced in "#RRGGBB" format
-		 * @return {Context2D} context object
+		 * @return {Context2d} context object
 		 */
 		api.applyRGBFilter = function(object, effect, option) {
 			//create a output canvas using the given canvas or image size
