@@ -534,7 +534,7 @@
 				}
 
 				// Translate global context
-				isTranslated = (obj.visible && !isFloating);
+				isTranslated = (obj.visible && !isFloating && obj.pos);
 				if (isTranslated) {
 					x = obj.pos.x;
 					y = obj.pos.y;
