@@ -25,6 +25,17 @@
 		 * @ignore
 		 */
 		isRenderable : true,
+        
+       /**
+		* (G)ame (U)nique (Id)entifier" <br>
+		* a GUID will be allocated for any renderable object added <br>
+		* to an object container (including the `me.game.world` container)
+		* @public
+		* @type String
+		* @name GUID
+		* @memberOf me.Renderable
+		*/
+		GUID : undefined,
 		
 		/**
 		 * the visible state of the renderable object<br>
