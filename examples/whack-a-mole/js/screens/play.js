@@ -46,7 +46,8 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.game.add (moleManager, 0);
 		
 		// add our HUD (scores/hiscore)
-		me.game.add (new game.HUD.Container());
+        this.HUD = new game.HUD.Container();
+		me.game.add(this.HUD);
 
 		// start the main soundtrack
 		me.audio.playTrack("whack");
@@ -57,6 +58,10 @@ game.PlayScreen = me.ScreenObject.extend({
 	 *  action to perform when leaving this screen (state change)
 	 */
 	onDestroyEvent: function() {
-	  me.audio.stopTrack();
+        // remove the HUD from the game world
+        me.game.world.removeChild(this.HUD);
+
+        // stop some music
+        me.audio.stopTrack();
 	}
 });
