@@ -478,9 +478,6 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.gravity = me.sys.gravity!==undefined ? me.sys.gravity : 0.98;
-
-			// just to identify our object
-			this.isEntity = true;
 			
 			/**
 			 * dead/living state of the entity<br>

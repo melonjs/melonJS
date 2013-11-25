@@ -1,5 +1,9 @@
 Version History
 ---------------
+1.0.0
+* ObjectContainer : renamed getEntityByProp to getChildByProp
+* ObjectContainer : getChildByProp now returns all matching object type and not only "entities"
+
 0.9.11
 * Documentation : Numerous fixes and improvements
 * General : Fix initial loading for me.save, and update documentation

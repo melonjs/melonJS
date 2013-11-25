@@ -1217,7 +1217,7 @@ window.me = window.me || {};
 		 * return the entity corresponding to the property and value<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
+		 * @deprecated use me.game.world.getChildByProp();
 		 * @name getEntityByProp
 		 * @memberOf me.game
 		 * @public
@@ -1227,7 +1227,7 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity[]} Array of object entities
 		 */
 		api.getEntityByProp = function(prop, value) {
-			return api.world.getEntityByProp(prop, value);
+			return api.world.getChildByProp(prop, value);
 		};
 
 		/**
