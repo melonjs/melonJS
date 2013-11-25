@@ -1,6 +1,7 @@
 Version History
 ---------------
 1.0.0
+* Core : now pass the elapsed time as a parameter when calling any object update function
 * ObjectContainer : renamed getEntityByProp to getChildByProp
 * ObjectContainer : getChildByProp now returns all matching object type and not only "entities"
 
