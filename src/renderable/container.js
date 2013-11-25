@@ -527,38 +527,45 @@
 					// skip this object
 					continue;
 				}
+                
+                if ( obj.isRenderable ) {
 
-				isFloating = (globalFloatingCounter > 0 || obj.floating);
-				if (isFloating) {
-					globalFloatingCounter++;
-				}
+                    isFloating = (globalFloatingCounter > 0 || obj.floating);
+                    if (isFloating) {
+                        globalFloatingCounter++;
+                    }
 
-				// Translate global context
-				isTranslated = (obj.visible && !isFloating && obj.pos);
-				if (isTranslated) {
-					x = obj.pos.x;
-					y = obj.pos.y;
-					globalTranslation.translateV(obj.pos);
-					globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
-				}
+                    // Translate global context
+                    isTranslated = (obj.visible && !isFloating);
+                    if (isTranslated) {
+                        x = obj.pos.x;
+                        y = obj.pos.y;
+                        globalTranslation.translateV(obj.pos);
+                        globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
+                    }
 
-				// check if object is visible
-				obj.inViewport = obj.visible && (
-					isFloating || (obj.getBounds && viewport.isVisible(globalTranslation))
-				);
+                    // check if object is visible
+                    obj.inViewport = obj.visible && (
+                        isFloating || viewport.isVisible(globalTranslation)
+                    );
 
-				// update our object
-				isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(time);
+                    // update our object
+                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
 
-				// Undo global context translation
-				if (isTranslated) {
-					globalTranslation.translate(-x, -y);
-				}
+                    // Undo global context translation
+                    if (isTranslated) {
+                        globalTranslation.translate(-x, -y);
+                    }
 
-				if (globalFloatingCounter > 0) {
-					globalFloatingCounter--;
-				}
-			}
+                    if (globalFloatingCounter > 0) {
+                        globalFloatingCounter--;
+                    }
+                    
+                } else {
+                
+                    // just directly call update() for non renderable object
+                    isDirty |= obj.alwaysUpdate && obj.update();
+                }
 
 			return isDirty;
 		},
