@@ -103,10 +103,17 @@
 		addChild : function(child) {
 			if(typeof(child.ancestor) !== 'undefined') {
 				child.ancestor.removeChild(child);
-			}
+			} else {
+				// only allocate a GUID if the object has no previous ancestor 
+				// (e.g. move one child from one container to another)
+				if (child.isRenderable) {
+					// allocated a GUID value
+					child.GUID = me.utils.createGUID();
+				}
+            }
 
 			child.ancestor = this;
-			
+            
 			this.children.push(child);
 			
 			if (this.autoSort === true) {
@@ -127,7 +134,14 @@
 				
 				if(typeof(child.ancestor) !== 'undefined') {
 					child.ancestor.removeChild(child);
-				}
+				} else {
+					// only allocate a GUID if the object has no previous ancestor 
+					// (e.g. move one child from one container to another)
+					if (child.isRenderable) {
+						// allocated a GUID value
+						child.GUID = me.utils.createGUID();
+					}
+            	}
 				
 				child.ancestor = this;
 				
