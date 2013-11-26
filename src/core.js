@@ -320,8 +320,8 @@ window.me = window.me || {};
             
         // else instanceof Object
         copy = {};
-        for( var attr in obj ) {
-            if (obj.hasOwnProperty(attr)) copy[attr] = deepcopy(obj[attr]);
+        for( var prop in obj ) {
+            copy[prop] = deepcopy(obj[prop]);
         }
         return copy;
     };
@@ -405,15 +405,23 @@ window.me = window.me || {};
 
 					return ret;
 				};
-			})(name, prop[name]) : deepcopy(prop[name]);
+			})(name, prop[name]) : prop[name];
 		}
 
 		// The dummy class constructor
 		function Class() {
-			if (!initializing && this.init) {
-				this.init.apply(this, arguments);
+			if (!initializing) {
+				for( var prop in this ) {
+					// deepcopy properties if required
+					if( typeof(this[prop]) === 'object' ) {
+						this[prop] = deepcopy(this[prop]);
+					}
+				}
+				if (this.init) {
+					this.init.apply(this, arguments);
+				}
 			}
-			//return this;
+			return this;
 		}
 		// Populate our constructed prototype object
 		Class.prototype = proto;
