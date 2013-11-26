@@ -5,7 +5,7 @@ describe("DeepCopy", function () {
     });
 
     var myVect2 = myVect1.extend({
-        a : new me.Vector2d(1.5, 1.5),
+        a : new me.Vector2d(1.5, 1.5)
     });
 
     var vec1 = new myVect1(25, 25);
