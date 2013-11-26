@@ -24,6 +24,16 @@ describe("DeepCopy", function () {
         expect(vec2).toBeInstanceOf(myVect1);
     });
 
+    it("has an instance of me.Vector2d", function () {
+        expect(vec1.a).toBeInstanceOf(me.Vector2d);
+        expect(vec2.a).toBeInstanceOf(me.Vector2d);
+    });
+
+    it("has an instance of Array", function () {
+        expect(vec1.b).toBeInstanceOf(Array);
+        expect(vec2.b).toBeInstanceOf(Array);
+    });
+
     it("is not the same object", function () {
         expect(vec1.a).not.toBe(vec2.a);
         expect(vec1.b).not.toBe(vec2.b);
