@@ -305,6 +305,7 @@ window.me = window.me || {};
         // Array copy
         if( obj instanceof Array ) {
             copy = [];
+            Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
             for( var i = 0, l = obj.length; i < l; i++) {
                 copy[i] = deepcopy(obj[i]);
             }
@@ -320,8 +321,9 @@ window.me = window.me || {};
             
         // else instanceof Object
         copy = {};
+        Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
         for( var prop in obj ) {
-            copy[prop] = deepcopy(obj[prop]);
+            if (obj.hasOwnProperty(prop)) copy[prop] = deepcopy(obj[prop]);
         }
         return copy;
     };
@@ -602,6 +604,30 @@ window.me = window.me || {};
 			}
 		};
 	}
+
+    /**
+     * Get the prototype of an Object.
+     * @memberOf external:Object#
+     * @alias getPrototypeOf
+     * @param {Object} obj Target object to inspect.
+     * @return {Prototype} Prototype of the target object.
+     */
+    Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
+        return obj.__proto__;
+    };
+
+    /**
+     * Set the prototype of an Object.
+     * @memberOf external:Object#
+     * @alias setPrototypeOf
+     * @param {Object} obj Target object to modify.
+     * @param {Prototype} prototype New prototype for the target object.
+     * @return {Object} Modified target object.
+     */
+    Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+        obj.__proto__ = prototype;
+        return obj;
+    };
 
 	/**
 	 * The built in String Object
