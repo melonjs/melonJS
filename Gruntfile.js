@@ -49,19 +49,31 @@ module.exports = function(grunt) {
         },
 
         replace: {
-            dist: {
-                options: {
-                    variables: {
-                        'VERSION': '<%= pkg.version %>'
-                    },
-                    prefix: '@'
+            options: {
+                variables: {
+                    'VERSION': '<%= pkg.version %>'
                 },
+                prefix: '@',
+                force: true
+            },
+
+            dist: {
                 files: [
                     {
                         expand: true,
                         flatten: true,
-                        src: ['build/<%= pkg.name %>-<%= pkg.version %>.js'],
+                        src: [ 'build/<%= pkg.name %>-<%= pkg.version %>.js' ],
                         dest: 'build/'
+                    }
+                ]
+            },
+
+            docs: {
+                files: [
+                    {
+                        expand: true,
+                        src: sourceFiles.concat([ 'README.md' ]),
+                        dest: 'build/docs/'
                     }
                 ]
             }
@@ -74,7 +86,9 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'build/<%= pkg.name %>-<%= pkg.version %>-min.js': ['<%= concat.dist.dest %>']
+                    'build/<%= pkg.name %>-<%= pkg.version %>-min.js': [
+                        '<%= concat.dist.dest %>'
+                    ]
                 }
             }
         },
@@ -98,13 +112,24 @@ module.exports = function(grunt) {
         },
 
         clean: {
-            dist: ['build/<%= pkg.name %>-<%= pkg.version %>.js', 'build/<%= pkg.name %>-<%= pkg.version %>.min.js'],
-            jsdoc: ['./docs/**/*.*', './docs/scripts', './docs/styles', './docs/images']
+            dist: [
+                'build/<%= pkg.name %>-<%= pkg.version %>.js',
+                'build/<%= pkg.name %>-<%= pkg.version %>-min.js'
+            ],
+            jsdoc: [
+                'build/docs',
+                './docs/**/*.*',
+                './docs/scripts',
+                './docs/styles',
+                './docs/images'
+            ]
         },
 
         jsdoc : {
             dist : {
-                src: [sourceFiles, 'README.md'],
+                src: sourceFiles.map(function (value) {
+                    return value.replace('src/', 'build/docs/src/');
+                }).concat([ 'README.md' ]),
                 options: {
                     configure: 'jsdoc_conf.json',
                     destination: 'docs',
@@ -125,7 +150,7 @@ module.exports = function(grunt) {
     grunt.loadTasks('tasks');
 
     // Default task.
-    grunt.registerTask('default', ['concat', 'replace', 'uglify']);
-    grunt.registerTask('lint', ['jshint:beforeConcat', 'concat', 'replace', 'jshint:afterConcat']);
-    grunt.registerTask('doc', ['concat', 'replace', 'jsdoc']);
+    grunt.registerTask('default', ['concat', 'replace:dist', 'uglify']);
+    grunt.registerTask('lint', ['jshint:beforeConcat', 'concat', 'replace:dist', 'jshint:afterConcat']);
+    grunt.registerTask('doc', ['replace:docs', 'jsdoc']);
 };
