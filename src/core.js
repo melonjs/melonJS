@@ -289,6 +289,45 @@ window.me = window.me || {};
 
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
+    /**
+     * a deep copy function
+     * @ignore
+     */
+    var deepcopy = function (obj) {
+     
+        if (null == obj || "object" !== typeof obj) {
+            return obj;
+        }
+        
+        // hold the copied object
+        var copy;
+        
+        // Array copy
+        if( obj instanceof Array ) {
+            copy = [];
+            Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
+            for( var i = 0, l = obj.length; i < l; i++) {
+                copy[i] = deepcopy(obj[i]);
+            }
+            return copy;
+        }
+        
+        // Date copy
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+            
+        // else instanceof Object
+        copy = {};
+        Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
+        for( var prop in obj ) {
+            if (obj.hasOwnProperty(prop)) copy[prop] = deepcopy(obj[prop]);
+        }
+        return copy;
+    };
+    
 	/**
 	 * JavaScript Inheritance Helper <br>
 	 * Based on <a href="http://ejohn.org/">John Resig</a> Simple Inheritance<br>
@@ -373,10 +412,18 @@ window.me = window.me || {};
 
 		// The dummy class constructor
 		function Class() {
-			if (!initializing && this.init) {
-				this.init.apply(this, arguments);
+			if (!initializing) {
+				for( var prop in this ) {
+					// deepcopy properties if required
+					if( typeof(this[prop]) === 'object' ) {
+						this[prop] = deepcopy(this[prop]);
+					}
+				}
+				if (this.init) {
+					this.init.apply(this, arguments);
+				}
 			}
-			//return this;
+			return this;
 		}
 		// Populate our constructed prototype object
 		Class.prototype = proto;
@@ -557,6 +604,30 @@ window.me = window.me || {};
 			}
 		};
 	}
+
+    /**
+     * Get the prototype of an Object.
+     * @memberOf external:Object#
+     * @alias getPrototypeOf
+     * @param {Object} obj Target object to inspect.
+     * @return {Prototype} Prototype of the target object.
+     */
+    Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
+        return obj.__proto__;
+    };
+
+    /**
+     * Set the prototype of an Object.
+     * @memberOf external:Object#
+     * @alias setPrototypeOf
+     * @param {Object} obj Target object to modify.
+     * @param {Prototype} prototype New prototype for the target object.
+     * @return {Object} Modified target object.
+     */
+    Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+        obj.__proto__ = prototype;
+        return obj;
+    };
 
 	/**
 	 * The built in String Object
@@ -1080,7 +1151,7 @@ window.me = window.me || {};
 					targetContainer.name = group.name;
 					targetContainer.visible = group.visible;
 					targetContainer.z = group.z;
-  					targetContainer.setOpacity(group.opacity);                  
+					targetContainer.setOpacity(group.opacity);                  
                  
 
 					// disable auto-sort
