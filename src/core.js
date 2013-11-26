@@ -289,6 +289,43 @@ window.me = window.me || {};
 
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
+    /**
+     * a deep copy function
+     * @ignore
+     */
+    var deepcopy = function (obj) {
+     
+        if (null == obj || "object" !== typeof obj) {
+            return obj;
+        }
+        
+        // hold the copied object
+        var copy;
+        
+        // Array copy
+        if( obj instanceof Array ) {
+            copy = [];
+            for( var i = 0, l = obj.length; i < l; i++) {
+                copy[i] = deepcopy(obj[i]);
+            }
+            return copy;
+        }
+        
+        // Date copy
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+            
+        // else instanceof Object
+        copy = {};
+        for( var attr in obj ) {
+            if (obj.hasOwnProperty(attr)) copy[attr] = deepcopy(obj[attr]);
+        }
+        return copy;
+    };
+    
 	/**
 	 * JavaScript Inheritance Helper <br>
 	 * Based on <a href="http://ejohn.org/">John Resig</a> Simple Inheritance<br>
@@ -368,7 +405,7 @@ window.me = window.me || {};
 
 					return ret;
 				};
-			})(name, prop[name]) : prop[name];
+			})(name, prop[name]) : deepcopy(prop[name]);
 		}
 
 		// The dummy class constructor
