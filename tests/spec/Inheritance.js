@@ -25,6 +25,22 @@ describe("John Resig Simple Inheritance", function () {
     var p = new Person(true);
     var n = new Ninja();
 
+    it("p is an instance of Person", function () {
+        expect(p).toBeInstanceOf(Person);
+    });
+    
+    it("p is not an instance of Ninja", function () {
+        expect(p).not.toBeInstanceOf(Ninja);
+    });
+    
+    it("n is an instance of Ninja", function () {
+        expect(n).toBeInstanceOf(Ninja);
+    });
+    
+    it("n is also an instance of Person", function () {
+        expect(n).toBeInstanceOf(Person);
+    });
+    
     it("p can dance", function () {
         expect(p.dance()).toEqual(true);
     });
