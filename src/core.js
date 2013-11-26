@@ -1077,7 +1077,7 @@ window.me = window.me || {};
 					targetContainer.name = group.name;
 					targetContainer.visible = group.visible;
 					targetContainer.z = group.z;
-  					targetContainer.setOpacity(group.opacity);                  
+					targetContainer.setOpacity(group.opacity);                  
                  
 
 					// disable auto-sort
