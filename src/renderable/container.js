@@ -564,7 +564,7 @@
                     );
 
                     // update our object
-                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(time);
 
                     // Undo global context translation
                     if (isTranslated) {
@@ -578,7 +578,7 @@
                 } else {
                 
                     // just directly call update() for non renderable object
-                    isDirty |= obj.alwaysUpdate && obj.update();
+                    isDirty |= obj.alwaysUpdate && obj.update(time);
                 }
             }
              
