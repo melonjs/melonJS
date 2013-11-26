@@ -1255,7 +1255,7 @@ window.me = window.me || {};
 		 * as defined in Tiled (Name field of the Object Properties)<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
+		 * @deprecated use me.game.world.getChildByProp();
 		 * @name getEntityByName
 		 * @memberOf me.game
 		 * @public
@@ -1264,14 +1264,14 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity[]} Array of object entities
 		 */
 		api.getEntityByName = function(entityName) {
-			return api.world.getEntityByProp("name", entityName);
+			return api.world.getChildByProp("name", entityName);
 		};
 		
 		/**
 		 * return the entity corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
+		 * @deprecated use me.game.world.getChildByProp();
 		 * @name getEntityByGUID
 		 * @memberOf me.game
 		 * @public
@@ -1280,7 +1280,7 @@ window.me = window.me || {};
 		 * @return {me.ObjectEntity} Object Entity (or null if not found)
 		 */
 		api.getEntityByGUID = function(guid) {
-			var obj = api.world.getEntityByProp("GUID", guid);
+			var obj = api.world.getChildByProp("GUID", guid);
 			return (obj.length>0)?obj[0]:null;
 		};
 		
