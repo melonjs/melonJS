@@ -32,6 +32,11 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.UP,	"up");
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
+		me.input.bindKey(me.input.KEY.A,	 "left");
+		me.input.bindKey(me.input.KEY.D, "right");
+		me.input.bindKey(me.input.KEY.W,	"up");
+		me.input.bindKey(me.input.KEY.S,	"down");
+
 		
 		// set a renderable
 		this.renderable = game.texture.createAnimationFromName([
