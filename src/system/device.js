@@ -55,9 +55,9 @@
 			}
 
 			// fullscreen api detection
-			this.hasFullScreenSupport = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+			document.body.requestFullscreen = document.body.requestFullscreen || document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen;
+			this.hasFullScreenSupport = document.body.requestFullscreen !== null && typeof document.body.requestFullscreen === 'function';
 			if(this.hasFullScreenSupport) {
-				document.body.requestFullscreen = document.body.requestFullscreen || document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen;
 				document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen;
 			}
 
