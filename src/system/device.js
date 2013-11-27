@@ -240,7 +240,7 @@
 		 * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
 		 * @public
 		 * @type Number
-         * @readonly
+		 * @readonly
 		 * @name beta
 		 * @memberOf me.device
 		 */
@@ -251,7 +251,7 @@
 		 * The z-axis is perpendicular to the phone, facing out from the center of the screen.
 		 * @public
 		 * @type Number
-         * @readonly
+		 * @readonly
 		 * @name alpha
 		 * @memberOf me.device
 		 */
