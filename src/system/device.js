@@ -6,13 +6,13 @@
  */
 (function(window) {
 
-	/**	
+	/**
 	 * A singleton object representing the device capabilities and specific events
 	 * @namespace me.device
 	 * @memberOf me
 	 */
 	me.device = (function() {
-		
+
 		// defines object for holding public information/functionality.
 		var obj = {};
 		// private properties
@@ -35,7 +35,7 @@
 			window.gesture = window.gesture || window.MSGesture;
 
 			// detect touch capabilities
-			me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) || 
+			me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
 							  (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 
 			// detect platform
@@ -44,17 +44,25 @@
 			// accelerometer detection
 			me.device.hasAccelerometer = (
 				(typeof (window.DeviceMotionEvent) !== 'undefined') || (
-					(typeof (window.Windows) !== 'undefined') && 
+					(typeof (window.Windows) !== 'undefined') &&
 					(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
 				)
 			);
-        
+
+			// device motion detection
 			if (window.DeviceOrientationEvent) {
 				me.device.hasDeviceOrientation = true;
 			}
-            
-            me.device.HighResTimer = (typeof window.performance !== 'undefined') && 
-                (typeof window.performance.now !== 'undefined');
+
+			// fullscreen api detection
+			this.hasFullScreenSupport = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+			if(this.hasFullScreenSupport) {
+				document.body.requestFullscreen = document.body.requestFullscreen || document.body.mozRequestFullScreen || document.body.webkitRequestFullscreen;
+				document.cancelFullScreen = document.cancelFullScreen || document.mozCancelFullScreen || document.webkitCancelFullScreen;
+			}
+
+			me.device.HighResTimer = (typeof window.performance !== 'undefined') &&
+				(typeof window.performance.now !== 'undefined');
 
 			try {
 				obj.localStorage = !!window.localStorage;
@@ -67,7 +75,7 @@
 		// ----- PUBLIC Properties & Functions -----
 
 		// Browser capabilities
-        
+
         /**
 		 * High Resolution timer (typically performance.now)
 		 * @type Boolean
@@ -96,7 +104,7 @@
 		obj.sound = false;
 		/**
 		 * Browser Local Storage capabilities <br>
-		 * (this flag will be set to false if cookies are blocked) 
+		 * (this flag will be set to false if cookies are blocked)
 		 * @type Boolean
          * @readonly
 		 * @name localStorage
@@ -120,6 +128,15 @@
 		 * @memberOf me.device
 		 */
 		obj.hasDeviceOrientation = false;
+
+		/**
+		 * Browser full screen support
+		 * @type Boolean
+		 		 * @readonly
+		 * @name hasFullScreenSupport
+		 * @memberOf me.device
+		 */
+		 obj.hasFullScreenSupport = false;
 
 		/**
 		 * Browser Base64 decoding capability
@@ -148,7 +165,7 @@
 		 * @memberOf me.device
 		 */
 		obj.isMobile = false;
-        
+
         /**
          * The device current orientation status. <br>
          *   0 : default orientation<br>
@@ -214,7 +231,7 @@
 		obj.beta = 0;
 
 		/**
-		 * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis. 
+		 * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
 		 * The z-axis is perpendicular to the phone, facing out from the center of the screen.
 		 * @public
 		 * @type Number
@@ -223,6 +240,31 @@
 		 * @memberOf me.device
 		 */
 		obj.alpha = 0;
+
+		/**
+		 * Triggers fullscreen request (user will be prompted). Requires fullscreen support from the browser/device.
+		 * If you need to utilize event handlers around the fullscreen changing, use: document.addEventListener( 'pointerlockchange', ... );
+		 * @name enterFullScreen
+		 * @memberOf me.device
+		 * @function
+		 */
+		obj.enterFullScreen = function() {
+			if(this.hasFullScreenSupport) {
+				document.body.requestFullscreen();
+			}
+		}
+
+		/**
+		 * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+		 * @name exitFullScreen
+		 * @memberOf me.device
+		 * @function
+		 */
+		obj.exitFullScreen = function() {
+			if(this.hasFullScreenSupport) {
+				document.cancelFullScreen();
+			}
+		}
 
 		/**
 		 * return the device pixel ratio
@@ -294,7 +336,7 @@
 		}
 
 		/**
-		 * watch Accelerator event 
+		 * watch Accelerator event
 		 * @name watchAccelerometer
 		 * @memberOf me.device
 		 * @public
@@ -325,9 +367,9 @@
 			}
 			return false;
 		};
-		
+
 		/**
-		 * unwatch Accelerometor event 
+		 * unwatch Accelerometor event
 		 * @name unwatchAccelerometer
 		 * @memberOf me.device
 		 * @public
@@ -349,7 +391,7 @@
 		};
 
 		/**
-		 * watch the device orientation event 
+		 * watch the device orientation event
 		 * @name watchDeviceOrientation
 		 * @memberOf me.device
 		 * @public
@@ -365,7 +407,7 @@
 		};
 
 		/**
-		 * unwatch Device orientation event 
+		 * unwatch Device orientation event
 		 * @name unwatchDeviceOrientation
 		 * @memberOf me.device
 		 * @public
