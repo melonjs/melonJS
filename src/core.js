@@ -1171,9 +1171,6 @@ window.me = window.me || {};
 						// set the entity z order correspondingly to its parent container/group
 						entity.z = group.z;
 
-						//set the object visible state based on the group visible state
-						entity.visible = (group.visible === true);
-
 						//apply group opacity value to the child objects if group are merged
 						if (api.mergeGroup === true && entity.isRenderable === true) {
 							entity.setOpacity(entity.getOpacity() * group.opacity);
