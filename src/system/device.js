@@ -49,6 +49,13 @@
 				)
 			);
 
+			// pointerlock detection
+			this.hasPointerLockSupport = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+			if(this.hasPointerLockSupport) {
+				document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock || document.body.webkitRequestPointerLock;
+				document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock || document.webkitExitPointerLock;
+			}
+
 			// device motion detection
 			if (window.DeviceOrientationEvent) {
 				me.device.hasDeviceOrientation = true;
@@ -137,6 +144,15 @@
 		 * @memberOf me.device
 		 */
 		 obj.hasFullScreenSupport = false;
+
+		 /**
+		 * Browser pointerlock api support
+		 * @type Boolean
+		 		 * @readonly
+		 * @name hasPointerLockSupport
+		 * @memberOf me.device
+		 */
+		 obj.hasPointerLockSupport = false;
 
 		/**
 		 * Browser Base64 decoding capability
@@ -242,11 +258,15 @@
 		obj.alpha = 0;
 
 		/**
-		 * Triggers fullscreen request (user will be prompted). Requires fullscreen support from the browser/device.
-		 * If you need to utilize event handlers around the fullscreen changing, use: document.addEventListener( 'pointerlockchange', ... );
+		 * Triggers fullscreen request. Requires fullscreen support from the browser/device. Must be called in a click event
+		 * or an event that requires user interaction.
+		 * If you need to utilize event handlers around the fullscreen changing, use as per example below
 		 * @name enterFullScreen
 		 * @memberOf me.device
 		 * @function
+		 * @example
+		 *   document.addEventListener( 'fullscreenchange', fullscreenchange, false );
+     *   document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
 		 */
 		obj.enterFullScreen = function() {
 			if(this.hasFullScreenSupport) {
@@ -333,6 +353,57 @@
 			obj.gamma = e.gamma;
 			obj.beta = e.beta;
 			obj.alpha = e.alpha;
+		}
+
+		/**
+		 * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
+		 * Must be called in a click event or an event that requires user interaction.
+		 * If you need to run handle events for errors or change of the pointer lock, see below.
+		 * @name turnOnPointerLock
+		 * @memberOf me.device
+		 * @function
+		 * @example
+		 *   document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+     *   document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+     *   document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+     *
+     *   document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+     *   document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+     *   document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+		 */
+		obj.turnOnPointerLock = function() {
+			if(this.hasPointerLockSupport) {
+				var element = document.body;
+				if (/Firefox/i.test(navigator.userAgent)) {
+					function fullscreenchange (event) {
+						if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+							document.removeEventListener( 'fullscreenchange', fullscreenchange );
+							document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+							element.requestPointerLock();
+						}
+					}
+
+					document.addEventListener( 'fullscreenchange', fullscreenchange, false );
+					document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+
+					element.requestFullscreen();
+
+				} else {
+					element.requestPointerLock();
+				}
+			}
+		}
+
+		/**
+		 * Exits pointer lock. Works on supported devices & browsers
+		 * @name turnOffPointerLock
+		 * @memberOf me.device
+		 * @function
+		 */
+		obj.turnOffPointerLock = function() {
+			if(this.hasPointerLockSupport) {
+				document.exitPointerLock();
+			}
 		}
 
 		/**
