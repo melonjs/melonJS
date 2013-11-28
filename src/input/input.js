@@ -92,7 +92,10 @@
 		var keyLock = {};
 		// actual lock status of each key
 		var keyLocked = {};
-		
+
+		// List of binded keys being held
+		var keyRefs = {};
+
 		// list of registered Event handlers
 		var evtHandlers = {};
 
@@ -232,7 +235,7 @@
 		 * key down event
 		 * @ignore
 		 */
-		function keydown(e, keyCode) {
+		function keydown(e, keyCode, mouseButton) {
 
             keyCode = keyCode || e.keyCode || e.which;
             var action = KeyBinding[keyCode];
@@ -246,9 +249,11 @@
 
 			if (action) {
 				if (!keyLocked[action]) {
-					keyStatus[action] = true;
-					// lock the key if requested
-					keyLocked[action] = keyLock[action];
+					var trigger = mouseButton ? mouseButton : keyCode;
+					if (!keyRefs[action][trigger]) {
+						keyStatus[action]++;
+						keyRefs[action][trigger] = true;
+					}
 				}
 				// prevent event propagation
 				return preventDefault(e);
@@ -262,7 +267,7 @@
 		 * key up event
 		 * @ignore
 		 */
-		function keyup(e, keyCode) {
+		function keyup(e, keyCode, mouseButton) {
 
             keyCode = keyCode || e.keyCode || e.which;
             var action = KeyBinding[keyCode];
@@ -271,8 +276,9 @@
             me.event.publish(me.event.KEYUP, [ action, keyCode ]);
 
 			if (action) {
-
-				keyStatus[action] = false;
+				var trigger = mouseButton ? mouseButton : keyCode;
+				keyRefs[action][trigger] = undefined;
+				keyStatus[action]--;
 				keyLocked[action] = false;
 
 				// prevent the event propagation
@@ -442,14 +448,15 @@
 			}
 
 			// in case of touch event button is undefined
-			var keycode = obj.mouse.bind[e.button || 0];
+			var button = e.button || 0;
+			var keycode = obj.mouse.bind[button];
 
 			// check if mapped to a key
 			if (keycode) {
 				if (e.type === activeEventList[2])
-					return keydown(e, keycode);
+					return keydown(e, keycode, button + 1);
 				else // 'mouseup' or 'touchend'
-					return keyup(e, keycode);
+					return keyup(e, keycode, button + 1);
 			}
 
 			return true;
@@ -594,11 +601,9 @@
 		 */
 
 		obj.isKeyPressed = function(action) {
-			if (keyStatus[action]) {
+			if (keyStatus[action] && !keyLocked[action]) {
 				if (keyLock[action]) {
 					keyLocked[action] = true;
-					// "eat" the event
-					keyStatus[action] = false;
 				}
 				return true;
 			}
@@ -616,7 +621,7 @@
 		 */
 
 		obj.keyStatus = function(action) {
-			return (keyLocked[action] === true) ? true : keyStatus[action];
+			return (keyStatus[action] > 0);
 		};
 
 		
@@ -664,9 +669,10 @@
 
 			KeyBinding[keycode] = action;
 
-			keyStatus[action] = false;
+			keyStatus[action] = 0;
 			keyLock[action] = lock ? lock : false;
 			keyLocked[action] = false;
+			keyRefs[action] = {};
 		};
 		
 		/**
@@ -698,8 +704,9 @@
 		 */
 		obj.unbindKey = function(keycode) {
 			// clear the event status
-			keyStatus[KeyBinding[keycode]] = false;
+			keyStatus[KeyBinding[keycode]] = 0;
 			keyLock[KeyBinding[keycode]] = false;
+			keyRefs[KeyBinding[keycode]] = {};
 			// remove the key binding
 			KeyBinding[keycode] = null;
 		};
