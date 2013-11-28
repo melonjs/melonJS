@@ -4,11 +4,11 @@
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "repository": {
-	  "type": "git",
-	  "url": "https://github.com/melonjs/melonJS"
+    "type": "git",
+    "url": "https://github.com/melonjs/melonJS"
   },
   "bugs": {
-	  "url": "https://github.com/melonjs/melonJS/issues"
+    "url": "https://github.com/melonjs/melonJS/issues"
   },
   "licenses": [
     {
@@ -25,13 +25,13 @@
   },
   "dependencies": {},
   "devDependencies": {
-	"grunt": "~0.4.1",
-	"grunt-contrib-jshint": "~0.7.2",
-	"grunt-contrib-concat": "~0.2.0",
-	"grunt-contrib-clean": "~0.4.0",
-	"grunt-contrib-uglify": "~0.2.0",
-	"grunt-contrib-nodeunit": "~0.1.2",
-	"grunt-replace": "~0.4.3"
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.7.2",
+    "grunt-contrib-concat": "~0.2.0",
+    "grunt-contrib-clean": "~0.4.0",
+    "grunt-contrib-uglify": "~0.2.7",
+    "grunt-contrib-nodeunit": "~0.1.2",
+    "grunt-replace": "~0.4.3"
   },
   "scripts": {
     "install": "bower install;grunt",
