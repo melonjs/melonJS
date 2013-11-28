@@ -276,7 +276,8 @@
             me.event.publish(me.event.KEYUP, [ action, keyCode ]);
 
 			if (action) {
-				delete keyRefs[action][mouseButton ? mouseButton : keyCode];
+				var trigger = mouseButton ? mouseButton : keyCode;
+				keyRefs[action][trigger] = undefined;
 				keyStatus[action]--;
 				keyLocked[action] = false;
 
