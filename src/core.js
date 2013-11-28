@@ -387,27 +387,29 @@ window.me = window.me || {};
 		var proto = new this();
 		initializing = false;
 
+		function addSuper(name, fn) {
+			return function() {
+				var tmp = this.parent;
+
+				// Add a new ._super() method that is the same method
+				// but on the super-class
+				this.parent = parent[name];
+
+				// The method only need to be bound temporarily, so we
+				// remove it when we're done executing
+				var ret = fn.apply(this, arguments);
+				this.parent = tmp;
+
+				return ret;
+			};
+		}
+
 		// Copy the properties over onto the new prototype
 		for ( var name in prop) {
 			// Check if we're overwriting an existing function
 			proto[name] = typeof prop[name] === "function" &&
 						  typeof parent[name] === "function" &&
-						  fnTest.test(prop[name]) ? (function(name, fn) {
-				return function() {
-					var tmp = this.parent;
-
-					// Add a new ._super() method that is the same method
-					// but on the super-class
-					this.parent = parent[name];
-
-					// The method only need to be bound temporarily, so we
-					// remove it when we're done executing
-					var ret = fn.apply(this, arguments);
-					this.parent = tmp;
-
-					return ret;
-				};
-			})(name, prop[name]) : prop[name];
+						  fnTest.test(prop[name]) ? addSuper(name, prop[name]) : prop[name];
 		}
 
 		// The dummy class constructor
@@ -464,7 +466,7 @@ window.me = window.me || {};
 	
 	if (!Function.prototype.bind) {
 		/** @ignore */
-		function Empty() {}
+		var Empty = function () {};
 		
 		/**
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
