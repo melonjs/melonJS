@@ -287,7 +287,7 @@
             if(this.hasFullScreenSupport) {
                 document.body.requestFullscreen();
             }
-        }
+        };
 
         /**
          * Exit fullscreen mode. Requires fullscreen support from the browser/device.
@@ -299,7 +299,7 @@
             if(this.hasFullScreenSupport) {
                 document.cancelFullScreen();
             }
-        }
+        };
 
         /**
          * return the device pixel ratio
@@ -389,14 +389,14 @@
         obj.turnOnPointerLock = function() {
             if(this.hasPointerLockSupport) {
                 var element = document.body;
-                if (/Firefox/i.test(navigator.userAgent)) {
-                    function fullscreenchange (event) {
+                if (me.device.ua.match(/Firefox/i)) {
+                    var fullscreenchange = function(event) {
                         if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
                             element.requestPointerLock();
                         }
-                    }
+                    };
 
                     document.addEventListener( 'fullscreenchange', fullscreenchange, false );
                     document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
@@ -407,7 +407,7 @@
                     element.requestPointerLock();
                 }
             }
-        }
+        };
 
         /**
          * Exits pointer lock. Works on supported devices & browsers
@@ -419,7 +419,7 @@
             if(this.hasPointerLockSupport) {
                 document.exitPointerLock();
             }
-        }
+        };
 
         /**
          * watch Accelerator event
