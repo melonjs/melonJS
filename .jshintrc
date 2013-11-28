@@ -52,7 +52,7 @@
     "laxcomma"      : false,     // true: Tolerate comma-first style coding
     "loopfunc"      : false,     // true: Tolerate functions being defined in loops
     "multistr"      : false,     // true: Tolerate multi-line strings
-    "proto"         : true,      // true: Tolerate using the `__proto__` property
+    "proto"         : false,      // true: Tolerate using the `__proto__` property
     "scripturl"     : false,     // true: Tolerate script-targeted URLs
     "smarttabs"     : true,      // true: Tolerate mixed tabs/spaces when used for alignment
     "shadow"        : false,     // true: Allows re-define variables later in code e.g. `var x=1; x=2;`

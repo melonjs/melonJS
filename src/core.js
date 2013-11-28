@@ -613,7 +613,9 @@ window.me = window.me || {};
      * @return {Prototype} Prototype of the target object.
      */
     Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
+        /* jshint ignore:start */
         return obj.__proto__;
+        /* jshint ignore:end */
     };
 
     /**
@@ -625,7 +627,9 @@ window.me = window.me || {};
      * @return {Object} Modified target object.
      */
     Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+        /* jshint ignore:start */
         obj.__proto__ = prototype;
+        /* jshint ignore:end */
         return obj;
     };
 
