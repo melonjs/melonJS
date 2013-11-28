@@ -222,6 +222,10 @@
 				if (entity["pool"].length > 0) {
 					obj = entity["pool"].pop();
 					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
+					// call the object onResetEvent function if defined
+					if (typeof obj.onResetEvent !== "undefined") {
+						obj.onResetEvent.apply(obj, arguments);
+					}
 				} else {
 					arguments[0] = proto;
 					obj = new (proto.bind.apply(proto, arguments))();
