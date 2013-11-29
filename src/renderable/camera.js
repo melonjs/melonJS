@@ -351,7 +351,7 @@
 			this._fadeOut.color = color;
 			this._fadeOut.duration = duration || 1000; // convert to ms
 			this._fadeOut.alpha = 1.0;
-			this._fadeOut.tween = new me.Tween(this._fadeOut).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
+			this._fadeOut.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeOut).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
 			this._fadeOut.tween.start();
 		},
 
@@ -369,7 +369,7 @@
 			this._fadeIn.color = color;
 			this._fadeIn.duration = duration || 1000; //convert to ms
 			this._fadeIn.alpha = 0.0;
-			this._fadeIn.tween = new me.Tween(this._fadeIn).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
+			this._fadeIn.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeIn).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
 			this._fadeIn.tween.start();
 		},
 
