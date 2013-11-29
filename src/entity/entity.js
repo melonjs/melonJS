@@ -141,6 +141,7 @@
 			obj.add("me.ObjectEntity", me.ObjectEntity);
 			obj.add("me.CollectableEntity", me.CollectableEntity);
 			obj.add("me.LevelEntity", me.LevelEntity);
+			obj.add("me.Tween", me.Tween, true);
 		};
 
 		/**
@@ -222,10 +223,13 @@
 				proto = entity["class"];
 				if (entity["pool"].length > 0) {
 					obj = entity["pool"].pop();
-					obj.init.apply(obj, args.slice(1));
+                    // call the object init function if defined (JR's Inheritance)
+					if (typeof obj.init === "function") {
+						obj.init.apply(obj, args.slice(1));
+					}
 					// call the object onResetEvent function if defined
-					if (typeof obj.onResetEvent !== "undefined") {
-						obj.onResetEvent.apply(obj, args);
+					if (typeof obj.onResetEvent === "function") {
+						obj.onResetEvent.apply(obj, args.slice(1));
 					}
 				} else {
 					args[0] = proto;
