@@ -53,6 +53,12 @@
 		 * @ignore
 		 */
 		this.alwaysUpdate = true;
+        
+		/**
+		 * fixed z value
+		 * @ignore
+		 */
+		this.z = 999;
 
 		// Set all starting values present on the target object
 		for ( var field in object ) {
@@ -61,6 +67,26 @@
 
 		}
 
+		/**
+		 * reset the tween object to default value
+		 * @ignore 
+		 */
+		this.onResetEvent = function ( object ) {
+			_object = object;
+			_valuesStart = {};
+			_valuesEnd = {};
+			_valuesStartRepeat = {};
+			_easingFunction = me.Tween.Easing.Linear.None;
+			_interpolationFunction = me.Tween.Interpolation.Linear;
+			_yoyo = false;
+			_reversed = false;
+			_duration = 1000;
+			_delayTime = 0;
+			_onStartCallback = null;
+			_onStartCallbackFired = false;
+			_onUpdateCallback = null;
+			_onCompleteCallback = null;
+		};
 		
 		/**
 		 * object properties to be updated and duration
@@ -95,7 +121,7 @@
 			_onStartCallbackFired = false;
 
 			// add the tween to the object pool on start
-			me.game.add(this, 999);
+			me.game.world.addChild(this);
 
 			_startTime = (time === undefined ? me.timer.getTime() : time) + _delayTime;
 			_pauseTime = 0;
@@ -138,7 +164,7 @@
 		 */
 		this.stop = function () {
 
-			me.game.remove(this, true);
+			me.game.world.removeChild(this);
 			return this;
 
 		};
@@ -382,7 +408,7 @@
 				} else {
 				
 					// remove the tween from the object pool
-					me.game.remove(this, true);
+					me.game.world.removeChild(this);
 
 					if ( _onCompleteCallback !== null ) {
 

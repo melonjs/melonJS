@@ -278,7 +278,10 @@
 			if (action) {
 				var trigger = mouseButton ? mouseButton : keyCode;
 				keyRefs[action][trigger] = undefined;
-				keyStatus[action]--;
+
+				if (keyStatus[action] > 0)
+					keyStatus[action]--;
+
 				keyLocked[action] = false;
 
 				// prevent the event propagation

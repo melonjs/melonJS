@@ -141,6 +141,7 @@
 			obj.add("me.ObjectEntity", me.ObjectEntity);
 			obj.add("me.CollectableEntity", me.CollectableEntity);
 			obj.add("me.LevelEntity", me.LevelEntity);
+			obj.add("me.Tween", me.Tween, true);
 		};
 
 		/**
@@ -209,22 +210,30 @@
 
 		obj.newInstanceOf = function(data) {
 			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
+			var args = Array.prototype.slice.call(arguments);
 			if (name && entityClass[name]) {
 				var proto;
 				if (!entityClass[name]['pool']) {
 					proto = entityClass[name]["class"];
-					arguments[0] = proto;
-					return new (proto.bind.apply(proto, arguments))();
+					args[0] = proto;
+					return new (proto.bind.apply(proto, args))();
 				}
 				
 				var obj, entity = entityClass[name];
 				proto = entity["class"];
 				if (entity["pool"].length > 0) {
 					obj = entity["pool"].pop();
-					obj.init.apply(obj, Array.prototype.slice.call(arguments, 1));
+                    // call the object init function if defined (JR's Inheritance)
+					if (typeof obj.init === "function") {
+						obj.init.apply(obj, args.slice(1));
+					}
+					// call the object onResetEvent function if defined
+					if (typeof obj.onResetEvent === "function") {
+						obj.onResetEvent.apply(obj, args.slice(1));
+					}
 				} else {
-					arguments[0] = proto;
-					obj = new (proto.bind.apply(proto, arguments))();
+					args[0] = proto;
+					obj = new (proto.bind.apply(proto, args))();
 					obj.className = name;
 				}
 
