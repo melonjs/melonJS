@@ -452,9 +452,9 @@ window.me = window.me || {};
 		 * newObject = Object.create(oldObject);
 		 */
 		Object.create = function(o) {
-			function _fn() {}
-			_fn.prototype = o;
-			return new _fn();
+			var Fn = function() {};
+			Fn.prototype = o;
+			return new Fn();
 		};
 	}
 
@@ -652,8 +652,8 @@ window.me = window.me || {};
 			return (this.replace(/^\s+/, '')).replace(/\s+$/, ''); 
 		};  
 	}
-    
-    	
+
+		
 	if(!String.prototype.trimRight) {  
 		/**
 		 * returns the string stripped of whitespace from the right end of the string.

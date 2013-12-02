@@ -162,7 +162,7 @@
 	 * @constructor
 	 * @ignore
 	 **/
-	function _TinyTMXParser() {
+	function TinyTMXParser() {
 		var parserObj = {
 			tmxDoc : null,
 
@@ -221,7 +221,7 @@
 		
 		init: function(){
 			if (!this.TMXParser) {
-				this.TMXParser = new _TinyTMXParser();
+				this.TMXParser = new TinyTMXParser();
 			}
 		},
 		
