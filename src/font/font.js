@@ -150,7 +150,7 @@
             
 			var strings = (""+text).split("\n");
 			for (var i = 0; i < strings.length; i++) {
-				this.width = Math.max(context.measureText(strings[i].trim()).width, this.width);
+				this.width = Math.max(context.measureText(strings[i].trimRight()).width, this.width);
 				this.height += this.fontSize.y * this.lineHeight;
 			}
 			return {width: this.width, height: this.height};
@@ -179,7 +179,7 @@
 			var strings = (""+text).split("\n");
 			for (var i = 0; i < strings.length; i++) {
 				// draw the string
-				context.fillText(strings[i].trim(), ~~x, ~~y);
+				context.fillText(strings[i].trimRight(), ~~x, ~~y);
 				// add leading space
 				y += this.fontSize.y * this.lineHeight;
 			}
@@ -298,7 +298,7 @@
             this.height = this.width = 0;
             
 			for (var i = 0; i < strings.length; i++) {
-				this.width = Math.max((strings[i].trim().length * this.sSize.x), this.width);
+				this.width = Math.max((strings[i].trimRight().length * this.sSize.x), this.width);
 				this.height += this.sSize.y * this.lineHeight;
 			}
 			return {width: this.width, height: this.height};
@@ -322,7 +322,7 @@
             this.pos.set(x,y);
             for (var i = 0; i < strings.length; i++) {
 				x = lX;
-				var string = strings[i].trim();
+				var string = strings[i].trimRight();
 				// adjust x pos based on alignment value
 				var width = string.length * this.sSize.x;
 				switch(this.textAlign) {
