@@ -652,6 +652,19 @@ window.me = window.me || {};
 			return (this.replace(/^\s+/, '')).replace(/\s+$/, ''); 
 		};  
 	}
+    
+    	
+	if(!String.prototype.trimRight) {  
+		/**
+		 * returns the string stripped of whitespace from the right end of the string.
+		 * @memberof! external:String#
+		 * @alias trimRight
+		 * @return {String} trimmed string
+		 */
+		String.prototype.trimRight = function () {  
+			return this.replace(/\s+$/, '');
+		};  
+	}
 	
 	/**
 	 * add isNumeric fn to the string object
