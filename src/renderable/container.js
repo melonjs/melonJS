@@ -128,6 +128,7 @@
 		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
+		 * @param {Number} index
 		 */
 		addChildAt : function(child, index) {
 			if((index >= 0) && (index < this.children.length)) {
