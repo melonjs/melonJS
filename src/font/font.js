@@ -17,7 +17,7 @@
 	/**
 	 * a generic system font object.
 	 * @class
-	 * @extends Object
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {String} font a CSS font name
@@ -33,7 +33,6 @@
 		font : null,
         fontSize : null,
        
-        
 		/**
 		 * defines the color used to draw the font.<br>
 		 * Default value : "#000000"
@@ -42,6 +41,24 @@
 		 * @name me.Font#fillStyle
 		 */
 		fillStyle : "#000000",
+
+		/**
+		 * defines the color used to draw the font stroke.<br>
+		 * Default value : "#000000"
+		 * @public
+		 * @type String
+		 * @name me.Font#strokeStyle
+		 */
+		strokeStyle : "#000000",
+        
+		/**
+		 * sets the current line width, in pixels, when drawing stroke
+		 * Default value : 1
+		 * @public
+		 * @type Number
+		 * @name me.Font#lineWidth 
+		 */
+		lineWidth  : 1,
 		
 		/**
 		 * Set the default text alignment (or justification),<br>
@@ -64,7 +81,7 @@
 		textBaseline : "top",
 		
 		/**
-		 * Set the line height (when displaying multi-line strings). <br>
+		 * Set the line spacing height (when displaying multi-line strings). <br>
 		 * Current font height will be multiplied with this value to set the line height.
 		 * Default value : 1.0
 		 * @public
@@ -192,9 +209,54 @@
 				y += this.fontSize.y * this.lineHeight;
 			}
 			
+		},
+        
+		/**
+		 * draw a stroke text at the specified coord, as defined <br>
+		 * by the `lineWidth` and `fillStroke` properties. <br>
+		 * Note : using drawStroke is not recommended for performance reasons
+		 * @name drawStroke
+		 * @memberOf me.Font
+		 * @function
+		 * @param {Context} context 2D Context
+		 * @param {String} text
+		 * @param {Number} x
+		 * @param {Number} y
+		 */
+		drawStroke : function(context, text, x, y) {
+            // update initial position
+            this.pos.set(x,y);
+            
+            // save the context, as we are modifying
+            // too much parameter in this function
+            context.save();
+            
+            // draw the text
+            context.font = this.font;
+            context.fillStyle = this.fillStyle;
+            context.strokeStyle = this.strokeStyle;
+            context.lineWidth = this.lineWidth;
+            context.textAlign = this.textAlign;
+            context.textBaseline = this.textBaseline;
+		           
+            var strings = (""+text).split("\n");
+            for (var i = 0; i < strings.length; i++) {
+                var _string = strings[i].trimRight();
+                // draw the border
+                context.strokeText(_string, ~~x, ~~y);
+                // draw the string
+                context.fillText(_string, ~~x, ~~y);
+                // add leading space
+                y += this.fontSize.y * this.lineHeight;
+            }
+            
+            // restore the context
+            context.restore();
 		}
+        
 	});
 
+    
 	/**
 	 * a bitpmap font object
 	 * @class

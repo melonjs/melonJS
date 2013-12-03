@@ -56,11 +56,18 @@ var PlayScreen = me.ScreenObject.extend( {
 		
 		// font size test
 		this.font.textAlign = "left";
-		for (var i = 8; i < 56; i += 8) {
+        this.font.lineWidth = "2";
+        
+		for (var i = 8; i < 48; i += 8) {
 			this.font.set('Arial', i, 'white');
 			this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
 			y_pos+=this.font.measureText(context, "DUMMY").height;
 		}
+        // one more with drawStroke this time
+        this.font.set('Arial', 48, 'white');
+        this.font.strokeStyle = "red";
+        this.font.lineWidth = 3;
+		this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
 
 		// bFont size test		
 		y_pos = 0;
@@ -74,7 +81,7 @@ var PlayScreen = me.ScreenObject.extend( {
 
 		
 		// font baseline test
-		this.font.set('Arial', 14, 'white');
+		this.font.set('Arial', 16, 'white');
 		var baseline = 200;
 
 		// Draw the baseline
@@ -105,7 +112,7 @@ var PlayScreen = me.ScreenObject.extend( {
 		
 		// font text
 		var text = "this is a multiline\nfont test with melonjs\nand it works!";
-		this.font.textAlign = "center";		
+		this.font.textAlign = "center";
 		this.font.draw(context, text, 75, 230);
 
 		var text = "this is another font test \nwith right alignment\nand it still works!";

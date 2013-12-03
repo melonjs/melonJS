@@ -649,7 +649,6 @@ window.me = window.me || {};
 		};  
 	}
     
-    	
 	if(!String.prototype.trimRight) {  
 		/**
 		 * returns the string stripped of whitespace from the right end of the string.
