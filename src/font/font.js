@@ -22,7 +22,7 @@
 	 * @constructor
 	 * @param {String} font a CSS font name
 	 * @param {Number|String} size size, or size + suffix (px, em, pt)
-	 * @param {String} color a CSS color value
+	 * @param {String} fillStyle a CSS color value
 	 * @param {String} [textAlign="left"] horizontal alignment
 	 */
     me.Font = me.Renderable.extend(
@@ -32,8 +32,16 @@
 		/** @ignore */
 		font : null,
         fontSize : null,
-        color : null,
+       
         
+		/**
+		 * defines the color used to draw the font.<br>
+		 * Default value : "#000000"
+		 * @public
+		 * @type String
+		 * @name me.Font#fillStyle
+		 */
+		fillStyle : "#000000",
 		
 		/**
 		 * Set the default text alignment (or justification),<br>
@@ -66,12 +74,12 @@
 		lineHeight : 1.0,
         
 		/** @ignore */
-		init : function(font, size, color, textAlign) {
+		init : function(font, size, fillStyle, textAlign) {
             this.pos = new me.Vector2d();
             this.fontSize = new me.Vector2d();
             
 			// font name and type
-			this.set(font, size, color, textAlign);
+			this.set(font, size, fillStyle, textAlign);
 			
             // parent constructor
             this.parent(this.pos, 0, this.fontSize.y);
@@ -104,13 +112,13 @@
 		 * @function
 		 * @param {String} font a CSS font name
 		 * @param {Number|String} size size, or size + suffix (px, em, pt)
-		 * @param {String} color a CSS color value
+		 * @param {String} fillStyle a CSS color value
 		 * @param {String} [textAlign="left"] horizontal alignment
 		 * @example
 		 * font.set("Arial", 20, "white");
 		 * font.set("Arial", "1.5em", "white");
 		 */
-		set : function(font, size, color, textAlign) {
+		set : function(font, size, fillStyle, textAlign) {
 			// font name and type
 			var font_names = font.split(",");
 			for (var i = 0; i < font_names.length; i++) {
@@ -124,7 +132,7 @@
 				size = "" + size + "px";
 			}
 			this.font = size + " " + font_names.join(",");
-			this.color = color;
+			this.fillStyle = fillStyle;
 			if (textAlign) {
 				this.textAlign = textAlign;
 			}
@@ -142,7 +150,7 @@
 		measureText : function(context, text) {
 			// draw the text
 			context.font = this.font;
-			context.fillStyle = this.color;
+			context.fillStyle = this.fillStyle;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
             
@@ -172,7 +180,7 @@
             
             // draw the text
 			context.font = this.font;
-			context.fillStyle = this.color;
+			context.fillStyle = this.fillStyle;
 			context.textAlign = this.textAlign;
 			context.textBaseline = this.textBaseline;
 		           
