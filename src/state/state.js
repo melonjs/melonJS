@@ -158,7 +158,7 @@
 			}
 			
 			// sort the object pool
-			me.game.sort();
+			me.game.world.sort();
 
 		},
 

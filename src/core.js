@@ -653,7 +653,6 @@ window.me = window.me || {};
 		};  
 	}
 
-		
 	if(!String.prototype.trimRight) {  
 		/**
 		 * returns the string stripped of whitespace from the right end of the string.
@@ -1265,67 +1264,15 @@ window.me = window.me || {};
 
 		};
 
-
 		/**
-		 * returns the list of entities with the specified name<br>
-		 * as defined in Tiled (Name field of the Object Properties)<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getChildByProp();
-		 * @name getEntityByName
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} entityName entity name
-		 * @return {me.ObjectEntity[]} Array of object entities
-		 */
-		api.getEntityByName = function(entityName) {
-			return api.world.getChildByProp("name", entityName);
-		};
-		
-		/**
-		 * return the entity corresponding to the specified GUID<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getChildByProp();
-		 * @name getEntityByGUID
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} GUID entity GUID
-		 * @return {me.ObjectEntity} Object Entity (or null if not found)
-		 */
-		api.getEntityByGUID = function(guid) {
-			var obj = api.world.getChildByProp("GUID", guid);
-			return (obj.length>0)?obj[0]:null;
-		};
-		
-		/**
-		 * return the entity corresponding to the property and value<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getChildByProp();
-		 * @name getEntityByProp
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} prop Property name
-		 * @param {String} value Value of the property
-		 * @return {me.ObjectEntity[]} Array of object entities
-		 */
-		api.getEntityByProp = function(prop, value) {
-			return api.world.getChildByProp(prop, value);
-		};
-
-		/**
-		 * Returns the entity container of the specified Child in the game world
-		 * @name getEntityContainer
+		 * Returns the parent container of the specified Child in the game world
+		 * @name getParentContainer
 		 * @memberOf me.game
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 * @return {me.ObjectContainer}
 		 */
-		api.getEntityContainer = function(child) {
+		api.getParentContainer = function(child) {
 			return child.ancestor;
 		};
 
@@ -1382,25 +1329,6 @@ window.me = window.me || {};
 			}
 			// destroy all objects in the root container
 			api.world.destroy();
-		};
-
-		/**
-		 * Manually trigger the sort all the game objects.</p>
-		 * Since version 0.9.9, all objects are automatically sorted, <br>
-		 * except if a container autoSort property is set to false.
-		 * @deprecated use me.game.world.sort();
-		 * @name sort
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @example
-		 * // change the default sort property
-		 * me.game.sortOn = "y";
-		 * // manuallly call me.game.sort with our sorting function
-		 * me.game.sort();
-		 */
-		api.sort = function() {
-			api.world.sort();
 		};
 
 		/**

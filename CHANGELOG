@@ -18,6 +18,7 @@ Version History
 * Core : better support object reset through a onResetEvent function when using object pooling
 * Tween : updated the me.Tween object to be usable with the object pooling mechanism
 * Font: added a trimRight polyfill to the String class to help fixing multi-line ASCII rendering
+* Font: added a drawStroke function
 
 0.9.10
 * Core : fixed object `visible` flag not being set based on their parent group visible status
