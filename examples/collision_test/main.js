@@ -18,9 +18,6 @@ var game = {
             return;
         }
 
-        // Run fast!
-        me.sys.useNativeAnimFrame = true;
-
         // install the debug panel plugin
         me.plugin.register(debugPanel, "debug");
         me.debug.renderCollisionMap = true;
