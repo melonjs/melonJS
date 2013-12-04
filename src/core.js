@@ -1136,7 +1136,7 @@ window.me = window.me || {};
 			for ( var i = layers.length; i--;) {
 				if (layers[i].visible) {
 					// only if visible
-					api.add(layers[i]);
+					api.world.addChild(layers[i]);
 				}
 			}
 
