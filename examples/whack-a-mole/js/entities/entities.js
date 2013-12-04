@@ -164,19 +164,19 @@ game.MoleManager = me.ObjectEntity.extend(
 		// add the first row of moles
 		for ( var i = 0; i < 3; i ++) {
 			this.moles[i] = new game.MoleEntity((112 + (i * 310)), 127+40)
-			me.game.add (this.moles[i], 15);
+			me.game.world.addChild (this.moles[i], 15);
 		}
 		
 		// add the 2nd row of moles
 		for ( var i = 3; i < 6; i ++) {
 			this.moles[i] = new game.MoleEntity((112 + ((i-3) * 310)), 383+40)
-			me.game.add (this.moles[i], 35);
+			me.game.world.addChild (this.moles[i], 35);
 		}
 		
 		// add the 3rd row of moles
 		for ( var i = 6; i < 9; i ++) {
 			this.moles[i] = new game.MoleEntity((112 + ((i-6) * 310)), 639+40)
-			me.game.add (this.moles[i], 55);
+			me.game.world.addChild (this.moles[i], 55);
 		}
 		
 			

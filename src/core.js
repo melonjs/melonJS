@@ -1240,29 +1240,6 @@ window.me = window.me || {};
 
 		};
 
-		/**
-		 * Manually add object to the game manager
-		 * @deprecated @see me.game.world.addChild()
-		 * @name add
-		 * @memberOf me.game
-		 * @param {me.ObjectEntity} obj Object to be added
-		 * @param {Number} [z="obj.z"] z index
-		 * @public
-		 * @function
-		 * @example
-		 * // create a new object
-		 * var obj = new MyObject(x, y)
-		 * // add the object and force the z index of the current object
-		 * me.game.add(obj, this.z);
-		 */
-		api.add = function(object, zOrder) {
-			if (typeof(zOrder) !== 'undefined') {
-				object.z = zOrder;
-			}
-			// add the object in the game obj list
-			api.world.addChild(object);
-
-		};
 
 		/**
 		 * Returns the parent container of the specified Child in the game world
