@@ -99,8 +99,9 @@
 		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
+		 * @param {number} [zIndex] forces the z index of the child to the specified value.
 		 */
-		addChild : function(child) {
+		addChild : function(child, zIndex) {
 			if(typeof(child.ancestor) !== 'undefined') {
 				child.ancestor.removeChild(child);
 			} else {
@@ -110,6 +111,11 @@
 					// allocated a GUID value
 					child.GUID = me.utils.createGUID();
 				}
+            }
+            
+            // change the child z-index if one is specified
+            if (typeof(zIndex) === 'number') {
+                    child.z = zIndex;
             }
 
 			child.ancestor = this;
