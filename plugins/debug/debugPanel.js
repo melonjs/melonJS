@@ -141,8 +141,29 @@
 				}
 			});
 
+			// patch state.js
+			me.plugin.patch(me.ScreenObject, 'onUpdateFrame', function(time) {
+				if ((++this.frame%this.frameRate)===0) {
+					var frameUpdateStartTime = me.timer.getTime();
+					// reset the frame counter
+					this.frame = 0;
+
+					// update the timer
+					me.timer.update(time);
+
+					// update all games object
+					me.game.update(time);
+					_this.frameUpdateTime = me.timer.getTime() - frameUpdateStartTime;
+				}
+				// draw the game objects
+				// using Date.now since the timer is not always updated for each draw call
+				var frameDrawStartTime = Date.now();
+				me.game.draw();
+				_this.frameDrawTime = Date.now() - frameDrawStartTime;
+			});
+
 			// patch entities.js
-			me.plugin.patch(me.ObjectEntity, "draw", function (context) { 
+			me.plugin.patch(me.ObjectEntity, "draw", function (context) {
 				// call the original me.game.draw function
 				this.parent(context);
 
@@ -285,39 +306,44 @@
 		/** @private */
 		draw : function(context) {
 			context.save();
-			
+
 			// draw the panel
 			context.globalAlpha = 0.5;
 			context.fillStyle = "black";
-			context.fillRect(this.rect.left,  this.rect.top, 
+			context.fillRect(this.rect.left,  this.rect.top,
 							 this.rect.width, this.rect.height);
 		    context.globalAlpha = 1.0;
 
 			// # entities / draw
 			this.font.draw(context, "#objects : " + me.game.world.children.length, 5, 5);
 			this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5, 18);
-			
+
 			// debug checkboxes
 			this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]", 	100, 5);
 			this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]", 	100, 18);
-			
+
 			this.font.draw(context, "?dirtyRect  [ ]",	200, 5);
 			this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 18);
 
-			// draw the memory heap usage 
+			// draw the memory heap usage
 			this.drawMemoryGraph(context, 300, this.rect.width - this.help_str_len - 5);
-			
+
+			// draw the update duration
+			this.font.draw(context, "Update Duration: " + ~~this.frameUpdateTime + "ms", 300, 5);
+			// draw the draw duration
+			this.font.draw(context, "Draw Duration: " + ~~this.frameDrawTime + "ms", 500, 5);
+
 			// some help string
 			this.font.draw(context, this.help_str, this.rect.width - this.help_str_len - 5, 18);
-			
+
 			//fps counter
 			var fps_str = "" + me.timer.fps + "/"	+ me.sys.fps + " fps";
 			this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5);
-			
+
 			context.restore();
 
 		},
-		
+
 		/** @private */
 		onDestroyEvent : function() {
 			// hide the panel
