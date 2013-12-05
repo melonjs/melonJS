@@ -212,19 +212,25 @@ window.me = window.me || {};
 	}
 
 	/**
+	 * The built in window Object
+	 * @external window
+	 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window}
+	 */
+    
+	/**
 	 * Specify a function to execute when the DOM is fully loaded
+     * @memberOf external:window#
+     * @alias onReady
 	 * @param {Function} handler A function to execute after the DOM is ready.
 	 * @example
 	 * // small main skeleton
-	 * var jsApp	=
-	 * {
-	 *    // Initialize the jsApp
+	 * var game	= {
+	 *    // Initialize the game
 	 *    // called by the window.onReady function
-	 *    onload: function()
-	 *    {
+	 *    onload: function() {
+	 *
 	 *       // init video
-	 *       if (!me.video.init('jsapp', 640, 480))
-	 *       {
+	 *       if (!me.video.init('screen', 640, 480, true)) {
 	 *          alert("Sorry but your browser does not support html 5 canvas. ");
 	 *          return;
 	 *       }
@@ -236,27 +242,25 @@ window.me = window.me || {};
 	 *       me.loader.onload = this.loaded.bind(this);
 	 *
 	 *       // set all ressources to be loaded
-	 *       me.loader.preload(g_ressources);
+	 *       me.loader.preload(game.resources);
 	 *
 	 *       // load everything & display a loading screen
 	 *       me.state.change(me.state.LOADING);
 	 *    },
 	 *
 	 *    // callback when everything is loaded
-	 *    loaded: function ()
-	 *    {
+	 *    loaded: function () {
 	 *       // define stuff
 	 *       // ....
 	 *
 	 *       // change to the menu screen
 	 *       me.state.change(me.state.MENU);
 	 *    }
-	 * }; // jsApp
+	 * }; // game
 	 *
 	 * // "bootstrap"
-	 * window.onReady(function()
-	 * {
-	 *    jsApp.onload();
+	 * window.onReady(function() {
+	 *    game.onload();
 	 * });
 	 */
 	$.onReady = function(fn) {
