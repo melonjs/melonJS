@@ -74,54 +74,54 @@
 
 			// always update, even when not visible
 			this.alwaysUpdate = true;
-			
+
 			// create a default font, with fixed char width
 			this.font = new me.Font('courier', 10, 'white');
-			
+
 			// clickable areas
 			this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
 			this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
-			
+
 			this.area.renderDirty = new me.Rect(new me.Vector2d(270,5),15,15);
 			this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
-			
+
 			// some internal string/length
 			this.help_str	  = "(s)how/(h)ide";
 			this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
 			this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
-			
+
 			// enable the FPS counter
 			me.debug.displayFPS = true;
 
 			// bind the "S" and "H" keys
 			me.input.bindKey(showKey || me.input.KEY.S, "show");
 			me.input.bindKey(hideKey || me.input.KEY.H, "hide");
-			
+
 			// memory heap sample points
 			this.samples = [];
 
 			//patch patch patch !
 			this.patchSystemFn();
-            
+
 			// add the debug panel to the game world
 			me.game.world.addChild(this);
-            
+
 			// make it visible
 			this.show();
 		},
 
-		
+
 		/**
 		 * patch system fn to draw debug information
 		 */
 		patchSystemFn : function() {
-			
+
 			// add a few new debug flag (if not yet defined)
 			me.debug.renderHitBox = me.debug.renderHitBox || false;
 			me.debug.renderVelocity = me.debug.renderVelocity || false;
-		
+			var _this = this;
 			// patch timer.js
-			me.plugin.patch(me.timer, "update", function (time) { 
+			me.plugin.patch(me.timer, "update", function (time) {
 				// call the original me.timer.update function
 				this.parent(time);
 
