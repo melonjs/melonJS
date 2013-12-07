@@ -508,4 +508,24 @@
 
         return obj;
     })();
+
+    /**
+     * Returns true if the browser/device is in full screen mode.
+     * @name isFullScreen
+     * @memberOf me.device
+     * @public
+     * @type Boolean
+     * @readonly
+     * @return {boolean}  
+     */
+    Object.defineProperty(me.device, "isFullScreen", {
+        get: function () {
+            if (me.device.hasFullScreenSupport) {
+                return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement) !== null; 
+            } else {
+                return false;
+            }
+        }
+    });
+
 })(window);
