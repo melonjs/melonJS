@@ -12,8 +12,9 @@ Version History
 * Animation : (quick) fixed hWidth and hHeight not being updated when the frame size is different
 * Core : better support object reset through a onResetEvent function when using object pooling
 * Tween : updated the me.Tween object to be usable with the object pooling mechanism
-* Font: added a trimRight polyfill to the String class to help fixing multi-line ASCII rendering
-* Font: added a drawStroke function
+* Font : added a trimRight polyfill to the String class to help fixing multi-line ASCII rendering
+* Font : added a drawStroke function
+* Font : fixed a bug that broke some CSS font-family names, like `monospace` and `"Trebuchet MS"`
 
 0.9.10
 * Core : fixed object `visible` flag not being set based on their parent group visible status
