@@ -112,6 +112,11 @@
 				}
             }
 
+            // specify a z property to infinity if not defined
+			if (typeof child.z === 'undefined') {
+				child.z = Infinity;
+			}
+
 			child.ancestor = this;
             
 			this.children.push(child);

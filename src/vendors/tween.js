@@ -48,11 +48,6 @@
 		var _onUpdateCallback = null;
 		var _onCompleteCallback = null;
 		
-		/**
-		 * fixed z value
-		 * @ignore
-		 */
-		this.z = 999;
 
 		// Set all starting values present on the target object
 		for ( var field in object ) {
