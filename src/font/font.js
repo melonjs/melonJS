@@ -137,16 +137,18 @@
 		 */
 		set : function(font, size, fillStyle, textAlign) {
 			// font name and type
-			var font_names = font.split(",");
-			for (var i = 0; i < font_names.length; i++) {
-				font_names[i] = "'" + font_names[i] + "'";
-			}
+			var font_names = font.split(",").map(function (value) {
+				value = value.trim();
+				return (
+					!/(^".*"$)|(^'.*'$)/.test(value)
+				) ? '"' + value + '"' : value;
+			});
 			
             this.fontSize.y = parseInt(size, 10);
 			this.height = this.fontSize.y;
             
             if (typeof size === "number") {
-				size = "" + size + "px";
+				size += "px";
 			}
 			this.font = size + " " + font_names.join(",");
 			this.fillStyle = fillStyle;

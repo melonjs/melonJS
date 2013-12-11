@@ -289,10 +289,16 @@
 		 * @function
 		 * @param {Array|String} handle The return value from a subscribe call or the
 		 * name of a channel as a String
-		 * @param {Function} [callback] The return value from a subscribe call.
+		 * @param {Function} [callback] The callback to be unsubscribed.
 		 * @example
-		 * var handle = me.subscribe("/some/channel", function(){});
+		 * var handle = me.event.subscribe("/some/channel", function(){});
 		 * me.event.unsubscribe(handle);
+		 *
+		 * // Or alternatively ...
+		 *
+		 * var callback = function(){};
+		 * me.event.subscribe("/some/channel", callback);
+		 * me.event.unsubscribe("/some/channel", callback);
 		 */
 		obj.unsubscribe = function(handle, callback){
 			var subs = cache[callback ? handle : handle[0]],

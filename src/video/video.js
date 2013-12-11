@@ -99,7 +99,7 @@
 			game_height_zoom = game_height * me.sys.scale.y;
 			
 			//add a channel for the onresize/onorientationchange event
-			window.addEventListener('resize', function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}, false);
+			window.addEventListener('resize', throttle(100, false, function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}), false);
 			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [event]);}, false);
 			
 			// register to the channel
