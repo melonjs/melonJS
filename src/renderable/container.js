@@ -579,7 +579,7 @@
                 } else {
                 
                     // just directly call update() for non renderable object
-                    isDirty |= obj.alwaysUpdate && obj.update();
+                    isDirty |= obj.update();
                 }
 			}
 

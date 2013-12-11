@@ -49,12 +49,6 @@
 		var _onCompleteCallback = null;
 		
 		/**
-		 * Always update the tween (it's never in viewport)
-		 * @ignore
-		 */
-		this.alwaysUpdate = true;
-        
-		/**
 		 * fixed z value
 		 * @ignore
 		 */
