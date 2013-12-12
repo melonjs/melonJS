@@ -611,7 +611,7 @@
 
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				isFloating = obj.floating;
-				if ((obj.inViewport || (isFloating && obj.visible)) && obj.isRenderable) {
+				if (obj.isRenderable && (obj.inViewport || (isFloating && obj.visible))) {
 
 					if (isFloating === true) {
 						context.save();
