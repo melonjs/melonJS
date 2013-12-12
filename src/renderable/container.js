@@ -115,7 +115,12 @@
             
             // change the child z-index if one is specified
             if (typeof(zIndex) === 'number') {
-                    child.z = zIndex;
+                child.z = zIndex;
+            }
+
+            // specify a z property to infinity if not defined
+            if (typeof child.z === 'undefined') {
+                child.z = Infinity;
             }
 
 			child.ancestor = this;
@@ -616,10 +621,9 @@
                         globalFloatingCounter--;
                     }
                     
-                } else {
-                
+                } else {                
                     // just directly call update() for non renderable object
-                    isDirty |= obj.alwaysUpdate && obj.update(time);
+                    isDirty |= obj.update(time);
                 }
             }
              
