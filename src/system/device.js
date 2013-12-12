@@ -50,17 +50,17 @@
             );
 
             // pointerlock detection
-            this.hasPointerLockSupport = 'pointerLockElement' in document || 
-                                         'mozPointerLockElement' in document || 
+            this.hasPointerLockSupport = 'pointerLockElement' in document ||
+                                         'mozPointerLockElement' in document ||
                                          'webkitPointerLockElement' in document;
-                                         
+
             if(this.hasPointerLockSupport) {
-                document.body.requestPointerLock = document.body.requestPointerLock || 
-                                                   document.body.mozRequestPointerLock || 
+                document.body.requestPointerLock = document.body.requestPointerLock ||
+                                                   document.body.mozRequestPointerLock ||
                                                    document.body.webkitRequestPointerLock;
-                                                   
-                document.exitPointerLock = document.exitPointerLock || 
-                                           document.mozExitPointerLock || 
+
+                document.exitPointerLock = document.exitPointerLock ||
+                                           document.mozExitPointerLock ||
                                            document.webkitExitPointerLock;
             }
 
@@ -70,18 +70,18 @@
             }
 
             // fullscreen api detection
-            document.body.requestFullscreen = document.body.requestFullscreen || 
-                                              document.body.mozRequestFullScreen || 
+            document.body.requestFullscreen = document.body.requestFullscreen ||
+                                              document.body.mozRequestFullScreen ||
                                               document.body.webkitRequestFullscreen;
-                                              
+
             this.hasFullScreenSupport = document.body.requestFullscreen !== null && typeof document.body.requestFullscreen === 'function';
-            
+
             if(this.hasFullScreenSupport) {
-                document.cancelFullScreen = document.cancelFullScreen || 
-                                            document.mozCancelFullScreen || 
+                document.cancelFullScreen = document.cancelFullScreen ||
+                                            document.mozCancelFullScreen ||
                                             document.webkitCancelFullScreen;
             }
-            
+
             // High Resolution timer Support
             me.device.HighResTimer = (typeof window.performance !== 'undefined') &&
                                      (typeof window.performance.now !== 'undefined');
@@ -391,7 +391,7 @@
                 var element = document.body;
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
-                        if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element ) {
+                        if (document.fullscreenElement === element || document.mozFullscreenElement === element) {
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
                             element.requestPointerLock();
@@ -516,12 +516,12 @@
      * @public
      * @type Boolean
      * @readonly
-     * @return {boolean}  
+     * @return {boolean}
      */
     Object.defineProperty(me.device, "isFullScreen", {
         get: function () {
             if (me.device.hasFullScreenSupport) {
-                return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement) !== null; 
+                return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement) !== null;
             } else {
                 return false;
             }
