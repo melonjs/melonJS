@@ -3,7 +3,7 @@
  */
 game.PlayScreen = me.ScreenObject.extend({
     "init" : function () {
-        me.game.viewport.setBounds(1920, 1080);
+        me.game.viewport.bounds.resize(1920, 1080);
         this.parent(true);
     },
 

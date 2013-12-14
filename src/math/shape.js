@@ -185,18 +185,34 @@
 		 * @param {Number} h height of the rectangle
 		 */
 		set : function(v, w, h) {
-			this.pos.setV(v);
+			// set the new position vector
+            this.pos.setV(v);
 
+            //reset offset
+            this.offset.set(0, 0);
+            
+            // resize
+            this.resize(w, h);
+
+		},
+
+        /**
+		 * resize the rectangle
+		 * @name resize
+		 * @memberOf me.Rect
+		 * @function
+		 * @param {Number} w new width of the rectangle
+		 * @param {Number} h new height of the rectangle
+		 */
+		resize : function(w, h) {
 			this.width = w;
 			this.height = h;
 			
 			this.hWidth = ~~(w / 2);
 			this.hHeight = ~~(h / 2);
-
-			//reset offset
-			this.offset.set(0, 0);
 		},
 
+        
         /**
          * returns the bounding box for this shape, the smallest rectangle object completely containing this shape.
          * @name getBounds
@@ -277,6 +293,7 @@
 		 * <img src="images/me.Rect.colpos.png"/>
 		 * @name adjustSize
 		 * @memberOf me.Rect
+         * @deprecated
 		 * @function
 		 * @param {Number} x x offset (specify -1 to not change the width)
 		 * @param {Number} w width of the hit box

@@ -65,9 +65,13 @@
 				}
 			}
 
-			// change the viewport limit
-			me.game.viewport.setBounds(Math.max(level.width, me.game.viewport.width),
-                                       Math.max(level.height, me.game.viewport.height));
+			// change the viewport bounds
+            me.game.viewport.bounds.pos.set(0,0);
+			me.game.viewport.bounds.resize( 
+                Math.max(level.width, me.game.viewport.width),
+                Math.max(level.height, me.game.viewport.height)
+            );
+                                       
 
 			// game world as default container
 			var targetContainer = container;

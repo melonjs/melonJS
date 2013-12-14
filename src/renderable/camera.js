@@ -24,8 +24,7 @@
 	 * @param {Number} [realh] real world height limit
 	 */
 	me.Viewport = me.Rect.extend(
-	/** @scope me.Viewport.prototype */
-	{
+	/** @scope me.Viewport.prototype */ {
 
 		/**
 		 * Axis definition :<br>
@@ -47,9 +46,19 @@
 			VERTICAL : 2,
 			BOTH : 3
 		},
+ 
+        /**
+		 * Camera bounds 
+		 * @public
+		 * @constant
+		 * @type me.Rect
+		 * @name bounds
+		 * @memberOf me.Viewport
+		 */
+		bounds : null,
 
-		// world limit
-		limits : null,
+		// camera deadzone
+		deadzone : null,
 
 		// target to follow
 		target : null,
@@ -64,12 +73,6 @@
 		_fadeIn : null,
 		_fadeOut : null,
 
-		// cache some values
-		_deadwidth : 0,
-		_deadheight : 0,
-		_limitwidth : 0,
-		_limitheight : 0,
-
 		// cache the screen rendering position
 		screenX : 0,
 		screenY : 0,
@@ -80,7 +83,7 @@
 			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
 			// real worl limits
-			this.limits = new me.Vector2d(realw||this.width, realh||this.height);
+			this.bounds = new me.Rect(new me.Vector2d(), realw||this.width, realh||this.height);
 
 			// offset for shake effect
 			this.offset = new me.Vector2d();
@@ -124,11 +127,11 @@
 		/** @ignore */
 		_followH : function(target) {
 			var _x = this.pos.x;
-			if ((target.x - this.pos.x) > (this._deadwidth)) {
-				this.pos.x = ~~MIN((target.x) - (this._deadwidth), this._limitwidth);
+			if ((target.x - this.pos.x) > (this.deadzone.right)) {
+				this.pos.x = ~~MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
 			}
-			else if ((target.x - this.pos.x) < (this.deadzone.x)) {
-				this.pos.x = ~~MAX((target.x) - this.deadzone.x, 0);
+			else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
+				this.pos.x = ~~MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
 			}
 			return (_x !== this.pos.x);
 		},
@@ -136,11 +139,11 @@
 		/** @ignore */
 		_followV : function(target) {
 			var _y = this.pos.y;
-			if ((target.y - this.pos.y) > (this._deadheight)) {
-				this.pos.y = ~~MIN((target.y) - (this._deadheight),	this._limitheight);
+			if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
+				this.pos.y = ~~MIN((target.y) - (this.deadzone.bottom),	this.bounds.height - this.height);
 			}
-			else if ((target.y - this.pos.y) < (this.deadzone.y)) {
-				this.pos.y = ~~MAX((target.y) - this.deadzone.y, 0);
+			else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
+				this.pos.y = ~~MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
 			}
 			return (_y !== this.pos.y);
 		},
@@ -177,30 +180,20 @@
 		 * @param {Number} h deadzone height
 		 */
 		setDeadzone : function(w, h) {
-			this.deadzone = new me.Vector2d(~~((this.width - w) / 2),
-					~~((this.height - h) / 2 - h * 0.25));
-			// cache some value
-			this._deadwidth = this.width - this.deadzone.x;
-			this._deadheight = this.height - this.deadzone.y;
+            
+            if (this.deadzone === null) {
+                this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
+            }
+            
+            // reusing the old code for now...
+            this.deadzone.pos.set(
+                ~~((this.width - w) / 2),
+                ~~((this.height - h) / 2 - h * 0.25)
+            );
+          	this.deadzone.resize(w, h);
 
 			// force a camera update
 			this.update(true);
-
-		},
-
-		/**
-		 * set the viewport boundaries (world limit)
-		 * @name setBounds
-		 * @memberOf me.Viewport
-		 * @function
-		 * @param {Number} w world width
-		 * @param {Number} h world height
-		 */
-		setBounds : function(w, h) {
-			this.limits.set(w, h);
-			// cache some value
-			this._limitwidth = this.limits.x - this.width;
-			this._limitheight = this.limits.y - this.height;
 
 		},
 
@@ -238,8 +231,8 @@
 			var newx = ~~(this.pos.x + x);
 			var newy = ~~(this.pos.y + y);
 			
-			this.pos.x = newx.clamp(0,this._limitwidth);
-			this.pos.y = newy.clamp(0,this._limitheight);
+			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width);
+			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height);
 
 			//publish the corresponding message
 			me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
@@ -473,7 +466,7 @@
 				if (this._fadeOut.alpha === 0.0)
 					this._fadeOut.tween = null;
 			}
-			
+
 			// blit our frame
 			me.video.blitSurface();
 		}
