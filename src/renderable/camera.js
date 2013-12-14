@@ -24,8 +24,7 @@
 	 * @param {Number} [realh] real world height limit
 	 */
 	me.Viewport = me.Rect.extend(
-	/** @scope me.Viewport.prototype */
-	{
+	/** @scope me.Viewport.prototype */ {
 
 		/**
 		 * Axis definition :<br>
@@ -84,7 +83,7 @@
 			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
 			// real worl limits
-			this.bounds = new me.Rect(me.Vector2d(), realw||this.width, realh||this.height);
+			this.bounds = new me.Rect(new me.Vector2d(), realw||this.width, realh||this.height);
 
 			// offset for shake effect
 			this.offset = new me.Vector2d();
@@ -129,7 +128,7 @@
 		_followH : function(target) {
 			var _x = this.pos.x;
 			if ((target.x - this.pos.x) > (this.deadzone.width)) {
-				this.pos.x = ~~MIN((target.x) - (this.deadzone.width), this.bounds.width);
+				this.pos.x = ~~MIN((target.x) - (this.deadzone.width), this.bounds.width - this.width);
 			}
 			else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
 				this.pos.x = ~~MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
@@ -141,7 +140,7 @@
 		_followV : function(target) {
 			var _y = this.pos.y;
 			if ((target.y - this.pos.y) > (this.deadzone.height)) {
-				this.pos.y = ~~MIN((target.y) - (this.deadzone.height),	this.bounds.height);
+				this.pos.y = ~~MIN((target.y) - (this.deadzone.height),	this.bounds.height - this.height);
 			}
 			else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
 				this.pos.y = ~~MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
@@ -186,6 +185,7 @@
                 this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
             }
             
+            // reusing the old code for now...
             this.deadzone.pos.set(
                 ~~((this.width - w) / 2),
                 ~~((this.height - h) / 2 - h * 0.25)
