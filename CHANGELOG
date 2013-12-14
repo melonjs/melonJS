@@ -4,6 +4,7 @@ Version History
 * Core : now pass the elapsed time as a parameter when calling any object update function
 * ObjectContainer : renamed getEntityByProp to getChildByProp
 * ObjectContainer : getChildByProp now returns all matching object type and not only "entities"
+* Camera : camera bounds are now defined as a rectangle and not only in width and height
 
 0.9.11
 * Documentation : Numerous fixes and improvements
