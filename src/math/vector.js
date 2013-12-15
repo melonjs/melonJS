@@ -338,7 +338,7 @@
 		},
 
 		/**
-		 * return the doc product of this vector and the passed one
+		 * return the dot product of this vector and the passed one
 		 * @name dotProduct
 		 * @memberOf me.Vector2d
 		 * @function
