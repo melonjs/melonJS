@@ -381,7 +381,7 @@
 		
 		/**
 		 * Checks if the specified entity collides with others entities in this container
-		 * @name collideType
+		 * @name collide
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
