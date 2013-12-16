@@ -259,9 +259,10 @@
 
 			// translate default position using the anchorPoint value
 			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
+				var viewport = me.game.viewport;
 				context.translate (
-					~~(this.anchorPoint.x * (this.viewport.width - this.imagewidth)),
-					~~(this.anchorPoint.y * (this.viewport.height - this.imageheight))
+					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)),
+					~~(this.anchorPoint.y * (viewport.height - this.imageheight))
 				);
 			}
 
