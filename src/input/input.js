@@ -169,28 +169,22 @@
 					}
 				), false);
 				
-			    // check for the standardized pointerEvent support
+			  // check for the standardized pointerEvent support
 				if (window.navigator.pointerEnabled) {
+					activeEventList = pointerEventList;
+				} else if(window.navigator.msPointerEnabled) {
 					// check for backward compatibility with the 'MS' prefix
-					if (window.navigator.msPointerEnabled) {
-						activeEventList = MSPointerEventList;
-					} else {
-						activeEventList = pointerEventList;
-					}
-					// register PointerEvents
-					registerEventListener(activeEventList, onPointerEvent);
+					activeEventList = MSPointerEventList;
 				} else {
-                    //  `touch****` events for iOS/Android devices
-				    if (me.device.touch) {
+					//  `touch****` events for iOS/Android devices
+					if (me.device.touch) {
 						activeEventList = touchEventList;
-						registerEventListener(activeEventList, onPointerEvent);
-				    } else {
+					} else {
 						// Regular Mouse events
-				        activeEventList = mouseEventList;
-						registerEventListener(activeEventList, onPointerEvent);
-						
-				    }
+						activeEventList = mouseEventList;
+					}
 				}
+				registerEventListener(activeEventList, onPointerEvent);
 
 				// detect wheel event support
 				// Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
