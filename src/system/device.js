@@ -30,7 +30,7 @@
 			me.audio.detectCapabilities();
 
 			// future proofing (MS) feature detection
-			navigator.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
+			this.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
 			navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
 			window.gesture = window.gesture || window.MSGesture;
 

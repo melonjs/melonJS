@@ -317,7 +317,7 @@
 					}
 
 					// if PointerEvent is not supported 
-					if (!navigator.pointerEnabled) {	
+					if (!me.device.pointerEnabled) {	
 						// -> define pointerId to simulate the PointerEvent standard
 						e.pointerId = obj.changedTouches[t].id;
 					}
@@ -842,7 +842,7 @@
 		    enablePointerEvent();
 
 		    // convert mouse events to iOS/PointerEvent equivalent
-		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || window.navigator.pointerEnabled)) {
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
 		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
 		    }
 			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
@@ -882,7 +882,7 @@
 		 */
 		obj.releasePointerEvent = function(eventType, rect) {
 			// convert mouse events to iOS/MSPointer equivalent
-		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || window.navigator.pointerEnabled)) {
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
 		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
 		    }
 			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
