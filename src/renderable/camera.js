@@ -190,7 +190,7 @@
                 ~~((this.width - w) / 2),
                 ~~((this.height - h) / 2 - h * 0.25)
             );
-          	this.deadzone.resize(w, h);
+            this.deadzone.resize(w, h);
 
 			// force a camera update
 			this.update(true);
