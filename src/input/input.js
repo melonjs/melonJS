@@ -300,7 +300,7 @@
 			// Convert touchcancel -> touchend, and pointercancel -> pointerup
 			if (!handlers) {
 				if (activeEventList.indexOf(e.type) === POINTER_CANCEL) {
-					handlers = evtHandlers[POINTER_UP];
+					handlers = evtHandlers[activeEventList[POINTER_UP]];
 				} else {
 					handlers = evtHandlers[e.type];
 				}
