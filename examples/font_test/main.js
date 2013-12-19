@@ -40,13 +40,33 @@ var PlayScreen = me.ScreenObject.extend( {
 		// pass true to the parent constructor
 		// as we draw our progress bar in the draw function
 		this.parent(true);
+
+		// a default white color object
+		this.color = new me.Color(255, 255, 255);
+
+		// define a tween to cycle the font color
+		this.tween = new me.Tween(this.color)
+			.to({
+            	g : 0, 
+            	b : 0
+        	}, 2000)
+        	.repeat( Infinity )
+        	.yoyo(true)
+        	.start();
+
 		// arial font 
-		this.font = new me.Font('Arial', 8, 'white');
+		this.font = new me.Font('Arial', 8, this.color.toHex());
 		// bitmap font
 		this.bFont = new me.BitmapFont("atascii", {x:8});
     },
-  
-	
+
+    // on reset event function
+    onResetEvent : function() {
+    	this.parent();
+    	// add the tween to the game world
+    	me.game.world.addChild(this.tween);
+    },
+ 
 	// draw function
 	draw : function(context) {
 		// clear the screen
@@ -59,12 +79,12 @@ var PlayScreen = me.ScreenObject.extend( {
         this.font.lineWidth = "2";
         
 		for (var i = 8; i < 48; i += 8) {
-			this.font.set('Arial', i, 'white');
+			this.font.set('Arial', i, this.color.toHex());
 			this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
 			y_pos+=this.font.measureText(context, "DUMMY").height;
 		}
         // one more with drawStroke this time
-        this.font.set('Arial', 48, 'white');
+        this.font.set('Arial', 48, this.color.toHex());
         this.font.strokeStyle = "red";
         this.font.lineWidth = 3;
 		this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
@@ -81,7 +101,7 @@ var PlayScreen = me.ScreenObject.extend( {
 
 		
 		// font baseline test
-		this.font.set('Arial', 16, 'white');
+		this.font.set('Arial', 16, this.color.toHex());
 		var baseline = 200;
 
 		// Draw the baseline
