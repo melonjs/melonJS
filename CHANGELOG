@@ -7,6 +7,7 @@ Version History
 * General : Fix uncaught exception when objects without a position vector are added to a container
 * Input : Fully support event-driven key input with me.event.KEYDOWN and me.event.KEYUP
 * Input : Multiple keys bound to the same action will no longer cancel each other
+* Input : Fixed pointerEvent support on IE11
 * ObjectContainer : fixed rendering of nested containers (again) - Thanks to Peter Hull
 * ObjectContainer : fixed getEntityByProp with nested containers
 * Animation : (quick) fixed hWidth and hHeight not being updated when the frame size is different
