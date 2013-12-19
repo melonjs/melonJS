@@ -169,21 +169,22 @@
 					}
 				), false);
 				
-			  // check for the standardized pointerEvent support
-				if (window.navigator.pointerEnabled) {
-					activeEventList = pointerEventList;
-				} else if(window.navigator.msPointerEnabled) {
+				// check for the standardized pointerEvent support
+				if (me.device.pointerEnabled) {
 					// check for backward compatibility with the 'MS' prefix
-					activeEventList = MSPointerEventList;
-				} else {
-					//  `touch****` events for iOS/Android devices
-					if (me.device.touch) {
-						activeEventList = touchEventList;
-					} else {
-						// Regular Mouse events
-						activeEventList = mouseEventList;
+					if(window.navigator.msPointerEnabled) {
+						activeEventList = MSPointerEventList;
+					} else { // standard pointerEvent support
+						activeEventList = pointerEventList;
 					}
+				//  `touch****` events for iOS/Android devices
+				} else if (me.device.touch) {
+					activeEventList = touchEventList;
+				// Regular Mouse events
+				} else {
+					activeEventList = mouseEventList;
 				}
+				
 				registerEventListener(activeEventList, onPointerEvent);
 
 				// detect wheel event support
