@@ -6,48 +6,48 @@
  */
 (function(window) {
 
-    /**
-     * A singleton object representing the device capabilities and specific events
-     * @namespace me.device
-     * @memberOf me
-     */
-    me.device = (function() {
+	/**	
+	 * A singleton object representing the device capabilities and specific events
+	 * @namespace me.device
+	 * @memberOf me
+	 */
+	me.device = (function() {
+		
+		// defines object for holding public information/functionality.
+		var obj = {};
+		// private properties
+		var accelInitialized = false;
+		var deviceOrientationInitialized = false;
+		var devicePixelRatio = null;
 
-        // defines object for holding public information/functionality.
-        var obj = {};
-        // private properties
-        var accelInitialized = false;
-        var deviceOrientationInitialized = false;
-        var devicePixelRatio = null;
+		/**
+		 * check the device capapbilities
+		 * @ignore
+		 */
+		obj._check = function() {
 
-        /**
-         * check the device capapbilities
-         * @ignore
-         */
-        obj._check = function() {
+			// detect audio capabilities (should be moved here too)
+			me.audio.detectCapabilities();
 
-            // detect audio capabilities (should be moved here too)
-            me.audio.detectCapabilities();
+			// future proofing (MS) feature detection
+			me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
+			navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+			window.gesture = window.gesture || window.MSGesture;
 
-            // future proofing (MS) feature detection
-            navigator.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
-            navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-            window.gesture = window.gesture || window.MSGesture;
+			// detect touch capabilities
+			me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) || 
+							  (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 
-            // detect touch capabilities
-            me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
-                              (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
+			// detect platform
+			me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
 
-            // detect platform
-            me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
-
-            // accelerometer detection
-            me.device.hasAccelerometer = (
-                (typeof (window.DeviceMotionEvent) !== 'undefined') || (
-                    (typeof (window.Windows) !== 'undefined') &&
-                    (typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
-                )
-            );
+			// accelerometer detection
+			me.device.hasAccelerometer = (
+				(typeof (window.DeviceMotionEvent) !== 'undefined') || (
+					(typeof (window.Windows) !== 'undefined') && 
+					(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
+				)
+			);
 
             // pointerlock detection
             this.hasPointerLockSupport = 'pointerLockElement' in document ||
@@ -85,18 +85,18 @@
             // High Resolution timer Support
             me.device.HighResTimer = (typeof window.performance !== 'undefined') &&
                                      (typeof window.performance.now !== 'undefined');
-
+			
             try {
-                obj.localStorage = !!window.localStorage;
-            } catch (e) {
-                // the above generates an exception when cookies are blocked
-                obj.localStorage = false;
-            }
-        };
+				obj.localStorage = !!window.localStorage;
+			} catch (e) {
+				// the above generates an exception when cookies are blocked
+				obj.localStorage = false;
+			}
+		};
 
-        // ----- PUBLIC Properties & Functions -----
+		// ----- PUBLIC Properties & Functions -----
 
-        // Browser capabilities
+		// Browser capabilities
 
         /**
          * High Resolution timer (typically performance.now)
@@ -107,10 +107,10 @@
          * @see https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HighResolutionTime/Overview.html
          */
         obj.HighResTimer = false;
-
+		
         /**
-         * Browser User Agent
-         * @type Boolean
+		 * Browser User Agent
+		 * @type Boolean
          * @readonly
          * @name ua
          * @memberOf me.device

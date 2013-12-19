@@ -169,28 +169,23 @@
 					}
 				), false);
 				
-			    // check for the standardized pointerEvent support
-				if (window.navigator.pointerEnabled) {
+				// check for the standardized pointerEvent support
+				if (me.device.pointerEnabled) {
 					// check for backward compatibility with the 'MS' prefix
-					if (window.navigator.msPointerEnabled) {
+					if(window.navigator.msPointerEnabled) {
 						activeEventList = MSPointerEventList;
-					} else {
+					} else { // standard pointerEvent support
 						activeEventList = pointerEventList;
 					}
-					// register PointerEvents
-					registerEventListener(activeEventList, onPointerEvent);
+				//  `touch****` events for iOS/Android devices
+				} else if (me.device.touch) {
+					activeEventList = touchEventList;
+				// Regular Mouse events
 				} else {
-                    //  `touch****` events for iOS/Android devices
-				    if (me.device.touch) {
-						activeEventList = touchEventList;
-						registerEventListener(activeEventList, onPointerEvent);
-				    } else {
-						// Regular Mouse events
-				        activeEventList = mouseEventList;
-						registerEventListener(activeEventList, onPointerEvent);
-						
-				    }
+					activeEventList = mouseEventList;
 				}
+				
+				registerEventListener(activeEventList, onPointerEvent);
 
 				// detect wheel event support
 				// Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
@@ -308,7 +303,7 @@
 			// Convert touchcancel -> touchend, and pointercancel -> pointerup
 			if (!handlers) {
 				if (activeEventList.indexOf(e.type) === POINTER_CANCEL) {
-					handlers = evtHandlers[POINTER_UP];
+					handlers = evtHandlers[activeEventList[POINTER_UP]];
 				} else {
 					handlers = evtHandlers[e.type];
 				}
@@ -325,7 +320,7 @@
 					}
 
 					// if PointerEvent is not supported 
-					if (!navigator.pointerEnabled) {	
+					if (!me.device.pointerEnabled) {	
 						// -> define pointerId to simulate the PointerEvent standard
 						e.pointerId = obj.changedTouches[t].id;
 					}
@@ -850,7 +845,7 @@
 		    enablePointerEvent();
 
 		    // convert mouse events to iOS/PointerEvent equivalent
-		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || window.navigator.pointerEnabled)) {
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
 		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
 		    }
 			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
@@ -890,7 +885,7 @@
 		 */
 		obj.releasePointerEvent = function(eventType, rect) {
 			// convert mouse events to iOS/MSPointer equivalent
-		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || window.navigator.pointerEnabled)) {
+		    if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
 		        eventType = activeEventList[mouseEventList.indexOf(eventType)];
 		    }
 			// >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
