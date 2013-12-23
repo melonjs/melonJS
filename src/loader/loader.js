@@ -258,7 +258,7 @@
 		 * @ignore
 		 */
 
-		obj.onResourceLoaded = function(e) {
+		obj.onResourceLoaded = function(res) {
 
 			// increment the loading counter
 			loadCount++;
@@ -267,9 +267,9 @@
 			var progress = obj.getLoadProgress();
 			if (obj.onProgress) {
 				// pass the load progress in percent, as parameter
-				obj.onProgress(progress);
+				obj.onProgress(progress, res);
 			}
-			me.event.publish(me.event.LOADER_PROGRESS, [progress]);
+			me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
 		};
 		
 		/**
@@ -332,7 +332,7 @@
 		obj.preload = function(res) {
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
-				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
+				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj, res[i]), obj.onLoadingError.bind(obj, res[i]));
 			}
 			// check load status
 			checkLoadStatus();
