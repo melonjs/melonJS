@@ -527,6 +527,9 @@
 		obj.setVolume = function(volume) {
 			if (typeof(volume) === "number") {
 				settings.volume = volume.clamp(0.0,1.0);
+				if(sound_enable && current_track) {
+					current_track.volume = settings.volume;
+				}
 			}
 		};
 
