@@ -168,29 +168,27 @@
 						me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
 					}
 				), false);
-				
-				// check for the standardized pointerEvent support
-				if (me.device.pointerEnabled) {
-					// check for backward compatibility with the 'MS' prefix
-					if(window.navigator.msPointerEnabled) {
-						activeEventList = MSPointerEventList;
-					} else { // standard pointerEvent support
-						activeEventList = pointerEventList;
-					}
-				//  `touch****` events for iOS/Android devices
-				} else if (me.device.touch) {
+
+				// check standard
+				if(window.navigator.pointerEnabled) {
+					activeEventList = pointerEventList;
+				}
+				else if(window.navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
+					activeEventList = MSPointerEventList;
+				}
+				else if (me.device.touch) { //  `touch****` events for iOS/Android devices
 					activeEventList = touchEventList;
-				// Regular Mouse events
-				} else {
+				}
+				else { // Regular Mouse events
 					activeEventList = mouseEventList;
 				}
-				
+
 				registerEventListener(activeEventList, onPointerEvent);
 
 				// detect wheel event support
-				// Modern browsers support "wheel", Webkit and IE support at least "mousewheel  
+				// Modern browsers support "wheel", Webkit and IE support at least "mousewheel
 				wheeltype = "onwheel" in document.createElement("div") ? "wheel" : "mousewheel";
-				window.addEventListener(wheeltype, onMouseWheel, false);						
+				window.addEventListener(wheeltype, onMouseWheel, false);
 
 				// set the PointerMove/touchMove/MouseMove event
 				if (obj.throttlingInterval === undefined) {
