@@ -7,7 +7,7 @@
 (function(window) {
 
 	// Convert CSS color names to RGB values.
-    var CSStoRGB = function CSStoRGB(color) {
+    var cssToRGB = function cssToRGB(color) {
         var colors = {
             // CSS1
             "black"                 : [   0,   0,   0 ],
@@ -204,18 +204,18 @@
 
 		/**
 		 * Color alpha Component
-		 * @name a
+		 * @name alpha
 		 * @memberOf me.Color
 		 * @type {Number}
 		 */
-        a : 1.0,		
+        alpha : 1.0,		
         
 		/** @ignore */
 		init : function(r, g, b, a) {
             this.r = r || 0;
             this.g = g || 0;
             this.b = b || 0;
-            this.a = a || 1.0;
+            this.alpha = a || 1.0;
 
             return this;
 		},
@@ -227,7 +227,7 @@
             this.r = 0;
             this.g = 0;
             this.b = 0;
-            this.a = 1.0;
+            this.alpha = 1.0;
 		},
 
 		/**
@@ -264,33 +264,86 @@
 
 		/**
 		 * parse a CSS color and set this color to the corresponding r,g,b values
-		 * @name parceCSS
+		 * @name parseCSS
 		 * @memberOf me.Color
 		 * @function
 		 * @param {String} color
 		 * @return {me.Color} Reference to this object for method chaining
 		 */
 		parseCSS : function(CSSColor) {
-			var color = CSStoRGB(CSSColor);
+			var color = cssToRGB(CSSColor);
 			this.r = color[0];
 			this.g = color[1];
 			this.b = color[2];
+			
+			this.alpha = 1.0;
 
 			return this;
 		},
 
 		/**
-		 * retuen the color in a "#000000" format
-		 * @name toHex
+		 * parse a Hex color ("#RGB" or "#RRGGBB" format) and set this color to the corresponding r,g,b values
+		 * @name parseHex
 		 * @memberOf me.Color
 		 * @function
 		 * @param {String} color
+		 * @return {me.Color} Reference to this object for method chaining
+		 */
+		parseHex : function(h) {
+			// remove the # 
+			h = h.substring(1, h.length);
+
+			if (h.length < 6)  {
+				// 3 char shortcut is used, double each char
+				this.r = parseInt(h.charAt(0)+h.charAt(0), 16);
+				this.g = parseInt(h.charAt(1)+h.charAt(1), 16);
+				this.b = parseInt(h.charAt(2)+h.charAt(2), 16);
+			} else {
+				this.r = parseInt(h.substring(0, 2), 16);
+				this.g = parseInt(h.substring(2, 4), 16);
+				this.b = parseInt(h.substring(4, 6), 16);
+			}
+
+			this.alpha = 1.0;
+
+			return this;
+		},
+
+		/**
+		 * return the color in a "#000000" format
+		 * @name toHex
+		 * @memberOf me.Color
+		 * @function
+		 * @return {String}
 		 */
 		toHex : function() {
 			// TODO : manage a cached value of the hex format (for performances)
 			// (probably needs a getter/setter for r,g,b values that also invalidate the cache)
 			return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
+		},
+
+		/**
+		 * return the color in a "rgb(0, 0, 0)" format
+		 * @name toRGB
+		 * @memberOf me.Color
+		 * @function
+		 * @return {String}
+		 */
+		toRGB : function() {
+			return ("rgb(" + this.r + "," + this.g + "," + this.b + ")");
+		},
+
+		/**
+		 * return the color in a "rgba(0, 0, 0, 1.0)" format
+		 * @name toRGBA
+		 * @memberOf me.Color
+		 * @function
+		 * @return {String}
+		 */
+		toRGBA : function() {
+			return ("rgba(" + this.r + "," + this.g + "," + this.b + "," + this.alpha + ")");
 		}
+
 	});
 
 })(window);
