@@ -445,10 +445,7 @@
 			
 			// fading effect
 			if (this._fadeIn.tween) {
-				context.globalAlpha = this._fadeIn.color.alpha;
-				me.video.clearSurface(context, this._fadeIn.color.toRGB());
-				// set back full opacity
-				context.globalAlpha = 1.0;
+				me.video.clearSurface(context, this._fadeIn.color.toRGBA());
 				// remove the tween if over
 				if (this._fadeIn.color.alpha === 1.0)
 					this._fadeIn.tween = null;
@@ -456,10 +453,7 @@
 			
 			// flashing effect
 			if (this._fadeOut.tween) {
-				context.globalAlpha = this._fadeOut.color.alpha;
-				me.video.clearSurface(context, this._fadeOut.color.toRGB());
-				// set back full opacity
-				context.globalAlpha = 1.0;
+				me.video.clearSurface(context, this._fadeOut.color.toRGBA());
 				// remove the tween if over
 				if (this._fadeOut.color.alpha === 0.0)
 					this._fadeOut.tween = null;
