@@ -24,7 +24,7 @@
 
 			// apply given parameters
 			this.name = name;
-			this.color = me.utils.HexToRGB(color);
+			this.color = (new me.Color()).parseHex(color);
 			this.z = z;
 		},
 
@@ -56,7 +56,7 @@
 			context.globalAlpha *= this.getOpacity();
 
 			// set layer color
-			context.fillStyle = this.color;
+			context.fillStyle = this.color.toRGB();
 
 			// clear the specified rect
 			context.fillRect(rect.left, rect.top, rect.width, rect.height);
