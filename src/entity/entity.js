@@ -142,6 +142,7 @@
 			obj.add("me.CollectableEntity", me.CollectableEntity);
 			obj.add("me.LevelEntity", me.LevelEntity);
 			obj.add("me.Tween", me.Tween, true);
+			obj.add("me.Color", me.Color, true);
 		};
 
 		/**
