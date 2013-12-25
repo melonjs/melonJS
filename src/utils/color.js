@@ -207,11 +207,7 @@
         
 		/** @ignore */
 		init : function(r, g, b, a) {
-            this.r = r || 0;
-            this.g = g || 0;
-            this.b = b || 0;
-            this.alpha = a || 1.0;
-
+            this.setColor(r, g, b, a);
             return this;
 		},
 
@@ -219,10 +215,7 @@
 		 * make it resetable (for usage with object pooling)
 		 */
 		onResetEvent : function() {
-            this.r = 0;
-            this.g = 0;
-            this.b = 0;
-            this.alpha = 1.0;
+            this.setColor(0, 0, 0, 1.0);
 		},
 
 		/**
@@ -237,6 +230,26 @@
             this.r = Math.min(this.r + c.r, 255);
             this.g = Math.min(this.g + c.g, 255);
             this.b = Math.min(this.b + c.b, 255);
+
+            return this;
+        },
+
+        /**
+		 * set this color to the specified value.
+		 * @name setColor
+		 * @memberOf me.Color
+		 * @function
+		 * @param {Number} r red component
+		 * @param {Number} g green component
+		 * @param {Number} b blue component
+		 * @param {Number} [a="1.0"] alpha value
+		 * @return {me.Color} Reference to this object for method chaining
+		 */
+		 setColor : function(r, g, b, a) {
+            this.r = r || 0;
+            this.g = g || 0;
+            this.b = b || 0;
+            this.alpha = a || 1.0;
 
             return this;
         },
@@ -257,6 +270,18 @@
             return this;
         },
 
+        /**
+		 * return true if the r, g, b, and alpha properties of this color are equal with the given one.
+		 * @name equals
+		 * @memberOf me.Color
+		 * @function
+		 * @param {me.Color} color
+		 * @return {Boolean}
+		 */
+		equals : function(c) {
+			return ((this.r === c.r) && (this.g === c.g) && (this.b === c.b) && (this.alpha === c.alpha));
+		},
+
 		/**
 		 * parse a CSS color and set this color to the corresponding r,g,b values
 		 * @name parseCSS
@@ -267,11 +292,7 @@
 		 */
 		parseCSS : function(CSSColor) {
 			var color = cssToRGB[CSSColor] || color;
-			this.r = color[0];
-			this.g = color[1];
-			this.b = color[2];
-			
-			this.alpha = 1.0;
+			this.setColor(color[0], color[1], color[2], 1.0);
 
 			return this;
 		},
