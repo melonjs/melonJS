@@ -5,6 +5,7 @@ Version History
 * ObjectContainer : renamed getEntityByProp to getChildByProp
 * ObjectContainer : getChildByProp now returns all matching object type and not only "entities"
 * Camera : camera bounds are now defined as a rectangle and not only in width and height
+* Loader : Added resource information to loader progress event (warpten)
 
 0.9.11
 * Documentation : Numerous fixes and improvements
