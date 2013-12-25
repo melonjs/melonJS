@@ -524,12 +524,19 @@
 					break;
 
 				case "transparent":
+					var refColor = me.entityPool.newInstanceOf("me.Color").parseCSS(option);
+					var pixel = me.entityPool.newInstanceOf("me.Color");
 					for (i = 0, n = pix.length; i < n; i += 4) {
-						if (me.utils.RGBToHex(pix[i], pix[i + 1], pix[i + 2]) === option) {
+						pixel.setColor(pix[i], pix[i + 1], pix[i + 2]);
+						if (pixel.equals(refColor)) {
 							pix[i + 3] = 0;
 						}
 					}
+					me.entityPool.freeInstance(refColor);
+					me.entityPool.freeInstance(pixel);
+
 					break;
+
 
 				default:
 					return null;

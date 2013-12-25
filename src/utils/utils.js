@@ -203,22 +203,6 @@
 			return path.substring(path.lastIndexOf(".") + 1, path.length);
 		};
 		
-
-		/**
-		 * an RGB to Hex color function
-		 * @public
-		 * @function
-		 * @memberOf me.utils
-		 * @name RGBToHex
-		 * @param {Number} r Value for red component (0 to 255)
-		 * @param {Number} g Value for green component (0 to 255)
-		 * @param {Number} b Value for blue component (0 to 255)
-		 * @return {String} Hex color code in "RRGGBB" format
-		 */
-		api.RGBToHex = function(r, g, b) {
-			return r.toHex() + g.toHex() + b.toHex();
-		};
-		
 		/**
 		 * Get image pixels
 		 * @public
