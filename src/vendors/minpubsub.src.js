@@ -101,7 +101,7 @@
 
 		/**
 		 * Channel Constant for displaying a load progress indicator <br>
-		 * Data passed : {Number} [0 .. 1] <br>
+		 * Data passed : {Number} [0 .. 1], {Resource} resource object<br>
 		 * @public
 		 * @constant
 		 * @type String
@@ -111,52 +111,52 @@
 
 		/**
 		 * Channel Constant for pressing a binded key <br>
-         * Data passed : {String} user-defined action, {Number} keyCode,
-         * {Boolean} edge state <br>
-         * Edge-state is for detecting "locked" key bindings. When a locked key
-         * is pressed and held, the first event will have have the third
-         * argument set true. subsequent events will continue firing with the
-         * third argument set false.
+		 * Data passed : {String} user-defined action, {Number} keyCode,
+		 * {Boolean} edge state <br>
+		 * Edge-state is for detecting "locked" key bindings. When a locked key
+		 * is pressed and held, the first event will have have the third
+		 * argument set true. subsequent events will continue firing with the
+		 * third argument set false.
 		 * @public
 		 * @constant
 		 * @type String
 		 * @name me.event#KEYDOWN
-         * @example
-         * me.input.bindKey("jump", me.input.KEY.X, true); // Edge-triggered
-         * me.input.bindKey("shoot", me.input.KEY.Z); // Level-triggered
-         * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge)) {
-         *     // Checking bound keys
-         *     if (action === "jump") {
-         *         if (edge) {
-         *             this.doJump();
-         *         }
-         *
-         *         // Make character fall slower when holding the jump key
-         *         this.vel.y = this.gravity;
-         *     }
-         * });
+		 * @example
+		 * me.input.bindKey("jump", me.input.KEY.X, true); // Edge-triggered
+		 * me.input.bindKey("shoot", me.input.KEY.Z); // Level-triggered
+		 * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge)) {
+		 *	 // Checking bound keys
+		 *	 if (action === "jump") {
+		 *		 if (edge) {
+		 *			 this.doJump();
+		 *		 }
+		 *
+		 *		 // Make character fall slower when holding the jump key
+		 *		 this.vel.y = this.gravity;
+		 *	 }
+		 * });
 		 */
 		obj.KEYDOWN = "me.input.keydown";
 
 		/**
 		 * Channel Constant for releasing a binded key <br>
-         * Data passed : {String} user-defined action, {Number} keyCode <br>
+		 * Data passed : {String} user-defined action, {Number} keyCode <br>
 		 * @public
 		 * @constant
 		 * @type String
 		 * @name me.event#KEYUP
-         * @example
-         * me.event.subscribe(me.event.KEYUP, function (action, keyCode)) {
-         *     // Checking unbound keys
-         *     if (keyCode == me.input.KEY.ESC) {
-         *         if (me.state.isPaused()) {
-         *             me.state.resume();
-         *         }
-         *         else {
-         *             me.state.pause();
-         *         }
-         *     }
-         * });
+		 * @example
+		 * me.event.subscribe(me.event.KEYUP, function (action, keyCode)) {
+		 *	 // Checking unbound keys
+		 *	 if (keyCode == me.input.KEY.ESC) {
+		 *		 if (me.state.isPaused()) {
+		 *			 me.state.resume();
+		 *		 }
+		 *		 else {
+		 *			 me.state.pause();
+		 *		 }
+		 *	 }
+		 * });
 		 */
 		obj.KEYUP = "me.input.keyup";
 
@@ -203,8 +203,8 @@
 		 * @name me.event#WINDOW_ONRESIZE
 		 */
 		obj.WINDOW_ONRESIZE = "window.onresize";
-        
-        /**
+
+		/**
 		 * Channel Constant for when the device is rotated <br>
 		 * Data passed : {Event} Event object <br>
 		 * @public
