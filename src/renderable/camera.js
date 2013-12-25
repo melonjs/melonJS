@@ -105,15 +105,13 @@
 
 			// flash variables
 			this._fadeOut = {
-				color : 0,
-				alpha : 0.0,
+				color : new me.Color(),
 				duration : 0,
 				tween : null
 			};
 			// fade variables
 			this._fadeIn = {
-				color : 0,
-				alpha : 1.0,
+				color : new me.Color(),
 				duration : 0,
 				tween : null
 			};
@@ -341,10 +339,10 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeOut : function(color, duration, onComplete) {
-			this._fadeOut.color = color;
+			this._fadeOut.color.parseHex(color);
+			this._fadeOut.color.alpha = 1.0;
 			this._fadeOut.duration = duration || 1000; // convert to ms
-			this._fadeOut.alpha = 1.0;
-			this._fadeOut.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeOut).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
+			this._fadeOut.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeOut.color).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
 			this._fadeOut.tween.start();
 		},
 
@@ -359,10 +357,10 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeIn : function(color, duration, onComplete) {
-			this._fadeIn.color = color;
+			this._fadeIn.color.parseHex(color);
+			this._fadeIn.color.alpha = 0.0;
 			this._fadeIn.duration = duration || 1000; //convert to ms
-			this._fadeIn.alpha = 0.0;
-			this._fadeIn.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeIn).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
+			this._fadeIn.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeIn.color).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
 			this._fadeIn.tween.start();
 		},
 
@@ -447,23 +445,23 @@
 			
 			// fading effect
 			if (this._fadeIn.tween) {
-				context.globalAlpha = this._fadeIn.alpha;
-				me.video.clearSurface(context, me.utils.HexToRGB(this._fadeIn.color));
+				context.globalAlpha = this._fadeIn.color.alpha;
+				me.video.clearSurface(context, this._fadeIn.color.toRGB());
 				// set back full opacity
 				context.globalAlpha = 1.0;
 				// remove the tween if over
-				if (this._fadeIn.alpha === 1.0)
+				if (this._fadeIn.color.alpha === 1.0)
 					this._fadeIn.tween = null;
 			}
 			
 			// flashing effect
 			if (this._fadeOut.tween) {
-				context.globalAlpha = this._fadeOut.alpha;
-				me.video.clearSurface(context, me.utils.HexToRGB(this._fadeOut.color));
+				context.globalAlpha = this._fadeOut.color.alpha;
+				me.video.clearSurface(context, this._fadeOut.color.toRGB());
 				// set back full opacity
 				context.globalAlpha = 1.0;
 				// remove the tween if over
-				if (this._fadeOut.alpha === 0.0)
+				if (this._fadeOut.color.alpha === 0.0)
 					this._fadeOut.tween = null;
 			}
 
