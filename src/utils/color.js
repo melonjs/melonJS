@@ -211,8 +211,8 @@
             return this;
 		},
 
-		/** @ignore 
-		 * make it resetable (for usage with object pooling)
+		/** 
+		 * @ignore 
 		 */
 		onResetEvent : function() {
             this.setColor(0, 0, 0, 1.0);
