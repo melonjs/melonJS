@@ -325,6 +325,24 @@
 			return this;
 		},
 
+
+		/**
+		 * generate random r,g,b values for this Color object
+		 * @name random
+		 * @memberOf me.Color
+		 * @function
+		 * @return {me.Color} Reference to this object for method chaining
+		 */
+		random : function(c) {
+			this.setColor(
+				Math.floor(Math.random()*256),
+				Math.floor(Math.random()*256),
+				Math.floor(Math.random()*256),
+				this.alpha
+			);
+			return this;
+		},
+
 		/**
 		 * return the color in a "#000000" format
 		 * @name toHex
