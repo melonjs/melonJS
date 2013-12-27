@@ -689,16 +689,19 @@ window.me = window.me || {};
 		return (this !== null && ("true" === this.trim() || "false" === this.trim()));
 	};
 
-	/**
-	 * add a contains fn to the string object
-	 * @memberof! external:String#
-	 * @alias contains
-	 * @param {String} string to test for
-	 * @return {Boolean} true if contains the specified string
-	 */
-	String.prototype.contains = function(word) {
-		return this.indexOf(word) > -1;
-	};
+	if (!String.prototype.contains) {
+		/**
+		 * determines whether or not a string contains another string.
+		 * @memberof! external:String#
+		 * @alias contains
+		 * @param {String} str A string to be searched for within this string.
+		 * @param {Number} [startIndex=0] The position in this string at which to begin searching for given string.
+		 * @return {Boolean} true if contains the specified string
+		 */
+		String.prototype.contains = function(str, startIndex) {
+	        return -1 !== String.prototype.indexOf.call(this, str, startIndex);
+		};
+	}
 
 	/**
 	 * convert the string to hex value
