@@ -254,9 +254,6 @@
 		 * @ignore
 		 */
 		draw : function(context, rect) {
-			// save current context state
-			context.save();
-
 			// translate default position using the anchorPoint value
 			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
 				var viewport = me.game.viewport;
@@ -322,9 +319,6 @@
 					sh = Math.min(this.imageheight - ~~this.pos.y, this.height);
 				} while( true );
 			}
-
-			// restore context state
-			context.restore();
 		},
 
 		// called when the layer is destroyed

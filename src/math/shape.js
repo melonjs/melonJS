@@ -629,14 +629,13 @@
 		 */
 		draw : function(context, color) {
 			// http://tinyurl.com/opnro2r
-			context.save();
 			context.beginPath();
 
 			context.translate(this.pos.x-this.radius.x, this.pos.y-this.radius.y);
 			context.scale(this.radius.x, this.radius.y);
 			context.arc(1, 1, 1, 0, 2 * Math.PI, false);
 
-			context.restore();
+			
 			context.strokeStyle = color || "red";
 			context.stroke();
 		}
@@ -762,7 +761,6 @@
 		 * @ignore
 		 */
 		draw : function(context, color) {
-			context.save();
 			context.translate(-this.offset.x, -this.offset.y);
 			context.strokeStyle = color || "red";
 			context.beginPath();
@@ -776,7 +774,6 @@
 				context.lineTo(this.points[0].x, this.points[0].y);
 			}
 			context.stroke();
-			context.restore();
 		}
 
 	});
