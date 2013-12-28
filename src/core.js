@@ -653,7 +653,20 @@ window.me = window.me || {};
 		 * @return {String} trimmed string
 		 */
 		String.prototype.trim = function () {  
-			return (this.replace(/^\s+/, '')).replace(/\s+$/, ''); 
+			return this.replace(/^\s+|\s+$/gm, '');
+
+		};  
+	}
+
+	if(!String.prototype.trimLeft) {  
+		/**
+		 * returns the string stripped of whitespace from the left of the string.
+		 * @memberof! external:String#
+		 * @alias trimLeft
+		 * @return {String} trimmed string
+		 */
+		String.prototype.trimLeft = function () {  
+			return this.replace(/^\s+/, '');
 		};  
 	}
 
