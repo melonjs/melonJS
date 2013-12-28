@@ -122,9 +122,9 @@
 		 * @type String
 		 * @name me.event#KEYDOWN
 		 * @example
-		 * me.input.bindKey("jump", me.input.KEY.X, true); // Edge-triggered
-		 * me.input.bindKey("shoot", me.input.KEY.Z); // Level-triggered
-		 * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge)) {
+		 * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
+		 * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
+		 * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
 		 *	 // Checking bound keys
 		 *	 if (action === "jump") {
 		 *		 if (edge) {
@@ -146,7 +146,7 @@
 		 * @type String
 		 * @name me.event#KEYUP
 		 * @example
-		 * me.event.subscribe(me.event.KEYUP, function (action, keyCode)) {
+		 * me.event.subscribe(me.event.KEYUP, function (action, keyCode) {
 		 *	 // Checking unbound keys
 		 *	 if (keyCode == me.input.KEY.ESC) {
 		 *		 if (me.state.isPaused()) {
