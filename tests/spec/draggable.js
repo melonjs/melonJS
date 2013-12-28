@@ -6,7 +6,7 @@
  * by simulating the system events that would have been triggered by pointer events
  */
 
-(function (Game, DraggableEntity, Event, Video) {
+(function (DraggableEntity, Event, Video) {
     'use strict';
     describe('entity.draggable', function () {
         var canvas,
@@ -30,7 +30,7 @@
                 draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
                     dimensions.y});
                 // add the test draggable entity to the game
-                Game.add(draggable, 1);
+                me.game.world.addChild(draggable, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
@@ -47,7 +47,7 @@
 
         afterEach(function () {
             if (draggable) {
-                Game.remove(draggable);
+                me.game.world.removeChild(draggable);
             }
         });
 
@@ -63,4 +63,4 @@
             expect(draggable.pos.y).toEqual(440);
         });
     });
-}(me.game, me.DraggableEntity, me.event, me.video));
+}(me.DraggableEntity, me.event, me.video));
