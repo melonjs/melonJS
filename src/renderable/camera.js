@@ -105,13 +105,13 @@
 
 			// flash variables
 			this._fadeOut = {
-				color : new me.Color(),
+				color : null,
 				duration : 0,
 				tween : null
 			};
 			// fade variables
 			this._fadeIn = {
-				color : new me.Color(),
+				color : null,
 				duration : 0,
 				tween : null
 			};
@@ -339,7 +339,7 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeOut : function(color, duration, onComplete) {
-			this._fadeOut.color.parseHex(color);
+			this._fadeOut.color = me.entityPool.newInstanceOf("me.Color").parseHex(color);
 			this._fadeOut.color.alpha = 1.0;
 			this._fadeOut.duration = duration || 1000; // convert to ms
 			this._fadeOut.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeOut.color).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
@@ -357,7 +357,7 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeIn : function(color, duration, onComplete) {
-			this._fadeIn.color.parseHex(color);
+			this._fadeIn.color = me.entityPool.newInstanceOf("me.Color").parseHex(color);
 			this._fadeIn.color.alpha = 0.0;
 			this._fadeIn.duration = duration || 1000; //convert to ms
 			this._fadeIn.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeIn.color).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
@@ -450,6 +450,8 @@
 				if (this._fadeIn.color.alpha === 1.0) {
 					me.entityPool.freeInstance(this._fadeIn.tween);
 					this._fadeIn.tween = null;
+					me.entityPool.freeInstance(this._fadeIn.color);
+					this._fadeIn.color = null;
 				}
 			}
 			
@@ -460,6 +462,8 @@
 				if (this._fadeOut.color.alpha === 0.0) {
 					me.entityPool.freeInstance(this._fadeOut.tween);
 					this._fadeOut.tween = null;
+					me.entityPool.freeInstance(this._fadeOut.color);
+					this._fadeOut.color = null;
 				}
 			}
 
