@@ -144,16 +144,18 @@
 			// patch state.js
 			me.plugin.patch(me.ScreenObject, 'onUpdateFrame', function(time) {
 				if ((++this.frame%this.frameRate)===0) {
-					var frameUpdateStartTime = me.timer.getTime();
+					var frameUpdateStartTime = Date.now();
 					// reset the frame counter
 					this.frame = 0;
-
+					
 					// update the timer
 					me.timer.update(time);
 
 					// update all games object
 					me.game.update(time);
-					_this.frameUpdateTime = me.timer.getTime() - frameUpdateStartTime;
+
+					// calculate the update time
+					_this.frameUpdateTime = Date.now() - frameUpdateStartTime;
 				}
 				// draw the game objects
 				// using Date.now since the timer is not always updated for each draw call
