@@ -943,6 +943,11 @@ window.me = window.me || {};
 		// to know when we have to refresh the display
 		var isDirty = true;
 
+		// frame counter for frameSkipping
+		// reset the frame counter
+		var frameCounter = 0;
+		var frameRate = 1;
+
 		/*---------------------------------------------
 
 			PUBLIC STUFF
@@ -1126,6 +1131,10 @@ window.me = window.me || {};
 
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
+
+			// reset the frame counter
+			frameCounter = 0;
+			frameRate = Math.round(60/me.sys.fps);
 		};
 	
 		/**
@@ -1276,15 +1285,20 @@ window.me = window.me || {};
          * @param {Number} time current timestamp
 		 */
 		api.update = function(time) {
-			
-			// update all objects
-			isDirty = api.world.update(time) || isDirty;
-			
-			// update the camera/viewport
-			isDirty = api.viewport.update(isDirty) || isDirty;
+			// handle frame skipping if required
+			if ((++frameCounter%frameRate)===0) {
+				// reset the frame counter
+				frame = 0;
+				
+				// update the timer
+				me.timer.update(time);
 
-			return isDirty;
+				// update all objects
+				isDirty = api.world.update(time) || isDirty;
 			
+				// update the camera/viewport
+				isDirty = api.viewport.update(isDirty) || isDirty;
+			}
 		};
 		
 
