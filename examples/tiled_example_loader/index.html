@@ -26,13 +26,14 @@
 			<p> you can scroll the selected map using the arrow keys</p>
 			<div id="jsapp">
 				<script type="text/javascript" src="./../../build/melonJS-1.0.0.js"></script>
-				<script type="text/javascript" src="ressources.js"></script>
-				<script type="text/javascript" src="main.js"></script>
+				<script type="text/javascript" src="js/ressources.js"></script>
+				<script type="text/javascript" src="js/main.js"></script>
+				<script type="text/javascript" src="js/play.js"></script>
 			</div>
 			<div id="info" style="width: 800px;">
 				<div id="map" style="float: right;">
 					<label for="tmx_map">Tiled Example map:</label>
-						<select id="level_name" onchange="jsApp.changelevel()">
+						<select id="level_name" onchange="game.changelevel()">
 							<option value=1>village</option>
 							<option value=2>desert</option>
 							<option value=3>sewers</option>
@@ -46,7 +47,7 @@
 	  </div>
     <div id="content_footer"></div>
     <div id="footer">
-      Copyright &copy; melonJS 2011
+      Copyright &copy; melonJS 2011-2013
     </div>
   </div>
 </body>
