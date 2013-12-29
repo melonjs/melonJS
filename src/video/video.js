@@ -524,7 +524,7 @@
 					break;
 
 				case "transparent":
-					var refColor = me.entityPool.newInstanceOf("me.Color").parseCSS(option);
+					var refColor = me.entityPool.newInstanceOf("me.Color").parseHex(option);
 					var pixel = me.entityPool.newInstanceOf("me.Color");
 					for (i = 0, n = pix.length; i < n; i += 4) {
 						pixel.setColor(pix[i], pix[i + 1], pix[i + 2]);
