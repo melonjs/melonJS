@@ -229,8 +229,8 @@
 			var newx = ~~(this.pos.x + x);
 			var newy = ~~(this.pos.y + y);
 			
-			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width);
-			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height);
+			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width - this.width);
+			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height - this.height);
 
 			//publish the corresponding message
 			me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
