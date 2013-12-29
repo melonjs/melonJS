@@ -413,10 +413,11 @@
 		 */
 		api.clearSurface = function(context, col) {
 			var _canvas = context.canvas;
-
+			context.save();
 			context.setTransform(1, 0, 0, 1, 0, 0);
 			context.fillStyle = col;
 			context.fillRect(0, 0, _canvas.width, _canvas.height);
+			context.restore();
 		};
 		
 		/**
