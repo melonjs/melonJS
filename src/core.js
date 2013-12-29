@@ -1288,7 +1288,7 @@ window.me = window.me || {};
 			// handle frame skipping if required
 			if ((++frameCounter%frameRate)===0) {
 				// reset the frame counter
-				frame = 0;
+				frameCounter = 0;
 				
 				// update the timer
 				me.timer.update(time);
