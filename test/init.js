@@ -25,7 +25,7 @@
                  */
                 onResetEvent: function() {
                     // clear the background
-                    me.game.add(new me.ColorLayer('background', '#000000', 0), 0);
+                    me.game.world.addChild(new me.ColorLayer('background', '#000000', 0), 0);
                     if (!showCanvas) {
                         me.video.getScreenCanvas().style.display = 'none';
                     }

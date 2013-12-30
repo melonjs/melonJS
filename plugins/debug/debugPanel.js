@@ -260,7 +260,7 @@
 						me.game.sort();
 					} else if (layer) {
 						layer.visible = false;
-						me.game.remove(layer);
+						me.game.world.removeChild(layer);
 						me.debug.renderCollisionMap = false;
 					}
 				*/	

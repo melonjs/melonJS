@@ -30,7 +30,7 @@
                 draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
                     dimensions.y});
                 // add the test draggable entity to the game
-                Game.add(draggable, 1);
+                Game.world.addChild(draggable, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
@@ -47,7 +47,7 @@
 
         afterEach(function () {
             if (draggable) {
-                Game.remove(draggable);
+                Game.world.removeChild(draggable);
             }
         });
 
