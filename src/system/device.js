@@ -81,11 +81,7 @@
                                             document.mozCancelFullScreen ||
                                             document.webkitCancelFullScreen;
             }
-
-            // High Resolution timer Support
-            me.device.HighResTimer = (typeof window.performance !== 'undefined') &&
-                                     (typeof window.performance.now !== 'undefined');
-			
+		
             try {
 				obj.localStorage = !!window.localStorage;
 			} catch (e) {
@@ -98,16 +94,6 @@
 
 		// Browser capabilities
 
-        /**
-         * High Resolution timer (typically performance.now)
-         * @type Boolean
-         * @readonly
-         * @name HighResTimer
-         * @memberOf me.device
-         * @see https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/HighResolutionTime/Overview.html
-         */
-        obj.HighResTimer = false;
-		
         /**
 		 * Browser User Agent
 		 * @type Boolean
