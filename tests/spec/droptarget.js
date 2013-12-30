@@ -59,6 +59,7 @@
                 // create a new droptarget entity instance
                 droptarget = new Droptarget(100, 100, {width: 200, height: 200});
                 // add the test droptarget to the game
+                me.game.world.addChild(droptarget, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
