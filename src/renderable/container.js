@@ -573,7 +573,7 @@
 		/**
 		 * @ignore
 		 */
-		update : function(time) {
+		update : function( dt ) {
 			var isDirty = false;
 			var isFloating = false;
 			var isPaused = me.state.isPaused();
@@ -610,7 +610,7 @@
                     );
 
                     // update our object
-                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(time);
+                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update( dt );
 
                     // Undo global context translation
                     if (isTranslated) {
@@ -623,7 +623,7 @@
                     
                 } else {                
                     // just directly call update() for non renderable object
-                    isDirty |= obj.update(time);
+                    isDirty |= obj.update( dt );
                 }
             }
              

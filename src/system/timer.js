@@ -80,6 +80,7 @@
         api.reset = function() {
             // set to "now"
             last = now;
+            delta = 0;
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
@@ -94,18 +95,20 @@
          * @function
          */
         api.getTime = function() {
-            /* ??????????
-            if (me.device.HighResTimer) {
-                // adjust time information to make it consistent
-                // across brower (time elapsed since unix epoch)
-                return (now + performance.timing.navigationStart);
-            } else {
-                return now;
-            }
-            */
             return now;
         };
 
+        /**
+         * Return elapsed time in milliseconds since the last update<br>
+         * @name getDelta
+         * @memberOf me.timer
+         * @return {Number}
+         * @function
+         */
+        api.getDelta = function() {
+         
+            return delta;            
+        };
 
         /**
          * compute the actual frame time and fps rate
@@ -127,10 +130,11 @@
         /**
          * update game tick
          * should be called once a frame
+         * @param {Number} time current timestamp as provided by the RAF callback
          * @ignore
          */
         api.update = function(time) {
-        
+
             last = now;
             
             now = time;

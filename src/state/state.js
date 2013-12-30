@@ -50,7 +50,7 @@
 	 *
 	 *
 	 *    // make sure the screen is only refreshed on load progress
-	 *    update: function()
+	 *    update: function( dt )
 	 *    {
 	 *       if (this.invalidate===true)
 	 *       {
@@ -104,8 +104,6 @@
 		addAsObject : false,
 		/** @ignore */
 		visible : false,
-		/** @ignore */
-		frame : 0,
 
 		/**
 		 * Z-order for object sorting<br>
@@ -137,10 +135,6 @@
 			// reset the game manager
 			me.game.reset();
 			
-			// reset the frame counter
-			this.frame = 0;
-			this.frameRate = Math.round(60/me.sys.fps);
-
 			// call the onReset Function
 			this.onResetEvent.apply(this, arguments);
 
@@ -169,79 +163,6 @@
 		destroy : function() {
 			// notify the object
 			this.onDestroyEvent.apply(this, arguments);
-		},
-
-		/**
-		 * update function<br>
-		 * optional empty function<br>
-		 * only used by the engine if the object has been initialized using addAsObject=true<br>
-		 * @name update
-		 * @memberOf me.ScreenObject
-		 * @function
-         * @param {Number} time current timestamp
-		 * @example
-		 * // define a Title Screen
-		 * var TitleScreen = me.ScreenObject.extend(
-		 * {
-		 *    // override the default constructor
-		 *    init : function()
-		 *    {
-		 *       //call the parent constructor giving true
-		 *       //as parameter, so that we use the update & draw functions
-		 *       this.parent(true);
-		 *       // ...
-		 *     },
-		 *     // ...
-		 * });
-		 */
-		update : function(time) {
-			return false;
-		},
-
-		/**
-		 * frame update function function
-		 * @ignore
-		 */
-		onUpdateFrame : function(time) {
-			// handle frame skipping if required
-			if ((++this.frame%this.frameRate)===0) {
-				// reset the frame counter
-				this.frame = 0;
-				
-				// update the timer
-				me.timer.update(time);
-
-				// update all games object
-				me.game.update(time);
-			}
-			// draw the game objects
-			me.game.draw();
-		},
-
-		/**
-		 * draw function<br>
-		 * optional empty function<br>
-		 * only used by the engine if the object has been initialized using addAsObject=true<br>
-		 * @name draw
-		 * @memberOf me.ScreenObject
-		 * @function
-		 * @example
-		 * // define a Title Screen
-		 * var TitleScreen = me.ScreenObject.extend(
-		 * {
-		 *    // override the default constructor
-		 *    init : function()
-		 *    {
-		 *       //call the parent constructor giving true
-		 *       //as parameter, so that we use the update & draw functions
-		 *       this.parent(true);
-		 *       // ...
-		 *     },
-		 *     // ...
-		 * });
-		 */
-		draw : function() {
-			// to be extended
 		},
 
 		/**
@@ -290,7 +211,7 @@
 
 		if (!requestAnimationFrame || !cancelAnimationFrame) {
 			requestAnimationFrame = function(callback, element) {
-				var currTime = me.device.HighResTimer ? window.performance.now() : Date.now();
+				var currTime = window.performance.now();
 				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
 				var id = window.setTimeout(function() { 
 					callback(currTime + timeToCall); 
@@ -351,9 +272,6 @@
 		// just to keep track of possible extra arguments
 		var _extraArgs = null;
 
-		// cache reference to the active screen update frame
-		var _activeUpdateFrame = null;
-
 		/**
 		 * @ignore
 		 */
@@ -393,10 +311,15 @@
 
 		/**
 		 * this is only called when using requestAnimFrame stuff
+         * @param {Number} time current timestamp in milliseconds
 		 * @ignore
 		 */
 		function _renderFrame(time) {
-			_activeUpdateFrame(time);
+			// update all game objects
+			me.game.update(time);
+			// render all game objects
+			me.game.draw();
+			// schedule the next frame update
 			if (_animFrameId !== -1) {
 		           _animFrameId = window.requestAnimationFrame(_renderFrame);
 		    }
@@ -439,9 +362,6 @@
 
 				// call the reset function with _extraArgs as arguments
 				_screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
-
-				// cache the new screen object update function
-				_activeUpdateFrame = _screenObject[_state].screen.onUpdateFrame.bind(_screenObject[_state].screen);
 
 				// and start the main loop of the
 				// new requested state

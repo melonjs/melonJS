@@ -7,7 +7,7 @@
  * pointer events
  */
 
-(function (Game, DraggableEntity, DroptargetEntity, Event, Video) {
+(function (DraggableEntity, DroptargetEntity, Event, Video) {
     'use strict';
     describe('entity.droptarget', function () {
         var canvas,
@@ -59,7 +59,6 @@
                 // create a new droptarget entity instance
                 droptarget = new Droptarget(100, 100, {width: 200, height: 200});
                 // add the test droptarget to the game
-                Game.world.addChild(droptarget, 1);
             },
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
@@ -72,10 +71,10 @@
             removeEntities = function () {
                 // remove entities if they are created
                 if (draggable) {
-                    Game.world.removeChild(draggable);
+                    me.game.world.removeChild(draggable);
                 }
                 if (droptarget) {
-                    Game.world.removeChild(droptarget);
+                    me.game.world.removeChild(droptarget);
                 }
             };
 
@@ -149,4 +148,4 @@
             });
         });
     });
-}(me.game, me.DraggableEntity, me.DroptargetEntity, me.event, me.video));
+}(me.DraggableEntity, me.DroptargetEntity, me.event, me.video));

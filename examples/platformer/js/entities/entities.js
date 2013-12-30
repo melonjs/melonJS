@@ -60,7 +60,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		update the player pos
 		
 	------			*/
-	update : function (time) {
+	update : function (dt) {
 		
 		if (me.input.isKeyPressed('left'))	{
 			this.vel.x -= this.accel.x * me.timer.tick;
@@ -126,7 +126,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		
 		// check if we moved (a "stand" animation would definitely be cleaner)
 		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this.parent(time);
+			this.parent(dt);
 			return true;
 		}
 		
@@ -223,7 +223,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 	/**
 	 * manage the enemy movement
 	 */
-	update : function (time) {
+	update : function (dt) {
 		
 		if (this.alive)	{
 			if (this.walkLeft && this.pos.x <= this.startX) {
@@ -243,7 +243,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		this.updateMovement();
 		
 		// return true if we moved of if flickering
-		return (this.parent(time) || this.vel.x != 0 || this.vel.y != 0);
+		return (this.parent(dt) || this.vel.x != 0 || this.vel.y != 0);
 	},
 	
 	/**

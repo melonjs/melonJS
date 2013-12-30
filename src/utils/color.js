@@ -306,8 +306,11 @@
 		 * @return {me.Color} Reference to this object for method chaining
 		 */
 		parseHex : function(h) {
-			// remove the # 
-			h = h.substring(1, h.length);
+			
+            // remove the # if present
+            if (h.charAt(0) === '#') {
+                h = h.substring(1, h.length);
+            }
 
 			if (h.length < 6)  {
 				// 3 char shortcut is used, double each char

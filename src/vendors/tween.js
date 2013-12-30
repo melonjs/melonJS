@@ -307,8 +307,12 @@
 		};
 		
 		/** @ignore*/
-		this.update = function ( time ) {
-
+		this.update = function ( dt ) {
+            
+			// the original Tween implementation expect
+			// a timestamp and not a time delta
+			var time = me.timer.getTime();
+            
 			var property;
             
 			if ( time < _startTime ) {

@@ -105,13 +105,13 @@
 
 			// flash variables
 			this._fadeOut = {
-				color : new me.Color(),
+				color : null,
 				duration : 0,
 				tween : null
 			};
 			// fade variables
 			this._fadeIn = {
-				color : new me.Color(),
+				color : null,
 				duration : 0,
 				tween : null
 			};
@@ -229,8 +229,8 @@
 			var newx = ~~(this.pos.x + x);
 			var newy = ~~(this.pos.y + y);
 			
-			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width);
-			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height);
+			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width - this.width);
+			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height - this.height);
 
 			//publish the corresponding message
 			me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
@@ -339,7 +339,7 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeOut : function(color, duration, onComplete) {
-			this._fadeOut.color.parseHex(color);
+			this._fadeOut.color = me.entityPool.newInstanceOf("me.Color").parseHex(color);
 			this._fadeOut.color.alpha = 1.0;
 			this._fadeOut.duration = duration || 1000; // convert to ms
 			this._fadeOut.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeOut.color).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
@@ -357,7 +357,7 @@
 		 * @param {Function} [onComplete] callback once effect is over
 		 */
 		fadeIn : function(color, duration, onComplete) {
-			this._fadeIn.color.parseHex(color);
+			this._fadeIn.color = me.entityPool.newInstanceOf("me.Color").parseHex(color);
 			this._fadeIn.color.alpha = 0.0;
 			this._fadeIn.duration = duration || 1000; //convert to ms
 			this._fadeIn.tween = me.entityPool.newInstanceOf("me.Tween", this._fadeIn.color).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
@@ -447,16 +447,24 @@
 			if (this._fadeIn.tween) {
 				me.video.clearSurface(context, this._fadeIn.color.toRGBA());
 				// remove the tween if over
-				if (this._fadeIn.color.alpha === 1.0)
+				if (this._fadeIn.color.alpha === 1.0) {
+					me.entityPool.freeInstance(this._fadeIn.tween);
 					this._fadeIn.tween = null;
+					me.entityPool.freeInstance(this._fadeIn.color);
+					this._fadeIn.color = null;
+				}
 			}
 			
 			// flashing effect
 			if (this._fadeOut.tween) {
 				me.video.clearSurface(context, this._fadeOut.color.toRGBA());
 				// remove the tween if over
-				if (this._fadeOut.color.alpha === 0.0)
+				if (this._fadeOut.color.alpha === 0.0) {
+					me.entityPool.freeInstance(this._fadeOut.tween);
 					this._fadeOut.tween = null;
+					me.entityPool.freeInstance(this._fadeOut.color);
+					this._fadeOut.color = null;
+				}
 			}
 
 			// blit our frame

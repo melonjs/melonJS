@@ -129,9 +129,29 @@
 				me.timer.countFPS();
 			});
 
+			// patch me.game.update
+			me.plugin.patch(me.game, 'update', function(time) {
+				var frameUpdateStartTime = Date.now();
+				
+				this.parent(time);	
+				
+				// calculate the update time
+				_this.frameUpdateTime = Date.now() - frameUpdateStartTime;
+			});
+
+			// patch me.game.draw
+			me.plugin.patch(me.game, 'draw', function() {
+				var frameDrawStartTime = Date.now();
+				
+				this.parent();
+
+				// calculate the drawing time
+				_this.frameDrawTime = Date.now() - frameDrawStartTime;
+			});
+
 			// patch sprite.js
 			me.plugin.patch(me.SpriteObject, "draw", function (context) { 
-				// call the original me.game.draw function
+				// call the original me.SpriteObject function
 				this.parent(context);
 
 				// draw the sprite rectangle
@@ -139,27 +159,6 @@
 					context.strokeStyle =  "green";
 					context.strokeRect(this.left, this.top, this.width, this.height);
 				}
-			});
-
-			// patch state.js
-			me.plugin.patch(me.ScreenObject, 'onUpdateFrame', function(time) {
-				if ((++this.frame%this.frameRate)===0) {
-					var frameUpdateStartTime = me.timer.getTime();
-					// reset the frame counter
-					this.frame = 0;
-
-					// update the timer
-					me.timer.update(time);
-
-					// update all games object
-					me.game.update(time);
-					_this.frameUpdateTime = me.timer.getTime() - frameUpdateStartTime;
-				}
-				// draw the game objects
-				// using Date.now since the timer is not always updated for each draw call
-				var frameDrawStartTime = Date.now();
-				me.game.draw();
-				_this.frameDrawTime = Date.now() - frameDrawStartTime;
 			});
 
 			// patch entities.js

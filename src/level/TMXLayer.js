@@ -10,6 +10,7 @@
 	/**
 	 * a generic Color Layer Object
 	 * @class
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {String}  name    layer name
@@ -38,15 +39,6 @@
 		},
 
 		/**
-		 * update function
-		 * @ignore
-		 * @function
-		 */
-		update : function() {
-			return false;
-		},
-
-		/**
 		 * draw the color layer
 		 * @ignore
 		 */
@@ -70,6 +62,7 @@
 	/**
 	 * a generic Image Layer Object
 	 * @class
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {String} name        layer name
@@ -237,19 +230,6 @@
 		},
 
 		/**
-		 * update function
-		 * @ignore
-		 * @function
-		 */
-		update : function() {
-			// this one will be repainted anyway
-			// if the viewport change
-			// note : this will not work later if
-			// we re-introduce a dirty rect algorithm ?
-			return false;
-		},
-
-		/**
 		 * draw the image layer
 		 * @ignore
 		 */
@@ -394,6 +374,7 @@
 	 * a TMX Tile Layer Object
 	 * Tiled QT 0.7.x format
 	 * @class
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {Number} tilewidth width of each tile in pixels
@@ -682,14 +663,6 @@
 			}
 			// return the collide object
 			return res;
-		},
-
-		/**
-		 * a dummy update function
-		 * @ignore
-		 */
-		update : function() {
-			return false;
 		},
 
 		/**

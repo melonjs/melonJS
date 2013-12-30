@@ -1,9 +1,7 @@
-/* -----
-
-	ressources
-		
-	------			*/
-
+/**
+ * ressources
+ */
+ 
 var g_ressources= [	
 	// images
 	{name: "free_tileset_version_10",   type:"image",	src: "data/free_tileset_version_10.png"},

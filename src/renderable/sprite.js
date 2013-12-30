@@ -222,7 +222,7 @@
 		 * @protected
 		 * @return false
 		 **/
-		update : function(time) {
+		update : function( dt ) {
 			//update the "flickering" state if necessary
 			if (this.flickering) {
 				this.flickerTimer -= me.timer.tick;
@@ -528,7 +528,7 @@
 				this.current = this.anim[name];
 				this.resetAnim = resetAnim || null;
 				this.setAnimationFrame(this.current.idx); // or 0 ?
-				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
+				this.current.nextFrame = this.current.animationspeed;
 			} else {
 				throw "melonJS: animation id '" + name + "' not defined";
 			}
@@ -589,35 +589,37 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @protected
-         * @param {Number} time current timestamp
+         * @param {Number} dt time since the last update in milliseconds.
 		 */
-		update : function(time) {
+		update : function( dt ) {
 			// update animation if necessary
-			if (!this.animationpause && (time >= this.current.nextFrame)) {
-				this.setAnimationFrame(++this.current.idx);
-				
+			if (!this.animationpause) {
+                this.current.nextFrame -= dt;
+                if (this.current.nextFrame <=0) {
+                    this.setAnimationFrame(++this.current.idx);
+                    
+                    // switch animation if we reach the end of the strip
+                    // and a callback is defined
+                    if (this.current.idx === 0 && this.resetAnim)  {
+                        // if string, change to the corresponding animation
+                        if (typeof this.resetAnim === "string")
+                            this.setCurrentAnimation(this.resetAnim);
+                        // if function (callback) call it
+                        else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
+                            this.current.idx = this.current.length - 1;
+                            this.setAnimationFrame(this.current.idx);
+                            this.parent( dt );
+                            return false;
+                        }
+                    }
+                    
+                    // set next frame timestamp
+                    this.current.nextFrame = this.current.animationspeed;
 
-				// switch animation if we reach the end of the strip
-				// and a callback is defined
-				if (this.current.idx === 0 && this.resetAnim)  {
-					// if string, change to the corresponding animation
-					if (typeof this.resetAnim === "string")
-						this.setCurrentAnimation(this.resetAnim);
-					// if function (callback) call it
-					else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
-						this.current.idx = this.current.length - 1;
-						this.setAnimationFrame(this.current.idx);
-						this.parent(time);
-						return false;
-					}
-				}
-				
-				// set next frame timestamp
-				this.current.nextFrame = time + this.current.animationspeed;
-
-				return this.parent(time) || true;
+                    return this.parent( dt ) || true;
+                }
 			}
-			return this.parent(time);
+			return this.parent( dt );
 		}
 	});
 
