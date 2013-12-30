@@ -255,7 +255,8 @@
 		 */
 		draw : function(context, rect) {
 			// translate default position using the anchorPoint value
-			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
+			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
+			if (shouldTranslate) {
 				var viewport = me.game.viewport;
 				context.translate (
 					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)),
@@ -318,6 +319,14 @@
 					dy = 0;
 					sh = Math.min(this.imageheight - ~~this.pos.y, this.height);
 				} while( true );
+			}
+
+			if (shouldTranslate) {
+				var viewport = me.game.viewport;
+				context.translate (
+					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)) * -1,
+					~~(this.anchorPoint.y * (viewport.height - this.imageheight)) * -1
+				);
 			}
 		},
 

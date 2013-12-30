@@ -253,7 +253,7 @@
 				this.flickerState = !this.flickerState;
 				if (!this.flickerState) return;
 			}
-
+			// save context
 			context.save();
 			// sprite alpha value
 			context.globalAlpha *= this.getOpacity();
@@ -296,6 +296,7 @@
 							xpos, ypos,
 							w, h);
 
+			// restore context
 			context.restore();
 		},
 
