@@ -1143,7 +1143,7 @@ window.me = window.me || {};
 		 */
 		api.reset = function() {
 			// remove all objects
-			api.removeAll();
+			api.world.destroy();
 
 			// reset the viewport to zero ?
 			if (api.viewport) {
@@ -1171,61 +1171,6 @@ window.me = window.me || {};
 		 */
 		api.getParentContainer = function(child) {
 			return child.ancestor;
-		};
-
-		
-		/**
-		 * remove the specific object from the world<br>
-		 * `me.game.remove` will preserve object that defines the `isPersistent` flag
-		 * `me.game.remove` will remove object at the end of the current frame
-		 * @name remove
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {me.ObjectEntity} obj Object to be removed
-		 * @param {Boolean} [force=false] Force immediate deletion.<br>
-		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
-		 */
-		api.remove = function(obj, force) {
-			if (obj.ancestor) {
-				// remove the object from the object list
-				if (force===true) {
-					// force immediate object deletion
-					obj.ancestor.removeChild(obj);
-				} else {
-					// make it invisible (this is bad...)
-					obj.visible = obj.inViewport = false;
-					// wait the end of the current loop
-					/** @ignore */
-					pendingRemove = (function (obj) {
-						// safety check in case the
-						// object was removed meanwhile
-						if (typeof obj.ancestor !== 'undefined') {
-							obj.ancestor.removeChild(obj);
-						}
-						pendingRemove = null;
-					}.defer(obj));
-				}
-			}
-		};
-
-		/**
-		 * remove all objects<br>
-		 * @name removeAll
-		 * @memberOf me.game
-		 * @param {Boolean} [force=false] Force immediate deletion.<br>
-		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
-		 * @public
-		 * @function
-		 */
-		api.removeAll = function() {
-			//cancel any pending tasks
-			if (pendingRemove) {
-				clearTimeout(pendingRemove);
-				pendingRemove = null;
-			}
-			// destroy all objects in the root container
-			api.world.destroy();
 		};
 
 		/**
