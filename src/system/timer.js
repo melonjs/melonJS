@@ -99,15 +99,15 @@
         };
 
         /**
-         * Return elapsed time in milliseconds since last frame<br>
+         * Return elapsed time in milliseconds since the last update<br>
          * @name getDelta
          * @memberOf me.timer
          * @return {Number}
          * @function
          */
         api.getDelta = function() {
-
-            return delta;
+         
+            return delta;            
         };
 
         /**
@@ -130,6 +130,7 @@
         /**
          * update game tick
          * should be called once a frame
+         * @param {Number} time current timestamp as provided by the RAF callback
          * @ignore
          */
         api.update = function(time) {

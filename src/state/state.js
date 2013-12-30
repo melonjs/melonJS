@@ -50,7 +50,7 @@
 	 *
 	 *
 	 *    // make sure the screen is only refreshed on load progress
-	 *    update: function()
+	 *    update: function( dt )
 	 *    {
 	 *       if (this.invalidate===true)
 	 *       {
@@ -163,59 +163,6 @@
 		destroy : function() {
 			// notify the object
 			this.onDestroyEvent.apply(this, arguments);
-		},
-
-		/**
-		 * update function<br>
-		 * optional empty function<br>
-		 * only used by the engine if the object has been initialized using addAsObject=true<br>
-		 * @name update
-		 * @memberOf me.ScreenObject
-		 * @function
-         * @param {Number} time current timestamp
-		 * @example
-		 * // define a Title Screen
-		 * var TitleScreen = me.ScreenObject.extend(
-		 * {
-		 *    // override the default constructor
-		 *    init : function()
-		 *    {
-		 *       //call the parent constructor giving true
-		 *       //as parameter, so that we use the update & draw functions
-		 *       this.parent(true);
-		 *       // ...
-		 *     },
-		 *     // ...
-		 * });
-		 */
-		update : function(time) {
-			return false;
-		},
-
-		/**
-		 * draw function<br>
-		 * optional empty function<br>
-		 * only used by the engine if the object has been initialized using addAsObject=true<br>
-		 * @name draw
-		 * @memberOf me.ScreenObject
-		 * @function
-		 * @example
-		 * // define a Title Screen
-		 * var TitleScreen = me.ScreenObject.extend(
-		 * {
-		 *    // override the default constructor
-		 *    init : function()
-		 *    {
-		 *       //call the parent constructor giving true
-		 *       //as parameter, so that we use the update & draw functions
-		 *       this.parent(true);
-		 *       // ...
-		 *     },
-		 *     // ...
-		 * });
-		 */
-		draw : function() {
-			// to be extended
 		},
 
 		/**
@@ -364,6 +311,7 @@
 
 		/**
 		 * this is only called when using requestAnimFrame stuff
+         * @param {Number} time current timestamp in milliseconds
 		 * @ignore
 		 */
 		function _renderFrame(time) {

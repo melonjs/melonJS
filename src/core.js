@@ -1306,7 +1306,7 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
-         * @param {Number} time current timestamp
+         * @param {Number} time current timestamp as provided by the RAF callback
 		 */
 		api.update = function(time) {
 			// handle frame skipping if required
@@ -1317,8 +1317,8 @@ window.me = window.me || {};
 				// update the timer
 				me.timer.update(time);
 
-				// update all objects
-				isDirty = api.world.update(time) || isDirty;
+				// update all objects (andd pass the elapsed time since last frame)
+				isDirty = api.world.update(me.timer.getDelta()) || isDirty;
 			
 				// update the camera/viewport
 				isDirty = api.viewport.update(isDirty) || isDirty;

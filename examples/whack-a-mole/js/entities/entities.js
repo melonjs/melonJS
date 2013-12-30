@@ -86,7 +86,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	 */
 	onDisplayed : function() {
 		this.isOut = true;
-		this.timer = me.timer.getTime();
+		this.timer = 0;
 	},
 	
 	/**
@@ -114,15 +114,16 @@ game.MoleEntity = me.AnimationSheet.extend(
 	/**
 	 * update the mole
 	 */
-	update : function (time)
+	update : function ( dt )
 	{
 		if (this.isVisible) {
 			// call the parent function to manage animation
-			this.parent(time);
+			this.parent( dt );
 		
 			// hide the mode after 1/2 sec
 			if (this.isOut===true) {
-				if ((time - this.timer) > 500){
+				this.timer += dt;
+				if ((this.timer) >= 500) {
 					this.isOut = false;
 					// set default one
 					this.setCurrentAnimation("laugh");
@@ -178,19 +179,19 @@ game.MoleManager = me.ObjectEntity.extend(
 			this.moles[i] = new game.MoleEntity((112 + ((i-6) * 310)), 639+40)
 			me.game.world.addChild (this.moles[i], 55);
 		}
-		
 			
-		this.timer = me.timer.getTime();
+		this.timer = 0;
 		
 	},
 
 	/*
 	 * update function
 	 */
-	update : function (time)
+	update : function ( dt )
 	{
 		// every 1/2 seconds display moles randomly
-		if ((time - this.timer) > 500) {
+        this.timer += dt;
+		if ((this.timer) >= 500) {
 
 			for (var i = 0; i < 9; i+=3) {
 				var hole = Number.prototype.random(0,2) + i ;
@@ -199,7 +200,7 @@ game.MoleManager = me.ObjectEntity.extend(
 				}
 			
 			}
-			this.timer = time;
+			this.timer = 0;
 		}
  		return false;
 	}
