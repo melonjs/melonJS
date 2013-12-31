@@ -256,12 +256,11 @@
 		draw : function(context, rect) {
 			// translate default position using the anchorPoint value
 			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
+			var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
+			var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
 			if (shouldTranslate) {
 				var viewport = me.game.viewport;
-				context.translate (
-					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)),
-					~~(this.anchorPoint.y * (viewport.height - this.imageheight))
-				);
+				context.translate(translateX, translateY);
 			}
 
 			// set the layer alpha value
@@ -323,10 +322,7 @@
 
 			if (shouldTranslate) {
 				var viewport = me.game.viewport;
-				context.translate (
-					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)) * -1,
-					~~(this.anchorPoint.y * (viewport.height - this.imageheight)) * -1
-				);
+				context.translate(translateX * -1, translateY * -1);
 			}
 		},
 
