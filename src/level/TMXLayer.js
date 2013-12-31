@@ -255,11 +255,11 @@
 		 */
 		draw : function(context, rect) {
 			// translate default position using the anchorPoint value
+			var viewport = me.game.viewport;
 			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
 			var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
 			var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
 			if (shouldTranslate) {
-				var viewport = me.game.viewport;
 				context.translate(translateX, translateY);
 			}
 
