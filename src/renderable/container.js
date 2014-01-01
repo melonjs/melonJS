@@ -113,7 +113,7 @@
 		 */
 		addChild : function(child, zIndex) {
 			if(typeof(child.ancestor) !== 'undefined') {
-				child.ancestor.removeChild(child);
+				child.ancestor.removeChildNow(child);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor 
 				// (e.g. move one child from one container to another)
@@ -155,7 +155,7 @@
 			if((index >= 0) && (index < this.children.length)) {
 				
 				if(typeof(child.ancestor) !== 'undefined') {
-					child.ancestor.removeChild(child);
+					child.ancestor.removeChildNow(child);
 				} else {
 					// only allocate a GUID if the object has no previous ancestor 
 					// (e.g. move one child from one container to another)

@@ -399,7 +399,6 @@
 					return true;
 
 				} else {
-				
 					// remove the tween from the object pool
 					me.game.world.removeChildNow(this);
 
