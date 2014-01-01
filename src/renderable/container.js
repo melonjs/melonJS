@@ -8,6 +8,16 @@
 (function(window) {
 
 	/**
+	 * Private function to re-use for object removal in a defer
+	 * @ignore
+	 */
+	var deferredRemove = function(child, keepalive) {
+		if(child.ancestor && typeof child.ancestor !== 'undefined') {
+			child.ancestor.removeChildNow(child, keepalive);
+		}
+	}
+
+	/**
 	 * A global "translation context" for nested ObjectContainers
 	 * @ignore
 	 */
@@ -305,18 +315,33 @@
 			return (obj.length>0)?obj[0]:null;
 		},
 
-
 		/**
-		 * Removes (and optionally destroys) a child from the container.<br>
-		 * (removal is immediate and unconditional)<br>
-		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
+		 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
 		 * @name removeChild
 		 * @memberOf me.ObjectContainer
+		 * @public
 		 * @function
 		 * @param {me.Renderable} child
 		 * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
 		 */
 		removeChild : function(child, keepalive) {
+			if(child.ancestor) {
+				deferredRemove.defer(child, keepalive);
+			}
+		},
+
+
+		/**
+		 * Removes (and optionally destroys) a child from the container.<br>
+		 * (removal is immediate and unconditional)<br>
+		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
+		 * @name removeChildNow
+		 * @memberOf me.ObjectContainer
+		 * @function
+		 * @param {me.Renderable} child
+		 * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+		 */
+		removeChildNow : function(child, keepalive) {
 
 			if  (this.hasChild(child)) {
 				

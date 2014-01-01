@@ -606,8 +606,8 @@ window.me = window.me || {};
 	 */
 	Function.prototype.defer = function() {
 		var fn = this, args = Array.prototype.slice.call(arguments);
-		return window.setTimeout(function() {
-			return fn.apply(fn, args);
+		window.setTimeout(function() {
+			fn.apply(fn, args);
 		}, 0.01);
 	};
 
