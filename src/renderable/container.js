@@ -11,9 +11,9 @@
 	 * Private function to re-use for object removal in a defer
 	 * @ignore
 	 */
-	var deferredRemove = function(child, keepalive) {
-		if(child.ancestor && typeof child.ancestor !== 'undefined') {
-			child.ancestor.removeChildNow(child, keepalive);
+	var deferredRemove = function(parent, child, keepalive) {
+		if(parent) {
+			parent.removeChildNow(child, keepalive);
 		}
 	}
 
@@ -326,7 +326,7 @@
 		 */
 		removeChild : function(child, keepalive) {
 			if(child.ancestor) {
-				deferredRemove.defer(child, keepalive);
+				deferredRemove.defer(this, child, keepalive);
 			}
 		},
 
