@@ -153,7 +153,7 @@
 		 */
 		this.stop = function () {
 
-			me.game.world.removeChild(this);
+			me.game.world.removeChildNow(this);
 			return this;
 
 		};
@@ -401,7 +401,7 @@
 				} else {
 				
 					// remove the tween from the object pool
-					me.game.world.removeChild(this);
+					me.game.world.removeChildNow(this);
 
 					if ( _onCompleteCallback !== null ) {
 
