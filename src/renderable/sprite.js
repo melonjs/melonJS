@@ -142,7 +142,7 @@
 		 * // and then remove it
 		 * this.flicker(60, function()
 		 * {
-		 *    me.game.remove(this);
+		 *    me.game.world.removeChild(this);
 		 * });
 		 */
 		flicker : function(duration, callback) {
@@ -504,7 +504,7 @@
 		 *
 		 * // set "die" animation, and remove the object when finished
 		 * this.setCurrentAnimation("die", (function () {
-		 *    me.game.remove(this);
+		 *    me.game.world.removeChild(this);
 		 *	  return false; // do not reset to first frame
 		 * }).bind(this));
 		 *

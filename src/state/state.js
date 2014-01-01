@@ -348,7 +348,7 @@
 				if (_screenObject[_state].screen.visible) {
 					// persistent or not, make sure we remove it
 					// from the current object list
-					me.game.remove.call(me.game, _screenObject[_state].screen, true);
+					me.game.world.removeChild.call(me.game.world, _screenObject[_state].screen);
 				} else {
 					// just notify the object
 					_screenObject[_state].screen.destroy();

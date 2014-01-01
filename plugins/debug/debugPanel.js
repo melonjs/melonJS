@@ -254,12 +254,12 @@
 					var layer = me.game.currentLevel.getLayerByName("collision");
 					if (layer && me.debug.renderCollisionMap === false) {
 						layer.visible = true;
-						me.game.add(layer);
+						me.game.world.addChild(layer);
 						me.debug.renderCollisionMap = true;
 						me.game.sort();
 					} else if (layer) {
 						layer.visible = false;
-						me.game.remove(layer);
+						me.game.world.removeChild(layer);
 						me.debug.renderCollisionMap = false;
 					}
 				*/	

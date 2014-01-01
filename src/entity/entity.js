@@ -205,8 +205,8 @@
 		 * // ...
 		 * // when we want to destroy existing object, the remove 
 		 * // function will ensure the object can then be reallocated later
-		 * me.game.remove(enemy);
-		 * me.game.remove(bullet);
+		 * me.game.world.removeChild(enemy);
+		 * me.game.world.removeChild(bullet);
 		 */
 
 		obj.newInstanceOf = function(data) {
@@ -655,8 +655,9 @@
 		 */
 		onCollision : function(res, obj) {
 			// destroy the object if collectable
-			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT))
-				me.game.remove(this);
+			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT)) {
+				me.game.world.removeChild(this);
+			}
 		},
 
 		/**

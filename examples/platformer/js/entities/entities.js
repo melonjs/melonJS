@@ -89,7 +89,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		// check if we fell into a hole
 		if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
 			// if yes reset the game
-			me.game.remove(this);
+			me.game.world.removeChild(this);
 			me.game.viewport.fadeIn('#fff', 150, function(){
 				me.audio.play("die", false);
 				me.levelDirector.reloadLevel();
@@ -179,7 +179,7 @@ game.CoinEntity = me.CollectableEntity.extend({
 		
 		//avoid further collision and delete it
 		this.collidable = false;
-		me.game.remove(this);
+		me.game.world.removeChild(this);
 	}
 	
 });
@@ -261,7 +261,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
 			var self = this;
-			this.renderable.flicker(45, function(){me.game.remove(self)});
+			this.renderable.flicker(45, function(){me.game.world.removeChild(self)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score
