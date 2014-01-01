@@ -239,6 +239,7 @@
 			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
 			var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
 			var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
+			
 			if (shouldTranslate) {
 				context.translate(translateX, translateY);
 			}
@@ -301,8 +302,7 @@
 			}
 
 			if (shouldTranslate) {
-				var viewport = me.game.viewport;
-				context.translate(translateX * -1, translateY * -1);
+				context.translate(-translateX, -translateY);
 			}
 		},
 
