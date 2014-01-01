@@ -234,16 +234,13 @@
 		 * @ignore
 		 */
 		draw : function(context, rect) {
-			// save current context state
-			context.save();
-
 			// translate default position using the anchorPoint value
-			if (this.anchorPoint.y !==0 || this.anchorPoint.x !==0) {
-				var viewport = me.game.viewport;
-				context.translate (
-					~~(this.anchorPoint.x * (viewport.width - this.imagewidth)),
-					~~(this.anchorPoint.y * (viewport.height - this.imageheight))
-				);
+			var viewport = me.game.viewport;
+			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
+			var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
+			var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
+			if (shouldTranslate) {
+				context.translate(translateX, translateY);
 			}
 
 			// set the layer alpha value
@@ -303,8 +300,10 @@
 				} while( true );
 			}
 
-			// restore context state
-			context.restore();
+			if (shouldTranslate) {
+				var viewport = me.game.viewport;
+				context.translate(translateX * -1, translateY * -1);
+			}
 		},
 
 		// called when the layer is destroyed
