@@ -153,13 +153,8 @@
 			// re-enable auto-sort
 			container.autoSort = true;
 
-			
-			// check if the map has different default (0,0) screen coordinates
-			if (me.game.currentLevel.pos.x !== me.game.currentLevel.pos.y) {
-				// translate the display accordingly
-				me.video.getSystemContext().translate( me.game.currentLevel.pos.x , me.game.currentLevel.pos.y );
-                // (would this achieveable using the globalTransition object of the root container?)
-			}
+			// translate the display if required
+			me.game.world.transform.translateV( me.game.currentLevel.pos );
 
 			// fire the callback if defined
 			if (me.game.onLevelLoaded) {

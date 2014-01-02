@@ -82,6 +82,16 @@
 		 * @memberOf me.ObjectContainer
 		 */
 		collidable : true,
+        
+		/**
+		 * the container default transformation matrix
+		 * @public
+		 * @type me.Matrix2d
+		 * @name transform
+		 * @memberOf me.ObjectContainer
+		 */
+		transform : new me.Matrix2d(),
+		
 		
 
 		/** 
@@ -99,6 +109,7 @@
 			// by default reuse the global me.game.setting
 			this.sortOn = me.game.sortOn;
 			this.autoSort = true;
+            this.transform.identity();
 		},
 
 
@@ -592,6 +603,9 @@
 					this.removeChild(obj);
 				}	
 			}
+            
+            // reset the transformation matrix
+            this.transform.identity();
 		},
 
 		/**
@@ -662,9 +676,15 @@
             var isFloating = false;
 			
 			this.drawCount = 0;			
-
-			// save the current context
-			context.save();
+            
+            context.save();
+            
+			// apply the container current transform
+			context.setTransform(
+                this.transform.a, this.transform.b,
+                this.transform.c, this.transform.d, 
+                this.transform.e, this.transform.f
+            );
             
 			// apply the group opacity
 			context.globalAlpha *= this.getOpacity();
@@ -695,9 +715,9 @@
 					this.drawCount++;
 				}
 			}
+            
+            context.restore();
 
-			// restore the context
-			context.restore();
 		}
 
 	});

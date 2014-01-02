@@ -1147,9 +1147,6 @@ window.me = window.me || {};
 				api.viewport.reset();
 			}
 
-			// reset the transform matrix to the normal one
-			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
-
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
 
@@ -1281,28 +1278,25 @@ window.me = window.me || {};
 			if (isDirty) {
 				// cache the viewport rendering position, so that other object
 				// can access it later (e,g. entityContainer when drawing floating objects)
-				api.viewport.screenX = api.viewport.pos.x + ~~api.viewport.offset.x;
-				api.viewport.screenY = api.viewport.pos.y + ~~api.viewport.offset.y;
+				var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;
+				var translateY = api.viewport.pos.y + ~~api.viewport.offset.y;
 							
-				// save the current context
-				frameBuffer.save();
-				// translate by default to screen coordinates
-				frameBuffer.translate(-api.viewport.screenX, -api.viewport.screenY);
+				// translate the world coordinates by default to screen coordinates
+				api.world.transform.translate(-translateX, -translateY);
 				
 				// substract the map offset to current the current pos
-				api.viewport.screenX -= api.currentLevel.pos.x;
-				api.viewport.screenY -= api.currentLevel.pos.y;
+				api.viewport.screenX = translateX - api.currentLevel.pos.x;
+				api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
 				// update all objects, 
 				// specifying the viewport as the rectangle area to redraw
-
 				api.world.draw(frameBuffer, api.viewport);
 
-				//restore context
-				frameBuffer.restore();
-				
-				// draw our camera/viewport
+                // draw our camera/viewport
 				api.viewport.draw(frameBuffer);
+                
+                // translate back
+				api.world.transform.translate(translateX, translateY);
 			}
 			isDirty = false;
 		};

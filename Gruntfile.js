@@ -6,6 +6,7 @@ module.exports = function(grunt) {
         'src/system/timer.js',
         'src/math/vector.js',
         'src/math/shape.js',
+        'src/math/matrix.js',
         'src/debug/debug.js',
         'src/renderable/base.js',
         'src/renderable/sprite.js',
