@@ -961,9 +961,6 @@ window.me = window.me || {};
 		// flag to redraw the sprites
 		var initialized = false;
 
-		// to keep track of deferred stuff
-		var pendingRemove = null;
-
 		// to know when we have to refresh the display
 		var isDirty = true;
 
