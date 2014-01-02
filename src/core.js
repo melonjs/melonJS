@@ -1150,6 +1150,9 @@ window.me = window.me || {};
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
 
+			// reset the transform matrix to the normal one
+			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
+
 			// reset the frame counter
 			frameCounter = 0;
 			frameRate = Math.round(60/me.sys.fps);
