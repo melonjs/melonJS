@@ -117,8 +117,8 @@
             this.b = b;
             this.c = c;
             this.d = d;
-            this.e = e || this.e;
-            this.f = f || this.f;
+            this.e = typeof(e) !== 'undefined' ? e : this.e;
+            this.f = typeof(f) !== 'undefined' ? f : this.f;
             return this;
         },
 
