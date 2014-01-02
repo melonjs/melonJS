@@ -207,8 +207,8 @@
 	            this.mapLayers.length = 0;
 	            this.objectGroups.length = 0;
 	            this.pos.set(0,0);
-           		this.initialized = false;
-           	}
+	            this.initialized = false;
+			}
 		}
         
 	});
