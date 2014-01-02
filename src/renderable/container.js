@@ -15,7 +15,7 @@
 		if(child.ancestor) {
 			child.ancestor.removeChildNow(child, keepalive);
 		}
-	}
+	};
 
 	/**
 	 * A global "translation context" for nested ObjectContainers
