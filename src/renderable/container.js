@@ -680,7 +680,7 @@
             context.save();
             
 			// apply the container current transform
-			context.setTransform(
+			context.transform(
                 this.transform.a, this.transform.b,
                 this.transform.c, this.transform.d, 
                 this.transform.e, this.transform.f

@@ -1291,12 +1291,13 @@ window.me = window.me || {};
 				// update all objects, 
 				// specifying the viewport as the rectangle area to redraw
 				api.world.draw(frameBuffer, api.viewport);
-
-                // draw our camera/viewport
-				api.viewport.draw(frameBuffer);
                 
                 // translate back
 				api.world.transform.translate(translateX, translateY);
+
+                // draw our camera/viewport
+				api.viewport.draw(frameBuffer);
+
 			}
 			isDirty = false;
 		};
