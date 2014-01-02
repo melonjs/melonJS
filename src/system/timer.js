@@ -131,6 +131,7 @@
          * update game tick
          * should be called once a frame
          * @param {Number} time current timestamp as provided by the RAF callback
+         * @return {Number} time elapsed since the last update
          * @ignore
          */
         api.update = function(time) {
@@ -143,6 +144,8 @@
 
             // get the game tick
             api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
+
+            return delta;
         };
 
         // return our apiect
