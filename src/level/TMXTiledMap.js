@@ -86,6 +86,9 @@
 			// tileset(s)
 			this.tilesets = null;
 
+			// loading flag
+			this.initialized = false;
+
 			this.parent(new me.Vector2d(), 0, 0);
 		},
 		
@@ -186,23 +189,26 @@
 		 */
 		destroy : function() {
 			var i;
-
-            // reset/clear all layers
-            for (i = this.mapLayers.length; i--;) {
-                this.mapLayers[i] = null;
-            }
-            // reset object groups
-            for (i = this.objectGroups.length; i--;) {
-                // objectGroups is not added to the game world
-                // so we call the destroy function manually
-                this.objectGroups[i].destroy();
-                this.objectGroups[i] = null;
-            }
-            // call parent reset function
-            this.tilesets = null;
-            this.mapLayers.length = 0;
-            this.objectGroups.length = 0;
-            this.pos.set(0,0);
+			
+			if (this.initialized === true) {
+	            // reset/clear all layers
+	            for (i = this.mapLayers.length; i--;) {
+	                this.mapLayers[i] = null;
+	            }
+	            // reset object groups
+	            for (i = this.objectGroups.length; i--;) {
+	                // objectGroups is not added to the game world
+	                // so we call the destroy function manually
+	                this.objectGroups[i].destroy();
+	                this.objectGroups[i] = null;
+	            }
+	            // call parent reset function
+	            this.tilesets = null;
+	            this.mapLayers.length = 0;
+	            this.objectGroups.length = 0;
+	            this.pos.set(0,0);
+           		this.initialized = false;
+           	}
 		}
         
 	});
