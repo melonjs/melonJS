@@ -267,9 +267,9 @@
 				// and pass the level id as parameter
 				me.utils.resetGUID(levelId);
 				
-				// reset the current (previous) level
+				// clean the current (previous) level
 				if (levels[obj.getCurrentLevelId()]) {
-					levels[obj.getCurrentLevelId()].reset();
+					levels[obj.getCurrentLevelId()].destroy();
 				}
 				
 				// read the map data

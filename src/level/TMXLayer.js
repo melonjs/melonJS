@@ -30,15 +30,6 @@
 		},
 
 		/**
-		 * reset function
-		 * @ignore
-		 * @function
-		 */
-		reset : function() {
-			// nothing to do here
-		},
-
-		/**
 		 * draw the color layer
 		 * @ignore
 		 */
@@ -189,21 +180,6 @@
 
 		},
 
-		/**
-		 * reset function
-		 * @ignore
-		 * @function
-		 */
-		reset : function() {
-			// cancel the event subscription
-			if (this.handle)  {
-				me.event.unsubscribe(this.handle);
-				this.handle = null;
-			}
-			// clear all allocated objects
-			this.image = null;
-			this.lastpos = null;
-		},
 
 		/**
 		 * updateLayer function
@@ -308,8 +284,15 @@
 
 		// called when the layer is destroyed
 		destroy : function() {
-			this.reset();
-		},
+			// cancel the event subscription
+			if (this.handle)  {
+				me.event.unsubscribe(this.handle);
+				this.handle = null;
+			}
+			// clear all allocated objects
+			this.image = null;
+			this.lastpos = null;
+		}
 	});
 
 
@@ -326,15 +309,6 @@
 
 			this.isCollisionMap = true;
 
-		},
-
-		/**
-		 * reset function
-		 * @ignore
-		 * @function
-		 */
-		reset : function() {
-			// nothing to do here
 		},
 
 		/**
@@ -494,11 +468,11 @@
 		},
 
 		/**
-		 * reset function
+		 * destroy function
 		 * @ignore
 		 * @function
 		 */
-		reset : function() {
+		destroy : function() {
 			// clear all allocated objects
 			if (this.preRender) {
 				this.layerCanvas = null;
@@ -509,7 +483,6 @@
 			this.layerData = null;
 			this.tileset = null;
 			this.tilesets = null;
-
 		},
 
 		/**
