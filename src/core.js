@@ -1257,13 +1257,13 @@ window.me = window.me || {};
 				frameCounter = 0;
 				
 				// update the timer
-				me.timer.update(time);
+				var dt = me.timer.update(time);
 
 				// update all objects (andd pass the elapsed time since last frame)
-				isDirty = api.world.update(me.timer.getDelta()) || isDirty;
+				isDirty = api.world.update(dt) || isDirty;
 			
 				// update the camera/viewport
-				isDirty = api.viewport.update(isDirty) || isDirty;
+				isDirty = api.viewport.update(dt) || isDirty;
 			}
 		};
 		
@@ -1303,6 +1303,9 @@ window.me = window.me || {};
 
 			}
 			isDirty = false;
+
+			// blit our frame
+-			me.video.blitSurface();
 		};
 
 		// return our object

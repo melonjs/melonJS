@@ -13,7 +13,7 @@
 	/**
 	 * a camera/viewport Object
 	 * @class
-	 * @extends me.Rect
+	 * @extends me.Renderable
 	 * @memberOf me
 	 * @constructor
 	 * @param {Number} minX start x offset
@@ -23,7 +23,7 @@
 	 * @param {Number} [realw] real world width limit
 	 * @param {Number} [realh] real world height limit
 	 */
-	me.Viewport = me.Rect.extend(
+	me.Viewport = me.Renderable.extend(
 	/** @scope me.Viewport.prototype */ {
 
 		/**
@@ -99,8 +99,7 @@
 				intensity : 0,
 				duration : 0,
 				axis : this.AXIS.BOTH,
-				onComplete : null,
-				start : 0
+				onComplete : null
 			};
 
 			// flash variables
@@ -191,7 +190,7 @@
             this.deadzone.resize(w, h);
 
 			// force a camera update
-			this.update(true);
+			this.updateTarget();
 
 		},
 
@@ -214,7 +213,7 @@
 			this.follow_axis = (typeof(axis) === "undefined" ? this.AXIS.BOTH : axis);
 			
 			// force a camera update
-			this.update(true);
+			this.updateTarget();
 		},
 
 		/**
@@ -237,36 +236,44 @@
 		},
 
 		/** @ignore */
-		update : function(updateTarget) {
+		updateTarget : function() {
 			var updated = false;
 			
-			if (this.target && updateTarget) {
+			if (this.target) {
 				switch (this.follow_axis) {
-				case this.AXIS.NONE:
-					//this.focusOn(this.target);
-					break;
+					case this.AXIS.NONE:
+						//this.focusOn(this.target);
+						break;
 
-				case this.AXIS.HORIZONTAL:
-					updated = this._followH(this.target);
-					break;
+					case this.AXIS.HORIZONTAL:
+						updated = this._followH(this.target);
+						break;
 
-				case this.AXIS.VERTICAL:
-					updated = this._followV(this.target);
-					break;
+					case this.AXIS.VERTICAL:
+						updated = this._followV(this.target);
+						break;
 
-				case this.AXIS.BOTH:
-					updated = this._followH(this.target);
-					updated = this._followV(this.target) || updated;
-					break;
+					case this.AXIS.BOTH:
+						updated = this._followH(this.target);
+						updated = this._followV(this.target) || updated;
+						break;
 
-				default:
-					break;
-				}
+					default:
+						break;
+					}
 			}
 
-			if (this.shaking===true) {
-				var delta = me.timer.getTime() - this._shake.start;
-				if (delta >= this._shake.duration) {
+			return updated;
+		},
+
+		/** @ignore */
+		update : function( dt ) {
+			
+			var updated = this.updateTarget();
+			
+			if (this.shaking === true) {
+				this._shake.duration -= dt;
+				if (this._shake.duration <= 0) {
 					this.shaking = false;
 					this.offset.setZero();
 					if (typeof(this._shake.onComplete) === "function") {
@@ -323,8 +330,7 @@
 				intensity : intensity,
 				duration : duration,
 				axis : axis || this.AXIS.BOTH,
-				onComplete : onComplete || null,
-				start : me.timer.getTime()
+				onComplete : onComplete || null
 			};
 		},
 
@@ -466,9 +472,6 @@
 					this._fadeOut.color = null;
 				}
 			}
-
-			// blit our frame
-			me.video.blitSurface();
 		}
 	});
 
