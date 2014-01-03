@@ -63,7 +63,7 @@
 
 		// to manage the flickering effect
 		flickering : false,
-		flickerTimer : -1,
+		flickerDuration : 0,
 		flickercb : null,
 		flickerState : false,
 
@@ -135,19 +135,19 @@
 		 * @name flicker
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Number} duration expressed in frames
+		 * @param {Number} duration expressed in milliseconds
 		 * @param {Function} callback Function to call when flickering ends
 		 * @example
-		 * // make the object flicker for 60 frame
+		 * // make the object flicker for 1 second
 		 * // and then remove it
-		 * this.flicker(60, function()
+		 * this.flicker(1000, function()
 		 * {
 		 *    me.game.world.removeChild(this);
 		 * });
 		 */
 		flicker : function(duration, callback) {
-			this.flickerTimer = duration;
-			if (this.flickerTimer < 0) {
+			this.flickerDuration = duration;
+			if (this.flickerDuration <= 0) {
 				this.flickering = false;
 				this.flickercb = null;
 			} else if (!this.flickering) {
@@ -225,8 +225,8 @@
 		update : function( dt ) {
 			//update the "flickering" state if necessary
 			if (this.flickering) {
-				this.flickerTimer -= me.timer.tick;
-				if (this.flickerTimer < 0) {
+				this.flickerDuration -= dt;
+				if (this.flickerDuration < 0) {
 					if (this.flickercb)
 						this.flickercb();
 					this.flicker(-1);

@@ -140,7 +140,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 	hurt : function () {
 		if (!this.renderable.flickering)
 		{
-			this.renderable.flicker(45);
+			this.renderable.flicker(750);
 			// flash the screen
 			me.game.viewport.fadeIn("#FFFFFF", 75);
 			me.audio.play("die", false);
@@ -261,7 +261,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
 			var self = this;
-			this.renderable.flicker(45, function(){me.game.world.removeChild(self)});
+			this.renderable.flicker(750, function(){me.game.world.removeChild(self)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score

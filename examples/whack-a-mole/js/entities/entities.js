@@ -44,7 +44,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 			// set touch animation
 			this.setCurrentAnimation("touch", this.hide.bind(this));
 			// make it flicker
-			this.flicker(20);
+			this.flicker(750);
 			// play ow FX
 			me.audio.play("ow");
 
