@@ -1257,13 +1257,13 @@ window.me = window.me || {};
 				frameCounter = 0;
 				
 				// update the timer
-				var dt = me.timer.update(time);
+				me.timer.update(time);
 
 				// update all objects (andd pass the elapsed time since last frame)
-				isDirty = api.world.update(dt) || isDirty;
+				isDirty = api.world.update(me.timer.getDelta()) || isDirty;
 			
 				// update the camera/viewport
-				isDirty = api.viewport.update(dt) || isDirty;
+				isDirty = api.viewport.update(me.timer.getDelta()) || isDirty;
 			}
 		};
 		
