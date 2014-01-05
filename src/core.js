@@ -1305,7 +1305,7 @@ window.me = window.me || {};
 			isDirty = false;
 
 			// blit our frame
--			me.video.blitSurface();
+			me.video.blitSurface();
 		};
 
 		// return our object
