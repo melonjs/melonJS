@@ -52,11 +52,11 @@
         var updateTimers = function( dt ) {
             for (var i = 0, len = timers.length; i < len; i++) {
                 var _timer = timers[i];
-                if (!(_timer.pausable && me.state.isPaused())) {
+                if (!(_timer.pauseable && me.state.isPaused())) {
                     _timer.elapsed += dt;
                 }
                 if (_timer.elapsed >= _timer.delay) {
-                    _timer.func.apply(this, _timer.args);
+                    _timer.func.apply(this);
                     if (_timer.repeat === true) {
                         _timer.elapsed -= _timer.delay;
                     } else {
@@ -122,18 +122,17 @@
          * @memberOf me.timer
          * @param {Function} func the function you want to execute after delay milliseconds.
          * @param {Function} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {Boolean} [pausable = true] respects the pause state of the engine.
+         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
          * @return {Number}  timeoutID the numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
          * @function
          */
-        api.setTimeout = function(func, delay, pausable) {
+        api.setTimeout = function(func, delay, pauseable) {
             return timers.push({
                 func: func,
                 delay : delay,
                 elapsed : 0,
                 repeat : false,
-                args : undefined, // ?
-                pausable : pausable === true || true
+                pauseable : pauseable === true || true
             });
         };
 
@@ -143,18 +142,17 @@
          * @memberOf me.timer
          * @param {Function} func the function to execute
          * @param {Function} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {Boolean} [pausable = true] respects the pause state of the engine.
+         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
          * @return {Number} intervalID the numerical ID of the timeout, which can be used later with me.timer.clearInterval().
          * @function
          */
-        api.setInterval = function(func, delay, pausable) {
+        api.setInterval = function(func, delay, pauseable) {
             return timers.push({
                 func: func,
                 delay : delay,
                 elapsed : 0,
                 repeat : true,
-                args : undefined, // ?
-                pausable : pausable === true || true
+                pauseable : pauseable === true || true
             });
         };
 
