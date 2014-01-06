@@ -133,7 +133,7 @@
                 elapsed : 0,
                 repeat : false,
                 pauseable : pauseable === true || true
-            });
+            }) - 1;
         };
 
         /**
@@ -153,7 +153,7 @@
                 elapsed : 0,
                 repeat : true,
                 pauseable : pauseable === true || true
-            });
+            }) - 1;
         };
 
         /**
