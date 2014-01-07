@@ -24,8 +24,6 @@
 		var tmxList = {};
 		// contains all the binary files loaded
 		var binList = {};
-		// contains all the texture atlas files
-		var atlasList = {};
 		// contains all the JSON files
 		var jsonList = {};
 		// flag to check loading status
@@ -476,23 +474,31 @@
 
 			// unload all binary resources
 			for (name in binList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "binary"
+				});
 
 			// unload all image resources
 			for (name in imgList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "image"
+				});
 
 			// unload all tmx resources
 			for (name in tmxList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "tmx"
+				});
 			
-			// unload all atlas resources
-			for (name in atlasList)
-				obj.unload(name);
-
 			// unload all in json resources
 			for (name in jsonList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "json"
+				});
 
 			// unload all audio resources
 			me.audio.unloadAll();
