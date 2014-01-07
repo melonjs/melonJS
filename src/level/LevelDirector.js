@@ -279,7 +279,7 @@
 				if (wasRunning) {
 					// resume the game loop if it was
 					// previously running
-					me.state.restart.defer();
+					me.state.restart.defer(this);
 				}
 			} else {
 				throw "melonJS: no level loader defined";
