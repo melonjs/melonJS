@@ -217,12 +217,15 @@
 		},
 
 		/**
-		 * move the viewport to the specified coordinates
+		 * move the viewport position by the specified offset
 		 * @name move
 		 * @memberOf me.Viewport
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
+		 * @example
+		 * // Move the viewport up by four pixels
+		 * me.game.viewport.move(0, -4);
 		 */
 		move : function(x, y) {
 			var newx = ~~(this.pos.x + x);
