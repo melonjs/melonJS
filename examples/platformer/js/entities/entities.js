@@ -235,13 +235,12 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 				this.walkLeft = true;
 				this.flipX(false);
 			}
-		} else {
-			this.vel.x = 0;
-		}
 		
-		// check & update movement
-		this.updateMovement();
-		
+			// check & update movement
+			this.updateMovement();
+
+		} 
+
 		// return true if we moved of if flickering
 		return (this.parent(dt) || this.vel.x != 0 || this.vel.y != 0);
 	},
