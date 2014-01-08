@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="50" height="17" tilewidth="35" tileheight="35">
- <properties>
-  <property name="backgroundcolor" value="#aa55ff"/>
- </properties>
+<map version="1.0" orientation="orthogonal" width="50" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff">
  <tileset firstgid="1" name="tileset" tilewidth="35" tileheight="35">
   <image source="../img/tileset.png" width="512" height="512"/>
  </tileset>

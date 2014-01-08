@@ -60,7 +60,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		update the player pos
 		
 	------			*/
-	update : function () {
+	update : function (dt) {
 		
 		if (me.input.isKeyPressed('left'))	{
 			this.vel.x -= this.accel.x * me.timer.tick;
@@ -89,7 +89,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		// check if we fell into a hole
 		if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
 			// if yes reset the game
-			me.game.remove(this);
+			me.game.world.removeChild(this);
 			me.game.viewport.fadeIn('#fff', 150, function(){
 				me.audio.play("die", false);
 				me.levelDirector.reloadLevel();
@@ -126,7 +126,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		
 		// check if we moved (a "stand" animation would definitely be cleaner)
 		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this.parent();
+			this.parent(dt);
 			return true;
 		}
 		
@@ -140,7 +140,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 	hurt : function () {
 		if (!this.renderable.flickering)
 		{
-			this.renderable.flicker(45);
+			this.renderable.flicker(750);
 			// flash the screen
 			me.game.viewport.fadeIn("#FFFFFF", 75);
 			me.audio.play("die", false);
@@ -179,7 +179,7 @@ game.CoinEntity = me.CollectableEntity.extend({
 		
 		//avoid further collision and delete it
 		this.collidable = false;
-		me.game.remove(this);
+		me.game.world.removeChild(this);
 	}
 	
 });
@@ -223,7 +223,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 	/**
 	 * manage the enemy movement
 	 */
-	update : function () {
+	update : function (dt) {
 		
 		if (this.alive)	{
 			if (this.walkLeft && this.pos.x <= this.startX) {
@@ -243,7 +243,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		this.updateMovement();
 		
 		// return true if we moved of if flickering
-		return (this.parent() || this.vel.x != 0 || this.vel.y != 0);
+		return (this.parent(dt) || this.vel.x != 0 || this.vel.y != 0);
 	},
 	
 	/**
@@ -261,7 +261,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
 			var self = this;
-			this.renderable.flicker(45, function(){me.game.remove(self)});
+			this.renderable.flicker(750, function(){me.game.world.removeChild(self)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score

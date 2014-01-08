@@ -1,4 +1,5 @@
-{ "height":17,
+{ "backgroundcolor":"#cc66ff",
+ "height":17,
  "layers":[
         {
          "height":17,
@@ -152,9 +153,36 @@
                     },
                  "type":"",
                  "visible":true,
-                 "width":210,
-                 "x":140,
+                 "width":105,
+                 "x":245,
                  "y":140
+                }, 
+                {
+                 "height":0,
+                 "name":"SlimeEntity",
+                 "polygon":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":35,
+                         "y":-70
+                        }, 
+                        {
+                         "x":70,
+                         "y":0
+                        }],
+                 "properties":
+                    {
+                     "spriteheight":"35",
+                     "spritewidth":"55"
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":140,
+                 "y":175
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -217,23 +245,6 @@
                     },
                  "type":"",
                  "visible":true,
-                 "width":350,
-                 "x":280,
-                 "y":280
-                }, 
-                {
-                 "height":35,
-                 "name":"FlyEntity",
-                 "properties":
-                    {
-                     "animationspeed":"200",
-                     "gravity":"0",
-                     "spriteheight":"35",
-                     "spritewidth":"70",
-                     "velX":"2"
-                    },
-                 "type":"",
-                 "visible":true,
                  "width":595,
                  "x":945,
                  "y":140
@@ -259,7 +270,7 @@
  "orientation":"orthogonal",
  "properties":
     {
-     "backgroundcolor":"#aa55ff"
+
     },
  "tileheight":35,
  "tilesets":[

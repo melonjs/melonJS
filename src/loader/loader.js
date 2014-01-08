@@ -24,8 +24,6 @@
 		var tmxList = {};
 		// contains all the binary files loaded
 		var binList = {};
-		// contains all the texture atlas files
-		var atlasList = {};
 		// contains all the JSON files
 		var jsonList = {};
 		// flag to check loading status
@@ -241,7 +239,7 @@
 		/**
 		 * onProgress callback<br>
 		 * each time a resource is loaded, the loader will fire the specified function,
-		 * giving the actual progress [0 ... 1], as argument.
+		 * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
 		 * @public
 		 * @callback
 		 * @name onProgress
@@ -258,7 +256,7 @@
 		 * @ignore
 		 */
 
-		obj.onResourceLoaded = function(e) {
+		obj.onResourceLoaded = function(res) {
 
 			// increment the loading counter
 			loadCount++;
@@ -267,9 +265,9 @@
 			var progress = obj.getLoadProgress();
 			if (obj.onProgress) {
 				// pass the load progress in percent, as parameter
-				obj.onProgress(progress);
+				obj.onProgress(progress, res);
 			}
-			me.event.publish(me.event.LOADER_PROGRESS, [progress]);
+			me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
 		};
 		
 		/**
@@ -297,8 +295,6 @@
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
 		 * @name preload
 		 * @memberOf me.loader
@@ -317,8 +313,8 @@
 		 *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
 		 *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
 		 *   // audio ressources
-		 *   {name: "bgmusic", type: "audio",  src: "data/audio/",  channel: 1,  stream: true},
-		 *   {name: "cling",   type: "audio",  src: "data/audio/",  channel: 2},
+		 *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
+		 *   {name: "cling",   type: "audio",  src: "data/audio/"},
 		 *   // binary file
 		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
 		 *   // JSON file (used for texturePacker) 
@@ -332,7 +328,7 @@
 		obj.preload = function(res) {
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
-				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
+				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj, res[i]), obj.onLoadingError.bind(obj, res[i]));
 			}
 			// check load status
 			checkLoadStatus();
@@ -340,14 +336,12 @@
 
 		/**
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
-		 * Given parmeter must contain the following fields :<br>
+		 * Given parameter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
 		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * @name load
 		 * @memberOf me.loader
 		 * @public
@@ -359,12 +353,11 @@
 		 * // load an image asset
 		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
 		 * 
-		 * // start streaming music
+		 * // start loading music
 		 * me.loader.load({
 		 *     name   : "bgmusic",
 		 *     type   : "audio",
-		 *     src    : "data/audio/",
-		 *     stream : true
+		 *     src    : "data/audio/"
 		 * }, function() {
 		 *     me.audio.play("bgmusic");
 		 * });
@@ -476,23 +469,31 @@
 
 			// unload all binary resources
 			for (name in binList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "binary"
+				});
 
 			// unload all image resources
 			for (name in imgList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "image"
+				});
 
 			// unload all tmx resources
 			for (name in tmxList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "tmx"
+				});
 			
-			// unload all atlas resources
-			for (name in atlasList)
-				obj.unload(name);
-
 			// unload all in json resources
 			for (name in jsonList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "json"
+				});
 
 			// unload all audio resources
 			me.audio.unloadAll();

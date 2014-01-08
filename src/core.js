@@ -456,9 +456,9 @@ window.me = window.me || {};
 		 * newObject = Object.create(oldObject);
 		 */
 		Object.create = function(o) {
-			function _fn() {}
-			_fn.prototype = o;
-			return new _fn();
+			var Fn = function() {};
+			Fn.prototype = o;
+			return new Fn();
 		};
 	}
 
@@ -521,13 +521,13 @@ window.me = window.me || {};
 		 * @ignore
 		 */
 		window.throttle = function( delay, no_trailing, callback, debounce_mode ) {
-			var last = Date.now(), deferTimer;
+			var last = window.performance.now(), deferTimer;
 			// `no_trailing` defaults to false.
 			if ( typeof no_trailing !== 'boolean' ) {
 			  no_trailing = false;
 			}
 			return function () {
-				var now = Date.now();
+				var now = window.performance.now();
 				var elasped = now - last;
 				var args = arguments;
 				if (elasped < delay) {
@@ -554,8 +554,32 @@ window.me = window.me || {};
 		 * supporting Date.now (JS 1.5)
 		 * @ignore
 		 */
-		Date.now = function(){return new Date().getTime();};
+        Date.now = function() { 
+            return new Date().getTime();
+        };
 	}
+    
+    // define window.performance if undefined
+    if (typeof window.performance === 'undefined') {
+        window.performance = {};
+    }
+ 
+    if (!window.performance.now){
+        var timeOffset = Date.now();
+        
+        if (window.performance.timing && window.performance.timing.navigationStart){
+            timeOffset = window.performance.timing.navigationStart;
+        }
+        /**
+         * provide a polyfill for window.performance now
+         * to provide consistent time information across browser
+         * (always return the elapsed time since the browser started)
+         * @ignore
+         */
+        window.performance.now = function() { 
+            return Date.now() - timeOffset;
+        };
+    }
 
 	if(typeof console === "undefined") {
 		/**
@@ -619,7 +643,9 @@ window.me = window.me || {};
      * @return {Prototype} Prototype of the target object.
      */
     Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
+        /* jshint ignore:start */
         return obj.__proto__;
+        /* jshint ignore:end */
     };
 
     /**
@@ -631,7 +657,9 @@ window.me = window.me || {};
      * @return {Object} Modified target object.
      */
     Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+        /* jshint ignore:start */
         obj.__proto__ = prototype;
+        /* jshint ignore:end */
         return obj;
     };
 
@@ -649,10 +677,23 @@ window.me = window.me || {};
 		 * @return {String} trimmed string
 		 */
 		String.prototype.trim = function () {  
-			return (this.replace(/^\s+/, '')).replace(/\s+$/, ''); 
+			return this.replace(/^\s+|\s+$/gm, '');
+
 		};  
 	}
-    
+
+	if(!String.prototype.trimLeft) {  
+		/**
+		 * returns the string stripped of whitespace from the left of the string.
+		 * @memberof! external:String#
+		 * @alias trimLeft
+		 * @return {String} trimmed string
+		 */
+		String.prototype.trimLeft = function () {  
+			return this.replace(/^\s+/, '');
+		};  
+	}
+
 	if(!String.prototype.trimRight) {  
 		/**
 		 * returns the string stripped of whitespace from the right end of the string.
@@ -685,16 +726,19 @@ window.me = window.me || {};
 		return (this !== null && ("true" === this.trim() || "false" === this.trim()));
 	};
 
-	/**
-	 * add a contains fn to the string object
-	 * @memberof! external:String#
-	 * @alias contains
-	 * @param {String} string to test for
-	 * @return {Boolean} true if contains the specified string
-	 */
-	String.prototype.contains = function(word) {
-		return this.indexOf(word) > -1;
-	};
+	if (!String.prototype.contains) {
+		/**
+		 * determines whether or not a string contains another string.
+		 * @memberof! external:String#
+		 * @alias contains
+		 * @param {String} str A string to be searched for within this string.
+		 * @param {Number} [startIndex=0] The position in this string at which to begin searching for given string.
+		 * @return {Boolean} true if contains the specified string
+		 */
+		String.prototype.contains = function(str, startIndex) {
+	        return -1 !== String.prototype.indexOf.call(this, str, startIndex);
+		};
+	}
 
 	/**
 	 * convert the string to hex value
@@ -902,7 +946,7 @@ window.me = window.me || {};
 	 * @memberOf me
 	 */
 	me.game = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var api = {};
 
 		/*---------------------------------------------
@@ -917,11 +961,13 @@ window.me = window.me || {};
 		// flag to redraw the sprites
 		var initialized = false;
 
-		// to keep track of deferred stuff
-		var pendingRemove = null;
-
 		// to know when we have to refresh the display
 		var isDirty = true;
+
+		// frame counter for frameSkipping
+		// reset the frame counter
+		var frameCounter = 0;
+		var frameRate = 1;
 
 		/*---------------------------------------------
 
@@ -1073,6 +1119,9 @@ window.me = window.me || {};
 				// publish init notification
 				me.event.publish(me.event.GAME_INIT);
 
+                // translate global pointer events
+                me.input.translatePointerEvents();
+
 				// make display dirty by default
 				isDirty = true;
 
@@ -1091,312 +1140,34 @@ window.me = window.me || {};
 		 */
 		api.reset = function() {
 			// remove all objects
-			api.removeAll();
+			api.world.destroy();
 
 			// reset the viewport to zero ?
 			if (api.viewport) {
 				api.viewport.reset();
 			}
 
+			// dummy current level
+			api.currentLevel = {pos:{x:0,y:0}};
+
 			// reset the transform matrix to the normal one
 			frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
 
-			// dummy current level
-			api.currentLevel = {pos:{x:0,y:0}};
+			// reset the frame counter
+			frameCounter = 0;
+			frameRate = Math.round(60/me.sys.fps);
 		};
 	
 		/**
-		 * Load a TMX level
-		 * @name loadTMXLevel
-		 * @memberOf me.game
-		 * @private
-		 * @ignore
-		 * @function
-		 */
-
-		api.loadTMXLevel = function(level) {
-			
-			// disable auto-sort
-			api.world.autoSort = false;
-			
-			// load our map
-			api.currentLevel = level;
-
-			// get the collision map
-			api.collisionMap = api.currentLevel.getLayerByName("collision");
-			if (!api.collisionMap || !api.collisionMap.isCollisionMap) {
-				console.error("WARNING : no collision map detected");
-			}
-
-			// add all defined layers
-			var layers = api.currentLevel.getLayers();
-			for ( var i = layers.length; i--;) {
-				if (layers[i].visible) {
-					// only if visible
-					api.add(layers[i]);
-				}
-			}
-
-			// change the viewport limit
-			api.viewport.setBounds(Math.max(api.currentLevel.width, api.viewport.width),
-								   Math.max(api.currentLevel.height, api.viewport.height));
-
-			// game world as default container
-			var targetContainer = api.world;
-
-			// load all ObjectGroup and Object definition
-			var objectGroups = api.currentLevel.getObjectGroups();
-			
-			for ( var g = 0; g < objectGroups.length; g++) {
-				
-				var group = objectGroups[g];
-
-				if (api.mergeGroup === false) {
-
-					// create a new container with Infinite size (?)
-					// note: initial position and size seems to be meaningless in Tiled
-					// https://github.com/bjorn/tiled/wiki/TMX-Map-Format :
-					// x: Defaults to 0 and can no longer be changed in Tiled Qt.
-					// y: Defaults to 0 and can no longer be changed in Tiled Qt.
-					// width: The width of the object group in tiles. Meaningless.
-					// height: The height of the object group in tiles. Meaningless.
-					targetContainer = new me.ObjectContainer();
-					
-					// set additional properties
-					targetContainer.name = group.name;
-					targetContainer.visible = group.visible;
-					targetContainer.z = group.z;
-					targetContainer.setOpacity(group.opacity);                  
-                 
-
-					// disable auto-sort
-					targetContainer.autoSort = false;
-				}
-
-				// iterate through the group and add all object into their
-				// corresponding target Container
-				for ( var o = 0; o < group.objects.length; o++) {
-					
-					// TMX Object
-					var obj = group.objects[o];
-
-					// create the corresponding entity
-					var entity = me.entityPool.newInstanceOf(obj.name, obj.x, obj.y, obj);
-
-					// ignore if the newInstanceOf function does not return a corresponding object
-					if (entity) {
-						
-						// set the entity z order correspondingly to its parent container/group
-						entity.z = group.z;
-
-						//apply group opacity value to the child objects if group are merged
-						if (api.mergeGroup === true && entity.isRenderable === true) {
-							entity.setOpacity(entity.getOpacity() * group.opacity);
-							// and to child renderables if any
-							if (entity.renderable !== null) {
-								entity.renderable.setOpacity(entity.renderable.getOpacity() * group.opacity);
-							}
-						}                        
-						// add the entity into the target container
-						targetContainer.addChild(entity);
-					}
-				}
-
-				// if we created a new container
-				if (api.mergeGroup === false) {
-										
-					// add our container to the world
-					api.world.addChild(targetContainer);
-					
-					// re-enable auto-sort
-					targetContainer.autoSort = true;	
-				
-				}
-
-			}
-
-			// sort everything (recursively)
-			api.world.sort(true);
-			
-			// re-enable auto-sort
-			api.world.autoSort = true;
-
-			
-			// check if the map has different default (0,0) screen coordinates
-			if (api.currentLevel.pos.x !== api.currentLevel.pos.y) {
-				// translate the display accordingly
-				frameBuffer.translate( api.currentLevel.pos.x , api.currentLevel.pos.y );
-			}
-
-			// fire the callback if defined
-			if (api.onLevelLoaded) {
-				api.onLevelLoaded.call(api.onLevelLoaded, level.name);
-			}
-			//publish the corresponding message
-			me.event.publish(me.event.LEVEL_LOADED, [level.name]);
-
-		};
-
-		/**
-		 * Manually add object to the game manager
-		 * @deprecated @see me.game.world.addChild()
-		 * @name add
-		 * @memberOf me.game
-		 * @param {me.ObjectEntity} obj Object to be added
-		 * @param {Number} [z="obj.z"] z index
-		 * @public
-		 * @function
-		 * @example
-		 * // create a new object
-		 * var obj = new MyObject(x, y)
-		 * // add the object and force the z index of the current object
-		 * me.game.add(obj, this.z);
-		 */
-		api.add = function(object, zOrder) {
-			if (typeof(zOrder) !== 'undefined') {
-				object.z = zOrder;
-			}
-			// add the object in the game obj list
-			api.world.addChild(object);
-
-		};
-
-
-		/**
-		 * returns the list of entities with the specified name<br>
-		 * as defined in Tiled (Name field of the Object Properties)<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
-		 * @name getEntityByName
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} entityName entity name
-		 * @return {me.ObjectEntity[]} Array of object entities
-		 */
-		api.getEntityByName = function(entityName) {
-			return api.world.getEntityByProp("name", entityName);
-		};
-		
-		/**
-		 * return the entity corresponding to the specified GUID<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
-		 * @name getEntityByGUID
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} GUID entity GUID
-		 * @return {me.ObjectEntity} Object Entity (or null if not found)
-		 */
-		api.getEntityByGUID = function(guid) {
-			var obj = api.world.getEntityByProp("GUID", guid);
-			return (obj.length>0)?obj[0]:null;
-		};
-		
-		/**
-		 * return the entity corresponding to the property and value<br>
-		 * note : avoid calling this function every frame since
-		 * it parses the whole object list each time
-		 * @deprecated use me.game.world.getEntityByProp();
-		 * @name getEntityByProp
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {String} prop Property name
-		 * @param {String} value Value of the property
-		 * @return {me.ObjectEntity[]} Array of object entities
-		 */
-		api.getEntityByProp = function(prop, value) {
-			return api.world.getEntityByProp(prop, value);
-		};
-
-		/**
-		 * Returns the entity container of the specified Child in the game world
-		 * @name getEntityContainer
+		 * Returns the parent container of the specified Child in the game world
+		 * @name getParentContainer
 		 * @memberOf me.game
 		 * @function
-		 * @param {me.ObjectEntity} child
+		 * @param {me.Renderable} child
 		 * @return {me.ObjectContainer}
 		 */
-		api.getEntityContainer = function(child) {
+		api.getParentContainer = function(child) {
 			return child.ancestor;
-		};
-
-		
-		/**
-		 * remove the specific object from the world<br>
-		 * `me.game.remove` will preserve object that defines the `isPersistent` flag
-		 * `me.game.remove` will remove object at the end of the current frame
-		 * @name remove
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @param {me.ObjectEntity} obj Object to be removed
-		 * @param {Boolean} [force=false] Force immediate deletion.<br>
-		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
-		 */
-		api.remove = function(obj, force) {
-			if (obj.ancestor) {
-				// remove the object from the object list
-				if (force===true) {
-					// force immediate object deletion
-					obj.ancestor.removeChild(obj);
-				} else {
-					// make it invisible (this is bad...)
-					obj.visible = obj.inViewport = false;
-					// wait the end of the current loop
-					/** @ignore */
-					pendingRemove = (function (obj) {
-						// safety check in case the
-						// object was removed meanwhile
-						if (typeof obj.ancestor !== 'undefined') {
-							obj.ancestor.removeChild(obj);
-						}
-						pendingRemove = null;
-					}.defer(obj));
-				}
-			}
-		};
-
-		/**
-		 * remove all objects<br>
-		 * @name removeAll
-		 * @memberOf me.game
-		 * @param {Boolean} [force=false] Force immediate deletion.<br>
-		 * <strong>WARNING</strong>: Not safe to force asynchronously (e.g. onCollision callbacks)
-		 * @public
-		 * @function
-		 */
-		api.removeAll = function() {
-			//cancel any pending tasks
-			if (pendingRemove) {
-				clearTimeout(pendingRemove);
-				pendingRemove = null;
-			}
-			// destroy all objects in the root container
-			api.world.destroy();
-		};
-
-		/**
-		 * Manually trigger the sort all the game objects.</p>
-		 * Since version 0.9.9, all objects are automatically sorted, <br>
-		 * except if a container autoSort property is set to false.
-		 * @deprecated use me.game.world.sort();
-		 * @name sort
-		 * @memberOf me.game
-		 * @public
-		 * @function
-		 * @example
-		 * // change the default sort property
-		 * me.game.sortOn = "y";
-		 * // manuallly call me.game.sort with our sorting function
-		 * me.game.sort();
-		 */
-		api.sort = function() {
-			api.world.sort();
 		};
 
 		/**
@@ -1477,17 +1248,23 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
+         * @param {Number} time current timestamp as provided by the RAF callback
 		 */
-		api.update = function() {
-			
-			// update all objects
-			isDirty = api.world.update() || isDirty;
-			
-			// update the camera/viewport
-			isDirty = api.viewport.update(isDirty) || isDirty;
+		api.update = function(time) {
+			// handle frame skipping if required
+			if ((++frameCounter%frameRate)===0) {
+				// reset the frame counter
+				frameCounter = 0;
+				
+				// update the timer
+				me.timer.update(time);
 
-			return isDirty;
+				// update all objects (andd pass the elapsed time since last frame)
+				isDirty = api.world.update(me.timer.getDelta()) || isDirty;
 			
+				// update the camera/viewport
+				isDirty = api.viewport.update(me.timer.getDelta()) || isDirty;
+			}
 		};
 		
 
@@ -1504,30 +1281,31 @@ window.me = window.me || {};
 			if (isDirty) {
 				// cache the viewport rendering position, so that other object
 				// can access it later (e,g. entityContainer when drawing floating objects)
-				api.viewport.screenX = api.viewport.pos.x + ~~api.viewport.offset.x;
-				api.viewport.screenY = api.viewport.pos.y + ~~api.viewport.offset.y;
+				var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;
+				var translateY = api.viewport.pos.y + ~~api.viewport.offset.y;
 							
-				// save the current context
-				frameBuffer.save();
-				// translate by default to screen coordinates
-				frameBuffer.translate(-api.viewport.screenX, -api.viewport.screenY);
+				// translate the world coordinates by default to screen coordinates
+				api.world.transform.translate(-translateX, -translateY);
 				
 				// substract the map offset to current the current pos
-				api.viewport.screenX -= api.currentLevel.pos.x;
-				api.viewport.screenY -= api.currentLevel.pos.y;
+				api.viewport.screenX = translateX - api.currentLevel.pos.x;
+				api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
 				// update all objects, 
 				// specifying the viewport as the rectangle area to redraw
-
 				api.world.draw(frameBuffer, api.viewport);
+                
+                // translate back
+				api.world.transform.translate(translateX, translateY);
 
-				//restore context
-				frameBuffer.restore();
-				
-				// draw our camera/viewport
+                // draw our camera/viewport
 				api.viewport.draw(frameBuffer);
+
 			}
 			isDirty = false;
+
+			// blit our frame
+			me.video.blitSurface();
 		};
 
 		// return our object

@@ -32,6 +32,8 @@
 	 *       settings.spriteheight = 50;
 	 *       // parent constructor
 	 *       this.parent(x, y, settings);
+	 *       // define the object z order
+	 *       this.z = 4;     
 	 *    },
 	 *	
 	 *    // output something in the console
@@ -44,8 +46,8 @@
 	 *    }
 	 * });
 	 * 
-	 * // add the object at pos (10,10), z index 4
-	 * me.game.add((new myButton(10,10)),4);
+	 * // add the object at pos (10,10)
+	 * me.game.world.addChild(new myButton(10,10));
 	 *
 	 */
 	me.GUI_Object = me.SpriteObject.extend({
@@ -83,7 +85,7 @@
 		 * return true if the object has been clicked
 		 * @ignore
 		 */
-		update : function() {
+		update : function( dt ) {
 			if (this.updated) {
 				// clear the flag
 				this.updated = false;

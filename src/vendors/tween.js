@@ -105,14 +105,14 @@
 		 * @public
 		 * @function
 		 */
-		this.start = function () {
+		this.start = function ( time ) {
 
 			_onStartCallbackFired = false;
 
 			// add the tween to the object pool on start
 			me.game.world.addChild(this);
 
-			_startTime = me.timer.getTime() + _delayTime;
+			_startTime = (time === undefined ? me.timer.getTime() : time) + _delayTime;
 			_pauseTime = 0;
 		
 			for ( var property in _valuesEnd ) {
@@ -153,7 +153,7 @@
 		 */
 		this.stop = function () {
 
-			me.game.world.removeChild(this);
+			me.game.world.removeChildNow(this);
 			return this;
 
 		};
@@ -307,12 +307,14 @@
 		};
 		
 		/** @ignore*/
-		this.update = function ( /*time*/ ) {
-
-			var property;
-			
+		this.update = function ( dt ) {
+            
+			// the original Tween implementation expect
+			// a timestamp and not a time delta
 			var time = me.timer.getTime();
-
+            
+			var property;
+            
 			if ( time < _startTime ) {
 
 				return true;
@@ -397,9 +399,8 @@
 					return true;
 
 				} else {
-				
 					// remove the tween from the object pool
-					me.game.world.removeChild(this);
+					me.game.world.removeChildNow(this);
 
 					if ( _onCompleteCallback !== null ) {
 

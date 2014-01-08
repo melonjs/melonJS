@@ -17,12 +17,12 @@ game.resources = [
 
     /* Background music. 
      * @example
-     * {name: "example_bgm", type: "audio", src: "data/bgm/", channel : 1},
+     * {name: "example_bgm", type: "audio", src: "data/bgm/"},
      */ 
 
     /* Sound effects. 
      * @example
-     * {name: "example_sfx", type: "audio", src: "data/sfx/", channel : 2}
+     * {name: "example_sfx", type: "audio", src: "data/sfx/"}
      */
 
     /* Atlases 

@@ -181,9 +181,10 @@
 		 * @memberOf me.Renderable
 		 * @function
 		 * @protected
+         * @param {Number} dt time since the last update in milliseconds.
 		 * @return false
 		 **/
-		update : function() {
+		update : function( dt ) {
 			return false;
 		},
 

@@ -229,10 +229,6 @@
             // update initial position
             this.pos.set(x,y);
             
-            // save the context, as we are modifying
-            // too much parameter in this function
-            context.save();
-            
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;
@@ -251,9 +247,6 @@
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
-            
-            // restore the context
-            context.restore();
 		}
         
 	});

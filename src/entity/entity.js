@@ -142,6 +142,7 @@
 			obj.add("me.CollectableEntity", me.CollectableEntity);
 			obj.add("me.LevelEntity", me.LevelEntity);
 			obj.add("me.Tween", me.Tween, true);
+			obj.add("me.Color", me.Color, true);
 		};
 
 		/**
@@ -204,8 +205,8 @@
 		 * // ...
 		 * // when we want to destroy existing object, the remove 
 		 * // function will ensure the object can then be reallocated later
-		 * me.game.remove(enemy);
-		 * me.game.remove(bullet);
+		 * me.game.world.removeChild(enemy);
+		 * me.game.world.removeChild(bullet);
 		 */
 
 		obj.newInstanceOf = function(data) {
@@ -475,9 +476,6 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.gravity = me.sys.gravity!==undefined ? me.sys.gravity : 0.98;
-
-			// just to identify our object
-			this.isEntity = true;
 			
 			/**
 			 * dead/living state of the entity<br>
@@ -657,8 +655,9 @@
 		 */
 		onCollision : function(res, obj) {
 			// destroy the object if collectable
-			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT))
-				me.game.remove(this);
+			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT)) {
+				me.game.world.removeChild(this);
+			}
 		},
 
 		/**
@@ -1154,9 +1153,9 @@
 		},
 		
 		/** @ignore */
-		update : function() {
+		update : function( dt ) {
 			if (this.renderable) {
-				return this.renderable.update();
+				return this.renderable.update( dt );
 			}
 			return false;
 		},

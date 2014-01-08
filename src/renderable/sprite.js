@@ -63,7 +63,7 @@
 
 		// to manage the flickering effect
 		flickering : false,
-		flickerTimer : -1,
+		flickerDuration : 0,
 		flickercb : null,
 		flickerState : false,
 
@@ -135,19 +135,19 @@
 		 * @name flicker
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Number} duration expressed in frames
+		 * @param {Number} duration expressed in milliseconds
 		 * @param {Function} callback Function to call when flickering ends
 		 * @example
-		 * // make the object flicker for 60 frame
+		 * // make the object flicker for 1 second
 		 * // and then remove it
-		 * this.flicker(60, function()
+		 * this.flicker(1000, function()
 		 * {
-		 *    me.game.remove(this);
+		 *    me.game.world.removeChild(this);
 		 * });
 		 */
 		flicker : function(duration, callback) {
-			this.flickerTimer = duration;
-			if (this.flickerTimer < 0) {
+			this.flickerDuration = duration;
+			if (this.flickerDuration <= 0) {
 				this.flickering = false;
 				this.flickercb = null;
 			} else if (!this.flickering) {
@@ -222,11 +222,11 @@
 		 * @protected
 		 * @return false
 		 **/
-		update : function() {
+		update : function( dt ) {
 			//update the "flickering" state if necessary
 			if (this.flickering) {
-				this.flickerTimer -= me.timer.tick;
-				if (this.flickerTimer < 0) {
+				this.flickerDuration -= dt;
+				if (this.flickerDuration < 0) {
 					if (this.flickercb)
 						this.flickercb();
 					this.flicker(-1);
@@ -253,10 +253,8 @@
 				this.flickerState = !this.flickerState;
 				if (!this.flickerState) return;
 			}
-
-			// save the current the context
+			// save context
 			context.save();
-			
 			// sprite alpha value
 			context.globalAlpha *= this.getOpacity();
             
@@ -298,8 +296,7 @@
 							xpos, ypos,
 							w, h);
 
-			
-			// restore the context
+			// restore context
 			context.restore();
 		},
 
@@ -507,7 +504,7 @@
 		 *
 		 * // set "die" animation, and remove the object when finished
 		 * this.setCurrentAnimation("die", (function () {
-		 *    me.game.remove(this);
+		 *    me.game.world.removeChild(this);
 		 *	  return false; // do not reset to first frame
 		 * }).bind(this));
 		 *
@@ -528,7 +525,7 @@
 				this.current = this.anim[name];
 				this.resetAnim = resetAnim || null;
 				this.setAnimationFrame(this.current.idx); // or 0 ?
-				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
+				this.current.nextFrame = this.current.animationspeed;
 			} else {
 				throw "melonJS: animation id '" + name + "' not defined";
 			}
@@ -589,34 +586,37 @@
 		 * @memberOf me.AnimationSheet
 		 * @function
 		 * @protected
+         * @param {Number} dt time since the last update in milliseconds.
 		 */
-		update : function() {
+		update : function( dt ) {
 			// update animation if necessary
-			if (!this.animationpause && (me.timer.getTime() >= this.current.nextFrame)) {
-				this.setAnimationFrame(++this.current.idx);
-				
+			if (!this.animationpause) {
+                this.current.nextFrame -= dt;
+                if (this.current.nextFrame <=0) {
+                    this.setAnimationFrame(++this.current.idx);
+                    
+                    // switch animation if we reach the end of the strip
+                    // and a callback is defined
+                    if (this.current.idx === 0 && this.resetAnim)  {
+                        // if string, change to the corresponding animation
+                        if (typeof this.resetAnim === "string")
+                            this.setCurrentAnimation(this.resetAnim);
+                        // if function (callback) call it
+                        else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
+                            this.current.idx = this.current.length - 1;
+                            this.setAnimationFrame(this.current.idx);
+                            this.parent( dt );
+                            return false;
+                        }
+                    }
+                    
+                    // set next frame timestamp
+                    this.current.nextFrame = this.current.animationspeed;
 
-				// switch animation if we reach the end of the strip
-				// and a callback is defined
-				if (this.current.idx === 0 && this.resetAnim)  {
-					// if string, change to the corresponding animation
-					if (typeof this.resetAnim === "string")
-						this.setCurrentAnimation(this.resetAnim);
-					// if function (callback) call it
-					else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
-						this.current.idx = this.current.length - 1;
-						this.setAnimationFrame(this.current.idx);
-						this.parent();
-						return false;
-					}
-				}
-				
-				// set next frame timestamp
-				this.current.nextFrame = me.timer.getTime() + this.current.animationspeed;
-
-				return this.parent() || true;
+                    return this.parent( dt ) || true;
+                }
 			}
-			return this.parent();
+			return this.parent( dt );
 		}
 	});
 

@@ -80,9 +80,6 @@
 		   PRIVATE STUFF
 				
 		 ---------------------------------------------*/
-
-		// cache rgb converted value
-		var rgbCache = {};
 		
 		// guid default value
 		var GUID_base  = "";
@@ -204,60 +201,6 @@
 		 */
 		api.getFileExtension = function(path) {
 			return path.substring(path.lastIndexOf(".") + 1, path.length);
-		};
-		
-		/**
-		 * a Hex to RGB color function
-		 * @public
-		 * @function
-		 * @memberOf me.utils
-		 * @name HexTORGB
-		 * @param {String} h Hex color code in "#rgb" or "#RRGGBB" format
-		 * @param {Number} [a] Alpha to be appended to decoded color (0 to 255)
-		 * @return {String} CSS color string in rgb() or rgba() format
-		 */
-		api.HexToRGB = function(h, a) {
-			if (h.charAt(0) !== "#") {
-				// this is not a hexadecimal string
-				return h;
-			}
-			// remove the # 
-			h = h.substring(1, h.length);
-
-			// check if we already have the converted value cached
-			if (rgbCache[h] == null) {
-				// else add it (format : "r,g,b")
-				var h1, h2, h3;
-				if (h.length < 6)  {
-					// 3 char shortcut is used, double each char
-					h1 = h.charAt(0)+h.charAt(0);
-					h2 = h.charAt(1)+h.charAt(1);
-					h3 = h.charAt(2)+h.charAt(2);
-				}
-				else {
-					h1 = h.substring(0, 2);
-					h2 = h.substring(2, 4);
-					h3 = h.substring(4, 6);
-				}
-				// set the value in our cache
-				rgbCache[h] = parseInt(h1, 16) + "," + parseInt(h2, 16) + "," + parseInt(h3, 16);
-			}
-			return (a ? "rgba(" : "rgb(") + rgbCache[h] + (a ? "," + a + ")" : ")");
-		};
-
-		/**
-		 * an RGB to Hex color function
-		 * @public
-		 * @function
-		 * @memberOf me.utils
-		 * @name RGBToHex
-		 * @param {Number} r Value for red component (0 to 255)
-		 * @param {Number} g Value for green component (0 to 255)
-		 * @param {Number} b Value for blue component (0 to 255)
-		 * @return {String} Hex color code in "RRGGBB" format
-		 */
-		api.RGBToHex = function(r, g, b) {
-			return r.toHex() + g.toHex() + b.toHex();
 		};
 		
 		/**

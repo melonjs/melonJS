@@ -137,7 +137,7 @@
 		 * @ignore
 		 * @function
 		 */
-		reset : function() {
+		destroy : function() {
 			// clear all allocated objects
 			this.objects = null;
 		},

@@ -27,8 +27,8 @@
      * // Print all
      * console.log(JSON.stringify(me.save));
      *
-     * // Delete "score" from localStorage
-     * me.save.delete('score');
+     * // Remove "score" from localStorage
+     * me.save.remove('score');
      * @namespace me.save
      * @memberOf me
      */
@@ -37,9 +37,9 @@
         // Variable to hold the object data
         var data = {};
 
-        // a fucntion to check if the given key is a reserved word
+        // a function to check if the given key is a reserved word
         function isReserved (key) {
-            return (key === "add" || key === "delete");
+            return (key === "add" || key === "remove");
         }
 
         // Public API
@@ -102,15 +102,15 @@
 
             /**
              * Remove a key from localStorage
-             * @name delete
+             * @name remove
              * @memberOf me.save
              * @function
              * @param {String} key key to be removed
              * @example
              * // Remove the "score" key from localStorage
-             * me.save.delete("score");
+             * me.save.remove("score");
              */
-            delete : function (key) {
+            remove : function (key) {
                 if (!isReserved(key)) {
                     if (typeof data[key] !== 'undefined') {
                         delete data[key];

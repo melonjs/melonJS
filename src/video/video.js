@@ -412,16 +412,11 @@
 		 * @param {String} color a CSS color string
 		 */
 		api.clearSurface = function(context, col) {
-			var w = context.canvas.width;
-			var h = context.canvas.height;
-
+			var _canvas = context.canvas;
 			context.save();
 			context.setTransform(1, 0, 0, 1, 0, 0);
-			if (col.substr(0, 4) === "rgba") {
-				context.clearRect(0, 0, w, h);
-			}
 			context.fillStyle = col;
-			context.fillRect(0, 0, w, h);
+			context.fillRect(0, 0, _canvas.width, _canvas.height);
 			context.restore();
 		};
 		
@@ -528,12 +523,19 @@
 					break;
 
 				case "transparent":
+					var refColor = me.entityPool.newInstanceOf("me.Color").parseHex(option);
+					var pixel = me.entityPool.newInstanceOf("me.Color");
 					for (i = 0, n = pix.length; i < n; i += 4) {
-						if (me.utils.RGBToHex(pix[i], pix[i + 1], pix[i + 2]) === option) {
+						pixel.setColor(pix[i], pix[i + 1], pix[i + 2]);
+						if (pixel.equals(refColor)) {
 							pix[i + 3] = 0;
 						}
 					}
+					me.entityPool.freeInstance(refColor);
+					me.entityPool.freeInstance(pixel);
+
 					break;
+
 
 				default:
 					return null;

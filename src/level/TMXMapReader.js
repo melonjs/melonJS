@@ -162,7 +162,7 @@
 	 * @constructor
 	 * @ignore
 	 **/
-	function _TinyTMXParser() {
+	function TinyTMXParser() {
 		var parserObj = {
 			tmxDoc : null,
 
@@ -221,7 +221,7 @@
 		
 		init: function(){
 			if (!this.TMXParser) {
-				this.TMXParser = new _TinyTMXParser();
+				this.TMXParser = new TinyTMXParser();
 			}
 		},
 		
@@ -266,11 +266,14 @@
 						me.TMXUtils.applyTMXPropertiesFromXML(map, elements);
 						
 						// check if a user-defined background color is defined  
-						map.background_color = map.backgroundcolor ? map.backgroundcolor : map.background_color;
-						if (map.background_color) {
-							map.mapLayers.push(new me.ColorLayer("background_color", 
-																  map.background_color, 
-																  zOrder++));
+						if (map.backgroundcolor) {
+							map.mapLayers.push(
+								new me.ColorLayer(
+									"background_color", 
+									map.backgroundcolor, 
+									zOrder++
+								)
+							);
 						}
 
 						// check if a background image is defined
@@ -445,11 +448,14 @@
 			me.TMXUtils.applyTMXPropertiesFromJSON(map, data);
 			
 			// check if a user-defined background color is defined  
-			map.background_color = map.backgroundcolor ? map.backgroundcolor : map.background_color;
-			if (map.background_color) {
-				map.mapLayers.push(new me.ColorLayer("background_color", 
-													  map.background_color, 
-													  zOrder++));
+			if (map.backgroundcolor) {
+				map.mapLayers.push(
+					new me.ColorLayer(
+						"background_color", 
+						map.backgroundcolor, 
+						zOrder++
+					)
+				);
 			}
 
 			// check if a background image is defined

@@ -18,9 +18,6 @@ var game = {
             return;
         }
 
-        // Run fast!
-        me.sys.useNativeAnimFrame = true;
-
         // install the debug panel plugin
         me.plugin.register(debugPanel, "debug");
         me.debug.renderCollisionMap = true;
@@ -51,7 +48,7 @@ var PlayScreen = me.ScreenObject.extend( {
 
         // Add some objects
         for (var i = 0; i < 200; i++) {
-            me.game.add(new Smilie(i), 2);
+            me.game.world.addChild(new Smilie(i), 2);
         }
     }
 });

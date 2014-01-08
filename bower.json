@@ -1,9 +1,12 @@
 {
   "name": "melonJS",
-  "version": "0.9.11",
-  "main": "build/melonJS-0.9.11-min.js",
+  "version": "1.0.0",
+  "main": "build/melonJS-1.0.0-min.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/melonjs/melonJS.git"
+  },
+  "dependencies": {
+    "jasmine": "https://github.com/pivotal/jasmine.git"
   }
 }

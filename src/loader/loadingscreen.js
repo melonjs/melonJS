@@ -62,7 +62,7 @@
 		},
 
 		// make sure the screen is refreshed every frame 
-		update : function() {
+		update : function( dt ) {
 			if (this.invalidate === true) {
 				// clear the flag
 				this.invalidate = false;

@@ -33,8 +33,38 @@
         var delta = 0;
         var step = Math.ceil(1000 / me.sys.fps); // ROUND IT ?
         // define some step with some margin
-        var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?
+        var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?\
 
+        // list of defined timer function
+        var timers = [];
+
+        /** 
+         * @ignore
+         */
+        var clearTimer = function (timeoutID) { 
+            timers.splice( timeoutID, 1 );
+        };
+
+        /**
+         * update timers
+         * @ignore
+         */
+        var updateTimers = function( dt ) {
+            for (var i = 0, len = timers.length; i < len; i++) {
+                var _timer = timers[i];
+                if (!(_timer.pauseable && me.state.isPaused())) {
+                    _timer.elapsed += dt;
+                }
+                if (_timer.elapsed >= _timer.delay) {
+                    _timer.func.apply(this);
+                    if (_timer.repeat === true) {
+                        _timer.elapsed -= _timer.delay;
+                    } else {
+                        me.timer.clearTimeout(i);
+                    }
+                }
+            }
+        };
 
         /*---------------------------------------------
             
@@ -67,6 +97,7 @@
         api.init = function() {
             // reset variables to initial state
             api.reset();
+            now = last = 0;
         };
 
         /**
@@ -78,14 +109,78 @@
          */
         api.reset = function() {
             // set to "now"
-            now = last = Date.now();
+            last = now;
+            delta = 0;
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
         };
 
         /**
-         * Return the current time, in milliseconds elapsed between midnight, January 1, 1970, and the current date and time.
+         * Calls a function once after a specified delay.
+         * @name setTimeout
+         * @memberOf me.timer
+         * @param {Function} func the function you want to execute after delay milliseconds.
+         * @param {Function} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
+         * @return {Number}  timeoutID the numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
+         * @function
+         */
+        api.setTimeout = function(func, delay, pauseable) {
+            return timers.push({
+                func: func,
+                delay : delay,
+                elapsed : 0,
+                repeat : false,
+                pauseable : pauseable === true || true
+            }) - 1;
+        };
+
+        /**
+         * Calls a function at specified interval.
+         * @name setInterval
+         * @memberOf me.timer
+         * @param {Function} func the function to execute
+         * @param {Function} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
+         * @return {Number} intervalID the numerical ID of the timeout, which can be used later with me.timer.clearInterval().
+         * @function
+         */
+        api.setInterval = function(func, delay, pauseable) {
+            return timers.push({
+                func: func,
+                delay : delay,
+                elapsed : 0,
+                repeat : true,
+                pauseable : pauseable === true || true
+            }) - 1;
+        };
+
+        /**
+         * Clears the delay set by me.timer.setTimeout().
+         * @name clearTimeout
+         * @memberOf me.timer
+         * @function
+         * @param {Number}  timeoutID ID of the timeout to be cleared
+         */
+        api.clearTimeout = function(timeoutID) {
+            clearTimer.defer(timeoutID);
+        };
+
+        /**
+         * Clears the Interval set by me.timer.setInterval().
+         * @name clearInterval
+         * @memberOf me.timer
+         * @function
+         * @param {Number} intervalID ID of the interval to be cleared
+         */
+        api.clearInterval = function(intervalID) {
+            clearTimer.defer(intervalID);
+        };
+
+        /**
+         * Return the current timestamp in milliseconds <br>
+         * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
          * @memberOf me.timer
          * @return {Number}
@@ -95,6 +190,17 @@
             return now;
         };
 
+        /**
+         * Return elapsed time in milliseconds since the last update<br>
+         * @name getDelta
+         * @memberOf me.timer
+         * @return {Number}
+         * @function
+         */
+        api.getDelta = function() {
+         
+            return delta;            
+        };
 
         /**
          * compute the actual frame time and fps rate
@@ -116,16 +222,25 @@
         /**
          * update game tick
          * should be called once a frame
+         * @param {Number} time current timestamp as provided by the RAF callback
+         * @return {Number} time elapsed since the last update
          * @ignore
          */
-        api.update = function() {
-            last = now;
-            now = Date.now();
+        api.update = function(time) {
 
+            last = now;
+            
+            now = time;
+                       
             delta = (now - last);
 
             // get the game tick
             api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
+
+            // update defined timers
+            updateTimers(delta);
+
+            return delta;
         };
 
         // return our apiect
