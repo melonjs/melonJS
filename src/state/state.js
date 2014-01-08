@@ -734,7 +734,7 @@
 				};
 				me.game.viewport.fadeIn(_fade.color, _fade.duration,
 										function() {
-											_switchState.defer(state);
+											_switchState.defer(this, state);
 										});
 
 			}
@@ -742,7 +742,7 @@
 			else {
 				// wait for the last frame to be
 				// "finished" before switching
-				_switchState.defer(state);
+				_switchState.defer(this, state);
 
 			}
 		};
