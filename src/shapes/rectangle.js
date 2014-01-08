@@ -215,7 +215,7 @@
             if (typeof(rect) !== 'undefined') {
                 return rect.set(this.pos, this.width, this.height);
             } else {
-                this.clone();
+                return this.clone();
             }
         },
         
@@ -326,6 +326,7 @@
         flipX : function(sw) {
             this.pos.x = sw - this.width - this.pos.x;
             this.hWidth = ~~(this.width / 2);
+            return this;
         },
 
         /**
@@ -338,6 +339,7 @@
         flipY : function(sh) {
             this.pos.y = sh - this.height - this.pos.y;
             this.hHeight = ~~(this.height / 2);
+            return this;
         },
         
         /**

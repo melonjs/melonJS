@@ -74,6 +74,8 @@
             this.points = points;
             this.closed = (closed === true);
             this.getBounds();
+
+            return this;
         },
 
         /**

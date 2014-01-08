@@ -67,6 +67,7 @@
 		set : function(v, w, h) {
 			this.radius.set(w/2, h/2);
             this.pos.setV(v).add(this.radius); 
+            return this;
 		},
 
         /**
@@ -102,7 +103,7 @@
          * @return {me.Ellipse} new Ellipse	
          */
         clone : function() {
-            return new me.Ellipse(this.pos.clone(), this.radius.x * 2, this.radius.y * 2);
+            return new me.Ellipse(this.pos, this.radius.x * 2, this.radius.y * 2);
         },
 
 
