@@ -250,8 +250,6 @@
 		 * sound item must contain the following fields :<br>
 		 * - name    : id of the sound<br>
 		 * - src     : source path<br>
-		 * - channel : [Optional] number of channels to allocate<br>
-		 * - stream  : [Optional] boolean to enable streaming<br>
 		 * @ignore
 		 */
 		obj.load = function(sound, onload_cb, onerror_cb) {
@@ -266,14 +264,6 @@
 					return;
 				}
 				sync_loading = true;
-			}
-
-			var channels = sound.channel || 1;
-			var eventname = "canplaythrough";
-
-			if (sound.stream === true && !me.device.isMobile) {
-				channels = 1;
-				eventname = "canplay";
 			}
 
 			var soundclip = new Howl({
