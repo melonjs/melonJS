@@ -172,6 +172,7 @@
          * @param {me.Vector2d} v x,y position for the rectangle
          * @param {Number} w width of the rectangle
          * @param {Number} h height of the rectangle
+         * @return {me.Rect} this rectangle
          */
         set : function(v, w, h) {
             // set the new position vector
@@ -179,6 +180,8 @@
             
             // resize
             this.resize(w, h);
+            
+            return this;
         },
 
         /**
@@ -188,6 +191,7 @@
          * @function
          * @param {Number} w new width of the rectangle
          * @param {Number} h new height of the rectangle
+         * @return {me.Rect} this rectangle
          */
         resize : function(w, h) {
             this.width = w;
@@ -195,6 +199,8 @@
             
             this.hWidth = ~~(w / 2);
             this.hHeight = ~~(h / 2);
+            
+            return this;
         },
 
         /**
