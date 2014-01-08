@@ -324,8 +324,7 @@
 					sound.loop(loop || false);
 					sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
 					sound.mute(settings.muted);
-					sound.onend = callback;
-					sound.play();
+					sound.play(callback);
 					return sound;
 				}
 			}
