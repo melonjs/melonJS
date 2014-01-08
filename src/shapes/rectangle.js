@@ -208,10 +208,15 @@
          * @name getBounds
          * @memberOf me.Rect
          * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} new rectangle    
          */
-        getBounds : function() {
-            return this.clone();
+        getBounds : function(rect) {
+            if (typeof(rect) !== 'undefined') {
+                return rect.set(this.pos, this.width, this.height);
+            } else {
+                this.clone();
+            }
         },
         
         /**
@@ -222,7 +227,7 @@
          * @return {me.Rect} new rectangle    
          */
         clone : function() {
-            return new me.Rect(this.pos.clone(), this.width, this.height);
+            return new me.Rect(this.pos, this.width, this.height);
         },
         
         /**

@@ -74,15 +74,24 @@
          * @name getBounds
          * @memberOf me.Ellipse
          * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} the bounding box Rectangle	object
          */
-        getBounds : function() {
-            //will return a rect, with pos being the top-left coordinates 
-            return new me.Rect(
-                this.pos.clone().sub(this.radius), 
-                this.radius.x * 2, 
-                this.radius.y * 2
-            );
+        getBounds : function(rect) {
+             if (typeof(rect) !== 'undefined') {
+                return rect.set(
+                    this.pos.clone().sub(this.radius), 
+                    this.radius.x * 2, 
+                    this.radius.y * 2
+                );
+            } else {
+                //will return a rect, with pos being the top-left coordinates 
+                return new me.Rect(
+                    this.pos.clone().sub(this.radius), 
+                    this.radius.x * 2, 
+                    this.radius.y * 2
+                );
+            }
         },
         
         /**

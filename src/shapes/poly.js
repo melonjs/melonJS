@@ -81,9 +81,10 @@
          * @name getBounds
          * @memberOf me.PolyShape
          * @function
-         * @return {me.Rect} the bounding box Rectangle    object
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} the bounding box Rectangle object
          */
-        getBounds : function() {
+        getBounds : function(rect) {
             var pos = this.pos.clone(), right = 0, bottom = 0;
             this.points.forEach(function(point) {
                 pos.x = Math.min(pos.x, point.x);
@@ -91,7 +92,11 @@
                 right = Math.max(right, point.x);
                 bottom = Math.max(bottom, point.y);
             });
-            return new me.Rect(pos, right - pos.x, bottom - pos.y);
+            if (typeof(rect) !== 'undefined') {
+                return rect.set(pos, right - pos.x, bottom - pos.y);
+            } else {
+                return new me.Rect(pos, right - pos.x, bottom - pos.y);
+            }
         },
         
         /**
