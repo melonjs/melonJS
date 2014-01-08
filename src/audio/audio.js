@@ -27,7 +27,7 @@
 		var obj = {};
 
 		// audio channel list
-		var audio_channels = {};
+		var audioTracks = {};
 
 		// Active (supported) audio extension
 		var activeAudioExt = -1;
@@ -91,28 +91,6 @@
 		}
 
 		/**
-		 * return the specified sound
-		 * @ignore
-		 */
-
-		function get(sound_id) {
-			var channels = audio_channels[sound_id];
-			// find which channel is available
-			for ( var i = 0, soundclip; soundclip = channels[i++];) {
-				if (soundclip.ended || !soundclip.currentTime)// soundclip.paused)
-				{
-					// console.log ("requested %s on channel %d",sound_id, i);
-					soundclip.currentTime = reset_val;
-					return soundclip;
-				}
-			}
-			// else force on channel 0
-			channels[0].pause();
-			channels[0].currentTime = reset_val;
-			return channels[0];
-		}
-
-		/**
 		 * event listener callback on load error
 		 * @ignore
 		 */
@@ -137,95 +115,8 @@
 				}
 			// else try loading again !
 			} else {
-				audio_channels[sound_id][0].load();
+				audioTracks[sound_id].load();
 			}
-		}
-
-		/**
-		 * event listener callback when a sound is loaded
-		 * @ignore
-		 */
-
-		function soundLoaded(sound_id, sound_channel, onload_cb) {
-			// reset the retry counter
-			retry_counter = 0;
-			// create other "copy" channels if necessary
-			if (sound_channel > 1) {
-				var soundclip = audio_channels[sound_id][0];
-				// clone copy to create multiple channel version
-				for (var channel = 1; channel < sound_channel; channel++) {
-					// allocate the new additional channels
-					audio_channels[sound_id][channel] = new Audio( soundclip.src );
-					audio_channels[sound_id][channel].preload = 'auto';
-					audio_channels[sound_id][channel].load();
-				}
-			}
-			// callback if defined
-			if (onload_cb) {
-				onload_cb();
-			}
-		}
-
-		/**
-		 * play the specified sound
-		 * @name play
-		 * @memberOf me.audio
-		 * @public
-		 * @function
-		 * @param {String}
-		 *            sound_id audio clip id
-		 * @param {Boolean}
-		 *            [loop=false] loop audio
-		 * @param {Function}
-		 *            [callback] callback function
-		 * @param {Number}
-		 *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-		 * @example
-		 * // play the "cling" audio clip 
-		 * me.audio.play("cling"); 
-		 * // play & repeat the "engine" audio clip
-		 * me.audio.play("engine", true); 
-		 * // play the "gameover_sfx" audio clip and call myFunc when finished
-		 * me.audio.play("gameover_sfx", false, myFunc);
-		 * // play the "gameover_sfx" audio clip with a lower volume level
-		 * me.audio.play("gameover_sfx", false, null, 0.5);
-		 */
-
-		function _play_audio_enable(sound_id, loop, callback, volume) {
-			var soundclip = get(sound_id.toLowerCase());
-	
-			soundclip.loop = loop || false;
-			soundclip.volume = volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume;
-			soundclip.muted = settings.muted;
-			soundclip.play();
-
-			// set a callback if defined
-			if (callback && !loop) {
-				soundclip.addEventListener('ended', function callbackFn(event) {
-					soundclip.removeEventListener('ended', callbackFn,
-							false);
-					// soundclip.pause();
-					// soundclip.currentTime = reset_val;
-					// execute a callback if required
-					callback();
-				}, false);
-			}			
-			return soundclip;
-
-		}
-
-		/**
-		 * play_audio with simulated callback
-		 * @ignore
-		 */
-
-		function _play_audio_disable(sound_id, loop, callback) {
-			// check if a callback need to be called
-			if (callback && !loop) {
-				// SoundMngr._play_cb = callback;
-				setTimeout(callback, 2000); // 2 sec as default timer ?
-			}
-			return null;
 		}
 
 		/*
@@ -306,14 +197,6 @@
 			// detect the prefered audio format
 			activeAudioExt = getSupportedAudioFormat(audioFormat);
 
-			// Disable audio on Mobile devices for now. (ARGH!)
-			if (me.device.isMobile && !navigator.isCocoonJS) {
-				sound_enable = false;
-			}
-
-			// enable/disable sound
-			obj.play = obj.isAudioEnable() ? _play_audio_enable : _play_audio_disable;
-
 			return obj.isAudioEnable();
 		};
 
@@ -344,11 +227,6 @@
 		 */
 		obj.enable = function() {
 			sound_enable = me.device.sound;
-
-			if (sound_enable)
-				obj.play = _play_audio_enable;
-			else
-				obj.play = _play_audio_disable;
 		};
 
 		/**
@@ -363,7 +241,6 @@
 			// stop the current track 
 			me.audio.stopTrack();
 			// disable sound
-			obj.play = _play_audio_disable;
 			sound_enable = false;
 		};
 
@@ -399,35 +276,71 @@
 				eventname = "canplay";
 			}
 
-			var soundclip = new Audio(sound.src + sound.name + "." + activeAudioExt + me.loader.nocache);
-			soundclip.preload = 'auto';
-			soundclip.addEventListener(eventname, function callbackFn(e) {
-				soundclip.removeEventListener(eventname, callbackFn, false);
-				sync_loading = false;
-				soundLoaded.call(
-					me.audio,
-					sound.name,
-					channels,
-					onload_cb
-				);
+			var soundclip = new Howl({
+				urls : [sound.src + sound.name + "." + activeAudioExt + me.loader.nocache],
+				volume : 1,
+				onloaderror : function() {
+					soundLoadError.call(me.audio, sound.name, onerror_cb);
+				},
+				onload : function() {
+					sync_loading = false;
 
-				// Load next audio clip synchronously
-				var next = sync_loader.shift();
-				if (next) {
-					obj.load.apply(obj, next);
+					var next = sync_loader.shift();
+					if(next) {
+						obj.load.apply(obj, next);
+					}
+
+					retry_counter = 0;
+					if(onload_cb) {
+						onload_cb();
+					}
 				}
-			}, false);
+			});
 
-			soundclip.addEventListener("error", function(e) {
-				soundLoadError.call(me.audio, sound.name, onerror_cb);
-			}, false);
-
-			// load it
-			soundclip.load();
-
-			audio_channels[sound.name] = [ soundclip ];
+			audioTracks[sound.name] = soundclip;
 
 			return 1;
+		};
+
+		/**
+		 * play the specified sound
+		 * @name play
+		 * @memberOf me.audio
+		 * @public
+		 * @function
+		 * @param {String}
+		 *            sound_id audio clip id
+		 * @param {Boolean}
+		 *            [loop=false] loop audio
+		 * @param {Function}
+		 *            [callback] callback function
+		 * @param {Number}
+		 *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+		 * @example
+		 * // play the "cling" audio clip 
+		 * me.audio.play("cling"); 
+		 * // play & repeat the "engine" audio clip
+		 * me.audio.play("engine", true); 
+		 * // play the "gameover_sfx" audio clip and call myFunc when finished
+		 * me.audio.play("gameover_sfx", false, myFunc);
+		 * // play the "gameover_sfx" audio clip with a lower volume level
+		 * me.audio.play("gameover_sfx", false, null, 0.5);
+		 */
+
+		obj.play = function(sound_id, loop, callback, volume) {
+			if(sound_enable) {
+				var sound = audioTracks[sound_id.toLowerCase()];
+				if(sound && typeof sound !== 'undefined') {
+					sound.loop(loop || false);
+					sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
+					sound.mute(settings.muted);
+					sound.onend = callback;
+					sound.play();
+					return sound;
+				}
+			}
+
+			return null;
 		};
 
 		/**
@@ -443,13 +356,10 @@
 		 */
 		obj.stop = function(sound_id) {
 			if (sound_enable) {
-				var sound = audio_channels[sound_id.toLowerCase()];
-				for (var channel_id = sound.length; channel_id--;) {
-					sound[channel_id].pause();
-					// force rewind to beginning
-					sound[channel_id].currentTime = reset_val;
+				var sound = audioTracks[sound_id.toLowerCase()];
+				if(sound && typeof sound !== 'undefined') {
+					sound.stop();
 				}
-
 			}
 		};
 
@@ -467,11 +377,10 @@
 		 */
 		obj.pause = function(sound_id) {
 			if (sound_enable) {
-				var sound = audio_channels[sound_id.toLowerCase()];
-				for (var channel_id = sound.length; channel_id--;) {
-					sound[channel_id].pause();
+				var sound = audioTracks[sound_id.toLowerCase()];
+				if(sound && typeof sound !== 'undefined') {
+					sound.pause();
 				}
-
 			}
 		};
 
@@ -528,7 +437,7 @@
 			if (typeof(volume) === "number") {
 				settings.volume = volume.clamp(0.0,1.0);
 				if(sound_enable && current_track) {
-					current_track.volume = settings.volume;
+					current_track.volume(settings.volume);
 				}
 			}
 		};
@@ -556,9 +465,9 @@
 		obj.mute = function(sound_id, mute) {
 			// if not defined : true
 			mute = (mute === undefined)?true:!!mute;
-			var channels = audio_channels[sound_id.toLowerCase()];
-			for ( var i = 0, soundclip; soundclip = channels[i++];) {
-				soundclip.muted = mute;
+			var sound = audioTracks[sound_id.toLowerCase()];
+			if(sound && typeof sound !== 'undefined') {
+				sound.mute(true);
 			}
 		};
 
@@ -583,7 +492,7 @@
 		 */
 		obj.muteAll = function() {
 			settings.muted = true;
-			for (var sound_id in audio_channels) {
+			for (var sound_id in audioTracks) {
 				obj.mute(sound_id, settings.muted);
 			}
 		};
@@ -597,7 +506,7 @@
 		 */
 		obj.unmuteAll = function() {
 			settings.muted = false;
-			for (var sound_id in audio_channels) {
+			for (var sound_id in audioTracks) {
 				obj.mute(sound_id, settings.muted);
 			}
 		};
@@ -666,7 +575,7 @@
 		 */
 		obj.unload = function(sound_id) {
 			sound_id = sound_id.toLowerCase();
-			if (!(sound_id in audio_channels))
+			if (!(sound_id in audioTracks))
 				return false;
 
 			if (current_track_id === sound_id) {
@@ -676,7 +585,7 @@
 				obj.stop(sound_id);
 			}
 
-			delete audio_channels[sound_id];
+			delete audioTracks[sound_id];
 
 			return true;
 		};
@@ -692,7 +601,7 @@
 		 * me.audio.unloadAll();
 		 */
 		obj.unloadAll = function() {
-			for (var sound_id in audio_channels) {
+			for (var sound_id in audioTracks) {
 				obj.unload(sound_id);
 			}
 		};

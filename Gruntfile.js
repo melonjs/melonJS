@@ -36,6 +36,7 @@ module.exports = function(grunt) {
         'src/level/LevelDirector.js',
         'src/vendors/tween.js',
         'src/vendors/minpubsub.src.js',
+        'src/vendors/howler.js',
         'src/plugin/plugin.js',
         'src/entity/draggable.js',
         'src/entity/droptarget.js'
