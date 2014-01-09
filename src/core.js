@@ -28,6 +28,16 @@ window.me = window.me || {};
 		mod : "melonJS",
 		version : "@VERSION"
 	};
+    
+    /**
+     * Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
+     * @ignore
+     */
+    if (typeof define === 'function' && define.amd) {
+        define('me', [], function() {
+            return me;
+        });
+    }
 
 	/**
 	 * global system settings and browser capabilities
