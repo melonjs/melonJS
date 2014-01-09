@@ -164,7 +164,7 @@
 						obj.capabilities[c].canPlayType = canPlayType;
 					}
 					// enable sound if any of the audio format is supported
-					me.device.sound |= obj.capabilities[c].canPlay;					
+					me.device.sound |= obj.capabilities[c].canPlay;
 				}
 			}
 		};
