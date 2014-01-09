@@ -143,6 +143,7 @@
 			obj.add("me.LevelEntity", me.LevelEntity);
 			obj.add("me.Tween", me.Tween, true);
 			obj.add("me.Color", me.Color, true);
+			obj.add("me.Particle", me.Particle, true);
 		};
 
 		/**
@@ -203,7 +204,7 @@
 		 * // when we need new enemy we can add more params, that the object construct requires:
 		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
 		 * // ...
-		 * // when we want to destroy existing object, the remove 
+		 * // when we want to destroy existing object, the remove
 		 * // function will ensure the object can then be reallocated later
 		 * me.game.world.removeChild(enemy);
 		 * me.game.world.removeChild(bullet);
@@ -219,7 +220,7 @@
 					args[0] = proto;
 					return new (proto.bind.apply(proto, args))();
 				}
-				
+
 				var obj, entity = entityClass[name];
 				proto = entity["class"];
 				if (entity["pool"].length > 0) {
@@ -279,7 +280,7 @@
 		 * @memberOf me.entityPool
 		 * @public
 		 * @function
-		 * @param {Object} instance to be removed 
+		 * @param {Object} instance to be removed
 		 */
 		obj.freeInstance = function(obj) {
 
@@ -330,7 +331,7 @@
 	 */
 	me.ObjectEntity = me.Renderable.extend(
 	/** @scope me.ObjectEntity.prototype */ {
-	
+
 		/**
 		 * define the type of the object<br>
 		 * default value : none<br>
@@ -350,8 +351,8 @@
 		 * @memberOf me.ObjectEntity
 		 */
 		collidable : true,
-		
-		
+
+
 		/**
 		 * Entity collision Box<br>
 		 * (reference to me.ObjectEntity.shapes[0].getBounds)
@@ -381,24 +382,24 @@
 		 * @memberOf me.ObjectEntity
 		 */
 		renderable : null,
-		
+
 		// just to keep track of when we flip
 		lastflipX : false,
 		lastflipY : false,
-		
-		
+
+
 		/** @ignore */
 		init : function(x, y, settings) {
             // instantiate pos here to avoid
             // later re-instantiation
             if (this.pos === null) {
                 this.pos = new me.Vector2d();
-            }            
+            }
 			// call the parent constructor
 			this.parent(this.pos.set(x,y),
 						~~settings.spritewidth  || ~~settings.width,
 						~~settings.spriteheight || ~~settings.height);
-			
+
 			if (settings.image) {
 				var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
 				this.renderable = new me.AnimationSheet(0, 0, image,
@@ -406,7 +407,7 @@
 														~~settings.spriteheight,
 														~~settings.spacing,
 														~~settings.margin);
-				
+
 				// check for user defined transparent color
 				if (settings.transparent_color) {
 					this.renderable.setTransparency(settings.transparent_color);
@@ -425,7 +426,7 @@
              */
             if (this.vel === undefined) {
                 this.vel = new me.Vector2d();
-            }    
+            }
             this.vel.set(0,0);
 
             /**
@@ -437,9 +438,9 @@
              */
             if (this.accel === undefined) {
                 this.accel = new me.Vector2d();
-            }    
+            }
             this.accel.set(0,0);
-            
+
             /**
              * entity current friction<br>
              * @public
@@ -448,7 +449,7 @@
              */
             if (this.friction === undefined) {
                 this.friction = new me.Vector2d();
-            }    
+            }
             this.friction.set(0,0);
 
             /**
@@ -460,9 +461,9 @@
              */
             if (this.maxVel === undefined) {
                 this.maxVel = new me.Vector2d();
-            }    
+            }
             this.maxVel.set(1000, 1000);
-        
+
 			// some default contants
 			/**
 			 * Default gravity value of the entity<br>
@@ -476,7 +477,7 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.gravity = me.sys.gravity!==undefined ? me.sys.gravity : 0.98;
-			
+
 			/**
 			 * dead/living state of the entity<br>
 			 * default value : true
@@ -486,13 +487,13 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.alive = true;
-			
+
 			// make sure it's visible by default
 			this.visible = true;
-			
+
 			// and also non floating by default
 			this.floating = false;
-			
+
 			// and non persistent per default
 			this.isPersistent = false;
 
@@ -548,18 +549,18 @@
 			 */
 			this.disableTopLadderCollision = false;
 
-			// to enable collision detection			
+			// to enable collision detection
 			this.collidable = typeof(settings.collidable) !== "undefined" ?	settings.collidable : true;
-			
+
 			// default objec type
 			this.type = settings.type || 0;
-			
+
 			// default flip value
 			this.lastflipX = this.lastflipY = false;
-			
+
 			// ref to the collision map
 			this.collisionMap = me.game.collisionMap;
-						
+
 			/**
 			 * Define if an entity can go through breakable tiles<br>
 			 * default value : false<br>
@@ -579,24 +580,24 @@
 			 */
 			this.onTileBreak = null;
 
-            // add a default shape 
+            // add a default shape
             if (settings.isEllipse===true) {
                 // ellipse
                 this.addShape(new me.Ellipse(new me.Vector2d(0,0), this.width, this.height));
-            } 
+            }
             else if ((settings.isPolygon===true) || (settings.isPolyline===true)) {
                 // add a polyshape
                 this.addShape(new me.PolyShape(new me.Vector2d(0,0), settings.points, settings.isPolygon));
                 // set the entity object based on the bounding box size ?
                 this.width = this.collisionBox.width;
                 this.height = this.collisionBox.height;
-            } 
+            }
             else {
                 // add a rectangle
                 this.addShape(new me.Rect(new me.Vector2d(0,0), this.width, this.height));
             }
-             
-            
+
+
 
 		},
 
@@ -630,7 +631,7 @@
                 this.shapes = [];
             }
             this.shapes.push(shape);
-            
+
             // some hack to get the collisionBox working in this branch
             // to be removed once the ticket #103 will be done
             if (this.shapes.length === 1) {
@@ -641,7 +642,7 @@
                 this.pos.add(this.shapes[0].offset);
             }
 		},
-         
+
 		/**
 		 * onCollision Event function<br>
 		 * called by the game manager when the object collide with shtg<br>
@@ -706,7 +707,7 @@
 			this.friction.x = x || 0;
 			this.friction.y = y || 0;
 		},
-		
+
 		/**
 		 * Flip object on horizontal axis
 		 * @name flipX
@@ -852,7 +853,7 @@
 			var dy = (this.pos.y + this.hHeight) - (e.pos.y + e.hHeight);
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		
+
 		/**
 		 * return the distance to the specified point
 		 * @name distanceToPoint
@@ -869,7 +870,7 @@
 			var dy = (this.pos.y + this.hHeight) - (v.y);
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		
+
 		/**
 		 * return the angle to the specified entity
 		 * @name angleTo
@@ -886,8 +887,8 @@
 			var ay = (e.pos.y + e.hHeight) - (this.pos.y + this.hHeight);
 			return Math.atan2(ay, ax);
 		},
-		
-		
+
+
 		/**
 		 * return the angle to the specified point
 		 * @name angleToPoint
@@ -1007,7 +1008,7 @@
 		updateMovement : function() {
 
 			this.computeVelocity(this.vel);
-			
+
 			// Adjust position only on collidable object
 			var collision;
 			if (this.collidable) {
@@ -1027,7 +1028,7 @@
 					this.onladder = collision.yprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.y > 0) {
-						if (collision.yprop.isSolid	|| 
+						if (collision.yprop.isSolid	||
 							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
 							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
@@ -1097,7 +1098,7 @@
 			return collision;
 
 		},
-		
+
 		/**
 		 * Checks if this entity collides with others entities.
 		 * @public
@@ -1151,7 +1152,7 @@
 		collideType : function(type, multiple) {
 			return me.game.collideType(this, type, multiple || false);
 		},
-		
+
 		/** @ignore */
 		update : function( dt ) {
 			if (this.renderable) {
@@ -1159,19 +1160,19 @@
 			}
 			return false;
 		},
-		
+
 		/**
-		 * @ignore	
+		 * @ignore
 		 */
 		getBounds : function() {
 			if (this.renderable) {
-				// translate the renderable position since its 
+				// translate the renderable position since its
 				// position is relative to this entity
 				return this.renderable.getBounds().translateV(this.pos);
 			}
 			return null;
 		},
-		
+
 		/**
 		 * object draw<br>
 		 * not to be called by the end user<br>
@@ -1195,7 +1196,7 @@
 				context.translate(-x, -y);
 			}
 		},
-		
+
 		/**
 		 * Destroy function<br>
 		 * @ignore
@@ -1278,7 +1279,7 @@
 			this.fade = settings.fade;
 			this.duration = settings.duration;
 			this.fading = false;
-			
+
 			// a temp variable
 			this.gotolevel = settings.to;
 		},

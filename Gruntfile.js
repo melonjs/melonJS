@@ -38,7 +38,9 @@ module.exports = function(grunt) {
         'src/vendors/minpubsub.src.js',
         'src/plugin/plugin.js',
         'src/entity/draggable.js',
-        'src/entity/droptarget.js'
+        'src/entity/droptarget.js',
+		'src/particles/emitter.js',
+		'src/particles/particle.js'
     ];
 
     // Project configuration.
