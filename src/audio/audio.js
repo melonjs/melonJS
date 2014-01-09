@@ -44,7 +44,7 @@
 
 		// a retry counter
 		var retry_counter = 0;
-		
+
 		// global volume setting
 		var settings = {
 			volume : 1.0,
@@ -54,7 +54,7 @@
 		// synchronous loader for mobile user agents
 		var sync_loading = false;
 		var sync_loader = [];
-		 
+
 		/**
 		 * return the first audio format extension supported by the browser
 		 * @ignore
@@ -69,8 +69,8 @@
 				for (var i = 0; i < len; i++) {
 					ext = requestedFormat[i].toLowerCase().trim();
 					// check extension against detected capabilities
-					if (obj.capabilities[ext] && 
-						obj.capabilities[ext].canPlay && 
+					if (obj.capabilities[ext] &&
+						obj.capabilities[ext].canPlay &&
 						// get only the first valid OR first 'probably' playable codec
 						(result === "" || obj.capabilities[ext].canPlayType === 'probably')
 					) {
@@ -147,8 +147,8 @@
 				canPlay: false,
 				canPlayType: 'no'
 			}
-		};	
-		
+		};
+
 		/**
 		 * @ignore
 		 */
@@ -164,7 +164,7 @@
 						obj.capabilities[c].canPlayType = canPlayType;
 					}
 					// enable sound if any of the audio format is supported
-					me.device.sound |= obj.capabilities[c].canPlay;					
+					me.device.sound |= obj.capabilities[c].canPlay;
 				}
 			}
 		};
@@ -181,10 +181,10 @@
 		 * @param {String}
 		 *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
 		 * @example
-		 * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format 
-		 * // i.e. on Safari, the loader will load all audio.mp3 files, 
+		 * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format
+		 * // i.e. on Safari, the loader will load all audio.mp3 files,
 		 * // on Opera the loader will however load audio.ogg files
-		 * me.audio.init("mp3,ogg"); 
+		 * me.audio.init("mp3,ogg");
 		 */
 		obj.init = function(audioFormat) {
 			if (!me.initialized) {
@@ -202,7 +202,7 @@
 
 		/**
 		 * return true if audio is enable
-		 * 
+		 *
 		 * @see me.audio#enable
 		 * @name isAudioEnable
 		 * @memberOf me.audio
@@ -218,7 +218,7 @@
 		 * enable audio output <br>
 		 * only useful if audio supported and previously disabled through
 		 * audio.disable()
-		 * 
+		 *
 		 * @see me.audio#disable
 		 * @name enable
 		 * @memberOf me.audio
@@ -231,14 +231,14 @@
 
 		/**
 		 * disable audio output
-		 * 
+		 *
 		 * @name disable
 		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 */
 		obj.disable = function() {
-			// stop the current track 
+			// stop the current track
 			me.audio.stopTrack();
 			// disable sound
 			sound_enable = false;
@@ -268,7 +268,7 @@
 
 			var soundclip = new Howl({
 				urls : [sound.src + sound.name + "." + activeAudioExt + me.loader.nocache],
-				volume : 1,
+				volume : 0,
 				onloaderror : function() {
 					soundLoadError.call(me.audio, sound.name, onerror_cb);
 				},
@@ -307,10 +307,10 @@
 		 * @param {Number}
 		 *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
 		 * @example
-		 * // play the "cling" audio clip 
-		 * me.audio.play("cling"); 
+		 * // play the "cling" audio clip
+		 * me.audio.play("cling");
 		 * // play & repeat the "engine" audio clip
-		 * me.audio.play("engine", true); 
+		 * me.audio.play("engine", true);
 		 * // play the "gameover_sfx" audio clip and call myFunc when finished
 		 * me.audio.play("gameover_sfx", false, myFunc);
 		 * // play the "gameover_sfx" audio clip with a lower volume level
@@ -334,7 +334,7 @@
 
 		/**
 		 * stop the specified sound on all channels
-		 * 
+		 *
 		 * @name stop
 		 * @memberOf me.audio
 		 * @public
@@ -355,7 +355,7 @@
 		/**
 		 * pause the specified sound on all channels<br>
 		 * this function does not reset the currentTime property
-		 * 
+		 *
 		 * @name pause
 		 * @memberOf me.audio
 		 * @public
@@ -377,7 +377,7 @@
 		 * play the specified audio track<br>
 		 * this function automatically set the loop property to true<br>
 		 * and keep track of the current sound being played.
-		 * 
+		 *
 		 * @name playTrack
 		 * @memberOf me.audio
 		 * @public
@@ -394,16 +394,16 @@
 
 		/**
 		 * stop the current audio track
-		 * 
+		 *
 		 * @see me.audio#playTrack
 		 * @name stopTrack
 		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @example
-		 * // play a awesome music 
-		 * me.audio.playTrack("awesome_music"); 
-		 * // stop the current music 
+		 * // play a awesome music
+		 * me.audio.playTrack("awesome_music");
+		 * // stop the current music
 		 * me.audio.stopTrack();
 		 */
 		obj.stopTrack = function() {
@@ -442,7 +442,7 @@
 		obj.getVolume = function() {
 			return settings.volume;
 		};
-		
+
 		/**
 		 * mute the specified sound
 		 * @name mute
@@ -473,7 +473,7 @@
 		};
 
 		/**
-		 * mute all audio 
+		 * mute all audio
 		 * @name muteAll
 		 * @memberOf me.audio
 		 * @public
@@ -485,9 +485,9 @@
 				obj.mute(sound_id, settings.muted);
 			}
 		};
-		
+
 		/**
-		 * unmute all audio 
+		 * unmute all audio
 		 * @name unmuteAll
 		 * @memberOf me.audio
 		 * @public
@@ -499,7 +499,7 @@
 				obj.mute(sound_id, settings.muted);
 			}
 		};
-		
+
 		/**
 		 * returns the current track Id
 		 * @name getCurrentTrack
@@ -511,10 +511,10 @@
 		obj.getCurrentTrack = function() {
 			return current_track_id;
 		};
-		
+
 		/**
 		 * pause the current audio track
-		 * 
+		 *
 		 * @name pauseTrack
 		 * @memberOf me.audio
 		 * @public
@@ -530,18 +530,18 @@
 
 		/**
 		 * resume the previously paused audio track
-		 * 
+		 *
 		 * @name resumeTrack
 		 * @memberOf me.audio
 		 * @public
 		 * @function
 		 * @param {String} sound_id audio track id
 		 * @example
-		 * // play an awesome music 
+		 * // play an awesome music
 		 * me.audio.playTrack("awesome_music");
-		 * // pause the audio track 
+		 * // pause the audio track
 		 * me.audio.pauseTrack();
-		 * // resume the music 
+		 * // resume the music
 		 * me.audio.resumeTrack();
 		 */
 		obj.resumeTrack = function() {
