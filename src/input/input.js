@@ -836,7 +836,7 @@
 		 * @param {Boolean} [floating="floating property of the given object"] specify if the object is a floating object (if yes, screen coordinates are used, if not mouse/touch coordinates will be converted to world coordinates)
 		 * @example
 		 * // register on the 'mousemove' event
-		 * me.input.registerPointerEvent('mousemove', this.collisionBox, this.mouseMove.bind(this));
+		 * me.input.registerPointerEvent('mousemove', this, this.mouseMove.bind(this));
 		 */
 		obj.registerPointerEvent = function (eventType, rect, callback, floating) {
 		    // make sure the mouse/touch events are initialized
@@ -879,7 +879,7 @@
 		 * @param {me.Rect} region object target (or corresponding region defined through me.Rect)
 		 * @example
 		 * // release the registered object/region on the 'mousemove' event
-		 * me.input.releasePointerEvent('mousemove', this.collisionBox);
+		 * me.input.releasePointerEvent('mousemove', this);
 		 */
 		obj.releasePointerEvent = function(eventType, rect) {
 			// convert mouse events to iOS/MSPointer equivalent
