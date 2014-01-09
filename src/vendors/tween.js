@@ -152,10 +152,11 @@
 		 * @function
 		 */
 		this.stop = function () {
-
-			me.game.world.removeChild(this);
+			// ensure the tween has not been removed previously
+			if (me.game.world.hasChild(this)) {
+				me.game.world.removeChild(this);
+			}
 			return this;
-
 		};
 
 		/**
