@@ -923,6 +923,9 @@ window.me = window.me || {};
 		// to know when we have to refresh the display
 		var isDirty = true;
 
+		// Whether a forced repaint is required
+		var pendingRepaint = false;
+
 		/*---------------------------------------------
 
 			PUBLIC STUFF
@@ -1466,7 +1469,12 @@ window.me = window.me || {};
 		 */
 
 		api.repaint = function() {
+			// Repaint immediately
 			isDirty = true;
+
+			// Repaint once more after next update (objects may have been
+			// changed in ways which require an update before repainting)
+			pendingRepaint = true;
 		};
 
 
@@ -1485,6 +1493,12 @@ window.me = window.me || {};
 			
 			// update the camera/viewport
 			isDirty = api.viewport.update(isDirty) || isDirty;
+
+			// force repaint while ensuring objects have been updated first
+			if (pendingRepaint) {
+				pendingRepaint = false;
+				isDirty = true;
+			}
 
 			return isDirty;
 			
