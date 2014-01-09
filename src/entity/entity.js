@@ -603,8 +603,6 @@
 		/**
 		 * specify the size of the hit box for collision detection<br>
 		 * (allow to have a specific size for each object)<br>
-		 * e.g. : object with resized collision box :<br>
-		 * <img src="images/me.Rect.colpos.png"/>
 		 * @name updateColRect
 		 * @memberOf me.ObjectEntity
 		 * @function
@@ -635,10 +633,6 @@
             // to be removed once the ticket #103 will be done
             if (this.shapes.length === 1) {
                 this.collisionBox = this.shapes[0].getBounds();
-                // collisionBox pos vector is a reference to this pos vector
-                this.collisionBox.pos = this.pos;
-                // offset position vector
-                this.pos.add(this.shapes[0].offset);
             }
 		},
          
@@ -907,26 +901,25 @@
 
 
 		/**
-		 * handle the player movement on a slope
-		 * and update vel value
+		 * adjust the given rect to the given slope tile
 		 * @ignore
 		 */
-		checkSlope : function(tile, left) {
+		checkSlope : function(rect, tile, left) {
 
 			// first make the object stick to the tile
-			this.pos.y = tile.pos.y - this.height;
+			rect.pos.y = tile.pos.y - rect.height;
 
 			// normally the check should be on the object center point,
 			// but since the collision check is done on corner, we must do the same thing here
 			if (left)
-				this.slopeY = tile.height - (this.collisionBox.right + this.vel.x - tile.pos.x);
+				this.slopeY = tile.height - (rect.right + this.vel.x - tile.pos.x);
 			else
-				this.slopeY = (this.collisionBox.left + this.vel.x - tile.pos.x);
+				this.slopeY = (rect.left + this.vel.x - tile.pos.x);
 
 			// cancel y vel
 			this.vel.y = 0;
 			// set player position (+ workaround when entering/exiting slopes tile)
-			this.pos.y += this.slopeY.clamp(0, tile.height);
+			rect.pos.y += this.slopeY.clamp(0, tile.height);
 
 		},
 
@@ -1007,12 +1000,17 @@
 		updateMovement : function() {
 
 			this.computeVelocity(this.vel);
+
+			// temporary stuff until ticket #103 is done (this function will disappear anyway)
+			// save the collision box offset
+			this.collisionBox.__offsetX = this.collisionBox.pos.x;
+			this.collisionBox.__offsetY = this.collisionBox.pos.y;
 			
 			// Adjust position only on collidable object
 			var collision;
 			if (this.collidable) {
 				// check for collision
-				collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
+				collision = this.collisionMap.checkCollision(this.collisionBox.translateV(this.pos), this.vel);
 
 				// update some flags
 				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -1031,13 +1029,13 @@
 							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
 							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
-							this.pos.y = ~~this.pos.y;
+							this.collisionBox.pos.y = ~~this.collisionBox.pos.y;
 							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
 							this.falling = false;
 						}
 						else if (collision.yprop.isSlope && !this.jumping) {
 							// we stop falling
-							this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
+							this.checkSlope(this.collisionBox, collision.ytile, collision.yprop.isLeftSlope);
 							this.falling = false;
 						}
 						else if (collision.yprop.isBreakable) {
@@ -1049,7 +1047,7 @@
 							}
 							else {
 								// adjust position to the corresponding tile
-								this.pos.y = ~~this.pos.y;
+								this.collision.pos.y = ~~this.collision.pos.y;
 								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
 								this.falling = false;
 							}
@@ -1071,7 +1069,7 @@
 					this.onladder = collision.xprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.xprop.isSlope && !this.jumping) {
-						this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
+						this.checkSlope(this.collisionBox, collision.xtile, collision.xprop.isLeftSlope);
 						this.falling = false;
 					} else {
 						// can walk through the platform & ladder
@@ -1089,6 +1087,18 @@
 					}
 				}
 			}
+
+			// temporary stuff until ticket #103 is done (this function will disappear anyway)
+			this.pos.set(
+				this.collisionBox.pos.x - this.collisionBox.__offsetX, 
+				this.collisionBox.pos.y - this.collisionBox.__offsetY
+			);
+
+			this.collisionBox.pos.set(
+				this.collisionBox.__offsetX, 
+				this.collisionBox.__offsetY
+			);
+			
 
 			// update player position
 			this.pos.add(this.vel);

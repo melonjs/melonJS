@@ -504,10 +504,21 @@
 						}
 						
 					} else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
-			
-						res = obj.collisionBox["collideWith"+objA.shapeType].call(obj.collisionBox, objA.collisionBox);
+
+						obj.collisionBox.translateV(obj.pos);
+						objA.collisionBox.translateV(objA.pos);
+					
+						res = obj.collisionBox["collideWith"+objA.shapeType].call(
+							obj.collisionBox, 
+							objA.collisionBox
+						);
+
+						// restore the collisionBox initial offset
+						obj.collisionBox.translate(-obj.pos.x, -obj.pos.y);
+						objA.collisionBox.translate(-objA.pos.x, -objA.pos.y);
 						
 						if (res.x !== 0 || res.y !== 0) {
+
 							// notify the object
 							obj.onCollision.call(obj, res, objA);
 							// return the type (deprecated)
