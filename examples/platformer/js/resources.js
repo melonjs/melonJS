@@ -20,18 +20,18 @@ game.resources = [
 
 	/* Background music. 
 	 * @example
-	 * {name: "example_bgm", type: "audio", src: "data/bgm/", channel : 1},
+	 * {name: "example_bgm", type: "audio", src: "data/bgm/" },
 	 */	
-	{name: "DST-GameForest",type: "audio",	src: "data/bgm/",	channel : 1},
+	{name: "DST-GameForest",type: "audio",	src: "data/bgm/" },
 	
 	/* Sound effects. 
 	 * @example
-	 * {name: "example_sfx", type: "audio", src: "data/sfx/", channel : 2}
+	 * {name: "example_sfx", type: "audio", src: "data/sfx/"}
 	 */
-	{name: "cling",			type: "audio",	src: "data/sfx/",	channel : 2},
-	{name: "die",			type: "audio",	src: "data/sfx/",	channel : 1},
-	{name: "enemykill",		type: "audio",	src: "data/sfx/",	channel : 1},
-	{name: "jump",			type: "audio",	src: "data/sfx/",	channel : 2},
+	{name: "cling", type: "audio", src: "data/sfx/"},
+	{name: "die", type: "audio", src: "data/sfx/"},
+	{name: "enemykill", type: "audio", src: "data/sfx/"},
+	{name: "jump", type: "audio", src: "data/sfx/"},
 
 	
 	/* Atlases 

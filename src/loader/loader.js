@@ -295,8 +295,6 @@
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
 		 * @name preload
 		 * @memberOf me.loader
@@ -315,8 +313,8 @@
 		 *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
 		 *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
 		 *   // audio ressources
-		 *   {name: "bgmusic", type: "audio",  src: "data/audio/",  channel: 1,  stream: true},
-		 *   {name: "cling",   type: "audio",  src: "data/audio/",  channel: 2},
+		 *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
+		 *   {name: "cling",   type: "audio",  src: "data/audio/"},
 		 *   // binary file
 		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
 		 *   // JSON file (used for texturePacker) 
@@ -344,8 +342,6 @@
 		 * - src     : path and file name of the resource<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * @name load
 		 * @memberOf me.loader
 		 * @public
@@ -357,12 +353,11 @@
 		 * // load an image asset
 		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
 		 * 
-		 * // start streaming music
+		 * // start loading music
 		 * me.loader.load({
 		 *     name   : "bgmusic",
 		 *     type   : "audio",
-		 *     src    : "data/audio/",
-		 *     stream : true
+		 *     src    : "data/audio/"
 		 * }, function() {
 		 *     me.audio.play("bgmusic");
 		 * });
