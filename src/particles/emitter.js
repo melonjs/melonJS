@@ -101,9 +101,8 @@
 		 * @memberOf me.ParticleEmitter
 		 */
 		reset: function(params) {
-			// check if params exist and create a dummy object
-			if (params === undefined)
-				params = {};
+			// check if params exists and create a dummy object
+			params = params || {};
 
 			/**
 			 * Start position for launch particles <br>
@@ -146,24 +145,24 @@
 			this.totalParticles = params.totalParticles || 50;
 
 			/**
-			 * Minimum start angle for launch particles in degrees <br>
+			 * Minimum start angle for launch particles in Radians <br>
 			 * default value : 90 <br>
 			 * @public
 			 * @type Number
 			 * @name minAngle
 			 * @memberOf me.ParticleEmitter
 			 */
-			this.minAngle = params.minAngle || 90;
+			this.minAngle = params.minAngle || (Math.PI / 2);
 
 			/**
-			 * Maximum start angle for launch particles in degrees <br>
+			 * Maximum start angle for launch particles in Radians <br>
 			 * default value : 90 <br>
 			 * @public
 			 * @type Number
 			 * @name maxAngle
 			 * @memberOf me.ParticleEmitter
 			 */
-			this.maxAngle = params.maxAngle || 90;
+			this.maxAngle = params.maxAngle || (Math.PI / 2);
 
 			/**
 			 * Minimum time each particle lives once it is emitted in ms <br>
@@ -206,7 +205,7 @@
 			this.maxSpeed = params.maxSpeed || 3;
 
 			/**
-			 * Minimum start rotation for particles sprites <br>
+			 * Minimum start rotation for particles sprites in Radians <br>
 			 * default value : 0 <br>
 			 * @public
 			 * @type Number
@@ -216,7 +215,7 @@
 			this.minRotation = params.minRotation || 0;
 
 			/**
-			 * Maximum start rotation for particles sprites <br>
+			 * Maximum start rotation for particles sprites in Radians <br>
 			 * default value : 0 <br>
 			 * @public
 			 * @type Number

@@ -41,8 +41,8 @@ game.changeEmitter = function() {
 			game.Emitter.varPos.x = 100;
 			game.Emitter.totalParticles = 300;
 			game.Emitter.frequency = 50;
-			game.Emitter.minAngle = 70;
-			game.Emitter.maxAngle = 110;
+			game.Emitter.minAngle = Number.prototype.degToRad(70);
+			game.Emitter.maxAngle = Number.prototype.degToRad(110);
 
 			// start the emitter with continuous particle output
 			game.Emitter.streamParticles();
@@ -56,8 +56,8 @@ game.changeEmitter = function() {
 				frequency: 50,
 				minSpeed: 1,
 				maxSpeed: 5,
-				minAngle: 70,
-				maxAngle: 110,
+				minAngle: Number.prototype.degToRad(70),
+				maxAngle: Number.prototype.degToRad(110),
 				wind: 0.05
 			};
 
@@ -80,8 +80,8 @@ game.changeEmitter = function() {
 			game.Emitter.maxLife = 2000;
 			game.Emitter.minSpeed = 8;
 			game.Emitter.maxSpeed = 16;
-			game.Emitter.minAngle = 80;
-			game.Emitter.maxAngle = 100;
+			game.Emitter.minAngle = Number.prototype.degToRad(80);
+			game.Emitter.maxAngle = Number.prototype.degToRad(100);
 			game.Emitter.minStartScale = 0.6;
 			game.Emitter.maxStartScale = 1.0;
 			game.Emitter.gravity = 0.3;
@@ -101,8 +101,8 @@ game.changeEmitter = function() {
 			game.Emitter.totalParticles = 200;
 			game.Emitter.maxParticles = 50;
 			game.Emitter.frequency = 200;
-			game.Emitter.minAngle = -30;
-			game.Emitter.maxAngle = 30;
+			game.Emitter.minAngle = Number.prototype.degToRad(-30);
+			game.Emitter.maxAngle = Number.prototype.degToRad(30);
 			game.Emitter.minLife = 1000;
 			game.Emitter.maxLife = 5000;
 			game.Emitter.minSpeed = 1;
@@ -127,8 +127,8 @@ game.changeEmitter = function() {
 			game.Emitter.maxLife = 8000;
 			game.Emitter.minSpeed = 0;
 			game.Emitter.maxSpeed = 0;
-			game.Emitter.minAngle = 270;
-			game.Emitter.maxAngle = 270;
+			game.Emitter.minAngle = Number.prototype.degToRad(270);
+			game.Emitter.maxAngle = game.Emitter.minAngle;
 			game.Emitter.minStartScale = 0.3;
 			game.Emitter.maxStartScale = 0.6;
 			game.Emitter.gravity = 0.6;
@@ -147,8 +147,8 @@ game.changeEmitter = function() {
 			game.Emitter.totalParticles = 25;
 			game.Emitter.maxParticles = 1;
 			game.Emitter.frequency = 200;
-			game.Emitter.minAngle = 70;
-			game.Emitter.maxAngle = 70;
+			game.Emitter.minAngle = Number.prototype.degToRad(70);
+			game.Emitter.maxAngle = game.Emitter.minAngle;
 			game.Emitter.minLife = 1000;
 			game.Emitter.maxLife = 5000;
 			game.Emitter.minSpeed = 5;
@@ -171,8 +171,8 @@ game.changeEmitter = function() {
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.pos.y = 200;
 			game.Emitter.varPos.x = 5;
-			game.Emitter.minAngle = 0;
-			game.Emitter.maxAngle = 360;
+			game.Emitter.minAngle = Number.prototype.degToRad(0);
+			game.Emitter.maxAngle = Number.prototype.degToRad(360);
 			game.Emitter.minLife = 1000;
 			game.Emitter.maxLife = 5000;
 
@@ -190,8 +190,8 @@ game.changeEmitter = function() {
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.pos.x = 100;
 			game.Emitter.pos.y = 200;
-			game.Emitter.minAngle = 30;
-			game.Emitter.maxAngle = -30;
+			game.Emitter.minAngle = Number.prototype.degToRad(30);
+			game.Emitter.maxAngle = Number.prototype.degToRad(-30);
 			game.Emitter.minLife = 1000;
 			game.Emitter.maxLife = 2000;
 
@@ -209,7 +209,7 @@ game.changeEmitter = function() {
 			game.Emitter.pos.y = 10;
 			game.Emitter.varPos.x = 50;
 			game.Emitter.totalParticles = 500;
-			game.Emitter.maxParticles = 25;
+			game.Emitter.maxParticles = 20;
 			game.Emitter.frequency = 30;
 			game.Emitter.minLife = 2000;
 			game.Emitter.maxLife = 5000;
@@ -234,8 +234,8 @@ game.changeEmitter = function() {
 			game.Emitter.maxLife = 3000;
 			game.Emitter.minSpeed = 8;
 			game.Emitter.maxSpeed = 16;
-			game.Emitter.minAngle = 80;
-			game.Emitter.maxAngle = 100;
+			game.Emitter.minAngle = Number.prototype.degToRad(80);
+			game.Emitter.maxAngle = Number.prototype.degToRad(100);
 			game.Emitter.minStartScale = 0.2;
 			game.Emitter.maxStartScale = 0.4;
 			game.Emitter.minEndScale = 1.0;
@@ -255,8 +255,8 @@ game.changeEmitter = function() {
 			game.EmitterAux.frequency = 30;
 			game.EmitterAux.minLife = 2000;
 			game.EmitterAux.maxLife = 5000;
-			game.EmitterAux.minAngle = 70;
-			game.EmitterAux.maxAngle = 110;
+			game.EmitterAux.minAngle = Number.prototype.degToRad(70);
+			game.EmitterAux.maxAngle = Number.prototype.degToRad(110);
 			game.Emitter.minStartScale = 0.2;
 			game.Emitter.maxStartScale = 0.4;
 

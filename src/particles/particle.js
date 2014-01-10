@@ -35,7 +35,7 @@
 			this._emitter = emitter;
 
 			// Set the start particle Angle and Speed as defined in emitter
-			var angle = Number.prototype.degToRad(Number.prototype.random(emitter.minAngle, emitter.maxAngle));
+			var angle = Number.prototype.random(emitter.minAngle * 10, emitter.maxAngle * 10) / 10;
 			var speed = Number.prototype.random(emitter.minSpeed, emitter.maxSpeed);
 
 			// Set the start particle Velocity
@@ -44,7 +44,7 @@
 			// Set the start particle rotation as defined in emitter
 			// if the particle not follow trajectory
 			if (!emitter.followTrajectory)
-				this.angle = Number.prototype.degToRad(Number.prototype.random(emitter.minRotation, emitter.maxRotation));
+				this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
 
 			// Set the start particle Time of Life as defined in emitter
 			this.life = Number.prototype.random(emitter.minLife, emitter.maxLife);
@@ -130,11 +130,10 @@
 		draw: function(context) {
 			// Check for particle additive draw
 			if (this.textureAdditive) {
-				context.save();
-				context.globalCompositeOperation = 'lighter';
+				var gco = context.globalCompositeOperation;
+				context.globalCompositeOperation = "lighter";
 				this.parent(context);
-				context.globalCompositeOperation = 'source-over';
-				context.restore();
+				context.globalCompositeOperation = gco;
 			} else {
 				this.parent(context);
 			}
