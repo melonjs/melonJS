@@ -452,7 +452,7 @@
 						this.addParticles(this.totalParticles - this._particlesCount);
 
 					this._frequencyTimer = 0;
-                }
+                		}
 			}
 		}
 	});
