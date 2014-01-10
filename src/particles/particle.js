@@ -18,13 +18,6 @@
     me.Particle = me.Renderable.extend(
     /** @scope me.Particle.prototype */
     {
-
-        /**
-         * Source rotation angle for pre-rotating the source image<br>
-         * Commonly used for TexturePacker
-         * @ignore
-         */
-        _sourceAngle: 0,
         
         /**
          * @ignore
@@ -47,11 +40,6 @@
 
             // Set the start particle Velocity
             this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
-
-            // Set the start particle rotation as defined in emitter
-            // if the particle not follow trajectory
-            if (!emitter.followTrajectory)
-                this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
 
             // Set the start particle Time of Life as defined in emitter
             this.life = Number.prototype.random(emitter.minLife, emitter.maxLife);
@@ -76,28 +64,29 @@
 
             // Set the particle Z Order
             this.z = emitter.z;
-            
+
             // Reset if this particle can be removed from the emitter
             this.isDead = false;
 
-            // scale factor of the object
-            this.scale = new me.Vector2d(1.0, 1.0);
-            this.scaleFlag = false;
-        },
-        
-        /**
-         * Resize the particle around his center<br>
-         * @name resize
-         * @memberOf me.Particle
-         * @function
-         * @param {Number} ratio scaling ratio
-         */
-        resize : function(ratio) {
-            if (ratio > 0) {
-                this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
-                this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
-                // set the scaleFlag
-                this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+            this.transform = new me.Matrix2d(1, 0, 0, 1, this.pos.x, this.pos.y);
+
+            // Set the start particle rotation as defined in emitter
+            // if the particle not follow trajectory
+            if (!emitter.followTrajectory) {
+                var angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
+                //this.transform.rotateLocal(this.angle);
+                if (angle !== 0) {
+                    var cos = Math.cos(angle);
+                    var sin = Math.sin(angle);
+                    var a = this.transform.a;
+                    var b = this.transform.b;
+                    var c = this.transform.c;
+                    var d = this.transform.d;
+                    this.transform.a = a * cos - b * sin;
+                    this.transform.b = a * sin + b * cos;
+                    this.transform.c = c * cos - d * sin;
+                    this.transform.d = c * sin + d * cos;
+                }
             }
         },
 
@@ -112,6 +101,8 @@
          */
         update: function(dt) {
             if ((this.inViewport || !this.onlyInViewport) && (this.life > 0)) {
+                var skew = dt * me.sys.fps / 1000;
+
                 // Decrease particle life
                 this.life -= dt;
 
@@ -122,25 +113,37 @@
                 var scale = (this.startScale > this.endScale) ?
                             Math.max(this.endScale, (this.startScale * ageRatio)) :
                             Math.min(this.endScale, (this.startScale / ageRatio));
-                this.resize(scale);
+                scale = scale > 0 ? scale : 0;
+                // this.transform.setScale(scale);
+                this.transform.set(scale, 0, 0, scale, this.transform.e, this.transform.f);
 
                 // Set the particle opacity as Age Ratio
                 this.alpha = ageRatio > 0 ? ageRatio : 0;
-
-                var skew = dt * me.sys.fps / 1000;
 
                 // Adjust the particle velocity
                 this.vel.x += this.wind * skew;
                 this.vel.y += this.gravity * skew;
 
-                // Update particle position
-                this.pos.x += this.vel.x * skew;
-                this.pos.y += this.vel.y * skew;
-
                 // Update the rotation of particle in accordance the particle trajectory
-                if (this.followTrajectory)
-                    this.angle = Math.atan2(this.vel.y, this.vel.x);
+                if (this.followTrajectory) {
+                    var angle = Math.atan2(this.vel.y, this.vel.x);
+                    //this.transform.rotateLocal(this.angle);
+                    if (angle !== 0) {
+                        var cos = Math.cos(angle);
+                        var sin = Math.sin(angle);
+                        var a = this.transform.a;
+                        var b = this.transform.b;
+                        var c = this.transform.c;
+                        var d = this.transform.d;
+                        this.transform.a = a * cos - b * sin;
+                        this.transform.b = a * sin + b * cos;
+                        this.transform.c = c * cos - d * sin;
+                        this.transform.d = c * sin + d * cos;
+                    }
+                }
 
+                // Update particle position
+                this.transform.translate(this.vel.x * skew, this.vel.y * skew);
                 return true;
             } else {
                 // Mark particle for removal 
@@ -154,44 +157,15 @@
             // particle alpha value
             context.globalAlpha = originalAlpha * this.alpha;
 
-            var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
+            // translate to the defined anchor point and scale it
+            var transform = this.transform;
+            context.setTransform(transform.a, transform.b, transform.c, transform.d, ~~transform.e, ~~transform.f);
+
             var w = this.width, h = this.height;
-            var angle = this.angle + this._sourceAngle;
-
-            if ((this.scaleFlag) || (angle !== 0)) {
-                // calculate pixel pos of the anchor point
-                var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-
-                // determine scale
-                var scaleX = 1, scaleY = 1;
-                if (this.scaleFlag) {
-                    scaleX = this.scale.x;
-                    scaleY = this.scale.y;
-                }
-
-                // translate to the defined anchor point and scale it
-                context.setTransform(scaleX, 0, 0, scaleY, xpos + ax, ypos + ay);
-                if (angle !== 0) {
-                    context.rotate(angle);
-                }
-
-                if (this._sourceAngle !== 0) {
-                    // swap w and h for rotated source images
-                    w = this.height;
-                    h = this.width;
-
-                    xpos = -ay;
-                    ypos = -ax;
-                } else {
-                    // reset coordinates back to upper left coordinates
-                    xpos = -ax;
-                    ypos = -ay;
-                }
-            }
             context.drawImage(this._emitter.image,
                             0, 0,
                             w, h,
-                            xpos, ypos,
+                            -w / 2, -h / 2,
                             w, h);
         }
     });
