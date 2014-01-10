@@ -146,7 +146,7 @@
 
 			/**
 			 * Minimum start angle for launch particles in Radians <br>
-			 * default value : 90 <br>
+			 * default value : Math.PI / 2<br>
 			 * @public
 			 * @type Number
 			 * @name minAngle
@@ -156,7 +156,7 @@
 
 			/**
 			 * Maximum start angle for launch particles in Radians <br>
-			 * default value : 90 <br>
+			 * default value : Math.PI / 2 <br>
 			 * @public
 			 * @type Number
 			 * @name maxAngle
