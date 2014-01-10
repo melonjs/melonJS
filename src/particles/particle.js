@@ -19,13 +19,13 @@
     /** @scope me.Particle.prototype */
     {
 
-		/**
-		 * Source rotation angle for pre-rotating the source image<br>
-		 * Commonly used for TexturePacker
-		 * @ignore
-		 */
-		_sourceAngle: 0,
-		
+        /**
+         * Source rotation angle for pre-rotating the source image<br>
+         * Commonly used for TexturePacker
+         * @ignore
+         */
+        _sourceAngle: 0,
+        
         /**
          * @ignore
          */
@@ -80,27 +80,27 @@
             // Reset if this particle can be removed from the emitter
             this.isDead = false;
 
-			// scale factor of the object
-			this.scale = new me.Vector2d(1.0, 1.0);
-			this.scaleFlag = false;
+            // scale factor of the object
+            this.scale = new me.Vector2d(1.0, 1.0);
+            this.scaleFlag = false;
 
         },
         
-		/**
-		 * Resize the particle around his center<br>
-		 * @name resize
-		 * @memberOf me.Particle
-		 * @function
-		 * @param {Number} ratio scaling ratio
-		 */
-		resize : function(ratio) {
-			if (ratio > 0) {
-				this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
-				this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
-				// set the scaleFlag
-				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
-			}
-		},
+        /**
+         * Resize the particle around his center<br>
+         * @name resize
+         * @memberOf me.Particle
+         * @function
+         * @param {Number} ratio scaling ratio
+         */
+        resize : function(ratio) {
+            if (ratio > 0) {
+                this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
+                this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
+                // set the scaleFlag
+                this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+            }
+        },
 
         /**
          * Update the Particle <br>
@@ -128,13 +128,15 @@
                 // Set the particle opacity as Age Ratio
                 this.setOpacity(ageRatio);
 
+                var skew = dt * me.sys.fps / 1000;
+
                 // Adjust the particle velocity
-                this.vel.x += this.wind;
-                this.vel.y += this.gravity;
+                this.vel.x += this.wind * skew;
+                this.vel.y += this.gravity * skew;
 
                 // Update particle position
-                this.pos.x += this.vel.x * me.timer.tick;
-                this.pos.y += this.vel.y * me.timer.tick;
+                this.pos.x += this.vel.x * skew;
+                this.pos.y += this.vel.y * skew;
 
                 // Update the rotation of particle in accordance the particle trajectory
                 if (this.followTrajectory)

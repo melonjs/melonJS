@@ -66,10 +66,10 @@
          * @ignore
          */
         init: function(x, y, image) {
-        	var pos = new me.Vector2d(x, y);
-        	
-			// call the parent constructor
-        	this.parent(pos, 1, 1);
+            var pos = new me.Vector2d(x, y);
+            
+            // call the parent constructor
+            this.parent(pos, 1, 1);
 
             // Emitter will always update
             this.alwaysUpdate = true;
@@ -473,109 +473,109 @@
             // Update particles if they are not dead yet
             var particlesCount = this._particles.length;
             var deadCount = 0;
-			for ( var i = 0; i < particlesCount; ++i) {
-				var particle = this._particles[i];
-				if(!particle.isDead) {
-					particle.inViewport = this.inViewport;
-					particle.update(dt);
-				} else {
-					deadCount++;
-				}
-			}
+            for ( var i = 0; i < particlesCount; ++i) {
+                var particle = this._particles[i];
+                if(!particle.isDead) {
+                    particle.inViewport = this.inViewport;
+                    particle.update(dt);
+                } else {
+                    deadCount++;
+                }
+            }
 
-			// Free dead particles if there are enough of them.
-			if(deadCount > this.cleanupThreshold) {
-				this._particles.sort(this._deadLast);
-				while(deadCount--) {
-					var particle = this._particles.pop();
-					me.entityPool.freeInstance(particle);
-				}
-			}
+            // Free dead particles if there are enough of them.
+            if(deadCount > this.cleanupThreshold) {
+                this._particles.sort(this._deadLast);
+                while(deadCount--) {
+                    var particle = this._particles.pop();
+                    me.entityPool.freeInstance(particle);
+                }
+            }
         },
 
         /**
          * Move dead particles to the end of the array.
-		 * @ignore
-		 */
+         * @ignore
+         */
         _deadLast: function(a, b) {
-			if(a.isDead && b.isDead)
-				return 0;
-			else if(a.isDead)
-				return 1;
-			else if(b.isDead)
-				return -1;
-			return 0;
+            if(a.isDead && b.isDead)
+                return 0;
+            else if(a.isDead)
+                return 1;
+            else if(b.isDead)
+                return -1;
+            return 0;
         },
 
         /**
-		 * @ignore
-		 */
-		draw : function(context) {
+         * @ignore
+         */
+        draw : function(context) {
             var particlesCount = this._particles.length;
             if(particlesCount > 0) {
-    			// save context
-    			context.save();
-    			
-    			var originalAlpha = context.globalAlpha;
-    			
-    			// Check for additive draw
-    			if (this.textureAdditive) {
-    				context.globalCompositeOperation = "lighter";
-    			}
-    			
-				for ( var i = 0; i < particlesCount; ++i) {
-					var particle = this._particles[i];
-					if(!particle.isDead) {
-		    			// particle alpha value
-		    			context.globalAlpha = originalAlpha * particle.getOpacity();
+                // save context
+                context.save();
+                
+                var originalAlpha = context.globalAlpha;
+                
+                // Check for additive draw
+                if (this.textureAdditive) {
+                    context.globalCompositeOperation = "lighter";
+                }
+                
+                for ( var i = 0; i < particlesCount; ++i) {
+                    var particle = this._particles[i];
+                    if(!particle.isDead) {
+                        // particle alpha value
+                        context.globalAlpha = originalAlpha * particle.getOpacity();
 
-		    			var xpos = ~~particle.pos.x, ypos = ~~particle.pos.y;
+                        var xpos = ~~particle.pos.x, ypos = ~~particle.pos.y;
 
-		    			var w = particle.width, h = particle.height;
-		    			var angle = particle.angle + particle._sourceAngle;
+                        var w = particle.width, h = particle.height;
+                        var angle = particle.angle + particle._sourceAngle;
 
-		    			if ((particle.scaleFlag) || (angle !== 0)) {
-		    				// calculate pixel pos of the anchor point
-		    				var ax = w * particle.anchorPoint.x, ay = h * particle.anchorPoint.y;
+                        if ((particle.scaleFlag) || (angle !== 0)) {
+                            // calculate pixel pos of the anchor point
+                            var ax = w * particle.anchorPoint.x, ay = h * particle.anchorPoint.y;
 
-		    				// determine scale
-		    				var scaleX = 1, scaleY = 1;
-		    				if (particle.scaleFlag) {
-		    					scaleX = particle.scale.x;
-		    					scaleY = particle.scale.y;
-		    				}
-		    				
-		    				// translate to the defined anchor point and scale it
-		    				context.setTransform(scaleX, 0, 0, scaleY, xpos + ax, ypos + ay);
-		    				if (angle !== 0) {
-		    					context.rotate(angle);
-		    				}
+                            // determine scale
+                            var scaleX = 1, scaleY = 1;
+                            if (particle.scaleFlag) {
+                                scaleX = particle.scale.x;
+                                scaleY = particle.scale.y;
+                            }
+                            
+                            // translate to the defined anchor point and scale it
+                            context.setTransform(scaleX, 0, 0, scaleY, xpos + ax, ypos + ay);
+                            if (angle !== 0) {
+                                context.rotate(angle);
+                            }
 
-		    				if (particle._sourceAngle !== 0) {
-		    					// swap w and h for rotated source images
-		    					w = particle.height;
-		    					h = particle.width;
+                            if (particle._sourceAngle !== 0) {
+                                // swap w and h for rotated source images
+                                w = particle.height;
+                                h = particle.width;
 
-		    					xpos = -ay;
-		    					ypos = -ax;
-		    				} else {
-		    					// reset coordinates back to upper left coordinates
-		    					xpos = -ax;
-		    					ypos = -ay;
-		    				}
-						}
-		    			context.drawImage(this.image,
-		    							0, 0,
-		    							w, h,
-		    							xpos, ypos,
-		    							w, h);
-					}
-				}
-			}
+                                xpos = -ay;
+                                ypos = -ax;
+                            } else {
+                                // reset coordinates back to upper left coordinates
+                                xpos = -ax;
+                                ypos = -ay;
+                            }
+                        }
+                        context.drawImage(this.image,
+                                        0, 0,
+                                        w, h,
+                                        xpos, ypos,
+                                        w, h);
+                    }
+                }
+            }
 
-			// restore context
-			context.restore();
-		}
+            // restore context
+            context.restore();
+        }
     });
 
 
