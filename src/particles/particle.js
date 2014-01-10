@@ -81,8 +81,8 @@
 		 * @memberOf me.Particle
 		 * @function
 		 * @protected
-         * @param {Number} dt time since the last update in milliseconds
-         */
+		 * * @param {Number} dt time since the last update in milliseconds
+		 */
 		update: function(dt) {
 			if ((this.inViewport || !this.onlyInViewport) && (this.life > 0)) {
 				// Decrease particle life
