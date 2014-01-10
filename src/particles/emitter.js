@@ -523,60 +523,18 @@
             if(particlesCount > 0) {
                 // save context
                 context.save();
-                
+
                 var originalAlpha = context.globalAlpha;
-                
+
                 // Check for additive draw
                 if (this.textureAdditive) {
                     context.globalCompositeOperation = "lighter";
                 }
-                
+
                 for ( var i = 0; i < particlesCount; ++i) {
                     var particle = this._particles[i];
                     if(!particle.isDead) {
-                        // particle alpha value
-                        context.globalAlpha = originalAlpha * particle.getOpacity();
-
-                        var xpos = ~~particle.pos.x, ypos = ~~particle.pos.y;
-
-                        var w = particle.width, h = particle.height;
-                        var angle = particle.angle + particle._sourceAngle;
-
-                        if ((particle.scaleFlag) || (angle !== 0)) {
-                            // calculate pixel pos of the anchor point
-                            var ax = w * particle.anchorPoint.x, ay = h * particle.anchorPoint.y;
-
-                            // determine scale
-                            var scaleX = 1, scaleY = 1;
-                            if (particle.scaleFlag) {
-                                scaleX = particle.scale.x;
-                                scaleY = particle.scale.y;
-                            }
-                            
-                            // translate to the defined anchor point and scale it
-                            context.setTransform(scaleX, 0, 0, scaleY, xpos + ax, ypos + ay);
-                            if (angle !== 0) {
-                                context.rotate(angle);
-                            }
-
-                            if (particle._sourceAngle !== 0) {
-                                // swap w and h for rotated source images
-                                w = particle.height;
-                                h = particle.width;
-
-                                xpos = -ay;
-                                ypos = -ax;
-                            } else {
-                                // reset coordinates back to upper left coordinates
-                                xpos = -ax;
-                                ypos = -ay;
-                            }
-                        }
-                        context.drawImage(this.image,
-                                        0, 0,
-                                        w, h,
-                                        xpos, ypos,
-                                        w, h);
+                        particle.draw(context, originalAlpha)
                     }
                 }
             }

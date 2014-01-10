@@ -83,7 +83,6 @@
             // scale factor of the object
             this.scale = new me.Vector2d(1.0, 1.0);
             this.scaleFlag = false;
-
         },
         
         /**
@@ -126,7 +125,7 @@
                 this.resize(scale);
 
                 // Set the particle opacity as Age Ratio
-                this.setOpacity(ageRatio);
+                this.alpha = ageRatio > 0 ? ageRatio : 0;
 
                 var skew = dt * me.sys.fps / 1000;
 
@@ -150,6 +149,51 @@
 
             return false;
         },
+
+        draw: function(context, originalAlpha) {
+            // particle alpha value
+            context.globalAlpha = originalAlpha * this.alpha;
+
+            var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
+            var w = this.width, h = this.height;
+            var angle = this.angle + this._sourceAngle;
+
+            if ((this.scaleFlag) || (angle !== 0)) {
+                // calculate pixel pos of the anchor point
+                var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
+
+                // determine scale
+                var scaleX = 1, scaleY = 1;
+                if (this.scaleFlag) {
+                    scaleX = this.scale.x;
+                    scaleY = this.scale.y;
+                }
+
+                // translate to the defined anchor point and scale it
+                context.setTransform(scaleX, 0, 0, scaleY, xpos + ax, ypos + ay);
+                if (angle !== 0) {
+                    context.rotate(angle);
+                }
+
+                if (this._sourceAngle !== 0) {
+                    // swap w and h for rotated source images
+                    w = this.height;
+                    h = this.width;
+
+                    xpos = -ay;
+                    ypos = -ax;
+                } else {
+                    // reset coordinates back to upper left coordinates
+                    xpos = -ax;
+                    ypos = -ay;
+                }
+            }
+            context.drawImage(this._emitter.image,
+                            0, 0,
+                            w, h,
+                            xpos, ypos,
+                            w, h);
+        }
     });
 
 
