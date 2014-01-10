@@ -15,18 +15,25 @@
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    me.Particle = me.SpriteObject.extend(
+    me.Particle = me.Renderable.extend(
     /** @scope me.Particle.prototype */
     {
 
+		/**
+		 * Source rotation angle for pre-rotating the source image<br>
+		 * Commonly used for TexturePacker
+		 * @ignore
+		 */
+		_sourceAngle: 0,
+		
         /**
          * @ignore
          */
         init: function(emitter) {
             // Call the parent constructor
-            this.parent(emitter.pos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
-                        emitter.pos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y)),
-                        emitter.image);
+            this.parent(new me.Vector2d(emitter.pos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
+                        emitter.pos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y))),
+                        emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;
@@ -67,12 +74,33 @@
             // Set if the particle update only in Viewport
             this.onlyInViewport = emitter.onlyInViewport;
 
-            // Set the particle additive draw
-            this.textureAdditive = emitter.textureAdditive;
-
             // Set the particle Z Order
             this.z = emitter.z;
+            
+            // Reset if this particle can be removed from the emitter
+            this.isDead = false;
+
+			// scale factor of the object
+			this.scale = new me.Vector2d(1.0, 1.0);
+			this.scaleFlag = false;
+
         },
+        
+		/**
+		 * Resize the particle around his center<br>
+		 * @name resize
+		 * @memberOf me.Particle
+		 * @function
+		 * @param {Number} ratio scaling ratio
+		 */
+		resize : function(ratio) {
+			if (ratio > 0) {
+				this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
+				this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
+				// set the scaleFlag
+				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+			}
+		},
 
         /**
          * Update the Particle <br>
@@ -112,32 +140,14 @@
                 if (this.followTrajectory)
                     this.angle = Math.atan2(this.vel.y, this.vel.x);
 
-                // Call the parent constructor
-                this.parent(dt);
                 return true;
             } else {
-                // Remove particle from game world
-                this._emitter._particlesCount--;
-                me.game.world.removeChild(this);
+                // Mark particle for removal 
+                this.isDead = true;
             }
 
             return false;
         },
-
-        /**
-         * @ignore
-         */
-        draw: function(context) {
-            // Check for particle additive draw
-            if (this.textureAdditive) {
-                var gco = context.globalCompositeOperation;
-                context.globalCompositeOperation = "lighter";
-                this.parent(context);
-                context.globalCompositeOperation = gco;
-            } else {
-                this.parent(context);
-            }
-        }
     });
 
 
