@@ -82,6 +82,9 @@
             
             // hold particles in an array
             this._particles = [];
+            
+            // keep count of how many particles are dead
+            this._deadCount = 0;
 
             // Reset the emitter to defaults
             this.reset();
@@ -459,7 +462,7 @@
                 this._frequencyTimer += dt;
 
                 // Check for new particles launch
-                var particlesCount = this._particles.length;
+                var particlesCount = this._particles.length - this._deadCount;
                 if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
                     if ((particlesCount + this.maxParticles) <= this.totalParticles)
                         this.addParticles(this.maxParticles);
@@ -472,16 +475,18 @@
 
             // Update particles if they are not dead yet
             var particlesCount = this._particles.length;
+			var viewport = me.game.viewport;
             var deadCount = 0;
             for ( var i = 0; i < particlesCount; ++i) {
                 var particle = this._particles[i];
                 if(!particle.isDead) {
-                    particle.inViewport = this.inViewport;
+                    particle.inViewport = viewport.isVisible(particle);
                     particle.update(dt);
                 } else {
-                    deadCount++;
+                	deadCount++;
                 }
             }
+            this._deadCount = deadCount;
 
             // Free dead particles if there are enough of them.
             if(deadCount > this.cleanupThreshold) {
