@@ -475,15 +475,18 @@
 
             // Update particles if they are not dead yet
             var particlesCount = this._particles.length;
-			var viewport = me.game.viewport;
+            var viewport = me.game.viewport;
             var deadCount = 0;
             for ( var i = 0; i < particlesCount; ++i) {
                 var particle = this._particles[i];
                 if(!particle.isDead) {
-                    particle.inViewport = viewport.isVisible(particle);
+                    particle.inViewport = (particle.pos.x < viewport.pos.x + viewport.width && 
+                                           viewport.pos.x < particle.pos.x + particle.width && 
+                                           particle.pos.y < viewport.pos.y + viewport.height &&
+                                           viewport.pos.y < particle.pos.y + particle.height);
                     particle.update(dt);
                 } else {
-                	deadCount++;
+                    deadCount++;
                 }
             }
             this._deadCount = deadCount;
