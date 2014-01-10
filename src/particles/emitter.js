@@ -44,25 +44,25 @@
 	/** @scope me.ParticleEmitter.prototype */
 	{
 		// Emitter total particles
-        /** @ignore */
+        	/** @ignore */
 		_particlesCount: 0,
 
 		// Emitter is Stream, launch particles constantly
-        /** @ignore */
+        	/** @ignore */
 		_stream: false,
 
 		// Frequency timer (in ms) for emitter launch new particles
 		// used only in stream emitter
-        /** @ignore */
+        	/** @ignore */
 		_frequencyTimer: 0,
 
 		// Time of live (in ms) for emitter launch new particles
 		// used only in stream emitter
-        /** @ignore */
+        	/** @ignore */
 		_durationTimer: 0,
 
 		// Emitter is emitting particles
-        /** @ignore */
+        	/** @ignore */
 		_enabled: false,
 
 
@@ -426,8 +426,8 @@
 		 * @memberOf me.ParticleEmitter
 		 * @function
 		 * @protected
-         * @param {Number} dt time since the last update in milliseconds
-         */
+		 * @param {Number} dt time since the last update in milliseconds
+		 */
 		update: function(dt) {
 			// Launch new particles, if emitter is Stream
 			if ((this._enabled) && (this._stream)) {
