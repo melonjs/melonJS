@@ -88,6 +88,7 @@
         "console": true,
         "throttle": true,
         "Windows": true,
-        "alert": true
+        "alert": true,
+        "define" : true
     } 
 }
