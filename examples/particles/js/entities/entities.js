@@ -1,14 +1,3 @@
-// game background
-game.Background = me.Renderable.extend({
-	init : function() {
-		this.parent(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
-	},
-
-	draw : function(ctx) {
-		me.video.clearSurface(ctx, "#4D4D4D");
-	}
-});
-
 /**
  *  change the current emitter type
  *  using the combobox value in the HTML file

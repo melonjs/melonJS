@@ -4,7 +4,7 @@ game.PlayScreen = me.ScreenObject.extend({
 	 */
 	onResetEvent: function() {
 		// add background to the game world
-		me.game.world.addChild(new game.Background());
+		me.game.world.addChild(new me.ColorLayer("background", "#4D4D4D"), 0);
 
 		// create a new emitter at viewport center bottom
 		game.Emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));

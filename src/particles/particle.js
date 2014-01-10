@@ -80,8 +80,8 @@
 		 * @name update
 		 * @memberOf me.Particle
 		 * @function
-		 * @protected
-		 * * @param {Number} dt time since the last update in milliseconds
+		 * @ignore
+		 * @param {Number} dt time since the last update in milliseconds
 		 */
 		update: function(dt) {
 			if ((this.inViewport || !this.onlyInViewport) && (this.life > 0)) {

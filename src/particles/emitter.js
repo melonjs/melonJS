@@ -425,7 +425,7 @@
 		 * @name update
 		 * @memberOf me.ParticleEmitter
 		 * @function
-		 * @protected
+		 * @ignore
 		 * @param {Number} dt time since the last update in milliseconds
 		 */
 		update: function(dt) {
