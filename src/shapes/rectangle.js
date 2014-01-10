@@ -32,9 +32,10 @@
         /**
          * allow expanding and contracting the rect with a vector<br>
          * while keeping its original size and shape<br>
-         * @private
+         * @ignore
          * @type me.Vector2d
-         * @name me.Rect#rangeV
+         * @name rangeV
+         * @memberOf me.Rect
          * @see me.Rect#addV
          */
         rangeV : null,
