@@ -6,7 +6,6 @@
  */
 
 (function($) {
-
     /**
      * Single Particle Object.
      * @class
@@ -65,6 +64,9 @@
             // Set the particle Z Order
             this.z = emitter.z;
 
+            // cache inverse of the expected delta time
+            this._deltaInv = me.sys.fps / 1000;
+
             // Reset if this particle can be removed from the emitter
             this.isDead = false;
 
@@ -73,20 +75,8 @@
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {
-                var angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
-                //this.transform.rotateLocal(this.angle);
-                if (angle !== 0) {
-                    var cos = Math.cos(angle);
-                    var sin = Math.sin(angle);
-                    var a = this.transform.a;
-                    var b = this.transform.b;
-                    var c = this.transform.c;
-                    var d = this.transform.d;
-                    this.transform.a = a * cos - b * sin;
-                    this.transform.b = a * sin + b * cos;
-                    this.transform.c = c * cos - d * sin;
-                    this.transform.d = c * sin + d * cos;
-                }
+                this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
+                this.transform.rotateLocal(this.angle);
             }
         },
 
@@ -100,57 +90,41 @@
          * @param {Number} dt time since the last update in milliseconds
          */
         update: function(dt) {
-            if ((this.inViewport || !this.onlyInViewport) && (this.life > 0)) {
-                var skew = dt * me.sys.fps / 1000;
+            // move things forward independent of the current frame rate
+            var skew = dt * this._deltaInv;
 
-                // Decrease particle life
-                this.life -= dt;
+            // Decrease particle life
+            this.life = this.life > dt ? this.life - dt : 0;
 
-                // Calculate the particle Age Ratio
-                var ageRatio = this.life / this.startLife;
+            // Calculate the particle Age Ratio
+            var ageRatio = this.life / this.startLife;
 
-                // Resize the particle as particle Age Ratio
-                var scale = (this.startScale > this.endScale) ?
-                            Math.max(this.endScale, (this.startScale * ageRatio)) :
-                            Math.min(this.endScale, (this.startScale / ageRatio));
-                scale = scale > 0 ? scale : 0;
-                // this.transform.setScale(scale);
-                this.transform.set(scale, 0, 0, scale, this.transform.e, this.transform.f);
-
-                // Set the particle opacity as Age Ratio
-                this.alpha = ageRatio > 0 ? ageRatio : 0;
-
-                // Adjust the particle velocity
-                this.vel.x += this.wind * skew;
-                this.vel.y += this.gravity * skew;
-
-                // Update the rotation of particle in accordance the particle trajectory
-                if (this.followTrajectory) {
-                    var angle = Math.atan2(this.vel.y, this.vel.x);
-                    //this.transform.rotateLocal(this.angle);
-                    if (angle !== 0) {
-                        var cos = Math.cos(angle);
-                        var sin = Math.sin(angle);
-                        var a = this.transform.a;
-                        var b = this.transform.b;
-                        var c = this.transform.c;
-                        var d = this.transform.d;
-                        this.transform.a = a * cos - b * sin;
-                        this.transform.b = a * sin + b * cos;
-                        this.transform.c = c * cos - d * sin;
-                        this.transform.d = c * sin + d * cos;
-                    }
-                }
-
-                // Update particle position
-                this.transform.translate(this.vel.x * skew, this.vel.y * skew);
-                return true;
-            } else {
-                // Mark particle for removal 
-                this.isDead = true;
+            // Resize the particle as particle Age Ratio
+            var scale = this.startScale;
+            if(this.startScale > this.endScale) {
+                scale *= ageRatio;
+                scale = (scale < this.endScale) ? this.endScale : scale;
+            } else if(this.startScale < this.endScale) {
+                scale /= ageRatio;
+                scale = (scale > this.endScale) ? this.endScale : scale;
             }
 
-            return false;
+            // Set the particle opacity as Age Ratio
+            this.alpha = ageRatio;
+
+            // Adjust the particle velocity
+            this.vel.x += this.wind * skew;
+            this.vel.y += this.gravity * skew;
+
+            // If necessary update the rotation of particle in accordance the particle trajectory
+            var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
+
+            // Update particle transform
+            this.transform.setScale(scale).rotateLocal(angle).translate(this.vel.x * skew, this.vel.y * skew);
+
+            // Mark particle for removal 
+            this.isDead = (!this.inViewport && this.onlyInViewport) || (this.life <= 0);
+            return !this.isDead;
         },
 
         draw: function(context, originalAlpha) {
