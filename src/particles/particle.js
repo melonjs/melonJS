@@ -67,16 +67,12 @@
             // cache inverse of the expected delta time
             this._deltaInv = me.sys.fps / 1000;
 
-            // Reset if this particle can be removed from the emitter
-            this.isDead = false;
-
             this.transform = new me.Matrix2d(1, 0, 0, 1, this.pos.x, this.pos.y);
 
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {
                 this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
-                this.transform.rotateLocal(this.angle);
             }
         },
 
@@ -122,9 +118,8 @@
             // Update particle transform
             this.transform.setScale(scale).rotateLocal(angle).translate(this.vel.x * skew, this.vel.y * skew);
 
-            // Mark particle for removal 
-            this.isDead = (!this.inViewport && this.onlyInViewport) || (this.life <= 0);
-            return !this.isDead;
+            // Return true if the particle is not dead yet 
+            return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
         draw: function(context, originalAlpha) {

@@ -83,9 +83,6 @@
             // hold particles in an array
             this._particles = [];
             
-            // keep count of how many particles are dead
-            this._deadCount = 0;
-            
             // count the updates
             this._updateCount = 0;
 
@@ -363,16 +360,6 @@
             this.duration = params.duration || Infinity;
 
             /**
-             * Determines how many particles can die before the internal cache is cleaned up. <br>
-             * default value : 10 <br>
-             * @public
-             * @type Number
-             * @name cleanupThreshold
-             * @memberOf me.ParticleEmitter
-             */
-            this.cleanupThreshold = params.cleanupThreshold || 10;
-
-            /**
              * Skip n frames after updating the particle system once. <br>
              * default value : 0 <br>
              * @public
@@ -491,7 +478,7 @@
                 this._frequencyTimer += dt;
 
                 // Check for new particles launch
-                var particlesCount = this._particles.length - this._deadCount;
+                var particlesCount = this._particles.length;
                 if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
                     if ((particlesCount + this.maxParticles) <= this.totalParticles)
                         this.addParticles(this.maxParticles);
@@ -502,29 +489,17 @@
                 }
             }
 
-            // Update particles if they are not dead yet
-            var particlesCount = this._particles.length;
+            // Update particles and remove them if they are dead
             var viewport = me.game.viewport;
-            var deadCount = 0;
-            for ( var i = 0; i < particlesCount; ++i) {
+            for ( var i = this._particles.length - 1; i >= 0; --i) {
                 var particle = this._particles[i];
-                if(!particle.isDead) {
-                    particle.inViewport = (particle.pos.x < viewport.pos.x + viewport.width && 
-                                           viewport.pos.x < particle.pos.x + particle.width && 
-                                           particle.pos.y < viewport.pos.y + viewport.height &&
-                                           viewport.pos.y < particle.pos.y + particle.height);
-                    particle.update(dt);
-                } else {
-                    deadCount++;
-                }
-            }
-            this._deadCount = deadCount;
-
-            // Free dead particles if there are enough of them.
-            if(deadCount > this.cleanupThreshold) {
-                this._particles.sort(this._deadLast);
-                while(deadCount--) {
-                    var particle = this._particles.pop();
+                // particle.inViewport = viewport.isVisible(particle);
+                particle.inViewport = (particle.pos.x < viewport.pos.x + viewport.width && 
+                                       viewport.pos.x < particle.pos.x + particle.width && 
+                                       particle.pos.y < viewport.pos.y + viewport.height &&
+                                       viewport.pos.y < particle.pos.y + particle.height);
+                if(!particle.update(dt)) {
+                    this._particles.splice(i, 1)
                     me.entityPool.freeInstance(particle);
                 }
             }
