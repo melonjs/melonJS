@@ -85,6 +85,12 @@
             
             // keep count of how many particles are dead
             this._deadCount = 0;
+            
+            // count the updates
+            this._updateCount = 0;
+
+            // internally store how much time was skipped when frames are skipped
+            this._dt = 0;
 
             // Reset the emitter to defaults
             this.reset();
@@ -365,9 +371,21 @@
              * @memberOf me.ParticleEmitter
              */
             this.cleanupThreshold = params.cleanupThreshold || 10;
-            
-            // clear particle array
+
+            /**
+             * Skip n frames after updating the particle system once. <br>
+             * default value : 0 <br>
+             * @public
+             * @type Number
+             * @name framesToSkip
+             * @memberOf me.ParticleEmitter
+             */
+            this.framesToSkip = params.framesToSkip || 0;
+
+            // reset internal values
             this._particles.length = 0;
+            this._updateCount = 0;
+            this._dt = 0;
         },
 
 
@@ -446,6 +464,17 @@
          * @param {Number} dt time since the last update in milliseconds
          */
         update: function(dt) {
+            if (++this._updateCount > this.framesToSkip) {
+                this._updateCount = 0;
+            }
+            if(this._updateCount > 0) {
+            	this._dt += dt;
+            	return false;
+            }
+
+            dt += this._dt;
+            this._dt = 0;
+
             // Launch new particles, if emitter is Stream
             if ((this._enabled) && (this._stream)) {
                 // Check if the emitter has duration set
@@ -499,6 +528,7 @@
                     me.entityPool.freeInstance(particle);
                 }
             }
+            return true;
         },
 
         /**
