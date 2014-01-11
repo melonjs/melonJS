@@ -195,6 +195,21 @@
 		},
 
 		/**
+         * set the viewport boundaries (world limit)
+         * @name setBounds
+         * @memberOf me.Viewport
+         * @function
+         * @param {Number} x world left limit
+         * @param {Number} y world top limit
+         * @param {Number} w world width limit
+         * @param {Number} h world height limit
+         */
+		setBounds : function(x, y, w, h) {
+			this.bounds.pos.set(x, y);
+			this.bounds.resize(w, h);
+        },
+
+		/**
 		 * set the viewport to follow the specified entity
 		 * @name follow
 		 * @memberOf me.Viewport
