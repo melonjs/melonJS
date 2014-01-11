@@ -40,7 +40,7 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = me.Renderable.extend(
+    me.ParticleEmitter = me.ObjectContainer.extend(
     /** @scope me.ParticleEmitter.prototype */
     {
         // Emitter is Stream, launch particles constantly
@@ -69,7 +69,7 @@
             var pos = new me.Vector2d(x, y);
             
             // call the parent constructor
-            this.parent(pos, 1, 1);
+            this.parent(pos);
 
             // Emitter will always update
             this.alwaysUpdate = true;
@@ -79,10 +79,10 @@
 
             // Cache the emitter start image
             this._defaultImage = image;
-            
-            // hold particles in an array
-            this._particles = [];
-            
+
+            // don't sort the particles by z-index
+            this.autoSort = false;
+
             // count the updates
             this._updateCount = 0;
 
@@ -370,7 +370,7 @@
             this.framesToSkip = params.framesToSkip || 0;
 
             // reset internal values
-            this._particles.length = 0;
+            this.destroy();
             this._updateCount = 0;
             this._dt = 0;
         },
@@ -381,7 +381,7 @@
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle in the emitter
-                this._particles.push(me.entityPool.newInstanceOf("me.Particle", this));
+            	this.addChild(me.entityPool.newInstanceOf("me.Particle", this));
             }
         },
 
@@ -478,7 +478,7 @@
                 this._frequencyTimer += dt;
 
                 // Check for new particles launch
-                var particlesCount = this._particles.length;
+                var particlesCount = this.children.length;
                 if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
                     if ((particlesCount + this.maxParticles) <= this.totalParticles)
                         this.addParticles(this.maxParticles);
@@ -491,40 +491,25 @@
 
             // Update particles and remove them if they are dead
             var viewport = me.game.viewport;
-            for ( var i = this._particles.length - 1; i >= 0; --i) {
-                var particle = this._particles[i];
+            for ( var i = this.children.length - 1; i >= 0; --i) {
+                var particle = this.children[i];
                 // particle.inViewport = viewport.isVisible(particle);
                 particle.inViewport = (particle.pos.x < viewport.pos.x + viewport.width && 
                                        viewport.pos.x < particle.pos.x + particle.width && 
                                        particle.pos.y < viewport.pos.y + viewport.height &&
                                        viewport.pos.y < particle.pos.y + particle.height);
                 if(!particle.update(dt)) {
-                    this._particles.splice(i, 1)
-                    me.entityPool.freeInstance(particle);
+                	this.removeChildNow(particle);
                 }
             }
             return true;
         },
 
         /**
-         * Move dead particles to the end of the array.
-         * @ignore
-         */
-        _deadLast: function(a, b) {
-            if(a.isDead && b.isDead)
-                return 0;
-            else if(a.isDead)
-                return 1;
-            else if(b.isDead)
-                return -1;
-            return 0;
-        },
-
-        /**
          * @ignore
          */
         draw : function(context) {
-            var particlesCount = this._particles.length;
+            var particlesCount = this.children.length;
             if(particlesCount > 0) {
                 // save context
                 context.save();
@@ -537,7 +522,7 @@
                 }
 
                 for ( var i = 0; i < particlesCount; ++i) {
-                    var particle = this._particles[i];
+                    var particle = this.children[i];
                     if(!particle.isDead) {
                         particle.draw(context, originalAlpha)
                     }
