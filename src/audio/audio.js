@@ -325,8 +325,10 @@
 					sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
 					sound.mute(settings.muted);
 					// remove callback so we don't double up
-					sound.off('end', callback);
-					sound.on('end', callback);
+					if (typeof(callback) === 'function') {
+						sound.off('end', callback);
+						sound.on('end', callback);
+					}
 					sound.play();
 
 					return sound;
