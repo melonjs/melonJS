@@ -519,15 +519,6 @@
          */
         draw : function(context, rect) {
             if(this.children.length > 0) {
-                if(this.floating) {
-                    var viewport = me.game.viewport;
-                    this.transform.e = -viewport.screenX;
-                    this.transform.f = -viewport.screenY;
-                } else {
-                    this.transform.e = 0;
-                    this.transform.f = 0;
-                }
-
                 var gco;
                 // Check for additive draw
                 if (this.textureAdditive) {

@@ -29,7 +29,6 @@
 
             // Particle will always update
             this.alwaysUpdate = true;
-            this.floating = emitter.floating;
 
             // Cache the particle emitter
             this._emitter = emitter;
