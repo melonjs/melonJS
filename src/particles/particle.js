@@ -23,12 +23,13 @@
          */
         init: function(emitter) {
             // Call the parent constructor
-            this.parent(new me.Vector2d(emitter.pos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
-                        emitter.pos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y))),
+            this.parent(new me.Vector2d(emitter.startPos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
+                        emitter.startPos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y))),
                         emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;
+            this.floating = emitter.floating;
 
             // Cache the particle emitter
             this._emitter = emitter;
@@ -122,13 +123,17 @@
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
-        draw: function(context, originalAlpha) {
+        draw: function(context) {
+            context.save();
+
             // particle alpha value
-            context.globalAlpha = originalAlpha * this.alpha;
+            context.globalAlpha *= this.alpha;
 
             // translate to the defined anchor point and scale it
             var transform = this.transform;
-            context.setTransform(transform.a, transform.b, transform.c, transform.d, ~~transform.e, ~~transform.f);
+            context.transform(transform.a, transform.b,
+                              transform.c, transform.d,
+                              ~~transform.e, ~~transform.f);
 
             var w = this.width, h = this.height;
             context.drawImage(this._emitter.image,
@@ -136,6 +141,8 @@
                             w, h,
                             -w / 2, -h / 2,
                             w, h);
+
+            context.restore();
         }
     });
 

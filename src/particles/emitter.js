@@ -66,16 +66,14 @@
          * @ignore
          */
         init: function(x, y, image) {
-            var pos = new me.Vector2d(x, y);
-            
             // call the parent constructor
-            this.parent(pos);
+            this.parent();
 
             // Emitter will always update
             this.alwaysUpdate = true;
 
             // Cache the emitter start pos
-            this._defaultPos = pos;
+            this._defaultPos = new me.Vector2d(x, y);
 
             // Cache the emitter start image
             this._defaultImage = image;
@@ -119,10 +117,10 @@
              * default value : x, y <br>
              * @public
              * @type me.Vector2d
-             * @name pos
+             * @name startPos
              * @memberOf me.ParticleEmitter
              */
-            this.pos = params.pos || this._defaultPos.clone();
+            this.startPos = params.pos || this._defaultPos.clone();
 
             /**
              * Variation in the start position for launch the particles (x, y) <br>
@@ -328,6 +326,16 @@
             this.onlyInViewport = params.onlyInViewport || true;
 
             /**
+             * Render particles in screen space. <br>
+             * default value : false <br>
+             * @public
+             * @type Boolean
+             * @name floating
+             * @memberOf me.ParticleEmitter
+             */
+            this.floating = params.floating || false;
+
+            /**
              * Maximum number of particles launched each time in this emitter (used only if emitter is Stream) <br>
              * default value : 10 <br>
              * @public
@@ -381,7 +389,7 @@
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle in the emitter
-            	this.addChild(me.entityPool.newInstanceOf("me.Particle", this));
+                this.addChild(me.entityPool.newInstanceOf("me.Particle", this));
             }
         },
 
@@ -455,8 +463,8 @@
                 this._updateCount = 0;
             }
             if(this._updateCount > 0) {
-            	this._dt += dt;
-            	return false;
+                this._dt += dt;
+                return false;
             }
 
             dt += this._dt;
@@ -494,12 +502,13 @@
             for ( var i = this.children.length - 1; i >= 0; --i) {
                 var particle = this.children[i];
                 // particle.inViewport = viewport.isVisible(particle);
-                particle.inViewport = (particle.pos.x < viewport.pos.x + viewport.width && 
+                particle.inViewport = this.floating ||
+                                       (particle.pos.x < viewport.pos.x + viewport.width && 
                                        viewport.pos.x < particle.pos.x + particle.width && 
                                        particle.pos.y < viewport.pos.y + viewport.height &&
                                        viewport.pos.y < particle.pos.y + particle.height);
                 if(!particle.update(dt)) {
-                	this.removeChildNow(particle);
+                    this.removeChildNow(particle);
                 }
             }
             return true;
@@ -508,29 +517,31 @@
         /**
          * @ignore
          */
-        draw : function(context) {
-            var particlesCount = this.children.length;
-            if(particlesCount > 0) {
-                // save context
-                context.save();
+        draw : function(context, rect) {
+            if(this.children.length > 0) {
+                if(this.floating) {
+                    var viewport = me.game.viewport;
+                    this.transform.e = -viewport.screenX;
+                    this.transform.f = -viewport.screenY;
+                } else {
+                    this.transform.e = 0;
+                    this.transform.f = 0;
+                }
 
-                var originalAlpha = context.globalAlpha;
-
+                var gco;
                 // Check for additive draw
                 if (this.textureAdditive) {
+                    gco = context.globalCompositeOperation;
                     context.globalCompositeOperation = "lighter";
                 }
 
-                for ( var i = 0; i < particlesCount; ++i) {
-                    var particle = this.children[i];
-                    if(!particle.isDead) {
-                        particle.draw(context, originalAlpha)
-                    }
+                this.parent(context, rect);
+
+                // Restore globalCompositeOperation
+                if (this.textureAdditive) {
+                    context.globalCompositeOperation = gco;
                 }
             }
-
-            // restore context
-            context.restore();
         }
     });
 
