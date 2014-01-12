@@ -4,10 +4,7 @@ game.PlayScreen = me.ScreenObject.extend({
 	 */
 	onResetEvent: function() {
 		// set world size
-		var size = Infinity;
-		me.game.viewport.bounds.resize(size, size);
-		me.game.viewport.bounds.translate(-size, -size);
-		me.game.viewport.setDeadzone(0, 0);
+		me.game.viewport.bounds.resize(2000, 2000);
 
 		// add background to the game world
 		me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
@@ -47,9 +44,12 @@ game.PlayScreen = me.ScreenObject.extend({
 		var lastX = mousepos.x, lastY = mousepos.y;
 		me.event.subscribe(me.event.MOUSEMOVE, function() {
 			if(me.input.isKeyPressed("moveEmitter")) {
-				var pos = viewport.localToWorld(mousepos.x, mousepos.y);
-				game.Emitter.pos.setV(pos);
-				game.EmitterAux.pos.setV(pos);
+				var pos = mousepos;
+				if(!game.Emitter.floating) {
+					pos = viewport.localToWorld(pos.x, pos.y);
+				}
+				game.Emitter.startPos.setV(pos);
+				game.EmitterAux.startPos.setV(pos);
 			}
 			if(me.input.isKeyPressed("moveViewport")) {
 				viewport.move(lastX - mousepos.x, lastY - mousepos.y);
