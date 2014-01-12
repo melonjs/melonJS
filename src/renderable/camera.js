@@ -20,8 +20,6 @@
 	 * @param {Number} minY start y offset
 	 * @param {Number} maxX end x offset
 	 * @param {Number} maxY end y offset
-	 * @param {Number} [realw] real world width limit
-	 * @param {Number} [realh] real world height limit
 	 */
 	me.Viewport = me.Renderable.extend(
 	/** @scope me.Viewport.prototype */ {
@@ -78,12 +76,12 @@
 		screenY : 0,
 
 		/** @ignore */
-		init : function(minX, minY, maxX, maxY, realw, realh) {
+		init : function(minX, minY, maxX, maxY) {
 			// viewport coordinates
 			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
 			// real worl limits
-			this.bounds = new me.Rect(new me.Vector2d(), realw||this.width, realh||this.height);
+			this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);
 
 			// offset for shake effect
 			this.offset = new me.Vector2d();
