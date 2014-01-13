@@ -5,6 +5,10 @@
 	@license Apache License 2.0 - See file 'LICENSE.md' in this project.
  */
 
+var path = require('jsdoc/path');
+
+var pwd = process.env.PWD;
+
 /**
     @constructor
     @param {object} opts
@@ -13,7 +17,11 @@
     @param {string|RegExp} opts.excludePattern
  */
 exports.Filter = function(opts) {
-    this.exclude = opts.exclude || null;
+    this.exclude = opts.exclude && Array.isArray(opts.exclude) ?
+        opts.exclude.map(function($) {
+            return path.resolve(pwd, $);
+        }) :
+        null;
     this.includePattern = opts.includePattern?
                             typeof opts.includePattern === 'string'? new RegExp(opts.includePattern) : opts.includePattern
                             : null;
@@ -27,6 +35,8 @@ exports.Filter = function(opts) {
     @returns {boolean} Should the given file be included?
  */
 exports.Filter.prototype.isIncluded = function(filepath) {
+    filepath = path.resolve(pwd, filepath);
+
     if ( this.includePattern && !this.includePattern.test(filepath) ) {
         return false;
     }
