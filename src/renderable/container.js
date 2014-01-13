@@ -75,6 +75,12 @@
 		children : null,
 
 		/**
+		 * Container bounds
+		 * @ignore
+		 */	
+		bounds : null,
+        
+		/**
 		 * Enable collision detection for this container (default true)<br>
 		 * @public
 		 * @type Boolean
@@ -102,9 +108,11 @@
 			// call the parent constructor
 			this.parent(
 				new me.Vector2d(x || 0, y || 0),
-				width || Infinity, 
+				width || Infinity,
 				height || Infinity 
 			);
+			// init the bounds to an empty rect
+			this.bounds = new me.Rect(new me.Vector2d(0,0), 0, 0);
 			this.children = [];
 			// by default reuse the global me.game.setting
 			this.sortOn = me.game.sortOn;
@@ -325,6 +333,37 @@
 			var obj = this.getChildByProp("GUID", guid);
 			return (obj.length>0)?obj[0]:null;
 		},
+        
+        
+        /**
+         * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
+         * @name getBounds
+         * @memberOf me.Rect
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle    
+         */
+        getBounds : function(rect) {
+            var _bounds = (typeof(rect) !== 'undefined') ? rect : this.bounds;
+            
+            // reset the rect with default values
+            _bounds.pos.set(Infinity, Infinity);
+            _bounds.resize(-Infinity, -Infinity);
+            
+            var childBounds;
+            for ( var i = this.children.length, child; i--, child = this.children[i];) {
+                if(child.isRenderable && child.visible) {
+                    childBounds = child.getBounds();
+                    // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
+                    // TODO : getBounds should always return something anyway
+                    if (childBounds !== null) {
+                        _bounds.union(childBounds);
+                    }
+                }
+            }
+            // TODO : cache the value until any childs are modified? (next frame?) 
+            return _bounds;
+        },
 
 		/**
 		 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
