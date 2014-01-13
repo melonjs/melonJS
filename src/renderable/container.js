@@ -338,7 +338,7 @@
         /**
          * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
          * @name getBounds
-         * @memberOf me.Rect
+         * @memberOf me.ObjectContainer
          * @function
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} new rectangle    
