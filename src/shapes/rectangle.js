@@ -277,18 +277,16 @@
          * @return {me.Rect} the union(ed) rectangle     
          */
         union : function(/** {me.Rect} */ r) {
-            var x1 = Math.min(this.pos.x, r.pos.x);
-            var y1 = Math.min(this.pos.y, r.pos.y);
+            var x1 = Math.min(this.left, r.left);
+            var y1 = Math.min(this.right, r.right);
 
-            this.width  = Math.ceil( Math.max(this.pos.x + this.width,  r.pos.x + r.width)  - x1 );
-            this.height = Math.ceil( Math.max(this.pos.y + this.height, r.pos.y + r.height) - y1 );
+            this.resize (
+                Math.max(this.right, r.right) - x1,
+                Math.max(this.bottom, r.bottom) - y1
+            );
             
-            this.hWidth = ~~(this.width  / 2);
-            this.hHeight = ~~(this.height / 2);
-            
-            this.pos.x  = ~~x1;
-            this.pos.y  = ~~y1;
-
+            this.pos.set(x1, y1);
+           
             return this;
         },
 
