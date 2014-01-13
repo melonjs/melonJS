@@ -116,7 +116,7 @@
             var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
             // Update particle transform
-            this.transform.setScale(scale).rotateLocal(angle).translate(this.vel.x * skew, this.vel.y * skew);
+            this.transform.set(scale, 0, 0, scale).rotateLocal(angle).translate(this.vel.x * skew, this.vel.y * skew);
 
             // Return true if the particle is not dead yet 
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
