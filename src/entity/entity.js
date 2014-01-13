@@ -352,18 +352,6 @@
 		 */
 		collidable : true,
 
-
-		/**
-		 * Entity collision Box<br>
-		 * (reference to me.ObjectEntity.shapes[0].getBounds)
-		 * @public
-		 * @deprecated
-		 * @type me.Rect
-		 * @name collisionBox
-		 * @memberOf me.ObjectEntity
-		 */
-		collisionBox : null,
-
 		/**
 		 * Entity collision shapes<br>
 		 * (RFU - Reserved for Future Usage)
@@ -588,9 +576,10 @@
             else if ((settings.isPolygon===true) || (settings.isPolyline===true)) {
                 // add a polyshape
                 this.addShape(new me.PolyShape(new me.Vector2d(0,0), settings.points, settings.isPolygon));
-                // set the entity object based on the bounding box size ?
-                this.width = this.collisionBox.width;
-                this.height = this.collisionBox.height;
+                // TODO : fixed this bug, as it should not matter!
+                this._bounds = this.getShape().getBounds();
+                this.width = this._bounds.width;
+                this.height = this._bounds.height;
             }
             else {
                 // add a rectangle
@@ -613,11 +602,13 @@
 		 * @param {Number} h height of the hit box
 		 */
 		updateColRect : function(x, w, y, h) {
-			this.collisionBox.adjustSize(x, w, y, h);
+			if (this.getShape().shapeType === "Rectangle") {
+				this.getShape().adjustSize(x, w, y, h);
+			}	
 		},
 
         /**
-		 * add a collision shape to this entity<
+		 * add a collision shape to this entity
 		 * @name addShape
 		 * @memberOf me.ObjectEntity
          * @public
@@ -629,12 +620,18 @@
                 this.shapes = [];
             }
             this.shapes.push(shape);
+		},
 
-            // some hack to get the collisionBox working in this branch
-            // to be removed once the ticket #103 will be done
-            if (this.shapes.length === 1) {
-                this.collisionBox = this.shapes[0].getBounds();
-            }
+		 /**
+		 * return the current collision shape for this entity
+		 * @name getShape
+		 * @memberOf me.ObjectEntity
+         * @public
+		 * @function
+		 * @param {me.objet} shape a shape object
+		 */
+		getShape : function(shape) {
+			return this.shapes[0];
 		},
 
 		/**
@@ -717,7 +714,9 @@
 					this.renderable.flipX(flip);
 				}
 				// flip the collision box
-				this.collisionBox.flipX(this.width);
+				if (this.getShape().flipX) {
+					this.getShape().flipX(this.width);
+				}
 			}
 		},
 
@@ -736,7 +735,9 @@
 					this.renderable.flipY(flip);
 				}
 				// flip the collision box
-				this.collisionBox.flipY(this.height);
+				if (this.getShape().flipY) {
+					this.getShape().flipY(this.height);
+				}
 			}
 		},
 
@@ -1002,16 +1003,17 @@
 
 			this.computeVelocity(this.vel);
 
-			// temporary stuff until ticket #103 is done (this function will disappear anyway)
-			// save the collision box offset
-			this.collisionBox.__offsetX = this.collisionBox.pos.x;
-			this.collisionBox.__offsetY = this.collisionBox.pos.y;
-
 			// Adjust position only on collidable object
 			var collision;
 			if (this.collidable) {
+				// temporary stuff until ticket #103 is done (this function will disappear anyway)
+				// save the collision box offset
+				this._bounds = this.getShape().getBounds(this._bounds);
+				this.__offsetX = this._bounds.pos.x;
+				this.__offsetY = this._bounds.pos.y;
+
 				// check for collision
-				collision = this.collisionMap.checkCollision(this.collisionBox.translateV(this.pos), this.vel);
+				collision = this.collisionMap.checkCollision(this._bounds.translateV(this.pos), this.vel);
 
 				// update some flags
 				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -1027,16 +1029,16 @@
 
 					if (collision.y > 0) {
 						if (collision.yprop.isSolid	||
-							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
+							(collision.yprop.isPlatform && (this._bounds.bottom - 1 <= collision.ytile.pos.y)) ||
 							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
-							this.collisionBox.pos.y = ~~this.collisionBox.pos.y;
-							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
+							this._bounds.pos.y = ~~this._bounds.pos.y;
+							this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0 ;
 							this.falling = false;
 						}
 						else if (collision.yprop.isSlope && !this.jumping) {
 							// we stop falling
-							this.checkSlope(this.collisionBox, collision.ytile, collision.yprop.isLeftSlope);
+							this.checkSlope(this._bounds, collision.ytile, collision.yprop.isLeftSlope);
 							this.falling = false;
 						}
 						else if (collision.yprop.isBreakable) {
@@ -1049,7 +1051,7 @@
 							else {
 								// adjust position to the corresponding tile
 								this.collision.pos.y = ~~this.collision.pos.y;
-								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
+								this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0;
 								this.falling = false;
 							}
 						}
@@ -1070,7 +1072,7 @@
 					this.onladder = collision.xprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.xprop.isSlope && !this.jumping) {
-						this.checkSlope(this.collisionBox, collision.xtile, collision.xprop.isLeftSlope);
+						this.checkSlope(this._bounds, collision.xtile, collision.xprop.isLeftSlope);
 						this.falling = false;
 					} else {
 						// can walk through the platform & ladder
@@ -1091,15 +1093,9 @@
 
 			// temporary stuff until ticket #103 is done (this function will disappear anyway)
 			this.pos.set(
-				this.collisionBox.pos.x - this.collisionBox.__offsetX,
-				this.collisionBox.pos.y - this.collisionBox.__offsetY
+				this._bounds.pos.x - this.__offsetX,
+				this._bounds.pos.y - this.__offsetY
 			);
-
-			this.collisionBox.pos.set(
-				this.collisionBox.__offsetX,
-				this.collisionBox.__offsetY
-			);
-
 
 			// update player position
 			this.pos.add(this.vel);
@@ -1171,16 +1167,16 @@
 			return false;
 		},
 
-		/**
-		 * @ignore
-		 */
-		getBounds : function() {
-			if (this.renderable) {
-				// translate the renderable position since its
-				// position is relative to this entity
-				return this.renderable.getBounds().translateV(this.pos);
-			}
-			return null;
+        /**
+         * returns the bounding box for this entity, the smallest rectangle object completely containing the entity current shape.
+         * @name getBounds
+         * @memberOf me.ObjectEntity
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle    
+         */
+		getBounds : function(rect) {
+			return this.shapes[0].getBounds(rect);
 		},
 
 		/**
@@ -1218,7 +1214,6 @@
 				this.renderable = null;
 			}
 			this.onDestroyEvent.apply(this, arguments);
-            this.collisionBox = null;
             this.shapes = [];
 		},
 

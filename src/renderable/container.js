@@ -544,17 +544,14 @@
 						
 					} else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
 
-						obj.collisionBox.translateV(obj.pos);
-						objA.collisionBox.translateV(objA.pos);
+						this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
+						this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
 					
-						res = obj.collisionBox["collideWith"+objA.shapeType].call(
-							obj.collisionBox, 
-							objA.collisionBox
+						res = this._boundsA["collideWith"+this._boundsB.shapeType].call(
+							this._boundsA, 
+							this._boundsB
 						);
 
-						// restore the collisionBox initial offset
-						obj.collisionBox.translate(-obj.pos.x, -obj.pos.y);
-						objA.collisionBox.translate(-objA.pos.x, -objA.pos.y);
 						
 						if (res.x !== 0 || res.y !== 0) {
 
