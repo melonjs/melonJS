@@ -14,15 +14,15 @@
      * @memberOf me
      * @constructor
      * @param {me.Vector2d} pos position of the particle emitter
-     * @param {Image} image reference to the Particle Image. See {@link me.loader#getImage} or {@link me.TextureAtlas#createImageFromName}
+     * @param {Image} image reference to the Particle Image. See {@link me.loader#getImage}
      * @example
      *
-     * // Create a basic emitter at position 100, 100, using a single image
+     * // Create a basic emitter at position 100, 100, using a Single Image
      * var emitter = new me.ParticleEmitter(100, 100, me.loader.getImage("smoke"));
      * 
-     * // OR
+     * // OR (alternative init)
      * 
-     * // Create a basic emitter at position 100, 100, using a texture atlas
+     * // Create a basic emitter at position 100, 100, using a Texture Atlas
      * game.texture = new me.TextureAtlas(me.loader.getJSON("texture"), me.loader.getImage("texture"));
      * var emitter = new me.ParticleEmitter(100, 100, game.texture.createImageFromName("smoke.png"));
      *
