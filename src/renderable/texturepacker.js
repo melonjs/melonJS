@@ -243,6 +243,44 @@
 			}
 			// instantiate a new animation sheet object
 			return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas, indices);
+		},
+		
+		/**
+		 * Create a single image object using the first region found using the specified name
+		 * @name createImageFromName
+		 * @memberOf me.TextureAtlas
+		 * @function
+		 * @param {String} name name of the image
+		 * @return {Image}
+		 * @example
+		 * // create a new texture atlas object under the `game` namespace
+		 * game.texture = new me.TextureAtlas(
+		 *    me.loader.getJSON("texture"), 
+		 *    me.loader.getImage("texture")
+		 * );
+		 * ...
+		 * ...
+		 * // get a single image from the texture atlas
+		 * var img = game.texture.createImageFromName("coin.png");
+		 */
+		createImageFromName : function(name) {
+			var region = this.getRegion(name);
+			if (region) {
+				// create a new image object
+				var _context = me.video.getContext2d(
+				    me.video.createCanvas(region.width, region.height)
+				);
+				// draw the image from texture atlas in a canvas cache
+				_context.drawImage(this.getTexture(name), 
+				                    region.offset.x, region.offset.y, 
+                                    region.width, region.height, 
+                                    0, 0, 
+                                    region.width, region.height);
+				// return image object;
+				return _context.canvas;
+			}
+			// throw an error
+			throw "melonjs: TextureAtlas - region for " + name + " not found";
 		}
 	});
 
