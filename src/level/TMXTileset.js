@@ -413,11 +413,12 @@
 			// check if any transformation is required
 			if (tmxTile.flipped) {
                 context.save();
-                // apply the container current transform
+                // apply the tile current transform
+                var transform = tmxTile.transform;
                 context.transform(
-                    tmxTile.transform.a, tmxTile.transform.b,
-                    tmxTile.transform.c, tmxTile.transform.d, 
-                    tmxTile.transform.e + dx, tmxTile.transform.f + dy
+                    transform.a, transform.b,
+                    transform.c, transform.d, 
+                    transform.e + dx, transform.f + dy
                 );
                 // reset both values as managed through transform();
                 dx = dy = 0;
