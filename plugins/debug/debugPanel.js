@@ -168,15 +168,22 @@
 
 				// check if debug mode is enabled
 				if (me.debug.renderHitBox && this.shapes.length) {
-                    // draw the original collisionBox
-                    this.collisionBox.draw(context, "red");
-                    // draw the original shape if not a rectangle
-             		if (this.shapes[0].shapeType!=="Rectangle") {
-             			// draw the original shape as well
-						context.translate(this.pos.x, this.pos.y);
-	                    this.shapes[0].draw(context, "red");
-	                    context.translate(-this.pos.x, -this.pos.y);
+                    
+                    // translate to the object position
+                    var translateX = this.pos.x ;
+                    var translateY = this.pos.y ;
+
+                    context.translate(translateX, translateY);
+                    
+                    // draw the original shape
+                    this.getShape().draw(context, "red");
+             		if (this.getShape().shapeType!=="Rectangle") {
+             			// draw the corresponding bounding box
+	                    this.getShape().getBounds().draw(context, "red");
                     }
+
+                    context.translate(-translateX, -translateY);
+
 				}
                 
 				if (me.debug.renderVelocity) {

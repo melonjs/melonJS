@@ -66,10 +66,10 @@
 			}
 
 			// change the viewport bounds
-            me.game.viewport.bounds.pos.set(0,0);
-			me.game.viewport.bounds.resize( 
-                Math.max(level.width, me.game.viewport.width),
-                Math.max(level.height, me.game.viewport.height)
+            me.game.viewport.setBounds(
+				0,0,
+				Math.max(level.width, me.game.viewport.width),
+				Math.max(level.height, me.game.viewport.height)
             );
                                        
 
@@ -279,7 +279,7 @@
 				if (wasRunning) {
 					// resume the game loop if it was
 					// previously running
-					me.state.restart.defer();
+					me.state.restart.defer(this);
 				}
 			} else {
 				throw "melonJS: no level loader defined";

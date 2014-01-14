@@ -5,7 +5,7 @@ melonJS
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 
-Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
+Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod
 
 [melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
@@ -25,6 +25,7 @@ and currently features :
 - Transition effects
 - A basic set of Object Entities (to be extended)
 - Object Pooling
+- Basic Particle System
 - Basic animation management
 - Standard spritesheet and Packed Textures (Texture Packer, ShoeBox) support
 - A state manager (to easily manage loading, menu, options, in-game state)

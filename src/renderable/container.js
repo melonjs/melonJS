@@ -75,6 +75,12 @@
 		children : null,
 
 		/**
+		 * Container bounds
+		 * @ignore
+		 */	
+		bounds : null,
+        
+		/**
 		 * Enable collision detection for this container (default true)<br>
 		 * @public
 		 * @type Boolean
@@ -102,9 +108,11 @@
 			// call the parent constructor
 			this.parent(
 				new me.Vector2d(x || 0, y || 0),
-				width || Infinity, 
+				width || Infinity,
 				height || Infinity 
 			);
+			// init the bounds to an empty rect
+			this.bounds = new me.Rect(new me.Vector2d(0,0), 0, 0);
 			this.children = [];
 			// by default reuse the global me.game.setting
 			this.sortOn = me.game.sortOn;
@@ -325,6 +333,37 @@
 			var obj = this.getChildByProp("GUID", guid);
 			return (obj.length>0)?obj[0]:null;
 		},
+        
+        
+        /**
+         * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
+         * @name getBounds
+         * @memberOf me.ObjectContainer
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle    
+         */
+        getBounds : function(rect) {
+            var _bounds = (typeof(rect) !== 'undefined') ? rect : this.bounds;
+            
+            // reset the rect with default values
+            _bounds.pos.set(Infinity, Infinity);
+            _bounds.resize(-Infinity, -Infinity);
+            
+            var childBounds;
+            for ( var i = this.children.length, child; i--, child = this.children[i];) {
+                if(child.isRenderable && child.visible) {
+                    childBounds = child.getBounds();
+                    // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
+                    // TODO : getBounds should always return something anyway
+                    if (childBounds !== null) {
+                        _bounds.union(childBounds);
+                    }
+                }
+            }
+            // TODO : cache the value until any childs are modified? (next frame?) 
+            return _bounds;
+        },
 
 		/**
 		 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
@@ -337,7 +376,7 @@
 		 */
 		removeChild : function(child, keepalive) {
 			if(child.ancestor) {
-				deferredRemove.defer(child, keepalive);
+				deferredRemove.defer(this, child, keepalive);
 			}
 		},
 
@@ -504,10 +543,18 @@
 						}
 						
 					} else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
-			
-						res = obj.collisionBox["collideWith"+objA.shapeType].call(obj.collisionBox, objA.collisionBox);
+
+						this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
+						this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
+					
+						res = this._boundsA["collideWith"+this._boundsB.shapeType].call(
+							this._boundsA, 
+							this._boundsB
+						);
+
 						
 						if (res.x !== 0 || res.y !== 0) {
+
 							// notify the object
 							obj.onCollision.call(obj, res, objA);
 							// return the type (deprecated)
@@ -556,7 +603,7 @@
 					self.pendingSort = null;
 					// make sure we redraw everything
 					me.game.repaint();
-				}.defer(this));
+				}.defer(this, this));
 			}
 		},
 		

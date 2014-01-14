@@ -88,6 +88,11 @@
         "console": true,
         "throttle": true,
         "Windows": true,
-        "alert": true
+        "alert": true,
+        "define" : true,
+        // Howler specific exceptions
+        "AudioContext" : true,
+        "webkitAudioContext" : true,
+        "Howl" : true
     } 
 }

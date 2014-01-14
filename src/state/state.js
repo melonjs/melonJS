@@ -348,7 +348,7 @@
 				if (_screenObject[_state].screen.visible) {
 					// persistent or not, make sure we remove it
 					// from the current object list
-					me.game.world.removeChild.call(me.game.world, _screenObject[_state].screen);
+					me.game.world.removeChildNow.call(me.game.world, _screenObject[_state].screen);
 				} else {
 					// just notify the object
 					_screenObject[_state].screen.destroy();
@@ -734,7 +734,7 @@
 				};
 				me.game.viewport.fadeIn(_fade.color, _fade.duration,
 										function() {
-											_switchState.defer(state);
+											_switchState.defer(this, state);
 										});
 
 			}
@@ -742,7 +742,7 @@
 			else {
 				// wait for the last frame to be
 				// "finished" before switching
-				_switchState.defer(state);
+				_switchState.defer(this, state);
 
 			}
 		};

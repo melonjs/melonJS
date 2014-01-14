@@ -1,6 +1,6 @@
 /**
  * @license MelonJS Game Engine
- * @copyright (C) 2011 - 2013 Olivier Biot, Jason Oster
+ * @copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * melonJS is licensed under the MIT License.
@@ -28,6 +28,16 @@ window.me = window.me || {};
 		mod : "melonJS",
 		version : "@VERSION"
 	};
+    
+    /**
+     * Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
+     * @ignore
+     */
+    if (typeof define === 'function' && define.amd) {
+        define('me', [], function() {
+            return me;
+        });
+    }
 
 	/**
 	 * global system settings and browser capabilities
@@ -598,17 +608,15 @@ window.me = window.me || {};
 	 * Executes a function as soon as the interpreter is idle (stack empty).
 	 * @memberof! external:Function#
 	 * @alias defer
-	 * @param {} [arguments...] Optional additional arguments to curry for the function.
+	 * @param {Object} context The execution context of the deferred function.
+	 * @param {} [arguments...] Optional additional arguments to carry for the function.
 	 * @return {Number} id that can be used to clear the deferred function using clearTimeout
 	 * @example
-	 * // execute myFunc() when the stack is empty, with 'myArgument' as parameter
-	 * myFunc.defer('myArgument');
+	 * // execute myFunc() when the stack is empty, with the current context and 'myArgument' as parameter
+	 * myFunc.defer(this, 'myArgument');
 	 */
 	Function.prototype.defer = function() {
-		var fn = this, args = Array.prototype.slice.call(arguments);
-		return window.setTimeout(function() {
-			return fn.apply(fn, args);
-		}, 0.01);
+		return setTimeout(this.bind.apply(this, arguments), 0.01);
 	};
 
 	if (!Object.defineProperty) {

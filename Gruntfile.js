@@ -5,7 +5,9 @@ module.exports = function(grunt) {
         'src/system/device.js',
         'src/system/timer.js',
         'src/math/vector.js',
-        'src/math/shape.js',
+        'src/shapes/rectangle.js',
+        'src/shapes/circle.js',
+        'src/shapes/poly.js',
         'src/math/matrix.js',
         'src/debug/debug.js',
         'src/renderable/base.js',
@@ -39,7 +41,9 @@ module.exports = function(grunt) {
         'src/vendors/howler.js',
         'src/plugin/plugin.js',
         'src/entity/draggable.js',
-        'src/entity/droptarget.js'
+        'src/entity/droptarget.js',
+	'src/particles/emitter.js',
+	'src/particles/particle.js'
     ];
 
     // Project configuration.

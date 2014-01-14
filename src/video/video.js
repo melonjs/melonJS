@@ -363,7 +363,7 @@
 						// cancel any previous pending resize
 						clearTimeout(deferResizeId);
 					}
-					deferResizeId = me.video.updateDisplaySize.defer(scaleX , scaleY);
+					deferResizeId = me.video.updateDisplaySize.defer(this, scaleX , scaleY);
 					return;
 				}
 			}
