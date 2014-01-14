@@ -17,8 +17,14 @@
      * @param {Image} image reference to the Particle Image. See {@link me.loader#getImage}
      * @example
      *
-     * // Create a basic emitter at position 100, 100
+     * // Create a basic emitter at position 100, 100, using a Single Image
      * var emitter = new me.ParticleEmitter(100, 100, me.loader.getImage("smoke"));
+     * 
+     * // OR (alternative init)
+     * 
+     * // Create a basic emitter at position 100, 100, using a Texture Atlas
+     * game.texture = new me.TextureAtlas(me.loader.getJSON("texture"), me.loader.getImage("texture"));
+     * var emitter = new me.ParticleEmitter(100, 100, game.texture.createImageFromName("smoke.png"));
      *
      * // Adjust the emitter properties
      * emitter.totalParticles = 200;
