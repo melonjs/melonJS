@@ -568,26 +568,15 @@
 			 */
 			this.onTileBreak = null;
 
-            // add a default shape
-            if (settings.isEllipse===true) {
-                // ellipse
-                this.addShape(new me.Ellipse(new me.Vector2d(0,0), this.width, this.height));
-            }
-            else if ((settings.isPolygon===true) || (settings.isPolyline===true)) {
-                // add a polyshape
-                this.addShape(new me.PolyShape(new me.Vector2d(0,0), settings.points, settings.isPolygon));
-                // TODO : fixed this bug, as it should not matter!
-                this._bounds = this.getShape().getBounds();
-                this.width = this._bounds.width;
-                this.height = this._bounds.height;
-            }
-            else {
-                // add a rectangle
-                this.addShape(new me.Rect(new me.Vector2d(0,0), this.width, this.height));
-            }
-
-
-
+			// add the given collision shape to the object
+			this.addShape(settings.getShape(this.width, this.height));
+			// ---- TODO : fix this bug, as it should not matter!
+			if (this.getShape().shapeType === 'PolyShape') {
+				this._bounds = this.getShape().getBounds();
+				this.width = this._bounds.width;
+				this.height = this._bounds.height;
+			}
+			// ----
 		},
 
 		/**
@@ -613,7 +602,7 @@
 		 * @memberOf me.ObjectEntity
          * @public
 		 * @function
-		 * @param {me.objet} shape a shape object
+		 * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
 		addShape : function(shape) {
 			if (this.shapes === null) {
@@ -622,13 +611,13 @@
             this.shapes.push(shape);
 		},
 
-		 /**
+		/**
 		 * return the current collision shape for this entity
 		 * @name getShape
 		 * @memberOf me.ObjectEntity
          * @public
 		 * @function
-		 * @param {me.objet} shape a shape object
+		 * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
 		getShape : function(shape) {
 			return this.shapes[0];
