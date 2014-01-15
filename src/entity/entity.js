@@ -144,7 +144,7 @@
 		 * @name shapes
 		 * @memberOf me.ObjectEntity
 		 */
-		shapes : null,
+		shapes : [],
         
 		/**
 		 * The current shape index
@@ -361,15 +361,18 @@
 			 */
 			this.onTileBreak = null;
 
-			// add the given collision shape to the object
-			this.addShape(settings.getShape(this.width, this.height));
-			// ---- TODO : fix this bug, as it should not matter!
-			if (this.getShape().shapeType === 'PolyShape') {
-				this._bounds = this.getBounds();
-				this.width = this._bounds.width;
-				this.height = this._bounds.height;
+			if (typeof (settings.getShape) === 'function') {
+				// add the given collision shape to the object
+				this.addShape(settings.getShape(this.width, this.height));
+
+				// ---- TODO : fix this bug, as it should not matter!
+				if (this.getShape().shapeType === 'PolyShape') {
+					this._bounds = this.getBounds();
+					this.width = this._bounds.width;
+					this.height = this._bounds.height;
+				}
+				// ----
 			}
-			// ----
 		},
 
 		/**
@@ -398,9 +401,6 @@
 		 * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
 		addShape : function(shape) {
-			if (this.shapes === null) {
-                this.shapes = [];
-            }
             this.shapes.push(shape);
 		},
 
@@ -974,7 +974,12 @@
          * @return {me.Rect} new rectangle    
          */
 		getBounds : function(rect) {
-			return this.getShape().getBounds(rect);
+			if (this.shapes.length) {
+				return this.getShape().getBounds(rect);
+			} else {
+				// call the parent me.Rect.getBounds();
+				return this.parent(rect);
+			}
 		},
 
 		/**
