@@ -303,6 +303,30 @@ window.me = window.me || {};
 
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
+
+	/**
+	 * Can be used to mix modules, to combine abilities
+	 * @name mixin
+	 * @memberOf Object.prototype
+	 * @function
+	 * @param {Object} obj the object you want to throw in the mix
+	 */
+	Object.prototype.mixin = function (obj) {
+		var i,
+		self = this;
+
+		// iterate over the mixin properties
+		for (i in obj) {
+			// if the current property belongs to the mixin
+			if (obj.hasOwnProperty(i)) {
+				// add the property to the mix
+				self[i] = obj[i];
+			}
+		}
+		// return the mixed object
+		return self;
+	};
+
     /**
      * a deep copy function
      * @ignore
@@ -332,16 +356,14 @@ window.me = window.me || {};
             copy.setTime(obj.getTime());
             return copy;
         }
-            
+        
         // else instanceof Object
         copy = {};
         Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
-        for( var prop in obj ) {
-            if (obj.hasOwnProperty(prop)) copy[prop] = deepcopy(obj[prop]);
-        }
-        return copy;
+        // mixin both objects and return the result
+        return copy.mixin(obj);
     };
-    
+
 	/**
 	 * JavaScript Inheritance Helper <br>
 	 * Based on <a href="http://ejohn.org/">John Resig</a> Simple Inheritance<br>

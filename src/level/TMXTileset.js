@@ -267,7 +267,7 @@
 			// set tile properties, if any
 			for(var i in tileInfo) {
 				var prop = {};
-				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
+				prop.mixin(tileInfo[i]);
 				this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
 			}
 			
