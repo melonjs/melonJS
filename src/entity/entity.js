@@ -355,12 +355,21 @@
 		/**
 		 * Entity collision shapes<br>
 		 * (RFU - Reserved for Future Usage)
-		 * @protected
+		 * @ignore
 		 * @type Object[]
 		 * @name shapes
 		 * @memberOf me.ObjectEntity
 		 */
 		shapes : null,
+        
+		/**
+		 * The current shape index
+		 * @ignore
+		 * @type Number
+		 * @name shapeIndex
+		 * @memberOf me.ObjectEntity
+		 */
+		shapeIndex : 0,
 
 		/**
 		 * The entity renderable object (if defined)
@@ -572,7 +581,7 @@
 			this.addShape(settings.getShape(this.width, this.height));
 			// ---- TODO : fix this bug, as it should not matter!
 			if (this.getShape().shapeType === 'PolyShape') {
-				this._bounds = this.getShape().getBounds();
+				this._bounds = this.getBounds();
 				this.width = this._bounds.width;
 				this.height = this._bounds.height;
 			}
@@ -617,12 +626,28 @@
 		 * @memberOf me.ObjectEntity
          * @public
 		 * @function
-		 * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+		 * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
-		getShape : function(shape) {
-			return this.shapes[0];
+		getShape : function() {
+			return this.shapes[this.shapeIndex];
 		},
 
+		/**
+		 * change the current collision shape for this entity
+		 * @name setShape
+		 * @memberOf me.ObjectEntity
+		 * @public
+		 * @function
+		 * @param {Number} index shape index
+		 */
+		setShape : function(index) {
+			if (typeof(this.shapes[index]) !== 'undefined') {
+				this.shapeIndex = index;
+				return;
+			}
+			throw "melonJS (me.Entity): Shape (" + index + ") not defined";
+		},
+        
 		/**
 		 * onCollision Event function<br>
 		 * called by the game manager when the object collide with shtg<br>
@@ -997,7 +1022,7 @@
 			if (this.collidable) {
 				// temporary stuff until ticket #103 is done (this function will disappear anyway)
 				// save the collision box offset
-				this._bounds = this.getShape().getBounds(this._bounds);
+				this._bounds = this.getBounds(this._bounds);
 				this.__offsetX = this._bounds.pos.x;
 				this.__offsetY = this._bounds.pos.y;
 
@@ -1165,7 +1190,7 @@
          * @return {me.Rect} new rectangle    
          */
 		getBounds : function(rect) {
-			return this.shapes[0].getBounds(rect);
+			return this.getShape().getBounds(rect);
 		},
 
 		/**
@@ -1204,6 +1229,7 @@
 			}
 			this.onDestroyEvent.apply(this, arguments);
             this.shapes = [];
+            this.shapeIndex = 0;
 		},
 
 		/**
