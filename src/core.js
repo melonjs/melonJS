@@ -360,8 +360,10 @@ window.me = window.me || {};
         // else instanceof Object
         copy = {};
         Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
-        // mixin both objects and return the result
-        return copy.mixin(obj);
+        for( var prop in obj ) {
+            if (obj.hasOwnProperty(prop)) copy[prop] = deepcopy(obj[prop]);
+        }
+        return copy;
     };
 
 	/**
