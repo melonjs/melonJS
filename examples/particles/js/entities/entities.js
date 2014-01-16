@@ -115,7 +115,7 @@ game.changeEmitter = function() {
 			game.Emitter.image = me.loader.getImage("rain");
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.floating = floating.checked;
-			game.Emitter.pos.y = 0;
+			game.Emitter.pos.y = 20;
 			game.Emitter.resize(600, 40);
 			game.Emitter.totalParticles = 400;
 			game.Emitter.frequency = 10;
