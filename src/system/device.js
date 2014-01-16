@@ -6,48 +6,48 @@
  */
 (function(window) {
 
-	/**	
-	 * A singleton object representing the device capabilities and specific events
-	 * @namespace me.device
-	 * @memberOf me
-	 */
-	me.device = (function() {
-		
-		// defines object for holding public information/functionality.
-		var obj = {};
-		// private properties
-		var accelInitialized = false;
-		var deviceOrientationInitialized = false;
-		var devicePixelRatio = null;
+    /**
+     * A singleton object representing the device capabilities and specific events
+     * @namespace me.device
+     * @memberOf me
+     */
+    me.device = (function() {
 
-		/**
-		 * check the device capapbilities
-		 * @ignore
-		 */
-		obj._check = function() {
+        // defines object for holding public information/functionality.
+        var obj = {};
+        // private properties
+        var accelInitialized = false;
+        var deviceOrientationInitialized = false;
+        var devicePixelRatio = null;
 
-			// detect audio capabilities (should be moved here too)
-			me.audio.detectCapabilities();
+        /**
+         * check the device capapbilities
+         * @ignore
+         */
+        obj._check = function() {
 
-			// future proofing (MS) feature detection
-			me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
-			navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-			window.gesture = window.gesture || window.MSGesture;
+            // detect audio capabilities (should be moved here too)
+            me.audio.detectCapabilities();
 
-			// detect touch capabilities
-			me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) || 
-							  (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
+            // future proofing (MS) feature detection
+            me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
+            navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+            window.gesture = window.gesture || window.MSGesture;
 
-			// detect platform
-			me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
+            // detect touch capabilities
+            me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
+                              (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 
-			// accelerometer detection
-			me.device.hasAccelerometer = (
-				(typeof (window.DeviceMotionEvent) !== 'undefined') || (
-					(typeof (window.Windows) !== 'undefined') && 
-					(typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
-				)
-			);
+            // detect platform
+            me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
+
+            // accelerometer detection
+            me.device.hasAccelerometer = (
+                (typeof (window.DeviceMotionEvent) !== 'undefined') || (
+                    (typeof (window.Windows) !== 'undefined') &&
+                    (typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
+                )
+            );
 
             // pointerlock detection
             this.hasPointerLockSupport = 'pointerLockElement' in document ||
@@ -81,22 +81,22 @@
                                             document.mozCancelFullScreen ||
                                             document.webkitCancelFullScreen;
             }
-		
+
             try {
-				obj.localStorage = !!window.localStorage;
-			} catch (e) {
-				// the above generates an exception when cookies are blocked
-				obj.localStorage = false;
-			}
-		};
+                obj.localStorage = !!window.localStorage;
+            } catch (e) {
+                // the above generates an exception when cookies are blocked
+                obj.localStorage = false;
+            }
+        };
 
-		// ----- PUBLIC Properties & Functions -----
+        // ----- PUBLIC Properties & Functions -----
 
-		// Browser capabilities
+        // Browser capabilities
 
         /**
-		 * Browser User Agent
-		 * @type Boolean
+         * Browser User Agent
+         * @type Boolean
          * @readonly
          * @name ua
          * @memberOf me.device
