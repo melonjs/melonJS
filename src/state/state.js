@@ -98,7 +98,7 @@
 	 *
 	 */
 	me.ScreenObject = me.Renderable.extend(
-	/** @scope me.ScreenObject.prototype */	
+	/** @scope me.ScreenObject.prototype */
 	{
 		/** @ignore */
 		addAsObject : false,
@@ -134,7 +134,7 @@
 
 			// reset the game manager
 			me.game.reset();
-			
+
 			// call the onReset Function
 			this.onResetEvent.apply(this, arguments);
 
@@ -150,7 +150,7 @@
 				// add ourself !
 				me.game.world.addChild(this);
 			}
-			
+
 			// sort the object pool
 			me.game.world.sort();
 
@@ -213,8 +213,8 @@
 			requestAnimationFrame = function(callback, element) {
 				var currTime = window.performance.now();
 				var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-				var id = window.setTimeout(function() { 
-					callback(currTime + timeToCall); 
+				var id = window.setTimeout(function() {
+					callback(currTime + timeToCall);
 				}, timeToCall);
 				lastTime = currTime + timeToCall;
 				return id;
@@ -224,13 +224,13 @@
 				window.clearTimeout(id);
 			};
 		}
-		
+
 		 // put back in global namespace
 		window.requestAnimationFrame = requestAnimationFrame;
 		window.cancelAnimationFrame = cancelAnimationFrame;
 	}());
 
-	
+
 	/**
 	 * a State Manager (state machine)<p>
 	 * There is no constructor function for me.state.
@@ -239,7 +239,7 @@
 	 */
 
 	me.state = (function() {
-		
+
 		// hold public stuff in our singleton
 		var obj = {};
 
@@ -380,7 +380,7 @@
 		/*---------------------------------------------
 			PUBLIC STUFF
 		 ---------------------------------------------*/
-		
+
 		/**
 		 * default state value for Loading Screen
 		 * @constant
@@ -444,7 +444,7 @@
 		 * @memberOf me.state
 		 */
 		obj.SETTINGS = 8;
-		
+
 		/**
 		 * default state value for user defined constants<br>
 		 * @constant
@@ -502,7 +502,7 @@
 				// only in case we are not loading stuff
 				if (_state !== obj.LOADING) {
 					if (me.sys.stopOnBlur) {
-						obj.stop(true);	
+						obj.stop(true);
 
 						// callback?
 						if (obj.onStop)
@@ -512,13 +512,11 @@
 						me.event.publish(me.event.STATE_STOP);
 					}
 					if (me.sys.pauseOnBlur) {
-							obj.pause(true);	
+						obj.pause(true);
 						// callback?
-						if (obj.onPause)
+						if (obj.onPause) {
 							obj.onPause();
-
-						// publish the pause notification
-						me.event.publish(me.event.STATE_PAUSE);
+						}
 					}
 				}
 			}, false);
@@ -531,11 +529,9 @@
 						obj.resume(true);
 
 						// callback?
-						if (obj.onResume)
+						if (obj.onResume) {
 							obj.onResume();
-
-						// publish the resume notification
-						me.event.publish(me.event.STATE_RESUME);
+						}
 					}
 					if (me.sys.stopOnBlur) {
 						obj.restart(true);
@@ -587,7 +583,8 @@
 			// current music stop
 			if (music)
 				me.audio.pauseTrack();
-
+			// publish the pause event
+			me.event.publish(me.event.STATE_PAUSE);
 		};
 
 		/**
@@ -620,6 +617,9 @@
 			// current music stop
 			if (music)
 				me.audio.resumeTrack();
+
+			// publish the resume event
+			me.event.publish(me.event.STATE_RESUME);
 		};
 
 		/**
