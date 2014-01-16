@@ -23,9 +23,7 @@
          */
         init: function(emitter) {
             // Call the parent constructor
-            this.parent(new me.Vector2d(emitter.startPos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
-                        emitter.startPos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y))),
-                        emitter.image.width, emitter.image.height);
+            this.parent(emitter.getRandomPoint(), emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;

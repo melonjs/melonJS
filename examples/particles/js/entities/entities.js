@@ -31,7 +31,7 @@ game.changeEmitter = function() {
 			game.Emitter.image = me.loader.getImage("explosion");
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.floating = floating.checked;
-			game.Emitter.varPos.x = 100;
+			game.Emitter.resize(200, 0);
 			game.Emitter.totalParticles = 300;
 			game.Emitter.frequency = 50;
 			game.Emitter.minAngle = Number.prototype.degToRad(70);
@@ -116,8 +116,7 @@ game.changeEmitter = function() {
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.y = 0;
-			game.Emitter.varPos.y = 20;
-			game.Emitter.varPos.x = 300;
+			game.Emitter.resize(600, 40);
 			game.Emitter.totalParticles = 400;
 			game.Emitter.frequency = 10;
 			game.Emitter.minLife = 1000;
@@ -169,7 +168,7 @@ game.changeEmitter = function() {
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.y = 200;
-			game.Emitter.varPos.x = 5;
+			game.Emitter.resize(10, 0);
 			game.Emitter.minAngle = Number.prototype.degToRad(0);
 			game.Emitter.maxAngle = Number.prototype.degToRad(360);
 			game.Emitter.minLife = 1000;
@@ -208,7 +207,7 @@ game.changeEmitter = function() {
 			game.Emitter.textureAdditive = additive.checked;
 			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.y = 10;
-			game.Emitter.varPos.x = 50;
+			game.Emitter.resize(100, 0);
 			game.Emitter.totalParticles = 500;
 			game.Emitter.maxParticles = 20;
 			game.Emitter.frequency = 30;
@@ -253,7 +252,7 @@ game.changeEmitter = function() {
 			// set emitter aux params
 			game.EmitterAux.image = me.loader.getImage("smoke");
 			game.EmitterAux.floating = floating.checked;
-			game.EmitterAux.varPos.x = 10;
+			game.EmitterAux.resize(20, 0);
 			game.EmitterAux.totalParticles = 250;
 			game.EmitterAux.frequency = 30;
 			game.EmitterAux.minLife = 2000;
@@ -292,6 +291,6 @@ game.changeFloating= function() {
 	// convert the current start position
 	var viewport = me.game.viewport;
 	var convertFunction = floating.checked ? viewport.worldToLocal.bind(viewport) : viewport.localToWorld.bind(viewport); 
-	game.Emitter.startPos = convertFunction(game.Emitter.startPos.x, game.Emitter.startPos.y)
-	game.EmitterAux.startPos = convertFunction(game.EmitterAux.startPos.x, game.EmitterAux.startPos.y)
+	game.Emitter.pos = convertFunction(game.Emitter.pos.x, game.Emitter.pos.y)
+	game.EmitterAux.pos = convertFunction(game.EmitterAux.pos.x, game.EmitterAux.pos.y)
 };

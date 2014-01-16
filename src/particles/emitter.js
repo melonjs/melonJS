@@ -70,13 +70,10 @@
         init: function(x, y, image) {
             // call the parent constructor
 			this.parent(
-					new me.Vector2d(0, 0),
+					new me.Vector2d(x, y),
 					Infinity, 
 					Infinity 
 				);
-
-            // Cache the emitter start pos
-            this._defaultPos = new me.Vector2d(x, y);
 
             // Cache the emitter start image
             this._defaultImage = image;
@@ -114,8 +111,34 @@
 				enumerable : true,
                 configurable : true
 			});
+
+            /**
+             * Texture Additive property for particles, value is forwarded to the particle container <br>
+             * @type Boolean
+             * @name textureAdditive
+             * @memberOf me.ParticleEmitter
+             */
+            Object.defineProperty(this, "textureAdditive", {
+            	get : function() { return this.container.textureAdditive; },
+            	set : function(value) { this.container.textureAdditive = value; },
+            	enumerable : true,
+            	configurable : true
+            });
         },
 
+        /**
+         * returns a random point inside the bounds for this emitter
+         * @name getRandomPoint
+         * @memberOf me.ParticleEmitter
+         * @function
+         * @return {me.Vector2d} new vector
+         */
+        getRandomPoint: function() {
+        	var vector = this.pos.clone();
+        	vector.x += Number.prototype.random(-this.hWidth, this.hWidth);
+        	vector.y += Number.prototype.random(-this.hHeight, this.hHeight);
+        	return vector;
+        },
 
         /**
          * Reset the Emitter with defaults params <br>
@@ -127,27 +150,7 @@
         reset: function(params) {
             // check if params exists and create a dummy object
             params = params || {};
-
-            /**
-             * Start position for launch particles <br>
-             * default value : x, y <br>
-             * @public
-             * @type me.Vector2d
-             * @name startPos
-             * @memberOf me.ParticleEmitter
-             */
-            this.startPos = params.pos || this._defaultPos.clone();
-
-            /**
-             * Variation in the start position for launch the particles (x, y) <br>
-             * Random value in range [pos - varPos, pos + varPos] <br>
-             * default value : 0, 0 <br>
-             * @public
-             * @type me.Vector2d
-             * @name varPos
-             * @memberOf me.ParticleEmitter
-             */
-            this.varPos = params.varPos || new me.Vector2d(0, 0);
+            this.resize(params.width || 0, params.height || 0);
 
             /**
              * Image used for particles <br>

@@ -48,8 +48,8 @@ game.PlayScreen = me.ScreenObject.extend({
 				if(!game.Emitter.floating) {
 					pos = viewport.localToWorld(pos.x, pos.y);
 				}
-				game.Emitter.startPos.setV(pos);
-				game.EmitterAux.startPos.setV(pos);
+				game.Emitter.pos.setV(pos);
+				game.EmitterAux.pos.setV(pos);
 			}
 			if(me.input.isKeyPressed("moveViewport")) {
 				viewport.move(lastX - mousepos.x, lastY - mousepos.y);
