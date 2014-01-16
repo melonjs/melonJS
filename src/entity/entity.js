@@ -977,8 +977,9 @@
 			if (this.shapes.length) {
 				return this.getShape().getBounds(rect);
 			} else {
-				// call the parent me.Rect.getBounds();
-				return this.parent(rect);
+				// call the parent me.Rect.getBounds()
+				// translate back for the position to be relative to the entity
+				return this.parent(rect).translate(-this.pos.x, -this.pos.y);
 			}
 		},
 
