@@ -43,6 +43,7 @@ module.exports = function(grunt) {
         'src/entity/draggable.js',
         'src/entity/droptarget.js',
 	'src/particles/emitter.js',
+	'src/particles/particlecontainer.js',
 	'src/particles/particle.js'
     ];
 

@@ -10,7 +10,7 @@
     /**
      * Particle Emitter Object.
      * @class
-     * @extends Object
+     * @extends Rect
      * @memberOf me
      * @constructor
      * @param {me.Vector2d} pos position of the particle emitter
@@ -40,7 +40,7 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = me.ObjectContainer.extend(
+    me.ParticleEmitter = me.Rect.extend(
     /** @scope me.ParticleEmitter.prototype */
     {
         // Emitter is Stream, launch particles constantly
@@ -61,16 +61,19 @@
             /** @ignore */
         _enabled: false,
 
+        // Emitter will always update
+		isRenderable : false,
 
         /**
          * @ignore
          */
         init: function(x, y, image) {
             // call the parent constructor
-            this.parent();
-
-            // Emitter will always update
-            this.alwaysUpdate = true;
+			this.parent(
+					new me.Vector2d(0, 0),
+					Infinity, 
+					Infinity 
+				);
 
             // Cache the emitter start pos
             this._defaultPos = new me.Vector2d(x, y);
@@ -81,23 +84,36 @@
             // don't sort the particles by z-index
             this.autoSort = false;
 
-            // count the updates
-            this._updateCount = 0;
-
-            // internally store how much time was skipped when frames are skipped
-            this._dt = 0;
+            this.container = new me.ParticleContainer(this);
 
             // Reset the emitter to defaults
             this.reset();
 
             /**
-             * Z-order for particles <br>
-             * default value : 0
+             * Z-order for particles, value is forwarded to the particle container <br>
              * @type Number
              * @name z
              * @memberOf me.ParticleEmitter
              */
-            this.z = 0;
+            Object.defineProperty(this, "z", {
+				get : function() { return this.container.z; },
+				set : function(value) { this.container.z = value; },
+				enumerable : true,
+                configurable : true
+			});
+
+            /**
+             * Floating property for particles, value is forwarded to the particle container <br>
+             * @type Boolean
+             * @name floating
+             * @memberOf me.ParticleEmitter
+             */
+            Object.defineProperty(this, "floating", {
+				get : function() { return this.container.floating; },
+				set : function(value) { this.container.floating = value; },
+				enumerable : true,
+                configurable : true
+			});
         },
 
 
@@ -377,10 +393,8 @@
              */
             this.framesToSkip = params.framesToSkip || 0;
 
-            // reset internal values
-            this.destroy();
-            this._updateCount = 0;
-            this._dt = 0;
+            // reset particle container values
+			me.game.world.addChild(this.container);
         },
 
 
@@ -388,8 +402,10 @@
         /** @ignore */
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
-                // Add particle in the emitter
-                this.addChild(me.entityPool.newInstanceOf("me.Particle", this));
+                // Add particle to the container
+            	var particle = me.entityPool.newInstanceOf("me.Particle", this);
+        		particle.isRenderable = false;
+                this.container.addChild(particle);
             }
         },
 
@@ -449,27 +465,11 @@
         },
 
 
+
         /**
-         * Update the Emitter <br>
-         * This is automatically called by the game manager {@link me.game}
-         * @name update
-         * @memberOf me.ParticleEmitter
-         * @function
          * @ignore
-         * @param {Number} dt time since the last update in milliseconds
          */
         update: function(dt) {
-            if (++this._updateCount > this.framesToSkip) {
-                this._updateCount = 0;
-            }
-            if(this._updateCount > 0) {
-                this._dt += dt;
-                return false;
-            }
-
-            dt += this._dt;
-            this._dt = 0;
-
             // Launch new particles, if emitter is Stream
             if ((this._enabled) && (this._stream)) {
                 // Check if the emitter has duration set
@@ -486,7 +486,7 @@
                 this._frequencyTimer += dt;
 
                 // Check for new particles launch
-                var particlesCount = this.children.length;
+                var particlesCount = this.container.children.length;
                 if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
                     if ((particlesCount + this.maxParticles) <= this.totalParticles)
                         this.addParticles(this.maxParticles);
@@ -496,44 +496,8 @@
                     this._frequencyTimer = 0;
                 }
             }
-
-            // Update particles and remove them if they are dead
-            var viewport = me.game.viewport;
-            for ( var i = this.children.length - 1; i >= 0; --i) {
-                var particle = this.children[i];
-                // particle.inViewport = viewport.isVisible(particle);
-                particle.inViewport = this.floating ||
-                                       (particle.pos.x < viewport.pos.x + viewport.width && 
-                                       viewport.pos.x < particle.pos.x + particle.width && 
-                                       particle.pos.y < viewport.pos.y + viewport.height &&
-                                       viewport.pos.y < particle.pos.y + particle.height);
-                if(!particle.update(dt)) {
-                    this.removeChildNow(particle);
-                }
-            }
             return true;
         },
-
-        /**
-         * @ignore
-         */
-        draw : function(context, rect) {
-            if(this.children.length > 0) {
-                var gco;
-                // Check for additive draw
-                if (this.textureAdditive) {
-                    gco = context.globalCompositeOperation;
-                    context.globalCompositeOperation = "lighter";
-                }
-
-                this.parent(context, rect);
-
-                // Restore globalCompositeOperation
-                if (this.textureAdditive) {
-                    context.globalCompositeOperation = gco;
-                }
-            }
-        }
     });
 
 
