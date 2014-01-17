@@ -175,7 +175,7 @@
          * @name rotate
          * @memberOf me.Matrix2d
          * @function
-          * @param {Number} a an angle representing the angle of the rotation. A positive angle denotes a clockwise rotation, a negative angle a counter-clockwise one.
+         * @param {Number} angle an angle in radians representing the angle of the rotation. A positive angle denotes a clockwise rotation, a negative angle a counter-clockwise one.
          * @return {me.Matrix2d} this matrix
          */
         rotate : function(angle) {

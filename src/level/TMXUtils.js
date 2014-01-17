@@ -76,25 +76,10 @@
 		api.applyTMXPropertiesFromJSON = function(obj, data) {
 			var properties = data[me.TMX_TAG_PROPERTIES];
 			if (properties) {
-				for(var name in properties){
-                    if (properties.hasOwnProperty(name)) {
-                        // set the value
-                        obj[name] = setTMXValue(properties[name]);
-                    }
-                }
+				obj.mixin(properties);
 			}
 		};
-		
-		/**
-		 * basic function to merge object properties
-		 * @ignore
-		 */
-		api.mergeProperties = function(dest, src, overwrite) {
-			for(var p in src){
-				if(overwrite || dest[p]===undefined) dest[p]= src[p];
-			}
-			return dest;
-		};
+	
 
 		
 		// return our object

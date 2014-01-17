@@ -1,8 +1,8 @@
 /*!
- *  howler.js v1.1.15
+ *  howler.js v1.1.16
  *  howlerjs.com
  *
- *  (c) 2013, James Simpson of GoldFire Studios
+ *  (c) 2013-2014, James Simpson of GoldFire Studios
  *  goldfirestudios.com
  *
  *  MIT License
@@ -1051,7 +1051,10 @@
       // stop playing any active nodes
       var nodes = self._audioNode;
       for (var i=0; i<self._audioNode.length; i++) {
-        self.stop(nodes[i].id);
+        // stop the sound if it is currently playing
+        if (!nodes[i].paused) {
+          self.stop(nodes[i].id);
+        }
 
         if (!self._webAudio) {
            // remove the source if using HTML5 Audio
@@ -1064,7 +1067,7 @@
 
       // remove the reference in the global Howler object
       var index = Howler._howls.indexOf(self);
-      if (index) {
+      if (index !== null && index >= 0) {
         Howler._howls.splice(index, 1);
       }
 

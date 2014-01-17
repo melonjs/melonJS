@@ -29,9 +29,6 @@
 		// audio channel list
 		var audioTracks = {};
 
-		// Active (supported) audio extension
-		var activeAudioExt = -1;
-
 		// current music
 		var current_track_id = null;
 		var current_track = null;
@@ -99,7 +96,7 @@
 			// check the retry counter
 			if (retry_counter++ > 3) {
 				// something went wrong
-				var errmsg = "melonJS: failed loading " + sound_id + "." + activeAudioExt;
+				var errmsg = "melonJS: failed loading " + sound_id;
 				if (me.sys.stopOnAudioError===false) {
 					// disable audio
 					me.audio.disable();
@@ -193,9 +190,7 @@
 			// if no param is given to init we use mp3 by default
 			audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
 			// convert it into an array
-			audioFormat = audioFormat.split(',');
-			// detect the prefered audio format
-			activeAudioExt = getSupportedAudioFormat(audioFormat);
+			this.audioFormats = audioFormat.split(',');
 
 			return obj.isAudioEnable();
 		};
@@ -253,10 +248,6 @@
 		 * @ignore
 		 */
 		obj.load = function(sound, onload_cb, onerror_cb) {
-			// do nothing if no compatible format is found
-			if (activeAudioExt === -1)
-				return 0;
-
 			// check for specific platform
 			if (me.device.isMobile && !navigator.isCocoonJS) {
 				if (sync_loading) {
@@ -265,10 +256,13 @@
 				}
 				sync_loading = true;
 			}
-
+			var urls = [];
+			for(var i = 0; i < this.audioFormats.length; i++) {
+				urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
+			}
 			var soundclip = new Howl({
-				urls : [sound.src + sound.name + "." + activeAudioExt + me.loader.nocache],
-				volume : 0,
+				urls : urls,
+				volume : 1,
 				onloaderror : function() {
 					soundLoadError.call(me.audio, sound.name, onerror_cb);
 				},
@@ -325,8 +319,10 @@
 					sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
 					sound.mute(settings.muted);
 					// remove callback so we don't double up
-					sound.off('end', callback);
-					sound.on('end', callback);
+					if (typeof(callback) === 'function') {
+						sound.off('end', callback);
+						sound.on('end', callback);
+					}
 					sound.play();
 
 					return sound;

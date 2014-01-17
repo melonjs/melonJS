@@ -175,11 +175,11 @@
 
                     context.translate(translateX, translateY);
                     
-                    this.collisionBox.draw(context, "red");
-                    // draw the original shape if not a rectangle
-             		if (this.shapes[0].shapeType!=="Rectangle") {
-             			// draw the original shape as well
-	                    this.shapes[0].draw(context, "red");
+                    // draw the original shape
+                    this.getShape().draw(context, "red");
+             		if (this.getShape().shapeType!=="Rectangle") {
+             			// draw the corresponding bounding box
+	                    this.getShape().getBounds().draw(context, "red");
                     }
 
                     context.translate(-translateX, -translateY);

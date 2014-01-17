@@ -51,6 +51,12 @@
          * @name me.Tile#tileset
          */
         tileset : null,
+        
+        /** 
+         * the tile transformation matrix (if defined)
+         * @ignore
+         */
+        transform : null,
 		
         
 		/** @ignore */
@@ -95,10 +101,43 @@
 			 */
 			this.flipped = this.flipX || this.flipY || this.flipAD;
 			
+            // create a transformation matrix if required
+            if (this.flipped === true) {
+                this.createTransform();
+            }
+            
 			// clear out the flags and set the tileId
 			this.tileId &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
-
-		}
+		},
+        
+		/**
+		 * create a transformation matrix for this tilee
+		 * @ignore
+		 */
+		createTransform : function() {
+			if (this.transform === null) {
+				this.transform = new me.Matrix2d();
+			}
+			// reset the matrix (in case it was already defined)
+			this.transform.identity();
+            
+			if (this.flipAD){
+				// Use shearing to swap the X/Y axis
+				this.transform.set(0,1,1,0);
+				this.transform.translate(0, this.height - this.width);                
+			}
+			if (this.flipX){
+				this.transform.a *= -1;
+				this.transform.c *= -1;
+				this.transform.translate((this.flipAD ? this.height : this.width), 0);
+				
+			}
+			if (this.flipY){
+				this.transform.b *= -1;
+				this.transform.d *= -1;
+				this.transform.translate(0, (this.flipAD ? this.width : this.height));
+			}
+		},
 	});
 	
     /**
@@ -228,7 +267,7 @@
 			// set tile properties, if any
 			for(var i in tileInfo) {
 				var prop = {};
-				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
+				prop.mixin(tileInfo[i]);
 				this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
 			}
 			
@@ -373,50 +412,29 @@
 		drawTile : function(context, dx, dy, tmxTile) {
 			// check if any transformation is required
 			if (tmxTile.flipped) {
-				var m11 = 1; // Horizontal scaling factor
-				var m12 = 0; // Vertical shearing factor
-				var m21 = 0; // Horizontal shearing factor
-				var m22 = 1; // Vertical scaling factor
-				var mx	= dx; 
-				var my	= dy;
-				// set initial value to zero since we use a transform matrix
-				dx = dy = 0;
-				
-				context.save();
-								
-				if (tmxTile.flipAD){
-					// Use shearing to swap the X/Y axis
-					m11=0;
-					m12=1;
-					m21=1;
-					m22=0;
-					// Compensate for the swap of image dimensions
-					my += this.tileheight - this.tilewidth;
-				}
-				if (tmxTile.flipX){
-					m11 = -m11;
-					m21 = -m21;
-					mx += tmxTile.flipAD ? this.tileheight : this.tilewidth;
-					
-				}
-				if (tmxTile.flipY){
-					m12 = -m12;
-					m22 = -m22;
-					my += tmxTile.flipAD ? this.tilewidth : this.tileheight;
-				}
-				// set the transform matrix
-				context.transform(m11, m12, m21, m22, mx, my);
+                context.save();
+                // apply the tile current transform
+                var transform = tmxTile.transform;
+                context.transform(
+                    transform.a, transform.b,
+                    transform.c, transform.d, 
+                    transform.e + dx, transform.f + dy
+                );
+                // reset both values as managed through transform();
+                dx = dy = 0;
 			}
 			
 			// get the local tileset id
 			var tileid = tmxTile.tileId - this.firstgid;
 			
 			// draw the tile
-			context.drawImage(this.image, 
-							  this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
-							  this.tilewidth, this.tileheight, 
-							  dx, dy, 
-							  this.tilewidth, this.tileheight);
+			context.drawImage(
+				this.image, 
+				this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
+				this.tilewidth, this.tileheight, 
+				dx, dy, 
+				this.tilewidth, this.tileheight
+			);
 
 			if  (tmxTile.flipped)  {
 				// restore the context to the previous state

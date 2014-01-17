@@ -91,10 +91,15 @@ exports.Parser.prototype.parse = function(sourceFiles, encoding) {
     }
 
     this.emit('parseComplete', {
-        sourcefiles: parsedFiles
+        sourcefiles: parsedFiles,
+        doclets: this._resultBuffer
     });
 
     return this._resultBuffer;
+};
+
+exports.Parser.prototype.fireProcessingComplete = function(doclets) {
+    this.emit('processingComplete', { doclets: doclets });
 };
 
 /**
@@ -139,6 +144,9 @@ exports.Parser.prototype.getVisitors = function() {
 
 function pretreat(code) {
     return code
+        // comment out hashbang at the top of the file, like: #!/usr/bin/env node
+        .replace(/^(\#\![\S \t]+\n)/, '// $1')
+
         // make starbangstar comments look like real jsdoc comments
         .replace(/\/\*\!\*/g, '/**')
 

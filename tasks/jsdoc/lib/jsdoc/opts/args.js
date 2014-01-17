@@ -43,11 +43,9 @@ function fixTypes(item) {
 			result[i] = fixTypes(result[i]);
 		}
 	} else if (typeof result === 'object') {
-		for (var prop in result) {
-			if ( hasOwnProp.call(result, prop) ) {
-				result[prop] = fixTypes(result[prop]);
-			}
-		}
+		Object.keys(result).forEach(function(prop) {
+			result[prop] = fixTypes(result[prop]);
+		});
 	} else {
 		result = castTypes(result);
 	}
@@ -58,17 +56,15 @@ function fixTypes(item) {
 function parseQuery(str) {
 	var result = querystring.parse(str);
 
-	for (var prop in result) {
-		if ( hasOwnProp.call(result, prop) ) {
-			result[prop] = fixTypes(result[prop]);
-		}
-	}
+	Object.keys(result).forEach(function(prop) {
+		result[prop] = fixTypes(result[prop]);
+	});
 
 	return result;
 }
 
-argParser.addOption('t', 'template',    true,  'The name of the template to use. Default: the "default" template');
-argParser.addOption('c', 'configure',   true,  'The path to the configuration file. Default: jsdoc __dirname + /conf.json');
+argParser.addOption('t', 'template',    true,  'The path to the template to use. Default: path/to/jsdoc/templates/default');
+argParser.addOption('c', 'configure',   true,  'The path to the configuration file. Default: path/to/jsdoc/conf.json');
 argParser.addOption('e', 'encoding',    true,  'Assume this encoding when reading all source files. Default: utf8');
 argParser.addOption('T', 'test',        false, 'Run all tests and quit.');
 argParser.addOption('d', 'destination', true,  'The path to the output folder. Use "console" to dump data to the console. Default: ./out/');

@@ -20,12 +20,17 @@ var DEFAULT_SCOPE = 'static';
     @param {module:jsdoc/doclet.Doclet} doclet
  */
 exports.resolve = function(doclet) {
-    var name = doclet.name,
+    var name = doclet.name ? String(doclet.name) : '',
         memberof = doclet.memberof || '',
         about = {},
         parentDoc;
 
-    doclet.name = name = name? (''+name).replace(/(^|\.)prototype\.?/g, '#') : '';
+    // change MyClass.prototype.instanceMethod to MyClass#instanceMethod
+    // (but not in function params, which lack doclet.kind)
+    if (name && doclet.kind) {
+        name = name.replace(/(?:^|\.)prototype\.?/g, '#');
+    }
+    doclet.name = name;
     
     // member of a var in an outer scope?
     if (name && !memberof && doclet.meta.code && doclet.meta.code.funcscope) {
@@ -123,6 +128,7 @@ function quoteUnsafe(name, kind) { // docspaced names may have unsafe characters
     return name;
 }
 
+// TODO: make this a private method, or remove it if possible
 RegExp.escape = RegExp.escape || function(str) {
     var specials = new RegExp("[.*+?|()\\[\\]{}\\\\]", "g"); // .*+?|()[]{}\
     return str.replace(specials, "\\$&");
@@ -198,7 +204,8 @@ exports.shorten = function(longname, forcedMemberof) {
     
     // like /** @name foo.bar(2) */
     if ( /(.+)\(([^)]+)\)$/.test(name) ) {
-        name = RegExp.$1, variation = RegExp.$2;
+        name = RegExp.$1;
+        variation = RegExp.$2;
     }
     
     //// restore quoted strings back again
@@ -215,44 +222,17 @@ exports.shorten = function(longname, forcedMemberof) {
 };
 
 /**
-    Split a string that starts with a name and ends with a description, into its parts.
+    Split a string that starts with a name and ends with a description into its parts.
     @param {string} nameDesc
     @returns {object} Hash with "name" and "description" properties.
  */
 exports.splitName = function(nameDesc) {
-    var name = '',
-        desc = '',
-        thisChar = '',
-        inQuote = false;
-    
-    for (var i = 0, len = nameDesc.length; i < len; i++) {
-        thisChar = nameDesc.charAt(i);
-        
-        if (thisChar === '\\') {
-            name += thisChar + nameDesc.charAt(++i);
-            continue;
-        }
-        
-        if (thisChar === '"') {
-            inQuote = !inQuote;
-        }
-        
-        if (inQuote) {
-            name += thisChar;
-            continue;
-        }
-        
-        if (!inQuote) {
-            if ( /\s/.test(thisChar) ) {
-                desc = nameDesc.substr(i);
-                desc = desc.replace(/^[\s\-\s]+/, '').trim();
-                break;
-            }
-            else {
-                name += thisChar;
-            }
-        }
-    }
-    
-    return { name: name, description: desc };
+    // like: name, [name], name text, [name] text, name - text, or [name] - text
+    // the hyphen must be on the same line as the name; this prevents us from treating a Markdown
+    // dash as a separator
+    nameDesc.match(/^(\[[^\]]+\]|\S+)((?:[ \t]*\-\s*|\s+)(\S[\s\S]*))?$/);
+    return {
+        name: RegExp.$1,
+        description: RegExp.$3
+    };
 };

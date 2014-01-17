@@ -16,6 +16,7 @@ module.exports = function(grunt) {
         'src/renderable/camera.js',
         'src/renderable/GUI.js',
         'src/renderable/container.js',
+        'src/entity/pooling.js',
         'src/entity/entity.js',
         'src/state/state.js',
         'src/loader/loadingscreen.js',
@@ -42,9 +43,9 @@ module.exports = function(grunt) {
         'src/plugin/plugin.js',
         'src/entity/draggable.js',
         'src/entity/droptarget.js',
-	'src/particles/emitter.js',
-	'src/particles/particlecontainer.js',
-	'src/particles/particle.js'
+        'src/particles/emitter.js',
+        'src/particles/particlecontainer.js',
+        'src/particles/particle.js'
     ];
 
     // Project configuration.
