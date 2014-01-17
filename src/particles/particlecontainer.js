@@ -80,7 +80,7 @@
             if(this.children.length > 0) {
                 var gco;
                 // Check for additive draw
-                if (this.textureAdditive) {
+                if (this._emitter.textureAdditive) {
                     gco = context.globalCompositeOperation;
                     context.globalCompositeOperation = "lighter";
                 }
@@ -88,7 +88,7 @@
                 this.parent(context, rect);
 
                 // Restore globalCompositeOperation
-                if (this.textureAdditive) {
+                if (this._emitter.textureAdditive) {
                     context.globalCompositeOperation = gco;
                 }
             }

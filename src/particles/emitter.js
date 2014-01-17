@@ -111,19 +111,6 @@
 				enumerable : true,
                 configurable : true
 			});
-
-            /**
-             * Texture Additive property for particles, value is forwarded to the particle container <br>
-             * @type Boolean
-             * @name textureAdditive
-             * @memberOf me.ParticleEmitter
-             */
-            Object.defineProperty(this, "textureAdditive", {
-            	get : function() { return this.container.textureAdditive; },
-            	set : function(value) { this.container.textureAdditive = value; },
-            	enumerable : true,
-            	configurable : true
-            });
         },
 
         /**
