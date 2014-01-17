@@ -65,7 +65,7 @@
             // cache inverse of the expected delta time
             this._deltaInv = me.sys.fps / 1000;
 
-            this.transform = new me.Matrix2d(1, 0, 0, 1, this.pos.x, this.pos.y);
+            this.transform = new me.Matrix2d();
 
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
@@ -114,7 +114,9 @@
             var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
             // Update particle transform
-            this.transform.set(scale, 0, 0, scale).rotateLocal(angle).translate(this.vel.x * skew, this.vel.y * skew);
+            this.transform.set(scale, 0, 0, scale, 0, 0).rotate(angle);
+            this.pos.x += this.vel.x * skew;
+            this.pos.y += this.vel.y * skew;
 
             // Return true if the particle is not dead yet 
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
@@ -130,7 +132,7 @@
             var transform = this.transform;
             context.transform(transform.a, transform.b,
                               transform.c, transform.d,
-                              ~~transform.e, ~~transform.f);
+                              ~~this.pos.x, ~~this.pos.y);
 
             var w = this.width, h = this.height;
             context.drawImage(this._emitter.image,

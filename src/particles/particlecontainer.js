@@ -56,18 +56,16 @@
             this._dt = 0;
 
             // Update particles and remove them if they are dead
-            var viewport = me.game.viewport, x, y;
+            var viewport = me.game.viewport;
             for ( var i = this.children.length - 1; i >= 0; --i) {
                 var particle = this.children[i];
                 particle.isRenderable = true;
                 // particle.inViewport = viewport.isVisible(particle);
-                x = particle.transform.e;
-                y = particle.transform.f;
                 particle.inViewport = this.floating ||
-                                       (x < viewport.pos.x + viewport.width && 
-                                       viewport.pos.x < x + particle.width && 
-                                       y < viewport.pos.y + viewport.height &&
-                                       viewport.pos.y < y + particle.height);
+                                       (particle.pos.x < viewport.pos.x + viewport.width && 
+                                       viewport.pos.x < particle.pos.x + particle.width && 
+                                       particle.pos.y < viewport.pos.y + viewport.height &&
+                                       viewport.pos.y < particle.pos.y + particle.height);
                 if(!particle.update(dt)) {
                     this.removeChildNow(particle);
                 }
