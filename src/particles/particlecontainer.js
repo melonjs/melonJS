@@ -42,7 +42,7 @@
          * @ignore
          */
         update: function(dt) {
-        	// skip frames if necessary
+            // skip frames if necessary
             if (++this._updateCount > this._emitter.framesToSkip) {
                 this._updateCount = 0;
             }

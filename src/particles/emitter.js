@@ -62,18 +62,18 @@
         _enabled: false,
 
         // Emitter will always update
-		isRenderable : false,
+        isRenderable : false,
 
         /**
          * @ignore
          */
         init: function(x, y, image) {
             // call the parent constructor
-			this.parent(
-					new me.Vector2d(x, y),
-					Infinity, 
-					Infinity 
-				);
+            this.parent(
+                    new me.Vector2d(x, y),
+                    Infinity, 
+                    Infinity 
+                );
 
             // Cache the emitter start image
             this._defaultImage = image;
@@ -93,11 +93,11 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "z", {
-				get : function() { return this.container.z; },
-				set : function(value) { this.container.z = value; },
-				enumerable : true,
+                get : function() { return this.container.z; },
+                set : function(value) { this.container.z = value; },
+                enumerable : true,
                 configurable : true
-			});
+            });
 
             /**
              * Floating property for particles, value is forwarded to the particle container <br>
@@ -106,11 +106,11 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "floating", {
-				get : function() { return this.container.floating; },
-				set : function(value) { this.container.floating = value; },
-				enumerable : true,
+                get : function() { return this.container.floating; },
+                set : function(value) { this.container.floating = value; },
+                enumerable : true,
                 configurable : true
-			});
+            });
         },
 
         /**
@@ -121,10 +121,10 @@
          * @return {me.Vector2d} new vector
          */
         getRandomPoint: function() {
-        	var vector = this.pos.clone();
-        	vector.x += Number.prototype.random(-this.hWidth, this.hWidth);
-        	vector.y += Number.prototype.random(-this.hHeight, this.hHeight);
-        	return vector;
+            var vector = this.pos.clone();
+            vector.x += Number.prototype.random(-this.hWidth, this.hWidth);
+            vector.y += Number.prototype.random(-this.hHeight, this.hHeight);
+            return vector;
         },
 
         /**
@@ -384,7 +384,7 @@
             this.framesToSkip = params.framesToSkip || 0;
 
             // reset particle container values
-			me.game.world.addChild(this.container);
+            me.game.world.addChild(this.container);
         },
 
 
@@ -393,8 +393,8 @@
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle to the container
-            	var particle = me.entityPool.newInstanceOf("me.Particle", this);
-        		particle.isRenderable = false;
+                var particle = me.entityPool.newInstanceOf("me.Particle", this);
+                particle.isRenderable = false;
                 this.container.addChild(particle);
             }
         },
