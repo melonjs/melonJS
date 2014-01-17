@@ -37,12 +37,19 @@
 
         // list of defined timer function
         var timers = [];
+        var timerId = 0;
 
         /** 
          * @ignore
          */
-        var clearTimer = function (timeoutID) { 
-            timers.splice( timeoutID, 1 );
+        var clearTimer = function (timerId) {
+            var i;
+            for (var i = 0, len = timers.length; i < len; i++) {
+                if (timers[i].timerId === timerId) {
+                    timers.splice( i, 1 );
+                    break
+                }
+            }   
         };
 
         /**
@@ -127,13 +134,15 @@
          * @function
          */
         api.setTimeout = function(func, delay, pauseable) {
-            return timers.push({
+            timers.push({
                 func: func,
                 delay : delay,
                 elapsed : 0,
                 repeat : false,
+                timerId : ++timerId,
                 pauseable : pauseable === true || true
-            }) - 1;
+            });
+            return timerId;
         };
 
         /**
@@ -147,13 +156,15 @@
          * @function
          */
         api.setInterval = function(func, delay, pauseable) {
-            return timers.push({
+            timers.push({
                 func: func,
                 delay : delay,
                 elapsed : 0,
                 repeat : true,
+                timerId : ++timerId,
                 pauseable : pauseable === true || true
-            }) - 1;
+            });
+            return timerId;
         };
 
         /**
@@ -235,7 +246,7 @@
             delta = (now - last);
 
             // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
+            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step    : 1;
 
             // update defined timers
             updateTimers(delta);
