@@ -16,8 +16,11 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		this.setVelocity(3, 15);
 		this.setFriction(0.4,0);
 		
-		// update the hit box
-		this.updateColRect(20,32, -1,0);
+		// update the collision shape rect
+		var shape = this.getShape();
+		shape.pos.x = 20;
+		shape.resize(32, shape.height);
+
 		this.dying = false;
 		
 		this.mutipleJump = 1;
