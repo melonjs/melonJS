@@ -384,7 +384,7 @@
             this.framesToSkip = params.framesToSkip || 0;
 
             // reset particle container values
-            me.game.world.addChild(this.container);
+            this.container.destroy();
         },
 
 

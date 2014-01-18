@@ -17,6 +17,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
 		// add the emitter to the game world
 		me.game.world.addChild(game.Emitter);
+        me.game.world.addChild(game.Emitter.container);
 
 		// create a secondary emitter at viewport center bottom
 		game.EmitterAux = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
@@ -26,6 +27,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
 		// add the secondary emitter to the game world
 		me.game.world.addChild(game.EmitterAux);
+        me.game.world.addChild(game.EmitterAux.container);
 
 		// start the default emitter example
 		game.changeEmitter();
