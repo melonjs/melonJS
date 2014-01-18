@@ -43,11 +43,10 @@
          * @ignore
          */
         var clearTimer = function (timerId) {
-            var i;
             for (var i = 0, len = timers.length; i < len; i++) {
                 if (timers[i].timerId === timerId) {
                     timers.splice( i, 1 );
-                    break
+                    break;
                 }
             }   
         };
