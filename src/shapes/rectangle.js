@@ -291,31 +291,6 @@
         },
 
         /**
-         * update the size of the collision rectangle<br>
-         * @deprecated use me.Rect.set()
-         * @name adjustSize
-         * @memberOf me.Rect
-         * @function
-         * @param {int} x x offset (specify -1 to not change the width)
-         * @param {int} w width of the hit box
-         * @param {int} y y offset (specify -1 to not change the height)
-         * @param {int} h height of the hit box
-         */
-        adjustSize : function(x, w, y, h) {
-            if (x !== -1) {
-                this.pos.x = x;
-                this.width = w;
-                this.hWidth = ~~(this.width / 2);
-            }
-                
-            if (y !== -1) {
-                this.pos.y = y;
-                this.height = h;
-                this.hHeight = ~~(this.height / 2);
-            }
-        },
-
-        /**
          *    
          * flip on X axis
          * usefull when used as collision box, in a non symetric way

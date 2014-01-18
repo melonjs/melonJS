@@ -375,23 +375,6 @@
 			}
 		},
 
-		/**
-		 * specify the size of the hit box for collision detection<br>
-		 * (allow to have a specific size for each object)<br>
-		 * @name updateColRect
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Number} x x offset (specify -1 to not change the width)
-		 * @param {Number} w width of the hit box
-		 * @param {Number} y y offset (specify -1 to not change the height)
-		 * @param {Number} h height of the hit box
-		 */
-		updateColRect : function(x, w, y, h) {
-			if (this.getShape().shapeType === "Rectangle") {
-				this.getShape().adjustSize(x, w, y, h);
-			}	
-		},
-
         /**
 		 * add a collision shape to this entity
 		 * @name addShape
