@@ -229,6 +229,7 @@
                 x = width - (len - i);
                 y = height - data[i];
                 context.lineTo(x, y < 0 ? 0 : y);
+                context.lineTo(x - 1, y < 0 ? 0 : y);
             }
             context.lineTo(0, height);
             context.closePath();
