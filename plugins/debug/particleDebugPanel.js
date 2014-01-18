@@ -79,12 +79,16 @@
             this.font = new me.Font('courier', 10, 'white');
 
             // sample points
+            this.frameUpdateTimeSamples = [];
+            this.frameDrawTimeSamples = [];
             this.updateTimeSamples = [];
             this.drawTimeSamples = [];
             this.updateTime = 0;
             this.drawTime = 0;
             this.updateTimeAvg = 0;
             this.drawTimeAvg = 0;
+            this.frameUpdateTimeAvg = 0;
+            this.frameDrawTimeAvg = 0;
             
             this.emitterCount = 0;
             this.particleCount = 0;
@@ -126,12 +130,26 @@
             };
 //          });
 
+			// patch me.game.update
+			me.plugin.patch(me.game, 'update', function(time) {
+                var startTime = now();
+				this.parent(time);	
+				// calculate the update time
+				_this.frameUpdateTimeSamples.push(now() - startTime);
+			});
+
+			// patch me.game.draw
+			me.plugin.patch(me.game, 'draw', function() {
+                var startTime = now();
+				this.parent();
+				// calculate the drawing time
+				_this.frameDrawTimeSamples.push(now() - startTime);
+			});
+
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, 'update', function(time) {
                 var startTime = now();
-                
                 var value = this.parent(time);  
-                
                 // calculate the update time
                 _this.updateTime += now() - startTime;
                 return value;
@@ -140,9 +158,7 @@
             // patch me.ParticleContainer.draw
             me.plugin.patch(me.ParticleContainer, 'draw', function(context, rect) {
                 var startTime = now();
-                
                 this.parent(context, rect);
-
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });
@@ -166,6 +182,8 @@
         drawGraph : function (context) {
             var updateTimeSamples = this.updateTimeSamples;
             var drawTimeSamples = this.drawTimeSamples;
+            var frameUpdateTimeSamples = this.frameUpdateTimeSamples;
+            var frameDrawTimeSamples = this.frameDrawTimeSamples;
             var width = this.rect.width, height = this.rect.height;
 
             while( updateTimeSamples.length > width) {
@@ -173,6 +191,12 @@
             }
             while( drawTimeSamples.length > width) {
                 drawTimeSamples.shift();
+            }
+            while( frameUpdateTimeSamples.length > width) {
+            	frameUpdateTimeSamples.shift();
+            }
+            while( frameDrawTimeSamples.length > width) {
+            	frameDrawTimeSamples.shift();
             }
 
             var maxTime = 60, scale = height / maxTime, len = updateTimeSamples.length;
@@ -188,7 +212,7 @@
             context.stroke();
             context.closePath();
 
-            var updateTimeSum = 0, drawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
+            var updateTimeSum = 0, drawTimeSum = 0, frameUpdateTimeSum = 0, frameDrawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
             // prepare data
             for( var x = 0, updateTime, drawTime, slow; x < len; ++x) {
                 updateTime = updateTimeSamples[x] || 0;
@@ -196,6 +220,8 @@
                 slow = (updateTime + drawTime > frameTimeLimit);
                 updateTimeSum += updateTime;
                 drawTimeSum += drawTime;
+            	frameUpdateTimeSum += frameUpdateTimeSamples[x] || 0;
+            	frameDrawTimeSum += frameDrawTimeSamples[x] || 0;
 
                 updateTime *= scale;
                 update.push(slow ? 0 : updateTime);
@@ -207,6 +233,8 @@
             }
             this.updateTimeAvg = updateTimeSum / len;
             this.drawTimeAvg = drawTimeSum / len;
+            this.frameUpdateTimeAvg = frameUpdateTimeSum / len;
+            this.frameDrawTimeAvg = frameDrawTimeSum / len;
 
             // draw the graph
             this.fillArea(context, width, height, draw, "lightblue");
@@ -253,10 +281,10 @@
             this.font.draw(context, "particles : " + this.particleCount, 5, 18);
 
             // draw the update duration
-            this.font.draw(context, "Update Duration: " + this.updateTimeAvg.toFixed(2) + "ms", 5, 31);
+            this.font.draw(context, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
 
             // draw the draw duration
-            this.font.draw(context, "Draw Duration: " + this.drawTimeAvg.toFixed(2) + "ms", 5, 44);
+            this.font.draw(context, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
 
             this.updateTimeSamples.push(this.updateTime);
             this.updateTime = 0;
