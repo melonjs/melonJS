@@ -130,21 +130,21 @@
             };
 //          });
 
-			// patch me.game.update
-			me.plugin.patch(me.game, 'update', function(time) {
+            // patch me.game.update
+            me.plugin.patch(me.game, 'update', function(time) {
                 var startTime = now();
-				this.parent(time);	
-				// calculate the update time
-				_this.frameUpdateTimeSamples.push(now() - startTime);
-			});
+                this.parent(time);  
+                // calculate the update time
+                _this.frameUpdateTimeSamples.push(now() - startTime);
+            });
 
-			// patch me.game.draw
-			me.plugin.patch(me.game, 'draw', function() {
+            // patch me.game.draw
+            me.plugin.patch(me.game, 'draw', function() {
                 var startTime = now();
-				this.parent();
-				// calculate the drawing time
-				_this.frameDrawTimeSamples.push(now() - startTime);
-			});
+                this.parent();
+                // calculate the drawing time
+                _this.frameDrawTimeSamples.push(now() - startTime);
+            });
 
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, 'update', function(time) {
@@ -193,10 +193,10 @@
                 drawTimeSamples.shift();
             }
             while( frameUpdateTimeSamples.length > width) {
-            	frameUpdateTimeSamples.shift();
+                frameUpdateTimeSamples.shift();
             }
             while( frameDrawTimeSamples.length > width) {
-            	frameDrawTimeSamples.shift();
+                frameDrawTimeSamples.shift();
             }
 
             var maxTime = 60, scale = height / maxTime, len = updateTimeSamples.length;
@@ -220,8 +220,8 @@
                 slow = (updateTime + drawTime > frameTimeLimit);
                 updateTimeSum += updateTime;
                 drawTimeSum += drawTime;
-            	frameUpdateTimeSum += frameUpdateTimeSamples[x] || 0;
-            	frameDrawTimeSum += frameDrawTimeSamples[x] || 0;
+                frameUpdateTimeSum += frameUpdateTimeSamples[x] || 0;
+                frameDrawTimeSum += frameDrawTimeSamples[x] || 0;
 
                 updateTime *= scale;
                 update.push(slow ? 0 : updateTime);
