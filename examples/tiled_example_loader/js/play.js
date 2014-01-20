@@ -1,61 +1,48 @@
 game.PlayScreen = me.ScreenObject.extend({
 	
-
-	/**
-	 * constructor
-	 */
-	init : function() {
-
-		this.parent(true);
-
-		this.isPersistent = true;
-	},
-
 	/**	
 	 *  action to perform on state change
 	 */
 	onResetEvent: function() {
-
 		// load a level
 		me.levelDirector.loadLevel("village");
+		// subscribe to key down event
+		this.handle = me.event.subscribe(me.event.KEYDOWN, this.keyPressed.bind(this));
 	},
 
 	/**
 	 * update function
 	 */
-	update: function(time) {
+	keyPressed: function (action, keyCode, edge) {
 	
 		// navigate the map :)
-		if (me.input.isKeyPressed('left')) 
-		{
+		if (action == 'left') {
 			me.game.viewport.move(-(me.game.currentLevel.tilewidth/2),0);
 			
-		} else if (me.input.isKeyPressed('right')) {
-			
+		} else if (action == 'right') {
 			me.game.viewport.move(me.game.currentLevel.tilewidth/2,0);		
 		}
 				
-		if (me.input.isKeyPressed('up')) {
-			
+		if (action === 'up') {
 			me.game.viewport.move(0,-(me.game.currentLevel.tileheight/2));
 
-		} else if (me.input.isKeyPressed('down')) {
-			
+		} else if (action === 'down') {
 			me.game.viewport.move(0,me.game.currentLevel.tileheight/2);
 		}
 
-		if (me.input.isKeyPressed('enter')) {
-			
+		if (action === 'enter') {
 			me.game.viewport.shake(16, 500);
 		}
 
-		return true;
+		// force redraw
+		me.game.repaint();
+
 	},
 
 	/**	
 	 *  action to perform when leaving this screen (state change)
 	 */
 	onDestroyEvent: function() {
-
+		me.event.unsubscribe(this.handle);
 	}
 });
