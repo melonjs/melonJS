@@ -303,6 +303,29 @@ window.me = window.me || {};
 
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
+    if (!Object.defineProperty) {
+		/**
+		 * simple defineProperty function definition (if not supported by the browser)<br>
+		 * if defineProperty is redefined, internally use __defineGetter__/__defineSetter__ as fallback
+		 * @param {Object} obj The object on which to define the property.
+		 * @param {String} prop The name of the property to be defined or modified.
+		 * @param {Object} desc The descriptor for the property being defined or modified.
+		 */
+		Object.defineProperty = function(obj, prop, desc) {
+			// check if Object support __defineGetter function
+			if (obj.__defineGetter__) {
+				if (desc.get) {
+					obj.__defineGetter__(prop, desc.get);
+				}
+				if (desc.set) {
+					obj.__defineSetter__(prop, desc.set);
+				}
+			} else {
+				// we should never reach this point....
+				throw "melonJS: Object.defineProperty not supported";
+			}
+		};
+	}
 
 	/**
 	 * Can be used to mix modules, to combine abilities
@@ -645,30 +668,6 @@ window.me = window.me || {};
 	Function.prototype.defer = function() {
 		return setTimeout(this.bind.apply(this, arguments), 0.01);
 	};
-
-	if (!Object.defineProperty) {
-		/**
-		 * simple defineProperty function definition (if not supported by the browser)<br>
-		 * if defineProperty is redefined, internally use __defineGetter__/__defineSetter__ as fallback
-		 * @param {Object} obj The object on which to define the property.
-		 * @param {String} prop The name of the property to be defined or modified.
-		 * @param {Object} desc The descriptor for the property being defined or modified.
-		 */
-		Object.defineProperty = function(obj, prop, desc) {
-			// check if Object support __defineGetter function
-			if (obj.__defineGetter__) {
-				if (desc.get) {
-					obj.__defineGetter__(prop, desc.get);
-				}
-				if (desc.set) {
-					obj.__defineSetter__(prop, desc.set);
-				}
-			} else {
-				// we should never reach this point....
-				throw "melonJS: Object.defineProperty not supported";
-			}
-		};
-	}
 
     /**
      * Get the prototype of an Object.
