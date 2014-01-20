@@ -28,7 +28,7 @@
 		 * @name pos
 		 * @memberOf me.Ellipse
 		 */
-		pos : null,
+		pos : new me.Vector2d(),
 		 
 		/**
 		 * radius (x/y) of the ellipse
@@ -37,7 +37,7 @@
 		 * @name radius
 		 * @memberOf me.Ellipse
 		 */
-		radius : null,
+		radius : new me.Vector2d(),
         
 
 		// the shape type
@@ -46,12 +46,6 @@
 		
 		/** @ignore */
 		init : function(v, w, h) {
-            if (this.pos === null) {
-                this.pos = new me.Vector2d();
-            }
-            if (this.radius === null) {
-                this.radius = new me.Vector2d();
-            }
 			this.set(v, w, h);
 		},
 

@@ -27,7 +27,7 @@
          * @name pos
          * @memberOf me.PolyShape
          */
-        pos : null,
+        pos :  new me.Vector2d(),
          
         /**
          * Array of points defining the polyshape
@@ -45,7 +45,7 @@
          * @name closed
          * @memberOf me.PolyShape
          */
-        closed : null,
+        closed : false,
         
 
         // the shape type
@@ -54,9 +54,6 @@
         
         /** @ignore */
         init : function(v, points, closed) {
-            if (this.pos === null) {
-                this.pos = new me.Vector2d();
-            }
             this.set(v, points, closed);
         },
 

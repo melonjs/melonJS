@@ -30,8 +30,8 @@
 
 		// private font properties
 		/** @ignore */
-		font : null,
-        fontSize : null,
+		font : new me.Vector2d(),
+		fontSize : new me.Vector2d(),
        
 		/**
 		 * defines the color used to draw the font.<br>
@@ -92,9 +92,7 @@
         
 		/** @ignore */
 		init : function(font, size, fillStyle, textAlign) {
-            this.pos = new me.Vector2d();
-            this.fontSize = new me.Vector2d();
-            
+        
 			// font name and type
 			this.set(font, size, fillStyle, textAlign);
 			
@@ -266,8 +264,8 @@
     me.BitmapFont = me.Font.extend(
     /** @scope me.BitmapFont.prototype */ {
 		/** @ignore */
-        // font scale;
-		sSize : null,
+		// scaled font size;
+		sSize : new me.Vector2d(),
 		// first char in the ascii table
 		firstChar : 0x20,
 		
@@ -279,9 +277,6 @@
 			// font name and type
 			this.parent(font, null, null);
 			
-			// font scaled size;
-			this.sSize = new me.Vector2d();
-
 			// first char in the ascii table
 			this.firstChar = firstChar || 0x20;
 

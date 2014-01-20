@@ -27,7 +27,7 @@
 	{
 		// default scale ratio of the object
 		/** @ignore */
-		scale	   : null,
+		scale : new me.Vector2d(),
 
 		// if true, image flipping/scaling is needed
 		scaleFlag : false,
@@ -40,7 +40,7 @@
 		z : 0,
 
 		// image offset
-		offset : null,
+		offset : new me.Vector2d(),
 
 		/**
 		 * Set the angle (in Radians) of a sprite to rotate it <br>
@@ -86,12 +86,12 @@
 			this.image = image;
 
 			// scale factor of the object
-			this.scale = new me.Vector2d(1.0, 1.0);
+			this.scale.set(1.0, 1.0);
 			this.lastflipX = this.lastflipY = false;
 			this.scaleFlag = false;
 
 			// set the default sprite index & offset
-			this.offset = new me.Vector2d(0, 0);		
+			this.offset.set(0, 0);		
 			
 			// make it visible by default
 			this.visible = true;

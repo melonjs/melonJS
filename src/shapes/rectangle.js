@@ -27,7 +27,7 @@
          * @name pos
          * @memberOf me.Rect
          */
-        pos : null,
+        pos : new me.Vector2d(),
 
         /**
          * allow expanding and contracting the rect with a vector<br>
@@ -38,7 +38,7 @@
          * @memberOf me.Rect
          * @see me.Rect#addV
          */
-        rangeV : null,
+        rangeV : new me.Vector2d(),
 
         /**
          * left coordinate of the Rectange<br>
@@ -106,16 +106,11 @@
         
         /** @ignore */
         init : function(v, w, h) {
-            if (this.pos === null) {
-                this.pos = new me.Vector2d();
-            }
+
             this.pos.setV(v);
             
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape
-            if (this.rangeV === null) {
-                this.rangeV = new me.Vector2d();
-            }
             this.rangeV.set(0, 0);
 
             this.width = w;

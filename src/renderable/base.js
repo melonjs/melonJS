@@ -121,7 +121,7 @@
 		 * @name anchorPoint
 		 * @memberOf me.Renderable
 		 */
-		anchorPoint: null,
+		anchorPoint: new me.Vector2d(),
         
 		/**
 		 * Define the renderable opacity<br>
@@ -141,9 +141,6 @@
             this.parent(pos, width, height);
 
             // set the default anchor point (middle of the renderable)
-            if (this.anchorPoint === null) {
-                this.anchorPoint = new me.Vector2d();
-            }
             this.anchorPoint.set(0.5, 0.5);
             
 			// ensure it's fully opaque by default
