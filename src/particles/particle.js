@@ -6,7 +6,6 @@
  */
 
 (function($) {
-
     /**
      * Single Particle Object.
      * @class
@@ -15,18 +14,16 @@
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    me.Particle = me.SpriteObject.extend(
+    me.Particle = me.Renderable.extend(
     /** @scope me.Particle.prototype */
     {
-
+        
         /**
          * @ignore
          */
         init: function(emitter) {
             // Call the parent constructor
-            this.parent(emitter.pos.x + (Number.prototype.random(-emitter.varPos.x, emitter.varPos.x)),
-                        emitter.pos.y + (Number.prototype.random(-emitter.varPos.y, emitter.varPos.y)),
-                        emitter.image);
+            this.parent(emitter.getRandomPoint(), emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;
@@ -40,11 +37,6 @@
 
             // Set the start particle Velocity
             this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
-
-            // Set the start particle rotation as defined in emitter
-            // if the particle not follow trajectory
-            if (!emitter.followTrajectory)
-                this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
 
             // Set the start particle Time of Life as defined in emitter
             this.life = Number.prototype.random(emitter.minLife, emitter.maxLife);
@@ -67,11 +59,19 @@
             // Set if the particle update only in Viewport
             this.onlyInViewport = emitter.onlyInViewport;
 
-            // Set the particle additive draw
-            this.textureAdditive = emitter.textureAdditive;
-
             // Set the particle Z Order
             this.z = emitter.z;
+
+            // cache inverse of the expected delta time
+            this._deltaInv = me.sys.fps / 1000;
+
+            this.transform = new me.Matrix2d();
+
+            // Set the start particle rotation as defined in emitter
+            // if the particle not follow trajectory
+            if (!emitter.followTrajectory) {
+                this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
+            }
         },
 
         /**
@@ -84,59 +84,64 @@
          * @param {Number} dt time since the last update in milliseconds
          */
         update: function(dt) {
-            if ((this.inViewport || !this.onlyInViewport) && (this.life > 0)) {
-                // Decrease particle life
-                this.life -= dt;
+            // move things forward independent of the current frame rate
+            var skew = dt * this._deltaInv;
 
-                // Calculate the particle Age Ratio
-                var ageRatio = this.life / this.startLife;
+            // Decrease particle life
+            this.life = this.life > dt ? this.life - dt : 0;
 
-                // Resize the particle as particle Age Ratio
-                var scale = (this.startScale > this.endScale) ?
-                            Math.max(this.endScale, (this.startScale * ageRatio)) :
-                            Math.min(this.endScale, (this.startScale / ageRatio));
-                this.resize(scale);
+            // Calculate the particle Age Ratio
+            var ageRatio = this.life / this.startLife;
 
-                // Set the particle opacity as Age Ratio
-                this.setOpacity(ageRatio);
-
-                // Adjust the particle velocity
-                this.vel.x += this.wind;
-                this.vel.y += this.gravity;
-
-                // Update particle position
-                this.pos.x += this.vel.x * me.timer.tick;
-                this.pos.y += this.vel.y * me.timer.tick;
-
-                // Update the rotation of particle in accordance the particle trajectory
-                if (this.followTrajectory)
-                    this.angle = Math.atan2(this.vel.y, this.vel.x);
-
-                // Call the parent constructor
-                this.parent(dt);
-                return true;
-            } else {
-                // Remove particle from game world
-                this._emitter._particlesCount--;
-                me.game.world.removeChild(this);
+            // Resize the particle as particle Age Ratio
+            var scale = this.startScale;
+            if(this.startScale > this.endScale) {
+                scale *= ageRatio;
+                scale = (scale < this.endScale) ? this.endScale : scale;
+            } else if(this.startScale < this.endScale) {
+                scale /= ageRatio;
+                scale = (scale > this.endScale) ? this.endScale : scale;
             }
 
-            return false;
+            // Set the particle opacity as Age Ratio
+            this.alpha = ageRatio;
+
+            // Adjust the particle velocity
+            this.vel.x += this.wind * skew;
+            this.vel.y += this.gravity * skew;
+
+            // If necessary update the rotation of particle in accordance the particle trajectory
+            var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
+
+            // Update particle transform
+            this.transform.set(scale, 0, 0, scale, 0, 0).rotate(angle);
+            this.pos.x += this.vel.x * skew;
+            this.pos.y += this.vel.y * skew;
+
+            // Return true if the particle is not dead yet 
+            return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
-        /**
-         * @ignore
-         */
         draw: function(context) {
-            // Check for particle additive draw
-            if (this.textureAdditive) {
-                var gco = context.globalCompositeOperation;
-                context.globalCompositeOperation = "lighter";
-                this.parent(context);
-                context.globalCompositeOperation = gco;
-            } else {
-                this.parent(context);
-            }
+            context.save();
+
+            // particle alpha value
+            context.globalAlpha *= this.alpha;
+
+            // translate to the defined anchor point and scale it
+            var transform = this.transform;
+            context.transform(transform.a, transform.b,
+                              transform.c, transform.d,
+                              ~~this.pos.x, ~~this.pos.y);
+
+            var w = this.width, h = this.height;
+            context.drawImage(this._emitter.image,
+                            0, 0,
+                            w, h,
+                            -w / 2, -h / 2,
+                            w, h);
+
+            context.restore();
         }
     });
 

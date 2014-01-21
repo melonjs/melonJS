@@ -10,7 +10,7 @@
     /**
      * Particle Emitter Object.
      * @class
-     * @extends Object
+     * @extends Rect
      * @memberOf me
      * @constructor
      * @param {me.Vector2d} pos position of the particle emitter
@@ -40,13 +40,9 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = Object.extend(
+    me.ParticleEmitter = me.Rect.extend(
     /** @scope me.ParticleEmitter.prototype */
     {
-        // Emitter total particles
-            /** @ignore */
-        _particlesCount: 0,
-
         // Emitter is Stream, launch particles constantly
             /** @ignore */
         _stream: false,
@@ -65,33 +61,71 @@
             /** @ignore */
         _enabled: false,
 
+        // Emitter will always update
+        isRenderable : false,
 
         /**
          * @ignore
          */
         init: function(x, y, image) {
-            // Emitter will always update
-            this.alwaysUpdate = true;
-
-            // Cache the emitter start pos
-            this._defaultPos = new me.Vector2d(x, y);
+            // call the parent constructor
+            this.parent(
+                    new me.Vector2d(x, y),
+                    Infinity, 
+                    Infinity 
+                );
 
             // Cache the emitter start image
             this._defaultImage = image;
+
+            // don't sort the particles by z-index
+            this.autoSort = false;
+
+            this.container = new me.ParticleContainer(this);
 
             // Reset the emitter to defaults
             this.reset();
 
             /**
-             * Z-order for particles <br>
-             * default value : 0
+             * Z-order for particles, value is forwarded to the particle container <br>
              * @type Number
              * @name z
              * @memberOf me.ParticleEmitter
              */
-            this.z = 0;
+            Object.defineProperty(this, "z", {
+                get : function() { return this.container.z; },
+                set : function(value) { this.container.z = value; },
+                enumerable : true,
+                configurable : true
+            });
+
+            /**
+             * Floating property for particles, value is forwarded to the particle container <br>
+             * @type Boolean
+             * @name floating
+             * @memberOf me.ParticleEmitter
+             */
+            Object.defineProperty(this, "floating", {
+                get : function() { return this.container.floating; },
+                set : function(value) { this.container.floating = value; },
+                enumerable : true,
+                configurable : true
+            });
         },
 
+        /**
+         * returns a random point inside the bounds for this emitter
+         * @name getRandomPoint
+         * @memberOf me.ParticleEmitter
+         * @function
+         * @return {me.Vector2d} new vector
+         */
+        getRandomPoint: function() {
+            var vector = this.pos.clone();
+            vector.x += Number.prototype.random(-this.hWidth, this.hWidth);
+            vector.y += Number.prototype.random(-this.hHeight, this.hHeight);
+            return vector;
+        },
 
         /**
          * Reset the Emitter with defaults params <br>
@@ -103,27 +137,7 @@
         reset: function(params) {
             // check if params exists and create a dummy object
             params = params || {};
-
-            /**
-             * Start position for launch particles <br>
-             * default value : x, y <br>
-             * @public
-             * @type me.Vector2d
-             * @name pos
-             * @memberOf me.ParticleEmitter
-             */
-            this.pos = params.pos || this._defaultPos.clone();
-
-            /**
-             * Variation in the start position for launch the particles (x, y) <br>
-             * Random value in range [pos - varPos, pos + varPos] <br>
-             * default value : 0, 0 <br>
-             * @public
-             * @type me.Vector2d
-             * @name varPos
-             * @memberOf me.ParticleEmitter
-             */
-            this.varPos = params.varPos || new me.Vector2d(0, 0);
+            this.resize(params.width || 0, params.height || 0);
 
             /**
              * Image used for particles <br>
@@ -318,6 +332,16 @@
             this.onlyInViewport = params.onlyInViewport || true;
 
             /**
+             * Render particles in screen space. <br>
+             * default value : false <br>
+             * @public
+             * @type Boolean
+             * @name floating
+             * @memberOf me.ParticleEmitter
+             */
+            this.floating = params.floating || false;
+
+            /**
              * Maximum number of particles launched each time in this emitter (used only if emitter is Stream) <br>
              * default value : 10 <br>
              * @public
@@ -348,6 +372,19 @@
              * @memberOf me.ParticleEmitter
              */
             this.duration = params.duration || Infinity;
+
+            /**
+             * Skip n frames after updating the particle system once. <br>
+             * default value : 0 <br>
+             * @public
+             * @type Number
+             * @name framesToSkip
+             * @memberOf me.ParticleEmitter
+             */
+            this.framesToSkip = params.framesToSkip || 0;
+
+            // reset particle container values
+            this.container.destroy();
         },
 
 
@@ -355,11 +392,10 @@
         /** @ignore */
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
-                // Add particle in the game world
-                me.game.world.addChild(me.entityPool.newInstanceOf("me.Particle", this));
-
-                // Increase total particles launched in the emitter
-                this._particlesCount++;
+                // Add particle to the container
+                var particle = me.entityPool.newInstanceOf("me.Particle", this);
+                particle.isRenderable = false;
+                this.container.addChild(particle);
             }
         },
 
@@ -419,14 +455,9 @@
         },
 
 
+
         /**
-         * Update the Emitter <br>
-         * This is automatically called by the game manager {@link me.game}
-         * @name update
-         * @memberOf me.ParticleEmitter
-         * @function
          * @ignore
-         * @param {Number} dt time since the last update in milliseconds
          */
         update: function(dt) {
             // Launch new particles, if emitter is Stream
@@ -445,16 +476,18 @@
                 this._frequencyTimer += dt;
 
                 // Check for new particles launch
-                if ((this._particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
-                    if ((this._particlesCount + this.maxParticles) <= this.totalParticles)
+                var particlesCount = this.container.children.length;
+                if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
+                    if ((particlesCount + this.maxParticles) <= this.totalParticles)
                         this.addParticles(this.maxParticles);
                     else
-                        this.addParticles(this.totalParticles - this._particlesCount);
+                        this.addParticles(this.totalParticles - particlesCount);
 
                     this._frequencyTimer = 0;
                 }
             }
-        }
+            return true;
+        },
     });
 
 

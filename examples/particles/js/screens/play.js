@@ -3,8 +3,11 @@ game.PlayScreen = me.ScreenObject.extend({
 	 *  action to perform on state change
 	 */
 	onResetEvent: function() {
+		// set world size
+		me.game.viewport.bounds.resize(2000, 2000);
+
 		// add background to the game world
-		me.game.world.addChild(new me.ColorLayer("background", "#4D4D4D"), 0);
+		me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
 
 		// create a new emitter at viewport center bottom
 		game.Emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
@@ -14,6 +17,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
 		// add the emitter to the game world
 		me.game.world.addChild(game.Emitter);
+        me.game.world.addChild(game.Emitter.container);
 
 		// create a secondary emitter at viewport center bottom
 		game.EmitterAux = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
@@ -23,9 +27,38 @@ game.PlayScreen = me.ScreenObject.extend({
 
 		// add the secondary emitter to the game world
 		me.game.world.addChild(game.EmitterAux);
+        me.game.world.addChild(game.EmitterAux.container);
 
 		// start the default emitter example
 		game.changeEmitter();
+
+		// enable the keyboard
+		me.input.bindKey(me.input.KEY.X, "moveEmitter");
+		me.input.bindKey(me.input.KEY.C, "moveViewport");
+
+		// map the left button click on the enter key
+		me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
+		me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
+
+		// listen to mouse movement
+		var viewport = me.game.viewport;
+		var mousepos = me.input.mouse.pos;
+		var lastX = mousepos.x, lastY = mousepos.y;
+		me.event.subscribe(me.event.MOUSEMOVE, function() {
+			if(me.input.isKeyPressed("moveEmitter")) {
+				var pos = mousepos;
+				if(!game.Emitter.floating) {
+					pos = viewport.localToWorld(pos.x, pos.y);
+				}
+				game.Emitter.pos.setV(pos);
+				game.EmitterAux.pos.setV(pos);
+			}
+			if(me.input.isKeyPressed("moveViewport")) {
+				viewport.move(lastX - mousepos.x, lastY - mousepos.y);
+			}
+			lastX = mousepos.x;
+			lastY = mousepos.y;
+		});
 	},
 
 	/**

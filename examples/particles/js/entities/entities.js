@@ -9,6 +9,9 @@ game.changeEmitter = function() {
 	// get the html checkbox value
 	var additive = document.getElementById("emitter_additive");
 
+	// get the html checkbox value
+	var floating = document.getElementById("emitter_floating");
+
 	// check if the emitter is running and stop the same
 	if (game.Emitter.isRunning)
 		game.Emitter.stopStream();
@@ -27,7 +30,8 @@ game.changeEmitter = function() {
 			// see the next emitter type - smoke
 			game.Emitter.image = me.loader.getImage("explosion");
 			game.Emitter.textureAdditive = additive.checked;
-			game.Emitter.varPos.x = 100;
+			game.Emitter.floating = floating.checked;
+			game.Emitter.resize(200, 0);
 			game.Emitter.totalParticles = 300;
 			game.Emitter.frequency = 50;
 			game.Emitter.minAngle = Number.prototype.degToRad(70);
@@ -41,6 +45,7 @@ game.changeEmitter = function() {
 			var params = {
 				image: me.loader.getImage("smoke"),
 				textureAdditive: additive.checked,
+				floating: floating.checked,
 				totalParticles: 200,
 				frequency: 50,
 				minSpeed: 1,
@@ -63,6 +68,7 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("blue");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.totalParticles = 300;
 			game.Emitter.maxParticles = 80;
 			game.Emitter.minLife = 500;
@@ -85,6 +91,7 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("fireball");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.x = 10;
 			game.Emitter.pos.y = 200;
 			game.Emitter.totalParticles = 200;
@@ -107,9 +114,9 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("rain");
 			game.Emitter.textureAdditive = additive.checked;
-			game.Emitter.pos.y = 0;
-			game.Emitter.varPos.y = 20;
-			game.Emitter.varPos.x = 300;
+			game.Emitter.floating = floating.checked;
+			game.Emitter.pos.y = 20;
+			game.Emitter.resize(600, 40);
 			game.Emitter.totalParticles = 400;
 			game.Emitter.frequency = 10;
 			game.Emitter.minLife = 1000;
@@ -132,6 +139,7 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("fireball");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.x = 100;
 			game.Emitter.totalParticles = 25;
 			game.Emitter.maxParticles = 1;
@@ -158,8 +166,9 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("explosion");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.y = 200;
-			game.Emitter.varPos.x = 5;
+			game.Emitter.resize(10, 0);
 			game.Emitter.minAngle = Number.prototype.degToRad(0);
 			game.Emitter.maxAngle = Number.prototype.degToRad(360);
 			game.Emitter.minLife = 1000;
@@ -177,6 +186,7 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("explosion");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.x = 100;
 			game.Emitter.pos.y = 200;
 			game.Emitter.minAngle = Number.prototype.degToRad(30);
@@ -195,8 +205,9 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("blue");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.pos.y = 10;
-			game.Emitter.varPos.x = 50;
+			game.Emitter.resize(100, 0);
 			game.Emitter.totalParticles = 500;
 			game.Emitter.maxParticles = 20;
 			game.Emitter.frequency = 30;
@@ -217,6 +228,7 @@ game.changeEmitter = function() {
 			// set emitter params
 			game.Emitter.image = me.loader.getImage("explosion");
 			game.Emitter.textureAdditive = additive.checked;
+			game.Emitter.floating = floating.checked;
 			game.Emitter.totalParticles = 300;
 			game.Emitter.frequency = 10;
 			game.Emitter.minLife = 500;
@@ -239,7 +251,8 @@ game.changeEmitter = function() {
 
 			// set emitter aux params
 			game.EmitterAux.image = me.loader.getImage("smoke");
-			game.EmitterAux.varPos.x = 10;
+			game.EmitterAux.floating = floating.checked;
+			game.EmitterAux.resize(20, 0);
 			game.EmitterAux.totalParticles = 250;
 			game.EmitterAux.frequency = 30;
 			game.EmitterAux.minLife = 2000;
@@ -265,4 +278,19 @@ game.changeAdditive = function() {
 
 	// enable texture additive in the emitter and change background color
 	game.Emitter.textureAdditive = additive.checked;
+};
+
+game.changeFloating= function() {
+	// get the html checkbox value
+	var floating = document.getElementById("emitter_floating");
+
+	// enable floating particles in the emitter
+	game.Emitter.floating = floating.checked;
+	game.EmitterAux.floating = floating.checked;
+
+	// convert the current start position
+	var viewport = me.game.viewport;
+	var convertFunction = floating.checked ? viewport.worldToLocal.bind(viewport) : viewport.localToWorld.bind(viewport); 
+	game.Emitter.pos = convertFunction(game.Emitter.pos.x, game.Emitter.pos.y)
+	game.EmitterAux.pos = convertFunction(game.EmitterAux.pos.x, game.EmitterAux.pos.y)
 };

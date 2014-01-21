@@ -24,16 +24,22 @@
 		<option value="multiples">Multiples (Two Particle Stream)</option>
 		<option value="stop">Stop the Emitters!</option>
 	  </select>
-	  <input id="emitter_additive" type="checkbox" onchange="game.changeAdditive();"> Texture Additive<br>
+	  <input id="emitter_additive" type="checkbox" onchange="game.changeAdditive();"> Texture Additive
+	  <input id="emitter_floating" type="checkbox" onchange="game.changeFloating();"> Floating<br>
   </div>
   <!-- Canvas placeholder -->
   <div id="screen"></div>
+  <div class="header">
+	  left mouse or X + mouse move: move emitter around<br>
+	  middle mouse or C + mouse move: move camera around
+  </div>
 
   <!-- melonJS Library -->
   <script type="text/javascript" src="../../build/melonJS-1.0.0.js"></script>
 
   <!-- Plugin(s) -->
   <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+  <script type="text/javascript" src="../../plugins/debug/particleDebugPanel.js"></script>
 
   <!-- Game Scripts -->
   <script type="text/javascript" src="js/game.js"></script>
