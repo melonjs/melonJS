@@ -28,7 +28,28 @@ game.Entity = me.ObjectEntity.extend({
             50,
             settings.color
         ));
+    },
+    
+    /**
+     * action to perform on frame update
+     */
+    "update" : function () {
+        var vp = me.game.viewport;
+        if (me.input.isKeyPressed("left")) {
+            vp.move(5, 0);
+        }
+        else if (me.input.isKeyPressed("right")) {
+            vp.move(-5, 0);
+        }
+        if (me.input.isKeyPressed("up")) {
+            vp.move(0, 5);
+        }
+        else if (me.input.isKeyPressed("down")) {
+            vp.move(0, -5);
+        }
+        return true;
     }
+    
 });
 
 /**
