@@ -17,113 +17,17 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Boolean} [addAsObject] add the object in the game manager object pool<br>
-     * @param {Boolean} [isPersistent] make the screen persistent over level changes; requires addAsObject=true<br>
      * @see me.state
-     * @example
-     * // create a custom loading screen
-     * var CustomLoadingScreen = me.ScreenObject.extend(
-     * {
-     *    // constructor
-     *    init: function()
-     *    {
-     *       // pass true to the parent constructor
-     *       // as we draw our progress bar in the draw function
-     *       this.parent(true);
-     *       // a font logo
-     *       this.logo = new me.Font('century gothic', 32, 'white');
-     *       // flag to know if we need to refresh the display
-     *       this.invalidate = false;
-     *       // load progress in percent
-     *       this.loadPercent = 0;
-     *       // setup a callback
-     *       me.loader.onProgress = this.onProgressUpdate.bind(this);
-     *
-     *    },
-     *
-     *    // will be fired by the loader each time a resource is loaded
-     *    onProgressUpdate: function(progress)
-     *    {
-     *       this.loadPercent = progress;
-     *       this.invalidate = true;
-     *    },
-     *
-     *
-     *    // make sure the screen is only refreshed on load progress
-     *    update: function( dt )
-     *    {
-     *       if (this.invalidate===true)
-     *       {
-     *          // clear the flag
-     *          this.invalidate = false;
-     *          // and return true
-     *          return true;
-     *       }
-     *       // else return false
-     *       return false;
-     *    },
-     *
-     *    // on destroy event
-     *    onDestroyEvent : function ()
-     *    {
-     *       // "nullify" all fonts
-     *       this.logo = null;
-     *    },
-     *
-     *    //    draw function
-     *    draw : function(context)
-     *    {
-     *       // clear the screen
-     *       me.video.clearSurface (context, "black");
-     *
-     *       // measure the logo size
-     *       logo_width = this.logo.measureText(context,"awesome loading screen").width;
-     *
-     *       // draw our text somewhere in the middle
-     *       this.logo.draw(context,
-     *                      "awesome loading screen",
-     *                      ((me.video.getWidth() - logo_width) / 2),
-     *                      (me.video.getHeight() + 60) / 2);
-     *
-     *       // display a progressive loading bar
-     *       var width = Math.floor(this.loadPercent * me.video.getWidth());
-     *
-     *       // draw the progress bar
-     *       context.strokeStyle = "silver";
-     *       context.strokeRect(0, (me.video.getHeight() / 2) + 40, me.video.getWidth(), 6);
-     *       context.fillStyle = "#89b002";
-     *       context.fillRect(2, (me.video.getHeight() / 2) + 42, width-4, 2);
-     *    },
-     * });
-     *
      */
     me.ScreenObject = me.Renderable.extend(
     /** @scope me.ScreenObject.prototype */
     {
-        /** @ignore */
-        addAsObject : false,
-        /** @ignore */
-        visible : false,
-
-        /**
-         * Z-order for object sorting<br>
-         * only used by the engine if the object has been initialized using addAsObject=true<br>
-         * default value : 999
-         * @private
-         * @type Number
-         * @name z
-         * @memberOf me.ScreenObject
-         */
-        z : 999,
-
         /**
          * initialization function
          * @ignore
          */
-        init : function(addAsObject, isPersistent) {
+        init : function() {
             this.parent(new me.Vector2d(0, 0), 0, 0);
-            this.addAsObject = this.visible = (addAsObject === true) || false;
-            this.isPersistent = (this.visible && (isPersistent === true)) || false;
         },
 
         /**
@@ -131,29 +35,10 @@
          * @ignore
          */
         reset : function() {
-
             // reset the game manager
             me.game.reset();
-
             // call the onReset Function
             this.onResetEvent.apply(this, arguments);
-
-            // add our object to the GameObject Manager
-            // allowing to benefit from the keyboard event stuff
-            if (this.addAsObject) {
-                // make sure we are visible upon reset
-                this.visible = true;
-                // Always use screen coordinates
-                this.floating = true;
-                // update the screen size if added as an object
-                this.set(new me.Vector2d(), me.game.viewport.width, me.game.viewport.height);
-                // add ourself !
-                me.game.world.addChild(this);
-            }
-
-            // sort the object pool
-            me.game.world.sort();
-
         },
 
         /**
@@ -345,14 +230,8 @@
 
             // call the screen object destroy method
             if (_screenObject[_state]) {
-                if (_screenObject[_state].screen.visible) {
-                    // persistent or not, make sure we remove it
-                    // from the current object list
-                    me.game.world.removeChildNow.call(me.game.world, _screenObject[_state].screen);
-                } else {
-                    // just notify the object
-                    _screenObject[_state].screen.destroy();
-                }
+                // just notify the object
+                _screenObject[_state].screen.destroy();
             }
 
             if (_screenObject[state])
