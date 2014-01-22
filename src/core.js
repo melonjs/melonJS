@@ -1158,6 +1158,9 @@ window.me = window.me || {};
 
 				// make display dirty by default
 				isDirty = true;
+                
+				// dummy current level
+				api.currentLevel = {pos:{x:0,y:0}};
 
 				// set as initialized
 				initialized = true;
@@ -1180,7 +1183,6 @@ window.me = window.me || {};
 			if (api.viewport) {
 				api.viewport.reset();
 			}
-
 			// dummy current level
 			api.currentLevel = {pos:{x:0,y:0}};
 
