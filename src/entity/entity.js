@@ -171,11 +171,6 @@
 
 		/** @ignore */
 		init : function(x, y, settings) {
-            // instantiate pos here to avoid
-            // later re-instantiation
-            if (this.pos === null) {
-                this.pos = new me.Vector2d();
-            }
 			// call the parent constructor
 			this.parent(this.pos.set(x,y),
 						~~settings.spritewidth  || ~~settings.width,
