@@ -3,6 +3,7 @@
   <head>
     <title>Particle Emitter Example</title>
     <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="editor.css">
     <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -24,14 +25,17 @@
 		<option value="multiples">Multiples (Two Particle Stream)</option>
 		<option value="stop">Stop the Emitters!</option>
 	  </select>
-	  <input id="emitter_additive" type="checkbox" onchange="game.changeAdditive();"> Texture Additive
-	  <input id="emitter_floating" type="checkbox" onchange="game.changeFloating();"> Floating<br>
   </div>
   <!-- Canvas placeholder -->
   <div id="screen"></div>
   <div class="header">
 	  left mouse or X + mouse move: move emitter around<br>
 	  middle mouse or C + mouse move: move camera around
+  </div>
+
+  <div id="editor">
+    <div id="emitterControls"><div class="title">Emitter</div></div>
+    <div id="emitterAuxControls"><div class="title">EmitterAux</div></div>
   </div>
 
   <!-- melonJS Library -->
@@ -47,6 +51,10 @@
   <script type="text/javascript" src="js/entities/entities.js"></script>
 
   <script type="text/javascript" src="js/screens/play.js"></script>
+  
+  <!-- Particle Effect Editor -->
+  <script type="text/javascript" src="js/editor/widgets.js"></script>
+  <script type="text/javascript" src="js/editor/controls.js"></script>
 
   <!-- Bootstrap & Mobile optimization tricks -->
   <script type="text/javascript">

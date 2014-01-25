@@ -40,6 +40,9 @@ game.PlayScreen = me.ScreenObject.extend({
 		me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
 		me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
 
+		var controller = new game.ParticleEditor.EmitterController(game.Emitter, "emitterControls");
+		var controllerAux = new game.ParticleEditor.EmitterController(game.EmitterAux, "emitterAuxControls");
+
 		// listen to mouse movement
 		var viewport = me.game.viewport;
 		var mousepos = me.input.mouse.pos;

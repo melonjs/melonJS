@@ -1,0 +1,27 @@
+#editor {
+    width: 800px;
+    margin: 10px auto;
+}
+
+#editor #emitterControls {
+    float: left;
+}
+
+#editor .controls {
+    margin: 0 50px;
+    width: 300px;
+    display: inline-block;
+}
+
+#editor .controls>div {
+    height: 22px;
+}
+
+#editor .controls input,.controls select {
+    width: 140px;
+    float: right;
+}
+
+#editor .title {
+    font-weight: bold;
+}
