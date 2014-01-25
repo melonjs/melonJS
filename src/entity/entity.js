@@ -977,8 +977,9 @@
 				// translate the renderable position (relative to the entity)
 				// and keeps it in the entity defined bounds
 				// anyway to optimize this ?
-				var x = ~~(this.pos.x + (this.anchorPoint.x * (this.width - this.renderable.width)));
-				var y = ~~(this.pos.y + (this.anchorPoint.y * (this.height - this.renderable.height)));
+				this._bounds = this.getBounds(this._bounds).translateV(this.pos);
+				var x = ~~(this._bounds.pos.x + (this.anchorPoint.x * (this._bounds.width - this.renderable.width)));
+				var y = ~~(this._bounds.pos.y + (this.anchorPoint.y * (this._bounds.height - this.renderable.height)));
 				context.translate(x, y);
 				this.renderable.draw(context);
 				context.translate(-x, -y);
