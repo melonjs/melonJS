@@ -264,15 +264,6 @@
 			 */
 			this.alive = true;
 
-			// make sure it's visible by default
-			this.visible = true;
-
-			// and also non floating by default
-			this.floating = false;
-
-			// and non persistent per default
-			this.isPersistent = false;
-
 			/**
 			 * falling state of the object<br>
 			 * true if the object is falling<br>
