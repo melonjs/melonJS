@@ -26,9 +26,6 @@
          */
         obj._check = function() {
 
-            // detect audio capabilities (should be moved here too)
-            me.audio.detectCapabilities();
-
             // future proofing (MS) feature detection
             me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
             navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
@@ -88,6 +85,33 @@
                 // the above generates an exception when cookies are blocked
                 obj.localStorage = false;
             }
+
+            // detect audio capabilities
+            me.device._detectAudio();
+        };
+
+        /**
+         * check the audio capapbilities
+         * @ignore
+         */
+        obj._detectAudio = function() {
+            // check for browser codec support
+            try {
+               var audioTest = new Audio();
+            } catch(e) {
+              audioTest = false;
+            }
+            if (audioTest) {
+                me.device.audioCodecs = {
+                    mp3: !!audioTest.canPlayType('audio/mpeg;').replace(/^no$/, ''),
+                    opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
+                    ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
+                    wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
+                    m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+                    weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')
+                };
+                me.device.sound = true;
+            }
         };
 
         // ----- PUBLIC Properties & Functions -----
@@ -102,6 +126,16 @@
          * @memberOf me.device
          */
         obj.ua = navigator.userAgent;
+
+        /**
+         * list of supported audio codecs
+         * @type enum
+         * @readonly
+         * @name audioCodecs
+         * @memberOf me.device
+         */
+        obj.audioCodecs = {};
+
         /**
          * Browser Audio capabilities
          * @type Boolean

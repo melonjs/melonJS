@@ -36,9 +36,6 @@
         // enable/disable flag
         var sound_enable = true;
 
-        // defaut reset value
-        var reset_val = 0;// .01;
-
         // a retry counter
         var retry_counter = 0;
 
@@ -52,40 +49,6 @@
         var sync_loading = false;
         var sync_loader = [];
 
-        /**
-         * return the first audio format extension supported by the browser
-         * @ignore
-         */
-        function getSupportedAudioFormat(requestedFormat) {
-            var result = "";
-            var len = requestedFormat.length;
-
-            // check for sound support by the browser
-            if (me.device.sound) {
-                var ext = "";
-                for (var i = 0; i < len; i++) {
-                    ext = requestedFormat[i].toLowerCase().trim();
-                    // check extension against detected capabilities
-                    if (obj.capabilities[ext] &&
-                        obj.capabilities[ext].canPlay &&
-                        // get only the first valid OR first 'probably' playable codec
-                        (result === "" || obj.capabilities[ext].canPlayType === 'probably')
-                    ) {
-                        result = ext;
-                        if (obj.capabilities[ext].canPlayType === 'probably') {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (result === "") {
-                // deactivate sound
-                sound_enable = false;
-            }
-
-            return result;
-        }
 
         /**
          * event listener callback on load error
@@ -121,50 +84,6 @@
          * PUBLIC STUFF
          *---------------------------------------------
          */
-
-        // audio capabilities
-        obj.capabilities = {
-            mp3: {
-                codec: 'audio/mpeg',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            ogg: {
-                codec: 'audio/ogg; codecs="vorbis"',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            m4a: {
-                codec: 'audio/mp4; codecs="mp4a.40.2"',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            wav: {
-                codec: 'audio/wav; codecs="1"',
-                canPlay: false,
-                canPlayType: 'no'
-            }
-        };
-
-        /**
-         * @ignore
-         */
-        obj.detectCapabilities = function () {
-            // init some audio variables
-            var a = document.createElement('audio');
-            if (a.canPlayType) {
-                for (var c in obj.capabilities) {
-                    var canPlayType = a.canPlayType(obj.capabilities[c].codec);
-                    // convert the string to a boolean
-                    if (canPlayType !== "" && canPlayType !== "no") {
-                        obj.capabilities[c].canPlay = true;
-                        obj.capabilities[c].canPlayType = canPlayType;
-                    }
-                    // enable sound if any of the audio format is supported
-                    me.device.sound |= obj.capabilities[c].canPlay;
-                }
-            }
-        };
 
         /**
          * initialize the audio engine<br>
