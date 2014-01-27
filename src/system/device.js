@@ -96,10 +96,11 @@
          */
         obj._detectAudio = function() {
             // check for browser codec support
+            var audioTest;
             try {
-               var audioTest = new Audio();
+                audioTest = new Audio();
             } catch(e) {
-              audioTest = false;
+                audioTest = false;
             }
             if (audioTest) {
                 me.device.audioCodecs = {
