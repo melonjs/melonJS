@@ -93,6 +93,7 @@
         // Howler specific exceptions
         "AudioContext" : true,
         "webkitAudioContext" : true,
-        "Howl" : true
+        "Howl" : true,
+        "Howler" : true
     } 
 }
