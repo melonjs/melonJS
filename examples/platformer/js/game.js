@@ -66,14 +66,25 @@ var game = {
 		// this will be used by object entities later
 		game.texture = new me.TextureAtlas(me.loader.getJSON("texture"), me.loader.getImage("texture"));
         
-		// add some global volume keyboard shortcuts
+		// add some keyboard shortcuts
 		me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+			
+			// change global volume setting
 			if (keyCode === me.input.KEY.PLUS) {
 				// increase volume
 				me.audio.setVolume(me.audio.getVolume()+0.1);
 			} else if (keyCode === me.input.KEY.MINUS) {
 				// decrease volume
 				me.audio.setVolume(me.audio.getVolume()-0.1);
+			}
+            
+			// toggle fullscreen on/off
+			if (keyCode === me.input.KEY.F) {
+				if (!me.device.isFullscreen) {
+					me.device.requestFullscreen();
+				} else {
+					me.device.exitFullscreen();
+				}
 			}
 		});
 		
