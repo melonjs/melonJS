@@ -39,11 +39,6 @@
         // a retry counter
         var retry_counter = 0;
 
-        // global volume setting
-        var settings = {
-            volume : 1.0
-        };
-
         // synchronous loader for mobile user agents
         var sync_loading = false;
         var sync_loader = [];
@@ -234,7 +229,7 @@
                 var sound = audioTracks[sound_id.toLowerCase()];
                 if(sound && typeof sound !== 'undefined') {
                     sound.loop(loop || false);
-                    sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
+                    sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
                     // remove callback so we don't double up
                     if (typeof(callback) === 'function') {
                         sound.off('end', callback);
@@ -340,12 +335,7 @@
          * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
          */
         obj.setVolume = function(volume) {
-            if (typeof(volume) === "number") {
-                settings.volume = volume.clamp(0.0,1.0);
-                if(sound_enable && current_track) {
-                    current_track.volume(settings.volume);
-                }
-            }
+            Howler.volume(volume);
         };
 
         /**
@@ -357,7 +347,7 @@
          * @returns {Number} current volume value in Float [0.0 - 1.0] .
          */
         obj.getVolume = function() {
-            return settings.volume;
+            return Howler.volume();
         };
 
         /**
