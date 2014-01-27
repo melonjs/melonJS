@@ -67,16 +67,25 @@
             }
 
             // fullscreen api detection
-            document.body.requestFullscreen = document.body.requestFullscreen ||
-                                              document.body.mozRequestFullScreen ||
-                                              document.body.webkitRequestFullscreen;
-
-            this.hasFullScreenSupport = document.body.requestFullscreen !== null && typeof document.body.requestFullscreen === 'function';
-
+            this.hasFullScreenSupport = document.fullscreenEnabled || 
+                                        document.webkitFullscreenEnabled || 
+                                        document.msFullscreenEnabled ||
+                                        document.mozFullScreenEnabled;
+            
+            
             if(this.hasFullScreenSupport) {
-                document.cancelFullScreen = document.cancelFullScreen ||
-                                            document.mozCancelFullScreen ||
-                                            document.webkitCancelFullScreen;
+                // some usefull polyfill
+                document.body.requestFullscreen = document.body.requestFullscreen ||
+                                                  document.body.webkitRequestFullscreen ||
+                                                  document.body.mozRequestFullScreen ||
+                                                  document.body.msRequestFullscreen;
+                                                  
+                document.exitFullScreen = document.cancelFullScreen ||
+                                          document.exitFullScreen ||
+                                          document.webkitCancelFullScreen ||
+                                          document.webkitExitFullscreen ||
+                                          document.mozCancelFullScreen ||
+                                          document.msExitFullscreen;                                           
             }
 
             try {
@@ -297,14 +306,14 @@
          * Triggers fullscreen request. Requires fullscreen support from the browser/device. Must be called in a click event
          * or an event that requires user interaction.
          * If you need to utilize event handlers around the fullscreen changing, use as per example below
-         * @name enterFullScreen
+         * @name requestFullscreen
          * @memberOf me.device
          * @function
          * @example
          *   document.addEventListener( 'fullscreenchange', fullscreenchange, false );
          *   document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
          */
-        obj.enterFullScreen = function() {
+        obj.requestFullscreen = function() {
             if(this.hasFullScreenSupport) {
                 document.body.requestFullscreen();
             }
@@ -318,7 +327,7 @@
          */
         obj.exitFullScreen = function() {
             if(this.hasFullScreenSupport) {
-                document.cancelFullScreen();
+                document.exitFullScreen();
             }
         };
 
@@ -412,7 +421,10 @@
                 var element = document.body;
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
-                        if (document.fullscreenElement === element || document.mozFullscreenElement === element) {
+                        if ((document.fullscreenElement || 
+                             document.webkitFullscreenElement ||
+                             document.msFullscreenElement ||
+                             document.mozFullScreenElement) === element) {
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
                             element.requestPointerLock();
@@ -532,17 +544,20 @@
 
     /**
      * Returns true if the browser/device is in full screen mode.
-     * @name isFullScreen
+     * @name isFullscreen
      * @memberOf me.device
      * @public
      * @type Boolean
      * @readonly
      * @return {boolean}
      */
-    Object.defineProperty(me.device, "isFullScreen", {
+    Object.defineProperty(me.device, "isFullscreen", {
         get: function () {
             if (me.device.hasFullScreenSupport) {
-                return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement) !== null;
+                return ((document.fullscreenElement || 
+                        document.webkitFullscreenElement ||
+                        document.msFullscreenElement ||
+                        document.mozFullScreenElement) !== null);
             } else {
                 return false;
             }
