@@ -529,18 +529,18 @@
 		 * @memberOf me.input
 		 */
 		obj.KEY = {
-			'LEFT' : 37,
-			'UP' : 38,
-			'RIGHT' : 39,
-			'DOWN' : 40,
-			'ENTER' : 13,
 			'TAB' : 9,
+			'ENTER': 13,
 			'SHIFT' : 16,
-			'CTRL' : 17,
-			'ALT' : 18,
-			'PAUSE' : 19,
+			'CTRL': 17,
+			'ALT': 18,
+			'PAUSE': 19,
 			'ESC' : 27,
 			'SPACE' : 32,
+			'LEFT': 37,
+			'UP': 38,
+			'RIGHT' : 39,
+			'DOWN' : 40,
 			'NUM0' : 48,
 			'NUM1' : 49,
 			'NUM2' : 50,
@@ -576,7 +576,16 @@
 			'W' : 87,
 			'X' : 88,
 			'Y' : 89,
-			'Z' : 90
+			'Z' : 90,
+			'MULTIPLY': 106,
+			'ADD': 107,
+			'SUBSTRACT': 109,
+			'DECIMAL': 110,
+			'DIVIDE': 111,
+			'PLUS': 187,
+			'COMMA': 188,
+			'MINUS': 189,
+			'PERIOD': 190
 		};
 
 		/**
