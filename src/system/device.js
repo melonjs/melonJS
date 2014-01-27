@@ -72,7 +72,6 @@
                                         document.msFullscreenEnabled ||
                                         document.mozFullScreenEnabled;
             
-            
             if(this.hasFullScreenSupport) {
                 // some usefull polyfill
                 document.body.requestFullscreen = document.body.requestFullscreen ||
@@ -80,8 +79,8 @@
                                                   document.body.mozRequestFullScreen ||
                                                   document.body.msRequestFullscreen;
                                                   
-                document.exitFullScreen = document.cancelFullScreen ||
-                                          document.exitFullScreen ||
+                document.exitFullscreen = document.cancelFullScreen ||
+                                          document.exitFullscreen ||
                                           document.webkitCancelFullScreen ||
                                           document.webkitExitFullscreen ||
                                           document.mozCancelFullScreen ||
@@ -321,13 +320,13 @@
 
         /**
          * Exit fullscreen mode. Requires fullscreen support from the browser/device.
-         * @name exitFullScreen
+         * @name exitFullscreen
          * @memberOf me.device
          * @function
          */
-        obj.exitFullScreen = function() {
+        obj.exitFullscreen = function() {
             if(this.hasFullScreenSupport) {
-                document.exitFullScreen();
+                document.exitFullscreen();
             }
         };
 
