@@ -41,8 +41,7 @@
 
         // global volume setting
         var settings = {
-            volume : 1.0,
-            muted : false
+            volume : 1.0
         };
 
         // synchronous loader for mobile user agents
@@ -236,7 +235,6 @@
                 if(sound && typeof sound !== 'undefined') {
                     sound.loop(loop || false);
                     sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
-                    sound.mute(settings.muted);
                     // remove callback so we don't double up
                     if (typeof(callback) === 'function') {
                         sound.off('end', callback);
@@ -399,10 +397,7 @@
          * @function
          */
         obj.muteAll = function() {
-            settings.muted = true;
-            for (var sound_id in audioTracks) {
-                obj.mute(sound_id, settings.muted);
-            }
+            Howler.mute();
         };
 
         /**
@@ -413,10 +408,7 @@
          * @function
          */
         obj.unmuteAll = function() {
-            settings.muted = false;
-            for (var sound_id in audioTracks) {
-                obj.mute(sound_id, settings.muted);
-            }
+            Howler.unmute();
         };
 
         /**
