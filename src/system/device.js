@@ -52,10 +52,6 @@
                                          'webkitPointerLockElement' in document;
 
             if(this.hasPointerLockSupport) {
-                document.body.requestPointerLock = document.body.requestPointerLock ||
-                                                   document.body.mozRequestPointerLock ||
-                                                   document.body.webkitRequestPointerLock;
-
                 document.exitPointerLock = document.exitPointerLock ||
                                            document.mozExitPointerLock ||
                                            document.webkitExitPointerLock;
@@ -66,26 +62,18 @@
                 me.device.hasDeviceOrientation = true;
             }
 
-            // fullscreen api detection
+            // fullscreen api detection & polyfill when possible
             this.hasFullScreenSupport = document.fullscreenEnabled || 
                                         document.webkitFullscreenEnabled || 
                                         document.msFullscreenEnabled ||
                                         document.mozFullScreenEnabled;
-            
-            if(this.hasFullScreenSupport) {
-                // some usefull polyfill
-                document.body.requestFullscreen = document.body.requestFullscreen ||
-                                                  document.body.webkitRequestFullscreen ||
-                                                  document.body.mozRequestFullScreen ||
-                                                  document.body.msRequestFullscreen;
-                                                  
-                document.exitFullscreen = document.cancelFullScreen ||
-                                          document.exitFullscreen ||
-                                          document.webkitCancelFullScreen ||
-                                          document.webkitExitFullscreen ||
-                                          document.mozCancelFullScreen ||
-                                          document.msExitFullscreen;                                           
-            }
+
+            document.exitFullscreen = document.cancelFullScreen ||
+                                      document.exitFullscreen ||
+                                      document.webkitCancelFullScreen ||
+                                      document.webkitExitFullscreen ||
+                                      document.mozCancelFullScreen ||
+                                      document.msExitFullscreen;
 
             try {
                 obj.localStorage = !!window.localStorage;
@@ -314,7 +302,12 @@
          */
         obj.requestFullscreen = function() {
             if(this.hasFullScreenSupport) {
-                document.body.requestFullscreen();
+                var element = me.video.getWrapper();
+                element.requestFullscreen = element.requestFullscreen ||
+                                            element.webkitRequestFullscreen ||
+                                            element.mozRequestFullScreen ||
+                                            element.msRequestFullscreen;
+                element.requestFullscreen();
             }
         };
 
@@ -417,15 +410,19 @@
          */
         obj.turnOnPointerLock = function() {
             if(this.hasPointerLockSupport) {
-                var element = document.body;
+                var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
                         if ((document.fullscreenElement || 
                              document.webkitFullscreenElement ||
                              document.msFullscreenElement ||
                              document.mozFullScreenElement) === element) {
+
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+                            element.requestPointerLock = element.requestPointerLock ||
+                                                         element.mozRequestPointerLock ||
+                                                         element.webkitRequestPointerLock;
                             element.requestPointerLock();
                         }
                     };
@@ -433,7 +430,7 @@
                     document.addEventListener( 'fullscreenchange', fullscreenchange, false );
                     document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
 
-                    element.requestFullscreen();
+                    me.device.requestFullscreen();
 
                 } else {
                     element.requestPointerLock();
@@ -556,7 +553,7 @@
                 return ((document.fullscreenElement || 
                         document.webkitFullscreenElement ||
                         document.msFullscreenElement ||
-                        document.mozFullScreenElement) !== null);
+                        document.mozFullScreenElement) === me.video.getWrapper());
             } else {
                 return false;
             }
