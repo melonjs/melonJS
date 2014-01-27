@@ -474,7 +474,8 @@
             else {
                 obj.stop(sound_id);
             }
-
+            // destroy the Howl object
+            audioTracks[sound_id].unload();
             delete audioTracks[sound_id];
 
             return true;
