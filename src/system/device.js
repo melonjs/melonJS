@@ -290,23 +290,33 @@
         obj.alpha = 0;
 
         /**
-         * Triggers fullscreen request. Requires fullscreen support from the browser/device. Must be called in a click event
-         * or an event that requires user interaction.
-         * If you need to utilize event handlers around the fullscreen changing, use as per example below
+         * Triggers a fullscreen request. Requires fullscreen support from the browser/device. 
          * @name requestFullscreen
          * @memberOf me.device
          * @function
+         * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
          * @example
-         *   document.addEventListener( 'fullscreenchange', fullscreenchange, false );
-         *   document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+         * // add a keyboard shortcut to toggle Fullscreen mode on/off
+         * // (this requires the keyboard to be initialized through a call to bindKey)
+         * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+         *    // toggle fullscreen on/off
+         *    if (keyCode === me.input.KEY.F) {
+         *       if (!me.device.isFullscreen) {
+         *          me.device.requestFullscreen();
+         *       } else {
+         *          me.device.exitFullscreen();
+         *       }
+         *    }
+         * });
          */
-        obj.requestFullscreen = function() {
+        obj.requestFullscreen = function(element) {
             if(this.hasFullScreenSupport) {
-                var element = me.video.getWrapper();
+                element = element || me.video.getWrapper();
                 element.requestFullscreen = element.requestFullscreen ||
                                             element.webkitRequestFullscreen ||
                                             element.mozRequestFullScreen ||
                                             element.msRequestFullscreen;
+                
                 element.requestFullscreen();
             }
         };
