@@ -297,10 +297,10 @@
          * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
          * @example
          * // add a keyboard shortcut to toggle Fullscreen mode on/off
-         * // (this requires the keyboard to be initialized through a call to bindKey)
+         * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
          * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
          *    // toggle fullscreen on/off
-         *    if (keyCode === me.input.KEY.F) {
+         *    if (action === "toggleFullscreen") {
          *       if (!me.device.isFullscreen) {
          *          me.device.requestFullscreen();
          *       } else {
