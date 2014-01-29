@@ -8,6 +8,7 @@ Version History
 * Loader : Added resource information to loader progress event (warpten)
 * Color : melonJS now defines a new me.Color class for advanced color manipulation
 * Particles : Added basic Particle System, with emitters and particles (ciangames)
+* device : Added full cross-browser support for the Fullscreen API (see me.device)
 
 0.9.11
 * Documentation : Numerous fixes and improvements
