@@ -36,19 +36,6 @@
 		var maxWidth = Infinity;
 		var maxHeight = Infinity;
 		
-		/**
-		 * return a vendor specific canvas type
-		 * @ignore
-		 */
-		function getCanvasType() {
-			// cocoonJS specific canvas extension
-			if (navigator.isCocoonJS) {
-					return 'screencanvas';
-			}
-			return 'canvas';
-		}
-		
-
 		/*---------------------------------------------
 			
 			PUBLIC STUFF
@@ -106,7 +93,7 @@
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			me.event.subscribe(me.event.WINDOW_ONORIENTATION_CHANGE, me.video.onresize.bind(me.video));
 			
-			// create the main canvas
+			// create the main screen canvas
 			canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
 
 			// add our canvas
@@ -225,15 +212,20 @@
 		 * @function
 		 * @param {Number} width width
 		 * @param {Number} height height
+		 * @param {Boolean} [screencanvas=false] set to true if this canvas renders directly to the screen
 		 * @return {Canvas}
 		 */
-		api.createCanvas = function(width, height, vendorExt) {
+		api.createCanvas = function(width, height, screencanvas) {
 			if (width === 0 || height === 0)  {
 				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
 			}
 			
-			var canvasType = (vendorExt === true) ? getCanvasType() : 'canvas';
-			var _canvas = document.createElement(canvasType);
+			var _canvas = document.createElement('canvas');
+
+			if ((screencanvas === true) && (navigator.isCocoonJS)) {
+				// enable ScreenCanvas on cocoonJS
+				_canvas.screencanvas = true;
+			}
 			
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
