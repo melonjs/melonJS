@@ -29,6 +29,9 @@
         // audio channel list
         var audioTracks = {};
 
+        // unique store for callbacks
+        var callbacks = {};
+
         // current music
         var current_track_id = null;
         var current_track = null;
@@ -154,6 +157,13 @@
             var soundclip = new Howl({
                 urls : urls,
                 volume : 1,
+                onend : function(soundId) {
+                    if(callbacks[soundId]) {
+                        // fire call back if it exists, then delete it
+                        callbacks[soundId]();
+                        callbacks[soundId] = null;
+                    }
+                },
                 onloaderror : function() {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
@@ -209,10 +219,13 @@
                 sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
                 // remove callback so we don't double up
                 if (typeof(callback) === 'function') {
-                    sound.off('end', callback);
-                    sound.on('end', callback);
+                    sound.play(function(soundId) {
+                        callbacks[soundId] = callback;
+                    });
                 }
-                sound.play();
+                else {
+                    sound.play();
+                }
 
                 return sound;
             }
