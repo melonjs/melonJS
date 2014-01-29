@@ -107,8 +107,8 @@
         };
 
         /**
-         * Alias for audio.unmuteAll()
-         * audio.disable()
+         * enable audio output <br>
+         * only useful if audio supported and previously disabled through
          *
          * @see me.audio#disable
          * @name enable
@@ -122,7 +122,6 @@
 
         /**
          * disable audio output
-         * Alias for audio.muteAll()
          *
          * @name disable
          * @memberOf me.audio
@@ -217,7 +216,6 @@
             if(sound && typeof sound !== 'undefined') {
                 sound.loop(loop || false);
                 sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
-                // remove callback so we don't double up
                 if (typeof(callback) === 'function') {
                     sound.play(function(soundId) {
                         callbacks[soundId] = callback;
