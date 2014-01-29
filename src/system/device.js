@@ -75,6 +75,12 @@
                                       document.mozCancelFullScreen ||
                                       document.msExitFullscreen;
 
+            // vibration API poyfill
+            navigator.vibrate = navigator.vibrate || 
+                                navigator.webkitVibrate || 
+                                navigator.mozVibrate || 
+                                navigator.msVibrate;
+
             try {
                 obj.localStorage = !!window.localStorage;
             } catch (e) {
@@ -544,6 +550,33 @@
                 deviceOrientationInitialized = false;
             }
         };
+
+        /**
+         * the vibrate method pulses the vibration hardware on the device, <br>
+         * If the device doesn't support vibration, this method has no effect. <br> 
+         * If a vibration pattern is already in progress when this method is called, 
+         * the previous pattern is halted and the new one begins instead.
+         * @name vibrate
+         * @memberOf me.device
+         * @public
+         * @function
+         * @param {Number|Number[]} pattern pattern of vibration and pause intervals
+         * @example
+         * // vibrate for 1000 ms
+         * navigator.vibrate(1000);
+         * // or alternatively
+         * navigator.vibrate([1000]);
+         * vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+         * navigator.vibrate([50, 100, 150]);
+         * // cancel any existing vibrations
+         * navigator.vibrate(0);
+         */
+        obj.vibrate = function(pattern) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        };
+
 
         return obj;
     })();
