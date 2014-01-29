@@ -390,7 +390,6 @@
 				case "audio":
 					me.audio.load(res, onload, onerror);
 					return 1;
-					break;
 
 				default:
 					throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
