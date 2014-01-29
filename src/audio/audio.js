@@ -29,12 +29,12 @@
         // audio channel list
         var audioTracks = {};
 
+        // unique store for callbacks
+        var callbacks = {};
+
         // current music
         var current_track_id = null;
         var current_track = null;
-
-        // enable/disable flag
-        var sound_enable = true;
 
         // a retry counter
         var retry_counter = 0;
@@ -104,28 +104,11 @@
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
             // convert it into an array
             this.audioFormats = audioFormat.split(',');
-
-            return obj.isAudioEnable();
-        };
-
-        /**
-         * return true if audio is enable
-         *
-         * @see me.audio#enable
-         * @name isAudioEnable
-         * @memberOf me.audio
-         * @public
-         * @function
-         * @return {Boolean}
-         */
-        obj.isAudioEnable = function() {
-            return sound_enable;
         };
 
         /**
          * enable audio output <br>
          * only useful if audio supported and previously disabled through
-         * audio.disable()
          *
          * @see me.audio#disable
          * @name enable
@@ -134,7 +117,7 @@
          * @function
          */
         obj.enable = function() {
-            sound_enable = me.device.sound;
+            this.unmuteAll();
         };
 
         /**
@@ -146,10 +129,7 @@
          * @function
          */
         obj.disable = function() {
-            // stop the current track
-            me.audio.stopTrack();
-            // disable sound
-            sound_enable = false;
+            this.muteAll();
         };
 
         /**
@@ -176,6 +156,13 @@
             var soundclip = new Howl({
                 urls : urls,
                 volume : 1,
+                onend : function(soundId) {
+                    if(callbacks[soundId]) {
+                        // fire call back if it exists, then delete it
+                        callbacks[soundId]();
+                        callbacks[soundId] = null;
+                    }
+                },
                 onloaderror : function() {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
@@ -225,23 +212,21 @@
          */
 
         obj.play = function(sound_id, loop, callback, volume) {
-            if(sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.loop(loop || false);
-                    sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
-                    // remove callback so we don't double up
-                    if (typeof(callback) === 'function') {
-                        sound.off('end', callback);
-                        sound.on('end', callback);
-                    }
-                    sound.play();
-
-                    return sound;
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.loop(loop || false);
+                sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
+                if (typeof(callback) === 'function') {
+                    sound.play(function(soundId) {
+                        callbacks[soundId] = callback;
+                    });
                 }
-            }
+                else {
+                    sound.play();
+                }
 
-            return null;
+                return sound;
+            }
         };
 
         /**
@@ -256,11 +241,9 @@
          * me.audio.stop("cling");
          */
         obj.stop = function(sound_id) {
-            if (sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.stop();
-                }
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.stop();
             }
         };
 
@@ -277,11 +260,9 @@
          * me.audio.pause("cling");
          */
         obj.pause = function(sound_id) {
-            if (sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.pause();
-                }
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.pause();
             }
         };
 
@@ -319,7 +300,7 @@
          * me.audio.stopTrack();
          */
         obj.stopTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.pause();
                 current_track_id = null;
                 current_track = null;
@@ -424,7 +405,7 @@
          * me.audio.pauseTrack();
          */
         obj.pauseTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.pause();
             }
         };
@@ -446,7 +427,7 @@
          * me.audio.resumeTrack();
          */
         obj.resumeTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.play();
             }
         };
