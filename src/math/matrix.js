@@ -239,6 +239,9 @@
 
         /**
          * Clone the Matrix
+         * @name clone
+         * @memberOf me.Matrix2d
+         * @function
          * @return {me.Matrix2d}
          */
          clone : function() {

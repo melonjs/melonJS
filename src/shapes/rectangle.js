@@ -256,11 +256,15 @@
 
         /**
          * add a vector to this rect
+         * @name addV
+         * @memberOf me.Rect
+         * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} new rectangle
+         * @return {me.Rect} this rectangle
          */
-        addV : function(/** {me.Vector2d} */ v) {
-            this.rangeV = v;
+        addV : function(v) {
+            this.rangeV.setV(v);
+            return this;
         },
 
         /**

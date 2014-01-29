@@ -303,6 +303,12 @@ window.me = window.me || {};
 
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
+	/**
+	 * The built in Object Object
+	 * @external Object
+	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
+	 */
+
     if (!Object.defineProperty) {
 		/**
 		 * simple defineProperty function definition (if not supported by the browser)<br>
@@ -330,7 +336,7 @@ window.me = window.me || {};
 	/**
 	 * Can be used to mix modules, to combine abilities
 	 * @name mixin
-	 * @memberOf Object.prototype
+	 * @memberOf external:Object#
 	 * @function
 	 * @param {Object} obj the object you want to throw in the mix
 	 */
@@ -397,6 +403,9 @@ window.me = window.me || {};
 	 * Based on <a href="http://ejohn.org/">John Resig</a> Simple Inheritance<br>
 	 * MIT Licensed.<br>
 	 * Inspired by <a href="http://code.google.com/p/base2/">base2</a> and <a href="http://www.prototypejs.org/">Prototype</a><br>
+	 * @name extend
+	 * @memberOf external:Object#
+	 * @function
 	 * @param {Object} object Object (or Properties) to inherit from
 	 * @example
 	 * var Person = Object.extend(
@@ -504,6 +513,9 @@ window.me = window.me || {};
 	if (typeof Object.create !== 'function') {
 		/**
 		 * Prototypal Inheritance Create Helper
+		 * @name create
+		 * @memberOf external:Object#
+		 * @function
 		 * @param {Object} Object
 		 * @example
 		 * // declare oldObject

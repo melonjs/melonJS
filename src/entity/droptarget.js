@@ -13,6 +13,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @constant
          * @type String
          * @name CHECKMETHOD_OVERLAP
+         * @memberOf me.DroptargetEntity
          */
         CHECKMETHOD_OVERLAP: "overlaps",
         /**
@@ -21,6 +22,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @constant
          * @type String
          * @name CHECKMETHOD_CONTAINS
+         * @memberOf me.DroptargetEntity
          */
         CHECKMETHOD_CONTAINS: "contains",
         /**
@@ -29,6 +31,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @constant
          * @type String
          * @name checkMethod
+         * @memberOf me.DroptargetEntity
          */
         checkMethod: null,
         /**
