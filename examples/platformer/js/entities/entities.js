@@ -18,8 +18,8 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		
 		// update the collision shape rect
 		var shape = this.getShape();
-		shape.pos.x = 20;
-		shape.resize(32, shape.height);
+		shape.pos.y = 16;
+		shape.resize(this.width, shape.height - shape.pos.y);
 
 		this.dying = false;
 		
@@ -166,8 +166,8 @@ game.CoinEntity = me.CollectableEntity.extend({
 		// add the coin sprite as renderable
 		this.renderable = game.texture.createSpriteFromName("coin.png");
 		
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
+		// set the renderable position to center
+		this.anchorPoint.set(0.5, 0.5);
 		
 	},		
 	
@@ -196,19 +196,26 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
+
+		// save the area size defined in Tiled
+		var width = settings.width || settings.spritewidth;
+		var height = settings.height || settings.spriteheight;
+
+		// adjust the setting size to the sprite one
+		settings.width = settings.spritewidth;
+		settings.height = settings.spriteheight;
+
 		// call the parent constructor
 		this.parent(x, y , settings);
 		
-		// apply gravity setting if specified
-		this.gravity = settings.gravity || me.sys.gravity;
-
-		// set start/end position
+		// set start/end position based on the initial area size
 		x = this.pos.x;
-		var width = settings.width || this.width;
 		this.startX = x;
 		this.endX   = x + width - settings.spritewidth
 		this.pos.x  = x + width - settings.spritewidth;
 		
+		// apply gravity setting if specified
+		this.gravity = settings.gravity || me.sys.gravity;
 		this.walkLeft = false;
 
 		// walking & jumping speed
