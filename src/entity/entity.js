@@ -173,8 +173,8 @@
 		init : function(x, y, settings) {
 			// call the parent constructor
 			this.parent(this.pos.set(x,y),
-						~~settings.spritewidth  || ~~settings.width,
-						~~settings.spriteheight || ~~settings.height);
+						settings.width,
+						settings.height);
 
 			if (settings.image) {
 				var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
@@ -349,13 +349,12 @@
 
 			if (typeof (settings.getShape) === 'function') {
 				// add the given collision shape to the object
-				this.addShape(settings.getShape(this.width, this.height));
+				this.addShape(settings.getShape());
 
 				// ---- TODO : fix this bug, as it should not matter!
 				if (this.getShape().shapeType === 'PolyShape') {
 					this._bounds = this.getBounds();
-					this.width = this._bounds.width;
-					this.height = this._bounds.height;
+					this.resize(this._bounds.width, this._bounds.height);
 				}
 				// ----
 			}
@@ -778,9 +777,10 @@
 				this._bounds = this.getBounds(this._bounds);
 				this.__offsetX = this._bounds.pos.x;
 				this.__offsetY = this._bounds.pos.y;
+				this._bounds.translateV(this.pos);
 
 				// check for collision
-				collision = this.collisionMap.checkCollision(this._bounds.translateV(this.pos), this.vel);
+				collision = this.collisionMap.checkCollision(this._bounds, this.vel);
 
 				// update some flags
 				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
