@@ -112,7 +112,7 @@
 			// add the tween to the object pool on start
 			me.game.world.addChild(this);
 
-			_startTime = (time === undefined ? me.timer.getTime() : time) + _delayTime;
+			_startTime = (typeof(time) === 'undefined' ? me.timer.getTime() : time) + _delayTime;
 			_pauseTime = 0;
 		
 			for ( var property in _valuesEnd ) {
