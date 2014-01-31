@@ -967,10 +967,13 @@
 			if (this.renderable) {
 				// translate the renderable position (relative to the entity)
 				// and keeps it in the entity defined bounds
-				// anyway to optimize this ?
-				this._bounds = this.getBounds(this._bounds).translateV(this.pos);
-				var x = ~~(this._bounds.pos.x + (this.anchorPoint.x * (this._bounds.width - this.renderable.width)));
-				var y = ~~(this._bounds.pos.y + (this.anchorPoint.y * (this._bounds.height - this.renderable.height)));
+				var bounds = this;
+				if (this.getShape().shapeType === 'PolyShape') {
+					// use the corresponding bounding box
+					bounds = this.getBounds(this._bounds).translateV(this.pos);
+				}
+				var x = ~~(bounds.pos.x + (this.anchorPoint.x * (bounds.width - this.renderable.width)));
+				var y = ~~(bounds.pos.y + (this.anchorPoint.y * (bounds.height - this.renderable.height)));
 				context.translate(x, y);
 				this.renderable.draw(context);
 				context.translate(-x, -y);
