@@ -46,19 +46,19 @@
 		
 		/** @ignore */
 		init : function(v, w, h) {
-			this.set(v, w, h);
+			this.setShape(v, w, h);
 		},
 
 		/**
-		 * set new value to the Ellipse
-		 * @name set
+		 * set new value to the Ellipse shape
+		 * @name setShape
 		 * @memberOf me.Ellipse
 		 * @function
 		 * @param {me.Vector2d} v top-left origin position of the Ellipse
 		 * @param {int} w width of the Ellipse
 		 * @param {int} h height of the Ellipse	 
 		 */
-		set : function(v, w, h) {
+		setShape : function(v, w, h) {
 			this.radius.set(w/2, h/2);
             this.pos.setV(v).add(this.radius); 
             return this;
@@ -74,7 +74,7 @@
          */
         getBounds : function(rect) {
              if (typeof(rect) !== 'undefined') {
-                return rect.set(
+                return rect.setShape(
                     this.pos.clone().sub(this.radius), 
                     this.radius.x * 2, 
                     this.radius.y * 2

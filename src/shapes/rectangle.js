@@ -161,8 +161,8 @@
         },
 
         /**
-         * set new value to the rectangle
-         * @name set
+         * set new value to the rectangle shape
+         * @name setShape
          * @memberOf me.Rect
          * @function
          * @param {me.Vector2d} v x,y position for the rectangle
@@ -170,7 +170,7 @@
          * @param {Number} h height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        set : function(v, w, h) {
+        setShape : function(v, w, h) {
             // set the new position vector
             this.pos.setV(v);
             
@@ -209,7 +209,7 @@
          */
         getBounds : function(rect) {
             if (typeof(rect) !== 'undefined') {
-                return rect.set(this.pos, this.width, this.height);
+                return rect.setShape(this.pos, this.width, this.height);
             } else {
                 return this.clone();
             }

@@ -54,19 +54,19 @@
         
         /** @ignore */
         init : function(v, points, closed) {
-            this.set(v, points, closed);
+            this.setShape(v, points, closed);
         },
 
         /**
          * set new value to the PolyShape
-         * @name set
+         * @name setShape
          * @memberOf me.PolyShape
          * @function
          * @param {me.Vector2d} v origin point of the PolyShape
          * @param {me.Vector2d[]} points array of vector defining the polyshape
          * @param {boolean} closed true if a polygone, false if a polyline     
          */
-        set : function(v, points, closed) {
+        setShape : function(v, points, closed) {
             this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
@@ -92,7 +92,7 @@
                 bottom = Math.max(bottom, point.y);
             });
             if (typeof(rect) !== 'undefined') {
-                return rect.set(pos, right - pos.x, bottom - pos.y);
+                return rect.setShape(pos, right - pos.x, bottom - pos.y);
             } else {
                 return new me.Rect(pos, right - pos.x, bottom - pos.y);
             }
