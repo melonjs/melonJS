@@ -76,6 +76,59 @@
         },
 
         /**
+         * translate the polyShape by the specified offset
+         * @name translate
+         * @memberOf me.PolyShape
+         * @function
+         * @param {Number} x x offset
+         * @param {Number} y y offset
+         * @return {me.PolyShape} this rectangle    
+         */
+        translate : function(x, y) {
+            this.pos.x+=x;
+            this.pos.y+=y;
+            return this;
+        },
+
+        /**
+         * translate the polyShape by the specified vector
+         * @name translateV
+         * @memberOf me.PolyShape
+         * @function
+         * @param {me.Vector2d} v vector offset
+         * @return {me.PolyShape} this rectangle    
+         */
+        translateV : function(v) {
+            this.pos.add(v);
+            return this;
+        },
+
+        /**
+         * check if this polyShape contains the specified point
+         * @name containsPointV
+         * @memberOf me.polyShape
+         * @function
+         * @param  {me.Vector2d} point
+         * @return {boolean} true if contains
+         */
+        containsPointV: function(v) {
+            return this.containsPoint(v.x, v.y);
+        },
+
+        /**
+         * check if this polyShape contains the specified point
+         * @name containsPoint
+         * @memberOf me.polyShape
+         * @function
+         * @param  {Number} x x coordinate
+         * @param  {Number} y y coordinate
+         * @return {boolean} true if contains
+         */
+        containsPoint: function(x, y) {
+            // to be added 
+        },
+
+        /**
          * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
          * @name getBounds
          * @memberOf me.PolyShape

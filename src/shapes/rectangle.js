@@ -354,10 +354,7 @@
          * @return {boolean} true if within
          */
         within: function(r) {
-            return (r.left <= this.left && 
-                    r.right >= this.right &&
-                    r.top <= this.top && 
-                    r.bottom >= this.bottom);
+            return r.contains(this);
         },
         
         /**
