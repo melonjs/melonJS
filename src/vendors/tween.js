@@ -39,7 +39,6 @@
 		var _reversed = false;
 		var _delayTime = 0;
 		var _startTime = null;
-		var _pauseTime = 0;
 		var _easingFunction = me.Tween.Easing.Linear.None;
 		var _interpolationFunction = me.Tween.Interpolation.Linear;
 		var _chainedTweens = [];
@@ -113,7 +112,6 @@
 			me.game.world.addChild(this);
 
 			_startTime = (typeof(time) === 'undefined' ? me.timer.getTime() : time) + _delayTime;
-			_pauseTime = 0;
 		
 			for ( var property in _valuesEnd ) {
 
@@ -172,24 +170,14 @@
 			return this;
 
 		};
-		
-		/**
-		 * Calculate delta to pause the tween
-		 * @ignore
-		 */
-		me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
-			if (_startTime) {
-				_pauseTime = me.timer.getTime();
-			}
-		});
 
 		/**
 		 * Calculate delta to resume the tween
 		 * @ignore
 		 */
-		me.event.subscribe(me.event.STATE_RESUME, function onResume() {
-			if (_startTime && _pauseTime) {
-				_startTime += me.timer.getTime() - _pauseTime;
+		me.event.subscribe(me.event.STATE_RESUME, function onResume(elapsed) {
+			if (_startTime) {
+				_startTime += elapsed;
 			}
 		});
 

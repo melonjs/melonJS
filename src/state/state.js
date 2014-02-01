@@ -157,6 +157,9 @@
         // just to keep track of possible extra arguments
         var _extraArgs = null;
 
+        // store the elapsed time during pause/stop period
+        var _pauseTime = 0;
+
         /**
          * @ignore
          */
@@ -386,9 +389,6 @@
                         // callback?
                         if (obj.onStop)
                             obj.onStop();
-
-                        // publish the pause notification
-                        me.event.publish(me.event.STATE_STOP);
                     }
                     if (me.sys.pauseOnBlur) {
                         obj.pause(true);
@@ -421,9 +421,6 @@
                         // callback?
                         if (obj.onRestart)
                             obj.onRestart();
-
-                        // publish the resume notification
-                        me.event.publish(me.event.STATE_RESTART);
                     }
                 }
 
@@ -446,6 +443,11 @@
             if (music)
                 me.audio.pauseTrack();
 
+            // store time when stopped
+            _pauseTime = window.performance.now();
+            // publish the stop notification
+            me.event.publish(me.event.STATE_STOP);
+
         };
 
         /**
@@ -462,6 +464,9 @@
             // current music stop
             if (music)
                 me.audio.pauseTrack();
+
+            // store time when paused
+            _pauseTime = window.performance.now();
             // publish the pause event
             me.event.publish(me.event.STATE_PAUSE);
         };
@@ -480,6 +485,12 @@
             // current music stop
             if (music)
                 me.audio.resumeTrack();
+
+            // calculate the elpased time
+            _pauseTime = window.performance.now() - _pauseTime;
+
+            // publish the restart notification
+            me.event.publish(me.event.STATE_RESTART, [_pauseTime]);
         };
 
         /**
@@ -497,8 +508,11 @@
             if (music)
                 me.audio.resumeTrack();
 
+            // calculate the elpased time
+            _pauseTime = window.performance.now() - _pauseTime;
+
             // publish the resume event
-            me.event.publish(me.event.STATE_RESUME);
+            me.event.publish(me.event.STATE_RESUME, [_pauseTime]);
         };
 
         /**
