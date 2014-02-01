@@ -1,10 +1,70 @@
 game.ParticleEditor = game.ParticleEditor || {};
+
+game.ParticleEditor.EmitterList = Object.extend({
+    init : function(emitterController, containerId) {
+        this.emitterController = emitterController;
+        this.emitters = [];
+        this.rootNode = document.getElementById(containerId);
+
+        var select = this.emitterList = document.createElement("select");
+        select.setAttribute("size", 35);
+        select.addEventListener("change", this.onChange.bind(this));
+        this.rootNode.appendChild(select);
+
+        me.event.subscribe("emitterChanged", this.updateList.bind(this));
+    },
+
+    createEmitter : function() {
+        var emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() / 2, me.loader.getImage(game.resources[0].name));
+        emitter.name = "emitter" + me.utils.createGUID();
+        emitter.z = 10;
+        me.game.world.addChild(emitter);
+        this.addEmitter(emitter);
+    },
+
+    addEmitter : function(emitter) {
+        this.emitters.push(emitter);
+        this.updateList();
+    },
+
+    updateList : function() {
+        var select = this.emitterList;
+        var options = {};
+
+        var option = select.firstChild;
+        while (option) {
+            options[option.value] = option;
+            option = option.nextSibling;
+        }
+
+        for ( var i = 0, emitters = this.emitters, length = emitters.length, emitter; i < length; ++i) {
+            emitter = emitters[i];
+            if (options[i]) {
+                option = options[i];
+                option.firstChild.textContent = emitter.name;
+            } else {
+                option = document.createElement("option");
+                option.appendChild(document.createTextNode(emitter.name));
+            }
+            option.setAttribute("value", i);
+            select.appendChild(option);
+        }
+    },
+
+    onChange : function() {
+        var select = this.emitterList;
+        var emitter = this.emitters[select.value];
+        this.emitterController.setEmitter(emitter);
+    }
+});
+
 game.ParticleEditor.EmitterController = Object.extend({
     init : function(emitter, containerId) {
-        this.emitter = emitter;
         this.widgets = [];
         this.rootNode = document.getElementById(containerId);
         this.rootNode.classList.add("controls");
+
+        this.addWidget(new game.ParticleEditor.TextInputWidget(emitter, "name"));
         var widget = new game.ParticleEditor.IntegerInputWidget(emitter, "width");
         widget.setPropertyValue = function(value) {
             var object = this.object;
@@ -23,6 +83,7 @@ game.ParticleEditor.EmitterController = Object.extend({
             }
         };
         this.addWidget(widget);
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "z"));
         this.addWidget(new game.ParticleEditor.ImageSelectionWidget(emitter, "image"));
         this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "totalParticles"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "minAngle"));
@@ -48,17 +109,26 @@ game.ParticleEditor.EmitterController = Object.extend({
         this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "duration"));
         this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "framesToSkip"));
 
-        this.onChange(emitter);
+        this.setEmitter(emitter);
         me.event.subscribe("emitterChanged", this.onChange.bind(this));
     },
+
+    setEmitter : function(emitter) {
+        this.emitter = emitter;
+        this.widgets.forEach(this.sync, this);
+    },
+
     onChange : function(emitter) {
         if (this.emitter === emitter) {
-            this.widgets.forEach(this.sync);
+            this.widgets.forEach(this.sync, this);
         }
     },
+
     sync : function(widget) {
+        widget.object = this.emitter;
         widget.sync();
     },
+
     addWidget : function(widget) {
         widget.appendTo(this.rootNode);
         this.widgets.push(widget);

@@ -78,6 +78,28 @@ game.ParticleEditor.IntegerInputWidget = game.ParticleEditor.WidgetBase.extend({
     }
 });
 
+game.ParticleEditor.TextInputWidget = game.ParticleEditor.WidgetBase.extend({
+    init : function(object, propertyName) {
+        this.parent(object, propertyName);
+        var root = this.rootNode;
+        var label = document.createElement("label");
+        var input = this.input = document.createElement("input");
+        input.setAttribute("type", "text");
+        input.addEventListener("change", this.onChange.bind(this));
+        label.appendChild(document.createTextNode(propertyName))
+        label.appendChild(input)
+        root.appendChild(label);
+    },
+    onChange : function() {
+        if (this.input.validity.valid) {
+            this.setPropertyValue(this.input.value);
+        }
+    },
+    sync : function() {
+        this.input.value = this.getPropertyValue();
+    }
+});
+
 game.ParticleEditor.BooleanInputWidget = game.ParticleEditor.WidgetBase.extend({
     init : function(object, propertyName) {
         this.parent(object, propertyName);
@@ -111,7 +133,7 @@ game.ParticleEditor.ImageSelectionWidget = game.ParticleEditor.WidgetBase.extend
             if (resource.type === "image") {
                 option = document.createElement("option");
                 option.setAttribute("value", resource.name);
-                option.appendChild(document.createTextNode(resource.name))
+                option.appendChild(document.createTextNode(resource.name));
                 select.appendChild(option);
             }
         }

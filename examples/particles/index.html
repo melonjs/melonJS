@@ -11,31 +11,31 @@
   <body>
   <!-- Header placeholder -->
   <div class="header">
-	  <label>Particles Examples:</label>
-	  <select id="emitter_type" onchange="game.changeEmitter();">
-		<option value="fire">Fire (Particle Stream)</option>
-		<option value="smoke">Smoke (Particle Stream)</option>
-		<option value="fountain">Fountain (Particle Stream)</option>
-		<option value="fireball">Fireball (Particle Stream)</option>
-		<option value="rain">Rain (Particle Stream)</option>
-		<option value="cannon">Cannon (Particle Stream Trajectory)</option>
-		<option value="radial">Explosion Radial (Particle Burst)</option>
-		<option value="directed">Explosion Directed (Particle Burst)</option>
-		<option value="waterfall">Waterfall (Particle Stream Timed)</option>
-		<option value="multiples">Multiples (Two Particle Stream)</option>
-		<option value="stop">Stop the Emitters!</option>
-	  </select>
+      <label>Particles Examples:</label>
+      <select id="emitter_type" onchange="game.changeEmitter();">
+        <option value="fire">Fire (Particle Stream)</option>
+        <option value="smoke">Smoke (Particle Stream)</option>
+        <option value="fountain">Fountain (Particle Stream)</option>
+        <option value="fireball">Fireball (Particle Stream)</option>
+        <option value="rain">Rain (Particle Stream)</option>
+        <option value="cannon">Cannon (Particle Stream Trajectory)</option>
+        <option value="radial">Explosion Radial (Particle Burst)</option>
+        <option value="directed">Explosion Directed (Particle Burst)</option>
+        <option value="waterfall">Waterfall (Particle Stream Timed)</option>
+        <option value="multiples">Multiples (Two Particle Stream)</option>
+        <option value="stop">Stop the Emitters!</option>
+      </select>
   </div>
   <!-- Canvas placeholder -->
   <div id="screen"></div>
   <div class="header">
-	  left mouse or X + mouse move: move emitter around<br>
-	  middle mouse or C + mouse move: move camera around
+      left mouse or X + mouse move: move emitter around<br>
+      middle mouse or C + mouse move: move camera around
   </div>
 
   <div id="editor">
-    <div id="emitterControls"><div class="title">Emitter</div></div>
-    <div id="emitterAuxControls"><div class="title">EmitterAux</div></div>
+    <div id="emitterList"></div>
+    <div id="emitterControls"></div>
   </div>
 
   <!-- melonJS Library -->

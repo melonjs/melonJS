@@ -3,13 +3,13 @@
     margin: 10px auto;
 }
 
-#editor #emitterControls {
+#editor #emitterControls, #editor #emitterList {
     float: left;
+    width: 300px;
+    margin: 0 50px;
 }
 
 #editor .controls {
-    margin: 0 50px;
-    width: 300px;
     display: inline-block;
 }
 
@@ -24,4 +24,8 @@
 
 #editor .title {
     font-weight: bold;
+}
+
+#editor #emitterList select {
+    width: 70%;
 }
