@@ -13,6 +13,14 @@
     display: inline-block;
 }
 
+#editor .controls .buttons {
+    height: 30px;
+}
+
+#editor .controls .buttons input {
+    float: none;
+}
+
 #editor .controls>div {
     height: 22px;
 }

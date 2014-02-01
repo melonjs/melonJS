@@ -34,9 +34,7 @@ game.ParticleEditor.EmitterList = Object.extend({
         me.game.world.addChild(emitter.container);
         emitter.streamParticles();
         this.addEmitter(emitter);
-        this.updateList();
         this.selectEmitter(emitter);
-        this.onChange();
     },
 
     destroyEmitter : function() {
@@ -44,21 +42,18 @@ game.ParticleEditor.EmitterList = Object.extend({
         this.removeEmitter(emitter);
         me.game.world.removeChild(emitter.container);
         me.game.world.removeChild(emitter);
-        this.updateList();
-        if (this.emitterList.selectedIndex === -1) {
-            this.selectEmitter(this.emitters[this.emitters.length - 1]);
-        }
-        this.onChange();
     },
 
     addEmitter : function(emitter) {
         this.emitters.push(emitter);
+        this.updateList();
     },
 
     removeEmitter : function(emitter) {
         for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
             if (obj === emitter) {
                 emitters.splice(i, 1);
+                this.updateList();
                 break;
             }
         }
@@ -68,6 +63,7 @@ game.ParticleEditor.EmitterList = Object.extend({
         for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
             if (obj === emitter) {
                 this.emitterList.selectedIndex = i;
+                this.onChange();
                 break;
             }
         }
@@ -102,6 +98,10 @@ game.ParticleEditor.EmitterList = Object.extend({
                 obj.remove();
             }
         }
+
+        if (select.selectedIndex === -1) {
+            this.selectEmitter(this.emitters[this.emitters.length - 1]);
+        }
     },
 
     onChange : function() {
@@ -117,6 +117,22 @@ game.ParticleEditor.EmitterController = Object.extend({
         this.widgets = [];
         this.rootNode = document.getElementById(containerId);
         this.rootNode.classList.add("controls");
+
+        var buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("buttons");
+        this.rootNode.appendChild(buttonContainer);
+
+        var streamButton = this.streamButton = document.createElement("input");
+        streamButton.value = "stream";
+        streamButton.setAttribute("type", "button");
+        streamButton.addEventListener("click", this.controlStream.bind(this));
+        buttonContainer.appendChild(streamButton);
+
+        var burstButton = document.createElement("input");
+        burstButton.value = "burst";
+        burstButton.setAttribute("type", "button");
+        burstButton.addEventListener("click", this.controlBurst.bind(this));
+        buttonContainer.appendChild(burstButton);
 
         this.addWidget(new game.ParticleEditor.TextInputWidget(emitter, "name"));
         var widget = new game.ParticleEditor.IntegerInputWidget(emitter, "width");
@@ -167,13 +183,37 @@ game.ParticleEditor.EmitterController = Object.extend({
         me.event.subscribe("emitterChanged", this.onChange.bind(this));
     },
 
+    controlStream : function(event) {
+        if (!this.emitter.isRunning()) {
+            this.emitter.streamParticles();
+        } else {
+            this.emitter.stopStream();
+        }
+        this.updateStreamButton();
+    },
+
+    controlBurst : function(event) {
+        this.emitter.burstParticles();
+        this.updateStreamButton();
+    },
+
     setEmitter : function(emitter) {
         this.emitter = emitter;
         this.widgets.forEach(this.sync, this);
+        this.updateStreamButton();
+    },
+
+    updateStreamButton : function() {
+        if (this.emitter.isRunning()) {
+            this.streamButton.value = "stop stream";
+        } else {
+            this.streamButton.value = "start stream";
+        }
     },
 
     onChange : function(emitter) {
         if (this.emitter === emitter) {
+            this.updateStreamButton();
             this.widgets.forEach(this.sync, this);
         }
     },
