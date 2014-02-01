@@ -41,7 +41,7 @@
 		
 		/**
 		 * Channel Constant for when the game is resumed <br>
-		 * Data passed : none <br>
+		 * Data passed : {Number} time in ms the game was paused
 		 * @public
 		 * @constant
 		 * @type String
@@ -61,7 +61,7 @@
 		
 		/**
 		 * Channel Constant for when the game is restarted <br>
-		 * Data passed : none <br>
+		 * Data passed : {Number} time in ms the game was stopped
 		 * @public
 		 * @constant
 		 * @type String

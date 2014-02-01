@@ -54,25 +54,78 @@
         
         /** @ignore */
         init : function(v, points, closed) {
-            this.set(v, points, closed);
+            this.setShape(v, points, closed);
         },
 
         /**
          * set new value to the PolyShape
-         * @name set
+         * @name setShape
          * @memberOf me.PolyShape
          * @function
          * @param {me.Vector2d} v origin point of the PolyShape
          * @param {me.Vector2d[]} points array of vector defining the polyshape
          * @param {boolean} closed true if a polygone, false if a polyline     
          */
-        set : function(v, points, closed) {
+        setShape : function(v, points, closed) {
             this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
             this.getBounds();
 
             return this;
+        },
+
+        /**
+         * translate the polyShape by the specified offset
+         * @name translate
+         * @memberOf me.PolyShape
+         * @function
+         * @param {Number} x x offset
+         * @param {Number} y y offset
+         * @return {me.PolyShape} this rectangle    
+         */
+        translate : function(x, y) {
+            this.pos.x+=x;
+            this.pos.y+=y;
+            return this;
+        },
+
+        /**
+         * translate the polyShape by the specified vector
+         * @name translateV
+         * @memberOf me.PolyShape
+         * @function
+         * @param {me.Vector2d} v vector offset
+         * @return {me.PolyShape} this rectangle    
+         */
+        translateV : function(v) {
+            this.pos.add(v);
+            return this;
+        },
+
+        /**
+         * check if this polyShape contains the specified point
+         * @name containsPointV
+         * @memberOf me.polyShape
+         * @function
+         * @param  {me.Vector2d} point
+         * @return {boolean} true if contains
+         */
+        containsPointV: function(v) {
+            return this.containsPoint(v.x, v.y);
+        },
+
+        /**
+         * check if this polyShape contains the specified point
+         * @name containsPoint
+         * @memberOf me.polyShape
+         * @function
+         * @param  {Number} x x coordinate
+         * @param  {Number} y y coordinate
+         * @return {boolean} true if contains
+         */
+        containsPoint: function(x, y) {
+            // to be added 
         },
 
         /**
@@ -92,7 +145,7 @@
                 bottom = Math.max(bottom, point.y);
             });
             if (typeof(rect) !== 'undefined') {
-                return rect.set(pos, right - pos.x, bottom - pos.y);
+                return rect.setShape(pos, right - pos.x, bottom - pos.y);
             } else {
                 return new me.Rect(pos, right - pos.x, bottom - pos.y);
             }

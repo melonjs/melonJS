@@ -94,7 +94,7 @@
 		init : function(font, size, fillStyle, textAlign) {
         
 			// font name and type
-			this.set(font, size, fillStyle, textAlign);
+			this.setFont(font, size, fillStyle, textAlign);
 			
             // parent constructor
             this.parent(this.pos, 0, this.fontSize.y);
@@ -122,7 +122,7 @@
 
 		/**
 		 * Change the font settings
-		 * @name set
+		 * @name setFont
 		 * @memberOf me.Font
 		 * @function
 		 * @param {String} font a CSS font name
@@ -130,10 +130,10 @@
 		 * @param {String} fillStyle a CSS color value
 		 * @param {String} [textAlign="left"] horizontal alignment
 		 * @example
-		 * font.set("Arial", 20, "white");
-		 * font.set("Arial", "1.5em", "white");
+		 * font.setFont("Arial", 20, "white");
+		 * font.setFont("Arial", "1.5em", "white");
 		 */
-		set : function(font, size, fillStyle, textAlign) {
+		setFont : function(font, size, fillStyle, textAlign) {
 			// font name and type
 			var font_names = font.split(",").map(function (value) {
 				value = value.trim();

@@ -173,8 +173,8 @@
 		init : function(x, y, settings) {
 			// call the parent constructor
 			this.parent(this.pos.set(x,y),
-						~~settings.spritewidth  || ~~settings.width,
-						~~settings.spriteheight || ~~settings.height);
+						settings.width,
+						settings.height);
 
 			if (settings.image) {
 				var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
@@ -264,15 +264,6 @@
 			 */
 			this.alive = true;
 
-			// make sure it's visible by default
-			this.visible = true;
-
-			// and also non floating by default
-			this.floating = false;
-
-			// and non persistent per default
-			this.isPersistent = false;
-
 			/**
 			 * falling state of the object<br>
 			 * true if the object is falling<br>
@@ -358,13 +349,12 @@
 
 			if (typeof (settings.getShape) === 'function') {
 				// add the given collision shape to the object
-				this.addShape(settings.getShape(this.width, this.height));
+				this.addShape(settings.getShape());
 
 				// ---- TODO : fix this bug, as it should not matter!
 				if (this.getShape().shapeType === 'PolyShape') {
 					this._bounds = this.getBounds();
-					this.width = this._bounds.width;
-					this.height = this._bounds.height;
+					this.resize(this._bounds.width, this._bounds.height);
 				}
 				// ----
 			}
@@ -516,97 +506,6 @@
 				}
 			}
 		},
-
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity move left of right<br>
-		 * @name doWalk
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Boolean} left will automatically flip horizontally the entity sprite
-		 * @protected
-		 * @deprecated
-		 * @example
-		 * if (me.input.isKeyPressed('left'))
-		 * {
-		 *     this.doWalk(true);
-		 * }
-		 * else if (me.input.isKeyPressed('right'))
-		 * {
-		 *     this.doWalk(false);
-		 * }
-		 */
-		doWalk : function(left) {
-			this.flipX(left);
-			this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
-		},
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity move up and down<br>
-		 * only valid is the player is on a ladder
-		 * @name doClimb
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Boolean} up will automatically flip vertically the entity sprite
-		 * @protected
-		 * @deprecated
-		 * @example
-		 * if (me.input.isKeyPressed('up'))
-		 * {
-		 *     this.doClimb(true);
-		 * }
-		 * else if (me.input.isKeyPressed('down'))
-		 * {
-		 *     this.doClimb(false);
-		 * }
-		 */
-		doClimb : function(up) {
-			// add the player x acceleration to the y velocity
-			if (this.onladder) {
-				this.vel.y = (up) ? -this.accel.x * me.timer.tick
-						: this.accel.x * me.timer.tick;
-				this.disableTopLadderCollision = !up;
-				return true;
-			}
-			return false;
-		},
-
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity jump<br>
-		 * @name doJump
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @protected
-		 * @deprecated
-		 */
-		doJump : function() {
-			// only jump if standing
-			if (!this.jumping && !this.falling) {
-				this.vel.y = -this.maxVel.y * me.timer.tick;
-				this.jumping = true;
-				return true;
-			}
-			return false;
-		},
-
-		/**
-		 * helper function for platform games: <br>
-		 * force to the entity to jump (for double jump)<br>
-		 * @name forceJump
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @protected
-		 * @deprecated
-		 */
-		forceJump : function() {
-			this.jumping = this.falling = false;
-			this.doJump();
-		},
-
 
 		/**
 		 * return the distance to the specified entity
@@ -787,9 +686,10 @@
 				this._bounds = this.getBounds(this._bounds);
 				this.__offsetX = this._bounds.pos.x;
 				this.__offsetY = this._bounds.pos.y;
+				this._bounds.translateV(this.pos);
 
 				// check for collision
-				collision = this.collisionMap.checkCollision(this._bounds.translateV(this.pos), this.vel);
+				collision = this.collisionMap.checkCollision(this._bounds, this.vel);
 
 				// update some flags
 				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -976,9 +876,13 @@
 			if (this.renderable) {
 				// translate the renderable position (relative to the entity)
 				// and keeps it in the entity defined bounds
-				// anyway to optimize this ?
-				var x = ~~(this.pos.x + (this.anchorPoint.x * (this.width - this.renderable.width)));
-				var y = ~~(this.pos.y + (this.anchorPoint.y * (this.height - this.renderable.height)));
+				var bounds = this;
+				if (this.shapes.length && this.getShape().shapeType === 'PolyShape') {
+					// use the corresponding bounding box
+					bounds = this.getBounds(this._bounds).translateV(this.pos);
+				}
+				var x = ~~(bounds.pos.x + (this.anchorPoint.x * (bounds.width - this.renderable.width)));
+				var y = ~~(bounds.pos.y + (this.anchorPoint.y * (bounds.height - this.renderable.height)));
 				context.translate(x, y);
 				this.renderable.draw(context);
 				context.translate(-x, -y);

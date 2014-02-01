@@ -29,63 +29,20 @@
         // audio channel list
         var audioTracks = {};
 
+        // unique store for callbacks
+        var callbacks = {};
+
         // current music
         var current_track_id = null;
         var current_track = null;
 
-        // enable/disable flag
-        var sound_enable = true;
-
-        // defaut reset value
-        var reset_val = 0;// .01;
-
         // a retry counter
         var retry_counter = 0;
-
-        // global volume setting
-        var settings = {
-            volume : 1.0,
-            muted : false
-        };
 
         // synchronous loader for mobile user agents
         var sync_loading = false;
         var sync_loader = [];
 
-        /**
-         * return the first audio format extension supported by the browser
-         * @ignore
-         */
-        function getSupportedAudioFormat(requestedFormat) {
-            var result = "";
-            var len = requestedFormat.length;
-
-            // check for sound support by the browser
-            if (me.device.sound) {
-                var ext = "";
-                for (var i = 0; i < len; i++) {
-                    ext = requestedFormat[i].toLowerCase().trim();
-                    // check extension against detected capabilities
-                    if (obj.capabilities[ext] &&
-                        obj.capabilities[ext].canPlay &&
-                        // get only the first valid OR first 'probably' playable codec
-                        (result === "" || obj.capabilities[ext].canPlayType === 'probably')
-                    ) {
-                        result = ext;
-                        if (obj.capabilities[ext].canPlayType === 'probably') {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (result === "") {
-                // deactivate sound
-                sound_enable = false;
-            }
-
-            return result;
-        }
 
         /**
          * event listener callback on load error
@@ -122,50 +79,6 @@
          *---------------------------------------------
          */
 
-        // audio capabilities
-        obj.capabilities = {
-            mp3: {
-                codec: 'audio/mpeg',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            ogg: {
-                codec: 'audio/ogg; codecs="vorbis"',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            m4a: {
-                codec: 'audio/mp4; codecs="mp4a.40.2"',
-                canPlay: false,
-                canPlayType: 'no'
-            },
-            wav: {
-                codec: 'audio/wav; codecs="1"',
-                canPlay: false,
-                canPlayType: 'no'
-            }
-        };
-
-        /**
-         * @ignore
-         */
-        obj.detectCapabilities = function () {
-            // init some audio variables
-            var a = document.createElement('audio');
-            if (a.canPlayType) {
-                for (var c in obj.capabilities) {
-                    var canPlayType = a.canPlayType(obj.capabilities[c].codec);
-                    // convert the string to a boolean
-                    if (canPlayType !== "" && canPlayType !== "no") {
-                        obj.capabilities[c].canPlay = true;
-                        obj.capabilities[c].canPlayType = canPlayType;
-                    }
-                    // enable sound if any of the audio format is supported
-                    me.device.sound |= obj.capabilities[c].canPlay;
-                }
-            }
-        };
-
         /**
          * initialize the audio engine<br>
          * the melonJS loader will try to load audio files corresponding to the
@@ -191,28 +104,11 @@
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
             // convert it into an array
             this.audioFormats = audioFormat.split(',');
-
-            return obj.isAudioEnable();
-        };
-
-        /**
-         * return true if audio is enable
-         *
-         * @see me.audio#enable
-         * @name isAudioEnable
-         * @memberOf me.audio
-         * @public
-         * @function
-         * @return {Boolean}
-         */
-        obj.isAudioEnable = function() {
-            return sound_enable;
         };
 
         /**
          * enable audio output <br>
          * only useful if audio supported and previously disabled through
-         * audio.disable()
          *
          * @see me.audio#disable
          * @name enable
@@ -221,7 +117,7 @@
          * @function
          */
         obj.enable = function() {
-            sound_enable = me.device.sound;
+            this.unmuteAll();
         };
 
         /**
@@ -233,10 +129,7 @@
          * @function
          */
         obj.disable = function() {
-            // stop the current track
-            me.audio.stopTrack();
-            // disable sound
-            sound_enable = false;
+            this.muteAll();
         };
 
         /**
@@ -263,6 +156,13 @@
             var soundclip = new Howl({
                 urls : urls,
                 volume : 1,
+                onend : function(soundId) {
+                    if(callbacks[soundId]) {
+                        // fire call back if it exists, then delete it
+                        callbacks[soundId]();
+                        callbacks[soundId] = null;
+                    }
+                },
                 onloaderror : function() {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
@@ -312,24 +212,21 @@
          */
 
         obj.play = function(sound_id, loop, callback, volume) {
-            if(sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.loop(loop || false);
-                    sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : settings.volume);
-                    sound.mute(settings.muted);
-                    // remove callback so we don't double up
-                    if (typeof(callback) === 'function') {
-                        sound.off('end', callback);
-                        sound.on('end', callback);
-                    }
-                    sound.play();
-
-                    return sound;
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.loop(loop || false);
+                sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
+                if (typeof(callback) === 'function') {
+                    sound.play(function(soundId) {
+                        callbacks[soundId] = callback;
+                    });
                 }
-            }
+                else {
+                    sound.play();
+                }
 
-            return null;
+                return sound;
+            }
         };
 
         /**
@@ -344,11 +241,9 @@
          * me.audio.stop("cling");
          */
         obj.stop = function(sound_id) {
-            if (sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.stop();
-                }
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.stop();
             }
         };
 
@@ -365,11 +260,9 @@
          * me.audio.pause("cling");
          */
         obj.pause = function(sound_id) {
-            if (sound_enable) {
-                var sound = audioTracks[sound_id.toLowerCase()];
-                if(sound && typeof sound !== 'undefined') {
-                    sound.pause();
-                }
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if(sound && typeof sound !== 'undefined') {
+                sound.pause();
             }
         };
 
@@ -407,7 +300,7 @@
          * me.audio.stopTrack();
          */
         obj.stopTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.pause();
                 current_track_id = null;
                 current_track = null;
@@ -423,12 +316,7 @@
          * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
          */
         obj.setVolume = function(volume) {
-            if (typeof(volume) === "number") {
-                settings.volume = volume.clamp(0.0,1.0);
-                if(sound_enable && current_track) {
-                    current_track.volume(settings.volume);
-                }
-            }
+            Howler.volume(volume);
         };
 
         /**
@@ -440,7 +328,7 @@
          * @returns {Number} current volume value in Float [0.0 - 1.0] .
          */
         obj.getVolume = function() {
-            return settings.volume;
+            return Howler.volume();
         };
 
         /**
@@ -480,10 +368,7 @@
          * @function
          */
         obj.muteAll = function() {
-            settings.muted = true;
-            for (var sound_id in audioTracks) {
-                obj.mute(sound_id, settings.muted);
-            }
+            Howler.mute();
         };
 
         /**
@@ -494,10 +379,7 @@
          * @function
          */
         obj.unmuteAll = function() {
-            settings.muted = false;
-            for (var sound_id in audioTracks) {
-                obj.mute(sound_id, settings.muted);
-            }
+            Howler.unmute();
         };
 
         /**
@@ -523,7 +405,7 @@
          * me.audio.pauseTrack();
          */
         obj.pauseTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.pause();
             }
         };
@@ -545,7 +427,7 @@
          * me.audio.resumeTrack();
          */
         obj.resumeTrack = function() {
-            if (sound_enable && current_track) {
+            if (current_track) {
                 current_track.play();
             }
         };
@@ -573,7 +455,8 @@
             else {
                 obj.stop(sound_id);
             }
-
+            // destroy the Howl object
+            audioTracks[sound_id].unload();
             delete audioTracks[sound_id];
 
             return true;

@@ -413,14 +413,10 @@
 		 * @function
 		 * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
-		getShape : function(width, height) {
-			//  adjust shape size to match with the given size 
-			width = width || this.width;
-			height = height || this.height;
-
+		getShape : function() {
             // add an ellipse shape
             if (this.isEllipse === true) {
-                return new me.Ellipse(new me.Vector2d(0,0), width, height);
+                return new me.Ellipse(new me.Vector2d(0,0), this.width, this.height);
             }
 
             // add a polyshape
@@ -429,7 +425,7 @@
             }
 
             // it's a rectangle
-            return new me.Rect(new me.Vector2d(0,0), width, height);
+            return new me.Rect(new me.Vector2d(0,0), this.width, this.height);
 		},
 		
 		/**

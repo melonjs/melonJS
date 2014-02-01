@@ -115,7 +115,7 @@
          */
         api.reset = function() {
             // set to "now"
-            last = now;
+            last = now = window.performance.now();
             delta = 0;
             // reset delta counting variables
             framedelta = 0;
@@ -245,7 +245,7 @@
             delta = (now - last);
 
             // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step    : 1;
+            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
 
             // update defined timers
             updateTimers(delta);

@@ -26,9 +26,6 @@
          */
         obj._check = function() {
 
-            // detect audio capabilities (should be moved here too)
-            me.audio.detectCapabilities();
-
             // future proofing (MS) feature detection
             me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
             navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
@@ -55,10 +52,6 @@
                                          'webkitPointerLockElement' in document;
 
             if(this.hasPointerLockSupport) {
-                document.body.requestPointerLock = document.body.requestPointerLock ||
-                                                   document.body.mozRequestPointerLock ||
-                                                   document.body.webkitRequestPointerLock;
-
                 document.exitPointerLock = document.exitPointerLock ||
                                            document.mozExitPointerLock ||
                                            document.webkitExitPointerLock;
@@ -69,24 +62,58 @@
                 me.device.hasDeviceOrientation = true;
             }
 
-            // fullscreen api detection
-            document.body.requestFullscreen = document.body.requestFullscreen ||
-                                              document.body.mozRequestFullScreen ||
-                                              document.body.webkitRequestFullscreen;
+            // fullscreen api detection & polyfill when possible
+            this.hasFullScreenSupport = document.fullscreenEnabled || 
+                                        document.webkitFullscreenEnabled || 
+                                        document.msFullscreenEnabled ||
+                                        document.mozFullScreenEnabled;
 
-            this.hasFullScreenSupport = document.body.requestFullscreen !== null && typeof document.body.requestFullscreen === 'function';
+            document.exitFullscreen = document.cancelFullScreen ||
+                                      document.exitFullscreen ||
+                                      document.webkitCancelFullScreen ||
+                                      document.webkitExitFullscreen ||
+                                      document.mozCancelFullScreen ||
+                                      document.msExitFullscreen;
 
-            if(this.hasFullScreenSupport) {
-                document.cancelFullScreen = document.cancelFullScreen ||
-                                            document.mozCancelFullScreen ||
-                                            document.webkitCancelFullScreen;
-            }
+            // vibration API poyfill
+            navigator.vibrate = navigator.vibrate || 
+                                navigator.webkitVibrate || 
+                                navigator.mozVibrate || 
+                                navigator.msVibrate;
 
             try {
                 obj.localStorage = !!window.localStorage;
             } catch (e) {
                 // the above generates an exception when cookies are blocked
                 obj.localStorage = false;
+            }
+
+            // detect audio capabilities
+            me.device._detectAudio();
+        };
+
+        /**
+         * check the audio capapbilities
+         * @ignore
+         */
+        obj._detectAudio = function() {
+            // check for browser codec support
+            var audioTest;
+            try {
+                audioTest = new Audio();
+            } catch(e) {
+                audioTest = false;
+            }
+            if (audioTest) {
+                me.device.audioCodecs = {
+                    mp3: !!audioTest.canPlayType('audio/mpeg;').replace(/^no$/, ''),
+                    opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
+                    ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
+                    wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
+                    m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+                    weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')
+                };
+                me.device.sound = true;
             }
         };
 
@@ -102,6 +129,16 @@
          * @memberOf me.device
          */
         obj.ua = navigator.userAgent;
+
+        /**
+         * list of supported audio codecs
+         * @type enum
+         * @readonly
+         * @name audioCodecs
+         * @memberOf me.device
+         */
+        obj.audioCodecs = {};
+
         /**
          * Browser Audio capabilities
          * @type Boolean
@@ -259,31 +296,46 @@
         obj.alpha = 0;
 
         /**
-         * Triggers fullscreen request. Requires fullscreen support from the browser/device. Must be called in a click event
-         * or an event that requires user interaction.
-         * If you need to utilize event handlers around the fullscreen changing, use as per example below
-         * @name enterFullScreen
+         * Triggers a fullscreen request. Requires fullscreen support from the browser/device. 
+         * @name requestFullscreen
          * @memberOf me.device
          * @function
+         * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
          * @example
-         *   document.addEventListener( 'fullscreenchange', fullscreenchange, false );
-         *   document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+         * // add a keyboard shortcut to toggle Fullscreen mode on/off
+         * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+         * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+         *    // toggle fullscreen on/off
+         *    if (action === "toggleFullscreen") {
+         *       if (!me.device.isFullscreen) {
+         *          me.device.requestFullscreen();
+         *       } else {
+         *          me.device.exitFullscreen();
+         *       }
+         *    }
+         * });
          */
-        obj.enterFullScreen = function() {
+        obj.requestFullscreen = function(element) {
             if(this.hasFullScreenSupport) {
-                document.body.requestFullscreen();
+                element = element || me.video.getWrapper();
+                element.requestFullscreen = element.requestFullscreen ||
+                                            element.webkitRequestFullscreen ||
+                                            element.mozRequestFullScreen ||
+                                            element.msRequestFullscreen;
+                
+                element.requestFullscreen();
             }
         };
 
         /**
          * Exit fullscreen mode. Requires fullscreen support from the browser/device.
-         * @name exitFullScreen
+         * @name exitFullscreen
          * @memberOf me.device
          * @function
          */
-        obj.exitFullScreen = function() {
+        obj.exitFullscreen = function() {
             if(this.hasFullScreenSupport) {
-                document.cancelFullScreen();
+                document.exitFullscreen();
             }
         };
 
@@ -374,12 +426,19 @@
          */
         obj.turnOnPointerLock = function() {
             if(this.hasPointerLockSupport) {
-                var element = document.body;
+                var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
-                        if (document.fullscreenElement === element || document.mozFullscreenElement === element) {
+                        if ((document.fullscreenElement || 
+                             document.webkitFullscreenElement ||
+                             document.msFullscreenElement ||
+                             document.mozFullScreenElement) === element) {
+
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+                            element.requestPointerLock = element.requestPointerLock ||
+                                                         element.mozRequestPointerLock ||
+                                                         element.webkitRequestPointerLock;
                             element.requestPointerLock();
                         }
                     };
@@ -387,7 +446,7 @@
                     document.addEventListener( 'fullscreenchange', fullscreenchange, false );
                     document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
 
-                    element.requestFullscreen();
+                    me.device.requestFullscreen();
 
                 } else {
                     element.requestPointerLock();
@@ -492,22 +551,52 @@
             }
         };
 
+        /**
+         * the vibrate method pulses the vibration hardware on the device, <br>
+         * If the device doesn't support vibration, this method has no effect. <br> 
+         * If a vibration pattern is already in progress when this method is called, 
+         * the previous pattern is halted and the new one begins instead.
+         * @name vibrate
+         * @memberOf me.device
+         * @public
+         * @function
+         * @param {Number|Number[]} pattern pattern of vibration and pause intervals
+         * @example
+         * // vibrate for 1000 ms
+         * navigator.vibrate(1000);
+         * // or alternatively
+         * navigator.vibrate([1000]);
+         * vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+         * navigator.vibrate([50, 100, 150]);
+         * // cancel any existing vibrations
+         * navigator.vibrate(0);
+         */
+        obj.vibrate = function(pattern) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        };
+
+
         return obj;
     })();
 
     /**
      * Returns true if the browser/device is in full screen mode.
-     * @name isFullScreen
+     * @name isFullscreen
      * @memberOf me.device
      * @public
      * @type Boolean
      * @readonly
      * @return {boolean}
      */
-    Object.defineProperty(me.device, "isFullScreen", {
+    Object.defineProperty(me.device, "isFullscreen", {
         get: function () {
             if (me.device.hasFullScreenSupport) {
-                return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement) !== null;
+                return ((document.fullscreenElement || 
+                        document.webkitFullscreenElement ||
+                        document.msFullscreenElement ||
+                        document.mozFullScreenElement) === me.video.getWrapper());
             } else {
                 return false;
             }

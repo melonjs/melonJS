@@ -80,12 +80,12 @@ var FontTest = me.Renderable.extend ({
         this.font.lineWidth = "2";
         
         for (var i = 8; i < 48; i += 8) {
-            this.font.set('Arial', i, this.color.toHex());
+            this.font.setFont('Arial', i, this.color.toHex());
             this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
             y_pos+=this.font.measureText(context, "DUMMY").height;
         }
         // one more with drawStroke this time
-        this.font.set('Arial', 48, this.color.toHex());
+        this.font.setFont('Arial', 48, this.color.toHex());
         this.font.strokeStyle = "red";
         this.font.lineWidth = 3;
         this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
@@ -102,7 +102,7 @@ var FontTest = me.Renderable.extend ({
 
         
         // font baseline test
-        this.font.set('Arial', 16, this.color.toHex());
+        this.font.setFont('Arial', 16, this.color.toHex());
         var baseline = 200;
 
         // Draw the baseline
