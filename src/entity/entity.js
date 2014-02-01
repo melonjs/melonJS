@@ -968,7 +968,7 @@
 				// translate the renderable position (relative to the entity)
 				// and keeps it in the entity defined bounds
 				var bounds = this;
-				if (this.getShape().shapeType === 'PolyShape') {
+				if (this.shapes.length && this.getShape().shapeType === 'PolyShape') {
 					// use the corresponding bounding box
 					bounds = this.getBounds(this._bounds).translateV(this.pos);
 				}
