@@ -686,7 +686,7 @@
                         x = obj.pos.x;
                         y = obj.pos.y;
                         globalTranslation.translateV(obj.pos);
-                        globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
+                        globalTranslation.resize(obj.width, obj.height);
                     }
 
                     // check if object is visible
