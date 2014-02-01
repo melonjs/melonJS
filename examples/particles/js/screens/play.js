@@ -57,8 +57,9 @@ game.PlayScreen = me.ScreenObject.extend({
                 if (!game.Emitter.floating) {
                     pos = viewport.localToWorld(pos.x, pos.y);
                 }
-                game.Emitter.pos.setV(pos);
-                game.EmitterAux.pos.setV(pos);
+                for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+                    obj.pos.setV(pos);
+                }
             }
             if (me.input.isKeyPressed("moveViewport")) {
                 viewport.move(lastX - mousepos.x, lastY - mousepos.y);

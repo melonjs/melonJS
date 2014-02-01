@@ -3,7 +3,7 @@
     margin: 10px auto;
 }
 
-#editor #emitterControls, #editor #emitterList {
+#editor #emitterControls,#editor #emitterList {
     float: left;
     width: 300px;
     margin: 0 50px;
@@ -27,5 +27,10 @@
 }
 
 #editor #emitterList select {
+    display: block;
     width: 70%;
+}
+
+#editor #emitterList input {
+    width: 100px;
 }

@@ -11,6 +11,18 @@ game.ParticleEditor.EmitterList = Object.extend({
         select.addEventListener("change", this.onChange.bind(this));
         this.rootNode.appendChild(select);
 
+        var createButton = document.createElement("input");
+        createButton.value = "create";
+        createButton.setAttribute("type", "button");
+        createButton.addEventListener("click", this.createEmitter.bind(this));
+        this.rootNode.appendChild(createButton);
+
+        var destroyButton = document.createElement("input");
+        destroyButton.value = "destroy";
+        destroyButton.setAttribute("type", "button");
+        destroyButton.addEventListener("click", this.destroyEmitter.bind(this));
+        this.rootNode.appendChild(destroyButton);
+
         me.event.subscribe("emitterChanged", this.updateList.bind(this));
     },
 
@@ -19,17 +31,51 @@ game.ParticleEditor.EmitterList = Object.extend({
         emitter.name = "emitter" + me.utils.createGUID();
         emitter.z = 10;
         me.game.world.addChild(emitter);
+        me.game.world.addChild(emitter.container);
+        emitter.streamParticles();
         this.addEmitter(emitter);
+        this.updateList();
+        this.selectEmitter(emitter);
+        this.onChange();
+    },
+
+    destroyEmitter : function() {
+        var emitter = this.emitters[this.emitterList.selectedIndex];
+        this.removeEmitter(emitter);
+        me.game.world.removeChild(emitter.container);
+        me.game.world.removeChild(emitter);
+        this.updateList();
+        if (this.emitterList.selectedIndex === -1) {
+            this.selectEmitter(this.emitters[this.emitters.length - 1]);
+        }
+        this.onChange();
     },
 
     addEmitter : function(emitter) {
         this.emitters.push(emitter);
-        this.updateList();
+    },
+
+    removeEmitter : function(emitter) {
+        for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            if (obj === emitter) {
+                emitters.splice(i, 1);
+                break;
+            }
+        }
+    },
+
+    selectEmitter : function(emitter) {
+        for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            if (obj === emitter) {
+                this.emitterList.selectedIndex = i;
+                break;
+            }
+        }
     },
 
     updateList : function() {
         var select = this.emitterList;
-        var options = {};
+        var options = [];
 
         var option = select.firstChild;
         while (option) {
@@ -42,6 +88,7 @@ game.ParticleEditor.EmitterList = Object.extend({
             if (options[i]) {
                 option = options[i];
                 option.firstChild.textContent = emitter.name;
+                options[i] = null;
             } else {
                 option = document.createElement("option");
                 option.appendChild(document.createTextNode(emitter.name));
@@ -49,12 +96,19 @@ game.ParticleEditor.EmitterList = Object.extend({
             option.setAttribute("value", i);
             select.appendChild(option);
         }
+
+        for ( var i = options.length, obj; i--, obj = options[i];) {
+            if (!!obj) {
+                obj.remove();
+            }
+        }
     },
 
     onChange : function() {
-        var select = this.emitterList;
-        var emitter = this.emitters[select.value];
-        this.emitterController.setEmitter(emitter);
+        var emitter = this.emitters[this.emitterList.selectedIndex];
+        if (!!emitter) {
+            this.emitterController.setEmitter(emitter);
+        }
     }
 });
 
