@@ -174,7 +174,11 @@
          * @return {me.PolyShape} new PolyShape    
          */
         clone : function() {
-            return new me.PolyShape(this.pos.clone(), this.points, this.closed);
+            var copy = [];
+            this.points.forEach(function(point) {
+                copy.push(new me.Vector2d(point.x, point.y));
+            });
+            return new me.PolyShape(this.pos.clone(), copy, this.closed);
         },
 
 
