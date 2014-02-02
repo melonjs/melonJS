@@ -115,10 +115,10 @@
          */
         containsPoint: function(x, y) {
             // Make position relative to object center point.
-            x -= this.radius;
-            y -= this.radius;
+            x -= this.pos.x;
+            y -= this.pos.y;
             // Pythagorean theorem.
-            return ((x * x) + (y * y) <= (this.radius * this.radius));
+            return ((x*x) / (this.radius.x * this.radius.x)) + ((y*y) / (this.radius.y * this.radius.y)) <= 1.0;
         },
 
         /**
