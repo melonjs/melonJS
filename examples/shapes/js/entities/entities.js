@@ -1,18 +1,11 @@
-game.square = me.ObjectEntity.extend({
-    /**
+game.ShapeObject = me.ObjectEntity.extend({
+     /**
      * constructor
      */
     init: function (x, y, settings) {
         // call the parent constructor
         this.parent(x, y, settings);
-        // set the color to white
-        this.color = "white";
-        this.hoverColor = "red";
-
-        this.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
-
         this.hover = false;
-
         this.handler = me.event.subscribe("mousemove", this.mouseMove.bind(this));
     },
 
@@ -20,7 +13,11 @@ game.square = me.ObjectEntity.extend({
      * mousemove function
      */
     mouseMove: function (event) {
-        this.hover = (this.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y));
+        this.hover = this.inViewport && 
+                     this.getShape().containsPoint(
+                        // shape object position is relative to the entity
+                        event.gameX - this.pos.x, event.gameY - this.pos.y
+                     );
     },
 
     /**
@@ -33,66 +30,78 @@ game.square = me.ObjectEntity.extend({
      * draw the square
      */
     draw: function (context) {
-        context.translate(this.pos.x, this.pos.y);
-        
-        // draw the shape
-        context.fillStyle = this.hover ? this.hoverColor:this.color;
-        context.fillRect(this.getShape().pos.x, this.getShape().pos.y, this.getShape().width, this.getShape().height);
-
-        context.translate(-this.pos.x, -this.pos.y);
+        context.globalAlpha = this.hover ? 1.0 : 0.5;
+        this.parent(context);
+        context.globalAlpha = 1.0;
     }
 });
 
-game.circle = me.ObjectEntity.extend({
+game.Square = game.ShapeObject.extend({
     /**
      * constructor
      */
     init: function (x, y, settings) {
         // call the parent constructor
         this.parent(x, y, settings);
-        // set the color to white
-        this.color = "white";
-        this.hoverColor = "red";
 
+        // add a rectangular shape
+        this.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
+
+        // pienapple
+        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 24);
+        this.renderable.offset.x = 93;
+        this.renderable.offset.y = 151;
+        this.renderable.resize(7.5);
+    }
+});
+
+game.Circle = game.ShapeObject.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        // call the parent constructor
+        this.parent(x, y, settings);
+
+        // add an ellipse shape
         this.addShape(new me.Ellipse({x:0, y:0}, this.width, this.height));
 
-        this.hover = false;
+        // tomato
+        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);
+        this.renderable.offset.x = 65;
+        this.renderable.offset.y = 153;
+        this.renderable.resize(7.5);
 
-        this.handler = me.event.subscribe("mousemove", this.mouseMove.bind(this));
-    },
+    }
+});
 
+game.Poly = game.ShapeObject.extend({
     /**
-     * mousemove function
+     * constructor
      */
-    mouseMove: function (event) {
-        this.hover = (this.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y));
-        console.log(this.hover);
-    },
+    init: function (x, y, settings) {
+        // call the parent constructor
+        this.parent(x, y, settings);
 
-    /**
-     * update function
-     */
-    update: function () {
-        return true;
-    },
-    /**
-     * draw the square
-     */
-    draw: function (context) {
-        context.translate(this.pos.x, this.pos.y);
-        
-        // http://tinyurl.com/opnro2r
-        context.save();
-        context.beginPath();
+        // add a polygone shape
+        this.addShape(new me.PolyShape({x:0, y:0}, [
+            // draw a star
+            {x:0, y:0},
+            {x:28, y:60},
+            {x:94, y:70},
+            {x:46, y:114},
+            {x:88, y:180},
+            {x:0, y:125},
+            {x:-88, y:180},
+            {x:-46, y:114},
+            {x:-94, y:70},
+            {x:-28, y:60}
+        ], true));
 
-        context.translate(this.getShape().pos.x-this.getShape().radius.x, this.getShape().pos.y-this.getShape().radius.y);
-        context.scale(this.getShape().radius.x, this.getShape().radius.y);
-        context.arc(1, 1, 1, 0, 2 * Math.PI, false);
-
-        context.restore();
-        context.fillStyle = this.hover ? this.hoverColor:this.color;
-        context.fill();
-
-        context.translate(-this.pos.x, -this.pos.y);
+        // star
+        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
+        this.renderable.offset.x = 86;
+        this.renderable.offset.y = 241;
+        this.renderable.resize(7.5);
     }
 });
