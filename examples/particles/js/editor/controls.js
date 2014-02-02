@@ -149,6 +149,7 @@ game.ParticleEditor.EmitterController = Object.extend({
         burstButton.addEventListener("click", this.controlBurst.bind(this));
         buttonContainer.appendChild(burstButton);
 
+        this.addWidget(new game.ParticleEditor.ShapeWidget(emitter));
         this.addWidget(new game.ParticleEditor.TextInputWidget(emitter, "name"));
         var widget = new game.ParticleEditor.IntegerInputWidget(emitter, "width");
         widget.setPropertyValue = function(value) {

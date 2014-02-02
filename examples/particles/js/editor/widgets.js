@@ -157,3 +157,107 @@ game.ParticleEditor.ImageSelectionWidget = game.ParticleEditor.WidgetBase.extend
         }
     }
 });
+
+game.ParticleEditor.ShapeWidget = game.ParticleEditor.WidgetBase.extend({
+    init : function(object) {
+        this.parent(object, "");
+
+        this.shapeHelper = new game.ParticleEditor.ShapeWidget.Helper(object);
+        this.sizeDragHandler = new game.ParticleEditor.ShapeWidget.DragHandler(object);
+        this.sizeDragHandler.onDrag = this.onDrag.bind(this);
+
+        me.game.world.addChild(this.shapeHelper);
+        me.game.world.addChild(this.sizeDragHandler);
+    },
+    onDrag : function(pos) {
+        var object = this.object;
+        if (object) {
+            pos.sub(object.pos).clampSelf(0, Infinity);
+            object.resize(pos.x * 2, pos.y * 2);
+            me.event.publish("emitterChanged", [ object ]);
+        }
+    },
+    onChange : function() {
+    },
+    sync : function() {
+        var object = this.object;
+        if (object) {
+            this.shapeHelper.setShape(object.pos, object.width, object.height);
+            this.sizeDragHandler.setPosition(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
+        }
+    }
+});
+
+game.ParticleEditor.ShapeWidget.Helper = me.Renderable.extend({
+    init : function(object) {
+        if (object) {
+            this.parent(object.pos, object.width, object.height);
+        } else {
+            this.parent(new me.Vector2d(0, 0), 0, 0);
+        }
+        this.z = Infinity;
+    },
+    draw : function(context, rect) {
+        context.strokeStyle = "#f00";
+        context.strokeRect(this.pos.x - this.hWidth, this.pos.y - this.hHeight, this.width, this.height);
+    }
+});
+
+game.ParticleEditor.ShapeWidget.DragHandler = me.Renderable.extend({
+    init : function() {
+        this.originalSize = 40;
+        this.parent(new me.Vector2d(0, 0), this.originalSize, this.originalSize);
+        this.z = Infinity;
+        this.dragging = false;
+        this.grabOffset = new me.Vector2d(0, 0);
+        this.floating = true;
+        me.input.registerPointerEvent("mousedown", this, this.startDrag.bind(this));
+        me.input.registerPointerEvent("mouseup", me.game.viewport, this.stopDrag.bind(this));
+        me.input.registerPointerEvent("mousemove", me.game.viewport, this.drag.bind(this));
+    },
+    setPosition : function(x, y) {
+        this.pos.set(x - this.hWidth, y - this.hHeight);
+    },
+    startDrag : function(event) {
+        this.dragging = true;
+
+        var size = this.originalSize / 2;
+        this.resize(size, size);
+        size /= 2;
+        this.translate(size, size);
+
+        var mousepos = me.input.mouse.pos;
+        var x = mousepos.x - this.pos.x;
+        var y = mousepos.y - this.pos.y;
+        this.grabOffset.set(x, y);
+    },
+    stopDrag : function() {
+        if (this.dragging) {
+            this.dragging = false;
+            var size = this.originalSize;
+            this.resize(size, size);
+            size /= -4;
+            this.translate(size, size);
+        }
+    },
+    drag : function(event) {
+        if (this.dragging) {
+            var pos = me.input.mouse.pos.clone().sub(this.grabOffset);
+            pos.x += this.hWidth;
+            pos.y += this.hHeight;
+            this.onDrag(pos);
+            return false;
+        }
+    },
+    onDrag : function(pos) {
+    },
+    draw : function(context, rect) {
+        context.strokeStyle = "#f00";
+        context.fillStyle = "rgba(255, 0, 0, 0.3)";
+        context.beginPath();
+        context.arc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2);
+        context.stroke();
+        context.fill();
+        context.closePath();
+    }
+});

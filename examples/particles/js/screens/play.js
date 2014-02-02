@@ -24,18 +24,23 @@ game.PlayScreen = me.ScreenObject.extend({
         me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
 
         // listen to mouse movement
+        me.input.offset = me.video.getPos();
         var viewport = me.game.viewport;
         var mousepos = me.input.mouse.pos;
         var lastX = mousepos.x, lastY = mousepos.y;
         me.event.subscribe(me.event.MOUSEMOVE, function() {
             if (me.input.isKeyPressed("moveEmitter")) {
-                var pos = mousepos;
-                if (!game.Emitter.floating) {
-                    pos = viewport.localToWorld(pos.x, pos.y);
-                }
+                var pos;
                 for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+                    if (!obj.floating) {
+                        pos = viewport.localToWorld(mousepos.x, mousepos.y);
+                    } else {
+                        pos = mousepos;
+                    }
                     obj.pos.setV(pos);
                 }
+
+                me.event.publish("emitterChanged", [ game.EmitterController.emitter ]);
             }
             if (me.input.isKeyPressed("moveViewport")) {
                 viewport.move(lastX - mousepos.x, lastY - mousepos.y);
