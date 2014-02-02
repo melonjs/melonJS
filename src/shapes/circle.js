@@ -71,7 +71,7 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Ellipse} this rectangle    
+         * @return {me.Ellipse} this Ellipse    
          */
         translate : function(x, y) {
             this.pos.x+=x;
@@ -85,7 +85,7 @@
          * @memberOf me.Ellipse
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle    
+         * @return {me.Rect} this Ellipse    
          */
         translateV : function(v) {
             this.pos.add(v);
