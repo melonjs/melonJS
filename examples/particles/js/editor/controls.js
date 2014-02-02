@@ -26,8 +26,20 @@ game.ParticleEditor.EmitterList = Object.extend({
         me.event.subscribe("emitterChanged", this.updateList.bind(this));
     },
 
-    createEmitter : function() {
+    clear : function() {
+        for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            me.game.world.removeChild(obj.container);
+            me.game.world.removeChild(obj);
+        }
+        this.emitters.length = 0;
+        this.updateList();
+    },
+
+    createEmitter : function(params) {
         var emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() / 2, me.loader.getImage(game.resources[0].name));
+        if (params) {
+            emitter.reset(params);
+        }
         emitter.name = "emitter" + me.utils.createGUID();
         emitter.z = 10;
         me.game.world.addChild(emitter);
@@ -35,6 +47,7 @@ game.ParticleEditor.EmitterList = Object.extend({
         emitter.streamParticles();
         this.addEmitter(emitter);
         this.selectEmitter(emitter);
+        return emitter;
     },
 
     destroyEmitter : function() {
@@ -42,6 +55,8 @@ game.ParticleEditor.EmitterList = Object.extend({
         this.removeEmitter(emitter);
         me.game.world.removeChild(emitter.container);
         me.game.world.removeChild(emitter);
+        emitter.destroy();
+        return emitter;
     },
 
     addEmitter : function(emitter) {
@@ -204,7 +219,7 @@ game.ParticleEditor.EmitterController = Object.extend({
     },
 
     updateStreamButton : function() {
-        if (this.emitter.isRunning()) {
+        if (this.emitter && this.emitter.isRunning()) {
             this.streamButton.value = "stop stream";
         } else {
             this.streamButton.value = "start stream";
@@ -219,8 +234,10 @@ game.ParticleEditor.EmitterController = Object.extend({
     },
 
     sync : function(widget) {
-        widget.object = this.emitter;
-        widget.sync();
+        if (this.emitter) {
+            widget.object = this.emitter;
+            widget.sync();
+        }
     },
 
     addWidget : function(widget) {

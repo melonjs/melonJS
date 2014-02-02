@@ -9,32 +9,8 @@ game.PlayScreen = me.ScreenObject.extend({
         // add background to the game world
         me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
 
-        // create a new emitter at viewport center bottom
-        game.Emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
-        game.Emitter.name = "Emitter";
-
-        // set the emiter z order
-        game.Emitter.z = 11;
-
-        // add the emitter to the game world
-        me.game.world.addChild(game.Emitter);
-        me.game.world.addChild(game.Emitter.container);
-
-        // create a secondary emitter at viewport center bottom
-        game.EmitterAux = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
-        game.EmitterAux.name = "EmitterAux";
-
-        // set the secondary emiter z order
-        game.EmitterAux.z = 10;
-
-        // add the secondary emitter to the game world
-        me.game.world.addChild(game.EmitterAux);
-        me.game.world.addChild(game.EmitterAux.container);
-
         var controller = game.EmitterController = new game.ParticleEditor.EmitterController(game.Emitter, "emitterControls");
         var emitterList = game.EmitterList = new game.ParticleEditor.EmitterList(controller, "emitterList");
-        emitterList.addEmitter(game.Emitter);
-        emitterList.addEmitter(game.EmitterAux);
 
         // start the default emitter example
         game.changeEmitter();
@@ -74,7 +50,6 @@ game.PlayScreen = me.ScreenObject.extend({
      */
     onDestroyEvent : function() {
         // remove the emitters from the game world
-        me.game.world.removeChild(game.Emitter);
-        me.game.world.removeChild(game.EmitterAux);
+        game.EmitterList.clear();
     }
 });
