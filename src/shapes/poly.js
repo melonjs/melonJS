@@ -82,7 +82,7 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.PolyShape} this rectangle    
+         * @return {me.PolyShape} this polyShape    
          */
         translate : function(x, y) {
             this.pos.x+=x;
@@ -96,7 +96,7 @@
          * @memberOf me.PolyShape
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.PolyShape} this rectangle    
+         * @return {me.PolyShape} this polyShape    
          */
         translateV : function(v) {
             this.pos.add(v);
@@ -116,7 +116,9 @@
         },
 
         /**
-         * check if this polyShape contains the specified point
+         * check if this polyShape contains the specified point <br>
+         * (Note: it is highly recommended to first do a hit test on the corresponding <br> 
+         *  bounding rect, as the function can be highly consuming with complex shapes)
          * @name containsPoint
          * @memberOf me.polyShape
          * @function
@@ -125,7 +127,20 @@
          * @return {boolean} true if contains
          */
         containsPoint: function(x, y) {
-            // to be added 
+            var intersects = false;
+            var posx = this.pos.x, posy = this.pos.y;
+            var points = this.points;
+            var len = points.length;
+
+            //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+            for (var i = 0, j = len-1; i < len; j = i++) {
+                var iy = points[i].y + posy, ix = points[i].x + posx,
+                    jy = points[j].y + posy, jx = points[j].x + posx;
+                if ( ((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix) ) {
+                    intersects = !intersects;
+                }
+            }
+            return intersects;
         },
 
         /**

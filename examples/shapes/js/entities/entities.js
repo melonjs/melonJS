@@ -98,10 +98,27 @@ game.Poly = game.ShapeObject.extend({
             {x:-28, y:60}
         ], true));
 
+        // cache a copy of the corresponding shape bounds
+        this.polyBounds = this.getShape().getBounds();
+
         // star
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
         this.renderable.resize(7.5);
+    },
+
+    /**
+     * mousemove function
+     */
+    mouseMove: function (event) {
+        // shape object position is relative to the entity
+        var x = event.gameX - this.pos.x, y = event.gameY - this.pos.y; 
+
+        this.hover = this.inViewport &&
+                     // for polyshape first use the less expensive 
+                     // test on the corresponding bounding rectangle
+                     this.polyBounds.containsPoint(x, y) &&
+                     this.getShape().containsPoint(x, y);
     }
 });
