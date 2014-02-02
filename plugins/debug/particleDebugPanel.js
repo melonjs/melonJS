@@ -116,6 +116,12 @@
                 _this.emitterCount++;
             });
 
+            // patch me.ParticleEmitter.destroy
+            me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
+                this.parent();   
+                _this.emitterCount--;
+            });
+
             // patch me.Particle.init
             me.plugin.patch(me.Particle, 'init', function(emitter) {
                 this.parent(emitter);   

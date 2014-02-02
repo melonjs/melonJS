@@ -113,6 +113,11 @@
             });
         },
 
+        destroy: function() {
+        	this._defaultImage = null;
+        	this.reset();
+        },
+
         /**
          * returns a random point inside the bounds for this emitter
          * @name getRandomPoint
