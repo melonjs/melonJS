@@ -96,6 +96,9 @@
         // List of binded keys being held
         var keyRefs = {};
 
+        // whether default event should be prevented for a given keypress
+        var preventDefaultForKeys = {};
+
         // list of registered Event handlers
         var evtHandlers = {};
 
@@ -255,7 +258,12 @@
                     }
                 }
                 // prevent event propagation
-                return preventDefault(e);
+                if(preventDefaultForKeys[keyCode]) {
+                    return preventDefault(e);
+                }
+                else {
+                    return true;
+                }
             }
 
             return true;
@@ -665,17 +673,22 @@
          * @param {me.input#KEY} keycode
          * @param {String} action user defined corresponding action
          * @param {Boolean} lock cancel the keypress event once read
+         * @param {Boolean} prevent default browser action. Default is true
          * @example
          * // enable the keyboard
          * me.input.bindKey(me.input.KEY.LEFT,  "left");
          * me.input.bindKey(me.input.KEY.RIGHT, "right");
          * me.input.bindKey(me.input.KEY.X,     "jump", true);
          */
-        obj.bindKey = function(keycode, action, lock) {
+        obj.bindKey = function(keycode, action, lock, preventDefault) {
             // make sure the keyboard is enable
+            if(preventDefault === null || typeof preventDefault === 'undefined') {
+                preventDefault = true;
+            }
             enableKeyboardEvent();
 
             KeyBinding[keycode] = action;
+            preventDefaultForKeys[keycode] = preventDefault;
 
             keyStatus[action] = 0;
             keyLock[action] = lock ? lock : false;
@@ -717,6 +730,7 @@
             keyRefs[KeyBinding[keycode]] = {};
             // remove the key binding
             KeyBinding[keycode] = null;
+            preventDefaultForKeys[keycode] = null;
         };
 
         /**
