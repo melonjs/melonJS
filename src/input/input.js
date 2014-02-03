@@ -529,6 +529,17 @@
         obj.changedTouches = [];
 
         /**
+         * Global flag to specify if melonJS should prevent default browser action on registered key events <br>
+         * This is also configurable per key through the bindKey function
+         * default : true
+         * @public
+         * @type Boolean
+         * @name preventDefault
+         * @memberOf me.input
+         */
+        obj.preventDefault = true;
+
+        /**
          * list of mappable keys :
          * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, ESCAPE, [0..9], [A..Z]
          * @public
@@ -672,8 +683,8 @@
          * @function
          * @param {me.input#KEY} keycode
          * @param {String} action user defined corresponding action
-         * @param {Boolean} lock cancel the keypress event once read
-         * @param {Boolean} prevent default browser action. Default is true
+         * @param {Boolean} [lock=false] cancel the keypress event once read
+         * @param {Boolean} [preventDefault=me.input.preventDefault] prevent default browser action
          * @example
          * // enable the keyboard
          * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -682,10 +693,11 @@
          */
         obj.bindKey = function(keycode, action, lock, preventDefault) {
             // make sure the keyboard is enable
-            if(preventDefault === null || typeof preventDefault === 'undefined') {
-                preventDefault = true;
-            }
             enableKeyboardEvent();
+
+            if(typeof preventDefault !== 'boolean') {
+                preventDefault = me.input.preventDefault;
+            }
 
             KeyBinding[keycode] = action;
             preventDefaultForKeys[keycode] = preventDefault;
