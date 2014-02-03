@@ -7,6 +7,13 @@ game.ShapeObject = me.ObjectEntity.extend({
         this.parent(x, y, settings);
         this.hover = false;
         this.handler = me.event.subscribe("mousemove", this.mouseMove.bind(this));
+
+        // to memorize where we grab the shape
+        this.grabOffset = new me.Vector2d(0,0);
+
+        //register on mouse/touch event
+        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
     },
 
     /**
@@ -18,6 +25,28 @@ game.ShapeObject = me.ObjectEntity.extend({
                         // shape object position is relative to the entity
                         event.gameX - this.pos.x, event.gameY - this.pos.y
                      );
+
+        if (this.canMove) {
+            // follow the mouse/finger
+            this.pos.set(event.gameX, event.gameY);
+            this.pos.sub(this.grabOffset);
+        }
+    },
+
+    // mouse down function
+    onSelect : function (event) {
+        this.grabOffset.set(event.gameX, event.gameY);
+        this.grabOffset.sub(this.pos);
+        this.canMove = true;
+        // don't propagate the event furthermore
+        return false;
+    },
+
+    // mouse up function
+    onRelease : function (event) {
+        this.canMove = false;
+        // don't propagate the event furthermore
+        return false;
     },
 
     /**
@@ -120,5 +149,11 @@ game.Poly = game.ShapeObject.extend({
                      // test on the corresponding bounding rectangle
                      this.polyBounds.containsPoint(x, y) &&
                      this.getShape().containsPoint(x, y);
+
+        if (this.canMove) {
+            // follow the mouse/finger
+            this.pos.set(event.gameX, event.gameY);
+            this.pos.sub(this.grabOffset);
+        }
     }
 });

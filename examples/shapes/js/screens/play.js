@@ -4,7 +4,7 @@ game.PlayScreen = me.ScreenObject.extend({
      */
     onResetEvent: function() {  
         // clear the background
-        me.game.world.addChild(new me.ColorLayer("background", "#000000", 0), 0);
+        me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
         
         // add a few shapes
         me.game.world.addChild(new game.Square(50, 100, {width: 120, height: 150}), 1);
