@@ -23,7 +23,7 @@ game.ParticleEditor.EmitterList = Object.extend({
         destroyButton.addEventListener("click", this.destroyEmitter.bind(this));
         this.rootNode.appendChild(destroyButton);
 
-        me.event.subscribe("emitterChanged", this.updateList.bind(this));
+        me.event.subscribe("propertyChanged", this.updateList.bind(this));
     },
 
     clear : function() {
@@ -52,11 +52,13 @@ game.ParticleEditor.EmitterList = Object.extend({
 
     destroyEmitter : function() {
         var emitter = this.emitters[this.emitterList.selectedIndex];
-        this.removeEmitter(emitter);
-        me.game.world.removeChild(emitter.container);
-        me.game.world.removeChild(emitter);
-        emitter.destroy();
-        return emitter;
+        if (emitter) {
+            this.removeEmitter(emitter);
+            me.game.world.removeChild(emitter.container);
+            me.game.world.removeChild(emitter);
+            return emitter;
+        }
+        return null;
     },
 
     addEmitter : function(emitter) {
@@ -75,13 +77,14 @@ game.ParticleEditor.EmitterList = Object.extend({
     },
 
     selectEmitter : function(emitter) {
+        this.emitterList.selectedIndex = -1;
         for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
             if (obj === emitter) {
                 this.emitterList.selectedIndex = i;
-                this.onChange();
                 break;
             }
         }
+        this.onChange();
     },
 
     updateList : function() {
@@ -121,14 +124,12 @@ game.ParticleEditor.EmitterList = Object.extend({
 
     onChange : function() {
         var emitter = this.emitters[this.emitterList.selectedIndex];
-        if (!!emitter) {
-            this.emitterController.setEmitter(emitter);
-        }
+        this.emitterController.setEmitter(emitter || null);
     }
 });
 
 game.ParticleEditor.EmitterController = Object.extend({
-    init : function(emitter, containerId) {
+    init : function(containerId) {
         this.widgets = [];
         this.rootNode = document.getElementById(containerId);
         this.rootNode.classList.add("controls");
@@ -149,54 +150,53 @@ game.ParticleEditor.EmitterController = Object.extend({
         burstButton.addEventListener("click", this.controlBurst.bind(this));
         buttonContainer.appendChild(burstButton);
 
-        this.addWidget(new game.ParticleEditor.ShapeWidget(emitter));
-        this.addWidget(new game.ParticleEditor.TextInputWidget(emitter, "name"));
-        var widget = new game.ParticleEditor.IntegerInputWidget(emitter, "width");
-        widget.setPropertyValue = function(value) {
+        this.addWidget(new game.ParticleEditor.ShapeWidget());
+        this.addWidget(new game.ParticleEditor.TextInputWidget("name"));
+        var widget = new game.ParticleEditor.IntegerInputWidget("width");
+        widget.property.setValue = function(value) {
             var object = this.object;
             if (object.width !== value) {
                 object.resize(value, object.height);
-                me.event.publish("emitterChanged", [ object ]);
+                me.event.publish("propertyChanged", [ object ]);
             }
         };
         this.addWidget(widget);
-        widget = new game.ParticleEditor.IntegerInputWidget(emitter, "height");
-        widget.setPropertyValue = function(value) {
+        widget = new game.ParticleEditor.IntegerInputWidget("height");
+        widget.property.setValue = function(value) {
             var object = this.object;
             if (object.height !== value) {
                 object.resize(object.width, value);
-                me.event.publish("emitterChanged", [ object ]);
+                me.event.publish("propertyChanged", [ object ]);
             }
         };
         this.addWidget(widget);
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "z"));
-        this.addWidget(new game.ParticleEditor.ImageSelectionWidget(emitter, "image"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "totalParticles"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "minAngle"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "maxAngle"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "minLife"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "maxLife"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "minSpeed"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "maxSpeed"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "minRotation"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "maxRotation"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "minStartScale"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "maxStartScale"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "minEndScale"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "maxEndScale"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "gravity"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget(emitter, "wind"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget(emitter, "followTrajectory"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget(emitter, "textureAdditive"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget(emitter, "onlyInViewport"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget(emitter, "floating"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "maxParticles"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "frequency"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "duration"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget(emitter, "framesToSkip"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("z"));
+        this.addWidget(new game.ParticleEditor.ImageSelectionWidget("image"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("totalParticles"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("minAngle"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("maxAngle"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("minLife"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxLife"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("minSpeed"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("maxSpeed"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("minRotation"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("maxRotation"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("minStartScale"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("maxStartScale"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("minEndScale"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("maxEndScale"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("gravity"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("wind"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("followTrajectory"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("textureAdditive"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("onlyInViewport"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("floating"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxParticles"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("frequency"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("duration"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("framesToSkip"));
 
-        this.setEmitter(emitter);
-        me.event.subscribe("emitterChanged", this.onChange.bind(this));
+        me.event.subscribe("propertyChanged", this.onChange.bind(this));
     },
 
     controlStream : function(event) {
@@ -235,10 +235,8 @@ game.ParticleEditor.EmitterController = Object.extend({
     },
 
     sync : function(widget) {
-        if (this.emitter) {
-            widget.object = this.emitter;
-            widget.sync();
-        }
+        widget.setObject(this.emitter);
+        widget.sync();
     },
 
     addWidget : function(widget) {

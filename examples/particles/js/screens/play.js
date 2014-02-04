@@ -9,7 +9,7 @@ game.PlayScreen = me.ScreenObject.extend({
         // add background to the game world
         me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
 
-        var controller = game.EmitterController = new game.ParticleEditor.EmitterController(game.Emitter, "emitterControls");
+        var controller = game.EmitterController = new game.ParticleEditor.EmitterController("emitterControls");
         var emitterList = game.EmitterList = new game.ParticleEditor.EmitterList(controller, "emitterList");
 
         // start the default emitter example
@@ -40,7 +40,7 @@ game.PlayScreen = me.ScreenObject.extend({
                     obj.pos.setV(pos);
                 }
 
-                me.event.publish("emitterChanged", [ game.EmitterController.emitter ]);
+                me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
             }
             if (me.input.isKeyPressed("moveViewport")) {
                 viewport.move(lastX - mousepos.x, lastY - mousepos.y);

@@ -229,5 +229,5 @@ game.changeEmitter = function() {
     default:
         emitter.stopStream();
     }
-    me.event.publish("emitterChanged", [ game.EmitterController.emitter ]);
+    me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
 };
