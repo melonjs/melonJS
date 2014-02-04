@@ -347,7 +347,10 @@
                             e.gameY = e.gameWorldY;
                         }
                         // call the defined handler
-                        if (handler.rect.containsPoint(e.gameX, e.gameY)) {
+                        if (handler.bounds.containsPoint(
+                                e.gameX - handler.rect.pos.x, 
+                                e.gameY - handler.rect.pos.y
+                            )) {
                             // trigger the corresponding callback
                             if (handler.cb(e) === false) {
                                 // stop propagating the event if return false
@@ -899,6 +902,7 @@
                 // initialize the handler
                 evtHandlers[eventType].push({
                     rect: rect,
+                    bounds : rect.getBounds(),
                     cb: callback,
                     floating: _float
                 });
@@ -938,7 +942,7 @@
                     for (var i = handlers.length, handler; i--, handler = handlers[i];) {
                         if (handler.rect === rect) {
                             // make sure all references are null
-                            handler.rect = handler.cb = handler.floating = null;
+                            handler.rect = handler.bounds = handler.cb = handler.floating = null;
                             evtHandlers[eventType].splice(i, 1);
                         }
                     }
