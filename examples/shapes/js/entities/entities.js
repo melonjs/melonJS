@@ -10,10 +10,6 @@ game.ShapeObject = me.ObjectEntity.extend({
 
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
-
-        //register on mouse/touch event
-        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
     },
 
     /**
@@ -81,6 +77,11 @@ game.Square = game.ShapeObject.extend({
         this.renderable.offset.x = 93;
         this.renderable.offset.y = 151;
         this.renderable.resize(7.5);
+
+        //register on mouse/touch event
+        // (only register in child object once the collision shape is defined)
+        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
     }
 });
 
@@ -100,6 +101,11 @@ game.Circle = game.ShapeObject.extend({
         this.renderable.offset.x = 65;
         this.renderable.offset.y = 153;
         this.renderable.resize(7.5);
+
+        //register on mouse/touch event
+        // (only register in child object once the collision shape is defined)
+        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
 
     }
 });
@@ -135,6 +141,20 @@ game.Poly = game.ShapeObject.extend({
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
         this.renderable.resize(7.5);
+
+        //register on mouse/touch event
+        // (only register in child object once the collision shape is defined)
+        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
+    },
+
+    // mouse down function
+    onSelect : function (event) {
+        // recheck using the polygone shape
+        if (this.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+            return this.parent(event);
+        }
+        return true;
     },
 
     /**
