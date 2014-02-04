@@ -23,8 +23,10 @@ game.PlayScreen = me.ScreenObject.extend({
         me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
         me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
 
+        // flush cached html layout after we added the editor elements
+        me.video.onresize();
+
         // listen to mouse movement
-        me.input.offset = me.video.getPos();
         var viewport = me.game.viewport;
         var mousepos = me.input.mouse.pos;
         var lastX = mousepos.x, lastY = mousepos.y;
