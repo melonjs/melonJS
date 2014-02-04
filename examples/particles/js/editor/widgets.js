@@ -255,9 +255,8 @@
     });
 
     pe.DragHandler = me.Renderable.extend({
-        init : function(strokeStyle, fillStyle) {
-            this.strokeStyle = strokeStyle;
-            this.fillStyle = fillStyle;
+        init : function(color) {
+            this.color = color;
             this.originalSize = 40;
             this.parent(new me.Vector2d(0, 0), this.originalSize, this.originalSize);
             this.z = Infinity;
@@ -296,6 +295,7 @@
             var x = mousepos.x - this.pos.x;
             var y = mousepos.y - this.pos.y;
             this.grabOffset.set(x, y);
+            return false;
         },
         stopDrag : function() {
             if (this.dragging) {
@@ -304,6 +304,7 @@
                 this.resize(size, size);
                 size /= -4;
                 this.translate(size, size);
+                return false;
             }
         },
         drag : function(event) {
@@ -318,13 +319,109 @@
         onDrag : function(pos) {
         },
         draw : function(context, rect) {
-            context.strokeStyle = this.strokeStyle;
-            context.fillStyle = this.fillStyle;
+            context.save();
+            context.strokeStyle = this.color;
+            context.fillStyle = this.color;
             context.beginPath();
             context.arc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2);
             context.stroke();
+            context.globalAlpha = 0.3;
             context.fill();
             context.closePath();
+            context.restore();
+        }
+    });
+
+    pe.VectorWidget = pe.WidgetBase.extend({
+        init : function(name, color) {
+            this.parent("");
+            this.origin = new me.Vector2d(0, 0);
+            this.vector = new me.Vector2d(0, 0);
+
+            this.shape = new pe.VectorWidget.Helper(this, color);
+            this.dragHandler = new pe.DragHandler(color);
+            this.dragHandler.onDrag = this.onDrag.bind(this);
+
+            var root = this.getRootNode();
+            var label = document.createElement("label");
+            var input = this.input = document.createElement("input");
+            input.setAttribute("type", "checkbox");
+            input.addEventListener("change", this.onChange.bind(this));
+            label.appendChild(document.createTextNode("toggle " + name + " widget"));
+            label.appendChild(input);
+            root.appendChild(label);
+        },
+        setObject : function(object) {
+            this.object = object;
+        },
+        setVector : function(x, y) {
+            this.vector.set(x, y);
+            this.dragHandler.setPosition(this.origin.x + x, this.origin.y + y);
+        },
+        onDrag : function(pos) {
+            var object = this.object;
+            if (object) {
+                pos.sub(object.pos);
+                var x = pos.x;
+                var y = pos.y;
+                if (x !== this.vector.x || y !== this.vector.y) {
+                    this.onVectorChanged(pos);
+                    this.setVector(x, y);
+                    me.event.publish("propertyChanged", [ object ]);
+                }
+            }
+        },
+        onChange : function() {
+            if (this.input.checked) {
+                me.game.world.addChild(this.shape);
+                this.dragHandler.enable();
+            } else {
+                me.game.world.removeChild(this.shape);
+                this.dragHandler.disable();
+            }
+        },
+        sync : function() {
+            var object = this.object;
+            if (object) {
+                this.origin.setV(object.pos);
+                this.onSync(object);
+                this.shape.setShape(this.origin, this.vector.x, this.vector.y);
+            }
+        },
+        onVectorChanged : function(vector) {
+        },
+        onSync : function(object) {
+        }
+    });
+
+    pe.VectorWidget.Helper = me.Renderable.extend({
+        init : function(widget, color) {
+            this.parent(new me.Vector2d(0, 0), 0, 0);
+            this.widget = widget;
+            this.z = Infinity;
+            this.color = color;
+        },
+        setAngle : function(angle) {
+            var length = this.vector.length();
+            this.vector.set(Math.cos(angle) * length, -Math.sin(angle) * length);
+        },
+        setShape : function(v, w, h) {
+            var x = w < 0 ? v.x + w : v.x;
+            var y = h < 0 ? v.y + h : v.y;
+            this.pos.set(x, y);
+            this.resize(Math.abs(w), Math.abs(h));
+            return this;
+        },
+        draw : function(context) {
+            var origin = this.widget.origin;
+            var vector = this.widget.vector;
+            context.save();
+            context.strokeStyle = this.color;
+            context.translate(origin.x, origin.y);
+            context.moveTo(0, 0);
+            context.lineTo(vector.x, vector.y);
+            context.stroke();
+            context.restore();
         }
     });
 })();

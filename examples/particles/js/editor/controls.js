@@ -151,8 +151,21 @@ game.ParticleEditor.EmitterController = Object.extend({
         buttonContainer.appendChild(burstButton);
 
         this.addWidget(new game.ParticleEditor.ShapeWidget());
+
+        var widget = new game.ParticleEditor.VectorWidget("force", "#0f0");
+        var scale = 300;
+        widget.onVectorChanged = function(vector) {
+            this.object.wind = vector.x / scale;
+            this.object.gravity = vector.y / scale;
+        };
+        widget.onSync = function(object) {
+            this.setVector(object.wind * scale, object.gravity * scale);
+        }
+        this.addWidget(widget);
+
         this.addWidget(new game.ParticleEditor.TextInputWidget("name"));
-        var widget = new game.ParticleEditor.IntegerInputWidget("width");
+
+        widget = new game.ParticleEditor.IntegerInputWidget("width");
         widget.property.setValue = function(value) {
             var object = this.object;
             if (object.width !== value) {
@@ -161,6 +174,7 @@ game.ParticleEditor.EmitterController = Object.extend({
             }
         };
         this.addWidget(widget);
+
         widget = new game.ParticleEditor.IntegerInputWidget("height");
         widget.property.setValue = function(value) {
             var object = this.object;
@@ -170,6 +184,7 @@ game.ParticleEditor.EmitterController = Object.extend({
             }
         };
         this.addWidget(widget);
+
         this.addWidget(new game.ParticleEditor.IntegerInputWidget("z"));
         this.addWidget(new game.ParticleEditor.ImageSelectionWidget("image"));
         this.addWidget(new game.ParticleEditor.IntegerInputWidget("totalParticles"));
