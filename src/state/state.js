@@ -521,7 +521,7 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {Boolean} true if a "process is running"
+         * @return {Boolean} true if a "process is running"
          */
         obj.isRunning = function() {
             return _animFrameId !== -1;
@@ -533,7 +533,7 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {Boolean} true if the game is paused
+         * @return {Boolean} true if the game is paused
          */
         obj.isPaused = function() {
             return _isPaused;
