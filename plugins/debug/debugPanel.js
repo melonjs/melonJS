@@ -47,6 +47,12 @@
 		// visibility flag
 		visible : false,
 
+		// frame update time in ms
+		frameUpdateTime : 0,
+
+		// frame draw time in ms
+		frameDrawTime : 0,
+
 		// minimum melonJS version expected
 		version : "1.0.0",
 
@@ -131,22 +137,22 @@
 
 			// patch me.game.update
 			me.plugin.patch(me.game, 'update', function(time) {
-				var frameUpdateStartTime = Date.now();
+				var frameUpdateStartTime = window.performance.now();
 
 				this.parent(time);
 
 				// calculate the update time
-				_this.frameUpdateTime = Date.now() - frameUpdateStartTime;
+				_this.frameUpdateTime = window.performance.now() - frameUpdateStartTime;
 			});
 
 			// patch me.game.draw
 			me.plugin.patch(me.game, 'draw', function() {
-				var frameDrawStartTime = Date.now();
+				var frameDrawStartTime = window.performance.now();
 
 				this.parent();
 
 				// calculate the drawing time
-				_this.frameDrawTime = Date.now() - frameDrawStartTime;
+				_this.frameDrawTime = window.performance.now() - frameDrawStartTime;
 			});
 
 			// patch sprite.js
@@ -296,16 +302,16 @@
 				for (var x = len;x--;) {
 					var where = endX - (len - x);
 					context.beginPath();
-					context.strokeStyle = "lightgreen";
+					context.strokeStyle = "lightblue";
 					context.moveTo(where, 30);
 					context.lineTo(where, 30 - (this.samples[x] || 0));
 					context.stroke();
 				}
 				// display the current value
-				this.font.draw(context, usedHeap + '/' + totalHeap + ' MB', startX, 18);
+				this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', startX + 5, 5);
 			} else {
 				// Heap Memory information not available
-				this.font.draw(context, "??/?? MB", startX, 18);
+				this.font.draw(context, "Heap : ??/?? MB", startX + 5, 5);
 			}
 		},
 
@@ -331,13 +337,13 @@
 			this.font.draw(context, "?dirtyRect  [ ]",	200, 5);
 			this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 18);
 
-			// draw the memory heap usage
-			this.drawMemoryGraph(context, 300, this.rect.width - this.help_str_len - 5);
-
 			// draw the update duration
-			this.font.draw(context, "Update Duration: " + ~~this.frameUpdateTime + "ms", 300, 5);
+			this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310, 5);
 			// draw the draw duration
-			this.font.draw(context, "Draw Duration: " + ~~this.frameDrawTime + "ms", 500, 5);
+			this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310, 18);
+
+			// draw the memory heap usage
+			this.drawMemoryGraph(context, 425, this.rect.width - this.help_str_len - 10);
 
 			// some help string
 			this.font.draw(context, this.help_str, this.rect.width - this.help_str_len - 5, 18);
