@@ -347,7 +347,7 @@
                             e.gameY = e.gameWorldY;
                         }
                         // call the defined handler
-                        if ((handler.rect === null) || handler.rect.containsPoint(e.gameX, e.gameY)) {
+                        if (handler.rect.containsPoint(e.gameX, e.gameY)) {
                             // trigger the corresponding callback
                             if (handler.cb(e) === false) {
                                 // stop propagating the event if return false
@@ -897,7 +897,11 @@
                     _float = floating === true ? true : false;
                 }
                 // initialize the handler
-                evtHandlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
+                evtHandlers[eventType].push({
+                    rect: rect,
+                    cb: callback,
+                    floating: _float
+                });
                 return;
             }
             throw "melonJS : invalid event type : " + eventType;
