@@ -5,8 +5,8 @@
 
 #editor #emitterControls,#editor #emitterList {
     float: left;
-    width: 300px;
-    margin: 0 50px;
+    width: 380px;
+    margin: 0 10px;
 }
 
 #editor .controls {
@@ -19,6 +19,13 @@
 
 #editor .controls .buttons input {
     float: none;
+}
+
+#editor .controls .category {
+    background: rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+    text-align: center;
+    clear: both;
 }
 
 #editor .controls>div {

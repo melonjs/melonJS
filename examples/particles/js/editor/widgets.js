@@ -205,7 +205,7 @@
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode("toggle shape widget"));
+            label.appendChild(document.createTextNode("shape widget"));
             label.appendChild(input);
             root.appendChild(label);
         },
@@ -267,17 +267,22 @@
             this._startDrag = this.startDrag.bind(this);
             this._stopDrag = this.stopDrag.bind(this);
             this._drag = this.drag.bind(this);
+            me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
+            me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
         },
         enable : function(container) {
             me.input.registerPointerEvent("mousedown", this, this._startDrag);
-            me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
-            me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
+            // me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
+            // me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
             (container || me.game.world).addChild(this);
         },
         disable : function(container) {
+            if (this.dragging) {
+                this.stopDrag();
+            }
             me.input.releasePointerEvent("mousedown", this, this._startDrag);
-            me.input.releasePointerEvent("mouseup", me.game.viewport, this._stopDrag);
-            me.input.releasePointerEvent("mousemove", me.game.viewport, this._drag);
+            // me.input.releasePointerEvent("mouseup", me.game.viewport, this._stopDrag);
+            // me.input.releasePointerEvent("mousemove", me.game.viewport, this._drag);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {
@@ -347,7 +352,7 @@
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode("toggle " + name + " widget"));
+            label.appendChild(document.createTextNode(name + " widget"));
             label.appendChild(input);
             root.appendChild(label);
         },
@@ -401,10 +406,6 @@
             this.z = Infinity;
             this.color = color;
         },
-        setAngle : function(angle) {
-            var length = this.vector.length();
-            this.vector.set(Math.cos(angle) * length, -Math.sin(angle) * length);
-        },
         setShape : function(v, w, h) {
             var x = w < 0 ? v.x + w : v.x;
             var y = h < 0 ? v.y + h : v.y;
@@ -422,6 +423,136 @@
             context.lineTo(vector.x, vector.y);
             context.stroke();
             context.restore();
+        }
+    });
+
+    pe.VelocityWidget = pe.WidgetBase.extend({
+        init : function() {
+            this.parent("");
+            this.scale = 30;
+
+            this.shape = new pe.VelocityWidget.Helper(this);
+            this.dragHandlerMinAngle = new pe.DragHandler("#00f");
+            this.dragHandlerMinAngle.onDrag = this.onDragMinAngle.bind(this);
+            this.dragHandlerMaxAngle = new pe.DragHandler("#0f0");
+            this.dragHandlerMaxAngle.onDrag = this.onDragMaxAngle.bind(this);
+            this.dragHandlerMinSpeed = new pe.DragHandler("#00f");
+            this.dragHandlerMinSpeed.onDrag = this.onDragMinSpeed.bind(this);
+            this.dragHandlerMaxSpeed = new pe.DragHandler("#0f0");
+            this.dragHandlerMaxSpeed.onDrag = this.onDragMaxSpeed.bind(this);
+
+            var root = this.getRootNode();
+            var label = document.createElement("label");
+            var input = this.input = document.createElement("input");
+            input.setAttribute("type", "checkbox");
+            input.addEventListener("change", this.onChange.bind(this));
+            label.appendChild(document.createTextNode("velocity variation widget"));
+            label.appendChild(input);
+            root.appendChild(label);
+        },
+        onDragMinAngle : function(pos) {
+            var object = this.object;
+            if (object) {
+                pos.sub(object.pos);
+                object.minAngle = Math.atan2(-pos.y, pos.x);
+                me.event.publish("propertyChanged", [ object ]);
+            }
+        },
+        onDragMaxAngle : function(pos) {
+            var object = this.object;
+            if (object) {
+                pos.sub(object.pos);
+                object.maxAngle = Math.atan2(-pos.y, pos.x);
+                me.event.publish("propertyChanged", [ object ]);
+            }
+        },
+        onDragMinSpeed : function(pos) {
+            var object = this.object;
+            if (object) {
+                pos.sub(object.pos);
+                object.minSpeed = pos.length() / this.scale;
+                me.event.publish("propertyChanged", [ object ]);
+            }
+        },
+        onDragMaxSpeed : function(pos) {
+            var object = this.object;
+            if (object) {
+                pos.sub(object.pos);
+                object.maxSpeed = pos.length() / this.scale;
+                me.event.publish("propertyChanged", [ object ]);
+            }
+        },
+        onChange : function() {
+            if (this.input.checked) {
+                me.game.world.addChild(this.shape);
+                this.dragHandlerMinAngle.enable();
+                this.dragHandlerMaxAngle.enable();
+                this.dragHandlerMinSpeed.enable();
+                this.dragHandlerMaxSpeed.enable();
+            } else {
+                me.game.world.removeChild(this.shape);
+                this.dragHandlerMinAngle.disable();
+                this.dragHandlerMaxAngle.disable();
+                this.dragHandlerMinSpeed.disable();
+                this.dragHandlerMaxSpeed.disable();
+            }
+        },
+        setObject : function(object) {
+            this.object = object;
+        },
+        sync : function() {
+            var object = this.object;
+            if (object) {
+                this.shape.set(object);
+                var radius = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * this.scale;
+                var x = object.pos.x + Math.cos(object.minAngle) * radius;
+                var y = object.pos.y - Math.sin(object.minAngle) * radius;
+                this.dragHandlerMinAngle.setPosition(x, y);
+                x = object.pos.x + Math.cos(object.maxAngle) * radius;
+                y = object.pos.y - Math.sin(object.maxAngle) * radius;
+                this.dragHandlerMaxAngle.setPosition(x, y);
+
+                var angle = (object.minAngle + (object.maxAngle - object.minAngle) / 2);
+                x = object.pos.x + Math.cos(angle) * object.minSpeed * this.scale;
+                y = object.pos.y - Math.sin(angle) * object.minSpeed * this.scale;
+                this.dragHandlerMinSpeed.setPosition(x, y);
+                x = object.pos.x + Math.cos(angle) * object.maxSpeed * this.scale;
+                y = object.pos.y - Math.sin(angle) * object.maxSpeed * this.scale;
+                this.dragHandlerMaxSpeed.setPosition(x, y);
+            }
+        }
+    });
+
+    pe.VelocityWidget.Helper = me.Renderable.extend({
+        init : function() {
+            this.parent(new me.Vector2d(0, 0), 0, 0);
+            this.minAngle = 0;
+            this.maxAngle = 0;
+            this.minSpeed = 0;
+            this.maxSpeed = 0;
+            this.wind = 0;
+            this.gravity = 0;
+            this.scale = 30;
+            this.z = Infinity;
+        },
+        set : function(object) {
+            this.pos.setV(object.pos);
+            this.minAngle = object.minAngle;
+            this.maxAngle = object.maxAngle;
+            this.minSpeed = object.minSpeed;
+            this.maxSpeed = object.maxSpeed;
+            this.wind = object.wind;
+            this.gravity = object.gravity;
+        },
+        draw : function(context, rect) {
+            context.strokeStyle = "#00f";
+            context.beginPath();
+            var x = this.pos.x, y = this.pos.y, startAngle = -this.minAngle, endAngle = -this.maxAngle;
+            var minRadius = this.minSpeed * this.scale, maxRadius = this.maxSpeed * this.scale;
+            context.arc(x, y, maxRadius, startAngle, endAngle, true);
+            context.arc(x, y, minRadius, endAngle, startAngle);
+            context.closePath();
+            context.stroke();
         }
     });
 })();

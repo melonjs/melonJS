@@ -131,39 +131,21 @@ game.ParticleEditor.EmitterList = Object.extend({
 game.ParticleEditor.EmitterController = Object.extend({
     init : function(containerId) {
         this.widgets = [];
+        var widget;
         this.rootNode = document.getElementById(containerId);
         this.rootNode.classList.add("controls");
 
-        var buttonContainer = document.createElement("div");
-        buttonContainer.classList.add("buttons");
-        this.rootNode.appendChild(buttonContainer);
+        this.addButtons();
 
-        var streamButton = this.streamButton = document.createElement("input");
-        streamButton.value = "stream";
-        streamButton.setAttribute("type", "button");
-        streamButton.addEventListener("click", this.controlStream.bind(this));
-        buttonContainer.appendChild(streamButton);
-
-        var burstButton = document.createElement("input");
-        burstButton.value = "burst";
-        burstButton.setAttribute("type", "button");
-        burstButton.addEventListener("click", this.controlBurst.bind(this));
-        buttonContainer.appendChild(burstButton);
-
-        this.addWidget(new game.ParticleEditor.ShapeWidget());
-
-        var widget = new game.ParticleEditor.VectorWidget("force", "#0f0");
-        var scale = 300;
-        widget.onVectorChanged = function(vector) {
-            this.object.wind = vector.x / scale;
-            this.object.gravity = vector.y / scale;
-        };
-        widget.onSync = function(object) {
-            this.setVector(object.wind * scale, object.gravity * scale);
-        }
-        this.addWidget(widget);
-
+        this.addCategorySeparator("general");
         this.addWidget(new game.ParticleEditor.TextInputWidget("name"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("z"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("onlyInViewport"));
+        this.addWidget(new game.ParticleEditor.BooleanInputWidget("floating"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("framesToSkip"));
+
+        this.addCategorySeparator("emitter properties");
+        this.addWidget(new game.ParticleEditor.ShapeWidget());
 
         widget = new game.ParticleEditor.IntegerInputWidget("width");
         widget.property.setValue = function(value) {
@@ -184,34 +166,92 @@ game.ParticleEditor.EmitterController = Object.extend({
             }
         };
         this.addWidget(widget);
-
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("z"));
-        this.addWidget(new game.ParticleEditor.ImageSelectionWidget("image"));
         this.addWidget(new game.ParticleEditor.IntegerInputWidget("totalParticles"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxParticles"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("frequency"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("duration"));
+
+        this.addCategorySeparator("particle path");
+        widget = new game.ParticleEditor.VectorWidget("velocity", "#f0f");
+        var scale2 = 30;
+        widget.onVectorChanged = function(vector) {
+            var object = this.object;
+            var sRange = Math.max(0, (object.maxSpeed - object.minSpeed) / 2);
+            var speed = vector.length() / scale2;
+            object.minSpeed = Math.max(0, speed - sRange);
+            object.maxSpeed = speed + sRange;
+            var angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
+            var aRange = (object.maxAngle - object.minAngle) / 2;
+            object.minAngle = angle - aRange;
+            object.maxAngle = angle + aRange;
+        };
+        widget.onSync = function(object) {
+            var length = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * scale2;
+            var angle = object.minAngle + (object.maxAngle - object.minAngle) / 2;
+            this.setVector(Math.cos(angle) * length, -Math.sin(angle) * length);
+        }
+        this.addWidget(widget);
+
+        widget = new game.ParticleEditor.VelocityWidget();
+        this.addWidget(widget);
+
+        widget = new game.ParticleEditor.VectorWidget("force", "#0f0");
+        var scale = 300;
+        widget.onVectorChanged = function(vector) {
+            this.object.wind = vector.x / scale;
+            this.object.gravity = vector.y / scale;
+        };
+        widget.onSync = function(object) {
+            this.setVector(object.wind * scale, object.gravity * scale);
+        }
+        this.addWidget(widget);
+
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minAngle"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxAngle"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("minLife"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxLife"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minSpeed"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxSpeed"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("gravity"));
+        this.addWidget(new game.ParticleEditor.FloatInputWidget("wind"));
+
+        this.addCategorySeparator("particle properties");
+        this.addWidget(new game.ParticleEditor.ImageSelectionWidget("image"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("minLife"));
+        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxLife"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minRotation"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxRotation"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minStartScale"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxStartScale"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minEndScale"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxEndScale"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget("gravity"));
-        this.addWidget(new game.ParticleEditor.FloatInputWidget("wind"));
         this.addWidget(new game.ParticleEditor.BooleanInputWidget("followTrajectory"));
         this.addWidget(new game.ParticleEditor.BooleanInputWidget("textureAdditive"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget("onlyInViewport"));
-        this.addWidget(new game.ParticleEditor.BooleanInputWidget("floating"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("maxParticles"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("frequency"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("duration"));
-        this.addWidget(new game.ParticleEditor.IntegerInputWidget("framesToSkip"));
 
         me.event.subscribe("propertyChanged", this.onChange.bind(this));
+    },
+
+    addButtons : function() {
+        var buttonContainer = document.createElement("div");
+        buttonContainer.classList.add("buttons");
+        this.rootNode.appendChild(buttonContainer);
+
+        var streamButton = this.streamButton = document.createElement("input");
+        streamButton.value = "stream";
+        streamButton.setAttribute("type", "button");
+        streamButton.addEventListener("click", this.controlStream.bind(this));
+        buttonContainer.appendChild(streamButton);
+
+        var burstButton = document.createElement("input");
+        burstButton.value = "burst";
+        burstButton.setAttribute("type", "button");
+        burstButton.addEventListener("click", this.controlBurst.bind(this));
+        buttonContainer.appendChild(burstButton);
+    },
+
+    addCategorySeparator : function(label) {
+        var separator = document.createElement("div");
+        separator.classList.add("category");
+        separator.appendChild(document.createTextNode(label));
+        this.rootNode.appendChild(separator);
     },
 
     controlStream : function(event) {
