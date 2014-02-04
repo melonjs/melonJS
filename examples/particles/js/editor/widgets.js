@@ -38,11 +38,14 @@
             this.property = new pe.PropertyWrapper(propertyName);
             this.rootNode = null;
         },
-        getRootNode : function() {
+        addInput : function(label, input) {
             if (!this.rootNode) {
                 this.rootNode = document.createElement("div");
             }
-            return this.rootNode;
+            var labelNode= document.createElement("label");
+            labelNode.appendChild(document.createTextNode(label))
+            labelNode.appendChild(input)
+            this.rootNode.appendChild(labelNode);
         },
         setObject : function(object) {
             this.property.object = object;
@@ -61,15 +64,11 @@
         init : function(propertyName) {
             this.parent(propertyName);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "number");
             input.setAttribute("step", "any");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode(propertyName))
-            label.appendChild(input)
-            root.appendChild(label);
+            this.addInput(propertyName, input);
         },
         onChange : function() {
             if (this.input.validity.valid) {
@@ -85,15 +84,11 @@
         init : function(propertyName) {
             this.parent(propertyName);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "number");
             input.setAttribute("step", "1");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode(propertyName))
-            label.appendChild(input)
-            root.appendChild(label);
+            this.addInput(propertyName, input);
         },
         onChange : function() {
             if (this.input.validity.valid) {
@@ -109,14 +104,10 @@
         init : function(propertyName) {
             this.parent(propertyName);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "text");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode(propertyName))
-            label.appendChild(input)
-            root.appendChild(label);
+            this.addInput(propertyName, input);
         },
         onChange : function() {
             if (this.input.validity.valid) {
@@ -132,14 +123,10 @@
         init : function(propertyName) {
             this.parent(propertyName);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode(propertyName))
-            label.appendChild(input)
-            root.appendChild(label);
+            this.addInput(propertyName, input);
         },
         onChange : function() {
             this.property.setValue(this.input.checked);
@@ -153,8 +140,6 @@
         init : function(propertyName, resourceList) {
             this.parent(propertyName);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var select = this.select = document.createElement("select");
             select.addEventListener("change", this.onChange.bind(this));
             this.resourceList = resourceList = resourceList || game.resources || [];
@@ -167,9 +152,7 @@
                     select.appendChild(option);
                 }
             }
-            label.appendChild(document.createTextNode(propertyName))
-            label.appendChild(select)
-            root.appendChild(label);
+            this.addInput(propertyName, select);
         },
         onChange : function() {
             var image = me.loader.getImage(this.select.value);
@@ -200,14 +183,10 @@
             this.dragHandler = new pe.DragHandler("#f00", "rgba(255, 0, 0, 0.3)");
             this.dragHandler.onDrag = this.onDrag.bind(this);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode("shape widget"));
-            label.appendChild(input);
-            root.appendChild(label);
+            this.addInput("shape widget", input);
         },
         setObject : function(object) {
             this.object = object;
@@ -347,14 +326,10 @@
             this.dragHandler = new pe.DragHandler(color);
             this.dragHandler.onDrag = this.onDrag.bind(this);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode(name + " widget"));
-            label.appendChild(input);
-            root.appendChild(label);
+            this.addInput(name + " widget", input);
         },
         setObject : function(object) {
             this.object = object;
@@ -441,14 +416,10 @@
             this.dragHandlerMaxSpeed = new pe.DragHandler("#0f0");
             this.dragHandlerMaxSpeed.onDrag = this.onDragMaxSpeed.bind(this);
 
-            var root = this.getRootNode();
-            var label = document.createElement("label");
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
-            label.appendChild(document.createTextNode("velocity variation widget"));
-            label.appendChild(input);
-            root.appendChild(label);
+            this.addInput("velocity variation widget", input);
         },
         onDragMinAngle : function(pos) {
             var object = this.object;
