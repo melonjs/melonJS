@@ -401,12 +401,51 @@
         }
     });
 
-    pe.VelocityWidget = pe.WidgetBase.extend({
+    pe.VelocityWidget = pe.VectorWidget.extend({
+        init : function() {
+            this.parent("velocity", "#f0f");
+            this.scale = 30;
+        },
+        onVectorChanged : function(vector) {
+            var object = this.object;
+            var speedRange = (object.maxSpeed - object.minSpeed) / 2;
+            var speed = vector.length() / this.scale;
+            var angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
+            var angleRange = (object.maxAngle - object.minAngle) / 2;
+
+            object.minSpeed = Math.max(speed - speedRange, 0);
+            object.maxSpeed = speed + speedRange;
+            object.minAngle = angle - angleRange;
+            object.maxAngle = angle + angleRange;
+        },
+        onSync : function(object) {
+            var length = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * this.scale;
+            var angle = object.minAngle + (object.maxAngle - object.minAngle) / 2;
+            this.setVector(Math.cos(angle) * length, -Math.sin(angle) * length);
+        }
+    });
+
+    pe.ForceWidget = pe.VectorWidget.extend({
+        init : function() {
+            this.parent("force", "#0f0");
+            this.scale = 300;
+        },
+        onVectorChanged : function(vector) {
+            var object = this.object;
+            object.wind = vector.x / this.scale;
+            object.gravity = vector.y / this.scale;
+        },
+        onSync : function(object) {
+            this.setVector(object.wind * this.scale, object.gravity * this.scale);
+        }
+    });
+
+    pe.VelocityVariationWidget = pe.WidgetBase.extend({
         init : function() {
             this.parent("");
             this.scale = 30;
 
-            this.shape = new pe.VelocityWidget.Helper(this);
+            this.shape = new pe.VelocityVariationWidget.Helper(this);
             this.dragHandlerMinAngle = new pe.DragHandler("#00f");
             this.dragHandlerMinAngle.onDrag = this.onDragMinAngle.bind(this);
             this.dragHandlerMaxAngle = new pe.DragHandler("#0f0");
@@ -494,7 +533,7 @@
         }
     });
 
-    pe.VelocityWidget.Helper = me.Renderable.extend({
+    pe.VelocityVariationWidget.Helper = me.Renderable.extend({
         init : function() {
             this.parent(new me.Vector2d(0, 0), 0, 0);
             this.angle = 0;

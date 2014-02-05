@@ -172,39 +172,9 @@ game.ParticleEditor.EmitterController = Object.extend({
         this.addWidget(new game.ParticleEditor.IntegerInputWidget("duration"));
 
         this.addCategorySeparator("particle path");
-        widget = new game.ParticleEditor.VectorWidget("velocity", "#f0f");
-        var scale2 = 30;
-        widget.onVectorChanged = function(vector) {
-            var object = this.object;
-            var sRange = Math.max(0, (object.maxSpeed - object.minSpeed) / 2);
-            var speed = vector.length() / scale2;
-            object.minSpeed = Math.max(0, speed - sRange);
-            object.maxSpeed = speed + sRange;
-            var angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
-            var aRange = (object.maxAngle - object.minAngle) / 2;
-            object.minAngle = angle - aRange;
-            object.maxAngle = angle + aRange;
-        };
-        widget.onSync = function(object) {
-            var length = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * scale2;
-            var angle = object.minAngle + (object.maxAngle - object.minAngle) / 2;
-            this.setVector(Math.cos(angle) * length, -Math.sin(angle) * length);
-        }
-        this.addWidget(widget);
-
-        widget = new game.ParticleEditor.VelocityWidget();
-        this.addWidget(widget);
-
-        widget = new game.ParticleEditor.VectorWidget("force", "#0f0");
-        var scale = 300;
-        widget.onVectorChanged = function(vector) {
-            this.object.wind = vector.x / scale;
-            this.object.gravity = vector.y / scale;
-        };
-        widget.onSync = function(object) {
-            this.setVector(object.wind * scale, object.gravity * scale);
-        }
-        this.addWidget(widget);
+        this.addWidget(new game.ParticleEditor.VelocityWidget());
+        this.addWidget(new game.ParticleEditor.VelocityVariationWidget());
+        this.addWidget(new game.ParticleEditor.ForceWidget());
 
         this.addWidget(new game.ParticleEditor.FloatInputWidget("minAngle"));
         this.addWidget(new game.ParticleEditor.FloatInputWidget("maxAngle"));
