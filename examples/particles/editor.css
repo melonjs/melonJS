@@ -154,3 +154,12 @@
     border: thin solid white;
     width: 100%;
 }
+
+.controls textarea {
+    background: none;
+    border: thin solid white;
+    color: #ffffff;
+    height: 600px;
+    width: 396px;
+    overflow: hidden;
+}

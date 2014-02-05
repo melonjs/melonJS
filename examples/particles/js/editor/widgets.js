@@ -163,7 +163,7 @@
         sync : function() {
             var image = this.property.getValue();
             if (image) {
-                resourceList = this.resourceList;
+                var resourceList = this.resourceList;
                 for ( var i = 0, length = resourceList.length, resource; i < length; ++i) {
                     resource = resourceList[i];
                     if (image === me.loader.getImage(resource.name)) {

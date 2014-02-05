@@ -132,6 +132,7 @@
         onChange : function() {
             var emitter = this.emitters[this.emitterList.selectedIndex];
             this.emitterController.setEmitter(emitter || null);
+            me.event.publish("emitterChanged", [ emitter ]);
         }
     });
 
@@ -298,5 +299,91 @@
             widget.appendTo(this.rootNode);
             this.widgets.push(widget);
         },
+    });
+
+    pe.CodeGenerator = Object.extend({
+        init : function(controller, container) {
+            this.emitter = null;
+            me.event.subscribe("propertyChanged", this.onChange.bind(this));
+            me.event.subscribe("emitterChanged", this.setEmitter.bind(this));
+
+            this.rootNode = container;
+
+            var separator = document.createElement("div");
+            separator.classList.add("category");
+            separator.appendChild(document.createTextNode("source code"));
+            this.rootNode.appendChild(separator);
+
+            var output = this.output = document.createElement("textarea");
+            this.rootNode.appendChild(output);
+        },
+        setEmitter : function(emitter) {
+            this.emitter = emitter;
+            this.onChange(emitter);
+        },
+        onChange : function(emitter) {
+            if (this.emitter === emitter) {
+                var code = this.generateCode();
+                 this.output.value = code;
+            }
+        },
+        generateCode : function() {
+            var emitter = this.emitter;
+            if (emitter) {
+                var code = [];
+                code.push("var x = me.game.viewport.getWidth() / 2;");
+                code.push("var y = me.game.viewport.getHeight() / 2;");
+                code.push("var image = me.loader.getImage('" + this.getImageName() + "');");
+                code.push("var emitter = new me.ParticleEmitter(x, y, image);");
+                code.push("emitter.reset({");
+                code.push("    width: " + emitter.width + ",");
+                code.push("    height: " + emitter.height + ",");
+                code.push("    totalParticles: " + emitter.totalParticles + ",");
+                code.push("    minAngle: " + emitter.minAngle + ",");
+                code.push("    maxAngle: " + emitter.maxAngle + ",");
+                code.push("    minLife: " + emitter.minLife + ",");
+                code.push("    maxLife: " + emitter.maxLife + ",");
+                code.push("    minSpeed: " + emitter.minSpeed + ",");
+                code.push("    maxSpeed: " + emitter.maxSpeed + ",");
+                code.push("    minRotation: " + emitter.minRotation + ",");
+                code.push("    maxRotation: " + emitter.maxRotation + ",");
+                code.push("    minStartScale: " + emitter.minStartScale + ",");
+                code.push("    maxStartScale: " + emitter.maxStartScale + ",");
+                code.push("    minEndScale: " + emitter.minEndScale + ",");
+                code.push("    maxEndScale: " + emitter.maxEndScale + ",");
+                code.push("    gravity: " + emitter.gravity + ",");
+                code.push("    wind: " + emitter.wind + ",");
+                code.push("    followTrajectory: " + emitter.followTrajectory + ",");
+                code.push("    textureAdditive: " + emitter.textureAdditive + ",");
+                code.push("    onlyInViewport: " + emitter.onlyInViewport + ",");
+                code.push("    floating: " + emitter.floating + ",");
+                code.push("    maxParticles: " + emitter.maxParticles + ",");
+                code.push("    frequency: " + emitter.frequency + ",");
+                code.push("    duration: " + emitter.duration + ",");
+                code.push("    framesToSkip: " + emitter.framesToSkip + "");
+                code.push("});");
+                code.push("emitter.name = '" + emitter.name + "';");
+                code.push("emitter.z = " + emitter.z + ";");
+                code.push("me.game.world.addChild(emitter);");
+                code.push("me.game.world.addChild(emitter.container);");
+                code.push("emitter.streamParticles();");
+                return code.join("\n");
+            }
+            return "";
+        },
+        getImageName : function() {
+            var image = this.emitter.image, imageName = "";
+            if (image) {
+                var resourceList = game.resources;
+                for ( var i = 0, length = resourceList.length, resource; i < length; ++i) {
+                    resource = resourceList[i];
+                    if (image === me.loader.getImage(resource.name)) {
+                        imageName = resource.name;
+                        break;
+                    }
+                }
+            }
+            return imageName;
+        }
     });
 })();
