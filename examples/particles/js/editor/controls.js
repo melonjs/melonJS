@@ -23,8 +23,6 @@
             destroyButton.setAttribute("type", "button");
             destroyButton.addEventListener("click", this.destroyEmitter.bind(this));
             this.rootNode.appendChild(destroyButton);
-
-            me.event.subscribe("propertyChanged", this.updateList.bind(this));
         },
 
         clear : function() {
@@ -142,7 +140,30 @@
             this.addButtons();
 
             this.addCategorySeparator("general");
-            this.addWidget(new pe.TextInputWidget("name"));
+
+            widget = new pe.TextInputWidget("name");
+            widget.property.setValue = function(value) {
+                if (!this.object) {
+                    return false;
+                }
+                var object = this._getNestedObject(), propertyName = this.propertyName;
+                if (object[propertyName] !== value) {
+                    object[propertyName] = value;
+                    game.EmitterList.updateList();
+                    me.event.publish("propertyChanged", [ this.object ]);
+                    return true;
+                }
+                return false;
+            };
+            widget.sync = function() {
+                var value = this.property.getValue() || "";
+                if (value !== this.input.value) {
+                    this.input.value = value;
+                    game.EmitterList.updateList();
+                }
+            }
+            this.addWidget(widget);
+
             this.addWidget(new pe.IntegerInputWidget("z"));
             this.addWidget(new pe.BooleanInputWidget("onlyInViewport"));
             this.addWidget(new pe.BooleanInputWidget("floating"));

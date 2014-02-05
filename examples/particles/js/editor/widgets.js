@@ -23,13 +23,15 @@
         },
         setValue : function(value) {
             if (!this.object) {
-                return;
+                return false;
             }
             var object = this._getNestedObject(), propertyName = this.propertyName;
             if (object[propertyName] !== value) {
                 object[propertyName] = value;
                 me.event.publish("propertyChanged", [ this.object ]);
+                return true;
             }
+            return false;
         },
     });
 
