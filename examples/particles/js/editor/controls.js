@@ -120,7 +120,13 @@
 
             for ( var i = options.length, obj; i--, obj = options[i];) {
                 if (!!obj) {
-                    obj.remove();
+                    if (obj.remove) {
+                        obj.remove();
+                    } else if (obj.removeNode) {
+                        obj.removeNode(true);
+                    } else {
+                        console.warn("cannot remove DOM element");
+                    }
                 }
             }
 
