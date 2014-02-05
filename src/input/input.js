@@ -96,6 +96,9 @@
         // List of binded keys being held
         var keyRefs = {};
 
+        // whether default event should be prevented for a given keypress
+        var preventDefaultForKeys = {};
+
         // list of registered Event handlers
         var evtHandlers = {};
 
@@ -255,7 +258,12 @@
                     }
                 }
                 // prevent event propagation
-                return preventDefault(e);
+                if(preventDefaultForKeys[keyCode]) {
+                    return preventDefault(e);
+                }
+                else {
+                    return true;
+                }
             }
 
             return true;
@@ -339,7 +347,10 @@
                             e.gameY = e.gameWorldY;
                         }
                         // call the defined handler
-                        if ((handler.rect === null) || handler.rect.containsPoint(e.gameX, e.gameY)) {
+                        if (handler.bounds.containsPoint(
+                                e.gameX - handler.rect.pos.x, 
+                                e.gameY - handler.rect.pos.y
+                            )) {
                             // trigger the corresponding callback
                             if (handler.cb(e) === false) {
                                 // stop propagating the event if return false
@@ -521,6 +532,17 @@
         obj.changedTouches = [];
 
         /**
+         * Global flag to specify if melonJS should prevent default browser action on registered key events <br>
+         * This is also configurable per key through the bindKey function
+         * default : true
+         * @public
+         * @type Boolean
+         * @name preventDefault
+         * @memberOf me.input
+         */
+        obj.preventDefault = true;
+
+        /**
          * list of mappable keys :
          * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, ESCAPE, [0..9], [A..Z]
          * @public
@@ -664,18 +686,24 @@
          * @function
          * @param {me.input#KEY} keycode
          * @param {String} action user defined corresponding action
-         * @param {Boolean} lock cancel the keypress event once read
+         * @param {Boolean} [lock=false] cancel the keypress event once read
+         * @param {Boolean} [preventDefault=me.input.preventDefault] prevent default browser action
          * @example
          * // enable the keyboard
          * me.input.bindKey(me.input.KEY.LEFT,  "left");
          * me.input.bindKey(me.input.KEY.RIGHT, "right");
          * me.input.bindKey(me.input.KEY.X,     "jump", true);
          */
-        obj.bindKey = function(keycode, action, lock) {
+        obj.bindKey = function(keycode, action, lock, preventDefault) {
             // make sure the keyboard is enable
             enableKeyboardEvent();
 
+            if(typeof preventDefault !== 'boolean') {
+                preventDefault = me.input.preventDefault;
+            }
+
             KeyBinding[keycode] = action;
+            preventDefaultForKeys[keycode] = preventDefault;
 
             keyStatus[action] = 0;
             keyLock[action] = lock ? lock : false;
@@ -717,6 +745,7 @@
             keyRefs[KeyBinding[keycode]] = {};
             // remove the key binding
             KeyBinding[keycode] = null;
+            preventDefaultForKeys[keycode] = null;
         };
 
         /**
@@ -871,7 +900,12 @@
                     _float = floating === true ? true : false;
                 }
                 // initialize the handler
-                evtHandlers[eventType].push({ rect: rect || null, cb: callback, floating: _float });
+                evtHandlers[eventType].push({
+                    rect: rect,
+                    bounds : rect.getBounds(),
+                    cb: callback,
+                    floating: _float
+                });
                 return;
             }
             throw "melonJS : invalid event type : " + eventType;
@@ -908,7 +942,7 @@
                     for (var i = handlers.length, handler; i--, handler = handlers[i];) {
                         if (handler.rect === rect) {
                             // make sure all references are null
-                            handler.rect = handler.cb = handler.floating = null;
+                            handler.rect = handler.bounds = handler.cb = handler.floating = null;
                             evtHandlers[eventType].splice(i, 1);
                         }
                     }

@@ -71,7 +71,7 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Ellipse} this rectangle    
+         * @return {me.Ellipse} this Ellipse    
          */
         translate : function(x, y) {
             this.pos.x+=x;
@@ -85,7 +85,7 @@
          * @memberOf me.Ellipse
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle    
+         * @return {me.Rect} this Ellipse    
          */
         translateV : function(v) {
             this.pos.add(v);
@@ -115,10 +115,10 @@
          */
         containsPoint: function(x, y) {
             // Make position relative to object center point.
-            x -= this.radius;
-            y -= this.radius;
+            x -= this.pos.x;
+            y -= this.pos.y;
             // Pythagorean theorem.
-            return ((x * x) + (y * y) <= (this.radius * this.radius));
+            return ((x*x) / (this.radius.x * this.radius.x)) + ((y*y) / (this.radius.y * this.radius.y)) <= 1.0;
         },
 
         /**

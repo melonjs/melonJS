@@ -80,6 +80,28 @@
 		 * @ignore
 		 */
 		function preloadTMX(tmxData, onload, onerror) {
+
+			function addToTMXList(data,format) {
+				// set the TMX content
+				tmxList[tmxData.name] = {
+					data: data,
+					isTMX: (tmxData.type === "tmx"),
+					format : format
+				};
+			}
+
+			// add the tmx to the levelDirector
+			if (tmxData.type === "tmx") {
+				me.levelDirector.addTMXLevel(tmxData.name);
+			}
+			
+			//if the data is in the tmxData object, don't get it via a XMLHTTPRequest
+			if (tmxData.data) {
+				addToTMXList(tmxData.data,tmxData.format);
+				onload();
+				return;
+			}
+			
 			var xmlhttp = new XMLHttpRequest();
 			// check the data format ('tmx', 'json')
 			var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
@@ -94,10 +116,6 @@
 
 			xmlhttp.open("GET", tmxData.src + obj.nocache, true);
 
-			// add the tmx to the levelDirector
-			if (tmxData.type === "tmx") {
-				me.levelDirector.addTMXLevel(tmxData.name);
-			}
 
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
@@ -131,13 +149,9 @@
 								throw "melonJS: TMX file format " + format + "not supported !";
 						}
 
-						// get the TMX content
-						tmxList[tmxData.name] = {
-							data: result,
-							isTMX: (tmxData.type === "tmx"),
-							format : format
-						};
-
+						//set the TMX content
+						addToTMXList(result,format);
+						
 						// fire the callback
 						onload();
 					} else {
@@ -292,7 +306,13 @@
 		 * each resource item must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
 		 * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
+		 * each resource except type "tmx" must contain the following field :<br>
 		 * - src     : path and file name of the resource<br>
+		 * (!) for tmx :<br>
+		 * - src     : path and file name of the resource<br>
+		 * or<br>
+		 * - data    : the json or xml object representation of the tmx file<br>
+		 * - format  : "xml" or "json"<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
 		 * <br>
@@ -312,7 +332,9 @@
 		 *   // TMX level (XML & JSON)
 		 *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
 		 *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
-		 *   // audio ressources
+		 *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}},
+		 *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}},
+		 *   // audio resources
 		 *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
 		 *   {name: "cling",   type: "audio",  src: "data/audio/"},
 		 *   // binary file
@@ -338,8 +360,14 @@
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
 		 * Given parameter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"
+		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"<br>
+		 * each resource except type "tmx" must contain the following field :<br>
 		 * - src     : path and file name of the resource<br>
+		 * (!) for tmx :<br>
+		 * - src     : path and file name of the resource<br>
+		 * or<br>
+		 * - data    : the json or xml object representation of the tmx file<br>
+		 * - format  : "xml" or "json"<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
 		 * @name load

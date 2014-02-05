@@ -6,19 +6,19 @@
  * a simple debug panel plugin
  * usage : me.plugin.register(debugPanel, "debug");
  *
- * you can then use me.plugin.debug.show() or me.plugin.debug.hide() 
+ * you can then use me.plugin.debug.show() or me.plugin.debug.hide()
  * to show or hide the panel, or press respectively the "S" and "H" keys.
- * 
- * note : 
- * Heap Memory information is available under Chrome when using 
+ *
+ * note :
+ * Heap Memory information is available under Chrome when using
  * the "--enable-memory-info" parameter to launch Chrome
  */
 
 (function($) {
-	
+
 	// ensure that me.debug is defined
 	me.debug = me.debug || {};
-	
+
 	/**
 	 * @class
 	 * @public
@@ -33,20 +33,26 @@
 		// Object "Game Unique Identifier"
 		GUID : null,
 
-		// to hold the debug options 
+		// to hold the debug options
 		// clickable rect area
 		area : {},
-		
+
 		// panel position and size
 		rect : null,
-		
+
 		// for z ordering
 		// make it ridiculously high
 		z : Infinity,
-		
+
 		// visibility flag
 		visible : false,
-		
+
+		// frame update time in ms
+		frameUpdateTime : 0,
+
+		// frame draw time in ms
+		frameDrawTime : 0,
+
 		// minimum melonJS version expected
 		version : "1.0.0",
 
@@ -54,9 +60,9 @@
 		init : function(showKey, hideKey) {
 			// call the parent constructor
 			this.parent();
-			
+
 			this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
-			
+
 			// set the object GUID value
 			this.GUID = "debug-" + me.utils.createGUID();
 
@@ -94,8 +100,8 @@
 			me.debug.displayFPS = true;
 
 			// bind the "S" and "H" keys
-			me.input.bindKey(showKey || me.input.KEY.S, "show");
-			me.input.bindKey(hideKey || me.input.KEY.H, "hide");
+			me.input.bindKey(showKey || me.input.KEY.S, "show", false, false);
+			me.input.bindKey(hideKey || me.input.KEY.H, "hide", false, false);
 
 			// memory heap sample points
 			this.samples = [];
@@ -131,26 +137,26 @@
 
 			// patch me.game.update
 			me.plugin.patch(me.game, 'update', function(time) {
-				var frameUpdateStartTime = Date.now();
-				
-				this.parent(time);	
-				
+				var frameUpdateStartTime = window.performance.now();
+
+				this.parent(time);
+
 				// calculate the update time
-				_this.frameUpdateTime = Date.now() - frameUpdateStartTime;
+				_this.frameUpdateTime = window.performance.now() - frameUpdateStartTime;
 			});
 
 			// patch me.game.draw
 			me.plugin.patch(me.game, 'draw', function() {
-				var frameDrawStartTime = Date.now();
-				
+				var frameDrawStartTime = window.performance.now();
+
 				this.parent();
 
 				// calculate the drawing time
-				_this.frameDrawTime = Date.now() - frameDrawStartTime;
+				_this.frameDrawTime = window.performance.now() - frameDrawStartTime;
 			});
 
 			// patch sprite.js
-			me.plugin.patch(me.SpriteObject, "draw", function (context) { 
+			me.plugin.patch(me.SpriteObject, "draw", function (context) {
 				// call the original me.SpriteObject function
 				this.parent(context);
 
@@ -168,13 +174,13 @@
 
 				// check if debug mode is enabled
 				if (me.debug.renderHitBox && this.shapes.length) {
-                    
+
                     // translate to the object position
                     var translateX = this.pos.x ;
                     var translateY = this.pos.y ;
 
                     context.translate(translateX, translateY);
-                    
+
                     // draw the original shape
                     this.getShape().draw(context, "red");
              		if (this.getShape().shapeType!=="Rectangle") {
@@ -185,7 +191,7 @@
                     context.translate(-translateX, -translateY);
 
 				}
-                
+
 				if (me.debug.renderVelocity) {
 					// draw entity current velocity
 					var x = ~~(this.pos.x + this.hWidth);
@@ -203,7 +209,7 @@
 				}
 			});
 		},
-		
+
 		/**
 		 * show the debug panel
 		 */
@@ -215,7 +221,7 @@
 				this.visible = true;
 			}
 		},
-	
+
 		/**
 		 * hide the debug panel
 		 */
@@ -227,8 +233,8 @@
 				this.visible = false;
 			}
 		},
-	
-	
+
+
 		/** @private */
 		update : function() {
 			if (me.input.isKeyPressed('show')) {
@@ -239,14 +245,14 @@
 			}
 			return true;
 		},
-		
+
 		/**
 		 * @private
 		 */
 		getBounds : function() {
 			return this.rect;
 		},
-		
+
 		/** @private */
 		onClick : function(e)  {
 			// check the clickable areas
@@ -269,7 +275,7 @@
 						me.game.world.removeChild(layer);
 						me.debug.renderCollisionMap = false;
 					}
-				*/	
+				*/
 			} else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
 				// does nothing for now, since velocity is
 				// rendered together with hitboxes (is a global debug flag required?)
@@ -277,35 +283,35 @@
 			}
 			// force repaint
 			me.game.repaint();
-		}, 
-		
+		},
+
 		/** @private */
 		drawMemoryGraph : function (context, startX, endX) {
 			if (window.performance && window.performance.memory) {
 				var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
 				var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
-				
+
 				var len = endX - startX;
-				
+
 				// remove the first item
 				this.samples.shift();
 				// add a new sample (25 is the height of the graph)
 				this.samples[len] = (usedHeap / totalHeap)  * 25;
-				
+
 				// draw the graph
 				for (var x = len;x--;) {
 					var where = endX - (len - x);
-					context.beginPath();		
-					context.strokeStyle = "lightgreen";			
+					context.beginPath();
+					context.strokeStyle = "lightblue";
 					context.moveTo(where, 30);
 					context.lineTo(where, 30 - (this.samples[x] || 0));
 					context.stroke();
 				}
 				// display the current value
-				this.font.draw(context, usedHeap + '/' + totalHeap + ' MB', startX, 18);
+				this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', startX + 5, 5);
 			} else {
 				// Heap Memory information not available
-				this.font.draw(context, "??/?? MB", startX, 18);
+				this.font.draw(context, "Heap : ??/?? MB", startX + 5, 5);
 			}
 		},
 
@@ -331,13 +337,13 @@
 			this.font.draw(context, "?dirtyRect  [ ]",	200, 5);
 			this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 18);
 
-			// draw the memory heap usage
-			this.drawMemoryGraph(context, 300, this.rect.width - this.help_str_len - 5);
-
 			// draw the update duration
-			this.font.draw(context, "Update Duration: " + ~~this.frameUpdateTime + "ms", 300, 5);
+			this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310, 5);
 			// draw the draw duration
-			this.font.draw(context, "Draw Duration: " + ~~this.frameDrawTime + "ms", 500, 5);
+			this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310, 18);
+
+			// draw the memory heap usage
+			this.drawMemoryGraph(context, 425, this.rect.width - this.help_str_len - 10);
 
 			// some help string
 			this.font.draw(context, this.help_str, this.rect.width - this.help_str_len - 5, 18);

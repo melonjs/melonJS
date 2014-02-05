@@ -307,14 +307,14 @@
 		 * as defined in Tiled (Name field of the Object Properties)<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @name getEntityByName
+		 * @name getChildByName
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {String} name entity name
 		 * @return {me.Renderable[]} Array of childs
 		 */
-		getEntityByName : function(name) {
+		getChildByName : function(name) {
 			return this.getChildByProp("name", name);
 		},
 		
@@ -322,14 +322,14 @@
 		 * return the child corresponding to the specified GUID<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object list each time
-		 * @name getEntityByGUID
+		 * @name getChildByGUID
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {String} GUID entity GUID
 		 * @return {me.Renderable} corresponding child or null
 		 */
-		getEntityByGUID : function(guid) {
+		getChildByGUID : function(guid) {
 			var obj = this.getChildByProp("GUID", guid);
 			return (obj.length>0)?obj[0]:null;
 		},
