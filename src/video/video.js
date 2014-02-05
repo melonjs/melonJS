@@ -327,10 +327,8 @@
 			if (auto_scale) {
 				// get the parent container max size
 				var parent = me.video.getScreenCanvas().parentNode;
-				// getBoudindClientRect function should be use here too
-				// https://developer.mozilla.org/en-US/docs/Determining_the_dimensions_of_elements
-				var _max_width = Math.min(maxWidth, parent.width || parent.offsetWidth || window.innerWidth);
-				var _max_height = Math.min(maxHeight, parent.height || parent.offsetHeight || window.innerHeight);
+				var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
+				var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
 
 				if (maintainAspectRatio) {
 					// make sure we maintain the original aspect ratio
