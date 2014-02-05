@@ -42,7 +42,7 @@
             if (!this.rootNode) {
                 this.rootNode = document.createElement("div");
             }
-            var labelNode= document.createElement("label");
+            var labelNode = document.createElement("label");
             labelNode.appendChild(document.createTextNode(label))
             labelNode.appendChild(input)
             this.rootNode.appendChild(labelNode);
@@ -497,8 +497,8 @@
     pe.VelocityWidget.Helper = me.Renderable.extend({
         init : function() {
             this.parent(new me.Vector2d(0, 0), 0, 0);
-            this.minAngle = 0;
-            this.maxAngle = 0;
+            this.angle = 0;
+            this.angleVariation = 0;
             this.minSpeed = 0;
             this.maxSpeed = 0;
             this.wind = 0;
@@ -508,8 +508,10 @@
         },
         set : function(object) {
             this.pos.setV(object.pos);
-            this.minAngle = object.minAngle;
-            this.maxAngle = object.maxAngle;
+
+            this.angle = (object.minAngle + (object.maxAngle - object.minAngle) / 2);
+            this.angleVariation = Math.abs(object.maxAngle - object.minAngle) / 2;
+
             this.minSpeed = object.minSpeed;
             this.maxSpeed = object.maxSpeed;
             this.wind = object.wind;
@@ -518,10 +520,14 @@
         draw : function(context, rect) {
             context.strokeStyle = "#00f";
             context.beginPath();
-            var x = this.pos.x, y = this.pos.y, startAngle = -this.minAngle, endAngle = -this.maxAngle;
+            var x = this.pos.x, y = this.pos.y, startAngle = -(this.angle - this.angleVariation), endAngle = -(this.angle + this.angleVariation);
             var minRadius = this.minSpeed * this.scale, maxRadius = this.maxSpeed * this.scale;
             context.arc(x, y, maxRadius, startAngle, endAngle, true);
-            context.arc(x, y, minRadius, endAngle, startAngle);
+            if (minRadius < 0) {
+                context.arc(x, y, -minRadius, endAngle + Math.PI, startAngle + Math.PI);
+            } else {
+                context.arc(x, y, minRadius, endAngle, startAngle);
+            }
             context.closePath();
             context.stroke();
         }
