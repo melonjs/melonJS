@@ -211,6 +211,7 @@
         sync : function() {
             var object = this.object;
             if (object) {
+                this.dragHandler.floating = this.shape.floating = object.floating;
                 this.shape.setShape(object.pos, object.width, object.height);
                 this.dragHandler.setPosition(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
             }
@@ -241,7 +242,6 @@
             this.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
-            this.floating = true;
 
             this._startDrag = this.startDrag.bind(this);
             this._stopDrag = this.stopDrag.bind(this);
@@ -363,6 +363,7 @@
         sync : function() {
             var object = this.object;
             if (object) {
+                this.dragHandler.floating = this.shape.floating = object.floating;
                 this.origin.setV(object.pos);
                 this.onSync(object);
                 this.shape.setShape(this.origin, this.vector.x, this.vector.y);
@@ -513,6 +514,12 @@
         sync : function() {
             var object = this.object;
             if (object) {
+                this.shape.floating = object.floating;
+                this.dragHandlerMinAngle.floating = object.floating;
+                this.dragHandlerMaxAngle.floating = object.floating;
+                this.dragHandlerMinSpeed.floating = object.floating;
+                this.dragHandlerMaxSpeed.floating = object.floating;
+
                 this.shape.set(object);
                 var radius = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * this.scale;
                 var x = object.pos.x + Math.cos(object.minAngle) * radius;
