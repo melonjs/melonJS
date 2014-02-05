@@ -2,13 +2,18 @@
     var pe = game.ParticleEditor = game.ParticleEditor || {};
 
     pe.EmitterList = Object.extend({
-        init : function(emitterController, containerId) {
+        init : function(emitterController, container) {
             this.emitterController = emitterController;
             this.emitters = [];
-            this.rootNode = document.getElementById(containerId);
+            this.rootNode = container;
+
+            var separator = document.createElement("div");
+            separator.classList.add("category");
+            separator.appendChild(document.createTextNode("emitter list"));
+            this.rootNode.appendChild(separator);
 
             var select = this.emitterList = document.createElement("select");
-            select.setAttribute("size", 35);
+            select.setAttribute("size", 10);
             select.addEventListener("change", this.onChange.bind(this));
             this.rootNode.appendChild(select);
 
@@ -131,12 +136,12 @@
     });
 
     pe.EmitterController = Object.extend({
-        init : function(containerId) {
+        init : function(container) {
             this.widgets = [];
             var widget;
-            this.rootNode = document.getElementById(containerId);
-            this.rootNode.classList.add("controls");
+            this.rootNode = container;
 
+            this.addCategorySeparator("controls");
             this.addButtons();
 
             this.addCategorySeparator("general");

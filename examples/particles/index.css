@@ -1,3 +1,7 @@
+html,body {
+  height: 100%
+}
+
 body {
   background-color: #000;
   color: #fff;
@@ -15,6 +19,7 @@ body {
 
   /* Allow canvas to hit the edges of the browser viewport. */
   margin: 0;
+  overflow-x: hidden;
 }
 
 #screen canvas {

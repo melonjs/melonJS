@@ -9,8 +9,10 @@ game.PlayScreen = me.ScreenObject.extend({
         // add background to the game world
         me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
 
-        var controller = game.EmitterController = new game.ParticleEditor.EmitterController("emitterControls");
-        var emitterList = game.EmitterList = new game.ParticleEditor.EmitterList(controller, "emitterList");
+        var leftContainer = document.querySelector("#leftPanel .controls");
+        var rightContainer = document.querySelector("#rightPanel .controls");
+        var controller = game.EmitterController = new game.ParticleEditor.EmitterController(rightContainer);
+        var emitterList = game.EmitterList = new game.ParticleEditor.EmitterList(controller, leftContainer);
 
         // start the default emitter example
         game.changeEmitter();

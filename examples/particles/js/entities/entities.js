@@ -231,3 +231,20 @@ game.changeEmitter = function() {
     }
     me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
 };
+
+game.togglePanel = function(element) {
+    var classList = element.parentNode.classList;
+    if (classList.contains("hidden")) {
+        classList.remove("hidden");
+        classList.add("slidein");
+    } else {
+        classList.add("hidden");
+        classList.add("slideout");
+    }
+}
+
+game.clearPanelAnimation = function(event) {
+    var classList = event.target.classList;
+    classList.remove("slidein");
+    classList.remove("slideout");
+}
