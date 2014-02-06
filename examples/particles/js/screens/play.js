@@ -19,8 +19,8 @@ game.PlayScreen = me.ScreenObject.extend({
         game.changeEmitter();
 
         // enable the keyboard
-        me.input.bindKey(me.input.KEY.X, "moveEmitter");
-        me.input.bindKey(me.input.KEY.C, "moveViewport");
+        me.input.bindKey(me.input.KEY.X, "moveEmitter", false, false);
+        me.input.bindKey(me.input.KEY.C, "moveViewport", false, false);
 
         // map the left button click on the enter key
         me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
