@@ -130,9 +130,8 @@
                 }
             }
 
-            if (select.selectedIndex === -1) {
-                this.selectEmitter(this.emitters[this.emitters.length - 1]);
-            }
+            var index = (select.selectedIndex === -1) ? this.emitters.length - 1 : select.selectedIndex;
+            this.selectEmitter(this.emitters[index]);
         },
 
         onChange : function() {
