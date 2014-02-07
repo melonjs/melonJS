@@ -94,6 +94,7 @@
         "AudioContext" : true,
         "webkitAudioContext" : true,
         "Howl" : true,
-        "Howler" : true
+        "Howler" : true,
+        "exports" : true // commonJS and friends
     } 
 }
