@@ -62,15 +62,46 @@
         }
     });
 
-    pe.FloatInputWidget = pe.WidgetBase.extend({
-        init : function(propertyName) {
+    pe.NumberInputWidget = pe.WidgetBase.extend({
+        init : function(propertyName, min, max, step) {
             this.parent(propertyName);
 
+            var container = document.createElement("div");
+            container.classList.add("slider");
+
+            var slider = this.slider = document.createElement("input");
             var input = this.input = document.createElement("input");
+            slider.setAttribute("type", "range");
             input.setAttribute("type", "number");
-            input.setAttribute("step", "any");
+
+            if (typeof step === "number") {
+                slider.setAttribute("step", step);
+                input.setAttribute("step", (step % 1 > 0) ? "any" : "1");
+            } else {
+                slider.setAttribute("step", "any");
+                input.setAttribute("step", "any");
+            }
+
+            if (typeof min === "number") {
+                slider.setAttribute("min", min);
+            }
+            if (typeof min === "number") {
+                slider.setAttribute("max", max);
+            }
+
+            slider.addEventListener("input", this.onSliderChange.bind(this));
+            slider.addEventListener("change", this.onSliderChange.bind(this));
             input.addEventListener("change", this.onChange.bind(this));
-            this.addInput(propertyName, input);
+
+            container.appendChild(slider);
+            container.appendChild(input);
+
+            this.addInput(propertyName, container);
+        },
+        onSliderChange : function() {
+            if (this.slider.validity.valid) {
+                this.property.setValue(this.slider.value);
+            }
         },
         onChange : function() {
             if (this.input.validity.valid) {
@@ -78,27 +109,9 @@
             }
         },
         sync : function() {
-            this.input.value = this.property.getValue();
-        }
-    });
-
-    pe.IntegerInputWidget = pe.WidgetBase.extend({
-        init : function(propertyName) {
-            this.parent(propertyName);
-
-            var input = this.input = document.createElement("input");
-            input.setAttribute("type", "number");
-            input.setAttribute("step", "1");
-            input.addEventListener("change", this.onChange.bind(this));
-            this.addInput(propertyName, input);
-        },
-        onChange : function() {
-            if (this.input.validity.valid) {
-                this.property.setValue(this.input.value);
-            }
-        },
-        sync : function() {
-            this.input.value = this.property.getValue();
+            var value = this.property.getValue();
+            this.input.value = value;
+            this.slider.value = value;
         }
     });
 
@@ -266,13 +279,12 @@
             // me.input.releasePointerEvent("mousemove", me.game.viewport, this._drag);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
-		getBounds : function() {
-			return this;
-		},
-		containsPoint : function(x, y) {
-            return  (x >= 0 && x <= this.width && 
-                    y >= 0 && y <= this.height);
-		},
+        getBounds : function() {
+            return this;
+        },
+        containsPoint : function(x, y) {
+            return (x >= 0 && x <= this.width && y >= 0 && y <= this.height);
+        },
         setPosition : function(x, y) {
             this.pos.set(x - this.hWidth, y - this.hHeight);
         },

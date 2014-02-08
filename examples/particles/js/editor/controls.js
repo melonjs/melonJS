@@ -140,8 +140,9 @@
     pe.EmitterController = Object.extend({
         init : function(container) {
             this.widgets = [];
-            var widget;
+            this.syncId = null;
             this.rootNode = container;
+            var widget;
 
             this.addCategorySeparator("controls");
             this.addButtons();
@@ -171,15 +172,15 @@
             }
             this.addWidget(widget);
 
-            this.addWidget(new pe.IntegerInputWidget("z"));
+            this.addWidget(new pe.NumberInputWidget("z", 0, 100, 1));
             this.addWidget(new pe.BooleanInputWidget("onlyInViewport"));
             this.addWidget(new pe.BooleanInputWidget("floating"));
-            this.addWidget(new pe.IntegerInputWidget("framesToSkip"));
+            this.addWidget(new pe.NumberInputWidget("framesToSkip", 0, 5, 1));
 
             this.addCategorySeparator("emitter properties");
             this.addWidget(new pe.ShapeWidget());
 
-            widget = new pe.IntegerInputWidget("width");
+            widget = new pe.NumberInputWidget("width", 0, 800, 1);
             widget.property.setValue = function(value) {
                 var object = this.object;
                 if (object.width !== value) {
@@ -189,7 +190,7 @@
             };
             this.addWidget(widget);
 
-            widget = new pe.IntegerInputWidget("height");
+            widget = new pe.NumberInputWidget("height", 0, 600, 1);
             widget.property.setValue = function(value) {
                 var object = this.object;
                 if (object.height !== value) {
@@ -198,33 +199,33 @@
                 }
             };
             this.addWidget(widget);
-            this.addWidget(new pe.IntegerInputWidget("totalParticles"));
-            this.addWidget(new pe.IntegerInputWidget("maxParticles"));
-            this.addWidget(new pe.IntegerInputWidget("frequency"));
-            this.addWidget(new pe.IntegerInputWidget("duration"));
+            this.addWidget(new pe.NumberInputWidget("totalParticles", 0, 500, 1));
+            this.addWidget(new pe.NumberInputWidget("maxParticles", 0, 50, 1));
+            this.addWidget(new pe.NumberInputWidget("frequency", 1, 100, 1));
+            this.addWidget(new pe.NumberInputWidget("duration", 0, 10000, 100));
 
             this.addCategorySeparator("particle path");
             this.addWidget(new pe.VelocityWidget());
             this.addWidget(new pe.VelocityVariationWidget());
             this.addWidget(new pe.ForceWidget());
 
-            this.addWidget(new pe.FloatInputWidget("minAngle"));
-            this.addWidget(new pe.FloatInputWidget("maxAngle"));
-            this.addWidget(new pe.FloatInputWidget("minSpeed"));
-            this.addWidget(new pe.FloatInputWidget("maxSpeed"));
-            this.addWidget(new pe.FloatInputWidget("gravity"));
-            this.addWidget(new pe.FloatInputWidget("wind"));
+            this.addWidget(new pe.NumberInputWidget("minAngle", -Math.PI, Math.PI));
+            this.addWidget(new pe.NumberInputWidget("maxAngle", -Math.PI, Math.PI));
+            this.addWidget(new pe.NumberInputWidget("minSpeed", 0, 30));
+            this.addWidget(new pe.NumberInputWidget("maxSpeed", 0, 30));
+            this.addWidget(new pe.NumberInputWidget("gravity", -5, 5));
+            this.addWidget(new pe.NumberInputWidget("wind", -5, 5));
 
             this.addCategorySeparator("particle properties");
             this.addWidget(new pe.ImageSelectionWidget("image"));
-            this.addWidget(new pe.IntegerInputWidget("minLife"));
-            this.addWidget(new pe.IntegerInputWidget("maxLife"));
-            this.addWidget(new pe.FloatInputWidget("minRotation"));
-            this.addWidget(new pe.FloatInputWidget("maxRotation"));
-            this.addWidget(new pe.FloatInputWidget("minStartScale"));
-            this.addWidget(new pe.FloatInputWidget("maxStartScale"));
-            this.addWidget(new pe.FloatInputWidget("minEndScale"));
-            this.addWidget(new pe.FloatInputWidget("maxEndScale"));
+            this.addWidget(new pe.NumberInputWidget("minLife", 0, 10000, 100));
+            this.addWidget(new pe.NumberInputWidget("maxLife", 0, 10000, 100));
+            this.addWidget(new pe.NumberInputWidget("minRotation", -Math.PI, Math.PI));
+            this.addWidget(new pe.NumberInputWidget("maxRotation", -Math.PI, Math.PI));
+            this.addWidget(new pe.NumberInputWidget("minStartScale", 0, 5));
+            this.addWidget(new pe.NumberInputWidget("maxStartScale", 0, 5));
+            this.addWidget(new pe.NumberInputWidget("minEndScale", 0, 5));
+            this.addWidget(new pe.NumberInputWidget("maxEndScale", 0, 5));
             this.addWidget(new pe.BooleanInputWidget("followTrajectory"));
             this.addWidget(new pe.BooleanInputWidget("textureAdditive"));
 
@@ -285,10 +286,15 @@
         },
 
         onChange : function(emitter) {
-            if (this.emitter === emitter) {
-                this.updateStreamButton();
-                this.widgets.forEach(this.sync, this);
+            if (this.emitter === emitter && this.syncId === null) {
+                this.syncId = setTimeout(this.doSync.bind(this), 50);
             }
+        },
+
+        doSync : function() {
+            this.syncId = null;
+            this.updateStreamButton();
+            this.widgets.forEach(this.sync, this);
         },
 
         sync : function(widget) {
@@ -305,6 +311,7 @@
     pe.CodeGenerator = Object.extend({
         init : function(controller, container) {
             this.emitter = null;
+            this.syncId = null;
             me.event.subscribe("propertyChanged", this.onChange.bind(this));
             me.event.subscribe("emitterChanged", this.setEmitter.bind(this));
 
@@ -323,9 +330,8 @@
             this.onChange(emitter);
         },
         onChange : function(emitter) {
-            if (this.emitter === emitter) {
-                var code = this.generateCode();
-                 this.output.value = code;
+            if (this.emitter === emitter && this.syncId === null) {
+                this.syncId = setTimeout(this.generateCode.bind(this), 100);
             }
         },
         generateCode : function() {
@@ -336,16 +342,16 @@
                 var settings = [];
                 code.push("var x = me.game.viewport.getWidth() / 2;");
                 code.push("var y = me.game.viewport.getHeight() / 2;");
-                if(emitter.image !== defaults.image) {
+                if (emitter.image !== defaults.image) {
                     code.push("var image = me.loader.getImage('" + this.getImageName() + "');");
                     settings.push("    image: image");
                 }
-                for(var i in defaults) {
-                    if(defaults.hasOwnProperty(i) && i !== "image" && emitter[i] !== defaults[i]) {
+                for ( var i in defaults) {
+                    if (defaults.hasOwnProperty(i) && i !== "image" && emitter[i] !== defaults[i]) {
                         settings.push("    " + i + ": " + emitter[i]);
                     }
                 }
-                if(settings.length > 0) {
+                if (settings.length > 0) {
                     code.push("var emitter = new me.ParticleEmitter(x, y, {");
                     code.push(settings.join(",\n"));
                     code.push("});");
@@ -357,9 +363,11 @@
                 code.push("me.game.world.addChild(emitter);");
                 code.push("me.game.world.addChild(emitter.container);");
                 code.push("emitter.streamParticles();");
-                return code.join("\n");
+                this.output.value = code.join("\n");
+            } else {
+                this.output.value = "";
             }
-            return "";
+            this.syncId = null;
         },
         getImageName : function() {
             var image = this.emitter.image, imageName = "";

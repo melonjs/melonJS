@@ -122,7 +122,7 @@
 }
 
 .controls>div {
-    height: 23px;
+    height: 25px;
 }
 
 .controls input,.controls select {
@@ -144,6 +144,23 @@
     border-bottom: thin dotted white;
     color: #ffffff;
     width: 200px;
+}
+
+.controls .slider {
+    display: inline-block;
+    width: 210px;
+    float: right;
+}
+
+.controls .slider input[type=range] {
+    border: none;
+    float: left;
+    width: 125px;
+    padding: 0;
+}
+
+.controls .slider input[type=number] {
+    width: 60px;
 }
 
 .controls label {
