@@ -194,8 +194,8 @@
         init : function() {
             this.parent("");
 
-            this.shape = new pe.ShapeWidget.Helper("#f00");
-            this.dragHandler = new pe.DragHandler("#f00", "rgba(255, 0, 0, 0.3)");
+            this.shape = new pe.ShapeWidget.Helper("rgba(255, 86, 86, 0.3)");
+            this.dragHandler = new pe.DragHandler(new me.Color(255, 86, 86, 1));
             this.dragHandler.onDrag = this.onDrag.bind(this);
 
             var input = this.input = document.createElement("input");
@@ -257,14 +257,17 @@
             return this;
         },
         draw : function(context) {
-            this.parent(context, this.color);
+            context.fillStyle = this.color;
+            context.strokeStyle = this.color;
+            context.fillRect(this.left, this.top, this.width, this.height);
+            context.strokeRect(this.left, this.top, this.width, this.height);
         }
     });
 
     pe.DragHandler = me.Renderable.extend({
         init : function(color) {
-            this.color = color;
             this.originalSize = 40;
+            this.createGradients(color, this.originalSize);
             this.parent(new me.Vector2d(0, 0), this.originalSize, this.originalSize);
             this.z = Infinity;
             this.dragging = false;
@@ -275,6 +278,25 @@
             this._drag = this.drag.bind(this);
             me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
             me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
+        },
+        createGradients : function(color, size) {
+            var context = me.video.getSystemContext();
+            var bigGradient = this.bigGradient = context.createRadialGradient(0, 0, 0, 0, 0, size / 2);
+            var smallGradient = this.smallGradient = context.createRadialGradient(0, 0, 0, 0, 0, size / 4);
+
+            color.alpha = 0;
+            bigGradient.addColorStop(0, color.toRGBA());
+            smallGradient.addColorStop(0, color.toRGBA());
+
+            color.alpha = 0.8;
+            bigGradient.addColorStop(0.9, color.toRGBA());
+            smallGradient.addColorStop(0.9, color.toRGBA());
+
+            color.alpha = 0;
+            bigGradient.addColorStop(1, color.toRGBA());
+            smallGradient.addColorStop(1, color.toRGBA());
+
+            this.color = bigGradient;
         },
         enable : function(container) {
             me.input.registerPointerEvent("mousedown", this, this._startDrag);
@@ -302,6 +324,7 @@
         },
         startDrag : function(event) {
             this.dragging = true;
+            this.color = this.smallGradient;
 
             var size = this.originalSize / 2;
             this.resize(size, size);
@@ -317,6 +340,7 @@
         stopDrag : function() {
             if (this.dragging) {
                 this.dragging = false;
+                this.color = this.bigGradient;
                 var size = this.originalSize;
                 this.resize(size, size);
                 size /= -4;
@@ -337,12 +361,13 @@
         },
         draw : function(context, rect) {
             context.save();
-            context.strokeStyle = this.color;
+            // context.strokeStyle = this.color;
             context.fillStyle = this.color;
             context.beginPath();
-            context.arc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2);
-            context.stroke();
-            context.globalAlpha = 0.3;
+            context.translate(this.pos.x + this.hWidth, this.pos.y + this.hHeight);
+            context.arc(0, 0, this.hWidth, 0, Math.PI * 2);
+            // context.stroke();
+            // context.globalAlpha = 0.3;
             context.fill();
             context.closePath();
             context.restore();
@@ -425,7 +450,7 @@
             this.parent(new me.Vector2d(0, 0), 0, 0);
             this.widget = widget;
             this.z = Infinity;
-            this.color = color;
+            this.color = color.toRGBA();
         },
         setShape : function(v, w, h) {
             var x = w < 0 ? v.x + w : v.x;
@@ -438,18 +463,21 @@
             var origin = this.widget.origin;
             var vector = this.widget.vector;
             context.save();
+            context.lineWidth = 5;
             context.strokeStyle = this.color;
             context.translate(origin.x, origin.y);
+            context.beginPath();
             context.moveTo(0, 0);
             context.lineTo(vector.x, vector.y);
             context.stroke();
+            context.closePath();
             context.restore();
         }
     });
 
     pe.VelocityWidget = pe.VectorWidget.extend({
         init : function() {
-            this.parent("velocity", "#f0f");
+            this.parent("velocity", new me.Color(229, 216, 47, 0.3));
             this.scale = 30;
         },
         onVectorChanged : function(vector) {
@@ -473,7 +501,7 @@
 
     pe.ForceWidget = pe.VectorWidget.extend({
         init : function() {
-            this.parent("force", "#0f0");
+            this.parent("force", new me.Color(79, 214, 72, 0.3));
             this.scale = 300;
         },
         onVectorChanged : function(vector) {
@@ -491,14 +519,14 @@
             this.parent("");
             this.scale = 30;
 
-            this.shape = new pe.VelocityVariationWidget.Helper(this);
-            this.dragHandlerMinAngle = new pe.DragHandler("#00f");
+            this.shape = new pe.VelocityVariationWidget.Helper(new me.Color(105, 190, 255, 0.3));
+            this.dragHandlerMinAngle = new pe.DragHandler(new me.Color(150, 150, 255, 1));
             this.dragHandlerMinAngle.onDrag = this.onDragMinAngle.bind(this);
-            this.dragHandlerMaxAngle = new pe.DragHandler("#0f0");
+            this.dragHandlerMaxAngle = new pe.DragHandler(new me.Color(80, 80, 255, 1));
             this.dragHandlerMaxAngle.onDrag = this.onDragMaxAngle.bind(this);
-            this.dragHandlerMinSpeed = new pe.DragHandler("#00f");
+            this.dragHandlerMinSpeed = new pe.DragHandler(new me.Color(255, 200, 150, 1));
             this.dragHandlerMinSpeed.onDrag = this.onDragMinSpeed.bind(this);
-            this.dragHandlerMaxSpeed = new pe.DragHandler("#0f0");
+            this.dragHandlerMaxSpeed = new pe.DragHandler(new me.Color(255, 120, 30, 1));
             this.dragHandlerMaxSpeed.onDrag = this.onDragMaxSpeed.bind(this);
 
             var input = this.input = document.createElement("input");
@@ -598,8 +626,9 @@
     });
 
     pe.VelocityVariationWidget.Helper = me.Renderable.extend({
-        init : function() {
+        init : function(color) {
             this.parent(new me.Vector2d(0, 0), 0, 0);
+            this.color = color.toRGBA();
             this.angle = 0;
             this.angleVariation = 0;
             this.minSpeed = 0;
@@ -621,7 +650,8 @@
             this.gravity = object.gravity;
         },
         draw : function(context, rect) {
-            context.strokeStyle = "#00f";
+            context.strokeStyle = this.color;
+            context.fillStyle = this.color;
             context.beginPath();
             var x = this.pos.x, y = this.pos.y, startAngle = -(this.angle - this.angleVariation), endAngle = -(this.angle + this.angleVariation);
             var minRadius = this.minSpeed * this.scale, maxRadius = this.maxSpeed * this.scale;
@@ -632,6 +662,7 @@
                 context.arc(x, y, minRadius, endAngle, startAngle);
             }
             context.closePath();
+            context.fill();
             context.stroke();
         }
     });
