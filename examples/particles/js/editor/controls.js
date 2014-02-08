@@ -140,12 +140,20 @@
     pe.EmitterController = Object.extend({
         init : function(container) {
             this.widgets = [];
+            this.ingameWidgets = [];
             this.syncId = null;
             this.rootNode = container;
             var widget;
 
             this.addCategorySeparator("controls");
-            this.addButtons();
+            this.addControlButtons();
+
+            this.addCategorySeparator("ingame widgets");
+            this.addWidgetButtons();
+            this.addWidget(new pe.ShapeWidget(), true);
+            this.addWidget(new pe.VelocityWidget(), true);
+            this.addWidget(new pe.VelocityVariationWidget(), true);
+            this.addWidget(new pe.ForceWidget(), true);
 
             this.addCategorySeparator("general");
 
@@ -178,8 +186,6 @@
             this.addWidget(new pe.NumberInputWidget("framesToSkip", 0, 5, 1));
 
             this.addCategorySeparator("emitter properties");
-            this.addWidget(new pe.ShapeWidget());
-
             widget = new pe.NumberInputWidget("width", 0, 800, 1);
             widget.property.setValue = function(value) {
                 var object = this.object;
@@ -205,10 +211,6 @@
             this.addWidget(new pe.NumberInputWidget("duration", 0, 10000, 100));
 
             this.addCategorySeparator("particle path");
-            this.addWidget(new pe.VelocityWidget());
-            this.addWidget(new pe.VelocityVariationWidget());
-            this.addWidget(new pe.ForceWidget());
-
             this.addWidget(new pe.NumberInputWidget("minAngle", -Math.PI, Math.PI));
             this.addWidget(new pe.NumberInputWidget("maxAngle", -Math.PI, Math.PI));
             this.addWidget(new pe.NumberInputWidget("minSpeed", 0, 30));
@@ -230,9 +232,11 @@
             this.addWidget(new pe.BooleanInputWidget("textureAdditive"));
 
             me.event.subscribe("propertyChanged", this.onChange.bind(this));
+
+            this.ingameWidgets.forEach(this.showIngameWidgets);
         },
 
-        addButtons : function() {
+        addControlButtons : function() {
             var buttonContainer = document.createElement("div");
             buttonContainer.classList.add("buttons");
             this.rootNode.appendChild(buttonContainer);
@@ -248,6 +252,32 @@
             burstButton.setAttribute("type", "button");
             burstButton.addEventListener("click", this.controlBurst.bind(this));
             buttonContainer.appendChild(burstButton);
+        },
+
+        addWidgetButtons : function() {
+            var buttonContainer = document.createElement("div");
+            buttonContainer.classList.add("buttons");
+            this.rootNode.appendChild(buttonContainer);
+
+            var showButton = this.showButton = document.createElement("input");
+            showButton.value = "show all";
+            showButton.setAttribute("type", "button");
+            showButton.addEventListener("click", this.ingameWidgets.forEach.bind(this.ingameWidgets, this.showIngameWidgets));
+            buttonContainer.appendChild(showButton);
+
+            var hideButton = document.createElement("input");
+            hideButton.value = "hide all";
+            hideButton.setAttribute("type", "button");
+            hideButton.addEventListener("click", this.ingameWidgets.forEach.bind(this.ingameWidgets, this.hideIngameWidgets));
+            buttonContainer.appendChild(hideButton);
+        },
+
+        showIngameWidgets : function(widget) {
+            widget.show();
+        },
+
+        hideIngameWidgets : function(widget) {
+            widget.hide();
         },
 
         addCategorySeparator : function(label) {
@@ -302,9 +332,12 @@
             widget.sync();
         },
 
-        addWidget : function(widget) {
+        addWidget : function(widget, ingame) {
             widget.appendTo(this.rootNode);
             this.widgets.push(widget);
+            if (ingame) {
+                this.ingameWidgets.push(widget);
+            }
         },
     });
 

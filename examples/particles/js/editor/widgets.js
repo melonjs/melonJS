@@ -223,6 +223,18 @@
                 this.dragHandler.disable();
             }
         },
+        show : function() {
+            if (!this.input.checked) {
+                this.input.checked = true;
+                this.onChange();
+            }
+        },
+        hide : function() {
+            if (this.input.checked) {
+                this.input.checked = false;
+                this.onChange();
+            }
+        },
         sync : function() {
             var object = this.object;
             if (object) {
@@ -381,6 +393,18 @@
                 this.dragHandler.disable();
             }
         },
+        show : function() {
+            if (!this.input.checked) {
+                this.input.checked = true;
+                this.onChange();
+            }
+        },
+        hide : function() {
+            if (this.input.checked) {
+                this.input.checked = false;
+                this.onChange();
+            }
+        },
         sync : function() {
             var object = this.object;
             if (object) {
@@ -527,6 +551,18 @@
                 this.dragHandlerMaxAngle.disable();
                 this.dragHandlerMinSpeed.disable();
                 this.dragHandlerMaxSpeed.disable();
+            }
+        },
+        show : function() {
+            if (!this.input.checked) {
+                this.input.checked = true;
+                this.onChange();
+            }
+        },
+        hide : function() {
+            if (this.input.checked) {
+                this.input.checked = false;
+                this.onChange();
             }
         },
         setObject : function(object) {
