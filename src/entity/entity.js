@@ -836,6 +836,49 @@
 			this.doJump();
 		},
 
+		/**
+		 * helper function for platform games: <br>
+		 * set the destination you want the entity to move to<br>
+		 * @name setXDestination
+		 * @memberOf me.ObjectEntity
+		 * @function
+		 * @param {Number} destination on x axis
+		 * @protected
+		 */
+		setXDestination: function (x) {
+			this.xDestination = x;
+			this.isWalkingToDestination = true;
+		},
+		/**
+		 * helper function for platform games: <br>
+		 * make the entity walk to the destination you set setXDestination <br>
+		 * @name walkToXDestination
+		 * @memberOf me.ObjectEntity
+		 * @function
+		 * @protected
+		 * @example
+		 * update: function() {
+		 * this.walkToXDestination();
+		 * return true;
+		 * }
+		 */
+		walkToXDestination: function () {
+			if (!this.xDestination) {
+				return;
+			}
+			if (this.isWalkingToDestination) {
+				if (this.xDestination > this.pos.x) {
+					this.walkLeft = false;
+				} else if (this.xDestination < this.pos.x) {
+					this.walkLeft = true;
+				}
+				if (this.xDestination === this.pos.x) {
+					this.isWalkingToDestination = false;
+				}
+				this.doWalk(this.walkLeft);
+			}
+		},
+
 
 		/**
 		 * return the distance to the specified entity
