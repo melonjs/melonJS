@@ -393,7 +393,7 @@
         addParticles: function(count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle to the container
-                var particle = me.entityPool.newInstanceOf("me.Particle", this);
+                var particle = me.pool.pull("me.Particle", this);
                 particle.isRenderable = false;
                 this.container.addChild(particle);
             }

@@ -55,12 +55,11 @@ var game = {
 		// set the fade transition effect
 		me.state.transition("fade","#FFFFFF", 250);
 
-		// add our player entity in the entity pool
-		me.entityPool.add("mainPlayer", game.PlayerEntity);
-		// add our enemy entity in the entity pool
-		me.entityPool.add("SlimeEntity", game.SlimeEnemyEntity);
-		me.entityPool.add("FlyEntity", game.FlyEnemyEntity);
-		me.entityPool.add("CoinEntity", game.CoinEntity);
+		// register our objects entity in the object pool
+		me.pool.register("mainPlayer", game.PlayerEntity);
+		me.pool.register("SlimeEntity", game.SlimeEnemyEntity);
+		me.pool.register("FlyEntity", game.FlyEnemyEntity);
+		me.pool.register("CoinEntity", game.CoinEntity);
 
 		// load the texture atlas file
 		// this will be used by object entities later
