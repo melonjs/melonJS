@@ -6,6 +6,7 @@ Version History
 * Core : added new shapes objects (Ellipse, Polygon) on top of the existing Rectangle one
 * Core : added a mixing property to object (insidiator)
 * Core : deprecated object manipulation (add, remove) have been removed from me.game
+* Core : renamed the `me.entityPool` API to `me.pool` and related functions (see documentation & upgrade guide)
 * Entity : deprecated helper function (doJump, doWalk) have been removed
 * ObjectContainer : renamed getEntityByProp to getChildByProp
 * ObjectContainer : getChildByProp now returns all matching object type and not only "entities"
