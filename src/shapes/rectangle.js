@@ -277,7 +277,7 @@
          */
         union : function(/** {me.Rect} */ r) {
             var x1 = Math.min(this.left, r.left);
-            var y1 = Math.min(this.right, r.right);
+            var y1 = Math.min(this.top, r.top);
 
             this.resize (
                 Math.max(this.right, r.right) - x1,
