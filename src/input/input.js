@@ -739,7 +739,7 @@
 		};
 
 		/**
-		 * Associate a mouse (button) action to a keycode
+		 * Associate a mouse (button) action to a keycode<br>
 		 * Left button – 0
 		 * Middle button – 1
 		 * Right button – 2
