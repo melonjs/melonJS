@@ -902,7 +902,10 @@
                 // initialize the handler
                 evtHandlers[eventType].push({
                     rect: rect,
-                    bounds : rect.getBounds(),
+                    bounds: (typeof (rect.getShape) === 'function') ? 
+                        rect.getShape().getBounds() : 
+                        // makes it relative to the rect object (0,0);
+                        rect.getBounds().translate(-rect.pos.x, -rect.pos.y),
                     cb: callback,
                     floating: _float
                 });
