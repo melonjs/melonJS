@@ -243,19 +243,19 @@
             }));
 
             this.addCategorySeparator("particle path");
-            this.addWidget(new pe.NumberInputWidget("minAngle", {
+            this.addWidget(new pe.NumberInputWidget("angle", {
                 min : -Math.PI,
                 max : Math.PI,
             }));
-            this.addWidget(new pe.NumberInputWidget("maxAngle", {
-                min : -Math.PI,
+            this.addWidget(new pe.NumberInputWidget("angleVariation", {
+                min : 0,
                 max : Math.PI,
             }));
-            this.addWidget(new pe.NumberInputWidget("minSpeed", {
+            this.addWidget(new pe.NumberInputWidget("speed", {
                 min : 0,
                 sliderMax : 30,
             }));
-            this.addWidget(new pe.NumberInputWidget("maxSpeed", {
+            this.addWidget(new pe.NumberInputWidget("speedVariation", {
                 min : 0,
                 sliderMax : 30,
             }));

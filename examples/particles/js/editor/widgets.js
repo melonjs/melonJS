@@ -104,12 +104,12 @@
         },
         onSliderChange : function() {
             if (this.slider.validity.valid) {
-                this.property.setValue(this.slider.value);
+                this.property.setValue(parseFloat(this.slider.value));
             }
         },
         onChange : function() {
             if (this.input.validity.valid) {
-                this.property.setValue(this.input.value);
+                this.property.setValue(parseFloat(this.input.value));
             }
         },
         sync : function() {
@@ -480,19 +480,15 @@
         },
         onVectorChanged : function(vector) {
             var object = this.object;
-            var speedRange = (object.maxSpeed - object.minSpeed) / 2;
-            var speed = vector.length() / this.scale;
-            var angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
-            var angleRange = (object.maxAngle - object.minAngle) / 2;
-
-            object.minSpeed = Math.max(speed - speedRange, 0);
-            object.maxSpeed = speed + speedRange;
-            object.minAngle = angle - angleRange;
-            object.maxAngle = angle + angleRange;
+            object.speed = vector.length() / this.scale;
+            object.angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
+            if (object.angle < -Math.PI) {
+                object.angle += 2 * Math.PI;
+            }
         },
         onSync : function(object) {
-            var length = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * this.scale;
-            var angle = object.minAngle + (object.maxAngle - object.minAngle) / 2;
+            var length = object.speed * this.scale;
+            var angle = object.angle;
             this.setVector(Math.cos(angle) * length, -Math.sin(angle) * length);
         }
     });
@@ -518,65 +514,35 @@
             this.scale = 30;
 
             this.shape = new pe.VelocityVariationWidget.Helper(new me.Color(105, 190, 255, 0.3));
-            this.dragHandlerMinAngle = new pe.DragHandler(new me.Color(150, 150, 255, 1));
-            this.dragHandlerMinAngle.onDrag = this.onDragMinAngle.bind(this);
-            this.dragHandlerMaxAngle = new pe.DragHandler(new me.Color(80, 80, 255, 1));
-            this.dragHandlerMaxAngle.onDrag = this.onDragMaxAngle.bind(this);
-            this.dragHandlerMinSpeed = new pe.DragHandler(new me.Color(255, 200, 150, 1));
-            this.dragHandlerMinSpeed.onDrag = this.onDragMinSpeed.bind(this);
-            this.dragHandlerMaxSpeed = new pe.DragHandler(new me.Color(255, 120, 30, 1));
-            this.dragHandlerMaxSpeed.onDrag = this.onDragMaxSpeed.bind(this);
+            this.dragHandler = new pe.DragHandler(new me.Color(150, 150, 255, 1));
+            this.dragHandler.onDrag = this.onDrag.bind(this);
 
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
             input.addEventListener("change", this.onChange.bind(this));
             this.addInput("velocity variation widget", input);
         },
-        onDragMinAngle : function(pos) {
+        onDrag : function(pos) {
             var object = this.object;
             if (object) {
                 pos.sub(object.pos);
-                object.minAngle = Math.atan2(-pos.y, pos.x);
-                me.event.publish("propertyChanged", [ object ]);
-            }
-        },
-        onDragMaxAngle : function(pos) {
-            var object = this.object;
-            if (object) {
-                pos.sub(object.pos);
-                object.maxAngle = Math.atan2(-pos.y, pos.x);
-                me.event.publish("propertyChanged", [ object ]);
-            }
-        },
-        onDragMinSpeed : function(pos) {
-            var object = this.object;
-            if (object) {
-                pos.sub(object.pos);
-                object.minSpeed = pos.length() / this.scale;
-                me.event.publish("propertyChanged", [ object ]);
-            }
-        },
-        onDragMaxSpeed : function(pos) {
-            var object = this.object;
-            if (object) {
-                pos.sub(object.pos);
-                object.maxSpeed = pos.length() / this.scale;
+                var variation = object.angle - Math.atan2(-pos.y, pos.x);
+                if (variation < -Math.PI / 2) {
+                    variation += 2 * Math.PI;
+                }
+                object.angleVariation = variation.clamp(0, Math.PI);
+                variation = (pos.length() / this.scale) - object.speed;
+                object.speedVariation = variation < 0 ? 0 : variation;
                 me.event.publish("propertyChanged", [ object ]);
             }
         },
         onChange : function() {
             if (this.input.checked) {
                 me.game.world.addChild(this.shape);
-                this.dragHandlerMinAngle.enable();
-                this.dragHandlerMaxAngle.enable();
-                this.dragHandlerMinSpeed.enable();
-                this.dragHandlerMaxSpeed.enable();
+                this.dragHandler.enable();
             } else {
                 me.game.world.removeChild(this.shape);
-                this.dragHandlerMinAngle.disable();
-                this.dragHandlerMaxAngle.disable();
-                this.dragHandlerMinSpeed.disable();
-                this.dragHandlerMaxSpeed.disable();
+                this.dragHandler.disable();
             }
         },
         show : function() {
@@ -598,27 +564,14 @@
             var object = this.object;
             if (object) {
                 this.shape.floating = object.floating;
-                this.dragHandlerMinAngle.floating = object.floating;
-                this.dragHandlerMaxAngle.floating = object.floating;
-                this.dragHandlerMinSpeed.floating = object.floating;
-                this.dragHandlerMaxSpeed.floating = object.floating;
+                this.dragHandler.floating = object.floating;
 
                 this.shape.set(object);
-                var radius = (object.minSpeed + (object.maxSpeed - object.minSpeed) / 2) * this.scale;
-                var x = object.pos.x + Math.cos(object.minAngle) * radius;
-                var y = object.pos.y - Math.sin(object.minAngle) * radius;
-                this.dragHandlerMinAngle.setPosition(x, y);
-                x = object.pos.x + Math.cos(object.maxAngle) * radius;
-                y = object.pos.y - Math.sin(object.maxAngle) * radius;
-                this.dragHandlerMaxAngle.setPosition(x, y);
-
-                var angle = (object.minAngle + (object.maxAngle - object.minAngle) / 2);
-                x = object.pos.x + Math.cos(angle) * object.minSpeed * this.scale;
-                y = object.pos.y - Math.sin(angle) * object.minSpeed * this.scale;
-                this.dragHandlerMinSpeed.setPosition(x, y);
-                x = object.pos.x + Math.cos(angle) * object.maxSpeed * this.scale;
-                y = object.pos.y - Math.sin(angle) * object.maxSpeed * this.scale;
-                this.dragHandlerMaxSpeed.setPosition(x, y);
+                var angle = object.angle - object.angleVariation;
+                var radius = (object.speed + object.speedVariation) * this.scale;
+                var x = object.pos.x + Math.cos(angle) * radius;
+                var y = object.pos.y - Math.sin(angle) * radius;
+                this.dragHandler.setPosition(x, y);
             }
         }
     });
@@ -627,37 +580,30 @@
         init : function(color) {
             this.parent(new me.Vector2d(0, 0), 0, 0);
             this.color = color.toRGBA();
-            this.angle = 0;
-            this.angleVariation = 0;
-            this.minSpeed = 0;
-            this.maxSpeed = 0;
-            this.wind = 0;
-            this.gravity = 0;
+            this.startAngle = 0;
+            this.endAngle = 0;
+            this.minRadius = 0;
+            this.maxRadius = 0;
             this.scale = 30;
             this.z = Infinity;
         },
         set : function(object) {
             this.pos.setV(object.pos);
-
-            this.angle = (object.minAngle + (object.maxAngle - object.minAngle) / 2);
-            this.angleVariation = Math.abs(object.maxAngle - object.minAngle) / 2;
-
-            this.minSpeed = object.minSpeed;
-            this.maxSpeed = object.maxSpeed;
-            this.wind = object.wind;
-            this.gravity = object.gravity;
+            this.startAngle = -(object.angle - object.angleVariation);
+            this.endAngle = -(object.angle + object.angleVariation);
+            this.minRadius = (object.speed - object.speedVariation) * this.scale;
+            this.maxRadius = (object.speed + object.speedVariation) * this.scale;
         },
         draw : function(context, rect) {
             context.strokeStyle = this.color;
             context.fillStyle = this.color;
             context.beginPath();
-            var x = this.pos.x, y = this.pos.y, startAngle = -(this.angle - this.angleVariation), endAngle = -(this.angle + this.angleVariation);
-            var minRadius = this.minSpeed * this.scale, maxRadius = this.maxSpeed * this.scale;
-            context.arc(x, y, maxRadius, startAngle, endAngle, true);
-            if (minRadius < 0) {
-                context.arc(x, y, -minRadius, endAngle + Math.PI, startAngle + Math.PI);
+            var x = this.pos.x, y = this.pos.y;
+            context.arc(x, y, this.maxRadius, this.startAngle, this.endAngle, true);
+            if (this.minRadius < 0) {
+                context.arc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI);
             } else {
-                context.arc(x, y, minRadius, endAngle, startAngle);
+                context.arc(x, y, this.minRadius, this.endAngle, this.startAngle);
             }
             context.closePath();
             context.fill();

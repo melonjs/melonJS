@@ -65,24 +65,24 @@
         totalParticles : 50,
 
         /**
-         * Minimum start angle for launch particles in Radians.<br>
+         * Start angle for particle launch in Radians.<br>
          * @public
          * @type Number
-         * @name minAngle
+         * @name angle
          * @default Math.PI / 2
          * @memberOf me.ParticleEmitterSettings
          */
-        minAngle : Math.PI / 2,
+        angle : Math.PI / 2,
 
         /**
-         * Maximum start angle for launch particles in Radians.<br>
+         * Variation in the start angle for particle launch in Radians.<br>
          * @public
          * @type Number
-         * @name maxAngle
-         * @default Math.PI / 2
+         * @name angleVariation
+         * @default 0
          * @memberOf me.ParticleEmitterSettings
          */
-        maxAngle : Math.PI / 2,
+        angleVariation : 0,
 
         /**
          * Minimum time each particle lives once it is emitted in ms.<br>
@@ -105,24 +105,24 @@
         maxLife : 3000,
 
         /**
-         * Minimum start speed for particles.<br>
+         * Start speed of particles.<br>
          * @public
          * @type Number
-         * @name minSpeed
+         * @name speed
+         * @default 2
+         * @memberOf me.ParticleEmitterSettings
+         */
+        speed : 2,
+
+        /**
+         * Variation in the start speed of particles.<br>
+         * @public
+         * @type Number
+         * @name speedVariation
          * @default 1
          * @memberOf me.ParticleEmitterSettings
          */
-        minSpeed : 1,
-
-        /**
-         * Maximum start speed for particles.<br>
-         * @public
-         * @type Number
-         * @name maxSpeed
-         * @default 3
-         * @memberOf me.ParticleEmitterSettings
-         */
-        maxSpeed : 3,
+        speedVariation : 1,
 
         /**
          * Minimum start rotation for particles sprites in Radians.<br>
@@ -434,12 +434,12 @@
 
             this.image = settings.image || defaults.image;
             this.totalParticles = (typeof settings.totalParticles === "number") ? settings.totalParticles : defaults.totalParticles;
-            this.minAngle = (typeof settings.minAngle === "number") ? settings.minAngle : defaults.minAngle;
-            this.maxAngle = (typeof settings.maxAngle === "number") ? settings.maxAngle : defaults.maxAngle;
+            this.angle = (typeof settings.angle === "number") ? settings.angle : defaults.angle;
+            this.angleVariation = (typeof settings.angleVariation === "number") ? settings.angleVariation : defaults.angleVariation;
             this.minLife = (typeof settings.minLife === "number") ? settings.minLife : defaults.minLife;
             this.maxLife = (typeof settings.maxLife === "number") ? settings.maxLife : defaults.maxLife;
-            this.minSpeed = (typeof settings.minSpeed === "number") ? settings.minSpeed : defaults.minSpeed;
-            this.maxSpeed = (typeof settings.maxSpeed === "number") ? settings.maxSpeed : defaults.maxSpeed;
+            this.speed = (typeof settings.speed === "number") ? settings.speed : defaults.speed;
+            this.speedVariation = (typeof settings.speedVariation === "number") ? settings.speedVariation : defaults.speedVariation;
             this.minRotation = (typeof settings.minRotation === "number") ? settings.minRotation : defaults.minRotation;
             this.maxRotation = (typeof settings.maxRotation === "number") ? settings.maxRotation : defaults.maxRotation;
             this.minStartScale = (typeof settings.minStartScale === "number") ? settings.minStartScale : defaults.minStartScale;

@@ -22,8 +22,8 @@ game.changeEmitter = function() {
         emitter.resize(200, 0);
         emitter.totalParticles = 300;
         emitter.frequency = 50;
-        emitter.minAngle = Number.prototype.degToRad(70);
-        emitter.maxAngle = Number.prototype.degToRad(110);
+        emitter.angle = Number.prototype.degToRad(90);
+        emitter.angleVariation = Number.prototype.degToRad(20);
 
         // move the emitter
         emitter.translate(0, 200);
@@ -34,10 +34,10 @@ game.changeEmitter = function() {
             image : me.loader.getImage("smoke"),
             totalParticles : 200,
             frequency : 50,
-            minSpeed : 1,
-            maxSpeed : 5,
-            minAngle : Number.prototype.degToRad(70),
-            maxAngle : Number.prototype.degToRad(110),
+            speed : 3,
+            speedVariation : 2,
+            angle : Number.prototype.degToRad(90),
+            angleVariation : Number.prototype.degToRad(20),
             wind : 0.05
         };
 
@@ -56,10 +56,10 @@ game.changeEmitter = function() {
         emitter.maxParticles = 80;
         emitter.minLife = 500;
         emitter.maxLife = 2000;
-        emitter.minSpeed = 8;
-        emitter.maxSpeed = 16;
-        emitter.minAngle = Number.prototype.degToRad(80);
-        emitter.maxAngle = Number.prototype.degToRad(100);
+        emitter.speed = 12;
+        emitter.speedVariation = 4;
+        emitter.angle = Number.prototype.degToRad(90);
+        emitter.angleVariation = Number.prototype.degToRad(10);
         emitter.minStartScale = 0.6;
         emitter.maxStartScale = 1.0;
         emitter.gravity = 0.3;
@@ -74,12 +74,12 @@ game.changeEmitter = function() {
         emitter.totalParticles = 200;
         emitter.maxParticles = 50;
         emitter.frequency = 200;
-        emitter.minAngle = Number.prototype.degToRad(-30);
-        emitter.maxAngle = Number.prototype.degToRad(30);
+        emitter.angle = 0;
+        emitter.angleVariation = Number.prototype.degToRad(30);
         emitter.minLife = 1000;
         emitter.maxLife = 5000;
-        emitter.minSpeed = 1;
-        emitter.maxSpeed = 5;
+        emitter.speed = 3;
+        emitter.speedVariation = 2;
 
         // move the emitter
         emitter.pos.set(10, 200);
@@ -93,10 +93,10 @@ game.changeEmitter = function() {
         emitter.frequency = 10;
         emitter.minLife = 1000;
         emitter.maxLife = 8000;
-        emitter.minSpeed = 0;
-        emitter.maxSpeed = 0;
-        emitter.minAngle = Number.prototype.degToRad(270);
-        emitter.maxAngle = emitter.minAngle;
+        emitter.speed = 0;
+        emitter.speedVariation = 0;
+        emitter.angle = Number.prototype.degToRad(270);
+        emitter.angleVariation = 0;
         emitter.minStartScale = 0.3;
         emitter.maxStartScale = 0.6;
         emitter.gravity = 0.6;
@@ -111,12 +111,12 @@ game.changeEmitter = function() {
         emitter.totalParticles = 25;
         emitter.maxParticles = 1;
         emitter.frequency = 200;
-        emitter.minAngle = Number.prototype.degToRad(70);
-        emitter.maxAngle = emitter.minAngle;
+        emitter.angle = Number.prototype.degToRad(70);
+        emitter.angleVariation = 0;
         emitter.minLife = 1000;
         emitter.maxLife = 5000;
-        emitter.minSpeed = 5;
-        emitter.maxSpeed = 8;
+        emitter.speed = 6.5;
+        emitter.speedVariation = 1.5;
         emitter.gravity = 0.1;
 
         // particle update the rotation in accordance the trajectory
@@ -132,8 +132,8 @@ game.changeEmitter = function() {
         emitter.image = me.loader.getImage("explosion");
         emitter.totalParticles = 500;
         emitter.resize(10, 0);
-        emitter.minAngle = Number.prototype.degToRad(0);
-        emitter.maxAngle = Number.prototype.degToRad(360);
+        emitter.angle = 0;
+        emitter.angleVariation = Number.prototype.degToRad(360);
         emitter.minLife = 1000;
         emitter.maxLife = 5000;
 
@@ -150,8 +150,8 @@ game.changeEmitter = function() {
         // set emitter params
         emitter.name = "directed explosion";
         emitter.image = me.loader.getImage("explosion");
-        emitter.minAngle = Number.prototype.degToRad(30);
-        emitter.maxAngle = Number.prototype.degToRad(-30);
+        emitter.angle = 0;
+        emitter.angleVariation = Number.prototype.degToRad(30);
         emitter.minLife = 1000;
         emitter.maxLife = 2000;
 
@@ -173,7 +173,8 @@ game.changeEmitter = function() {
         emitter.frequency = 30;
         emitter.minLife = 2000;
         emitter.maxLife = 5000;
-        emitter.minSpeed = 0;
+        emitter.speed = 2;
+        emitter.speedVariation = 2;
         emitter.gravity = 0.3;
 
         // move the emitter
@@ -193,10 +194,10 @@ game.changeEmitter = function() {
         emitter.frequency = 10;
         emitter.minLife = 500;
         emitter.maxLife = 3000;
-        emitter.minSpeed = 8;
-        emitter.maxSpeed = 16;
-        emitter.minAngle = Number.prototype.degToRad(80);
-        emitter.maxAngle = Number.prototype.degToRad(100);
+        emitter.speed = 12;
+        emitter.speedVariation = 4;
+        emitter.angle = Number.prototype.degToRad(90);
+        emitter.angleVariation = Number.prototype.degToRad(10);
         emitter.minStartScale = 0.2;
         emitter.maxStartScale = 0.4;
         emitter.minEndScale = 1.0;
@@ -218,8 +219,8 @@ game.changeEmitter = function() {
         emitter.frequency = 30;
         emitter.minLife = 2000;
         emitter.maxLife = 5000;
-        emitter.minAngle = Number.prototype.degToRad(70);
-        emitter.maxAngle = Number.prototype.degToRad(110);
+        emitter.angle = Number.prototype.degToRad(90);
+        emitter.angleVariation = Number.prototype.degToRad(20);
         emitter.minStartScale = 0.2;
         emitter.maxStartScale = 0.4;
 
