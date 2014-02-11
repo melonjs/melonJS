@@ -899,13 +899,16 @@
                     // ovveride the previous value
                     _float = floating === true ? true : false;
                 }
+                
+                // calculate the given elemments bounding rect
+                var bounds = rect.getBounds();
+                if (typeof (rect.getShape) === 'undefined') {
+                    bounds.translate(-rect.pos.x, -rect.pos.y);
+                }
                 // initialize the handler
                 evtHandlers[eventType].push({
                     rect: rect,
-                    bounds: (typeof (rect.getShape) === 'function') ? 
-                        rect.getShape().getBounds() : 
-                        // makes it relative to the rect object (0,0);
-                        rect.getBounds().translate(-rect.pos.x, -rect.pos.y),
+                    bounds: bounds,
                     cb: callback,
                     floating: _float
                 });
