@@ -65,7 +65,6 @@
 		follow_axis : 0,
 
 		// shake parameters
-		shaking : false,
 		_shake : null,
 		// fade parameters
 		_fadeIn : null,
@@ -287,10 +286,10 @@
 			
 			var updated = this.updateTarget();
 			
-			if (this.shaking === true) {
+			if (this._shake.duration > 0) {
 				this._shake.duration -= dt;
 				if (this._shake.duration <= 0) {
-					this.shaking = false;
+					this._shake.duration = 0;
 					this.offset.setZero();
 					if (typeof(this._shake.onComplete) === "function") {
 						this._shake.onComplete();
@@ -337,16 +336,14 @@
 		 * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
 		 */
 		shake : function(intensity, duration, axis, onComplete) {
-			if (this.shaking)
+			if (this._shake.duration > 0)
 				return;
-
-			this.shaking = true;
 
 			this._shake = {
 				intensity : intensity,
 				duration : duration,
 				axis : axis || this.AXIS.BOTH,
-				onComplete : onComplete || null
+				onComplete : onComplete
 			};
 		},
 
