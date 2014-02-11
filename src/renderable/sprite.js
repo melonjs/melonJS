@@ -91,10 +91,7 @@
 			this.scaleFlag = false;
 
 			// set the default sprite index & offset
-			this.offset.set(0, 0);		
-			
-			// make it visible by default
-			this.visible = true;
+			this.offset.set(0, 0);
 			
 			// non persistent per default
 			this.isPersistent = false;
