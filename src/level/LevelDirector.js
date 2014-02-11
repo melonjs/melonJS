@@ -113,7 +113,7 @@
 					var obj = group.objects[o];
 
 					// create the corresponding entity
-					var entity = me.entityPool.newInstanceOf(obj.name, obj.x, obj.y, obj);
+					var entity = me.pool.pull(obj.name, obj.x, obj.y, obj);
 
 					// ignore if the newInstanceOf function does not return a corresponding object
 					if (entity) {

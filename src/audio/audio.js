@@ -155,7 +155,7 @@
             }
             var soundclip = new Howl({
                 urls : urls,
-                volume : 1,
+                volume : Howler.volume(),
                 onend : function(soundId) {
                     if(callbacks[soundId]) {
                         // fire call back if it exists, then delete it
@@ -215,7 +215,7 @@
             var sound = audioTracks[sound_id.toLowerCase()];
             if(sound && typeof sound !== 'undefined') {
                 sound.loop(loop || false);
-                sound.volume(volume ? parseFloat(volume).clamp(0.0,1.0) : Howler.volume());
+                sound.volume(typeof(volume) === 'number' ? volume.clamp(0.0, 1.0) : Howler.volume());
                 if (typeof(callback) === 'function') {
                     sound.play(function(soundId) {
                         callbacks[soundId] = callback;

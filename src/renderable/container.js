@@ -384,7 +384,7 @@
 		/**
 		 * Removes (and optionally destroys) a child from the container.<br>
 		 * (removal is immediate and unconditional)<br>
-		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
+		 * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
 		 * @name removeChildNow
 		 * @memberOf me.ObjectContainer
 		 * @function
@@ -401,7 +401,7 @@
 						child.destroy();
 					}
 
-					me.entityPool.freeInstance(child);
+					me.pool.push(child);
 				}
 				
 				this.children.splice( this.getChildIndex(child), 1 );

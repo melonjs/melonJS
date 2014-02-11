@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2013, Olivier Biot
  * http://www.melonjs.org
  *
  */
@@ -20,13 +20,12 @@
      * which means, that on level loading the engine will try to instantiate every object
      * found in the map, based on the user defined name in each Object Properties<br>
      * <img src="images/object_properties.png"/><br>
-     * There is no constructor function for me.entityPool, this is a static object
-     * @namespace me.entityPool
+     * @namespace me.pool
      * @memberOf me
      */
-    me.entityPool = (function() {
+    me.pool = (function() {
         // hold public stuff in our singleton
-        var obj = {};
+        var api = {};
 
         var entityClass = {};
 
@@ -41,23 +40,23 @@
          * @ignore
          */
 
-        obj.init = function() {
+        api.init = function() {
             // add default entity object
-            obj.add("me.ObjectEntity", me.ObjectEntity);
-            obj.add("me.CollectableEntity", me.CollectableEntity);
-            obj.add("me.LevelEntity", me.LevelEntity);
-            obj.add("me.Tween", me.Tween, true);
-            obj.add("me.Color", me.Color, true);
-            obj.add("me.Particle", me.Particle, true);
+            api.register("me.ObjectEntity", me.ObjectEntity);
+            api.register("me.CollectableEntity", me.CollectableEntity);
+            api.register("me.LevelEntity", me.LevelEntity);
+            api.register("me.Tween", me.Tween, true);
+            api.register("me.Color", me.Color, true);
+            api.register("me.Particle", me.Particle, true);
         };
 
         /**
-         * Add an object to the pool. <br>
+         * register an object to the pool. <br>
          * Pooling must be set to true if more than one such objects will be created. <br>
          * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
-         * See examples in {@link me.entityPool#newInstanceOf}
-         * @name add
-         * @memberOf me.entityPool
+         * See examples in {@link me.pool#pull}
+         * @name register
+         * @memberOf me.pool
          * @public
          * @function
          * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
@@ -66,12 +65,12 @@
          * - speeds up the game by reusing existing objects
          * @example
          * // add our users defined entities in the entity pool
-         * me.entityPool.add("playerspawnpoint", PlayerEntity);
-         * me.entityPool.add("cherryentity", CherryEntity, true);
-         * me.entityPool.add("heartentity", HeartEntity, true);
-         * me.entityPool.add("starentity", StarEntity, true);
+         * me.pool.register("playerspawnpoint", PlayerEntity);
+         * me.pool.register("cherryentity", CherryEntity, true);
+         * me.pool.register("heartentity", HeartEntity, true);
+         * me.pool.register("starentity", StarEntity, true);
          */
-        obj.add = function(className, entityObj, pooling) {
+        api.register = function(className, entityObj, pooling) {
             if (!pooling) {
                 entityClass[className.toLowerCase()] = {
                     "class" : entityObj,
@@ -82,32 +81,31 @@
 
             entityClass[className.toLowerCase()] = {
                 "class" : entityObj,
-                "pool" : [],
-                "active" : []
+                "pool" : []
             };
         };
 
         /**
-         * Return a new instance of the requested object (if added into the object pool)
-         * @name newInstanceOf
-         * @memberOf me.entityPool
+         * Pull a new instance of the requested object (if added into the object pool)
+         * @name pull
+         * @memberOf me.pool
          * @public
          * @function
-         * @param {String} className as used in {@link me.entityPool#add}
+         * @param {String} className as used in {@link me.pool#register}
          * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
          * @example
-         * me.entityPool.add("player", PlayerEntity);
-         * var player = me.entityPool.newInstanceOf("player");
+         * me.pool.register("player", PlayerEntity);
+         * var player = me.pool.pull("player");
          * @example
-         * me.entityPool.add("bullet", BulletEntity, true);
-         * me.entityPool.add("enemy", EnemyEntity, true);
+         * me.pool.register("bullet", BulletEntity, true);
+         * me.pool.register("enemy", EnemyEntity, true);
          * // ...
          * // when we need to manually create a new bullet:
-         * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
+         * var bullet = me.pool.pull("bullet", x, y, direction);
          * // ...
          * // params aren't a fixed number
          * // when we need new enemy we can add more params, that the object construct requires:
-         * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
+         * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
          * // ...
          * // when we want to destroy existing object, the remove
          * // function will ensure the object can then be reallocated later
@@ -115,7 +113,7 @@
          * me.game.world.removeChild(bullet);
          */
 
-        obj.newInstanceOf = function(data) {
+        api.pull = function(data) {
             var name = typeof data === 'string' ? data.toLowerCase() : undefined;
             var args = Array.prototype.slice.call(arguments);
             if (name && entityClass[name]) {
@@ -143,8 +141,6 @@
                     obj = new (proto.bind.apply(proto, args))();
                     obj.className = name;
                 }
-
-                entity["active"].push(obj);
                 return obj;
             }
 
@@ -166,52 +162,39 @@
          * Object pooling must be enabled for this function to work<br>
          * note: this will trigger the garbage collector
          * @name purge
-         * @memberOf me.entityPool
+         * @memberOf me.pool
          * @public
          * @function
          */
-        obj.purge = function() {
+        api.purge = function() {
             for (var className in entityClass) {
                 entityClass[className]["pool"] = [];
             }
         };
 
         /**
-         * Remove object from the entity pool <br>
+         * Push back an object instance into the entity pool <br>
          * Object pooling for the object class must be enabled,
-         * and object must have been instantiated using {@link me.entityPool#newInstanceOf},
+         * and object must have been instantiated using {@link me.pool#pull},
          * otherwise this function won't work
-         * @name freeInstance
-         * @memberOf me.entityPool
+         * @name push
+         * @memberOf me.pool
          * @public
          * @function
-         * @param {Object} instance to be removed
+         * @param {Object} instance to be recycled
          */
-        obj.freeInstance = function(obj) {
-
+        api.push = function(obj) {
             var name = obj.className;
-            if (!name || !entityClass[name]) {
+            if (typeof(name) === 'undefined' || !entityClass[name]) {
+                // object is not registered, don't do anything
                 return;
             }
-
-            var notFound = true;
-            for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
-                if (entityClass[name]["active"][i] === obj) {
-                    notFound = false;
-                    entityClass[name]["active"].splice(i, 1);
-                    break;
-                }
-            }
-
-            if (notFound) {
-                return;
-            }
-
+            // store back the object instance for later recycling
             entityClass[name]["pool"].push(obj);
         };
 
         // return our object
-        return obj;
+        return api;
 
     })();
 

@@ -3,11 +3,11 @@
   game.PlayScreen = me.ScreenObject.extend({
     onResetEvent: function() {
       // tell the entity pool what classes it needs to work with
-      me.entityPool.add('main', game.MainEntity, true);
-      me.entityPool.add('renderable', game.RenderableEntity, true);
+      me.pool.register('main', game.MainEntity, true);
+      me.pool.register('renderable', game.RenderableEntity, true);
 
       // create the main
-      main = me.entityPool.newInstanceOf('main', 100, 100);
+      main = me.pool.pull('main', 100, 100);
       me.game.world.addChild(new game.Background());
       me.game.world.addChild(main);
       
@@ -25,9 +25,9 @@
                 // purge the main
                 me.game.world.removeChild(main);
                 // main will get re-used but initialized elsewhere.
-                main = me.entityPool.newInstanceOf('main', 20, 20);
+                main = me.pool.pull('main', 20, 20);
                 // create the renderable
-                var renderable = me.entityPool.newInstanceOf('renderable', 120, 120);
+                var renderable = me.pool.pull('renderable', 120, 120);
                 me.game.world.addChild(main);
                 me.game.world.addChild(renderable);
             }

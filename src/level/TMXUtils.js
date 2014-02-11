@@ -76,7 +76,12 @@
 		api.applyTMXPropertiesFromJSON = function(obj, data) {
 			var properties = data[me.TMX_TAG_PROPERTIES];
 			if (properties) {
-				obj.mixin(properties);
+				for(var name in properties){
+					if (properties.hasOwnProperty(name)) {
+						// set the value
+						obj[name] = setTMXValue(properties[name]);
+					}
+				}
 			}
 		};
 	

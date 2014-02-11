@@ -66,7 +66,7 @@
                     if (_timer.repeat === true) {
                         _timer.elapsed -= _timer.delay;
                     } else {
-                        me.timer.clearTimeout(i);
+                        me.timer.clearTimeout(_timer.timerId);
                     }
                 }
             }

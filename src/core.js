@@ -975,7 +975,7 @@ window.me = window.me || {};
 		me.state.init();
 
 		// init the Entity Pool
-		me.entityPool.init();
+		me.pool.init();
 
 		// init the level Director
 		me.levelDirector.reset();

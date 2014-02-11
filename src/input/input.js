@@ -779,7 +779,7 @@
         };
 
         /**
-         * Associate a mouse (button) action to a keycode
+         * Associate a mouse (button) action to a keycode<br>
          * Left button – 0
          * Middle button – 1
          * Right button – 2
@@ -899,10 +899,16 @@
                     // ovveride the previous value
                     _float = floating === true ? true : false;
                 }
+                
+                // calculate the given elemments bounding rect
+                var bounds = rect.getBounds();
+                if (typeof (rect.getShape) === 'undefined') {
+                    bounds.translate(-rect.pos.x, -rect.pos.y);
+                }
                 // initialize the handler
                 evtHandlers[eventType].push({
                     rect: rect,
-                    bounds : rect.getBounds(),
+                    bounds: bounds,
                     cb: callback,
                     floating: _float
                 });

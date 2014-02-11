@@ -250,8 +250,7 @@
          * @return {me.Rect} this rectangle    
          */
         translateV : function(v) {
-            this.pos.add(v);
-            return this;
+            return this.translate(v.x, v.y);
         },
 
         /**
@@ -277,7 +276,7 @@
          */
         union : function(/** {me.Rect} */ r) {
             var x1 = Math.min(this.left, r.left);
-            var y1 = Math.min(this.right, r.right);
+            var y1 = Math.min(this.top, r.top);
 
             this.resize (
                 Math.max(this.right, r.right) - x1,
@@ -298,7 +297,6 @@
          */
         flipX : function(sw) {
             this.pos.x = sw - this.width - this.pos.x;
-            this.hWidth = ~~(this.width / 2);
             return this;
         },
 
@@ -311,7 +309,6 @@
          */
         flipY : function(sh) {
             this.pos.y = sh - this.height - this.pos.y;
-            this.hHeight = ~~(this.height / 2);
             return this;
         },
         

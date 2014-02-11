@@ -73,7 +73,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	 */
 	display : function() {
 		var finalpos = this.initialPos - 140;
-		this.displayTween = me.entityPool.newInstanceOf("me.Tween", this.pos).to({y: finalpos }, 200);
+		this.displayTween = me.pool.pull("me.Tween", this.pos).to({y: finalpos }, 200);
 		this.displayTween.easing(me.Tween.Easing.Quadratic.Out);
 		this.displayTween.onComplete(this.onDisplayed.bind(this));
 		this.displayTween.start();
@@ -95,7 +95,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 	 */	
 	hide : function() {
 		var finalpos = this.initialPos;
-		this.displayTween = me.entityPool.newInstanceOf("me.Tween", this.pos).to({y: finalpos }, 200);
+		this.displayTween = me.pool.pull("me.Tween", this.pos).to({y: finalpos }, 200);
 		this.displayTween.easing(me.Tween.Easing.Quadratic.In);
 		this.displayTween.onComplete(this.onHidden.bind(this));
 		this.displayTween.start();
