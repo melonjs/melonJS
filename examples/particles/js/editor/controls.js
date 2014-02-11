@@ -180,13 +180,25 @@
             }
             this.addWidget(widget);
 
-            this.addWidget(new pe.NumberInputWidget("z", 0, 100, 1));
+            this.addWidget(new pe.NumberInputWidget("z", {
+                min : 0,
+                sliderMax : 100,
+                step : 1
+            }));
             this.addWidget(new pe.BooleanInputWidget("onlyInViewport"));
             this.addWidget(new pe.BooleanInputWidget("floating"));
-            this.addWidget(new pe.NumberInputWidget("framesToSkip", 0, 5, 1));
+            this.addWidget(new pe.NumberInputWidget("framesToSkip", {
+                min : 0,
+                sliderMax : 5,
+                step : 1
+            }));
 
             this.addCategorySeparator("emitter properties");
-            widget = new pe.NumberInputWidget("width", 0, 800, 1);
+            widget = new pe.NumberInputWidget("width", {
+                min : 0,
+                sliderMax : 800,
+                step : 1
+            });
             widget.property.setValue = function(value) {
                 var object = this.object;
                 if (object.width !== value) {
@@ -196,7 +208,11 @@
             };
             this.addWidget(widget);
 
-            widget = new pe.NumberInputWidget("height", 0, 600, 1);
+            widget = new pe.NumberInputWidget("height", {
+                min : 0,
+                sliderMax : 600,
+                step : 1
+            });
             widget.property.setValue = function(value) {
                 var object = this.object;
                 if (object.height !== value) {
@@ -205,29 +221,91 @@
                 }
             };
             this.addWidget(widget);
-            this.addWidget(new pe.NumberInputWidget("totalParticles", 0, 500, 1));
-            this.addWidget(new pe.NumberInputWidget("maxParticles", 0, 50, 1));
-            this.addWidget(new pe.NumberInputWidget("frequency", 1, 100, 1));
-            this.addWidget(new pe.NumberInputWidget("duration", 0, 10000, 100));
+            this.addWidget(new pe.NumberInputWidget("totalParticles", {
+                min : 1,
+                sliderMax : 500,
+                step : 1
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxParticles", {
+                min : 1,
+                sliderMax : 100,
+                step : 1
+            }));
+            this.addWidget(new pe.NumberInputWidget("frequency", {
+                min : 1,
+                sliderMax : 100,
+                step : 1
+            }));
+            this.addWidget(new pe.NumberInputWidget("duration", {
+                min : 0,
+                sliderMax : 10000,
+                step : 100
+            }));
 
             this.addCategorySeparator("particle path");
-            this.addWidget(new pe.NumberInputWidget("minAngle", -Math.PI, Math.PI));
-            this.addWidget(new pe.NumberInputWidget("maxAngle", -Math.PI, Math.PI));
-            this.addWidget(new pe.NumberInputWidget("minSpeed", 0, 30));
-            this.addWidget(new pe.NumberInputWidget("maxSpeed", 0, 30));
-            this.addWidget(new pe.NumberInputWidget("gravity", -5, 5));
-            this.addWidget(new pe.NumberInputWidget("wind", -5, 5));
+            this.addWidget(new pe.NumberInputWidget("minAngle", {
+                min : -Math.PI,
+                max : Math.PI,
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxAngle", {
+                min : -Math.PI,
+                max : Math.PI,
+            }));
+            this.addWidget(new pe.NumberInputWidget("minSpeed", {
+                min : 0,
+                sliderMax : 30,
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxSpeed", {
+                min : 0,
+                sliderMax : 30,
+            }));
+            this.addWidget(new pe.NumberInputWidget("gravity", {
+                sliderMin : -5,
+                sliderMax : 5,
+            }));
+            this.addWidget(new pe.NumberInputWidget("wind", {
+                sliderMin : -5,
+                sliderMax : 5,
+            }));
 
             this.addCategorySeparator("particle properties");
             this.addWidget(new pe.ImageSelectionWidget("image"));
-            this.addWidget(new pe.NumberInputWidget("minLife", 0, 10000, 100));
-            this.addWidget(new pe.NumberInputWidget("maxLife", 0, 10000, 100));
-            this.addWidget(new pe.NumberInputWidget("minRotation", -Math.PI, Math.PI));
-            this.addWidget(new pe.NumberInputWidget("maxRotation", -Math.PI, Math.PI));
-            this.addWidget(new pe.NumberInputWidget("minStartScale", 0, 5));
-            this.addWidget(new pe.NumberInputWidget("maxStartScale", 0, 5));
-            this.addWidget(new pe.NumberInputWidget("minEndScale", 0, 5));
-            this.addWidget(new pe.NumberInputWidget("maxEndScale", 0, 5));
+            this.addWidget(new pe.NumberInputWidget("minLife", {
+                min : 0,
+                sliderMax : 10000,
+                step : 100
+            }));
+
+            this.addWidget(new pe.NumberInputWidget("maxLife", {
+                min : 0,
+                sliderMax : 10000,
+                step : 100
+            }));
+
+            this.addWidget(new pe.NumberInputWidget("minRotation", {
+                min : -Math.PI,
+                max : Math.PI,
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxRotation", {
+                min : -Math.PI,
+                max : Math.PI,
+            }));
+            this.addWidget(new pe.NumberInputWidget("minStartScale", {
+                min : 0,
+                sliderMax : 5,
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxStartScale", {
+                min : 0,
+                sliderMax : 5,
+            }));
+            this.addWidget(new pe.NumberInputWidget("minEndScale", {
+                min : 0,
+                sliderMax : 5,
+            }));
+            this.addWidget(new pe.NumberInputWidget("maxEndScale", {
+                min : 0,
+                sliderMax : 5,
+            }));
             this.addWidget(new pe.BooleanInputWidget("followTrajectory"));
             this.addWidget(new pe.BooleanInputWidget("textureAdditive"));
 

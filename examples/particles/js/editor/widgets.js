@@ -63,8 +63,9 @@
     });
 
     pe.NumberInputWidget = pe.WidgetBase.extend({
-        init : function(propertyName, min, max, step) {
+        init : function(propertyName, settings) {
             this.parent(propertyName);
+            settings = settings || {};
 
             var container = document.createElement("div");
             container.classList.add("slider");
@@ -74,20 +75,23 @@
             slider.setAttribute("type", "range");
             input.setAttribute("type", "number");
 
-            if (typeof step === "number") {
-                slider.setAttribute("step", step);
-                input.setAttribute("step", (step % 1 > 0) ? "any" : "1");
+            if (typeof settings.step === "number") {
+                slider.setAttribute("step", settings.step);
+                input.setAttribute("step", (settings.step % 1 > 0) ? "any" : "1");
             } else {
                 slider.setAttribute("step", "any");
                 input.setAttribute("step", "any");
             }
 
-            if (typeof min === "number") {
-                slider.setAttribute("min", min);
-            }
-            if (typeof min === "number") {
-                slider.setAttribute("max", max);
-            }
+            var min = (typeof settings.min === "number") ? settings.min : -Infinity;
+            var max = (typeof settings.max === "number") ? settings.max : Infinity;
+            input.setAttribute("min", min);
+            input.setAttribute("max", max);
+
+            var sliderMin = (typeof settings.sliderMin === "number") ? settings.sliderMin : -Infinity;
+            var sliderMax = (typeof settings.sliderMax === "number") ? settings.sliderMax : Infinity;
+            slider.setAttribute("min", Math.max(min, sliderMin));
+            slider.setAttribute("max", Math.min(max, sliderMax));
 
             slider.addEventListener("input", this.onSliderChange.bind(this));
             slider.addEventListener("change", this.onSliderChange.bind(this));
