@@ -45,7 +45,7 @@
                 this.rootNode = document.createElement("div");
             }
             var labelNode = document.createElement("label");
-            labelNode.appendChild(document.createTextNode(label))
+            labelNode.appendChild(document.createTextNode(label.replace(/([A-Z])/g, ' $1').toLowerCase()))
             labelNode.appendChild(input)
             this.rootNode.appendChild(labelNode);
         },
