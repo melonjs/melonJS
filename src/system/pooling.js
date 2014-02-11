@@ -185,7 +185,7 @@
          */
         api.push = function(obj) {
             var name = obj.className;
-            if (typeof(name) !== 'undefined' || !entityClass[name]) {
+            if (typeof(name) === 'undefined' || !entityClass[name]) {
                 // object is not registered, don't do anything
                 return;
             }
