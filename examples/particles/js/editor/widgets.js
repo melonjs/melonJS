@@ -313,12 +313,6 @@
             // me.input.releasePointerEvent("mousemove", me.game.viewport, this._drag);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
-        getBounds : function() {
-            return this;
-        },
-        containsPoint : function(x, y) {
-            return (x >= 0 && x <= this.width && y >= 0 && y <= this.height);
-        },
         setPosition : function(x, y) {
             this.pos.set(x - this.hWidth, y - this.hHeight);
         },
