@@ -765,13 +765,13 @@
 						}
 					}
 				}
-			}
 
-			// temporary stuff until ticket #103 is done (this function will disappear anyway)
-			this.pos.set(
-				this._bounds.pos.x - this.__offsetX,
-				this._bounds.pos.y - this.__offsetY
-			);
+				// temporary stuff until ticket #103 is done (this function will disappear anyway)
+				this.pos.set(
+					this._bounds.pos.x - this.__offsetX,
+					this._bounds.pos.y - this.__offsetY
+				);
+			}
 
 			// update player position
 			this.pos.add(this.vel);
