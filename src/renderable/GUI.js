@@ -26,7 +26,7 @@
 	 * {	
 	 *    init:function(x, y)
 	 *    {
-	 *       settings = {}
+	 *       var settings = {}
 	 *       settings.image = "button";
 	 *       settings.spritewidth = 100;
 	 *       settings.spriteheight = 50;
