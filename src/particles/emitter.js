@@ -7,16 +7,17 @@
 
 (function($) {
     // generate a default image for the particles
-    var pixel = document.createElement("canvas");
-    pixel.width = 1;
-    pixel.height = 1;
-    with (pixel.getContext("2d")) {
-        fillStyle = "#fff";
-        fillRect(0, 0, 1, 1);
-    }
+    var pixel = (function() {
+        var canvas = me.video.createCanvas(1, 1);
+        var context = me.video.getContext2d(canvas);
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, 1, 1);
+        return canvas;
+    })();
 
     /**
      * me.ParticleEmitterSettings contains the default settings for me.ParticleEmitter.<br>
+     * 
      * @protected
      * @class
      * @memberOf me
