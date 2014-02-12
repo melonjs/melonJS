@@ -467,7 +467,6 @@
 				me.video.clearSurface(context, this._fadeIn.color.toRGBA());
 				// remove the tween if over
 				if (this._fadeIn.color.alpha === 1.0) {
-					me.pool.push(this._fadeIn.tween);
 					this._fadeIn.tween = null;
 					me.pool.push(this._fadeIn.color);
 					this._fadeIn.color = null;
@@ -479,7 +478,6 @@
 				me.video.clearSurface(context, this._fadeOut.color.toRGBA());
 				// remove the tween if over
 				if (this._fadeOut.color.alpha === 0.0) {
-					me.pool.push(this._fadeOut.tween);
 					this._fadeOut.tween = null;
 					me.pool.push(this._fadeOut.color);
 					this._fadeOut.color = null;

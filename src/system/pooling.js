@@ -81,8 +81,7 @@
 
             entityClass[className.toLowerCase()] = {
                 "class" : entityObj,
-                "pool" : [],
-                "active" : []
+                "pool" : []
             };
         };
 
@@ -142,8 +141,6 @@
                     obj = new (proto.bind.apply(proto, args))();
                     obj.className = name;
                 }
-
-                entity["active"].push(obj);
                 return obj;
             }
 
@@ -187,25 +184,12 @@
          * @param {Object} instance to be recycled
          */
         api.push = function(obj) {
-
             var name = obj.className;
-            if (!name || !entityClass[name]) {
+            if (typeof(name) === 'undefined' || !entityClass[name]) {
+                // object is not registered, don't do anything
                 return;
             }
-
-            var notFound = true;
-            for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
-                if (entityClass[name]["active"][i] === obj) {
-                    notFound = false;
-                    entityClass[name]["active"].splice(i, 1);
-                    break;
-                }
-            }
-
-            if (notFound) {
-                return;
-            }
-
+            // store back the object instance for later recycling
             entityClass[name]["pool"].push(obj);
         };
 
