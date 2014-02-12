@@ -240,14 +240,7 @@
 		 * me.game.viewport.move(0, -4);
 		 */
 		move : function(x, y) {
-			var newx = ~~(this.pos.x + x);
-			var newy = ~~(this.pos.y + y);
-			
-			this.pos.x = newx.clamp(this.bounds.pos.x, this.bounds.width - this.width);
-			this.pos.y = newy.clamp(this.bounds.pos.y, this.bounds.height - this.height);
-
-			//publish the corresponding message
-			me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
+			this.moveTo(~~(this.pos.x + x), ~~(this.pos.y + y));
 		},
 		
 		/**
@@ -422,16 +415,18 @@
 		},
 
 		/**
-		 *	set the viewport around the specified entity<p>
-		 * <b>BROKEN !!!!</b>
-		 * @deprecated
-		 * @ignore
-		 * @param {Object} 
+		 * set the viewport position around the specified object
+		 * @name focusOn
+		 * @memberOf me.Viewport
+		 * @function
+		 * @param {me.Renderable} 
 		 */
 		focusOn : function(target) {
-			// BROKEN !! target x and y should be the center point
-			this.pos.x = target.x - this.width * 0.5;
-			this.pos.y = target.y - this.height * 0.5;
+			var bounds = target.getBounds();
+			this.moveTo(
+				target.pos.x + bounds.pos.x + bounds.hWidth,
+				target.pos.y + bounds.pos.y + bounds.hHeight
+			);
 		},
 
 		/**
