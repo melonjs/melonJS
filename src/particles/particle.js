@@ -28,12 +28,12 @@
             // Particle will always update
             this.alwaysUpdate = true;
 
-            // Cache the particle emitter
-            this._emitter = emitter;
+            // Cache the image reference
+            this.image = emitter.image;
 
             // Set the start particle Angle and Speed as defined in emitter
-            var angle = Number.prototype.random(emitter.minAngle * 10, emitter.maxAngle * 10) / 10;
-            var speed = Number.prototype.random(emitter.minSpeed, emitter.maxSpeed);
+            var angle = emitter.angle + ((emitter.angleVariation > 0) ? (Math.random() * 2 - 1) * emitter.angleVariation : 0);
+            var speed = emitter.speed + ((emitter.speedVariation > 0) ? (Math.random() * 2 - 1) * emitter.speedVariation : 0);
 
             // Set the start particle Velocity
             this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
@@ -135,7 +135,7 @@
                               ~~this.pos.x, ~~this.pos.y);
 
             var w = this.width, h = this.height;
-            context.drawImage(this._emitter.image,
+            context.drawImage(this.image,
                             0, 0,
                             w, h,
                             -w / 2, -h / 2,

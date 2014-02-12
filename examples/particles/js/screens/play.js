@@ -1,72 +1,65 @@
 game.PlayScreen = me.ScreenObject.extend({
-	/**
-	 *  action to perform on state change
-	 */
-	onResetEvent: function() {
-		// set world size
-		me.game.viewport.bounds.resize(2000, 2000);
+    /**
+     * action to perform on state change
+     */
+    onResetEvent : function() {
+        // set world size
+        me.game.viewport.bounds.resize(2000, 2000);
 
-		// add background to the game world
-		me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
+        // add background to the game world
+        me.game.world.addChild(new me.ImageLayer("background", 0, 0, "grid", 0, 0));
 
-		// create a new emitter at viewport center bottom
-		game.Emitter = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
+        var leftContainer = document.querySelector("#leftPanel .controls");
+        var rightContainer = document.querySelector("#rightPanel .controls");
+        var controller = game.EmitterController = new game.ParticleEditor.EmitterController(rightContainer);
+        var emitterList = game.EmitterList = new game.ParticleEditor.EmitterList(controller, leftContainer);
+        game.CodeGenerator = new game.ParticleEditor.CodeGenerator(controller, leftContainer);
 
-		// set the emiter z order
-		game.Emitter.z = 11;
+        // start the default emitter example
+        game.changeEmitter();
 
-		// add the emitter to the game world
-		me.game.world.addChild(game.Emitter);
-        me.game.world.addChild(game.Emitter.container);
+        // enable the keyboard
+        me.input.bindKey(me.input.KEY.X, "moveEmitter", false, false);
+        me.input.bindKey(me.input.KEY.C, "moveViewport", false, false);
 
-		// create a secondary emitter at viewport center bottom
-		game.EmitterAux = new me.ParticleEmitter(me.game.viewport.getWidth() / 2, me.game.viewport.getHeight() - 50, me.loader.getImage("explosion"));
+        // map the left button click on the enter key
+        me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
+        me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
 
-		// set the secondary emiter z order
-		game.EmitterAux.z = 10;
+        // flush cached html layout after we added the editor elements
+        me.video.onresize();
 
-		// add the secondary emitter to the game world
-		me.game.world.addChild(game.EmitterAux);
-        me.game.world.addChild(game.EmitterAux.container);
+        // listen to mouse movement
+        var viewport = me.game.viewport;
+        var mousepos = me.input.mouse.pos;
+        var lastX = mousepos.x, lastY = mousepos.y;
+        me.event.subscribe(me.event.MOUSEMOVE, function() {
+            if (me.input.isKeyPressed("moveEmitter")) {
+                var pos;
+                for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+                    if (!obj.floating) {
+                        pos = viewport.localToWorld(mousepos.x, mousepos.y);
+                    } else {
+                        pos = mousepos;
+                    }
+                    obj.pos.setV(pos);
+                }
 
-		// start the default emitter example
-		game.changeEmitter();
+                me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
+            }
+            if (me.input.isKeyPressed("moveViewport")) {
+                viewport.move(lastX - mousepos.x, lastY - mousepos.y);
+            }
+            lastX = mousepos.x;
+            lastY = mousepos.y;
+        });
+    },
 
-		// enable the keyboard
-		me.input.bindKey(me.input.KEY.X, "moveEmitter");
-		me.input.bindKey(me.input.KEY.C, "moveViewport");
-
-		// map the left button click on the enter key
-		me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
-		me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
-
-		// listen to mouse movement
-		var viewport = me.game.viewport;
-		var mousepos = me.input.mouse.pos;
-		var lastX = mousepos.x, lastY = mousepos.y;
-		me.event.subscribe(me.event.MOUSEMOVE, function() {
-			if(me.input.isKeyPressed("moveEmitter")) {
-				var pos = mousepos;
-				if(!game.Emitter.floating) {
-					pos = viewport.localToWorld(pos.x, pos.y);
-				}
-				game.Emitter.pos.setV(pos);
-				game.EmitterAux.pos.setV(pos);
-			}
-			if(me.input.isKeyPressed("moveViewport")) {
-				viewport.move(lastX - mousepos.x, lastY - mousepos.y);
-			}
-			lastX = mousepos.x;
-			lastY = mousepos.y;
-		});
-	},
-
-	/**
-	 *  action to perform when leaving this screen (state change)
-	 */
-	onDestroyEvent: function() {
-		// remove the emitters from the game world
-		me.game.world.removeChild(game.Emitter);
-		me.game.world.removeChild(game.EmitterAux);
-	}
+    /**
+     * action to perform when leaving this screen (state change)
+     */
+    onDestroyEvent : function() {
+        // remove the emitters from the game world
+        game.EmitterList.clear();
+    }
 });
