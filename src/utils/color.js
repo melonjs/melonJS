@@ -207,15 +207,15 @@
         
 		/** @ignore */
 		init : function(r, g, b, a) {
-            this.setColor(r, g, b, a);
-            return this;
+            return this.onResetEvent(r, g, b, a);
 		},
 
 		/** 
 		 * @ignore 
 		 */
-		onResetEvent : function() {
-            this.setColor(0, 0, 0, 1.0);
+		onResetEvent : function(r, g, b, a) {
+            this.setColor(r, g, b, a);
+            return this;
 		},
 
 		/**
