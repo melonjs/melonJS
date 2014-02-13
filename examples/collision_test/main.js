@@ -69,8 +69,7 @@ var Smilie = me.ObjectEntity.extend({
     update : function () {
         this.updateMovement();
         
-        if (me.game.collide)
-            me.game.collide(this, true);
+         me.game.world.collide(this, true);
 
         return this.parent();
     }

@@ -102,7 +102,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		// check for collision with sthg
-		var res = me.game.collide(this);
+		var res = me.game.world.collide(this);
 
 		if (res) {
 			switch (res.obj.type) {	

@@ -495,13 +495,34 @@
 		
 		/**
 		 * Checks if the specified child collides with others childs in this container
-		 * @name collideType
+		 * @name collide
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {me.Renderable} obj Object to be tested for collision
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+		 * @example
+		 * // check for collision between this object and others
+		 * res = me.game.world.collide(this);
+		 *
+		 * // check if we collide with an enemy :
+		 * if (res && (res.obj.type == game.constants.ENEMY_OBJECT)) {
+		 *   if (res.x != 0) {
+		 *      // x axis
+		 *      if (res.x<0)
+		 *         console.log("x axis : left side !");
+		 *      else
+		 *         console.log("x axis : right side !");
+		 *   }
+		 *   else {
+		 *      // y axis
+		 *      if (res.y<0)
+		 *         console.log("y axis : top side !");
+		 *      else
+		 *         console.log("y axis : bottom side !");
+		 *   }
+		 * }
 		 */
 		collide : function(objA, multiple) {
 			return this.collideType(objA, null, multiple);
