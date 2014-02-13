@@ -34,7 +34,7 @@
     "grunt-replace": "~0.4.3"
   },
   "scripts": {
-    "install": "bower install;grunt",
+    "install": "(bower install || true) && grunt",
     "release": "grunt release"
   }
 }
