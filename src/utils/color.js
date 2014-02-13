@@ -226,7 +226,7 @@
 		 * @param {me.Color} color
 		 * @return {me.Color} Reference to this object for method chaining
 		 */
-		 add : function(c) {
+		add : function(c) {
             this.r = Math.min(this.r + c.r, 255);
             this.g = Math.min(this.g + c.g, 255);
             this.b = Math.min(this.b + c.b, 255);
@@ -245,11 +245,11 @@
 		 * @param {Number} [a="1.0"] alpha value
 		 * @return {me.Color} Reference to this object for method chaining
 		 */
-		 setColor : function(r, g, b, a) {
+		setColor : function(r, g, b, a) {
             this.r = r || 0;
             this.g = g || 0;
             this.b = b || 0;
-            this.alpha = a || 1.0;
+            this.alpha = typeof(a) === "undefined" ? 1.0 : a;
 
             return this;
         },
@@ -262,7 +262,7 @@
 		 * @param {Number} scale
 		 * @return {me.Color} Reference to this object for method chaining
 		 */
-		 darken : function(scale) {	
+		darken : function(scale) {
             this.r = Math.min(this.r * scale, 255);
             this.g = Math.min(this.g * scale, 255);
             this.b = Math.min(this.b * scale, 255);
@@ -366,9 +366,13 @@
 		 * @function
 		 * @return {String}
 		 */
-		toRGB : function() {
-			return ("rgb(" + this.r + "," + this.g + "," + this.b + ")");
-		},
+        toRGB : function() {
+            return "rgb(" +
+                Math.floor(this.r) + "," +
+                Math.floor(this.g) + "," +
+                Math.floor(this.b) +
+            ")";
+        },
 
 		/**
 		 * return the color in a "rgba(0, 0, 0, 1.0)" format
@@ -377,9 +381,14 @@
 		 * @function
 		 * @return {String}
 		 */
-		toRGBA : function() {
-			return ("rgba(" + this.r + "," + this.g + "," + this.b + "," + this.alpha + ")");
-		}
+        toRGBA : function() {
+            return "rgba(" +
+                Math.floor(this.r) + "," +
+                Math.floor(this.g) + "," +
+                Math.floor(this.b) + "," +
+                this.alpha +
+            ")";
+        }
 
 	});
 
