@@ -109,28 +109,32 @@
 				// corresponding target Container
 				for ( var o = 0; o < group.objects.length; o++) {
 					
-					// TMX Object
-					var obj = group.objects[o];
-
-					// create the corresponding entity
-					var entity = me.pool.pull(obj.name, obj.x, obj.y, obj);
-
-					// ignore if the newInstanceOf function does not return a corresponding object
-					if (entity) {
+					// TMX object settings
+					var settings = group.objects[o];
+                    
+					var obj = me.pool.pull(
+						settings.name, 
+						settings.x, settings.y,
+						// 'TileObject' will instantiate a Sprite Object
+						settings.name === 'TileObject' ? settings.image : settings
+					);
+                    
+					// ignore if the pull function does not return a corresponding object
+					if (obj) {
 						
-						// set the entity z order correspondingly to its parent container/group
-						entity.z = group.z;
+						// set the obj z order correspondingly to its parent container/group
+						obj.z = group.z;
 
 						//apply group opacity value to the child objects if group are merged
-						if (me.game.mergeGroup === true && entity.isRenderable === true) {
-							entity.setOpacity(entity.getOpacity() * group.opacity);
+						if (me.game.mergeGroup === true && obj.isRenderable === true) {
+							obj.setOpacity(obj.getOpacity() * group.opacity);
 							// and to child renderables if any
-							if (entity.renderable !== null) {
-								entity.renderable.setOpacity(entity.renderable.getOpacity() * group.opacity);
+							if (obj.renderable instanceof me.Renderable) {
+								obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
 							}
 						}                        
-						// add the entity into the target container
-						targetContainer.addChild(entity);
+						// add the obj into the target container
+						targetContainer.addChild(obj);
 					}
 				}
 

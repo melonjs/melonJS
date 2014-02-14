@@ -45,6 +45,7 @@
             api.register("me.ObjectEntity", me.ObjectEntity);
             api.register("me.CollectableEntity", me.CollectableEntity);
             api.register("me.LevelEntity", me.LevelEntity);
+            api.register("TileObject", me.SpriteObject);
             api.register("me.Tween", me.Tween, true);
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);
@@ -142,13 +143,6 @@
                     obj.className = name;
                 }
                 return obj;
-            }
-
-            // Tile objects can be created with a GID attribute;
-            // The TMX parser will use it to create the image property.
-            var settings = arguments[3];
-            if (settings && settings.gid && settings.image) {
-                return new me.SpriteObject(settings.x, settings.y, settings.image);
             }
 
             if (name) {
