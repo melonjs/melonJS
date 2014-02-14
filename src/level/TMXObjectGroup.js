@@ -406,7 +406,7 @@
             
 			// set a generic name if not defined
 			if (typeof (this.name) === 'undefined') {
-        		this.name = 'TileObject';
+				this.name = 'TileObject';
 			}
 		},
 
