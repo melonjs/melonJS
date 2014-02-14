@@ -200,15 +200,32 @@
 		 * @name resize
 		 * @memberOf me.SpriteObject
 		 * @function
-		 * @param {Number} ratio scaling ratio
+		 * @param {Number} ratioX x scaling ratio
+		 * @param {Number} ratioY y scaling ratio
 		 */
-		resize : function(ratio) {
-			if (ratio > 0) {
-				this.scale.x = this.scale.x < 0.0 ? -ratio : ratio;
-				this.scale.y = this.scale.y < 0.0 ? -ratio : ratio;
-				// set the scaleFlag
-				this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+		resize : function(ratioX, ratioY) {
+			var x = ratioX;
+			var y = typeof (ratioY) !== undefined ? ratioX : ratioY;
+			if (x > 0) {
+				this.scale.x = this.scale.x < 0.0 ? -x : x;
 			}
+			if (y > 0) {
+				this.scale.y = this.scale.y < 0.0 ? -y : y;
+			}
+			// set the scaleFlag
+			this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+
+		},
+        
+		/**
+		 * Resize the sprite around his center<br>
+		 * @name resizeV
+		 * @memberOf me.SpriteObject
+		 * @function
+		 * @param {me.Vector2d} vector ratio 
+		 */
+		resizeV : function(ratio) {
+			this.resize(ratio.x, ratio.y);
 		},
 
 
