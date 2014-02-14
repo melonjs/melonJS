@@ -125,6 +125,20 @@
 		},
 
 		/**
+		 * Multiply this vector values by the passed value
+		 * @name mul
+		 * @memberOf me.Vector2d
+		 * @function
+		 * @param {Number} value
+		 * @return {me.Venctor2d} Reference to this object for method chaining
+		 */
+		mul : function(n) {
+			this.x *= n;
+			this.y *= n;
+			return this;
+		},
+
+		/**
 		 * Divide this vector values by the passed value
 		 * @name div
 		 * @memberOf me.Vector2d
