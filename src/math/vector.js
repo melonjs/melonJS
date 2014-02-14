@@ -111,6 +111,21 @@
 		},
 
 		/**
+		 * Multiply this vector values by the given scalar
+		 * @name scale
+		 * @memberOf me.Vector2d
+		 * @function
+		 * @param {Number} x
+		 * @param {Number} [y=x]
+		 * @return {me.Vector2d} Reference to this object for method chaining
+		 */
+		scale : function(x, y) {
+			this.x *= x;
+			this.y *= typeof (y) !== 'undefined' ? y : x;
+			return this;
+		},
+        
+		/**
 		 * Multiply this vector values by the passed vector
 		 * @name scale
 		 * @memberOf me.Vector2d
@@ -118,7 +133,7 @@
 		 * @param {me.Vector2d} v
 		 * @return {me.Vector2d} Reference to this object for method chaining
 		 */
-		scale : function(v) {
+		scaleV : function(v) {
 			this.x *= v.x;
 			this.y *= v.y;
 			return this;
