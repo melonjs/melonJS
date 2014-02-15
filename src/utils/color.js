@@ -159,237 +159,305 @@
         "yellowgreen"           : [ 154, 205,  50 ]
     };
 
-	/**
-	 * a color manipulation object.
-	 * @class
-	 * @extends Object
-	 * @memberOf me
-	 * @constructor
-	 * @param {Number} [r='0'] red component
-	 * @param {Number} [g='0'] green component
-	 * @param {Number} [b='0'] blue component
-	 * @param {Number} [a="1.0"] alpha value
-	 */
+    /**
+     * A color manipulation object.
+     * @class
+     * @extends Object
+     * @memberOf me
+     * @constructor
+     * @param {Number} [r=0] red component
+     * @param {Number} [g=0] green component
+     * @param {Number} [b=0] blue component
+     * @param {Number} [a=1.0] alpha value
+     */
     me.Color = Object.extend(
     /** @scope me.Color.prototype */ {
 
-		/**
-		 * Color Red Component
-		 * @name r
-		 * @memberOf me.Color
-		 * @type {Number}
-		 */
-		r : 0,
+        /**
+         * Color Red Component
+         * @name r
+         * @memberOf me.Color
+         * @type {Number}
+         * @readonly
+         */
+        r : 0,
 
-		/**
-		 * Color Green Component
-		 * @name g
-		 * @memberOf me.Color
-		 * @type {Number}
-		 */
+        /**
+         * Color Green Component
+         * @name g
+         * @memberOf me.Color
+         * @type {Number}
+         * @readonly
+         */
         g : 0,
 
-		/**
-		 * Color Blue Component
-		 * @name b
-		 * @memberOf me.Color
-		 * @type {Number}
-		 */        
+        /**
+         * Color Blue Component
+         * @name b
+         * @memberOf me.Color
+         * @type {Number}
+         * @readonly
+         */
         b : 0,
 
-		/**
-		 * Color alpha Component
-		 * @name alpha
-		 * @memberOf me.Color
-		 * @type {Number}
-		 */
-        alpha : 1.0,		
-        
-		/** @ignore */
-		init : function(r, g, b, a) {
+        /**
+         * Color alpha Component
+         * @name alpha
+         * @memberOf me.Color
+         * @type {Number}
+         * @readonly
+         */
+        alpha : 1.0,
+
+        /** @ignore */
+        init : function (r, g, b, a) {
             return this.onResetEvent(r, g, b, a);
-		},
+        },
 
-		/** 
-		 * @ignore 
-		 */
-		onResetEvent : function(r, g, b, a) {
-            this.setColor(r, g, b, a);
-            return this;
-		},
+        /**
+         * @ignore
+         */
+        onResetEvent : function (r, g, b, a) {
+            return this.setColor(r, g, b, a);
+        },
 
-		/**
-		 * Blend this color with the given one using addition.
-		 * @name add
-		 * @memberOf me.Color
-		 * @function
-		 * @param {me.Color} color
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		add : function(c) {
-            this.r = Math.min(this.r + c.r, 255);
-            this.g = Math.min(this.g + c.g, 255);
-            this.b = Math.min(this.b + c.b, 255);
+        /**
+         * Set this color to the specified value.
+         * @name setColor
+         * @memberOf me.Color
+         * @function
+         * @param {Number} r red component
+         * @param {Number} g green component
+         * @param {Number} b blue component
+         * @param {Number} [a=1.0] alpha value
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        setColor : function (r, g, b, a) {
+            this.r = Math.floor(r || 0).clamp(0, 255);
+            this.g = Math.floor(g || 0).clamp(0, 255);
+            this.b = Math.floor(b || 0).clamp(0, 255);
+            this.alpha = typeof(a) === "undefined" ? 1.0 : a.clamp(0, 1);
 
             return this;
         },
 
         /**
-		 * set this color to the specified value.
-		 * @name setColor
-		 * @memberOf me.Color
-		 * @function
-		 * @param {Number} r red component
-		 * @param {Number} g green component
-		 * @param {Number} b blue component
-		 * @param {Number} [a="1.0"] alpha value
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		setColor : function(r, g, b, a) {
-            this.r = r || 0;
-            this.g = g || 0;
-            this.b = b || 0;
-            this.alpha = typeof(a) === "undefined" ? 1.0 : a;
-
-            return this;
-        },
-
-		/**
-		 * Darken this color value by 0..1
-		 * @name darken
-		 * @memberOf me.Color
-		 * @function
-		 * @param {Number} scale
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		darken : function(scale) {
-            this.r = Math.min(this.r * scale, 255);
-            this.g = Math.min(this.g * scale, 255);
-            this.b = Math.min(this.b * scale, 255);
-
-            return this;
+         * Blend this color with the given one using addition.
+         * @name add
+         * @memberOf me.Color
+         * @function
+         * @param {me.Color} color
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        add : function (color) {
+            return this.setColor(
+                this.r + color.r,
+                this.g + color.g,
+                this.b + color.b,
+                (this.alpha + color.alpha) / 2
+            );
         },
 
         /**
-		 * return true if the r, g, b, and alpha properties of this color are equal with the given one.
-		 * @name equals
-		 * @memberOf me.Color
-		 * @function
-		 * @param {me.Color} color
-		 * @return {Boolean}
-		 */
-		equals : function(c) {
-			return ((this.r === c.r) && (this.g === c.g) && (this.b === c.b) && (this.alpha === c.alpha));
-		},
+         * Darken this color value by 0..1
+         * @name darken
+         * @memberOf me.Color
+         * @function
+         * @param {Number} scale
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        darken : function (scale) {
+            scale = scale.clamp(0, 1);
+            return this.setColor(
+                this.r * scale,
+                this.g * scale,
+                this.b * scale,
+                this.alpha
+            );
+        },
 
-		/**
-		 * parse a CSS color and set this color to the corresponding r,g,b values
-		 * @name parseCSS
-		 * @memberOf me.Color
-		 * @function
-		 * @param {String} color
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		parseCSS : function(CSSColor) {
-			var color = cssToRGB[CSSColor] || color;
-			this.setColor(color[0], color[1], color[2], 1.0);
+        /**
+         * Lighten this color value by 0..1
+         * @name lighten
+         * @memberOf me.Color
+         * @function
+         * @param {Number} scale
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        lighten : function (scale) {
+            scale = scale.clamp(0, 1);
+            return this.setColor(
+                this.r + (255 - this.r) * scale,
+                this.g + (255 - this.g) * scale,
+                this.b + (255 - this.b) * scale,
+                this.alpha
+            );
+        },
 
-			return this;
-		},
+        /**
+         * Generate random r,g,b values for this color object
+         * @name random
+         * @memberOf me.Color
+         * @function
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        random : function () {
+            return this.setColor(
+                Math.random() * 256,
+                Math.random() * 256,
+                Math.random() * 256,
+                this.alpha
+            );
+        },
 
-		/**
-		 * parse a Hex color ("#RGB" or "#RRGGBB" format) and set this color to the corresponding r,g,b values
-		 * @name parseHex
-		 * @memberOf me.Color
-		 * @function
-		 * @param {String} color
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		parseHex : function(h) {
-			
-            // remove the # if present
-            if (h.charAt(0) === '#') {
-                h = h.substring(1, h.length);
+        /**
+         * Return true if the r,g,b,a values of this color are equal with the
+         * given one.
+         * @name equals
+         * @memberOf me.Color
+         * @function
+         * @param {me.Color} color
+         * @return {Boolean}
+         */
+        equals : function (color) {
+            return (
+                (this.r === color.r) &&
+                (this.g === color.g) &&
+                (this.b === color.b) &&
+                (this.alpha === color.alpha)
+            );
+        },
+
+        /**
+         * Parse a CSS color string and set this color to the corresponding
+         * r,g,b values
+         * @name parseCSS
+         * @memberOf me.Color
+         * @function
+         * @param {String} color
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        parseCSS : function (cssColor) {
+            // TODO : Memoize this function by caching its input
+
+            if (!(cssColor in cssToRGB)) {
+                return this.parseRGB(cssColor);
             }
 
-			if (h.length < 6)  {
-				// 3 char shortcut is used, double each char
-				this.r = parseInt(h.charAt(0)+h.charAt(0), 16);
-				this.g = parseInt(h.charAt(1)+h.charAt(1), 16);
-				this.b = parseInt(h.charAt(2)+h.charAt(2), 16);
-			} else {
-				this.r = parseInt(h.substring(0, 2), 16);
-				this.g = parseInt(h.substring(2, 4), 16);
-				this.b = parseInt(h.substring(4, 6), 16);
-			}
+            return this.setColor.apply(this, cssToRGB[cssColor]);
+        },
 
-			this.alpha = 1.0;
+        /**
+         * Parse an RGB or RGBA CSS color string
+         * @name parseRGB
+         * @memberOf me.Color
+         * @function
+         * @param {String} color
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        parseRGB : function (rgbColor) {
+            // TODO : Memoize this function by caching its input
 
-			return this;
-		},
+            var start;
+            if (rgbColor.substring(0, 4) === "rgba") {
+                start = 5;
+            }
+            else if (rgbColor.substring(0, 3) === "rgb") {
+                start = 4;
+            }
+            else {
+                return this.parseHex(rgbColor);
+            }
 
+            var color = rgbColor.slice(start, -1).split(/\s*,\s*/);
+            return this.setColor.apply(this, color);
+        },
 
-		/**
-		 * generate random r,g,b values for this Color object
-		 * @name random
-		 * @memberOf me.Color
-		 * @function
-		 * @return {me.Color} Reference to this object for method chaining
-		 */
-		random : function(c) {
-			this.setColor(
-				Math.floor(Math.random()*256),
-				Math.floor(Math.random()*256),
-				Math.floor(Math.random()*256),
-				this.alpha
-			);
-			return this;
-		},
+        /**
+         * Parse a Hex color ("#RGB" or "#RRGGBB" format) and set this color to
+         * the corresponding r,g,b values
+         * @name parseHex
+         * @memberOf me.Color
+         * @function
+         * @param {String} color
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        parseHex : function (hexColor) {
+            // TODO : Memoize this function by caching its input
 
-		/**
-		 * return the color in a "#000000" format
-		 * @name toHex
-		 * @memberOf me.Color
-		 * @function
-		 * @return {String}
-		 */
-		toHex : function() {
-			// TODO : manage a cached value of the hex format (for performances)
-			// (probably needs a getter/setter for r,g,b values that also invalidate the cache)
-			return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
-		},
+            // Remove the # if present
+            if (hexColor.charAt(0) === '#') {
+                hexColor = hexColor.substring(1, hexColor.length);
+            }
 
-		/**
-		 * return the color in a "rgb(0, 0, 0)" format
-		 * @name toRGB
-		 * @memberOf me.Color
-		 * @function
-		 * @return {String}
-		 */
-        toRGB : function() {
+            var r, g, b;
+
+            if (hexColor.length < 6)  {
+                // 3 char shortcut is used, double each char
+                r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16);
+                g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16);
+                b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16);
+            }
+            else {
+                r = parseInt(hexColor.substring(0, 2), 16);
+                g = parseInt(hexColor.substring(2, 4), 16);
+                b = parseInt(hexColor.substring(4, 6), 16);
+            }
+
+            return this.setColor(r, g, b);
+        },
+
+        /**
+         * Get the color in "#000000" format
+         * @name toHex
+         * @memberOf me.Color
+         * @function
+         * @return {String}
+         */
+        toHex : function () {
+            // TODO : Memoize this function by caching its result until any of
+            // the r,g,b,a values are changed
+
+            return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
+        },
+
+        /**
+         * Get the color in "rgb(0,0,0)" format
+         * @name toRGB
+         * @memberOf me.Color
+         * @function
+         * @return {String}
+         */
+        toRGB : function () {
+            // TODO : Memoize this function by caching its result until any of
+            // the r,g,b,a values are changed
+
             return "rgb(" +
-                Math.floor(this.r) + "," +
-                Math.floor(this.g) + "," +
-                Math.floor(this.b) +
+                this.r + "," +
+                this.g + "," +
+                this.b +
             ")";
         },
 
-		/**
-		 * return the color in a "rgba(0, 0, 0, 1.0)" format
-		 * @name toRGBA
-		 * @memberOf me.Color
-		 * @function
-		 * @return {String}
-		 */
-        toRGBA : function() {
+        /**
+         * Get the color in "rgba(0,0,0,1)" format
+         * @name toRGBA
+         * @memberOf me.Color
+         * @function
+         * @return {String}
+         */
+        toRGBA : function () {
+            // TODO : Memoize this function by caching its result until any of
+            // the r,g,b,a values are changed
+
             return "rgba(" +
-                Math.floor(this.r) + "," +
-                Math.floor(this.g) + "," +
-                Math.floor(this.b) + "," +
+                this.r + "," +
+                this.g + "," +
+                this.b + "," +
                 this.alpha +
             ")";
         }
 
-	});
+    });
 
 })(window);
