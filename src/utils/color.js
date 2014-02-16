@@ -241,6 +241,10 @@
             return this;
         },
 
+        clone: function() {
+            return me.pool.pull("me.Color", this.r, this.g, this.b, this.a);
+        },
+
         /**
          * Blend this color with the given one using addition.
          * @name add
