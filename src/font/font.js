@@ -30,7 +30,7 @@
 
 		// private font properties
 		/** @ignore */
-		font : new me.Vector2d(),
+		font : 'Arial',
 		fontSize : new me.Vector2d(),
        
 		/**
