@@ -222,7 +222,7 @@
 
 			var _canvas = document.createElement('canvas');
 
-			if ((screencanvas === true) && (navigator.isCocoonJS)) {
+			if ((screencanvas === true) && (navigator.isCocoonJS) && (me.device.android2 !== true)) {
 				// enable ScreenCanvas on cocoonJS
 				_canvas.screencanvas = true;
 			}
