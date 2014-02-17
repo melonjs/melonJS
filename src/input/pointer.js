@@ -136,20 +136,26 @@
 
     /**
      * cache value for the offset of the canvas position within the page
-     * @private
+     * @ignore
      */
     var viewportOffset = new me.Vector2d();
     
     /**
+     * Array of object containing changed touch information (iOS event model)
+     * @ignore
+     */
+    var changedTouches = [];
+    
+    /**
      * cache value for the offset of the canvas position within the page
-     * @private
+     * @ignore
      */
     obj._offset = null;
     
 
     /**
      * addEventListerner for the specified event list and callback
-     * @private
+     * @ignore
      */
     function registerEventListener(eventList, callback) {
         for (var x = 2; x < eventList.length; ++x) {
@@ -166,7 +172,7 @@
     function enablePointerEvent() {
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
-            obj.changedTouches.push({ x: 0, y: 0 });
+            changedTouches.push({ x: 0, y: 0 });
             obj.mouse.pos = new me.Vector2d(0,0);
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
@@ -249,7 +255,7 @@
         if (handlers) {
             // get the current screen to world offset
             me.game.viewport.localToWorld(0,0, viewportOffset);
-            for(var t=0, l=obj.changedTouches.length; t<l; t++) {
+            for(var t=0, l=changedTouches.length; t<l; t++) {
                 // Do not fire older events
                 if (typeof(e.timeStamp) !== "undefined") {
                     if (e.timeStamp < lastTimeStamp) continue;
@@ -259,12 +265,12 @@
                 // if PointerEvent is not supported
                 if (!me.device.pointerEnabled) {
                     // -> define pointerId to simulate the PointerEvent standard
-                    e.pointerId = obj.changedTouches[t].id;
+                    e.pointerId = changedTouches[t].id;
                 }
 
                 /* Initialize the two coordinate space properties. */
-                e.gameScreenX = obj.changedTouches[t].x;
-                e.gameScreenY = obj.changedTouches[t].y;
+                e.gameScreenX = changedTouches[t].x;
+                e.gameScreenY = changedTouches[t].y;
                 e.gameWorldX = e.gameScreenX + viewportOffset.x;
                 e.gameWorldY = e.gameScreenY + viewportOffset.y;
                 // parse all handlers
@@ -299,35 +305,35 @@
      * translate event coordinates
      * @ignore
      */
-    function updateCoordFromEvent(e) {
+    function updateCoordFromEvent(event) {
         var local;
 
         // reset the touch array cache
-        obj.changedTouches.length=0;
+        changedTouches.length=0;
 
         // PointerEvent or standard Mouse event
-        if (!e.touches) {
-            local = obj.globalToLocal(e.clientX, e.clientY);
-            local.id =  e.pointerId || 1;
-            obj.changedTouches.push(local);
+        if (!event.touches) {
+            local = obj.globalToLocal(event.clientX, event.clientY);
+            local.id =  event.pointerId || 1;
+            changedTouches.push(local);
         }
         // iOS/Android like touch event
         else {
-            for(var i=0, l=e.changedTouches.length; i<l; i++) {
-                var t = e.changedTouches[i];
+            for(var i=0, l=event.changedTouches.length; i<l; i++) {
+                var t = event.changedTouches[i];
                 local = obj.globalToLocal(t.clientX, t.clientY);
                 local.id = t.identifier;
-                obj.changedTouches.push(local);
+                changedTouches.push(local);
             }
         }
         // if event.isPrimary is defined and false, return
-        if (e.isPrimary === false) {
+        if (event.isPrimary === false) {
             return;
         }
         // Else use the first entry to simulate mouse event
         obj.mouse.pos.set(
-            obj.changedTouches[0].x,
-            obj.changedTouches[0].y
+            changedTouches[0].x,
+            changedTouches[0].y
         );
     }
 
@@ -446,19 +452,6 @@
      * @memberOf me.input
      */
     obj.throttlingInterval = undefined;
-
-    /**
-     * Array of object containing changed touch information (iOS event model)<br>
-     * properties : <br>
-     * x : x position of the touch event in the canvas (screen coordinates)<br>
-     * y : y position of the touch event in the canvas (screen coordinates)<br>
-     * id : unique finger identifier<br>
-     * @public
-     * @type Array
-     * @name touches
-     * @memberOf me.input
-     */
-    obj.changedTouches = [];
 
     /**
      * Translate the specified x and y values from the global (absolute)
