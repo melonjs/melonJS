@@ -71,7 +71,7 @@ then we can install the melonJS required dependencies, by typing :
 
 Once all the above done, we are ready to build melonJS :
 
-    $ cd melonJS
+    $ cd melonJS (if not already in the melonJS directory)
     $ grunt
 
 Both plain and minified library will be available under the "build" directory.
@@ -86,15 +86,9 @@ And for Ubuntu:
 
     $ export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 
-
-JSDoc also requires specific dependencies to be installed :
-
-    $ cd melonJS/tasks/jsdoc
-    $ npm install
-
 Then do the following to actually build the documentation :
 
-    $ cd melonJS
+    $ cd melonJS (if not already in the melonJS directory)
     $ grunt doc
 
 The generated documentation will be then available under the "docs" directory
