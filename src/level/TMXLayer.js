@@ -25,7 +25,7 @@
 
 			// apply given parameters
 			this.name = name;
-			this.color = (new me.Color()).parseHex(color);
+			this.color = color;
 			this.z = z;
 		},
 
@@ -39,7 +39,7 @@
 			context.globalAlpha *= this.getOpacity();
 
 			// set layer color
-			context.fillStyle = this.color.toRGB();
+			context.fillStyle = this.color;
 
 			// clear the specified rect
 			context.fillRect(rect.left, rect.top, rect.width, rect.height);
@@ -215,7 +215,7 @@
 			var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
 			var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
 			var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
-			
+
 			if (shouldTranslate) {
 				context.translate(translateX, translateY);
 			}
