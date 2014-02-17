@@ -452,7 +452,7 @@
 		 * @return {me.Vector2d}
 		 */
 		localToWorld : function(x, y, v) {
-			v = v || me.Vector2d();
+			v = v || new me.Vector2d();
 			return (v.set(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
 		},
 		
@@ -467,7 +467,7 @@
 		 * @return {me.Vector2d}
 		 */
 		worldToLocal : function(x, y, v) {
-			v = v || me.Vector2d();
+			v = v || new me.Vector2d();
 			return (v.set(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
 		},
 		
