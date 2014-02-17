@@ -241,8 +241,15 @@
             return this;
         },
 
-        clone: function() {
-            return me.pool.pull("me.Color", this.r, this.g, this.b, this.a);
+        /**
+         * Create a new copy of this color object.
+         * @name clone
+         * @memberOf me.Color
+         * @function
+         * @return {me.Color} Reference to the newly cloned object
+         */
+        clone : function () {
+            return me.pool.pull("me.Color", this.r, this.g, this.b, this.alpha);
         },
 
         /**
