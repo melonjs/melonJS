@@ -25,6 +25,9 @@
          * @ignore
          */
         obj._check = function() {
+        
+            // detect device type/platform
+            me.device._detectDevice();
 
             // future proofing (MS) feature detection
             me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
@@ -34,9 +37,6 @@
             // detect touch capabilities
             me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
                               (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
-
-            // detect platform
-            me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
 
             // accelerometer detection
             me.device.hasAccelerometer = (
@@ -90,6 +90,22 @@
 
             // detect audio capabilities
             me.device._detectAudio();
+        };
+        
+        /**
+         * detect the device type
+         * @ignore
+         */
+        obj._detectDevice = function() {
+            // detect platform
+            me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
+            // iOS Device ?
+            me.device.iOS = me.device.ua.match(/iPhone|iPad|iPod/i) || false;
+            // Android Device ?
+            me.device.android = me.device.ua.match(/android/i) || false;
+            me.device.android2 = me.device.ua.match(/android 2/i) || false;
+            // Windows Device ?
+            me.device.wp = me.device.ua.match(/Windows Phone/i) || false;
         };
 
         /**
@@ -216,7 +232,43 @@
          * @memberOf me.device
          */
         obj.isMobile = false;
+        
+        /**
+         * equals to true if the device is an iOS platform <br>
+         * @type Boolean
+         * @readonly
+         * @name iOS
+         * @memberOf me.device
+         */
+        obj.iOS = false;
 
+        /**
+         * equals to true if the device is an Android platform <br>
+         * @type Boolean
+         * @readonly
+         * @name android
+         * @memberOf me.device
+         */
+        obj.android = false;
+
+        /**
+         * equals to true if the device is an Android 2.x platform <br>
+         * @type Boolean
+         * @readonly
+         * @name android2
+         * @memberOf me.device
+         */
+        obj.android2 = false;
+        
+         /**
+         * equals to true if the device is an Windows Phone platform <br>
+         * @type Boolean
+         * @readonly
+         * @name wp
+         * @memberOf me.device
+         */
+        obj.wp = false;
+        
         /**
          * The device current orientation status. <br>
          *   0 : default orientation<br>
