@@ -14,7 +14,7 @@
       ---------------------------------------------*/
 
     // Reference to base class
-    obj = me.input;
+    var obj = me.input;
 
     // list of binded keys
     obj._KeyBinding = {};

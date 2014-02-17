@@ -73,7 +73,7 @@
       ---------------------------------------------*/
 
     // Reference to base class
-    obj = me.input;
+    var obj = me.input;
 
     // list of registered Event handlers
     var evtHandlers = {};
