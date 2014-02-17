@@ -35,11 +35,11 @@
 		// max display size
 		var maxWidth = Infinity;
 		var maxHeight = Infinity;
-		
+
 		/*---------------------------------------------
-			
+
 			PUBLIC STUFF
-				
+
 			---------------------------------------------*/
 
 		/**
@@ -71,28 +71,28 @@
 			double_buffering = doublebuffering || false;
 			auto_scale  = (scale==='auto') || false;
 			maintainAspectRatio = (aspectRatio !== undefined) ? aspectRatio : true;
-			
+
 			// normalize scale
 			scale = (scale!=='auto') ? parseFloat(scale || 1.0) : 1.0;
 			me.sys.scale = new me.Vector2d(scale, scale);
-			
+
 			// force double buffering if scaling is required
 			if (auto_scale || (scale !== 1.0)) {
 				double_buffering = true;
 			}
-			
+
 			// default scaled size value
 			game_width_zoom = game_width * me.sys.scale.x;
 			game_height_zoom = game_height * me.sys.scale.y;
-			
+
 			//add a channel for the onresize/onorientationchange event
 			window.addEventListener('resize', throttle(100, false, function (event) {me.event.publish(me.event.WINDOW_ONRESIZE, [event]);}), false);
 			window.addEventListener('orientationchange', function (event) {me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [event]);}, false);
-			
+
 			// register to the channel
 			me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
 			me.event.subscribe(me.event.WINDOW_ONORIENTATION_CHANGE, me.video.onresize.bind(me.video));
-			
+
 			// create the main screen canvas
 			canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
 
@@ -110,10 +110,10 @@
 			// stop here if not supported
 			if (!canvas.getContext)
 				return false;
-				
+
 			// get the 2D context
 			context2D = api.getContext2d(canvas);
-			
+
 			// adjust CSS style for High-DPI devices
 			if (me.device.getPixelRatio()>1) {
 				canvas.style.width = (canvas.width / me.device.getPixelRatio()) + 'px';
@@ -128,18 +128,18 @@
 				backBufferCanvas = canvas;
 				backBufferContext2D = context2D;
 			}
-			
-			// set max the canvas max size if CSS values are defined 
+
+			// set max the canvas max size if CSS values are defined
 			if (window.getComputedStyle) {
 				var style = window.getComputedStyle(canvas, null);
 				me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
 			}
-			
+
 			// trigger an initial resize();
 			me.video.onresize(null);
 
 			me.game.init();
-			
+
 			return true;
 		};
 
@@ -165,7 +165,7 @@
 			return backBufferCanvas.width;
 
 		};
-		
+
 		/**
 		 * return the relative (to the page) position of the specified Canvas
 		 * @name getPos
@@ -189,7 +189,7 @@
 		api.getHeight = function() {
 			return backBufferCanvas.height;
 		};
-		
+
 		/**
 		 * set the max canvas display size (when scaling)
 		 * @name setMaxSize
@@ -219,14 +219,14 @@
 			if (width === 0 || height === 0)  {
 				throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
 			}
-			
+
 			var _canvas = document.createElement('canvas');
 
 			if ((screencanvas === true) && (navigator.isCocoonJS)) {
 				// enable ScreenCanvas on cocoonJS
 				_canvas.screencanvas = true;
 			}
-			
+
 			_canvas.width = width || backBufferCanvas.width;
 			_canvas.height = height || backBufferCanvas.height;
 
@@ -248,7 +248,7 @@
 				// cocoonJS specific extension
 				_context = canvas.getContext('2d', { "antialias" : me.sys.scalingInterpolation });
 			} else {
-				_context = canvas.getContext('2d');				
+				_context = canvas.getContext('2d');
 			}
 			if (!_context.canvas) {
 				_context.canvas = canvas;
@@ -271,7 +271,7 @@
 		api.getScreenCanvas = function() {
 			return canvas;
 		};
-		
+
 		/**
 		 * return a reference to the screen canvas corresponding 2d Context<br>
 		 * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
@@ -283,7 +283,7 @@
 		api.getScreenContext = function() {
 			return context2D;
 		};
-		
+
 		/**
 		 * return a reference to the system canvas
 		 * @name getSystemCanvas
@@ -294,7 +294,7 @@
 		api.getSystemCanvas = function() {
 			return backBufferCanvas;
 		};
-		
+
 		/**
 		 * return a reference to the system 2d Context
 		 * @name getSystemContext
@@ -305,8 +305,8 @@
 		api.getSystemContext = function() {
 			return backBufferContext2D;
 		};
-		
-		
+
+
 		/**
 		 * callback for window resize event
 		 * @ignore
@@ -314,7 +314,7 @@
 		api.onresize = function(event){
 			// default (no scaling)
 			var scaleX = 1, scaleY = 1;
-            
+
             // check for orientation information
             if (typeof window.orientation !== 'undefined') {
                 me.device.orientation = window.orientation;
@@ -323,7 +323,7 @@
                 // orientation might vary between for example an ipad and and android tab
                 me.device.orientation = (window.outerWidth > window.outerHeight) ? 90 : 0;
             }
-			
+
 			if (auto_scale) {
 				// get the parent container max size
 				var parent = me.video.getScreenCanvas().parentNode;
@@ -343,11 +343,11 @@
 					scaleX = _max_width / me.video.getWidth();
 					scaleY = _max_height / me.video.getHeight();
 				}
-				
+
 				// adjust scaling ratio based on the device pixel ratio
 				scaleX *= me.device.getPixelRatio();
 				scaleY *= me.device.getPixelRatio();
-			
+
 				// scale if required
 				if (scaleX!==1 || scaleY !==1) {
 
@@ -360,9 +360,9 @@
 				}
 			}
 			// make sure we have the correct relative canvas position cached
-			me.input.offset = me.video.getPos();
+			me.input._offset = me.video.getPos();
 		};
-		
+
 		/**
 		 * Modify the "displayed" canvas size
 		 * @name updateDisplaySize
@@ -386,15 +386,15 @@
 			me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
 
 			// make sure we have the correct relative canvas position cached
-			me.input.offset = me.video.getPos();
+			me.input._offset = me.video.getPos();
 
 			// force a canvas repaint
 			api.blitSurface();
-			
+
 			// clear the timeout id
 			deferResizeId = -1;
 		};
-		
+
 		/**
 		 * Clear the specified context with the given color
 		 * @name clearSurface
@@ -411,7 +411,7 @@
 			context.fillRect(0, 0, _canvas.width, _canvas.height);
 			context.restore();
 		};
-		
+
 		/**
 		 * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
 		 * (!) this might not be supported by all browsers <br>
@@ -432,7 +432,7 @@
 			// generic one (if implemented)
 			context.imageSmoothingEnabled = (enable===true);
 		};
-		
+
 		/**
 		 * enable/disable Alpha for the specified context
 		 * @name setAlpha
@@ -459,7 +459,7 @@
 					context2D.drawImage(backBufferCanvas, 0, 0,
 							backBufferCanvas.width, backBufferCanvas.height, 0,
 							0, game_width_zoom, game_height_zoom);
-					
+
 				};
 			} else {
 				// "empty" function, as we directly render stuff on "context2D"

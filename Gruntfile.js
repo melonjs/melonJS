@@ -25,6 +25,8 @@ module.exports = function(grunt) {
         'src/audio/audio.js',
         'src/video/video.js',
         'src/input/input.js',
+        'src/input/keyboard.js',
+        'src/input/pointer.js',
         'src/utils/utils.js',
         'src/utils/color.js',
         'src/system/save.js',
