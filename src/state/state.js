@@ -383,14 +383,14 @@
             $.addEventListener("blur", function() {
                 // only in case we are not loading stuff
                 if (_state !== obj.LOADING) {
-                    if (me.sys.stopOnBlur) {
+                    if (me.sys.stopOnBlur && obj.isRunning()) {
                         obj.stop(true);
 
                         // callback?
                         if (obj.onStop)
                             obj.onStop();
                     }
-                    if (me.sys.pauseOnBlur) {
+                    if (me.sys.pauseOnBlur && !obj.isPaused()) {
                         obj.pause(true);
                         // callback?
                         if (obj.onPause) {
@@ -404,7 +404,7 @@
                 // only in case we are not loading stuff
                 if (_state !== obj.LOADING) {
                     // note: separate boolean so we can stay paused if user prefers
-                    if (me.sys.resumeOnFocus) {
+                    if (me.sys.resumeOnFocus && obj.isPaused()) {
                         obj.resume(true);
 
                         // callback?
@@ -412,7 +412,7 @@
                             obj.onResume();
                         }
                     }
-                    if (me.sys.stopOnBlur) {
+                    if (me.sys.stopOnBlur && !obj.isRunning()) {
                         obj.restart(true);
 
                         // force repaint
