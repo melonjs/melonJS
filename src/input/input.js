@@ -8,7 +8,6 @@
 (function(window) {
 
     /**
-     * There is no constructor function for me.input.
      * @namespace me.input
      * @memberOf me
      */
