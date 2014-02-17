@@ -138,8 +138,14 @@
      * cache value for the offset of the canvas position within the page
      * @private
      */
+    var viewportOffset = new me.Vector2d();
+    
+    /**
+     * cache value for the offset of the canvas position within the page
+     * @private
+     */
     obj._offset = null;
-
+    
 
     /**
      * addEventListerner for the specified event list and callback
@@ -242,7 +248,7 @@
 
         if (handlers) {
             // get the current screen to world offset
-            var offset = me.game.viewport.localToWorld(0,0);
+            me.game.viewport.localToWorld(0,0, viewportOffset);
             for(var t=0, l=obj.changedTouches.length; t<l; t++) {
                 // Do not fire older events
                 if (typeof(e.timeStamp) !== "undefined") {
@@ -259,8 +265,8 @@
                 /* Initialize the two coordinate space properties. */
                 e.gameScreenX = obj.changedTouches[t].x;
                 e.gameScreenY = obj.changedTouches[t].y;
-                e.gameWorldX = e.gameScreenX + offset.x;
-                e.gameWorldY = e.gameScreenY + offset.y;
+                e.gameWorldX = e.gameScreenX + viewportOffset.x;
+                e.gameWorldY = e.gameScreenY + viewportOffset.y;
                 // parse all handlers
                 for (var i = handlers.length, handler; i--, handler = handlers[i];) {
                     /* Set gameX and gameY depending on floating. */
