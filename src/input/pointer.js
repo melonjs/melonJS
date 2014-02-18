@@ -427,7 +427,7 @@
      * MIDDLE : constant for middle button <br>
      * RIGHT : constant for right button <br>
      * @public
-     * @enum {number}
+     * @enum {Object}
      * @name mouse
      * @memberOf me.input
      */
@@ -484,27 +484,34 @@
     };
 
     /**
-     * Associate a mouse (button) action to a keycode<br>
+     * Associate a pointer event to a keycode<br>
      * Left button – 0
      * Middle button – 1
      * Right button – 2
-     * @name bindMouse
+     * @name bindPointer
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @param {me.input#KEY} keyCode
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
-     * // map the left button click on the X key
-     * me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
+     * // map the left button click on the X key (default if the button is not specified)
+     * me.input.bindPointer(me.input.KEY.X);
+     * // map the right button click on the X key
+     * me.input.bindPointer(me.input.mouse.RIGHT, me.input.KEY.X);
      */
-    obj.bindMouse = function (button, keyCode)
-    {
+    obj.bindPointer = function () {
+    
+        console.log(arguments.length);
+        console.log(arguments);
+        var button = (arguments.length < 2) ? obj.mouse.LEFT : arguments[0];
+        var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
+        
         // make sure the mouse is initialized
         enablePointerEvent();
-
+        
         // throw an exception if no action is defined for the specified keycode
         if (!obj._KeyBinding[keyCode])
           throw "melonJS : no action defined for keycode " + keyCode;
@@ -513,53 +520,18 @@
     };
     /**
      * unbind the defined keycode
-     * @name unbindMouse
+     * @name unbindPointer
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @example
-     * me.input.unbindMouse(me.input.mouse.LEFT);
+     * me.input.unbindPointer(me.input.mouse.LEFT);
      */
-    obj.unbindMouse = function(button) {
+    obj.unbindPointer = function(button) {
         // clear the event status
-        obj.mouse.bind[button] = null;
+        obj.mouse.bind[typeof(button) === 'undefined'?me.input.mouse.LEFT:button] = null;
     };
-
-    /**
-     * Associate a touch action to a keycode
-     * @name bindTouch
-     * @memberOf me.input
-     * @public
-     * @function
-     * @param {me.input#KEY} keyCode
-     * @example
-     * // enable the keyboard
-     * me.input.bindKey(obme.inputj.KEY.X, "shoot");
-     * // map the touch event on the X key
-     * me.input.bindTouch(me.input.KEY.X);
-     */
-    obj.bindTouch = function (keyCode)
-    {
-        // reuse the mouse emulation stuff
-        // where left mouse button is map to touch event
-        obj.bindMouse(obj.mouse.LEFT, keyCode);
-    };
-
-    /**
-     * unbind the defined touch binding
-     * @name unbindTouch
-     * @memberOf me.input
-     * @public
-     * @function
-     * @example
-     * me.input.unbindTouch();
-     */
-    obj.unbindTouch = function() {
-        // clear the key binding
-        obj.unbindMouse(obj.mouse.LEFT);
-    };
-
 
 
     /**
