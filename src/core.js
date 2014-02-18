@@ -23,12 +23,10 @@ window.me = window.me || {};
 	 * me global references
 	 * @ignore
 	 */
-	me = {
-		// library name & version
-		mod : "melonJS",
-		version : "@VERSION"
-	};
-    
+	// library name & version
+	me.mod = "melonJS";
+	me.version = "@VERSION";
+
     /**
      * Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
      * @ignore
@@ -291,9 +289,16 @@ window.me = window.me || {};
 	};
 
 	// call the library init function when ready
-	$.onReady(function() {
-		_init_ME();
-	});
+	if(me.skipAutoInit !== true) {
+		$.onReady(function() {
+			_init_ME();
+		});
+	} else {
+		me.init = function() {
+			_init_ME();
+			domReady();
+		}
+	}
 
 	/************************************************************************************/
 
