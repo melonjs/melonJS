@@ -13,7 +13,7 @@ module.exports = function(grunt) {
         'src/debug/debug.js',
         'src/renderable/base.js',
         'src/renderable/sprite.js',
-        'src/renderable/texturepacker.js',
+        'src/renderable/textureatlas.js',
         'src/renderable/camera.js',
         'src/renderable/GUI.js',
         'src/renderable/container.js',
