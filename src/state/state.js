@@ -81,18 +81,10 @@
     // based on the requestAnimationFrame polyfill by Erik Möller
     (function() {
         var lastTime = 0;
-        var vendors = ['ms', 'moz', 'webkit', 'o'];
         // get unprefixed rAF and cAF, if present
-        var requestAnimationFrame = window.requestAnimationFrame;
-        var cancelAnimationFrame = window.cancelAnimationFrame;
-        for(var x = 0; x < vendors.length; ++x) {
-            if ( requestAnimationFrame && cancelAnimationFrame ) {
-                break;
-            }
-            requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-            cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] ||
-                                   window[vendors[x]+'CancelRequestAnimationFrame'];
-        }
+        var requestAnimationFrame = me.agent.prefixed("requestAnimationFrame");
+        var cancelAnimationFrame = me.agent.prefixed("cancelAnimationFrame") ||
+                                   me.agent.prefixed("cancelRequestAnimationFrame");
 
         if (!requestAnimationFrame || !cancelAnimationFrame) {
             requestAnimationFrame = function(callback, element) {

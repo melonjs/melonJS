@@ -25,14 +25,14 @@
          * @ignore
          */
         obj._check = function() {
-        
+
             // detect device type/platform
             me.device._detectDevice();
 
             // future proofing (MS) feature detection
-            me.device.pointerEnabled = navigator.pointerEnabled || navigator.msPointerEnabled;
-            navigator.maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
-            window.gesture = window.gesture || window.MSGesture;
+            me.device.pointerEnabled = me.agent.prefixed("pointerEnabled", navigator);
+            navigator.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
+            window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
             me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
@@ -47,14 +47,10 @@
             );
 
             // pointerlock detection
-            this.hasPointerLockSupport = 'pointerLockElement' in document ||
-                                         'mozPointerLockElement' in document ||
-                                         'webkitPointerLockElement' in document;
+            this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
 
             if(this.hasPointerLockSupport) {
-                document.exitPointerLock = document.exitPointerLock ||
-                                           document.mozExitPointerLock ||
-                                           document.webkitExitPointerLock;
+                document.exitPointerLock = me.agent.prefixed("exitPointerLock", document);
             }
 
             // device motion detection
@@ -63,23 +59,13 @@
             }
 
             // fullscreen api detection & polyfill when possible
-            this.hasFullScreenSupport = document.fullscreenEnabled || 
-                                        document.webkitFullscreenEnabled || 
-                                        document.msFullscreenEnabled ||
-                                        document.mozFullScreenEnabled;
+            this.hasFullScreenSupport = me.agent.prefixed("fullscreenEnabled", document);
 
-            document.exitFullscreen = document.cancelFullScreen ||
-                                      document.exitFullscreen ||
-                                      document.webkitCancelFullScreen ||
-                                      document.webkitExitFullscreen ||
-                                      document.mozCancelFullScreen ||
-                                      document.msExitFullscreen;
+            document.exitFullscreen = me.agent.prefixed("cancelFullScreen", document) ||
+                                      me.agent.prefixed("exitFullscreen", document);
 
             // vibration API poyfill
-            navigator.vibrate = navigator.vibrate || 
-                                navigator.webkitVibrate || 
-                                navigator.mozVibrate || 
-                                navigator.msVibrate;
+            navigator.vibrate = me.agent.prefixed("vibrate", navigator);
 
             try {
                 obj.localStorage = !!window.localStorage;
@@ -91,7 +77,7 @@
             // detect audio capabilities
             me.device._detectAudio();
         };
-        
+
         /**
          * detect the device type
          * @ignore
@@ -232,7 +218,7 @@
          * @memberOf me.device
          */
         obj.isMobile = false;
-        
+
         /**
          * equals to true if the device is an iOS platform <br>
          * @type Boolean
@@ -259,7 +245,7 @@
          * @memberOf me.device
          */
         obj.android2 = false;
-        
+
          /**
          * equals to true if the device is an Windows Phone platform <br>
          * @type Boolean
@@ -268,7 +254,7 @@
          * @memberOf me.device
          */
         obj.wp = false;
-        
+
         /**
          * The device current orientation status. <br>
          *   0 : default orientation<br>
@@ -345,7 +331,7 @@
         obj.alpha = 0;
 
         /**
-         * Triggers a fullscreen request. Requires fullscreen support from the browser/device. 
+         * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
          * @name requestFullscreen
          * @memberOf me.device
          * @function
@@ -367,11 +353,8 @@
         obj.requestFullscreen = function(element) {
             if(this.hasFullScreenSupport) {
                 element = element || me.video.getWrapper();
-                element.requestFullscreen = element.requestFullscreen ||
-                                            element.webkitRequestFullscreen ||
-                                            element.mozRequestFullScreen ||
-                                            element.msRequestFullscreen;
-                
+                element.requestFullscreen = me.agent.prefixed("requestFullscreen", element);
+
                 element.requestFullscreen();
             }
         };
@@ -399,11 +382,7 @@
             if (devicePixelRatio===null) {
                 var _context = me.video.getScreenContext();
                 var _devicePixelRatio = window.devicePixelRatio || 1,
-                    _backingStoreRatio = _context.webkitBackingStorePixelRatio ||
-                    _context.mozBackingStorePixelRatio ||
-                    _context.msBackingStorePixelRatio ||
-                    _context.oBackingStorePixelRatio ||
-                    _context.backingStorePixelRatio || 1;
+                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", _context) || 1;
                 devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
             }
             return devicePixelRatio;
@@ -478,16 +457,11 @@
                 var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
-                        if ((document.fullscreenElement || 
-                             document.webkitFullscreenElement ||
-                             document.msFullscreenElement ||
-                             document.mozFullScreenElement) === element) {
+                        if (me.agent.prefixed("fullscreenElement", document) === element) {
 
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
-                            element.requestPointerLock = element.requestPointerLock ||
-                                                         element.mozRequestPointerLock ||
-                                                         element.webkitRequestPointerLock;
+                            element.requestPointerLock = me.agent.prefixed("requestPointerLock", element);
                             element.requestPointerLock();
                         }
                     };
@@ -602,8 +576,8 @@
 
         /**
          * the vibrate method pulses the vibration hardware on the device, <br>
-         * If the device doesn't support vibration, this method has no effect. <br> 
-         * If a vibration pattern is already in progress when this method is called, 
+         * If the device doesn't support vibration, this method has no effect. <br>
+         * If a vibration pattern is already in progress when this method is called,
          * the previous pattern is halted and the new one begins instead.
          * @name vibrate
          * @memberOf me.device
@@ -642,10 +616,8 @@
     Object.defineProperty(me.device, "isFullscreen", {
         get: function () {
             if (me.device.hasFullScreenSupport) {
-                return ((document.fullscreenElement || 
-                        document.webkitFullscreenElement ||
-                        document.msFullscreenElement ||
-                        document.mozFullScreenElement) === me.video.getWrapper());
+                var el = me.agent.prefixed("fullscreenElement", document);
+                return (el === me.video.getWrapper());
             } else {
                 return false;
             }

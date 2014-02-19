@@ -2,6 +2,7 @@
 module.exports = function(grunt) {
     var sourceFiles = [
         'src/core.js',
+        'src/system/agent.js',
         'src/system/device.js',
         'src/system/timer.js',
         'src/system/pooling.js',

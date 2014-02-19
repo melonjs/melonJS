@@ -192,10 +192,10 @@
             ), false);
 
             // check standard
-            if(window.navigator.pointerEnabled) {
+            if(navigator.pointerEnabled) {
                 activeEventList = pointerEventList;
             }
-            else if(window.navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
+            else if(navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
             else if (me.device.touch) { //  `touch****` events for iOS/Android devices
