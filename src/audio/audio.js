@@ -39,10 +39,6 @@
         // a retry counter
         var retry_counter = 0;
 
-        // synchronous loader for mobile user agents
-        var sync_loading = false;
-        var sync_loader = [];
-
 
         /**
          * event listener callback on load error
@@ -141,14 +137,6 @@
          * @ignore
          */
         obj.load = function(sound, onload_cb, onerror_cb) {
-            // check for specific platform
-            if (me.device.isMobile && !navigator.isCocoonJS) {
-                if (sync_loading) {
-                    sync_loader.push([ sound, onload_cb, onerror_cb ]);
-                    return;
-                }
-                sync_loading = true;
-            }
             var urls = [];
             for(var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
@@ -167,13 +155,6 @@
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
                 onload : function() {
-                    sync_loading = false;
-
-                    var next = sync_loader.shift();
-                    if(next) {
-                        obj.load.apply(obj, next);
-                    }
-
                     retry_counter = 0;
                     if(onload_cb) {
                         onload_cb();
