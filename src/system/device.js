@@ -59,7 +59,8 @@
             }
 
             // fullscreen api detection & polyfill when possible
-            this.hasFullScreenSupport = me.agent.prefixed("fullscreenEnabled", document);
+            this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) ||
+                                        document.mozFullScreenEnabled;
 
             document.exitFullscreen = me.agent.prefixed("cancelFullScreen", document) ||
                                       me.agent.prefixed("exitFullscreen", document);
@@ -177,10 +178,10 @@
          * Browser full screen support
          * @type Boolean
          * @readonly
-         * @name hasFullScreenSupport
+         * @name hasFullscreenSupport
          * @memberOf me.device
          */
-         obj.hasFullScreenSupport = false;
+         obj.hasFullscreenSupport = false;
 
          /**
          * Browser pointerlock api support
@@ -351,9 +352,10 @@
          * });
          */
         obj.requestFullscreen = function(element) {
-            if(this.hasFullScreenSupport) {
+            if(this.hasFullscreenSupport) {
                 element = element || me.video.getWrapper();
-                element.requestFullscreen = me.agent.prefixed("requestFullscreen", element);
+                element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
+                                            element.mozRequestFullScreen;
 
                 element.requestFullscreen();
             }
@@ -366,7 +368,7 @@
          * @function
          */
         obj.exitFullscreen = function() {
-            if(this.hasFullScreenSupport) {
+            if(this.hasFullscreenSupport) {
                 document.exitFullscreen();
             }
         };
@@ -457,7 +459,8 @@
                 var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function(event) {
-                        if (me.agent.prefixed("fullscreenElement", document) === element) {
+                        if ((me.agent.prefixed("fullscreenElement", document) ||
+                             document.mozFullScreenElement) === element) {
 
                             document.removeEventListener( 'fullscreenchange', fullscreenchange );
                             document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
@@ -615,8 +618,9 @@
      */
     Object.defineProperty(me.device, "isFullscreen", {
         get: function () {
-            if (me.device.hasFullScreenSupport) {
-                var el = me.agent.prefixed("fullscreenElement", document);
+            if (me.device.hasFullscreenSupport) {
+                var el = me.agent.prefixed("fullscreenElement", document) ||
+                         document.mozFullScreenElement;
                 return (el === me.video.getWrapper());
             } else {
                 return false;
