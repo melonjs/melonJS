@@ -89,7 +89,7 @@
 
     // "active" list of supported events
     var activeEventList = null;
-    
+
     // list of standard pointer event type
     var pointerEventList = [
         'mousewheel',
@@ -100,7 +100,7 @@
         undefined,
         undefined
     ];
-    
+
     // previous MS prefixed pointer event type
     var MSPointerEventList = [
         'mousewheel',
@@ -111,7 +111,7 @@
         undefined,
         undefined
     ];
-    
+
     // legacy mouse event type
     var mouseEventList = [
         'mousewheel',
@@ -122,7 +122,7 @@
         undefined,
         undefined
     ];
-    
+
     // iOS style touch event type
     var touchEventList = [
         undefined,
@@ -146,19 +146,19 @@
      * @ignore
      */
     var viewportOffset = new me.Vector2d();
-    
+
     /**
      * Array of object containing changed touch information (iOS event model)
      * @ignore
      */
     var changedTouches = [];
-    
+
     /**
      * cache value for the offset of the canvas position within the page
      * @ignore
      */
     obj._offset = null;
-    
+
 
     /**
      * addEventListerner for the specified event list and callback
@@ -512,10 +512,10 @@
     obj.bindPointer = function () {
         var button = (arguments.length < 2) ? obj.mouse.LEFT : arguments[0];
         var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
-        
+
         // make sure the mouse is initialized
         enablePointerEvent();
-        
+
         // throw an exception if no action is defined for the specified keycode
         if (!obj._KeyBinding[keyCode])
           throw "melonJS : no action defined for keycode " + keyCode;
@@ -561,7 +561,7 @@
     obj.registerPointerEvent = function (eventType, rect, callback, floating) {
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
-        
+
         if (pointerEventList.indexOf(eventType) === -1) {
             throw "melonJS : invalid event type : " + eventType;
         }
@@ -642,12 +642,12 @@
     /**
      * Will translate global (frequently used) pointer events
      * which should be catched at root level, into minipubsub system events
-     * @name translatePointerEvents
+     * @name _translatePointerEvents
      * @memberOf me.input
-     * @public
+     * @private
      * @function
      */
-    obj.translatePointerEvents = function () {
+    obj._translatePointerEvents = function () {
         // listen to mouse move (and touch move) events on the viewport
         // and convert them to a system event by default
         obj.registerPointerEvent('pointermove', me.game.viewport, function (e) {
