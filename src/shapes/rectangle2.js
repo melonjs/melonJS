@@ -10,11 +10,12 @@
     // vertices indexes
     // v1-----v2
     //  |-----|
-    // v3-----v4     
+    // v4-----v3     
     var TOP_LEFT = 0;
     var TOP_RIGHT = 1;
-    var BOTTOM_LEFT = 2;
-    var BOTTOM_RIGHT = 3;
+    var BOTTOM_RIGHT = 2;
+    var BOTTOM_LEFT = 3;
+
     
     /**
      * a Rectangle Object
@@ -28,15 +29,6 @@
      */
     me.Rect = me.PolyShape.extend(
     /** @scope me.Rect.prototype */ {
-    
-        /**
-         * position of the Rectange
-         * @public
-         * @type me.Vector2d
-         * @name pos
-         * @memberOf me.Rect
-         */
-        pos : new me.Vector2d(),
 
         /**
          * allow expanding and contracting the rect with a vector<br>
@@ -116,9 +108,17 @@
         /** @ignore */
         init : function(v, w, h) {
 
-            this.setShape(v, w, h);
+            // create 4 default vertices
+            this.points = [
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d()
+            ];
 
-            
+            // this will actually call this object setShspe function..
+            this.parent(v, w, h);
+   
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape
             this.rangeV.set(0, 0);
@@ -175,16 +175,16 @@
          */
         setShape : function(v, w, h) {
             this.pos.setV(v);
-            this.points = [
-                v.clone(), //v1
-                new me.Vector2d(v.x + w, v.y), //v2
-                new me.Vector2d(v.x, v.y + h), //v3
-                new me.Vector2d(v.x + w, v.y + h) //v4
-            ];
-            this.closed = (closed === true);
+
+            this.points[TOP_LEFT].setV(v); //v1
+            this.points[TOP_RIGHT].set(v.x + w, v.y); //v2
+            this.points[BOTTOM_RIGHT].set(v.x + w, v.y + h); //v3
+            this.points[BOTTOM_LEFT].set(v.x, v.y + h); //v4
+
+            this.closed = true;
                      
-            this.width = this.points[TOP_RIGHT].x - this.points[TOP_LEFT].x;
-            this.height = this.points[BOTTOM_LEFT].y - this.points[TOP_LEFT].y;
+            this.width = w;
+            this.height = h;
 
             // half width/height
             this.hWidth = ~~(this.width / 2);
@@ -205,6 +205,7 @@
         resize : function(w, h) {
             this.points[TOP_RIGHT].x = this.points[TOP_LEFT].x + w;
             this.points[BOTTOM_RIGHT].x = this.points[BOTTOM_LEFT].x + w;
+
             this.points[BOTTOM_LEFT].y = this.points[TOP_LEFT].y + h;
             this.points[BOTTOM_RIGHT].y = this.points[TOP_RIGHT].y + h;
             
@@ -245,32 +246,6 @@
             return new me.Rect(this.pos, this.width, this.height);
         },
         
-        /**
-         * translate the rect by the specified offset
-         * @name translate
-         * @memberOf me.Rect
-         * @function
-         * @param {Number} x x offset
-         * @param {Number} y y offset
-         * @return {me.Rect} this rectangle    
-         */
-        translate : function(x, y) {
-            this.pos.x+=x;
-            this.pos.y+=y;
-            return this;
-        },
-
-        /**
-         * translate the rect by the specified vector
-         * @name translateV
-         * @memberOf me.Rect
-         * @function
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle    
-         */
-        translateV : function(v) {
-            return this.translate(v.x, v.y);
-        },
 
         /**
          * add a vector to this rect
