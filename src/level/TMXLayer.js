@@ -27,6 +27,9 @@
 			this.name = name;
 			this.color = color;
 			this.z = z;
+
+			// assume it is visible, in order to be added. Some layers in Tiled may be set to NOT be visible
+			this.visible = true;
 		},
 
 		/**
