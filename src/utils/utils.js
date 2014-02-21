@@ -204,19 +204,6 @@
         };
 
         /**
-         * Convert first character of a string to uppercase, if it's a letter.
-         * @public
-         * @function
-         * @memberOf me.utils
-         * @name wordUpperCase
-         * @param  {String} str Input string.
-         * @return {String} String with first letter made uppercase.
-         */
-        api.wordUpperCase = function (str) {
-            return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
-        };
-
-        /**
          * Get image pixels
          * @public
          * @function

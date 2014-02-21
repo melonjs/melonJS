@@ -8,6 +8,18 @@
 (function(window) {
 
     /**
+     * Convert first character of a string to uppercase, if it's a letter.
+     * @ignore
+     * @function
+     * @name wordUpperCase
+     * @param  {String} str Input string.
+     * @return {String} String with first letter made uppercase.
+     */
+      var wordUpperCase = function (str) {
+            return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
+        };
+    
+    /**
      * A collection of utilities to ease porting between different user agents.
      * @namespace me.agent
      * @memberOf me
@@ -35,7 +47,7 @@
             obj = obj || window;
             if (name in obj) return obj[name];
 
-            var uc_name = me.utils.wordUpperCase(name);
+            var uc_name = wordUpperCase(name);
 
             var result;
             vendors.some(function (vendor) {
@@ -62,7 +74,7 @@
                 return;
             }
 
-            var uc_name = me.utils.wordUpperCase(name);
+            var uc_name = wordUpperCase(name);
 
             vendors.some(function (vendor) {
                 var name = vendor + uc_name;
