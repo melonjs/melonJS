@@ -27,9 +27,6 @@
 			this.name = name;
 			this.color = color;
 			this.z = z;
-
-			// assume it is visible, in order to be added. Some layers in Tiled may be set to NOT be visible
-			this.visible = true;
 		},
 
 		/**
@@ -396,12 +393,12 @@
 
 			// additional TMX flags
 			this.name = me.mapReader.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) === 1);
 			this.cols = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
 			this.rows = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
 
 			// layer opacity
-			this.setOpacity(me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0));
+			var visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) === 1);
+			this.setOpacity(visible?me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0):0);
 
 			// layer "real" size
 			this.width = this.cols * this.tilewidth;
@@ -419,7 +416,7 @@
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
-				this.visible = false;
+				this.setOpacity(0);
 			}
 
 
@@ -435,12 +432,12 @@
 		initFromJSON: function(layer) {
 			// additional TMX flags
 			this.name = layer[me.TMX_TAG_NAME];
-			this.visible = layer[me.TMX_TAG_VISIBLE];
 			this.cols = parseInt(layer[me.TMX_TAG_WIDTH], 10);
 			this.rows = parseInt(layer[me.TMX_TAG_HEIGHT], 10);
 
 			// layer opacity
-			this.setOpacity(parseFloat(layer[me.TMX_TAG_OPACITY]));
+			var visible = layer[me.TMX_TAG_VISIBLE];
+			this.setOpacity(visible?parseFloat(layer[me.TMX_TAG_OPACITY]):0);
 
 			// layer "real" size
 			this.width = this.cols * this.tilewidth;
@@ -459,7 +456,7 @@
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
 			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
 				// force the layer as invisible
-				this.visible = false;
+				this.setOpacity(0);
 			}
 
 			// if pre-rendering method is use, create the offline canvas
@@ -577,7 +574,7 @@
 			// clearing tile
 			this.layerData[x][y] = null;
 			// erase the corresponding area in the canvas
-			if (this.visible && this.preRender) {
+			if (this.preRender) {
 				this.layerSurface.clearRect(x * this.tilewidth,	y * this.tileheight, this.tilewidth, this.tileheight);
 			}
 		},
