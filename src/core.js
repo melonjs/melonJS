@@ -23,7 +23,6 @@ window.me = window.me || {};
 	 * me global references
 	 * @ignore
 	 */
-	// library name & version
 	me.mod = "melonJS";
 	me.version = "@VERSION";
 
@@ -64,14 +63,14 @@ window.me = window.me || {};
 		 * @memberOf me.sys
 		 */
 		scale : null, //initialized by me.video.init
-		
+
 		/**
 		 * enable/disable video scaling interpolation (default disable)<br>
 		 * @type Boolean
 		 * @memberOf me.sys
 		 */
 		scalingInterpolation : false,
-	
+
 		/**
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
@@ -127,7 +126,7 @@ window.me = window.me || {};
 		 * @memberOf me.sys
 		 */
 		preRender : false,
-		
+
 
 		// System methods
 		/**
@@ -135,7 +134,7 @@ window.me = window.me || {};
 		 * @public
 		 * @function
 		 * @param {String} first First version string to compare
-		 * @param {String} [second="@VERSION"] Second version string to compare 
+		 * @param {String} [second="@VERSION"] Second version string to compare
 		 * @return {Number} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
 		 * @example
 		 * if (me.sys.checkVersion("0.9.5") > 0) {
@@ -187,7 +186,7 @@ window.me = window.me || {};
 			} else {
 				$.removeEventListener("load", domReady, false);
 			}
-			
+
 			// Remember that the DOM is ready
 			isReady = true;
 
@@ -224,7 +223,7 @@ window.me = window.me || {};
 	 * @external window
 	 * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window}
 	 */
-    
+
 	/**
 	 * Specify a function to execute when the DOM is fully loaded
      * @memberOf external:window#
@@ -369,14 +368,14 @@ window.me = window.me || {};
      * @ignore
      */
     var deepcopy = function (obj) {
-     
+
         if (null == obj || "object" !== typeof obj) {
             return obj;
         }
-        
+
         // hold the copied object
         var copy;
-        
+
         // Array copy
         if( obj instanceof Array ) {
             copy = [];
@@ -386,14 +385,14 @@ window.me = window.me || {};
             }
             return copy;
         }
-        
+
         // Date copy
         if (obj instanceof Date) {
             copy = new Date();
             copy.setTime(obj.getTime());
             return copy;
         }
-        
+
         // else instanceof Object
         copy = {};
         Object.setPrototypeOf(copy, Object.getPrototypeOf(obj));
@@ -544,11 +543,11 @@ window.me = window.me || {};
 	 * @external Function
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function|Function}
 	 */
-	
+
 	if (!Function.prototype.bind) {
 		/** @ignore */
 		var Empty = function () {};
-		
+
 		/**
 		 * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
 		 * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
@@ -592,7 +591,7 @@ window.me = window.me || {};
 
 	if (!window.throttle) {
 		/**
-		 * a simple throttle function 
+		 * a simple throttle function
 		 * use same fct signature as the one in prototype
 		 * in case it's already defined before
 		 * @ignore
@@ -623,27 +622,27 @@ window.me = window.me || {};
 			};
 		};
 	}
-	
-	
+
+
 	if (typeof Date.now === "undefined") {
 		/**
 		 * provide a replacement for browser not
 		 * supporting Date.now (JS 1.5)
 		 * @ignore
 		 */
-        Date.now = function() { 
+        Date.now = function() {
             return new Date().getTime();
         };
 	}
-    
+
     // define window.performance if undefined
     if (typeof window.performance === 'undefined') {
         window.performance = {};
     }
- 
+
     if (!window.performance.now){
         var timeOffset = Date.now();
-        
+
         if (window.performance.timing && window.performance.timing.navigationStart){
             timeOffset = window.performance.timing.navigationStart;
         }
@@ -653,7 +652,7 @@ window.me = window.me || {};
          * (always return the elapsed time since the browser started)
          * @ignore
          */
-        window.performance.now = function() { 
+        window.performance.now = function() {
             return Date.now() - timeOffset;
         };
     }
@@ -719,44 +718,44 @@ window.me = window.me || {};
 	 * @external String
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String|String}
 	 */
-	
-	if(!String.prototype.trim) {  
+
+	if(!String.prototype.trim) {
 		/**
 		 * returns the string stripped of whitespace from both ends
 		 * @memberof! external:String#
 		 * @alias trim
 		 * @return {String} trimmed string
 		 */
-		String.prototype.trim = function () {  
+		String.prototype.trim = function () {
 			return this.replace(/^\s+|\s+$/gm, '');
 
-		};  
+		};
 	}
 
-	if(!String.prototype.trimLeft) {  
+	if(!String.prototype.trimLeft) {
 		/**
 		 * returns the string stripped of whitespace from the left of the string.
 		 * @memberof! external:String#
 		 * @alias trimLeft
 		 * @return {String} trimmed string
 		 */
-		String.prototype.trimLeft = function () {  
+		String.prototype.trimLeft = function () {
 			return this.replace(/^\s+/, '');
-		};  
+		};
 	}
 
-	if(!String.prototype.trimRight) {  
+	if(!String.prototype.trimRight) {
 		/**
 		 * returns the string stripped of whitespace from the right end of the string.
 		 * @memberof! external:String#
 		 * @alias trimRight
 		 * @return {String} trimmed string
 		 */
-		String.prototype.trimRight = function () {  
+		String.prototype.trimRight = function () {
 			return this.replace(/\s+$/, '');
-		};  
+		};
 	}
-	
+
 	/**
 	 * add isNumeric fn to the string object
 	 * @memberof! external:String#
@@ -810,7 +809,7 @@ window.me = window.me || {};
 	 * @external Number
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number|Number}
 	 */
-	 
+
 	/**
 	 * add a clamp fn to the Number object
 	 * @memberof! external:Number#
@@ -910,14 +909,14 @@ window.me = window.me || {};
 	Number.prototype.radToDeg = function (angle) {
 		return (angle||this) * (180.0 / Math.PI);
 	};
-	
-	
+
+
 	/**
 	 * The built in Array Object
 	 * @external Array
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array|Array}
 	 */
-	
+
 	/**
 	 * Remove the specified object from the Array<br>
 	 * @memberof! external:Array#
@@ -969,7 +968,7 @@ window.me = window.me || {};
 
 		// enable/disable the cache
 		me.loader.setNocache(document.location.href.match(/\?nocache/)||false);
-	
+
 		// init the FPS counter if needed
 		me.timer.init();
 
@@ -1033,7 +1032,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.viewport = null;
-		
+
 		/**
 		 * a reference to the game collision Map
 		 * @public
@@ -1042,7 +1041,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.collisionMap = null;
-		
+
 		/**
 		 * a reference to the game current level
 		 * @public
@@ -1083,7 +1082,7 @@ window.me = window.me || {};
 		 * @memberOf me.game
 		 */
 		api.sortOn = "z";
-		
+
 		/**
 		 * default layer renderer
 		 * @private
@@ -1091,7 +1090,7 @@ window.me = window.me || {};
 		 * @type me.TMXRenderer
 		 * @name renderer
 		 * @memberOf me.game
-		 */		
+		 */
 		api.renderer = null;
 
 		// FIX ME : put this somewhere else
@@ -1138,7 +1137,7 @@ window.me = window.me || {};
 		 * me.game.onLevelLoaded = this.myFunction.bind(this);
 		 */
 		 api.onLevelLoaded = null;
-		 
+
 		/**
 		 * Initialize the game manager
 		 * @name init
@@ -1171,11 +1170,11 @@ window.me = window.me || {};
 				me.event.publish(me.event.GAME_INIT);
 
                 // translate global pointer events
-                me.input.translatePointerEvents();
+                me.input._translatePointerEvents();
 
 				// make display dirty by default
 				isDirty = true;
-                
+
 				// dummy current level
 				api.currentLevel = {pos:{x:0,y:0}};
 
@@ -1210,7 +1209,7 @@ window.me = window.me || {};
 			frameCounter = 0;
 			frameRate = Math.round(60/me.sys.fps);
 		};
-	
+
 		/**
 		 * Returns the parent container of the specified Child in the game world
 		 * @name getParentContainer
@@ -1250,18 +1249,18 @@ window.me = window.me || {};
 			if ((++frameCounter%frameRate)===0) {
 				// reset the frame counter
 				frameCounter = 0;
-				
+
 				// update the timer
 				me.timer.update(time);
 
 				// update all objects (andd pass the elapsed time since last frame)
 				isDirty = api.world.update(me.timer.getDelta()) || isDirty;
-			
+
 				// update the camera/viewport
 				isDirty = api.viewport.update(me.timer.getDelta()) || isDirty;
 			}
 		};
-		
+
 
 		/**
 		 * draw all existing objects
@@ -1278,18 +1277,18 @@ window.me = window.me || {};
 				// can access it later (e,g. entityContainer when drawing floating objects)
 				var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;
 				var translateY = api.viewport.pos.y + ~~api.viewport.offset.y;
-							
+
 				// translate the world coordinates by default to screen coordinates
 				api.world.transform.translate(-translateX, -translateY);
-				
+
 				// substract the map offset to current the current pos
 				api.viewport.screenX = translateX - api.currentLevel.pos.x;
 				api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
-				// update all objects, 
+				// update all objects,
 				// specifying the viewport as the rectangle area to redraw
 				api.world.draw(frameBuffer, api.viewport);
-                
+
                 // translate back
 				api.world.transform.translate(translateX, translateY);
 

@@ -12,8 +12,8 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new game.Poly(600, 150, {width: 200, height: 200}), 1);
 
         // register on the mousemove event
-        me.input.registerPointerEvent("mousemove", me.game.viewport, function (event) {
-            me.event.publish("mousemove", [ event ]);
+        me.input.registerPointerEvent("pointermove", me.game.viewport, function (event) {
+            me.event.publish("pointermove", [ event ]);
         });
     }
 });

@@ -23,8 +23,8 @@ game.PlayScreen = me.ScreenObject.extend({
         me.input.bindKey(me.input.KEY.C, "moveViewport", false, false);
 
         // map the left button click on the enter key
-        me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
-        me.input.bindMouse(me.input.mouse.MIDDLE, me.input.KEY.C);
+        me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.X);
+        me.input.bindPointer(me.input.mouse.MIDDLE, me.input.KEY.C);
 
         // flush cached html layout after we added the editor elements
         me.video.onresize();

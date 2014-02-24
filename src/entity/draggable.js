@@ -43,8 +43,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this.mouseUp = function (e) {
                 this.translatePointerEvent(e, Event.DRAGEND);
             };
-            this.onPointerEvent('mousedown', this, this.mouseDown.bind(this));
-            this.onPointerEvent('mouseup', this, this.mouseUp.bind(this));
+            this.onPointerEvent('pointerdown', this, this.mouseDown.bind(this));
+            this.onPointerEvent('pointerup', this, this.mouseUp.bind(this));
             Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
             Event.subscribe(Event.DRAGSTART, function (e, draggable) {
                 if (draggable === self) {
@@ -124,8 +124,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             Event.unsubscribe(Event.MOUSEMOVE, this.dragMove);
             Event.unsubscribe(Event.DRAGSTART, this.dragStart);
             Event.unsubscribe(Event.DRAGEND, this.dragEnd);
-            this.removePointerEvent('mousedown', this);
-            this.removePointerEvent('mouseup', this);
+            this.removePointerEvent('pointerdown', this);
+            this.removePointerEvent('pointerup', this);
         }
     });
 }(me.ObjectEntity, me.input, me.event, me.Vector2d));

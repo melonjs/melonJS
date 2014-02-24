@@ -87,27 +87,10 @@
     // Track last event timestamp to prevent firing events out of order
     var lastTimeStamp = 0;
 
-    // list of supported mouse & touch events
+    // "active" list of supported events
     var activeEventList = null;
-    var mouseEventList = [
-        'mousewheel',
-        'mousemove',
-        'mousedown',
-        'mouseup',
-        undefined,
-        'click',
-        'dblclick'
-    ];
-    var touchEventList = [
-        undefined,
-        'touchmove',
-        'touchstart',
-        'touchend',
-        'touchcancel',
-        'tap',
-        'dbltap'
-    ];
-    // (a polyfill will probably be required at some stage, once this will be fully standardized
+
+    // list of standard pointer event type
     var pointerEventList = [
         'mousewheel',
         'pointermove',
@@ -117,12 +100,36 @@
         undefined,
         undefined
     ];
+
+    // previous MS prefixed pointer event type
     var MSPointerEventList = [
         'mousewheel',
         'MSPointerMove',
         'MSPointerDown',
         'MSPointerUp',
         'MSPointerCancel',
+        undefined,
+        undefined
+    ];
+
+    // legacy mouse event type
+    var mouseEventList = [
+        'mousewheel',
+        'mousemove',
+        'mousedown',
+        'mouseup',
+        undefined,
+        undefined,
+        undefined
+    ];
+
+    // iOS style touch event type
+    var touchEventList = [
+        undefined,
+        'touchmove',
+        'touchstart',
+        'touchend',
+        'touchcancel',
         undefined,
         undefined
     ];
@@ -136,20 +143,26 @@
 
     /**
      * cache value for the offset of the canvas position within the page
-     * @private
+     * @ignore
      */
     var viewportOffset = new me.Vector2d();
-    
+
+    /**
+     * Array of object containing changed touch information (iOS event model)
+     * @ignore
+     */
+    var changedTouches = [];
+
     /**
      * cache value for the offset of the canvas position within the page
-     * @private
+     * @ignore
      */
     obj._offset = null;
-    
+
 
     /**
      * addEventListerner for the specified event list and callback
-     * @private
+     * @ignore
      */
     function registerEventListener(eventList, callback) {
         for (var x = 2; x < eventList.length; ++x) {
@@ -166,7 +179,7 @@
     function enablePointerEvent() {
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
-            obj.changedTouches.push({ x: 0, y: 0 });
+            changedTouches.push({ x: 0, y: 0 });
             obj.mouse.pos = new me.Vector2d(0,0);
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
@@ -179,10 +192,10 @@
             ), false);
 
             // check standard
-            if(window.navigator.pointerEnabled) {
+            if(navigator.pointerEnabled) {
                 activeEventList = pointerEventList;
             }
-            else if(window.navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
+            else if(navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
             else if (me.device.touch) { //  `touch****` events for iOS/Android devices
@@ -249,7 +262,7 @@
         if (handlers) {
             // get the current screen to world offset
             me.game.viewport.localToWorld(0,0, viewportOffset);
-            for(var t=0, l=obj.changedTouches.length; t<l; t++) {
+            for(var t=0, l=changedTouches.length; t<l; t++) {
                 // Do not fire older events
                 if (typeof(e.timeStamp) !== "undefined") {
                     if (e.timeStamp < lastTimeStamp) continue;
@@ -259,12 +272,12 @@
                 // if PointerEvent is not supported
                 if (!me.device.pointerEnabled) {
                     // -> define pointerId to simulate the PointerEvent standard
-                    e.pointerId = obj.changedTouches[t].id;
+                    e.pointerId = changedTouches[t].id;
                 }
 
                 /* Initialize the two coordinate space properties. */
-                e.gameScreenX = obj.changedTouches[t].x;
-                e.gameScreenY = obj.changedTouches[t].y;
+                e.gameScreenX = changedTouches[t].x;
+                e.gameScreenY = changedTouches[t].y;
                 e.gameWorldX = e.gameScreenX + viewportOffset.x;
                 e.gameWorldY = e.gameScreenY + viewportOffset.y;
                 // parse all handlers
@@ -299,35 +312,35 @@
      * translate event coordinates
      * @ignore
      */
-    function updateCoordFromEvent(e) {
+    function updateCoordFromEvent(event) {
         var local;
 
         // reset the touch array cache
-        obj.changedTouches.length=0;
+        changedTouches.length=0;
 
         // PointerEvent or standard Mouse event
-        if (!e.touches) {
-            local = obj.globalToLocal(e.clientX, e.clientY);
-            local.id =  e.pointerId || 1;
-            obj.changedTouches.push(local);
+        if (!event.touches) {
+            local = obj.globalToLocal(event.clientX, event.clientY);
+            local.id =  event.pointerId || 1;
+            changedTouches.push(local);
         }
         // iOS/Android like touch event
         else {
-            for(var i=0, l=e.changedTouches.length; i<l; i++) {
-                var t = e.changedTouches[i];
+            for(var i=0, l=event.changedTouches.length; i<l; i++) {
+                var t = event.changedTouches[i];
                 local = obj.globalToLocal(t.clientX, t.clientY);
                 local.id = t.identifier;
-                obj.changedTouches.push(local);
+                changedTouches.push(local);
             }
         }
         // if event.isPrimary is defined and false, return
-        if (e.isPrimary === false) {
+        if (event.isPrimary === false) {
             return;
         }
         // Else use the first entry to simulate mouse event
         obj.mouse.pos.set(
-            obj.changedTouches[0].x,
-            obj.changedTouches[0].y
+            changedTouches[0].x,
+            changedTouches[0].y
         );
     }
 
@@ -421,7 +434,7 @@
      * MIDDLE : constant for middle button <br>
      * RIGHT : constant for right button <br>
      * @public
-     * @enum {number}
+     * @enum {Object}
      * @name mouse
      * @memberOf me.input
      */
@@ -446,19 +459,6 @@
      * @memberOf me.input
      */
     obj.throttlingInterval = undefined;
-
-    /**
-     * Array of object containing changed touch information (iOS event model)<br>
-     * properties : <br>
-     * x : x position of the touch event in the canvas (screen coordinates)<br>
-     * y : y position of the touch event in the canvas (screen coordinates)<br>
-     * id : unique finger identifier<br>
-     * @public
-     * @type Array
-     * @name touches
-     * @memberOf me.input
-     */
-    obj.changedTouches = [];
 
     /**
      * Translate the specified x and y values from the global (absolute)
@@ -491,24 +491,28 @@
     };
 
     /**
-     * Associate a mouse (button) action to a keycode<br>
+     * Associate a pointer event to a keycode<br>
      * Left button – 0
      * Middle button – 1
      * Right button – 2
-     * @name bindMouse
+     * @name bindPointer
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @param {me.input#KEY} keyCode
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
-     * // map the left button click on the X key
-     * me.input.bindMouse(me.input.mouse.LEFT, me.input.KEY.X);
+     * // map the left button click on the X key (default if the button is not specified)
+     * me.input.bindPointer(me.input.KEY.X);
+     * // map the right button click on the X key
+     * me.input.bindPointer(me.input.mouse.RIGHT, me.input.KEY.X);
      */
-    obj.bindMouse = function (button, keyCode)
-    {
+    obj.bindPointer = function () {
+        var button = (arguments.length < 2) ? obj.mouse.LEFT : arguments[0];
+        var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
+
         // make sure the mouse is initialized
         enablePointerEvent();
 
@@ -520,173 +524,133 @@
     };
     /**
      * unbind the defined keycode
-     * @name unbindMouse
+     * @name unbindPointer
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} button (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @example
-     * me.input.unbindMouse(me.input.mouse.LEFT);
+     * me.input.unbindPointer(me.input.mouse.LEFT);
      */
-    obj.unbindMouse = function(button) {
+    obj.unbindPointer = function(button) {
         // clear the event status
-        obj.mouse.bind[button] = null;
+        obj.mouse.bind[typeof(button) === 'undefined'?me.input.mouse.LEFT:button] = null;
     };
-
-    /**
-     * Associate a touch action to a keycode
-     * @name bindTouch
-     * @memberOf me.input
-     * @public
-     * @function
-     * @param {me.input#KEY} keyCode
-     * @example
-     * // enable the keyboard
-     * me.input.bindKey(obme.inputj.KEY.X, "shoot");
-     * // map the touch event on the X key
-     * me.input.bindTouch(me.input.KEY.X);
-     */
-    obj.bindTouch = function (keyCode)
-    {
-        // reuse the mouse emulation stuff
-        // where left mouse button is map to touch event
-        obj.bindMouse(obj.mouse.LEFT, keyCode);
-    };
-
-    /**
-     * unbind the defined touch binding
-     * @name unbindTouch
-     * @memberOf me.input
-     * @public
-     * @function
-     * @example
-     * me.input.unbindTouch();
-     */
-    obj.unbindTouch = function() {
-        // clear the key binding
-        obj.unbindMouse(obj.mouse.LEFT);
-    };
-
 
 
     /**
      * allows registration of event listeners on the object target. <br>
-     * (on a touch enabled device mouse event will automatically be converted to touch event)<br>
-     * <br>
-     * melonJS defines the additional `gameX` and `gameY` properties when passing the Event object <br>
-     * to the defined callback (see below)<br>
+     * melonJS defines the additional `gameX` and `gameY` properties when passing the Event object to the defined callback (see below)<br>
      * @see external:Event
+     * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
      * @name registerPointerEvent
      * @memberOf me.input
      * @public
      * @function
-     * @param {String} eventType  The event type for which the object is registering
-     * ('mousemove','mousedown','mouseup','mousewheel','touchstart','touchmove','touchend')
+     * @param {String} eventType  The event type for which the object is registering <br>
+     * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
      * @param {me.Rect} rect object target (or corresponding region defined through me.Rect)
      * @param {Function} callback methods to be called when the event occurs.
      * @param {Boolean} [floating] specify if the object is a floating object
      * (if yes, screen coordinates are used, if not mouse/touch coordinates will
      * be converted to world coordinates)
      * @example
-     * // register on the 'mousemove' event
-     * me.input.registerPointerEvent('mousemove', this, this.mouseMove.bind(this));
+     * // register on the 'pointerdown' event
+     * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
      */
     obj.registerPointerEvent = function (eventType, rect, callback, floating) {
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
-        // convert mouse events to iOS/PointerEvent equivalent
-        if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
-            eventType = activeEventList[mouseEventList.indexOf(eventType)];
+        if (pointerEventList.indexOf(eventType) === -1) {
+            throw "melonJS : invalid event type : " + eventType;
         }
-        // >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
 
-        // check if this is supported event
-        if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
-            // register the event
-            if (!evtHandlers[eventType]) {
-                evtHandlers[eventType] = [];
-            }
-            // check if this is a floating object or not
-            var _float = rect.floating === true ? true : false;
-            // check if there is a given parameter
-            if (floating) {
-                // ovveride the previous value
-                _float = floating === true ? true : false;
-            }
-
-            // calculate the given elemments bounding rect
-            var bounds = rect.getBounds();
-            if (typeof (rect.getShape) === 'undefined') {
-                bounds.translate(-rect.pos.x, -rect.pos.y);
-            }
-            // initialize the handler
-            evtHandlers[eventType].push({
-                rect: rect,
-                bounds: bounds,
-                cb: callback,
-                floating: _float
-            });
-            return;
+        // convert to supported event type if pointerEvent not natively supported
+        if (pointerEventList !== activeEventList) {
+            eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
-        throw "melonJS : invalid event type : " + eventType;
+
+        // register the event
+        if (!evtHandlers[eventType]) {
+            evtHandlers[eventType] = [];
+        }
+        // check if this is a floating object or not
+        var _float = rect.floating === true ? true : false;
+        // check if there is a given parameter
+        if (floating) {
+            // ovveride the previous value
+            _float = floating === true ? true : false;
+        }
+
+        // calculate the given elemments bounding rect
+        var bounds = rect.getBounds();
+        if (typeof (rect.getShape) === 'undefined') {
+            bounds.translate(-rect.pos.x, -rect.pos.y);
+        }
+        // initialize the handler
+        evtHandlers[eventType].push({
+            rect: rect,
+            bounds: bounds,
+            cb: callback,
+            floating: _float
+        });
+        return;
     };
 
     /**
      * allows the removal of event listeners from the object target.
-     * note : on a touch enabled device mouse event will automatically be converted to touch event
+     * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
      * @name releasePointerEvent
      * @memberOf me.input
      * @public
      * @function
-     * @param {String} eventType  The event type for which the object is registering
-     * ('mousemove', 'mousedown', 'mouseup', 'mousewheel', 'click', 'dblclick',
-     * 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap')
+     * @param {String} eventType  The event type for which the object was registered <br>
+     * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
      * @param {me.Rect} region object target (or corresponding region defined through me.Rect)
      * @example
-     * // release the registered object/region on the 'mousemove' event
-     * me.input.releasePointerEvent('mousemove', this);
+     * // release the registered object/region on the 'pointerdown' event
+     * me.input.releasePointerEvent('pointerdown', this);
      */
     obj.releasePointerEvent = function(eventType, rect) {
-        // convert mouse events to iOS/MSPointer equivalent
-        if ((mouseEventList.indexOf(eventType) !== -1) && (me.device.touch || me.device.pointerEnabled)) {
-            eventType = activeEventList[mouseEventList.indexOf(eventType)];
+         if (pointerEventList.indexOf(eventType) === -1) {
+            throw "melonJS : invalid event type : " + eventType;
         }
-        // >>>TODO<<< change iOS touch event to their PointerEvent equivalent & vice-versa
 
-        // check if this is supported event
-        if (eventType && (activeEventList.indexOf(eventType) !== -1)) {
-            // unregister the event
-            if (!evtHandlers[eventType]) {
-                evtHandlers[eventType] = [];
-            }
-            var handlers = evtHandlers[eventType];
-            if (handlers) {
-                for (var i = handlers.length, handler; i--, handler = handlers[i];) {
-                    if (handler.rect === rect) {
-                        // make sure all references are null
-                        handler.rect = handler.bounds = handler.cb = handler.floating = null;
-                        evtHandlers[eventType].splice(i, 1);
-                    }
+        // convert to supported event type if pointerEvent not natively supported
+        if (pointerEventList !== activeEventList) {
+            eventType = activeEventList[pointerEventList.indexOf(eventType)];
+        }
+
+        // unregister the event
+        if (!evtHandlers[eventType]) {
+            evtHandlers[eventType] = [];
+        }
+        var handlers = evtHandlers[eventType];
+        if (handlers) {
+            for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+                if (handler.rect === rect) {
+                    // make sure all references are null
+                    handler.rect = handler.bounds = handler.cb = handler.floating = null;
+                    evtHandlers[eventType].splice(i, 1);
                 }
             }
-            return;
         }
-        throw "melonJS : invalid event type : " + eventType;
+        return;
     };
 
     /**
      * Will translate global (frequently used) pointer events
      * which should be catched at root level, into minipubsub system events
-     * @name translatePointerEvents
+     * @name _translatePointerEvents
      * @memberOf me.input
-     * @public
+     * @private
      * @function
      */
-    obj.translatePointerEvents = function () {
+    obj._translatePointerEvents = function () {
         // listen to mouse move (and touch move) events on the viewport
         // and convert them to a system event by default
-        obj.registerPointerEvent('mousemove', me.game.viewport, function (e) {
+        obj.registerPointerEvent('pointermove', me.game.viewport, function (e) {
             me.event.publish(me.event.MOUSEMOVE, [e]);
             return false;
         });

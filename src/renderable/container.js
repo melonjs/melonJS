@@ -352,7 +352,7 @@
             
             var childBounds;
             for ( var i = this.children.length, child; i--, child = this.children[i];) {
-                if(child.isRenderable && child.visible) {
+                if(child.isRenderable) {
                     childBounds = child.getBounds();
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
@@ -702,7 +702,7 @@
                     }
 
                     // Translate global context
-                    isTranslated = (obj.visible && !isFloating);
+                    isTranslated = !isFloating;
                     if (isTranslated) {
                         x = obj.pos.x;
                         y = obj.pos.y;
@@ -711,9 +711,7 @@
                     }
 
                     // check if object is visible
-                    obj.inViewport = obj.visible && (
-                        isFloating || viewport.isVisible(globalTranslation)
-                    );
+                    obj.inViewport = isFloating || viewport.isVisible(globalTranslation);
 
                     // update our object
                     isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update( dt );
@@ -762,7 +760,7 @@
 
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				isFloating = obj.floating;
-				if ((obj.inViewport || (isFloating && obj.visible)) && obj.isRenderable) {
+				if ((obj.inViewport || isFloating) && obj.isRenderable) {
 
 					if (isFloating === true) {
 						context.save();
