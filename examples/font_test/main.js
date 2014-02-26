@@ -132,9 +132,11 @@ var FontTest = me.Renderable.extend ({
         // ---- multiline testing -----
         
         // font text
-        var text = "this is a multiline\nfont test with melonjs\nand it works!";
+        var text = "this is a multiline font\n test with melonjs and it\nworks even with a\n specific lineHeight value!";
         this.font.textAlign = "center";
-        this.font.draw(context, text, 75, 230);
+        this.font.lineHeight = 1.1;
+        this.font.draw(context, text, 90, 210);
+        this.font.lineHeight = 1.1;
 
         var text = "this is another font test \nwith right alignment\nand it still works!";
         this.font.textAlign = "right";        
@@ -144,13 +146,15 @@ var FontTest = me.Renderable.extend ({
         this.bFont.textAlign = "center";
         var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
         this.bFont.resize(2);
-        this.bFont.draw(context, text, 400, 230);
+        this.bFont.draw(context, text + "\n" + text, 400, 230);
         
         // bFont  test        
         this.bFont.textAlign = "right";
         var text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+        this.bFont.lineHeight = 1.2;
         this.bFont.resize(3);
         this.bFont.draw(context, text, 640, 400);
+        this.bFont.lineHeight = 1.0;
         
         // baseline test with bitmap font
         var x_pos = 0;
