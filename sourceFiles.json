@@ -21,6 +21,7 @@
     "src/loader/loadingscreen.js",
     "src/loader/loader.js",
     "src/font/font.js",
+    "src/font/bitmapfont.js",
     "src/audio/audio.js",
     "src/video/video.js",
     "src/input/input.js",
