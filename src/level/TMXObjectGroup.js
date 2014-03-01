@@ -50,15 +50,6 @@
 		height : 0,
 		
 		/**
-		 * group visibility state
-		 * @public
-		 * @type Boolean
-		 * @name name
-		 * @memberOf me.TMXObjectGroup
-		 */
-		visible : false,
-		
-		/**
 		 * group z order
 		 * @public
 		 * @type Number
@@ -87,10 +78,11 @@
 			this.name    = name;
 			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
 			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
-			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) === 1);
-			this.opacity = me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects = [];
+            
+			var visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) === 1);
+			this.opacity = visible?me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0):0;
 		
 			// check if we have any user-defined properties
 			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
@@ -116,10 +108,11 @@
 			this.name    = name;
 			this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
 			this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
-			this.visible = tmxObjGroup[me.TMX_TAG_VISIBLE];
-			this.opacity = parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects  = [];
+
+			var visible  = tmxObjGroup[me.TMX_TAG_VISIBLE];
+			this.opacity = (visible===true)?parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0;
 			
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);

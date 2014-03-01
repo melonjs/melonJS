@@ -168,7 +168,7 @@
 		 * @type String
 		 * @name me.event#MOUSEMOVE
 		 */
-		obj.MOUSEMOVE = "me.game.mousemove";
+		obj.MOUSEMOVE = "me.game.pointermove";
 
 		/**
 		 * Channel Constant for dragstart events on a Draggable entity <br>

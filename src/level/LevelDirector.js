@@ -59,8 +59,8 @@
 			// add all defined layers
 			var layers = level.getLayers();
 			for ( var i = layers.length; i--;) {
-				if (layers[i].visible) {
-					// only if visible
+				// don't add the collision layer
+				if (!layers[i].isCollisionMap) {
 					container.addChild(layers[i]);
 				}
 			}
@@ -96,11 +96,9 @@
 					
 					// set additional properties
 					targetContainer.name = group.name;
-					targetContainer.visible = group.visible;
 					targetContainer.z = group.z;
 					targetContainer.setOpacity(group.opacity);                  
                  
-
 					// disable auto-sort
 					targetContainer.autoSort = false;
 				}

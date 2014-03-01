@@ -6,7 +6,7 @@ game.ShapeObject = me.ObjectEntity.extend({
         // call the parent constructor
         this.parent(x, y, settings);
         this.hover = false;
-        this.handler = me.event.subscribe("mousemove", this.mouseMove.bind(this));
+        this.handler = me.event.subscribe("pointermove", this.mouseMove.bind(this));
 
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
@@ -80,8 +80,8 @@ game.Square = game.ShapeObject.extend({
 
         //register on mouse/touch event
         // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
+        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
     }
 });
 
@@ -104,8 +104,8 @@ game.Circle = game.ShapeObject.extend({
 
         //register on mouse/touch event
         // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
+        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
 
     }
 });
@@ -144,8 +144,8 @@ game.Poly = game.ShapeObject.extend({
 
         //register on mouse/touch event
         // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('mousedown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('mouseup', this, this.onRelease.bind(this));
+        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
     },
 
     // mouse down function

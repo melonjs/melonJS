@@ -10,7 +10,7 @@
 	/**
 	 * GUI Object<br>
 	 * A very basic object to manage GUI elements <br>
-	 * The object simply register on the "mousedown" <br>
+	 * The object simply register on the "pointerdown" <br>
 	 * or "touchstart" event and call the onClick function" 
 	 * @class
 	 * @extends me.SpriteObject
@@ -77,7 +77,7 @@
 			this.floating = true;
 			
 			// register on mouse event
-			me.input.registerPointerEvent('mousedown', this, this.clicked.bind(this));
+			me.input.registerPointerEvent('pointerdown', this, this.clicked.bind(this));
 
 		},
 
@@ -95,7 +95,7 @@
 		},
 		
 		/**
-		 * function callback for the mousedown event
+		 * function callback for the pointerdown event
 		 * @ignore
 		 */
 		clicked : function(event) {
@@ -129,7 +129,7 @@
 		 * @function
 		 */
 		onDestroyEvent : function() {
-			me.input.releasePointerEvent('mousedown', this);
+			me.input.releasePointerEvent('pointerdown', this);
 		}
 
 	});

@@ -448,10 +448,12 @@
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
+		 * @param {Number} [v] an optional vector object where to set the converted value
 		 * @return {me.Vector2d}
 		 */
-		localToWorld : function(x, y) {
-			return (new me.Vector2d(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
+		localToWorld : function(x, y, v) {
+			v = v || new me.Vector2d();
+			return (v.set(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
 		},
 		
 		/**
@@ -461,10 +463,12 @@
 		 * @function
 		 * @param {Number} x
 		 * @param {Number} y
+          * @param {Number} [v] an optional vector object where to set the converted value
 		 * @return {me.Vector2d}
 		 */
-		worldToLocal : function(x, y) {
-			return (new me.Vector2d(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
+		worldToLocal : function(x, y, v) {
+			v = v || new me.Vector2d();
+			return (v.set(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
 		},
 		
 		/**

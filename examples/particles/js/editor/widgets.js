@@ -280,8 +280,8 @@
             this._startDrag = this.startDrag.bind(this);
             this._stopDrag = this.stopDrag.bind(this);
             this._drag = this.drag.bind(this);
-            me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
-            me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
+            me.input.registerPointerEvent("pointerup", me.game.viewport, this._stopDrag);
+            me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
         },
         createGradients : function(color, size) {
             var context = me.video.getSystemContext();
@@ -303,18 +303,18 @@
             this.color = bigGradient;
         },
         enable : function(container) {
-            me.input.registerPointerEvent("mousedown", this, this._startDrag);
-            // me.input.registerPointerEvent("mouseup", me.game.viewport, this._stopDrag);
-            // me.input.registerPointerEvent("mousemove", me.game.viewport, this._drag);
+            me.input.registerPointerEvent("pointerdown", this, this._startDrag);
+            // me.input.registerPointerEvent("pointerup", me.game.viewport, this._stopDrag);
+            // me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
             (container || me.game.world).addChild(this);
         },
         disable : function(container) {
             if (this.dragging) {
                 this.stopDrag();
             }
-            me.input.releasePointerEvent("mousedown", this, this._startDrag);
-            // me.input.releasePointerEvent("mouseup", me.game.viewport, this._stopDrag);
-            // me.input.releasePointerEvent("mousemove", me.game.viewport, this._drag);
+            me.input.releasePointerEvent("pointerdown", this, this._startDrag);
+            // me.input.releasePointerEvent("pointerup", me.game.viewport, this._stopDrag);
+            // me.input.releasePointerEvent("pointermove", me.game.viewport, this._drag);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {

@@ -146,7 +146,7 @@
 						// add a new tile to the layer
 						var tile = layer.setTile(x, y, gid);
 						// draw the corresponding tile
-						if (layer.visible && layer.preRender) {
+						if (layer.preRender) {
 							layer.renderer.drawTile(layer.layerSurface, x, y, tile, tile.tileset);
 						}
 					}
@@ -378,8 +378,8 @@
 			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
 			
 			// set some additional flags
-			imageLayer.visible = (this.TMXParser.getIntAttribute(data, me.TMX_TAG_VISIBLE, 1) === 1);
-			imageLayer.setOpacity(this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0));
+			var visible = (this.TMXParser.getIntAttribute(data, me.TMX_TAG_VISIBLE, 1) === 1);
+			imageLayer.setOpacity(visible?this.TMXParser.getFloatAttribute(data, me.TMX_TAG_OPACITY, 1.0):0);
 			
 			// check if we have any properties 
 			me.TMXUtils.applyTMXPropertiesFromXML(imageLayer, data);
@@ -535,8 +535,8 @@
 			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
 			
 			// set some additional flags
-			imageLayer.visible = data[me.TMX_TAG_VISIBLE];
-			imageLayer.setOpacity(parseFloat(data[me.TMX_TAG_OPACITY]));
+			var visible = data[me.TMX_TAG_VISIBLE];
+			imageLayer.setOpacity(visible? parseFloat(data[me.TMX_TAG_OPACITY]):0);
 			
 			// check if we have any additional properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);

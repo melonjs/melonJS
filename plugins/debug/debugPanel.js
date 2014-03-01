@@ -102,15 +102,22 @@
 			// bind the "S" and "H" keys
 			me.input.bindKey(showKey || me.input.KEY.S, "show", false, false);
 			me.input.bindKey(hideKey || me.input.KEY.H, "hide", false, false);
+            
+            // add some keyboard shortcuts
+            var self = this;
+            this.handler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+                if (action === "show") {
+                    self.show();
+                } else if (action === "hide") {
+                    self.hide();
+                }
+            });
 
 			// memory heap sample points
 			this.samples = [];
 
 			//patch patch patch !
 			this.patchSystemFn();
-
-			// add the debug panel to the game world
-			me.game.world.addChild(this);
 
 			// make it visible
 			this.show();
@@ -216,9 +223,11 @@
 		show : function() {
 			if (!this.visible) {
 				// register a mouse event for the checkboxes
-				me.input.registerPointerEvent('mousedown', this.rect, this.onClick.bind(this), true);
-				// make it visible
-				this.visible = true;
+				me.input.registerPointerEvent('pointerdown', this.rect, this.onClick.bind(this), true);
+				// add the debug panel to the game world
+				me.game.world.addChild(this, Infinity);
+				// mark it as visible
+				this.visible = true;         
 			}
 		},
 
@@ -228,8 +237,10 @@
 		hide : function() {
 			if (this.visible) {
 				// release the mouse event for the checkboxes
-				me.input.releasePointerEvent('mousedown', this.rect);
-				// make it visible
+				me.input.releasePointerEvent('pointerdown', this.rect);
+				// remove the debug panel from the game world
+				me.game.world.removeChild(this);
+				// mark it as invisible
 				this.visible = false;
 			}
 		},
@@ -360,9 +371,10 @@
 		onDestroyEvent : function() {
 			// hide the panel
 			this.hide();
-			// unbind "S" & "H"
+			// unbind keys event
 			me.input.unbindKey(me.input.KEY.S);
 			me.input.unbindKey(me.input.KEY.H);
+			me.event.unsubscribe(this.handler);
 		}
 
 

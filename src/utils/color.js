@@ -242,6 +242,17 @@
         },
 
         /**
+         * Create a new copy of this color object.
+         * @name clone
+         * @memberOf me.Color
+         * @function
+         * @return {me.Color} Reference to the newly cloned object
+         */
+        clone : function () {
+            return me.pool.pull("me.Color", this.r, this.g, this.b, this.alpha);
+        },
+
+        /**
          * Blend this color with the given one using addition.
          * @name add
          * @memberOf me.Color
@@ -408,7 +419,7 @@
         },
 
         /**
-         * Get the color in "#000000" format
+         * Get the color in "#RRGGBB" format
          * @name toHex
          * @memberOf me.Color
          * @function
@@ -422,7 +433,7 @@
         },
 
         /**
-         * Get the color in "rgb(0,0,0)" format
+         * Get the color in "rgb(R,G,B)" format
          * @name toRGB
          * @memberOf me.Color
          * @function
@@ -440,7 +451,7 @@
         },
 
         /**
-         * Get the color in "rgba(0,0,0,1)" format
+         * Get the color in "rgba(R,G,B,A)" format
          * @name toRGBA
          * @memberOf me.Color
          * @function

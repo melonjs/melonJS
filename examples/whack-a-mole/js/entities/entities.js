@@ -30,7 +30,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 		this.hideTween = null;
 		
 		// register on mouse event
-		me.input.registerPointerEvent('mousedown', this, this.onMouseDown.bind(this));
+		me.input.registerPointerEvent('pointerdown', this, this.onMouseDown.bind(this));
 
 	},
 	
