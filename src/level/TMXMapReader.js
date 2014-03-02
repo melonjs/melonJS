@@ -421,8 +421,8 @@
 	 */
 	var JSONMapReader = me.TMXMapReader.extend({
 		
-		readJSONMap: function (map, data) {
-			if (!data) {
+		readJSONMap: function (map, rootdata) {
+			if (!rootdata) {
 				throw "melonJS:" + map.levelId + " TMX map not found";
 			}
 			
@@ -432,11 +432,18 @@
 			// keep a reference to our scope
 			var self = this;
 			
+			// data
+			var data = rootdata;			
+			// manage JSON/XML format quirks
+			if (typeof(rootdata.map) !== 'undefined') {
+				// in Tiled json exported format, everything is at root level 
+				// in xml converted format, map information is under map 
+				data = rootdata.map;
+			}
+
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
-			map.cols = parseInt(data[me.TMX_TAG_WIDTH], 10);
-			map.rows = parseInt(data[me.TMX_TAG_HEIGHT], 10);
 			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH], 10);
 			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT], 10);
 			map.width = map.cols * map.tilewidth;
@@ -471,7 +478,7 @@
 			if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
 				me.game.renderer = this.getNewDefaultRenderer(map);
 			}
-			
+
 			// Tileset information
 			if (!map.tilesets) {
 				// make sure we have a TilesetGroup Object
@@ -519,8 +526,11 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
+
+			var encoding = typeof(data[ me.TMX_TAG_ENCODING]) !== 'undefined' ? data[me.TMX_TAG_ENCODING] : 'json'; 
+			console.log(encoding);
 			// parse the layer data
-			this.setLayerData(layer, data[me.TMX_TAG_DATA], 'json', null);
+			this.setLayerData(layer, data[me.TMX_TAG_DATA], encoding, null);
 			return layer;
 		},
 		

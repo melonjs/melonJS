@@ -234,9 +234,8 @@
 		initFromJSON: function (tileset) {
 			// first gid
 			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
-
 			var src = tileset[me.TMX_TAG_SOURCE];
-			if (src) {
+			if (src && me.utils.getFileExtension(src).toLowerCase() === 'tsx') {
 				// load TSX
 				src = me.utils.getBasename(src);
 				// replace tiletset with a local variable
@@ -272,7 +271,12 @@
 			}
 			
 			// check for the texture corresponding image
-			var imagesrc = me.utils.getBasename(tileset[me.TMX_TAG_IMAGE]);
+			// manage inconstency between XML and JSON format
+			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 
+				tileset[me.TMX_TAG_IMAGE] :
+				tileset[me.TMX_TAG_IMAGE].source;
+			// extract baase name
+			imagesrc = me.utils.getBasename(imagesrc);
 			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
 			if (!image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");

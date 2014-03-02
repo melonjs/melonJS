@@ -101,6 +101,10 @@
 			// layer name
 			this.name = name;
 
+			// check for the texture corresponding image
+			// manage inconstency between XML and JSON format
+			imagesrc = typeof(imagesrc)=== 'string' ? imagesrc : imagesrc.source;
+
 			// get the corresponding image (throw an exception if not found)
 			this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
 			if (!this.image) {

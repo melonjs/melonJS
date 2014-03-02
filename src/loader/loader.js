@@ -7,6 +7,83 @@
 
 (function($) {
 
+	var coerce = function (value) {
+
+	    var num = Number(value);
+	    if (!isNaN(num)) {
+	        return num;
+	    }
+
+	    var _value = value.toLowerCase();
+
+	    if (_value === 'true') {
+	        return true;
+	    }
+
+	    if (_value === 'false') {
+	        return false;
+	    }
+
+	    return value;
+	};
+
+	// conver a TMX XML to a javascript object
+	var tmxToJson = function (xml) {
+		
+		// Create the return object
+		var obj = {};
+		
+		// text node
+		if (xml.nodeType === 3) {
+			obj = xml.nodeValue;
+		}
+
+		// do children
+		if (xml.hasChildNodes()) {
+			for(var i = 0; i < xml.childNodes.length; i++) {
+				var item = xml.childNodes.item(i);
+				var nodeName = item.nodeName;
+				
+				if (nodeName === me.TMX_TAG_TILESET ) {
+					// name are not consistent between XML and JSON
+					nodeName = "tilesets";
+				} else if (nodeName === me.TMX_TAG_LAYER ) {
+					// name are not consistent between XML and JSON
+					nodeName = "layers";
+				} 
+
+				if (typeof(obj[nodeName]) === "undefined") {
+					if (nodeName === '#text') {
+					    /* ignore empty text nodes */
+					    continue;
+					} else if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
+					    // todo manage multi node value for data element
+					    obj[nodeName] = ( item.firstChild.nodeValue + '' ).trim();
+					} else {
+					    obj[nodeName] =  tmxToJson(item);
+					
+					}
+					// do attributes
+					if (item.attributes && item.attributes.length > 0) {
+						for (var j = 0; j < item.attributes.length; j++) {
+							var attribute = item.attributes.item(j);
+							obj[nodeName][attribute.nodeName] = coerce(attribute.nodeValue);
+						}
+					}
+				} else {
+					if (typeof(obj[nodeName].push) === "undefined") {
+						var old = obj[nodeName];
+						obj[nodeName] = [];
+						obj[nodeName].push(old);
+					}
+					obj[nodeName].push(tmxToJson(item));
+
+				}
+			}
+		}
+		return obj;
+	};
+
 	/**
 	 * a small class to manage loading of stuff and manage resources
 	 * There is no constructor function for me.input.
@@ -130,15 +207,21 @@
 						switch (format) {
 							case 'xml':
 							case 'tmx':
+								var _xml;
 								// ie9 does not fully implement the responseXML
 								if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
 									// manually create the XML DOM
-									result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
+									_xml = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
 								} else {
-									result = xmlhttp.responseXML;
+									_xml = xmlhttp.responseXML;
 								}
-								// change the data format
-								format = 'xml';
+
+								// converts to JSON
+								console.log(tmxToJson(_xml));
+								result = tmxToJson(_xml);
+								_xml = null;
+								format = 'json';
+								
 								break;
 
 							case 'json':
