@@ -251,7 +251,7 @@
                 margin: 0,
                 spacing: 0,
                 atlas: tpAtlas,
-                atlasIndicdes: indices
+                atlasIndices: indices
             });
         }
     });
