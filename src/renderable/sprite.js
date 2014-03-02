@@ -433,14 +433,19 @@
 					~~((image.width - this.margin) / (this.width + this.spacing)),
 					~~((image.height - this.margin) / (this.height + this.spacing))
 				);
-
+				var offsetX = 0;
+				var offsetY = 0;
+				if(image['offset']) {
+					offsetX = image.offset.x;
+					offsetY = image.offset.y;
+				}
 				// build the local atlas
 				for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
 					this.textureAtlas[frame] = {
 						name: ''+frame,
 						offset: new me.Vector2d(
-							this.margin + (this.spacing + this.width) * (frame % spritecount.x),
-							this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x)
+							this.margin + (this.spacing + this.width) * (frame % spritecount.x) + offsetX,
+							this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x) + offsetY
 						),
 						width: this.width,
 						height: this.height,
