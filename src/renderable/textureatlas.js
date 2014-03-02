@@ -85,7 +85,6 @@
                 // initialize the atlas
                 this.atlas = this.initFromTexturePacker(atlas);
             }
-            else if(atlas && atlas.)
 
             // if format not recognized
             if (this.atlas === null) {
@@ -245,62 +244,15 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas, indices);
-        },
-
-        /**
-         * Create an animation from a single region that contains multiple frames.
-         * @name createAnimationSheetFromName
-         * @memberOf me.TextureAtlas
-         * @function
-         * @param {String} region name of the sheet. "player.png"
-         * @param {Number} the frame width. If player.png has 64x128 for the frame dimensions, use 64 as the width
-         * @param {Number} the frame height. If player.png has 64x128 for the frame dimensions, use 128 as the height
-         * @param {Number} (Optional) specify if the margin between frames. Default is 0
-         * @param {Number} (Optional) specify if the spacing between frames. Default is 0
-         * @example
-         * // create a new texture atlas object under the `game` namespace
-         * game.texture = new me.TextureAtlas(
-         *    me.loader.getJSON("texture"),
-         *    me.loader.getImage("texture")
-         * );
-         * ...
-         * ...
-         * // create a new animationSheet as renderable for the entity
-         * var myAnimationSheet = game.texture.createAnimationSheetFromName('player.png', 64, 128);
-         *
-         * // define an additional basic walking animatin
-         * myAnimationSheet.addAnimation ("simple_walk", [0,2,1]);
-         * // set the default animation
-         * myAnimationSheet.setCurrentAnimation("simple_walk");
-         */
-        createAnimationSheetFromName : function(name, width, height, margin, spacing) {
-            var textureAtlas = [];
-            margin = margin || 0;
-            spacing = spacing || 0;
-            var region = this.getRegion(name);
-            var spritecount = new me.Vector2d(
-                ~~((region.width - margin) / (width + spacing)),
-                ~~((region.height - margin) / (height + spacing))
-            );
-
-
-            // build the local atlas
-            for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
-                textureAtlas[frame] = {
-                    name: ''+frame,
-                    offset: new me.Vector2d(
-                        margin + (spacing + width) * (frame % spritecount.x) + region.offset.x,
-                        margin + (spacing + height) * ~~(frame / spritecount.x) + region.offset.y
-                    ),
-                    width: width,
-                    height: height,
-                    hWidth: width / 2,
-                    hHeight: height / 2,
-                    angle: 0
-                };
-            }
-            return new me.AnimationSheet(0, 0, this.texture, width, height, 0, 0, textureAtlas);
+            return new me.AnimationSheet(0,0, {
+                image: this.texture,
+                spritewidth: 0,
+                spriteheight: 0,
+                margin: 0,
+                spacing: 0,
+                atlas: tpAtlas,
+                atlasIndicdes: indices
+            });
         }
     });
 

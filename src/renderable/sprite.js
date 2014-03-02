@@ -376,7 +376,8 @@
 		animationspeed : 100,
 
 		/** @ignore */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
+		// spritewidth, spriteheight, spacing, margin, atlas, atlasIndices
+		init : function(x, y, settings) {
 			// hold all defined animation
 			this.anim = {};
 
@@ -390,18 +391,20 @@
 			this.animationspeed = 100;
 
 			// Spacing and margin
-			this.spacing = spacing || 0;
-			this.margin = margin || 0;
+			this.spacing = settings['spacing'] || 0;
+			this.margin = settings['margin'] || 0;
+
+			var image = settings['region'] || settings['image'];
 
 			// call the constructor
-			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+			this.parent(x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
 						
 			// store the current atlas information
 			this.textureAtlas = null;
 			this.atlasIndices = null;
 			
 			// build the local textureAtlas
-			this.buildLocalAtlas(atlas || undefined, atlasIndices || undefined);
+			this.buildLocalAtlas(settings['atlas'], settings['atlasIndices'], image);
 			
 			// create a default animation sequence with all sprites
 			this.addAnimation("default", null);
@@ -414,8 +417,11 @@
 		 * build the local (private) atlas
 		 * @ignore
 		 */
-		buildLocalAtlas : function (atlas, indices) {
+		buildLocalAtlas : function (atlas, indices, image) {
 			// reinitialze the atlas
+			if(image === null || typeof image === 'undefined') {
+				image = this.image
+			}
 			if (atlas !== undefined) {
 				this.textureAtlas = atlas;
 				this.atlasIndices = indices;
@@ -424,8 +430,8 @@
 				this.textureAtlas = [];
 				// calculate the sprite count (line, col)
 				var spritecount = new me.Vector2d(
-					~~((this.image.width - this.margin) / (this.width + this.spacing)),
-					~~((this.image.height - this.margin) / (this.height + this.spacing))
+					~~((image.width - this.margin) / (this.width + this.spacing)),
+					~~((image.height - this.margin) / (this.height + this.spacing))
 				);
 
 				// build the local atlas
