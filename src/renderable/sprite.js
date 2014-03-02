@@ -344,9 +344,28 @@
 	 * @constructor
 	 * @param {Number} x the x coordinates of the sprite object
 	 * @param {Number} y the y coordinates of the sprite object
-	 * @param {Image} image reference of the animation sheet
-	 * @param {Number} spritewidth width of a single sprite within the spritesheet
-	 * @param {Number} [spriteheight=image.height] height of a single sprite within the spritesheet
+	 * @param {Object} settings Contains additional parameters for the animation sheet:
+	 * <ul>
+	 * <li>{Image} image to use for the animation</li>
+	 * <li>{Number} spritewidth - of a single sprite within the spritesheet</li>
+	 * <li>{Number} spriteheight - height of a single sprite within the spritesheet</li>
+	 * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
+	 * </ul>
+	 * @example
+	 * // standalone image
+	 * var animationSheet = new me.AnimationSheet(0, 0, {
+	 *   image: me.loader.getImage('animationsheet'),
+	 *   spritewidth: 64,
+	 *   spriteheight: 64
+	 * });
+	 * // from a texture
+	 * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
+	 * var animationSheet = new me.AnimationSheet(0, 0, {
+	 *   image: texture,
+	 *   spritewidth: 64,
+	 *   spriteheight: 64,
+	 *   region: texture.getRegion('animationsheet')
+	 * });
 	 */
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
@@ -376,7 +395,6 @@
 		animationspeed : 100,
 
 		/** @ignore */
-		// spritewidth, spriteheight, spacing, margin, atlas, atlasIndices
 		init : function(x, y, settings) {
 			// hold all defined animation
 			this.anim = {};
