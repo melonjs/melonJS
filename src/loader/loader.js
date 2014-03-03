@@ -26,16 +26,30 @@
 
 	    return value;
 	};
+    
+    var parseAttributes = function(obj, elt) {
+        // do attributes
+        if (elt.attributes && elt.attributes.length > 0) {
+            for (var j = 0; j < elt.attributes.length; j++) {
+                var attribute = elt.attributes.item(j);
+                obj[attribute.nodeName] = coerce(attribute.nodeValue);
+            }
+        }    
+    }
 
 	// conver a TMX XML to a javascript object
 	var tmxToObject = function (xml) {
 		
 		// Create the return object
 		var obj = {};
-                    
-		// text node
-		if (xml.nodeType === 3) {
-			obj = xml.nodeValue;
+        
+		// element
+		if (xml.nodeType === 1 ) { 
+        	// do attributes
+			parseAttributes (obj, xml);
+		} else if (xml.nodeType === 3) {
+			// text node
+			obj = xml.nodeValue.trim();
 		}
 
 		// do children
@@ -49,19 +63,13 @@
 					    /* ignore empty text nodes */
 					    continue;
 					} else if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
-					    // todo manage multi node value for data element
-					    obj[nodeName] = ( item.firstChild.nodeValue + '' ).trim();
+					    // TODO :  manage multi node value for data element
+					    obj[nodeName] = item.firstChild.nodeValue.trim();
+					    // apply attributes on the parent object since this is a text node
+					    parseAttributes (obj, item);
 					} else {
 					    obj[nodeName] =  tmxToObject(item);
 					}
-					 // do attributes
-					if (item.attributes && item.attributes.length > 0) {
-						for (var j = 0; j < item.attributes.length; j++) {
-							var attribute = item.attributes.item(j);
-							obj[nodeName][attribute.nodeName] = coerce(attribute.nodeValue);
-						}
-					}
-                
 				} else {
 					if (typeof(obj[nodeName].push) === "undefined") {
 						var old = obj[nodeName];
