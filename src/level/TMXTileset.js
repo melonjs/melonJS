@@ -266,19 +266,24 @@
 			if (tileset["tileproperties"]) {
                 var tileInfo = tileset["tileproperties"];
                 for(var i in tileInfo) {
-                    this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
+                	var prop = {};
+					prop.mixin(tileInfo[i]);
+                    this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
                 }
             } else if (tileset[me.TMX_TAG_TILE]) {
-                // XML converted format
-                var tileInfo = tileset[me.TMX_TAG_TILE];
+            	var tileInfo = tileset[me.TMX_TAG_TILE];
                 for ( var i = 0; i < tileInfo.length; i++) {
                     var tileID = tileInfo[i][me.TMX_TAG_ID] + this.firstgid;
-                    // apply tiled defined properties
-                    this.setTileProperty(tileID, tileInfo[i]);
+                    var prop = {};
+                    //me.TMXUtils.applyTMXPropertiesFromJSON(tileInfo[i], prop);
+                    // FIX ME !!!!!
+                    prop[tileInfo[i]["properties"]["property"].name] = tileInfo[i]["properties"]["property"].value;
+                    //apply tiled defined properties
+                    this.setTileProperty(tileID, prop);
+                    
                 }
             }
-           
-			
+            			
 			// check for the texture corresponding image
 			// manage inconstency between XML and JSON format
 			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 
