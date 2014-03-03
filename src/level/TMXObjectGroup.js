@@ -117,8 +117,10 @@
 			// check if we have any user-defined properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
 			
-			// parse all TMX objects
-			tmxObjGroup["objects"].forEach(function(tmxObj) {
+			// parse all objects
+            // (objects are directly defined under the group for converted xml format)
+            var _objects = tmxObjGroup["object"] || tmxObjGroup;
+			_objects.forEach(function(tmxObj) {
 				var object = new me.TMXObject();
 				object.initFromJSON(tmxObj, tilesets, z);
 				self.objects.push(object);
@@ -358,12 +360,23 @@
 							this.isPolyline = true;
 						}
                     }
-                    if (points !== undefined) {
+                    if (typeof(points) !== 'undefined') {
                         this.points = [];
-                        var self = this;
-                        points.forEach(function(point) {
-                            self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
-                        });
+                        if (typeof(points["points"]) !== 'undefined') {
+                            // get a point array
+                            points = points["points"].split(" ");
+                            // and normalize them into an array of vectors
+                            for (var i = 0, v; i < points.length; i++) {
+                                v = points[i].split(",");
+                                this.points.push(new me.Vector2d(+v[0], +v[1]));
+                            }
+                        } else {
+                            // already an object (native json format)
+                            var self = this;
+                            points.forEach(function(point) {
+                                self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
+                            });
+                        }
                     }
                    }
 			}

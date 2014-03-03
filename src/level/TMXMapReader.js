@@ -90,10 +90,13 @@
 		 * Set tiled layer Data
 		 * @ignore
 		 */
-		setLayerData : function(layer, data, encoding, compression) {
+		setLayerData : function(layer, rawdata, encoding, compression) {
 			// initialize the layer data array
 			layer.initArray(layer.cols, layer.rows);
 			
+            // data
+            var data = null;
+            
 			// decode data based on encoding type
 			switch (encoding) {
 				// XML encoding
@@ -103,30 +106,24 @@
 				// json encoding
 				case 'json':
 					// do nothing as data can be directly reused
+                    data = rawdata;
 					break;
 				// CSV encoding
 				case me.TMX_TAG_CSV:
 				// Base 64 encoding
 				case me.TMX_TAG_ATTR_BASE64:
-					// Merge all childNodes[].nodeValue into a single one
-					var nodeValue = '';
-					for ( var i = 0, len = data.childNodes.length; i < len; i++) {
-						nodeValue += data.childNodes[i].nodeValue;
-					}
 					// and then decode them
 					if (encoding === me.TMX_TAG_CSV) {
 						// CSV decode
-						data = me.utils.decodeCSV(nodeValue, layer.cols);
+						data = me.utils.decodeCSV(rawdata, layer.cols);
 					} else {
 						// Base 64 decode
-						data = me.utils.decodeBase64AsArray(nodeValue, 4);
+						data = me.utils.decodeBase64AsArray(rawdata, 4);
 						// check if data is compressed
 						if (compression !== null) {
-							data = me.utils.decompress(data, compression);
+							data = me.utils.decompress(rawdata, compression);
 						}
 					}
-					// ensure nodeValue is deallocated
-					nodeValue = null;
 					break;
 
 
@@ -484,27 +481,69 @@
 				map.tilesets.add(self.readTileset(tileset));
 			});
 			
-			// get layers information
-			var layers = data["layers"] || data["layer"];
-			layers.forEach(function(layer) {
-				switch (layer.type) {
-					case me.TMX_TAG_IMAGE_LAYER :
-						map.mapLayers.push(self.readImageLayer(map, layer, zOrder++));
-						break;
+            // parse layer information
+            
+            // native JSON format
+            if (typeof (data["layers"]) !== 'undefined') {
+                data["layers"].forEach(function(layer) {
+                    switch (layer.type) {
+                        case me.TMX_TAG_IMAGE_LAYER :
+                            map.mapLayers.push(self.readImageLayer(map, layer, zOrder++));
+                            break;
 
-					case me.TMX_TAG_TILE_LAYER :
-						map.mapLayers.push(self.readLayer(map, layer, zOrder++));
-						break;
+                        case me.TMX_TAG_TILE_LAYER :
+                            map.mapLayers.push(self.readLayer(map, layer, zOrder++));
+                            break;
 
-					// get the object groups information
-					case me.TMX_TAG_OBJECTGROUP:
-						map.objectGroups.push(self.readObjectGroup(map, layer, zOrder++));
-						break;
+                        // get the object groups information
+                        case me.TMX_TAG_OBJECTGROUP:
+                            map.objectGroups.push(self.readObjectGroup(map, layer, zOrder++));
+                            break;
+                        default: break;
+                    }
+                });
+            } // converted XML format 
+            else if (typeof (data["layer"]) !== 'undefined') {
+                 // in converted format, these are not under the generic layers structure
+                var layers =  data["layer"];
+                layers.forEach(function(layer) {
+                    // get the object information
+                    if (layers.hasOwnProperty(layer)) { 
+                        map.mapLayers.push(self.readLayer(map, layer, zOrder++));
+                    }
+                });
+                
+                // in converted format, these are not under the generic layers structure
+                if (typeof(data[me.TMX_TAG_OBJECTGROUP]) !== 'undefined') {
+                    var groups = data[me.TMX_TAG_OBJECTGROUP];
+                    groups.forEach(function(group) {
+                        // get the object information
+                        if (groups.hasOwnProperty(group)) { 
+                            map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
+                        }
+                    });
+                }
 
-					default: break;
-				}
-			});
+                // in converted format, these are not under the generic layers structure
+               
+                if (typeof(data[me.TMX_TAG_IMAGE_LAYER]) !== 'undefined') {   
+                    var imageLayers = data[me.TMX_TAG_IMAGE_LAYER];
+                    // TODO : FIX THIS !!!!!
+                    if (typeof(imageLayers.forEach) === 'function') {
+                        imageLayers.forEach(function(imageLayer) {
+                            // get the object information
+                            if (imageLayers.hasOwnProperty(imageLayer)) { 
+                                map.mapLayers.push(self.readImageLayer(map, imageLayer, zOrder++));
+                            }
+                        });
+                    } else {
+                        map.mapLayers.push(self.readImageLayer(map, imageLayers, zOrder++));
+                    }
+                }
+                
+            }
 			
+
 			// FINISH !
 		},
 		
@@ -523,7 +562,6 @@
 			}
 
 			var encoding = typeof(data[ me.TMX_TAG_ENCODING]) !== 'undefined' ? data[me.TMX_TAG_ENCODING] : 'json'; 
-			console.log(encoding);
 			// parse the layer data
 			this.setLayerData(layer, data[me.TMX_TAG_DATA], encoding, null);
 			return layer;
@@ -534,7 +572,7 @@
 			var iln = data[me.TMX_TAG_NAME];
 			var ilw = parseInt(data[me.TMX_TAG_WIDTH], 10);
 			var ilh = parseInt(data[me.TMX_TAG_HEIGHT], 10);
-			var ilsrc = data[me.TMX_TAG_IMAGE];
+			var ilsrc = typeof (data[me.TMX_TAG_IMAGE]) !== 'string' ? data[me.TMX_TAG_IMAGE].source : data[me.TMX_TAG_IMAGE];
 			
 			// create the layer
 			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);

@@ -25,7 +25,8 @@
 		 * @ignore
 		 */
 		function setTMXValue(value) {
-			if (!value || value.isBoolean()) {
+            //console.log(value);
+            if (!value || value.isBoolean()) {
 				// if value not defined or boolean
 				value = value ? (value === "true") : true;
 			} else if (value.isNumeric()) {
@@ -75,7 +76,13 @@
 		 */
 		api.applyTMXPropertiesFromJSON = function(obj, data) {
 			var properties = data[me.TMX_TAG_PROPERTIES];
-			if (properties) {
+            if (properties && data[me.TMX_TAG_PROPERTIES]["property"] ) {
+                // XML converted format
+                data[me.TMX_TAG_PROPERTIES]["property"].forEach(function(property) {
+                    // value are already converted in this case
+                    obj[property.name] = property.value;
+				});
+			} else if (properties) { // native json format
 				for(var name in properties){
 					if (properties.hasOwnProperty(name)) {
 						// set the value
@@ -84,8 +91,6 @@
 				}
 			}
 		};
-	
-
 		
 		// return our object
 		return api;

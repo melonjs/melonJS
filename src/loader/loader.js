@@ -35,7 +35,7 @@
                 obj[attribute.nodeName] = coerce(attribute.nodeValue);
             }
         }    
-    }
+    };
 
 	// conver a TMX XML to a javascript object
 	var tmxToObject = function (xml) {
@@ -45,7 +45,7 @@
         
 		// element
 		if (xml.nodeType === 1 ) { 
-        	// do attributes
+			// do attributes
 			parseAttributes (obj, xml);
 		} else if (xml.nodeType === 3) {
 			// text node
@@ -64,6 +64,13 @@
 					    continue;
 					} else if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
 					    // TODO :  manage multi node value for data element
+                        /*
+                        // Merge all childNodes[].nodeValue into a single one
+                        var nodeValue = '';
+                        for ( var i = 0, len = data.childNodes.length; i < len; i++) {
+                            nodeValue += data.childNodes[i].nodeValue;
+                        }
+                        */
 					    obj[nodeName] = item.firstChild.nodeValue.trim();
 					    // apply attributes on the parent object since this is a text node
 					    parseAttributes (obj, item);
@@ -73,7 +80,9 @@
 				} else {
 					if (typeof(obj[nodeName].push) === "undefined") {
 						var old = obj[nodeName];
+                        
 						obj[nodeName] = [];
+                        
 						obj[nodeName].push(old);
 					}
 					obj[nodeName].push(tmxToObject(item));
@@ -223,6 +232,7 @@
 
 							case 'json':
 								result = JSON.parse(xmlhttp.responseText);
+                                  console.log(result);
 								break;
 
 							default:
