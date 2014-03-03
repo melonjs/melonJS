@@ -96,7 +96,7 @@
 			
             // data
             var data = null;
-            
+
 			// decode data based on encoding type
 			switch (encoding) {
 				// XML encoding
@@ -508,19 +508,14 @@
                 var layers =  data["layer"];
                 layers.forEach(function(layer) {
                     // get the object information
-                    if (layers.hasOwnProperty(layer)) { 
-                        map.mapLayers.push(self.readLayer(map, layer, zOrder++));
-                    }
+                     map.mapLayers.push(self.readLayer(map, layer, zOrder++));
                 });
                 
                 // in converted format, these are not under the generic layers structure
                 if (typeof(data[me.TMX_TAG_OBJECTGROUP]) !== 'undefined') {
                     var groups = data[me.TMX_TAG_OBJECTGROUP];
                     groups.forEach(function(group) {
-                        // get the object information
-                        if (groups.hasOwnProperty(group)) { 
-                            map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
-                        }
+                        map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
                     });
                 }
 
@@ -531,10 +526,7 @@
                     // TODO : FIX THIS !!!!!
                     if (typeof(imageLayers.forEach) === 'function') {
                         imageLayers.forEach(function(imageLayer) {
-                            // get the object information
-                            if (imageLayers.hasOwnProperty(imageLayer)) { 
-                                map.mapLayers.push(self.readImageLayer(map, imageLayer, zOrder++));
-                            }
+                            map.mapLayers.push(self.readImageLayer(map, imageLayer, zOrder++));
                         });
                     } else {
                         map.mapLayers.push(self.readImageLayer(map, imageLayers, zOrder++));
@@ -560,7 +552,6 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
-
 			var encoding = typeof(data[ me.TMX_TAG_ENCODING]) !== 'undefined' ? data[me.TMX_TAG_ENCODING] : 'json'; 
 			// parse the layer data
 			this.setLayerData(layer, data[me.TMX_TAG_DATA], encoding, null);

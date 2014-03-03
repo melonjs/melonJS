@@ -120,11 +120,17 @@
 			// parse all objects
             // (objects are directly defined under the group for converted xml format)
             var _objects = tmxObjGroup["object"] || tmxObjGroup;
-			_objects.forEach(function(tmxObj) {
-				var object = new me.TMXObject();
-				object.initFromJSON(tmxObj, tilesets, z);
-				self.objects.push(object);
-			});
+            if (typeof(_objects.forEach) === 'function') {
+                _objects.forEach(function(tmxObj) {
+                    var object = new me.TMXObject();
+                    object.initFromJSON(tmxObj, tilesets, z);
+                    self.objects.push(object);
+                });
+            } else {
+                var object = new me.TMXObject();
+                object.initFromJSON(_objects, tilesets, z);
+                self.objects.push(object);
+            }
 		},
 		
 		/**
