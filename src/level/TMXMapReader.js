@@ -421,8 +421,8 @@
 	 */
 	var JSONMapReader = me.TMXMapReader.extend({
 		
-		readJSONMap: function (map, rootdata) {
-			if (!rootdata) {
+		readJSONMap: function (map, data) {
+			if (!data) {
 				throw "melonJS:" + map.levelId + " TMX map not found";
 			}
 			
@@ -432,19 +432,12 @@
 			// keep a reference to our scope
 			var self = this;
 			
-			// data
-			var data = rootdata;			
-			// manage JSON/XML format quirks
-			if (typeof(rootdata.map) !== 'undefined') {
-				// in Tiled json exported format, everything is at root level 
-				// in xml converted format, map information is under map 
-				data = rootdata.map;
-			}
-
 			// map information
 			map.version = data[me.TMX_TAG_VERSION];
 			map.orientation = data[me.TMX_TAG_ORIENTATION];
-			map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH], 10);
+			map.cols = parseInt(data[me.TMX_TAG_WIDTH], 10);
+			map.rows = parseInt(data[me.TMX_TAG_HEIGHT], 10);
+            map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH], 10);
 			map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT], 10);
 			map.width = map.cols * map.tilewidth;
 			map.height = map.rows * map.tileheight;
@@ -485,13 +478,15 @@
 				map.tilesets = new me.TMXTilesetGroup();
 			}
 			// parse all tileset objects
-			data["tilesets"].forEach(function(tileset) {
+			var tilesets = data["tilesets"] || data["tileset"];
+			tilesets.forEach(function(tileset) {
 				// add the new tileset
 				map.tilesets.add(self.readTileset(tileset));
 			});
 			
 			// get layers information
-			data["layers"].forEach(function(layer) {
+			var layers = data["layers"] || data["layer"];
+			layers.forEach(function(layer) {
 				switch (layer.type) {
 					case me.TMX_TAG_IMAGE_LAYER :
 						map.mapLayers.push(self.readImageLayer(map, layer, zOrder++));

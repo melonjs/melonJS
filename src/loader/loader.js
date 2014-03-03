@@ -28,11 +28,11 @@
 	};
 
 	// conver a TMX XML to a javascript object
-	var tmxToJson = function (xml) {
+	var tmxToObject = function (xml) {
 		
 		// Create the return object
 		var obj = {};
-		
+                    
 		// text node
 		if (xml.nodeType === 3) {
 			obj = xml.nodeValue;
@@ -44,14 +44,6 @@
 				var item = xml.childNodes.item(i);
 				var nodeName = item.nodeName;
 				
-				if (nodeName === me.TMX_TAG_TILESET ) {
-					// name are not consistent between XML and JSON
-					nodeName = "tilesets";
-				} else if (nodeName === me.TMX_TAG_LAYER ) {
-					// name are not consistent between XML and JSON
-					nodeName = "layers";
-				} 
-
 				if (typeof(obj[nodeName]) === "undefined") {
 					if (nodeName === '#text') {
 					    /* ignore empty text nodes */
@@ -60,24 +52,23 @@
 					    // todo manage multi node value for data element
 					    obj[nodeName] = ( item.firstChild.nodeValue + '' ).trim();
 					} else {
-					    obj[nodeName] =  tmxToJson(item);
-					
+					    obj[nodeName] =  tmxToObject(item);
 					}
-					// do attributes
+					 // do attributes
 					if (item.attributes && item.attributes.length > 0) {
 						for (var j = 0; j < item.attributes.length; j++) {
 							var attribute = item.attributes.item(j);
 							obj[nodeName][attribute.nodeName] = coerce(attribute.nodeValue);
 						}
 					}
+                
 				} else {
 					if (typeof(obj[nodeName].push) === "undefined") {
 						var old = obj[nodeName];
 						obj[nodeName] = [];
 						obj[nodeName].push(old);
 					}
-					obj[nodeName].push(tmxToJson(item));
-
+					obj[nodeName].push(tmxToObject(item));
 				}
 			}
 		}
@@ -207,21 +198,19 @@
 						switch (format) {
 							case 'xml':
 							case 'tmx':
-								var _xml;
 								// ie9 does not fully implement the responseXML
 								if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
 									// manually create the XML DOM
-									_xml = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
+									result = (new DOMParser()).parseFromString(xmlhttp.responseText, 'text/xml');
 								} else {
-									_xml = xmlhttp.responseXML;
+									result = xmlhttp.responseXML;
 								}
-
-								// converts to JSON
-								console.log(tmxToJson(_xml));
-								result = tmxToJson(_xml);
-								_xml = null;
+                                // converts to a JS object
+								// (returns with map as a the root object, to match native json format)
+								result = tmxToObject(result).map;
+                                console.log(result);
+                                // force format to json
 								format = 'json';
-								
 								break;
 
 							case 'json':
