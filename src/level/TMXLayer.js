@@ -436,7 +436,7 @@
 			this.rows = parseInt(layer[me.TMX_TAG_HEIGHT], 10);
 
 			// layer opacity
-			var visible = layer[me.TMX_TAG_VISIBLE];
+			var visible = typeof(layer[me.TMX_TAG_VISIBLE]) !== 'undefined' ? layer[me.TMX_TAG_VISIBLE] : true;
 			this.setOpacity(visible?parseFloat(layer[me.TMX_TAG_OPACITY]):0);
 
 			// layer "real" size
@@ -464,7 +464,6 @@
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = me.video.getContext2d(this.layerCanvas);
 			}
-
 		},
 
 		/**

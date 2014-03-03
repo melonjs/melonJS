@@ -111,7 +111,8 @@
 			this.z       = z;
 			this.objects  = [];
 
-			var visible  = tmxObjGroup[me.TMX_TAG_VISIBLE];
+			var visible = typeof(tmxObjGroup[me.TMX_TAG_VISIBLE]) !== 'undefined' ? tmxObjGroup[me.TMX_TAG_VISIBLE] : true;
+			
 			this.opacity = (visible===true)?parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0;
 			
 			// check if we have any user-defined properties 
