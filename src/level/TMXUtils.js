@@ -49,26 +49,6 @@
 		// hold public stuff in our singleton
 		var api = {};
 
-		/**
-		 * Apply TMX Properties to the give object
-		 * @ignore
-		 */
-		api.applyTMXPropertiesFromXML = function(obj, xmldata) {
-			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
-
-			if (properties) {
-				var oProp = properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
-
-				for ( var i = 0; i < oProp.length; i++) {
-					var propname = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
-					var value = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
-					// set the value
-					obj[propname] = setTMXValue(value);
-							
-				}
-			}
-
-		};
 		
 		/**
 		 * Apply TMX Properties to the give object

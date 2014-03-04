@@ -170,67 +170,6 @@
 		},
 
 		// constructor
-		initFromXML: function (xmltileset) {
-
-			// first gid
-			this.firstgid = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
-			
-
-			var src = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
-			if (src) {
-				// load TSX
-				src = me.utils.getBasename(src);
-				xmltileset = me.loader.getTMX(src);
-
-				if (!xmltileset) {
-					throw "melonJS:" + src + " TSX tileset not found";
-				}
-
-				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.mapReader.TMXParser`
-				me.mapReader.TMXParser.parseFromString(xmltileset);
-				xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
-			}
-			
-			this.name = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
-			this.tilewidth = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
-			this.tileheight = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
-			this.spacing = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
-			this.margin = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
-		
-
-			// set tile offset properties (if any)
-			this.tileoffset = new me.Vector2d(0,0);
-			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
-			if (offset.length>0) {
-				this.tileoffset.x = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
-			}
-			
-			// set tile properties, if any
-			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
-			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
-				// apply tiled defined properties
-				var prop = {};
-				me.TMXUtils.applyTMXPropertiesFromXML(prop, tileInfo[i]);
-				this.setTileProperty(tileID, prop);
-			}
-			
-			// check for the texture corresponding image
-			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
-			var image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)):null;
-			if (!image) {
-				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_TRANS);
-			
-			this.initFromImage(image, trans);
-			
-		},
-		
-		// constructor
 		initFromJSON: function (tileset) {
 			// first gid
 			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
@@ -263,27 +202,25 @@
 			}
 			
 			// set tile properties, if any
+            var tileInfo = tileset["tileproperties"];
 			if (tileset["tileproperties"]) {
-                var tileInfo = tileset["tileproperties"];
                 for(var i in tileInfo) {
-                	var prop = {};
-					prop.mixin(tileInfo[i]);
-                    this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
+                    this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
                 }
             } else if (tileset[me.TMX_TAG_TILE]) {
-            	var tileInfo = tileset[me.TMX_TAG_TILE];
-                for ( var i = 0; i < tileInfo.length; i++) {
-                    var tileID = tileInfo[i][me.TMX_TAG_ID] + this.firstgid;
+                tileInfo = tileset[me.TMX_TAG_TILE];
+                for ( var j = 0; j < tileInfo.length; j++) {
+                    var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
                     //me.TMXUtils.applyTMXPropertiesFromJSON(tileInfo[i], prop);
                     // FIX ME !!!!!
-                    prop[tileInfo[i]["properties"]["property"].name] = tileInfo[i]["properties"]["property"].value;
+                    prop[tileInfo[j]["properties"]["property"].name] = tileInfo[j]["properties"]["property"].value;
                     //apply tiled defined properties
                     this.setTileProperty(tileID, prop);
                     
                 }
             }
-            			
+			
 			// check for the texture corresponding image
 			// manage inconstency between XML and JSON format
 			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 

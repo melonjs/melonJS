@@ -49,7 +49,7 @@
 			parseAttributes (obj, xml);
 		} else if (xml.nodeType === 3) {
 			// text node
-			obj = xml.nodeValue.trim();
+			obj = xml.nodeValue;
 		}
 
 		// do children
@@ -71,7 +71,7 @@
                             nodeValue += data.childNodes[i].nodeValue;
                         }
                         */
-					    obj[nodeName] = item.firstChild.nodeValue.trim();
+					    obj[nodeName] = item.firstChild.nodeValue;
 					    // apply attributes on the parent object since this is a text node
 					    parseAttributes (obj, item);
 					} else {

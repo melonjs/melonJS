@@ -67,35 +67,6 @@
 		 * @memberOf me.TMXObjectGroup
 		 */
 		objects : [],
-
-		/**
-		 * constructor from XML content
-		 * @ignore
-		 * @function
-		 */
-		initFromXML : function(name, tmxObjGroup, tilesets, z) {
-			
-			this.name    = name;
-			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
-			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
-			this.z       = z;
-			this.objects = [];
-            
-			var visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) === 1);
-			this.opacity = visible?me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0):0;
-		
-			// check if we have any user-defined properties
-			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
-				me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObjGroup);
-			}
-			
-			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
-			for ( var i = 0; i < data.length; i++) {
-				var object = new me.TMXObject();
-				object.initFromXML(data[i], tilesets, z);
-				this.objects.push(object);
-			}
-		},
 		
 		/**
 		 * constructor from JSON content
@@ -122,6 +93,7 @@
             // (objects are directly defined under the group for converted xml format)
             var _objects = tmxObjGroup["object"] || tmxObjGroup;
             if (typeof(_objects.forEach) === 'function') {
+                // JSON native format
                 _objects.forEach(function(tmxObj) {
                     var object = new me.TMXObject();
                     object.initFromJSON(tmxObj, tilesets, z);
@@ -132,6 +104,7 @@
                 object.initFromJSON(_objects, tilesets, z);
                 self.objects.push(object);
             }
+            
 		},
 		
 		/**
@@ -265,69 +238,6 @@
 		 * @memberOf me.TMXObject
 		 */
 		points : undefined,
-
-		/**
-		 * constructor from XML content
-		 * @ignore
-		 * @function
-		 */
-		initFromXML :  function(tmxObj, tilesets, z) {
-			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
-			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
-			this.y = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
-			this.z = z;
-
-			this.width = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
-			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
-			this.gid = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
-            
-            this.isEllipse = false;
-            this.isPolygon = false;
-            this.isPolyline = false;
-            
-
-			// check if the object has an associated gid	
-			if (this.gid) {
-				this.setImage(this.gid, tilesets);
-			} else {
-                
-                // check if this is an ellipse 
-                if (tmxObj.getElementsByTagName(me.TMX_TAG_ELLIPSE).length) {
-                    this.isEllipse = true;
-                } else {
-					// polygone || polyline
-					var points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
-					if (points.length) {
-						this.isPolygon = true;
-					} else {
-						points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
-						if (points.length) {
-							this.isPolyline = true;
-						}
-					}
-                    if (points.length) {
-                        this.points = [];
-                        // get a point array
-                        var point = me.mapReader.TMXParser.getStringAttribute(
-							points[0], 
-							me.TMX_TAG_POINTS
-                        ).split(" ");
-                        // and normalize them into an array of vectors
-                        for (var i = 0, v; i < point.length; i++) {
-                            v = point[i].split(",");
-                            this.points.push(new me.Vector2d(+v[0], +v[1]));
-                        }
-                    }	
-                }
-			}
-			
-			// Adjust the Position to match Tiled
-			me.game.renderer.adjustPosition(this);
-			
-			// set the object properties
-			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
-		},
-		
 
 		/**
 		 * constructor from JSON content
