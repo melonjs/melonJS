@@ -203,21 +203,20 @@
 			
 			// set tile properties, if any
             var tileInfo = tileset["tileproperties"];
-			if (tileset["tileproperties"]) {
+			if (tileInfo) {
+                // native JSON format
                 for(var i in tileInfo) {
                     this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
                 }
             } else if (tileset[me.TMX_TAG_TILE]) {
+                // converted XML format
                 tileInfo = tileset[me.TMX_TAG_TILE];
                 for ( var j = 0; j < tileInfo.length; j++) {
                     var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
-                    //me.TMXUtils.applyTMXPropertiesFromJSON(tileInfo[i], prop);
-                    // FIX ME !!!!!
-                    prop[tileInfo[j]["properties"]["property"].name] = tileInfo[j]["properties"]["property"].value;
+                    me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo[j]);
                     //apply tiled defined properties
-                    this.setTileProperty(tileID, prop);
-                    
+                    this.setTileProperty(tileID, prop);   
                 }
             }
 			

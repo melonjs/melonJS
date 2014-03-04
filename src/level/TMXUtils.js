@@ -126,10 +126,16 @@
             var properties = data[me.TMX_TAG_PROPERTIES];
             if (properties && data[me.TMX_TAG_PROPERTIES]["property"] ) {
                 // XML converted format
-                data[me.TMX_TAG_PROPERTIES]["property"].forEach(function(property) {
+                var property = data[me.TMX_TAG_PROPERTIES]["property"];
+                if (typeof(property.forEach) === 'function') {
+                    property.forEach(function(prop) {
+                        // value are already converted in this case
+                        obj[prop.name] = prop.value;
+                    });
+                } else {
                     // value are already converted in this case
                     obj[property.name] = property.value;
-                });
+                }
             } else if (properties) { // native json format
                 for(var name in properties){
                     if (properties.hasOwnProperty(name)) {
