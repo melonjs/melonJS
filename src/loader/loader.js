@@ -7,91 +7,6 @@
 
 (function($) {
 
-	var coerce = function (value) {
-
-	    var num = Number(value);
-	    if (!isNaN(num)) {
-	        return num;
-	    }
-
-	    var _value = value.toLowerCase();
-
-	    if (_value === 'true') {
-	        return true;
-	    }
-
-	    if (_value === 'false') {
-	        return false;
-	    }
-
-	    return value;
-	};
-    
-    var parseAttributes = function(obj, elt) {
-        // do attributes
-        if (elt.attributes && elt.attributes.length > 0) {
-            for (var j = 0; j < elt.attributes.length; j++) {
-                var attribute = elt.attributes.item(j);
-                obj[attribute.nodeName] = coerce(attribute.nodeValue);
-            }
-        }    
-    };
-
-	// conver a TMX XML to a javascript object
-	var tmxToObject = function (xml) {
-		
-		// Create the return object
-		var obj = {};
-        
-		// element
-		if (xml.nodeType === 1 ) { 
-			// do attributes
-			parseAttributes (obj, xml);
-		} else if (xml.nodeType === 3) {
-			// text node
-			obj = xml.nodeValue;
-		}
-
-		// do children
-		if (xml.hasChildNodes()) {
-			for(var i = 0; i < xml.childNodes.length; i++) {
-				var item = xml.childNodes.item(i);
-				var nodeName = item.nodeName;
-				
-				if (typeof(obj[nodeName]) === "undefined") {
-					if (nodeName === '#text') {
-					    /* ignore empty text nodes */
-					    continue;
-					} else if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
-					    // TODO :  manage multi node value for data element
-                        /*
-                        // Merge all childNodes[].nodeValue into a single one
-                        var nodeValue = '';
-                        for ( var i = 0, len = data.childNodes.length; i < len; i++) {
-                            nodeValue += data.childNodes[i].nodeValue;
-                        }
-                        */
-					    obj[nodeName] = item.firstChild.nodeValue;
-					    // apply attributes on the parent object since this is a text node
-					    parseAttributes (obj, item);
-					} else {
-					    obj[nodeName] =  tmxToObject(item);
-					}
-				} else {
-					if (typeof(obj[nodeName].push) === "undefined") {
-						var old = obj[nodeName];
-                        
-						obj[nodeName] = [];
-                        
-						obj[nodeName].push(old);
-					}
-					obj[nodeName].push(tmxToObject(item));
-				}
-			}
-		}
-		return obj;
-	};
-
 	/**
 	 * a small class to manage loading of stuff and manage resources
 	 * There is no constructor function for me.input.
@@ -100,7 +15,7 @@
 	 */
 
 	me.loader = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		// contains all the images loaded
@@ -224,7 +139,7 @@
 								}
                                 // converts to a JS object
 								// (returns with map as a the root object, to match native json format)
-								result = tmxToObject(result).map;
+								result = me.TMXUtils.parse(result).map;
                                 console.log(result);
                                 // force format to json
 								format = 'json';
@@ -232,7 +147,7 @@
 
 							case 'json':
 								result = JSON.parse(xmlhttp.responseText);
-                                  console.log(result);
+                                console.log(result);
 								break;
 
 							default:
@@ -611,27 +526,6 @@
 
 			// unload all audio resources
 			me.audio.unloadAll();
-		};
-
-		/**
-		 * return the specified TMX object storing type
-		 * @name getTMXFormat
-		 * @memberOf me.loader
-		 * @public
-		 * @function
-		 * @param {String} tmx name of the tmx/tsx element ("map1");
-		 * @return {String} 'xml' or 'json'
-		 */
-		obj.getTMXFormat = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (elt in tmxList)
-				return tmxList[elt].format;
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
-
 		};
 
 		/**
