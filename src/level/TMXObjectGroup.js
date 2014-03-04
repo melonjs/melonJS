@@ -90,8 +90,8 @@
 			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
 			
 			// parse all objects
-            // (objects are directly defined under the group for converted xml format)
-            var _objects = tmxObjGroup["object"] || tmxObjGroup;
+            // (under `objects` for XML converted map, under `object` for native json map)
+            var _objects = tmxObjGroup["objects"] || tmxObjGroup["object"];
             if (typeof(_objects.forEach) === 'function') {
                 // JSON native format
                 _objects.forEach(function(tmxObj) {
