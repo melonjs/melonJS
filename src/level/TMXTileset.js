@@ -159,18 +159,16 @@
 			TOPLADDER : "topladder",
 			BREAKABLE : "breakable"
 		},
+        
+		// tile properties (collidable, etc..)
+		TileProperties : [],
 
-		init: function() {
-			// tile properties (collidable, etc..)
-			this.TileProperties = [];
-
-			// a cache for offset value
-			this.tileXOffset = [];
-			this.tileYOffset = [];
-		},
+		// a cache for offset value
+		tileXOffset : [],
+		tileYOffset : [],
 
 		// constructor
-		initFromJSON: function (tileset) {
+		init: function (tileset) {
 			// first gid
 			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
 			var src = tileset[me.TMX_TAG_SOURCE];

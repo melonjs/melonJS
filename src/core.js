@@ -943,6 +943,19 @@ window.me = window.me || {};
 			}
 		};
 	}
+    
+    if(!Array.isArray) {
+        /**
+		 * provide a replacement for browsers that don't
+		 * natively support Array.isArray
+		 * @ignore
+		 */
+        Array.isArray = function (vArg) {
+            var isArray;
+            isArray = vArg instanceof Array;
+            return isArray;
+        };
+    }
 
 	Object.defineProperty(me, "initialized", {
 		get : function get() {

@@ -195,12 +195,17 @@
 				// make sure we have a TilesetGroup Object
 				map.tilesets = new me.TMXTilesetGroup();
 			}
+            
 			// parse all tileset objects
 			var tilesets = data["tilesets"] || data["tileset"];
-			tilesets.forEach(function(tileset) {
-				// add the new tileset
-				map.tilesets.add(self.readTileset(tileset));
-			});
+			if (Array.isArray(tilesets) === true) {
+				tilesets.forEach(function(tileset) {
+					// add the new tileset
+					map.tilesets.add(self.readTileset(tileset));
+				});
+			} else {
+				map.tilesets.add(self.readTileset(tilesets));
+			}
 			
             // parse layer information
             
@@ -223,29 +228,39 @@
                         default: break;
                     }
                 });
-            } // converted XML format 
-            else if (typeof (data["layer"]) !== 'undefined') {
-                 // in converted format, these are not under the generic layers structure
+            } else if (typeof (data["layer"]) !== 'undefined') {
+                // converted XML format 
+                // in converted format, these are not under the generic layers structure
+                // and each element can be either an array of object of just one object
+                 
                 var layers = data["layer"];
-                layers.forEach(function(layer) {
+                if (Array.isArray(layers) === true) {
+                    layers.forEach(function(layer) {
+                        // get the object information
+                         map.mapLayers.push(self.readLayer(map, layer, zOrder++));
+                    });
+                } else {
                     // get the object information
-                     map.mapLayers.push(self.readLayer(map, layer, zOrder++));
-                });
+                     map.mapLayers.push(self.readLayer(map, layers, zOrder++));
+                }
                 
                 // in converted format, these are not under the generic layers structure
                 if (typeof(data[me.TMX_TAG_OBJECTGROUP]) !== 'undefined') {
                     var groups = data[me.TMX_TAG_OBJECTGROUP];
-                    groups.forEach(function(group) {
-                        map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
-                    });
+                    if (Array.isArray(groups) === true) {
+                        groups.forEach(function(group) {
+                            map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
+                        });
+                    } else {
+                        // get the object information
+                        map.objectGroups.push(self.readObjectGroup(map, groups, zOrder++));
+                    }
                 }
 
                 // in converted format, these are not under the generic layers structure
-               
                 if (typeof(data[me.TMX_TAG_IMAGE_LAYER]) !== 'undefined') {   
                     var imageLayers = data[me.TMX_TAG_IMAGE_LAYER];
-                    // TODO : FIX THIS !!!!!
-                    if (typeof(imageLayers.forEach) === 'function') {
+                    if (Array.isArray(imageLayers) === true) {
                         imageLayers.forEach(function(imageLayer) {
                             map.mapLayers.push(self.readImageLayer(map, imageLayer, zOrder++));
                         });
@@ -305,15 +320,11 @@
 		},
 		
 		readTileset : function (data) {
-			var tileset = new me.TMXTileset();
-			tileset.initFromJSON(data);
-			return tileset;
+			return (new me.TMXTileset(data));
 		},
 		
 		readObjectGroup: function(map, data, z) {
-			var group = new me.TMXObjectGroup();
-			group.initFromJSON(data[me.TMX_TAG_NAME], data, map.tilesets, z);
-			return group;
+			return (new me.TMXObjectGroup(data[me.TMX_TAG_NAME], data, map.tilesets, z));
 		}
 	
 	});

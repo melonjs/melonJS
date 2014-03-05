@@ -69,11 +69,11 @@
 		objects : [],
 		
 		/**
-		 * constructor from JSON content
+		 * constructor
 		 * @ignore
 		 * @function
 		 */
-		initFromJSON : function(name, tmxObjGroup, tilesets, z) {
+		init : function(name, tmxObjGroup, tilesets, z) {
 			var self = this;
 			
 			this.name    = name;
@@ -92,17 +92,13 @@
 			// parse all objects
             // (under `objects` for XML converted map, under `object` for native json map)
             var _objects = tmxObjGroup["objects"] || tmxObjGroup["object"];
-            if (typeof(_objects.forEach) === 'function') {
+            if (Array.isArray(_objects) === true) {
                 // JSON native format
                 _objects.forEach(function(tmxObj) {
-                    var object = new me.TMXObject();
-                    object.initFromJSON(tmxObj, tilesets, z);
-                    self.objects.push(object);
+                    self.objects.push(new me.TMXObject(tmxObj, tilesets, z));
                 });
             } else {
-                var object = new me.TMXObject();
-                object.initFromJSON(_objects, tilesets, z);
-                self.objects.push(object);
+                self.objects.push(new me.TMXObject(_objects, tilesets, z));
             }
             
 		},
@@ -240,12 +236,11 @@
 		points : undefined,
 
 		/**
-		 * constructor from JSON content
+		 * constructor
 		 * @ignore
 		 * @function
 		 */
-		initFromJSON :  function(tmxObj, tilesets, z) {
-			
+		init :  function(tmxObj, tilesets, z) {
 			this.name = tmxObj[me.TMX_TAG_NAME];
 			this.x = parseInt(tmxObj[me.TMX_TAG_X], 10);
 			this.y = parseInt(tmxObj[me.TMX_TAG_Y], 10);

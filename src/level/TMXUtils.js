@@ -127,7 +127,7 @@
             if (properties && data[me.TMX_TAG_PROPERTIES]["property"] ) {
                 // XML converted format
                 var property = data[me.TMX_TAG_PROPERTIES]["property"];
-                if (typeof(property.forEach) === 'function') {
+                if (Array.isArray(property) === true) {
                     property.forEach(function(prop) {
                         // value are already converted in this case
                         obj[prop.name] = prop.value;
