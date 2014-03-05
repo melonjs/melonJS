@@ -29,7 +29,7 @@
          "name":"player",
          "objects":[
                 {
-                 "height":70,
+                 "height":105,
                  "name":"mainPlayer",
                  "properties":
                     {
@@ -38,9 +38,9 @@
                     },
                  "type":"",
                  "visible":true,
-                 "width":70,
-                 "x":70,
-                 "y":280
+                 "width":35,
+                 "x":105,
+                 "y":420
                 }, 
                 {
                  "gid":19,
