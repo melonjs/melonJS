@@ -64,10 +64,14 @@
          * Parse a XML TMX object and returns the corresponding javascript object
          * @ignore
          */
-        api.parse = function (xml) {
+        api.parse = function (xml, draworder) {
             
             // Create the return object
             var obj = {};
+            
+            // make sure draworder is defined
+            // note: `draworder` is a new object property in next coming version of Tiled            
+            draworder = draworder || 1;
             
             // element
             if (xml.nodeType === 1 ) { 
@@ -101,17 +105,17 @@
                             // apply attributes on the parent object since this is a text node
                             parseAttributes (obj, item);
                         } else {
-                            obj[nodeName] =  me.TMXUtils.parse(item);
+                            obj[nodeName] =  me.TMXUtils.parse(item, draworder);
+                            obj[nodeName]["draworder"] = draworder++;
                         }
                     } else {
                         if (typeof(obj[nodeName].push) === "undefined") {
                             var old = obj[nodeName];
-                            
                             obj[nodeName] = [];
-                            
                             obj[nodeName].push(old);
                         }
-                        obj[nodeName].push(me.TMXUtils.parse(item));
+                        obj[nodeName].push(me.TMXUtils.parse(item, draworder));
+                        obj[nodeName][obj[nodeName].length-1]["draworder"] = draworder++;
                     }
                 }
             }

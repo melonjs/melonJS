@@ -237,11 +237,11 @@
                 if (Array.isArray(layers) === true) {
                     layers.forEach(function(layer) {
                         // get the object information
-                         map.mapLayers.push(self.readLayer(map, layer, zOrder++));
+                         map.mapLayers.push(self.readLayer(map, layer, layer.draworder));
                     });
                 } else {
                     // get the object information
-                     map.mapLayers.push(self.readLayer(map, layers, zOrder++));
+                     map.mapLayers.push(self.readLayer(map, layers, layers.draworder));
                 }
                 
                 // in converted format, these are not under the generic layers structure
@@ -249,11 +249,11 @@
                     var groups = data[me.TMX_TAG_OBJECTGROUP];
                     if (Array.isArray(groups) === true) {
                         groups.forEach(function(group) {
-                            map.objectGroups.push(self.readObjectGroup(map, group, zOrder++));
+                            map.objectGroups.push(self.readObjectGroup(map, group, group.draworder ));
                         });
                     } else {
                         // get the object information
-                        map.objectGroups.push(self.readObjectGroup(map, groups, zOrder++));
+                        map.objectGroups.push(self.readObjectGroup(map, groups, groups.draworder));
                     }
                 }
 
@@ -262,10 +262,10 @@
                     var imageLayers = data[me.TMX_TAG_IMAGE_LAYER];
                     if (Array.isArray(imageLayers) === true) {
                         imageLayers.forEach(function(imageLayer) {
-                            map.mapLayers.push(self.readImageLayer(map, imageLayer, zOrder++));
+                            map.mapLayers.push(self.readImageLayer(map, imageLayer, imageLayer.draworder));
                         });
                     } else {
-                        map.mapLayers.push(self.readImageLayer(map, imageLayers, zOrder++));
+                        map.mapLayers.push(self.readImageLayer(map, imageLayers, imageLayers.draworder));
                     }
                 }
                 
@@ -305,8 +305,8 @@
 			var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
 			
 			// set some additional flags
-			var visible = data[me.TMX_TAG_VISIBLE];
-			imageLayer.setOpacity(visible? parseFloat(data[me.TMX_TAG_OPACITY]):0);
+			var visible = typeof(data[me.TMX_TAG_VISIBLE]) !== 'undefined' ? data[me.TMX_TAG_VISIBLE] : true;
+			imageLayer.setOpacity((visible===true)?parseFloat(data[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0);
 			
 			// check if we have any additional properties 
 			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);
