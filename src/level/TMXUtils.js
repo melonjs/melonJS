@@ -54,7 +54,13 @@
             if (elt.attributes && elt.attributes.length > 0) {
                 for (var j = 0; j < elt.attributes.length; j++) {
                     var attribute = elt.attributes.item(j);
-                    obj[attribute.nodeName] = setTMXValue(attribute.nodeValue);
+                    if (typeof(attribute.name) !== 'undefined') {
+                        // DOM4 (Attr no longer inherit from Node)
+                        obj[attribute.name] = setTMXValue(attribute.value);
+                    } else {
+                        // else use the deprecated ones
+                        obj[attribute.nodeName] = setTMXValue(attribute.nodeValue);
+                    }
                 }
             }    
         };
