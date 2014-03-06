@@ -170,7 +170,7 @@
 		// constructor
 		init: function (tileset) {
 			// first gid
-			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
+			this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
 			var src = tileset[me.TMX_TAG_SOURCE];
 			if (src && me.utils.getFileExtension(src).toLowerCase() === 'tsx') {
 				// load TSX
@@ -223,37 +223,27 @@
 			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 
 				tileset[me.TMX_TAG_IMAGE] :
 				tileset[me.TMX_TAG_IMAGE].source;
-			// extract baase name
+			// extract base name
 			imagesrc = me.utils.getBasename(imagesrc);
-			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
-			if (!image) {
+			this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
+			
+			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = tileset[me.TMX_TAG_TRANS] || null;
-
-			this.initFromImage(image, trans);
-		},
-		
-		
-		// constructor
-		initFromImage: function (image, transparency) {
-			if (image) {
-				this.image = image;
+			} else {
 				// number of tiles per horizontal line 
 				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			}
-			
-			// compute the last gid value in the tileset
-			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
-		  
-			// set Color Key for transparency if needed
-			if (transparency !== null && this.image) {
-				// applyRGB Filter (return a context object)
-				this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
-			}
-			
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));				
+				// compute the last gid value in the tileset
+				this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
+			  
+				// check if transparency is defined for a specific color
+				var transparency = tileset[me.TMX_TAG_TRANS] || tileset[me.TMX_TAG_IMAGE][me.TMX_TAG_TRANS];
+				// set Color Key for transparency if needed
+				if (typeof(transparency) !== 'undefined') {
+					// applyRGB Filter (return a context object)
+					this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
+				}
+			}	
 		},
 		
 		/**
