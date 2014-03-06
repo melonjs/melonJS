@@ -94,11 +94,14 @@
                     var item = xml.childNodes.item(i);
                     var nodeName = item.nodeName;
                     
+                    if (nodeName === '#text') {
+                        /* ignore empty text nodes */
+                        continue;
+                    }
+
                     if (typeof(obj[nodeName]) === "undefined") {
-                        if (nodeName === '#text') {
-                            /* ignore empty text nodes */
-                            continue;
-                        } else if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
+                        
+                        if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
                             // TODO :  manage multi node value for data element
                             /*
                             // Merge all childNodes[].nodeValue into a single one
@@ -115,10 +118,8 @@
                             obj[nodeName]["draworder"] = draworder++;
                         }
                     } else {
-                        if (typeof(obj[nodeName].push) === "undefined") {
-                            var old = obj[nodeName];
-                            obj[nodeName] = [];
-                            obj[nodeName].push(old);
+                        if (Array.isArray(obj[nodeName]) === false) {
+                            obj[nodeName] = [obj[nodeName]];
                         }
                         obj[nodeName].push(me.TMXUtils.parse(item, draworder));
                         obj[nodeName][obj[nodeName].length-1]["draworder"] = draworder++;
