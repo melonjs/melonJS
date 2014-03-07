@@ -14,21 +14,13 @@
      * every "screen" object (title screen, credits, ingame, etc...) to be managed <br>
      * through the state manager must inherit from this base class.
      * @class
-     * @extends me.Renderable
+     * @extends Object
      * @memberOf me
      * @constructor
      * @see me.state
      */
-    me.ScreenObject = me.Renderable.extend(
-    /** @scope me.ScreenObject.prototype */
-    {
-        /**
-         * initialization function
-         * @ignore
-         */
-        init : function() {
-            this.parent(new me.Vector2d(0, 0), 0, 0);
-        },
+    me.ScreenObject = Object.extend(
+    /** @scope me.ScreenObject.prototype */ {
 
         /**
          * Object reset function
