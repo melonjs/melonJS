@@ -4,95 +4,156 @@
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
- * http://www.mapeditor.org/	
+ * http://www.mapeditor.org/    
  *
  */
 
 (function($) {
 
-	
-	/**
-	 * a collection of TMX utility Function
-	 * @final
-	 * @memberOf me
-	 * @ignore
-	 */
+    
+    /**
+     * a collection of TMX utility Function
+     * @final
+     * @memberOf me
+     * @ignore
+     */
 
-	me.TMXUtils = (function() {
-		
-		/**
-		 * set and interpret a TMX property value 
-		 * @ignore
-		 */
-		function setTMXValue(value) {
-			if (!value || value.isBoolean()) {
-				// if value not defined or boolean
-				value = value ? (value === "true") : true;
-			} else if (value.isNumeric()) {
-				// check if numeric
-				value = Number(value);
-			} else if (value.match(/^json:/i)) {
-				// try to parse it
-				var match = value.split(/^json:/i)[1];
-				try {
-					value = JSON.parse(match);
-				}
-				catch (e) {
-					throw "Unable to parse JSON: " + match;
-				}
-			}
-			// return the interpreted value
-			return value;
-		}
-	
-		// hold public stuff in our singleton
-		var api = {};
+    me.TMXUtils = (function() {
+        /*--- PUBLIC ---*/
+        // hold public stuff in our singleton
+        var api = {};
+        
+        /**
+         * set and interpret a TMX property value 
+         * @ignore
+         */
+        function setTMXValue(value) {
+            //console.log(value);
+            if (!value || value.isBoolean()) {
+                // if value not defined or boolean
+                value = value ? (value === "true") : true;
+            } else if (value.isNumeric()) {
+                // check if numeric
+                value = Number(value);
+            } else if (value.match(/^json:/i)) {
+                // try to parse it
+                var match = value.split(/^json:/i)[1];
+                try {
+                    value = JSON.parse(match);
+                }
+                catch (e) {
+                    throw "Unable to parse JSON: " + match;
+                }
+            }
+            // return the interpreted value
+            return value;
+        }
+    
+        var parseAttributes = function(obj, elt) {
+            // do attributes
+            if (elt.attributes && elt.attributes.length > 0) {
+                for (var j = 0; j < elt.attributes.length; j++) {
+                    var attribute = elt.attributes.item(j);
+                    if (typeof(attribute.name) !== 'undefined') {
+                        // DOM4 (Attr no longer inherit from Node)
+                        obj[attribute.name] = setTMXValue(attribute.value);
+                    } else {
+                        // else use the deprecated ones
+                        obj[attribute.nodeName] = setTMXValue(attribute.nodeValue);
+                    }
+                }
+            }    
+        };
 
-		/**
-		 * Apply TMX Properties to the give object
-		 * @ignore
-		 */
-		api.applyTMXPropertiesFromXML = function(obj, xmldata) {
-			var properties = xmldata.getElementsByTagName(me.TMX_TAG_PROPERTIES)[0];
 
-			if (properties) {
-				var oProp = properties.getElementsByTagName(me.TMX_TAG_PROPERTY);
+         /**
+         * Parse a XML TMX object and returns the corresponding javascript object
+         * @ignore
+         */
+        api.parse = function (xml, draworder) {
+            
+            // Create the return object
+            var obj = {};
 
-				for ( var i = 0; i < oProp.length; i++) {
-					var propname = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_NAME);
-					var value = me.mapReader.TMXParser.getStringAttribute(oProp[i], me.TMX_TAG_VALUE);
-					// set the value
-					obj[propname] = setTMXValue(value);
-							
-				}
-			}
+            // temporary cache value for concatenated #text element
+            var cacheValue = '';
+            
+            // make sure draworder is defined
+            // note: `draworder` is a new object property in next coming version of Tiled            
+            draworder = draworder || 1;
 
-		};
-		
-		/**
-		 * Apply TMX Properties to the give object
-		 * @ignore
-		 */
-		api.applyTMXPropertiesFromJSON = function(obj, data) {
-			var properties = data[me.TMX_TAG_PROPERTIES];
-			if (properties) {
-				for(var name in properties){
-					if (properties.hasOwnProperty(name)) {
-						// set the value
-						obj[name] = setTMXValue(properties[name]);
-					}
-				}
-			}
-		};
-	
+            if (xml.nodeType === 1 ) { 
+                // do attributes
+                parseAttributes (obj, xml);
+            }
+            
+            // do children
+            if (xml.hasChildNodes()) {
+                for(var i = 0; i < xml.childNodes.length; i++) {
+                    var item = xml.childNodes.item(i);
+                    var nodeName = item.nodeName;
+                    
+                    if (typeof(obj[nodeName]) === "undefined") { 
+                        if (item.nodeType === 3) {
+                            /* nodeType is "Text"  */
+                            var value = item.nodeValue.trim();
+                            if (value && value.length > 0) {
+                                cacheValue += value; 
+                            }
+                        }  else if (item.nodeType === 1) { 
+                            /* nodeType is "Element" */
+                            obj[nodeName] =  me.TMXUtils.parse(item, draworder);
+                            obj[nodeName]["_draworder"] = draworder++;
+                        } 
+                    } else {
+                        if (Array.isArray(obj[nodeName]) === false) {
+                            obj[nodeName] = [obj[nodeName]];
+                        }
+                        obj[nodeName].push(me.TMXUtils.parse(item, draworder));
+                        obj[nodeName][obj[nodeName].length-1]["_draworder"] = draworder++;
+                    }
+                }
+                // set concatenated string value
+                // cheap hack that will only probably work with the TMX format
+                if (cacheValue.length > 0) {
+                    obj["value"] = cacheValue;
+                    cacheValue = '';
+                }
+            }
+            return obj;
+        };
+        
+        /**
+         * Apply TMX Properties to the give object
+         * @ignore
+         */
+        api.applyTMXPropertiesFromJSON = function(obj, data) {
+            var properties = data[me.TMX_TAG_PROPERTIES];
+            if (properties && data[me.TMX_TAG_PROPERTIES]["property"] ) {
+                // XML converted format
+                var property = data[me.TMX_TAG_PROPERTIES]["property"];
+                if (Array.isArray(property) === true) {
+                    property.forEach(function(prop) {
+                        // value are already converted in this case
+                        obj[prop.name] = prop.value;
+                    });
+                } else {
+                    // value are already converted in this case
+                    obj[property.name] = property.value;
+                }
+            } else if (properties) { // native json format
+                for(var name in properties){
+                    if (properties.hasOwnProperty(name)) {
+                        // set the value
+                        obj[name] = setTMXValue(properties[name]);
+                    }
+                }
+            }
+        };
+        
+        // return our object
+        return api;
 
-		
-		// return our object
-		return api;
+    })();
 
-	})();
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
 })(window);

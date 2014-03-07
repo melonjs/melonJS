@@ -159,84 +159,20 @@
 			TOPLADDER : "topladder",
 			BREAKABLE : "breakable"
 		},
+        
+		// tile properties (collidable, etc..)
+		TileProperties : [],
 
-		init: function() {
-			// tile properties (collidable, etc..)
-			this.TileProperties = [];
-
-			// a cache for offset value
-			this.tileXOffset = [];
-			this.tileYOffset = [];
-		},
+		// a cache for offset value
+		tileXOffset : [],
+		tileYOffset : [],
 
 		// constructor
-		initFromXML: function (xmltileset) {
-
+		init: function (tileset) {
 			// first gid
-			this.firstgid = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
-			
-
-			var src = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
-			if (src) {
-				// load TSX
-				src = me.utils.getBasename(src);
-				xmltileset = me.loader.getTMX(src);
-
-				if (!xmltileset) {
-					throw "melonJS:" + src + " TSX tileset not found";
-				}
-
-				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.mapReader.TMXParser`
-				me.mapReader.TMXParser.parseFromString(xmltileset);
-				xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
-			}
-			
-			this.name = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
-			this.tilewidth = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
-			this.tileheight = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
-			this.spacing = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
-			this.margin = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
-		
-
-			// set tile offset properties (if any)
-			this.tileoffset = new me.Vector2d(0,0);
-			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
-			if (offset.length>0) {
-				this.tileoffset.x = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
-			}
-			
-			// set tile properties, if any
-			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
-			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
-				// apply tiled defined properties
-				var prop = {};
-				me.TMXUtils.applyTMXPropertiesFromXML(prop, tileInfo[i]);
-				this.setTileProperty(tileID, prop);
-			}
-			
-			// check for the texture corresponding image
-			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
-			var image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)):null;
-			if (!image) {
-				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_TRANS);
-			
-			this.initFromImage(image, trans);
-			
-		},
-		
-		// constructor
-		initFromJSON: function (tileset) {
-			// first gid
-			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
-
+			this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
 			var src = tileset[me.TMX_TAG_SOURCE];
-			if (src) {
+			if (src && me.utils.getFileExtension(src).toLowerCase() === 'tsx') {
 				// load TSX
 				src = me.utils.getBasename(src);
 				// replace tiletset with a local variable
@@ -263,45 +199,51 @@
 				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y], 10);
 			}
 			
-			var tileInfo = tileset["tileproperties"];
 			// set tile properties, if any
-			for(var i in tileInfo) {
-				var prop = {};
-				prop.mixin(tileInfo[i]);
-				this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
-			}
+            var tileInfo = tileset["tileproperties"];
+			if (tileInfo) {
+                // native JSON format
+                for(var i in tileInfo) {
+                    this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
+                }
+            } else if (tileset[me.TMX_TAG_TILE]) {
+                // converted XML format
+                tileInfo = tileset[me.TMX_TAG_TILE];
+                for ( var j = 0; j < tileInfo.length; j++) {
+                    var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
+                    var prop = {};
+                    me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo[j]);
+                    //apply tiled defined properties
+                    this.setTileProperty(tileID, prop);   
+                }
+            }
 			
 			// check for the texture corresponding image
-			var imagesrc = me.utils.getBasename(tileset[me.TMX_TAG_IMAGE]);
-			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
-			if (!image) {
+			// manage inconstency between XML and JSON format
+			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 
+				tileset[me.TMX_TAG_IMAGE] :
+				tileset[me.TMX_TAG_IMAGE].source;
+			// extract base name
+			imagesrc = me.utils.getBasename(imagesrc);
+			this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
+			
+			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = tileset[me.TMX_TAG_TRANS] || null;
-
-			this.initFromImage(image, trans);
-		},
-		
-		
-		// constructor
-		initFromImage: function (image, transparency) {
-			if (image) {
-				this.image = image;
+			} else {
 				// number of tiles per horizontal line 
 				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			}
-			
-			// compute the last gid value in the tileset
-			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
-		  
-			// set Color Key for transparency if needed
-			if (transparency !== null && this.image) {
-				// applyRGB Filter (return a context object)
-				this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
-			}
-			
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));				
+				// compute the last gid value in the tileset
+				this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
+			  
+				// check if transparency is defined for a specific color
+				var transparency = tileset[me.TMX_TAG_TRANS] || tileset[me.TMX_TAG_IMAGE][me.TMX_TAG_TRANS];
+				// set Color Key for transparency if needed
+				if (typeof(transparency) !== 'undefined') {
+					// applyRGB Filter (return a context object)
+					this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
+				}
+			}	
 		},
 		
 		/**
