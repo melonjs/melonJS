@@ -74,56 +74,50 @@
             
             // Create the return object
             var obj = {};
+
+            // temporary cache value for concatenated #text element
+            var cacheValue = '';
             
             // make sure draworder is defined
             // note: `draworder` is a new object property in next coming version of Tiled            
             draworder = draworder || 1;
-            
-            // element
+
             if (xml.nodeType === 1 ) { 
                 // do attributes
                 parseAttributes (obj, xml);
-            } else if (xml.nodeType === 3) {
-                // text node
-                obj = xml.nodeValue.trim();
-            }
-
+            };
+            
             // do children
             if (xml.hasChildNodes()) {
                 for(var i = 0; i < xml.childNodes.length; i++) {
                     var item = xml.childNodes.item(i);
                     var nodeName = item.nodeName;
                     
-                    if (nodeName === '#text') {
-                        /* ignore empty text nodes */
-                        continue;
-                    }
-
-                    if (typeof(obj[nodeName]) === "undefined") {
-                        
-                        if (item.childNodes.length === 1 && item.firstChild.nodeName === '#text'){
-                            // TODO :  manage multi node value for data element
-                            /*
-                            // Merge all childNodes[].nodeValue into a single one
-                            var nodeValue = '';
-                            for ( var i = 0, len = data.childNodes.length; i < len; i++) {
-                                nodeValue += data.childNodes[i].nodeValue;
+                    if (typeof(obj[nodeName]) === "undefined") { 
+                        if (item.nodeType === 3) {
+                            /* nodeType is "Text"  */
+                            var value = item.nodeValue.trim();
+                            if (value && value.length > 0) {
+                                cacheValue += value; 
                             }
-                            */
-                            obj[nodeName] = item.firstChild.nodeValue.trim();
-                            // apply attributes on the parent object since this is a text node
-                            parseAttributes (obj, item);
-                        } else {
+                        }  else if (item.nodeType === 1) { 
+                            /* nodeType is "Element" */
                             obj[nodeName] =  me.TMXUtils.parse(item, draworder);
-                            obj[nodeName]["draworder"] = draworder++;
-                        }
+                            obj[nodeName]["_draworder"] = draworder++;
+                        } 
                     } else {
                         if (Array.isArray(obj[nodeName]) === false) {
                             obj[nodeName] = [obj[nodeName]];
                         }
                         obj[nodeName].push(me.TMXUtils.parse(item, draworder));
-                        obj[nodeName][obj[nodeName].length-1]["draworder"] = draworder++;
+                        obj[nodeName][obj[nodeName].length-1]["_draworder"] = draworder++;
                     }
+                }
+                // set concatenated string value
+                // cheap hack that will only probably work with the TMX format
+                if (cacheValue.length > 0) {
+                    obj["value"] = cacheValue;
+                    cacheValue = '';
                 }
             }
             return obj;

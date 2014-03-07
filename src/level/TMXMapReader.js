@@ -76,7 +76,7 @@
 			layer.initArray(layer.cols, layer.rows);
 			
             // data
-            var data = null;
+            var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
 
 			// decode data based on encoding type
 			switch (encoding) {
@@ -91,13 +91,13 @@
 					// and then decode them
 					if (encoding === me.TMX_TAG_CSV) {
 						// CSV decode
-						data = me.utils.decodeCSV(rawdata, layer.cols);
+						data = me.utils.decodeCSV(data, layer.cols);
 					} else {
 						// Base 64 decode
-						data = me.utils.decodeBase64AsArray(rawdata, 4);
+						data = me.utils.decodeBase64AsArray(data, 4);
 						// check if data is compressed
 						if (compression !== null) {
-							data = me.utils.decompress(rawdata, compression);
+							data = me.utils.decompress(data, compression);
 						}
 					}
 					break;
@@ -237,11 +237,11 @@
                 if (Array.isArray(layers) === true) {
                     layers.forEach(function(layer) {
                         // get the object information
-                         map.mapLayers.push(self.readLayer(map, layer, layer.draworder));
+                         map.mapLayers.push(self.readLayer(map, layer, layer._draworder));
                     });
                 } else {
                     // get the object information
-                     map.mapLayers.push(self.readLayer(map, layers, layers.draworder));
+                     map.mapLayers.push(self.readLayer(map, layers, layers._draworder));
                 }
                 
                 // in converted format, these are not under the generic layers structure
@@ -249,11 +249,11 @@
                     var groups = data[me.TMX_TAG_OBJECTGROUP];
                     if (Array.isArray(groups) === true) {
                         groups.forEach(function(group) {
-                            map.objectGroups.push(self.readObjectGroup(map, group, group.draworder ));
+                            map.objectGroups.push(self.readObjectGroup(map, group, group._draworder ));
                         });
                     } else {
                         // get the object information
-                        map.objectGroups.push(self.readObjectGroup(map, groups, groups.draworder));
+                        map.objectGroups.push(self.readObjectGroup(map, groups, groups._draworder));
                     }
                 }
 
@@ -262,10 +262,10 @@
                     var imageLayers = data[me.TMX_TAG_IMAGE_LAYER];
                     if (Array.isArray(imageLayers) === true) {
                         imageLayers.forEach(function(imageLayer) {
-                            map.mapLayers.push(self.readImageLayer(map, imageLayer, imageLayer.draworder));
+                            map.mapLayers.push(self.readImageLayer(map, imageLayer, imageLayer._draworder));
                         });
                     } else {
-                        map.mapLayers.push(self.readImageLayer(map, imageLayers, imageLayers.draworder));
+                        map.mapLayers.push(self.readImageLayer(map, imageLayers, imageLayers._draworder));
                     }
                 }
                 
@@ -288,9 +288,9 @@
 					layer.setRenderer(me.game.renderer);
 				}
 			}
-			var encoding = typeof(data[ me.TMX_TAG_ENCODING]) !== 'undefined' ? data[me.TMX_TAG_ENCODING] : 'json'; 
+			var encoding = Array.isArray(data[me.TMX_TAG_DATA]) ? data[me.TMX_TAG_ENCODING] : data[me.TMX_TAG_DATA][me.TMX_TAG_ENCODING];
 			// parse the layer data
-			this.setLayerData(layer, data[me.TMX_TAG_DATA], encoding, null);
+			this.setLayerData(layer, data[me.TMX_TAG_DATA], encoding || 'json', null);
 			return layer;
 		},
 		
