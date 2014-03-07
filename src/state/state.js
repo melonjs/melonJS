@@ -370,54 +370,6 @@
         obj.init = function() {
             // set the embedded loading screen
             obj.set(obj.LOADING, new me.DefaultLoadingScreen());
-
-            // set pause/stop action on losing focus
-            $.addEventListener("blur", function() {
-                // only in case we are not loading stuff
-                if (_state !== obj.LOADING) {
-                    if (me.sys.stopOnBlur && obj.isRunning()) {
-                        obj.stop(true);
-
-                        // callback?
-                        if (obj.onStop)
-                            obj.onStop();
-                    }
-                    if (me.sys.pauseOnBlur && !obj.isPaused()) {
-                        obj.pause(true);
-                        // callback?
-                        if (obj.onPause) {
-                            obj.onPause();
-                        }
-                    }
-                }
-            }, false);
-            // set restart/resume action on gaining focus
-            $.addEventListener("focus", function() {
-                // only in case we are not loading stuff
-                if (_state !== obj.LOADING) {
-                    // note: separate boolean so we can stay paused if user prefers
-                    if (me.sys.resumeOnFocus && obj.isPaused()) {
-                        obj.resume(true);
-
-                        // callback?
-                        if (obj.onResume) {
-                            obj.onResume();
-                        }
-                    }
-                    if (me.sys.stopOnBlur && !obj.isRunning()) {
-                        obj.restart(true);
-
-                        // force repaint
-                        me.game.repaint();
-
-                        // callback?
-                        if (obj.onRestart)
-                            obj.onRestart();
-                    }
-                }
-
-            }, false);
-
         };
 
         /**
@@ -429,17 +381,25 @@
          * @param {Boolean} pauseTrack pause current track on screen stop.
          */
         obj.stop = function(music) {
-            // stop the main loop
-            _stopRunLoop();
-            // current music stop
-            if (music)
-                me.audio.pauseTrack();
+            // only stop when we are not loading stuff
+            if ((_state !== obj.LOADING) && obj.isRunning()) {
+                // stop the main loop
+                _stopRunLoop();
+                // current music stop
+                if (music === true) {
+                    me.audio.pauseTrack();
+                }
 
-            // store time when stopped
-            _pauseTime = window.performance.now();
-            // publish the stop notification
-            me.event.publish(me.event.STATE_STOP);
+                // store time when stopped
+                _pauseTime = window.performance.now();
 
+                // publish the stop notification
+                me.event.publish(me.event.STATE_STOP);
+                // any callback defined ?
+                if (typeof(obj.onStop) === 'function') {
+                    obj.onStop();
+                }
+            }
         };
 
         /**
@@ -451,16 +411,25 @@
          * @param {Boolean} pauseTrack pause current track on screen pause
          */
         obj.pause = function(music) {
-            // stop the main loop
-            _pauseRunLoop();
-            // current music stop
-            if (music)
-                me.audio.pauseTrack();
+            // only pause when we are not loading stuff
+            if ((_state !== obj.LOADING) && !obj.isPaused()) {
+                // stop the main loop
+                _pauseRunLoop();
+                // current music stop
+                if (music === true) {
+                    me.audio.pauseTrack();
+                }
 
-            // store time when paused
-            _pauseTime = window.performance.now();
-            // publish the pause event
-            me.event.publish(me.event.STATE_PAUSE);
+                // store time when paused
+                _pauseTime = window.performance.now();
+
+                // publish the pause event
+                me.event.publish(me.event.STATE_PAUSE);
+                // any callback defined ?
+                if (typeof(obj.onPause) === 'function') {
+                    obj.onPause();
+                }
+            }
         };
 
         /**
@@ -472,17 +441,27 @@
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
         obj.restart = function(music) {
-            // restart the main loop
-            _startRunLoop();
-            // current music stop
-            if (music)
-                me.audio.resumeTrack();
+            if (!obj.isRunning()) {
+                // restart the main loop
+                _startRunLoop();
+                // current music stop
+                if (music === true) {
+                    me.audio.resumeTrack();
+                }
 
-            // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+                // calculate the elpased time
+                _pauseTime = window.performance.now() - _pauseTime;
 
-            // publish the restart notification
-            me.event.publish(me.event.STATE_RESTART, [_pauseTime]);
+                // force repaint
+                me.game.repaint();
+
+                // publish the restart notification
+                me.event.publish(me.event.STATE_RESTART, [_pauseTime]);
+                // any callback defined ?
+                if (typeof(obj.onRestart) === 'function') { 
+                    obj.onRestart();
+                }
+            }
         };
 
         /**
@@ -494,17 +473,23 @@
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
         obj.resume = function(music) {
-            // resume the main loop
-            _resumeRunLoop();
-            // current music stop
-            if (music)
-                me.audio.resumeTrack();
+            if (obj.isPaused()) {
+                // resume the main loop
+                _resumeRunLoop();
+                // current music stop
+                if (music === true)
+                    me.audio.resumeTrack();
 
-            // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+                // calculate the elpased time
+                _pauseTime = window.performance.now() - _pauseTime;
 
-            // publish the resume event
-            me.event.publish(me.event.STATE_RESUME, [_pauseTime]);
+                // publish the resume event
+                me.event.publish(me.event.STATE_RESUME, [_pauseTime]);
+                // any callback defined ?
+                if (typeof(obj.onResume) === 'function') {
+                    obj.onResume();
+                }
+            }
         };
 
         /**

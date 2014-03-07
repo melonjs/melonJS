@@ -77,6 +77,66 @@
 
             // detect audio capabilities
             me.device._detectAudio();
+
+            // set pause/stop action on losing focus
+            window.addEventListener("blur", function() {
+                if (me.sys.stopOnBlur) {
+                    me.state.stop(true);
+                }
+                if (me.sys.pauseOnBlur) {
+                    me.state.pause(true);
+                }
+            }, false);
+            // set restart/resume action on gaining focus
+            window.addEventListener("focus", function() {
+                if (me.sys.stopOnBlur) {
+                    me.state.restart(true);
+                }
+                if (me.sys.resumeOnFocus) {
+                    me.state.resume(true);
+                }
+            }, false);
+
+
+            // Set the name of the hidden property and the change event for visibility
+            var hidden, visibilityChange; 
+            if (typeof document.hidden !== "undefined") {
+                // Opera 12.10 and Firefox 18 and later support 
+                hidden = "hidden";
+                visibilityChange = "visibilitychange";
+            } else if (typeof document.mozHidden !== "undefined") {
+                hidden = "mozHidden";
+                visibilityChange = "mozvisibilitychange";
+            } else if (typeof document.msHidden !== "undefined") {
+                hidden = "msHidden";
+                visibilityChange = "msvisibilitychange";
+            } else if (typeof document.webkitHidden !== "undefined") {
+                hidden = "webkitHidden";
+                visibilityChange = "webkitvisibilitychange";
+            }
+
+            // add the corresponding event listener
+            document.addEventListener(visibilityChange, 
+                function () {
+                    if (document[hidden]) {
+                        if (me.sys.stopOnBlur) {
+                            me.state.stop(true);
+                        }
+                        if (me.sys.pauseOnBlur) {
+                            me.state.pause(true);
+                        }
+                    } else {
+                        if (me.sys.stopOnBlur) {
+                            me.state.restart(true);
+                        }
+                        if (me.sys.resumeOnFocus) {
+                            me.state.resume(true);
+                        }
+                    }
+                }, false
+            );
+
+
         };
 
         /**
