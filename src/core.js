@@ -994,6 +994,11 @@ window.me = window.me || {};
 		// init the Entity Pool
 		me.pool.init();
 
+		// automatically enable keyboard events if on desktop
+		if (me.device.isMobile === false) {
+			me.input._enableKeyboardEvent();
+		}
+
 		// init the level Director
 		me.levelDirector.reset();
 

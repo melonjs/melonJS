@@ -41,13 +41,13 @@
      * @ignore
      */
 
-    function enableKeyboardEvent() {
+    obj._enableKeyboardEvent = function () {
         if (!keyboardInitialized) {
             window.addEventListener('keydown', obj._keydown, false);
             window.addEventListener('keyup', obj._keyup, false);
             keyboardInitialized = true;
         }
-    }
+    };
 
     /**
      * key down event
@@ -279,7 +279,7 @@
      */
     obj.bindKey = function(keycode, action, lock, preventDefault) {
         // make sure the keyboard is enable
-        enableKeyboardEvent();
+        obj._enableKeyboardEvent();
 
         if(typeof preventDefault !== 'boolean') {
             preventDefault = obj.preventDefault;
