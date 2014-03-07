@@ -85,7 +85,7 @@
             if (xml.nodeType === 1 ) { 
                 // do attributes
                 parseAttributes (obj, xml);
-            };
+            }
             
             // do children
             if (xml.hasChildNodes()) {

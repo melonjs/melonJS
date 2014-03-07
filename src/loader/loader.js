@@ -140,14 +140,12 @@
                                 // converts to a JS object
 								// (returns with map as a the root object, to match native json format)
 								result = me.TMXUtils.parse(result).map;
-                                console.log(result);
                                 // force format to json
 								format = 'json';
 								break;
 
 							case 'json':
 								result = JSON.parse(xmlhttp.responseText);
-                                console.log(result);
 								break;
 
 							default:
