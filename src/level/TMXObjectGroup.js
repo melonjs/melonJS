@@ -208,6 +208,16 @@
 		 */
 		gid : undefined,
 
+
+		/**
+		 * object type 
+		 * @public
+		 * @type String
+		 * @name type
+		 * @memberOf me.TMXObject
+		 */
+		type : undefined,
+
 		/**
 		 * if true, the object is a polygone
 		 * @public
@@ -249,6 +259,8 @@
 			this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0, 10);
 			this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0, 10);
 			this.gid = parseInt(tmxObj[me.TMX_TAG_GID], 10) || null;
+
+			this.type = tmxObj[me.TMX_TAG_TYPE];
 			
 			this.isEllipse = false;
             this.isPolygon = false;
