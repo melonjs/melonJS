@@ -129,23 +129,26 @@
          */
         api.applyTMXPropertiesFromJSON = function(obj, data) {
             var properties = data[me.TMX_TAG_PROPERTIES];
-            if (properties && data[me.TMX_TAG_PROPERTIES]["property"] ) {
-                // XML converted format
-                var property = data[me.TMX_TAG_PROPERTIES]["property"];
-                if (Array.isArray(property) === true) {
-                    property.forEach(function(prop) {
+            if (typeof(properties) !== 'undefined') {
+                 if (typeof(properties["property"]) !== 'undefined') {
+                    // XML converted format
+                    var property = properties["property"];
+                    if (Array.isArray(property) === true) {
+                        property.forEach(function(prop) {
+                            // value are already converted in this case
+                            obj[prop.name] = prop.value;
+                        });
+                    } else {
                         // value are already converted in this case
-                        obj[prop.name] = prop.value;
-                    });
-                } else {
-                    // value are already converted in this case
-                    obj[property.name] = property.value;
-                }
-            } else if (properties) { // native json format
-                for(var name in properties){
-                    if (properties.hasOwnProperty(name)) {
-                        // set the value
-                        obj[name] = setTMXValue(properties[name]);
+                        obj[property.name] = property.value;
+                    }
+                } else { 
+                    // native json format
+                    for(var name in properties){
+                        if (properties.hasOwnProperty(name)) {
+                            // set the value
+                            obj[name] = setTMXValue(properties[name]);
+                        }
                     }
                 }
             }
