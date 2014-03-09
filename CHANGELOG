@@ -14,15 +14,25 @@ Version History
 * Loader : added resource information to loader progress event (warpten)
 * Loader : added loading of TMX data from javascript (json) objects (paulmedwal)
 * Color : melonJS now defines a new me.Color class for advanced color manipulation
-* Particles : added basic Particle System, with emitters and particles (ciangames)
+* Particles : added basic Particle System, with emitters and particles (ciangames/insidiator)
+* Particles : added a particle emmiter editor, see the example folder (insidiator)
 * Device : added full cross-browser support for the Fullscreen API (see me.device)
 * Device : added support for the vibration API (me.device.vibrate)
 * Device : renamed the me.save.delete function to me.save.removed (delete is a reserved keyword)
-* Audio : modernised (mobile compatible) web audio API based on the awesome Howler library 
+* Device : added support for the visibilitychange API (pause/stop state on window show/hidden status)
+* Audio : modernised (and also mobile compatible) web audio API based on the awesome Howler library 
 * Input : added the possibility to disable globally or per key the default browser action
+* Input : automatically enable keyboard even on desktop type devices
+* Input : the registerPointerEvent functio now only accepts the standardized Pointer Event names.
 * TMX : added proper support for all shape type (collision is still however resolved using AABB detection)
+* TMX : XML TMX map are now converted to a JXON object on-the-fly, allowing to remove duplicated parsing code
+* TMX : added the Tiled "type" property to TMXObject
+* TMX : melonJS will now respect the object size as defined in Tiled when parsing/creating related object in the game world
+* Timer : added a setTimeout and setIntveral function obeying the engine pause state
+* Tween : Fixed tweens to properly maintain time state when paused
 * Renderable : `collisionBox` has been replaced by a more cleaner implementation (see `getShape`/`addShape`/`getBounds`)
 * Renderable : the flicker function now takes the global flickering duration in ms (as opposed in frame count)
+* Renderable : removed the visible property
 
 0.9.11
 * Documentation : Numerous fixes and improvements
