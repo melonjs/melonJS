@@ -42,31 +42,30 @@ window.me = window.me || {};
 	 */
 	me.sys = {
 
-		// Global settings
 		/**
 		 * Game FPS (default 60)
-		 * @type Int
+		 * @type {number}
 		 * @memberOf me.sys
 		 */
 		fps : 60,
 
 		/**
 		 * enable/disable frame interpolation (default disable)<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		interpolation : false,
 
 		/**
 		 * Global scaling factor(default 1.0)
-		 * @type me.Vector2d
+		 * @type {me.Vector2d}
 		 * @memberOf me.sys
 		 */
 		scale : null, //initialized by me.video.init
 
 		/**
 		 * enable/disable video scaling interpolation (default disable)<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		scalingInterpolation : false,
@@ -75,7 +74,7 @@ window.me = window.me || {};
 		 * Global gravity settings <br>
 		 * will override entities init value if defined<br>
 		 * default value : undefined
-		 * @type Number
+		 * @type {(number|undefined)}
 		 * @memberOf me.sys
 		 */
 		gravity : undefined,
@@ -85,7 +84,7 @@ window.me = window.me || {};
 		 * if me.debug.stopOnAudioLoad is true, melonJS will throw an exception and stop loading<br>
 		 * if me.debug.stopOnAudioLoad is false, melonJS will disable sounds and output a warning message in the console <br>
 		 * default value : true<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		stopOnAudioError : true,
@@ -93,7 +92,7 @@ window.me = window.me || {};
 		/**
 		 * Specify whether to pause the game when losing focus.<br>
 		 * default value : true<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		pauseOnBlur : true,
@@ -101,7 +100,7 @@ window.me = window.me || {};
 		/**
 		 * Specify whether to unpause the game when gaining focus.<br>
 		 * default value : true<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		resumeOnFocus : true,
@@ -110,7 +109,7 @@ window.me = window.me || {};
 		 * Specify whether to stop the game when losing focus or not<br>
 		 * The engine restarts on focus if this is enabled.
 		 * default value : false<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		stopOnBlur : false,
@@ -122,20 +121,19 @@ window.me = window.me || {};
 		 * the "best" rendering method depends of your game<br>
 		 * (amount of layer, layer size, amount of tiles per layer, etc…)<br>
 		 * note : rendering method is also configurable per layer by adding this property to your layer (in Tiled)<br>
-		 * @type Boolean
+		 * @type {boolean}
 		 * @memberOf me.sys
 		 */
 		preRender : false,
-
 
 		// System methods
 		/**
 		 * Compare two version strings
 		 * @public
 		 * @function
-		 * @param {String} first First version string to compare
-		 * @param {String} [second="@VERSION"] Second version string to compare
-		 * @return {Number} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
+		 * @param {string} first First version string to compare
+		 * @param {string} [second="@VERSION"] Second version string to compare
+		 * @return {number} comparison result <br>&lt; 0 : first &lt; second <br>0 : first == second <br>&gt; 0 : first &gt; second
 		 * @example
 		 * if (me.sys.checkVersion("0.9.5") > 0) {
 		 *     console.error("melonJS is too old. Expected: 0.9.5, Got: " + me.version);
@@ -234,7 +232,7 @@ window.me = window.me || {};
 	 * var game	= {
 	 *    // Initialize the game
 	 *    // called by the window.onReady function
-	 *    onload: function() {
+	 *    onload : function() {
 	 *
 	 *       // init video
 	 *       if (!me.video.init('screen', 640, 480, true)) {
@@ -256,7 +254,7 @@ window.me = window.me || {};
 	 *    },
 	 *
 	 *    // callback when everything is loaded
-	 *    loaded: function () {
+	 *    loaded : function () {
 	 *       // define stuff
 	 *       // ....
 	 *
@@ -304,21 +302,19 @@ window.me = window.me || {};
 	/*
 	 * some "Javascript API" patch & enhancement
 	 */
-
 	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
 
 	/**
-	 * The built in Object Object
+	 * The built in Object object.
 	 * @external Object
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
 	 */
-
     if (!Object.defineProperty) {
 		/**
 		 * simple defineProperty function definition (if not supported by the browser)<br>
 		 * if defineProperty is redefined, internally use __defineGetter__/__defineSetter__ as fallback
 		 * @param {Object} obj The object on which to define the property.
-		 * @param {String} prop The name of the property to be defined or modified.
+		 * @param {string} prop The name of the property to be defined or modified.
 		 * @param {Object} desc The descriptor for the property being defined or modified.
 		 */
 		Object.defineProperty = function(obj, prop, desc) {
@@ -345,7 +341,7 @@ window.me = window.me || {};
 	 * @param {Object} obj the object you want to throw in the mix
 	 */
      Object.defineProperty(Object.prototype, "mixin", {
-        value: function (obj) {
+        value : function (obj) {
             var i,
             self = this;
 
@@ -360,9 +356,10 @@ window.me = window.me || {};
             // return the mixed object
             return self;
         },
-        enumerable: false,
-        configurable: false
+        enumerable : false,
+        configurable : false
     });
+    
     /**
      * a deep copy function
      * @ignore
@@ -414,11 +411,11 @@ window.me = window.me || {};
 	 * @example
 	 * var Person = Object.extend(
 	 * {
-	 *    init: function(isDancing)
+	 *    init : function(isDancing)
 	 *    {
 	 *       this.dancing = isDancing;
 	 *    },
-	 *    dance: function()
+	 *    dance : function()
 	 *    {
 	 *       return this.dancing;
 	 *    }
@@ -426,18 +423,18 @@ window.me = window.me || {};
 	 *
 	 * var Ninja = Person.extend(
 	 * {
-	 *    init: function()
+	 *    init : function()
 	 *    {
 	 *       this.parent( false );
 	 *    },
 	 *
-	 *    dance: function()
+	 *    dance : function()
 	 *    {
 	 *       // Call the inherited version of dance()
 	 *       return this.parent();
 	 *    },
 	 *
-	 *    swingSword: function()
+	 *    swingSword : function()
 	 *    {
 	 *       return true;
 	 *    }
@@ -543,7 +540,6 @@ window.me = window.me || {};
 	 * @external Function
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function|Function}
 	 */
-
 	if (!Function.prototype.bind) {
 		/** @ignore */
 		var Empty = function () {};
@@ -664,9 +660,9 @@ window.me = window.me || {};
 		 * @ignore
 		 */
 		console = {
-			log: function() {},
-			info: function() {},
-			error: function() {alert(Array.prototype.slice.call(arguments).join(", "));}
+			log : function() {},
+			info : function() {},
+			error : function() {alert(Array.prototype.slice.call(arguments).join(", "));}
 		};
 	}
 
@@ -676,7 +672,7 @@ window.me = window.me || {};
 	 * @alias defer
 	 * @param {Object} context The execution context of the deferred function.
 	 * @param {} [arguments...] Optional additional arguments to carry for the function.
-	 * @return {Number} id that can be used to clear the deferred function using clearTimeout
+	 * @return {number} id that can be used to clear the deferred function using clearTimeout
 	 * @example
 	 * // execute myFunc() when the stack is empty, with the current context and 'myArgument' as parameter
 	 * myFunc.defer(this, 'myArgument');
@@ -718,17 +714,15 @@ window.me = window.me || {};
 	 * @external String
 	 * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String|String}
 	 */
-
 	if(!String.prototype.trim) {
 		/**
 		 * returns the string stripped of whitespace from both ends
 		 * @memberof! external:String#
 		 * @alias trim
-		 * @return {String} trimmed string
+		 * @return {string} trimmed string
 		 */
 		String.prototype.trim = function () {
 			return this.replace(/^\s+|\s+$/gm, '');
-
 		};
 	}
 
@@ -737,7 +731,7 @@ window.me = window.me || {};
 		 * returns the string stripped of whitespace from the left of the string.
 		 * @memberof! external:String#
 		 * @alias trimLeft
-		 * @return {String} trimmed string
+		 * @return {string} trimmed string
 		 */
 		String.prototype.trimLeft = function () {
 			return this.replace(/^\s+/, '');
@@ -749,7 +743,7 @@ window.me = window.me || {};
 		 * returns the string stripped of whitespace from the right end of the string.
 		 * @memberof! external:String#
 		 * @alias trimRight
-		 * @return {String} trimmed string
+		 * @return {string} trimmed string
 		 */
 		String.prototype.trimRight = function () {
 			return this.replace(/\s+$/, '');
@@ -760,7 +754,7 @@ window.me = window.me || {};
 	 * add isNumeric fn to the string object
 	 * @memberof! external:String#
 	 * @alias isNumeric
-	 * @return {Boolean} true if string contains only digits
+	 * @return {boolean} true if string contains only digits
 	 */
 	String.prototype.isNumeric = function() {
 		return (this !== null && !isNaN(this) && this.trim() !== "");
@@ -770,7 +764,7 @@ window.me = window.me || {};
 	 * add a isBoolean fn to the string object
 	 * @memberof! external:String#
 	 * @alias isBoolean
-	 * @return {Boolean} true if the string is either true or false
+	 * @return {boolean} true if the string is either true or false
 	 */
 	String.prototype.isBoolean = function() {
 		return (this !== null && ("true" === this.trim() || "false" === this.trim()));
@@ -781,9 +775,9 @@ window.me = window.me || {};
 		 * determines whether or not a string contains another string.
 		 * @memberof! external:String#
 		 * @alias contains
-		 * @param {String} str A string to be searched for within this string.
-		 * @param {Number} [startIndex=0] The position in this string at which to begin searching for given string.
-		 * @return {Boolean} true if contains the specified string
+		 * @param {string} str A string to be searched for within this string.
+		 * @param {number} [startIndex=0] The position in this string at which to begin searching for given string.
+		 * @return {boolean} true if contains the specified string
 		 */
 		String.prototype.contains = function(str, startIndex) {
 	        return -1 !== String.prototype.indexOf.call(this, str, startIndex);
@@ -794,7 +788,7 @@ window.me = window.me || {};
 	 * convert the string to hex value
 	 * @memberof! external:String#
 	 * @alias toHex
-	 * @return {String}
+	 * @return {string}
 	 */
 	String.prototype.toHex = function() {
 		var res = "", c = 0;
@@ -814,9 +808,9 @@ window.me = window.me || {};
 	 * add a clamp fn to the Number object
 	 * @memberof! external:Number#
 	 * @alias clamp
-	 * @param {Number} low lower limit
-	 * @param {Number} high higher limit
-	 * @return {Number} clamped value
+	 * @param {number} low lower limit
+	 * @param {number} high higher limit
+	 * @return {number} clamped value
 	 */
 	Number.prototype.clamp = function(low, high) {
 		return this < low ? low : this > high ? high : +this;
@@ -826,9 +820,9 @@ window.me = window.me || {};
 	 * return a random between min, max
 	 * @memberof! external:Number#
 	 * @alias random
-	 * @param {Number} min minimum value.
-	 * @param {Number} max maximum value.
-	 * @return {Number} random value
+	 * @param {number} min minimum value.
+	 * @param {number} max maximum value.
+	 * @return {number} random value
 	 */
 	Number.prototype.random = function(min, max) {
 		return (~~(Math.random() * (max - min + 1)) + min);
@@ -838,9 +832,9 @@ window.me = window.me || {};
 	 * round a value to the specified number of digit
 	 * @memberof! external:Number#
 	 * @alias round
-	 * @param {Number} [num="Object value"] value to be rounded.
-	 * @param {Number} dec number of decimal digit to be rounded to.
-	 * @return {Number} rounded value
+	 * @param {number} [num="Object value"] value to be rounded.
+	 * @param {number} dec number of decimal digit to be rounded to.
+	 * @return {number} rounded value
 	 * @example
 	 * // round a specific value to 2 digits
 	 * Number.prototype.round (10.33333, 2); // return 10.33
@@ -860,7 +854,7 @@ window.me = window.me || {};
 	 * given number <b>must</b> be an int, with a value between 0 and 255
 	 * @memberof! external:Number#
 	 * @alias toHex
-	 * @return {String} converted hexadecimal value
+	 * @return {string} converted hexadecimal value
 	 */
 	Number.prototype.toHex = function() {
 		return "0123456789ABCDEF".charAt((this - this % 16) >> 4) + "0123456789ABCDEF".charAt(this % 16);
@@ -870,7 +864,7 @@ window.me = window.me || {};
 	 * Returns a value indicating the sign of a number<br>
 	 * @memberof! external:Number#
 	 * @alias sign
-	 * @return {Number} sign of a the number
+	 * @return {number} sign of a the number
 	 */
 	Number.prototype.sign = function() {
 		return this < 0 ? -1 : (this > 0 ? 1 : 0);
@@ -880,8 +874,8 @@ window.me = window.me || {};
 	 * Converts an angle in degrees to an angle in radians
 	 * @memberof! external:Number#
 	 * @alias degToRad
-	 * @param {Number} [angle="angle"] angle in degrees
-	 * @return {Number} corresponding angle in radians
+	 * @param {number} [angle="angle"] angle in degrees
+	 * @return {number} corresponding angle in radians
 	 * @example
 	 * // convert a specific angle
 	 * Number.prototype.degToRad (60); // return 1.0471...
@@ -897,8 +891,8 @@ window.me = window.me || {};
 	 * Converts an angle in radians to an angle in degrees.
 	 * @memberof! external:Number#
 	 * @alias radToDeg
-	 * @param {Number} [angle="angle"] angle in radians
-	 * @return {Number} corresponding angle in degrees
+	 * @param {number} [angle="angle"] angle in radians
+	 * @return {number} corresponding angle in degrees
 	 * @example
 	 * // convert a specific angle
 	 * Number.prototype.radToDeg (1.0471975511965976); // return 59.9999...
@@ -909,7 +903,6 @@ window.me = window.me || {};
 	Number.prototype.radToDeg = function (angle) {
 		return (angle||this) * (180.0 / Math.PI);
 	};
-
 
 	/**
 	 * The built in Array Object
@@ -966,7 +959,6 @@ window.me = window.me || {};
 	/*
 	 * me init stuff
      */
-
 	function _init_ME() {
 		// don't do anything if already initialized (should not happen anyway)
 		if (me_initialized) {
@@ -1045,7 +1037,7 @@ window.me = window.me || {};
 		/**
 		 * a reference to the game viewport.
 		 * @public
-		 * @type me.Viewport
+		 * @type {me.Viewport}
 		 * @name viewport
 		 * @memberOf me.game
 		 */
@@ -1054,7 +1046,7 @@ window.me = window.me || {};
 		/**
 		 * a reference to the game collision Map
 		 * @public
-		 * @type me.TMXLayer
+		 * @type {me.TMXLayer}
 		 * @name collisionMap
 		 * @memberOf me.game
 		 */
@@ -1063,7 +1055,7 @@ window.me = window.me || {};
 		/**
 		 * a reference to the game current level
 		 * @public
-		 * @type me.TMXTileMap
+		 * @type {me.TMXTileMap}
 		 * @name currentLevel
 		 * @memberOf me.game
 		 */
@@ -1073,19 +1065,18 @@ window.me = window.me || {};
 		 * a reference to the game world <br>
 		 * a world is a virtual environment containing all the game objects
 		 * @public
-		 * @type me.ObjectContainer
+		 * @type {me.ObjectContainer}
 		 * @name world
 		 * @memberOf me.game
 		 */
 		api.world = null;
-
 
 		/**
 		 * when true, all objects will be added under the root world container <br>
 		 * when false, a `me.ObjectContainer` object will be created for each corresponding `TMXObjectGroup`
 		 * default value : true
 		 * @public
-		 * @type Boolean
+		 * @type {boolean}
 		 * @name mergeGroup
 		 * @memberOf me.game
 		 */
@@ -1095,7 +1086,7 @@ window.me = window.me || {};
 		 * The property of should be used when sorting entities <br>
 		 * value : "x", "y", "z" (default: "z")
 		 * @public
-		 * @type String
+		 * @type {string}
 		 * @name sortOn
 		 * @memberOf me.game
 		 */
@@ -1105,7 +1096,7 @@ window.me = window.me || {};
 		 * default layer renderer
 		 * @private
 		 * @ignore
-		 * @type me.TMXRenderer
+		 * @type {me.TMXRenderer}
 		 * @name renderer
 		 * @memberOf me.game
 		 */
@@ -1163,8 +1154,8 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
-		 * @param {Number} [width="full size of the created canvas"] width of the canvas
-		 * @param {Number} [height="full size of the created canvas"] width of the canvas
+		 * @param {number} [width="full size of the created canvas"] width of the canvas
+		 * @param {number} [height="full size of the created canvas"] width of the canvas
 		 * init function.
 		 */
 		api.init = function(width, height) {
@@ -1247,11 +1238,9 @@ window.me = window.me || {};
 		 * @public
 		 * @function
 		 */
-
 		api.repaint = function() {
 			isDirty = true;
 		};
-
 
 		/**
 		 * update all objects of the game manager
@@ -1260,7 +1249,7 @@ window.me = window.me || {};
 		 * @private
 		 * @ignore
 		 * @function
-         * @param {Number} time current timestamp as provided by the RAF callback
+         * @param {number} time current timestamp as provided by the RAF callback
 		 */
 		api.update = function(time) {
 			// handle frame skipping if required
@@ -1279,7 +1268,6 @@ window.me = window.me || {};
 			}
 		};
 
-
 		/**
 		 * draw all existing objects
 		 * @name draw
@@ -1288,7 +1276,6 @@ window.me = window.me || {};
 		 * @ignore
 		 * @function
 		 */
-
 		api.draw = function() {
 			if (isDirty) {
 				// cache the viewport rendering position, so that other object
