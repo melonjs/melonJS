@@ -1,23 +1,19 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Tile QT 0.7.x format
- * http://www.mapeditor.org/    
- *
- */
-
-(function($) {
-
-    
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Tile QT 0.7.x format
+     * http://www.mapeditor.org/    
+     *
+     */
+ 
     /**
      * a collection of TMX utility Function
      * @final
      * @memberOf me
      * @ignore
      */
-
     me.TMXUtils = (function() {
         /*--- PUBLIC ---*/
         // hold public stuff in our singleton
@@ -156,7 +152,4 @@
         
         // return our object
         return api;
-
     })();
-
-})(window);

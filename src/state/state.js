@@ -1,13 +1,11 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Screens objects & State machine
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Screens objects & State machine
+     *
+     */
 
     /**
      * A class skeleton for "Screen" Object <br>
@@ -623,11 +621,4 @@
 
         // return our object
         return obj;
-
     })();
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);

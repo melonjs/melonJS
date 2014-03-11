@@ -1,10 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013 melonJS
- * http://www.melonjs.org
- *
- */
-(function(window) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013 melonJS
+     * http://www.melonjs.org
+     *
+     */
 
     /**
      * A singleton object representing the device capabilities and specific events
@@ -682,10 +681,7 @@
                 var el = me.agent.prefixed("fullscreenElement", document) ||
                          document.mozFullScreenElement;
                 return (el === me.video.getWrapper());
-            } else {
+            } else
                 return false;
-            }
         }
     });
-
-})(window);

@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
 	/**
 	 * a small class to manage loading of stuff and manage resources
@@ -13,7 +11,6 @@
 	 * @namespace me.loader
 	 * @memberOf me
 	 */
-
 	me.loader = (function() {
 		// hold public stuff in our singleton
 		var obj = {};
@@ -30,7 +27,6 @@
 		var resourceCount = 0;
 		var loadCount = 0;
 		var timerId = 0;
-
 
 		/**
 		 * check the loading status
@@ -626,10 +622,4 @@
 
 		// return our object
 		return obj;
-
 	})();
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);

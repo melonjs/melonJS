@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013 melonJS
- * http://www.melonjs.org
- *
- */
-
-(function(window) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013 melonJS
+     * http://www.melonjs.org
+     *
+     */
 
     /**
      * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
@@ -255,7 +253,4 @@
 
         // return our apiect
         return api;
-
     })();
-
-})(window);

@@ -1,12 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function(window) {
-    
     /**
      * a polyshape (polygone/polyline) Object
      * @class
@@ -197,13 +195,10 @@
                 context.moveTo(point.x, point.y);
             
             });
-            if (this.closed===true) {
+            if (this.closed === true)
                 context.lineTo(this.points[0].x, this.points[0].y);
-            }
+
             context.stroke();
             context.restore();
         }
-
     });
-
-})(window);

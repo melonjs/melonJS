@@ -1,13 +1,11 @@
-/**
- * @preserve MinPubSub
- * a micro publish/subscribe messaging framework
- * @see https://github.com/daniellmb/MinPubSub 
- * @author Daniel Lamb <daniellmb.com>
- *
- * Released under the MIT License
- */
-
-(function() {
+    /**
+     * @preserve MinPubSub
+     * a micro publish/subscribe messaging framework
+     * @see https://github.com/daniellmb/MinPubSub 
+     * @author Daniel Lamb <daniellmb.com>
+     *
+     * Released under the MIT License
+     */
 
 	/**
 	 * There is no constructor function for me.event
@@ -315,7 +313,4 @@
 		
 		// return our object
 		return obj;
-
 	})();
-
-})();

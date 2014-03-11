@@ -1,12 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function(window) {
-    
     /**
      * an ellipse Object
      * (Tiled specifies top-left coordinates, and width and height of the ellipse)
@@ -176,5 +174,3 @@
             context.stroke();
         }
     });
-
-})(window);

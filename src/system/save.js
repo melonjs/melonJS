@@ -1,12 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013 melonJS
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013 melonJS
+     * http://www.melonjs.org
+     *
+     */
 
-(function(window) {
-    
     /** 
      * A singleton object to access the device localStorage area
      * @example
@@ -122,8 +120,5 @@
                 }
             }
         };
-
         return api;
-
     })();
-})(window);

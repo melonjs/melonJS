@@ -1,15 +1,13 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Tile QT 0.7.x format
- * http://www.mapeditor.org/	
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Tile QT 0.7.x format
+     * http://www.mapeditor.org/	
+     *
+     */
 
-(function($) {
-	
 	/**
 	 * TMX Object Group <br>
 	 * contains the object group definition as defined in Tiled. <br>
@@ -371,10 +369,4 @@
 		getObjectPropertyByName : function(name) {
 			return this[name];
 		}
-
 	});
-
-/*---------------------------------------------------------*/
-// END END END
-/*---------------------------------------------------------*/
-})(window);

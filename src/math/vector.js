@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
 	/**
 	 * a generic 2D Vector Object
@@ -409,7 +407,4 @@
 		 toString : function() {
 			return 'x:' + this.x + ',y:' + this.y;
 		}
-
 	});
-	
-})(window);

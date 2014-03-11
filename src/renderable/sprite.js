@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
 	/**
 	 * A Simple object to display a sprite on screen.
@@ -633,9 +631,3 @@
 			return this.parent( dt );
 		}
 	});
-
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);
