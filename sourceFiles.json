@@ -1,4 +1,5 @@
 [
+    "src/header.js",
     "src/core.js",
     "src/system/agent.js",
     "src/system/device.js",
@@ -47,5 +48,6 @@
     "src/entity/droptarget.js",
     "src/particles/emitter.js",
     "src/particles/particlecontainer.js",
-    "src/particles/particle.js"
+    "src/particles/particle.js",
+    "src/footer.js"
 ]
