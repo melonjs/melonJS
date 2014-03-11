@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster
- * http://www.melonjs.org/
- *
- */
-
-(function(window) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster
+     * http://www.melonjs.org/
+     *
+     */
 
     /**
      * @namespace me.input
@@ -65,10 +63,4 @@
 
         // return our object
         return obj;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);

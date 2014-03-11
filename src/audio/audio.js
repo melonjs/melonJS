@@ -1,14 +1,12 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Audio Mngt Objects
- *
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Audio Mngt Objects
+     *
+     *
+     */
 
     /**
      * There is no constructor function for me.audio.
@@ -461,10 +459,4 @@
 
         // return our object
         return obj;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);

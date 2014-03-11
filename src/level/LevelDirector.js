@@ -1,13 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function($) {
-
-	
 	/**
 	 * a level manager object <br>
 	 * once ressources loaded, the level director contains all references of defined levels<br>
@@ -359,9 +356,4 @@
 		
 		// return our object
 		return obj;
-
 	})();
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);

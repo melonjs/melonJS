@@ -1,18 +1,16 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Font / Bitmap font
- *
- * ASCII Table
- * http://www.asciitable.com/ 
- * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
- *
- * -> first char " " 32d (0x20);
- */
-
-(function(window) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Font / Bitmap font
+     *
+     * ASCII Table
+     * http://www.asciitable.com/ 
+     * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
+     *
+     * -> first char " " 32d (0x20);
+     */
 
 	/**
 	 * a generic system font object.
@@ -246,9 +244,4 @@
                 y += this.fontSize.y * this.lineHeight;
             }
 		}
-        
 	});
-
-    
-
-})(window);

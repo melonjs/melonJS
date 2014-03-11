@@ -1,15 +1,13 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Tile QT 0.7.x format
- * http://www.mapeditor.org/	
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Tile QT 0.7.x format
+     * http://www.mapeditor.org/	
+     *
+     */
 
-(function($) {
-		
 	/**
 	 * a TMX Tile Map Object
 	 * Tiled QT 0.7.x format
@@ -210,11 +208,4 @@
 	            this.initialized = false;
 			}
 		}
-        
 	});
-		
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);

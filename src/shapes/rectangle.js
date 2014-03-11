@@ -1,12 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function(window) {
-    
     /**
      * a rectangle Object
      * @class
@@ -457,8 +455,5 @@
             // draw the rectangle
             context.strokeStyle = color || "red";
             context.strokeRect(this.left, this.top, this.width, this.height);
-
         }
     });
-
-})(window);

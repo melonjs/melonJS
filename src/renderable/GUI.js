@@ -1,12 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function($) {
-	
 	/**
 	 * GUI Object<br>
 	 * A very basic object to manage GUI elements <br>
@@ -131,10 +129,4 @@
 		onDestroyEvent : function() {
 			me.input.releasePointerEvent('pointerdown', this);
 		}
-
 	});
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);

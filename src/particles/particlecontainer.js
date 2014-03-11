@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2014, Olivier BIOT
- * http://www.melonjs.org
- *
- */
-
-(function($) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2014, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
     /**
      * Particle Container Object.
@@ -88,15 +86,8 @@
                 this.parent(context, rect);
 
                 // Restore globalCompositeOperation
-                if (this._emitter.textureAdditive) {
+                if (this._emitter.textureAdditive)
                     context.globalCompositeOperation = gco;
-                }
             }
         }
     });
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);

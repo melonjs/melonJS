@@ -1,11 +1,9 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2014, melonJS Team
- * http://www.melonjs.org
- *
- */
-
-(function(window) {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2014, melonJS Team
+     * http://www.melonjs.org
+     *
+     */
 
     /**
      * a Matrix2d Object.<br>
@@ -247,7 +245,4 @@
          clone : function() {
              return new me.Matrix2d(this.a, this.b, this.c, this.d, this.e, this.f);
          }
-        
     });
-
-})(window);

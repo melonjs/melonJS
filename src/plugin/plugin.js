@@ -1,10 +1,8 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- */
- 
-(function() {
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     */
 
 	/**
 	 * There is no constructor function for me.plugin
@@ -142,6 +140,4 @@
 		
 		// return our singleton
 		return singleton;
-
 	})();
-})();

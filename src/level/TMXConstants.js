@@ -1,15 +1,13 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
- *
- * Tile QT 0.7.x format
- * http://www.mapeditor.org/	
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2013, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     * Tile QT 0.7.x format
+     * http://www.mapeditor.org/	
+     *
+     */
 
-(function($) {
-	
 	// some custom constants
 	me.COLLISION_LAYER             = "collision";
 	// some TMX constants
@@ -59,7 +57,3 @@
     me.TMX_TAG_ELLIPSE            = "ellipse";
 	me.TMX_TAG_POINTS              = "points";
 	me.TMX_BACKGROUND_COLOR        = "backgroundcolor";
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);

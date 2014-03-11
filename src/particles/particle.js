@@ -1,11 +1,10 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2014, Olivier BIOT
- * http://www.melonjs.org
- *
- */
+    /*
+     * MelonJS Game Engine
+     * Copyright (C) 2011 - 2014, Olivier BIOT
+     * http://www.melonjs.org
+     *
+     */
 
-(function($) {
     /**
      * Single Particle Object.
      * @class
@@ -144,9 +143,3 @@
             context.restore();
         }
     });
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
