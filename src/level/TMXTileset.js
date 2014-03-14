@@ -209,12 +209,20 @@
             } else if (tileset[me.TMX_TAG_TILE]) {
                 // converted XML format
                 tileInfo = tileset[me.TMX_TAG_TILE];
-                for ( var j = 0; j < tileInfo.length; j++) {
-                    var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
+                if (Array.isArray(tileInfo)) {
+                    for ( var j = 0; j < tileInfo.length; j++) {
+                        var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
+                        var prop = {};
+                        me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo[j]);
+                        //apply tiled defined properties
+                        this.setTileProperty(tileID, prop);   
+                    }
+                } else {
+                    var tileID = tileInfo[me.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
-                    me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo[j]);
+                    me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo);
                     //apply tiled defined properties
-                    this.setTileProperty(tileID, prop);   
+                    this.setTileProperty(tileID, prop); 
                 }
             }
 			
