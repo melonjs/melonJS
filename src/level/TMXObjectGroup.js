@@ -87,7 +87,7 @@
 			this.opacity = (visible===true)?parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0;
 			
 			// check if we have any user-defined properties 
-			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
+			me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
 			
 			// parse all objects
             // (under `objects` for XML converted map, under `object` for native json map)
@@ -309,7 +309,7 @@
 			me.game.renderer.adjustPosition(this);
 			
 			// set the object properties
-			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
+			me.TMXUtils.applyTMXProperties(this, tmxObj);
 		},
 		
 		/**

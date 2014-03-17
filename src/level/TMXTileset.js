@@ -216,7 +216,7 @@
                 for ( var j = 0; j < tileInfo.length; j++) {
                     var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
-                    me.TMXUtils.applyTMXPropertiesFromJSON(prop, tileInfo[j]);
+                    me.TMXUtils.applyTMXProperties(prop, tileInfo[j]);
                     //apply tiled defined properties
                     this.setTileProperty(tileID, prop);
                 }

@@ -163,7 +163,7 @@
 			map.z = zOrder++;
 		   
 			// set the map properties (if any)
-			me.TMXUtils.applyTMXPropertiesFromJSON(map, data);
+			me.TMXUtils.applyTMXProperties(map, data);
 			
 			// check if a user-defined background color is defined  
 			if (map.backgroundcolor) {
@@ -309,7 +309,7 @@
 			imageLayer.setOpacity((visible===true)?parseFloat(data[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0);
 			
 			// check if we have any additional properties 
-			me.TMXUtils.applyTMXPropertiesFromJSON(imageLayer, data);
+			me.TMXUtils.applyTMXProperties(imageLayer, data);
 			
 			// make sure ratio is a vector (backward compatibility)
 			if (typeof(imageLayer.ratio) === "number") {

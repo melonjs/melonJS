@@ -124,10 +124,10 @@
         };
         
         /**
-         * Apply TMX Properties to the give object
+         * Apply TMX Properties to the given object
          * @ignore
          */
-        api.applyTMXPropertiesFromJSON = function(obj, data) {
+        api.applyTMXProperties = function(obj, data) {
             var properties = data[me.TMX_TAG_PROPERTIES];
             if (typeof(properties) !== 'undefined') {
                  if (typeof(properties["property"]) !== 'undefined') {

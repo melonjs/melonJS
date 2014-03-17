@@ -405,7 +405,7 @@
 
 
 			// check if we have any user-defined properties
-			me.TMXUtils.applyTMXPropertiesFromJSON(this, layer);
+			me.TMXUtils.applyTMXProperties(this, layer);
 
 			// check for the correct rendering method
 			if (typeof (this.preRender) === 'undefined') {
