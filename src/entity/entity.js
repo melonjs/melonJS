@@ -137,10 +137,9 @@
 		collidable : true,
 
 		/**
-		 * Entity collision shapes<br>
-		 * (RFU - Reserved for Future Usage)
-		 * @ignore
-		 * @type Object[]
+		 * The collision shapes of the entity <br>
+		 * (note: only shape at index 0 is used in melonJS 1.0.x)
+		 * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]} 
 		 * @name shapes
 		 * @memberOf me.ObjectEntity
 		 */
