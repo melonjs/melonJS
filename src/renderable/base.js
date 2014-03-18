@@ -159,6 +159,10 @@
 		setOpacity : function(alpha) {
 			if (typeof (alpha) === "number") {
 				this.alpha = alpha.clamp(0.0,1.0);
+				// Set to 1 if alpha is NaN
+				if (this.alpha !== this.alpha) {
+					this.alpha = 1.0;
+				}
 			}
 		},
 
