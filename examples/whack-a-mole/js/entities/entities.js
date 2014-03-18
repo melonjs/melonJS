@@ -6,7 +6,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 {	
 	init:function (x, y) {
 		// call the constructor
-		this.parent(x, y , me.loader.getImage("mole"), 178, 140);
+		this.parent(x, y , { image: me.loader.getImage("mole"), spritewidth: 178, spriteheight: 140});
 		
 		// idle animation
 		this.addAnimation ("idle",  [0]);
