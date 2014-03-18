@@ -344,9 +344,28 @@
 	 * @constructor
 	 * @param {Number} x the x coordinates of the sprite object
 	 * @param {Number} y the y coordinates of the sprite object
-	 * @param {Image} image reference of the animation sheet
-	 * @param {Number} spritewidth width of a single sprite within the spritesheet
-	 * @param {Number} [spriteheight=image.height] height of a single sprite within the spritesheet
+	 * @param {Object} settings Contains additional parameters for the animation sheet:
+	 * <ul>
+	 * <li>{Image} image to use for the animation</li>
+	 * <li>{Number} spritewidth - of a single sprite within the spritesheet</li>
+	 * <li>{Number} spriteheight - height of a single sprite within the spritesheet</li>
+	 * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
+	 * </ul>
+	 * @example
+	 * // standalone image
+	 * var animationSheet = new me.AnimationSheet(0, 0, {
+	 *   image: me.loader.getImage('animationsheet'),
+	 *   spritewidth: 64,
+	 *   spriteheight: 64
+	 * });
+	 * // from a texture
+	 * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
+	 * var animationSheet = new me.AnimationSheet(0, 0, {
+	 *   image: texture,
+	 *   spritewidth: 64,
+	 *   spriteheight: 64,
+	 *   region: texture.getRegion('animationsheet')
+	 * });
 	 */
 	me.AnimationSheet = me.SpriteObject.extend(
 	/** @scope me.AnimationSheet.prototype */
@@ -376,7 +395,7 @@
 		animationspeed : 100,
 
 		/** @ignore */
-		init : function(x, y, image, spritewidth, spriteheight, spacing, margin, atlas, atlasIndices) {
+		init : function(x, y, settings) {
 			// hold all defined animation
 			this.anim = {};
 
@@ -390,18 +409,20 @@
 			this.animationspeed = 100;
 
 			// Spacing and margin
-			this.spacing = spacing || 0;
-			this.margin = margin || 0;
+			this.spacing = settings['spacing'] || 0;
+			this.margin = settings['margin'] || 0;
+
+			var image = settings['region'] || settings['image'];
 
 			// call the constructor
-			this.parent(x, y, image, spritewidth, spriteheight, spacing, margin);
+			this.parent(x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
 						
 			// store the current atlas information
 			this.textureAtlas = null;
 			this.atlasIndices = null;
 			
 			// build the local textureAtlas
-			this.buildLocalAtlas(atlas || undefined, atlasIndices || undefined);
+			this.buildLocalAtlas(settings['atlas'], settings['atlasIndices'], image);
 			
 			// create a default animation sequence with all sprites
 			this.addAnimation("default", null);
@@ -414,8 +435,11 @@
 		 * build the local (private) atlas
 		 * @ignore
 		 */
-		buildLocalAtlas : function (atlas, indices) {
+		buildLocalAtlas : function (atlas, indices, image) {
 			// reinitialze the atlas
+			if(image === null || typeof image === 'undefined') {
+				image = this.image
+			}
 			if (atlas !== undefined) {
 				this.textureAtlas = atlas;
 				this.atlasIndices = indices;
@@ -424,17 +448,22 @@
 				this.textureAtlas = [];
 				// calculate the sprite count (line, col)
 				var spritecount = new me.Vector2d(
-					~~((this.image.width - this.margin) / (this.width + this.spacing)),
-					~~((this.image.height - this.margin) / (this.height + this.spacing))
+					~~((image.width - this.margin) / (this.width + this.spacing)),
+					~~((image.height - this.margin) / (this.height + this.spacing))
 				);
-
+				var offsetX = 0;
+				var offsetY = 0;
+				if(image['offset']) {
+					offsetX = image.offset.x;
+					offsetY = image.offset.y;
+				}
 				// build the local atlas
 				for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
 					this.textureAtlas[frame] = {
 						name: ''+frame,
 						offset: new me.Vector2d(
-							this.margin + (this.spacing + this.width) * (frame % spritecount.x),
-							this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x)
+							this.margin + (this.spacing + this.width) * (frame % spritecount.x) + offsetX,
+							this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x) + offsetY
 						),
 						width: this.width,
 						height: this.height,

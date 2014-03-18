@@ -30,6 +30,8 @@
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
+     * 
+     * // or if you wish to specify the atlas
      */
     me.TextureAtlas = Object.extend(
     /** @scope me.TextureAtlas.prototype */
@@ -242,7 +244,15 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0,0, this.texture, 0, 0, 0, 0, tpAtlas, indices);
+            return new me.AnimationSheet(0,0, {
+                image: this.texture,
+                spritewidth: 0,
+                spriteheight: 0,
+                margin: 0,
+                spacing: 0,
+                atlas: tpAtlas,
+                atlasIndices: indices
+            });
         }
     });
 

@@ -177,11 +177,13 @@
 
 			if (settings.image) {
 				var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
-				this.renderable = new me.AnimationSheet(0, 0, image,
-														~~settings.spritewidth,
-														~~settings.spriteheight,
-														~~settings.spacing,
-														~~settings.margin);
+				this.renderable = new me.AnimationSheet(0, 0, {
+					image: image,
+					spritewidth: ~~settings.spritewidth,
+					spriteheight: ~~settings.spriteheight,
+					spacing: ~~settings.spacing,
+					margin: ~~settings.margin
+				});
 
 				// check for user defined transparent color
 				if (settings.transparent_color) {
