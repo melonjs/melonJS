@@ -943,6 +943,19 @@ window.me = window.me || {};
 			}
 		};
 	}
+    
+    if(!Array.isArray) {
+        /**
+		 * provide a replacement for browsers that don't
+		 * natively support Array.isArray
+		 * @ignore
+		 */
+        Array.isArray = function (vArg) {
+            var isArray;
+            isArray = vArg instanceof Array;
+            return isArray;
+        };
+    }
 
 	Object.defineProperty(me, "initialized", {
 		get : function get() {
@@ -980,6 +993,11 @@ window.me = window.me || {};
 
 		// init the Entity Pool
 		me.pool.init();
+
+		// automatically enable keyboard events if on desktop
+		if (me.device.isMobile === false) {
+			me.input._enableKeyboardEvent();
+		}
 
 		// init the level Director
 		me.levelDirector.reset();

@@ -15,7 +15,7 @@
 	 */
 
 	me.loader = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		// contains all the images loaded
@@ -137,8 +137,11 @@
 								} else {
 									result = xmlhttp.responseXML;
 								}
-								// change the data format
-								format = 'xml';
+                                // converts to a JS object
+								// (returns with map as a the root object, to match native json format)
+								result = me.TMXUtils.parse(result).map;
+                                // force format to json
+								format = 'json';
 								break;
 
 							case 'json':
@@ -521,27 +524,6 @@
 
 			// unload all audio resources
 			me.audio.unloadAll();
-		};
-
-		/**
-		 * return the specified TMX object storing type
-		 * @name getTMXFormat
-		 * @memberOf me.loader
-		 * @public
-		 * @function
-		 * @param {String} tmx name of the tmx/tsx element ("map1");
-		 * @return {String} 'xml' or 'json'
-		 */
-		obj.getTMXFormat = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (elt in tmxList)
-				return tmxList[elt].format;
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
-
 		};
 
 		/**

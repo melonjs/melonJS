@@ -20,6 +20,7 @@
 	me.TMX_TAG_ORIENTATION	       = "orientation";
 	me.TMX_TAG_WIDTH               = "width";
 	me.TMX_TAG_HEIGHT              = "height";
+	me.TMX_TAG_TYPE                = "type";
 	me.TMX_TAG_OPACITY             = "opacity";
 	me.TMX_TAG_TRANS               = "trans";
 	me.TMX_TAG_TILEWIDTH           = "tilewidth";

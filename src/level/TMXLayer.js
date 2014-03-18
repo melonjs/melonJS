@@ -389,46 +389,6 @@
 		},
 
 		/** @ignore */
-		initFromXML: function(layer) {
-
-			// additional TMX flags
-			this.name = me.mapReader.TMXParser.getStringAttribute(layer, me.TMX_TAG_NAME);
-			this.cols = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_WIDTH);
-			this.rows = me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_HEIGHT);
-
-			// layer opacity
-			var visible = (me.mapReader.TMXParser.getIntAttribute(layer, me.TMX_TAG_VISIBLE, 1) === 1);
-			this.setOpacity(visible?me.mapReader.TMXParser.getFloatAttribute(layer, me.TMX_TAG_OPACITY, 1.0):0);
-
-			// layer "real" size
-			this.width = this.cols * this.tilewidth;
-			this.height = this.rows * this.tileheight;
-
-			// check if we have any user-defined properties
-			me.TMXUtils.applyTMXPropertiesFromXML(this, layer);
-
-			// check for the correct rendering method
-			if (typeof (this.preRender) === 'undefined') {
-				this.preRender = me.sys.preRender;
-			}
-
-			// detect if the layer is a collision map
-			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
-			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
-				// force the layer as invisible
-				this.setOpacity(0);
-			}
-
-
-			// if pre-rendering method is use, create the offline canvas
-			if (this.preRender === true) {
-				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-				this.layerSurface = me.video.getContext2d(this.layerCanvas);
-			}
-
-		},
-
-		/** @ignore */
 		initFromJSON: function(layer) {
 			// additional TMX flags
 			this.name = layer[me.TMX_TAG_NAME];
@@ -436,7 +396,7 @@
 			this.rows = parseInt(layer[me.TMX_TAG_HEIGHT], 10);
 
 			// layer opacity
-			var visible = layer[me.TMX_TAG_VISIBLE];
+			var visible = typeof(layer[me.TMX_TAG_VISIBLE]) !== 'undefined' ? layer[me.TMX_TAG_VISIBLE] : true;
 			this.setOpacity(visible?parseFloat(layer[me.TMX_TAG_OPACITY]):0);
 
 			// layer "real" size
@@ -464,7 +424,6 @@
 				this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
 				this.layerSurface = me.video.getContext2d(this.layerCanvas);
 			}
-
 		},
 
 		/**
