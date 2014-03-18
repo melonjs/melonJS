@@ -59,8 +59,8 @@
 			// add all defined layers
 			var layers = level.getLayers();
 			for ( var i = layers.length; i--;) {
-				// don't add the collision layer
-				if (!layers[i].isCollisionMap) {
+				// do not add non-visible layers
+				if (layers[i].getOpacity() > 0) {
 					container.addChild(layers[i]);
 				}
 			}

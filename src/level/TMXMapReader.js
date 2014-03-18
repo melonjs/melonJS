@@ -279,14 +279,12 @@
 			var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 			// init the layer properly
 			layer.initFromJSON(data);
-			// associate a renderer to the layer (if not a collision layer)
-			if (!layer.isCollisionMap) {
-				if (!me.game.renderer.canRender(layer)) {
-					layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
-				} else {
-					// use the default one
-					layer.setRenderer(me.game.renderer);
-				}
+			// set a renderer
+			if (!me.game.renderer.canRender(layer)) {
+				layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
+			} else {
+				// use the default one
+				layer.setRenderer(me.game.renderer);
 			}
 			var encoding = Array.isArray(data[me.TMX_TAG_DATA]) ? data[me.TMX_TAG_ENCODING] : data[me.TMX_TAG_DATA][me.TMX_TAG_ENCODING];
 			// parse the layer data

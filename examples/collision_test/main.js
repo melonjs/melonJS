@@ -48,7 +48,7 @@ var PlayScreen = me.ScreenObject.extend( {
 
         // Add some objects
         for (var i = 0; i < 200; i++) {
-            me.game.world.addChild(new Smilie(i), 2);
+            me.game.world.addChild(new Smilie(i), 3);
         }
     }
 });
