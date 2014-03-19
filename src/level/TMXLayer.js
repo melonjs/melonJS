@@ -610,23 +610,27 @@
 
 				this.layerSurface.globalAlpha = context.globalAlpha * this.getOpacity();
 
-				// draw using the cached canvas
-				context.drawImage(this.layerCanvas,
-								  rect.pos.x, //sx
-								  rect.pos.y, //sy
-								  width, height,    //sw, sh
-								  rect.pos.x, //dx
-								  rect.pos.y, //dy
-								  width, height);   //dw, dh
+				if (this.layerSurface.globalAlpha > 0) {
+					// draw using the cached canvas
+					context.drawImage(this.layerCanvas,
+                                      rect.pos.x, //sx
+                                      rect.pos.y, //sy
+                                      width, height,    //sw, sh
+                                      rect.pos.x, //dx
+                                      rect.pos.y, //dy
+                                      width, height);   //dw, dh
+				}
 			}
 			// dynamically render the layer
 			else {
 				// set the layer alpha value
 				var _alpha = context.globalAlpha;
 				context.globalAlpha *= this.getOpacity();
-
-				// draw the layer
-				this.renderer.drawTileLayer(context, this, rect);
+                
+				if (context.globalAlpha > 0) {
+					// draw the layer
+					this.renderer.drawTileLayer(context, this, rect);
+				}
 
 				// restore context to initial state
 				context.globalAlpha = _alpha;

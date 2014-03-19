@@ -59,10 +59,7 @@
 			// add all defined layers
 			var layers = level.getLayers();
 			for ( var i = layers.length; i--;) {
-				// do not add non-visible layers
-				if (layers[i].getOpacity() > 0) {
-					container.addChild(layers[i]);
-				}
+				container.addChild(layers[i]);
 			}
 
 			// change the viewport bounds
