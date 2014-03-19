@@ -5,11 +5,15 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        path: {
+            main: 'build/<%= pkg.name %>-<%= pkg.version %>.js',
+            min: 'build/<%= pkg.name %>-<%= pkg.version %>-min.js'
+        },
 
         concat: {
             dist: {
                 src: sourceFiles,
-                dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
+                dest: '<%= path.main %>'
             }
         },
 
@@ -27,7 +31,7 @@ module.exports = function(grunt) {
                     {
                         expand: true,
                         flatten: true,
-                        src: [ 'build/<%= pkg.name %>-<%= pkg.version %>.js' ],
+                        src: [  '<%= path.main %>' ],
                         dest: 'build/'
                     }
                 ]
@@ -51,8 +55,8 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'build/<%= pkg.name %>-<%= pkg.version %>-min.js': [
-                        '<%= concat.dist.dest %>'
+                    '<%= path.min %>': [
+                        '<%= path.main %>'
                     ]
                 }
             }
@@ -71,15 +75,15 @@ module.exports = function(grunt) {
 
             afterConcat: {
                 files: {
-                    src: [ '<%= concat.dist.dest %>' ]
+                    src: [ '<%= path.main %>' ]
                 }
             }
         },
 
         clean: {
             dist: [
-                'build/<%= pkg.name %>-<%= pkg.version %>.js',
-                'build/<%= pkg.name %>-<%= pkg.version %>-min.js'
+                '<%= path.main %>',
+                '<%= path.min %>'
             ],
             jsdoc: [
                 'build/docs',
