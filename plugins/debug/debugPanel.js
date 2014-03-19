@@ -105,11 +105,19 @@
             
             // add some keyboard shortcuts
             var self = this;
-            this.handler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+            this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
                 if (action === "show") {
                     self.show();
                 } else if (action === "hide") {
                     self.hide();
+                }
+            });
+            
+            // re-apply panel settings on level changes
+            this.levelHandler = me.event.subscribe(me.event.LEVEL_LOADED, function () {
+                var layer = me.game.currentLevel.getLayerByName("collision");
+                if (layer) {
+                    layer.setOpacity((me.debug.renderCollisionMap===true)?1:0);
                 }
             });
 
@@ -132,6 +140,7 @@
 			// add a few new debug flag (if not yet defined)
 			me.debug.renderHitBox = me.debug.renderHitBox || false;
 			me.debug.renderVelocity = me.debug.renderVelocity || false;
+			me.debug.renderCollisionMap = me.debug.renderCollisionMap || false;
 			var _this = this;
 			// patch timer.js
 			me.plugin.patch(me.timer, "update", function (time) {
@@ -271,22 +280,16 @@
 				me.debug.renderHitBox = !me.debug.renderHitBox;
 			}
 			else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
-				me.debug.renderCollisionMap = !me.debug.renderCollisionMap;
-				/*
-					// not working with dynamic rendering since
-					// collision layer does not have allocated renderers
-					var layer = me.game.currentLevel.getLayerByName("collision");
-					if (layer && me.debug.renderCollisionMap === false) {
-						layer.visible = true;
-						me.game.world.addChild(layer);
+				var layer = me.game.currentLevel.getLayerByName("collision");
+				if (layer) {
+					if (layer.getOpacity() === 0) {
+						layer.setOpacity(1);
 						me.debug.renderCollisionMap = true;
-						me.game.sort();
-					} else if (layer) {
-						layer.visible = false;
-						me.game.world.removeChild(layer);
+					} else {
+						layer.setOpacity(0);
 						me.debug.renderCollisionMap = false;
 					}
-				*/
+				}
 			} else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
 				// does nothing for now, since velocity is
 				// rendered together with hitboxes (is a global debug flag required?)
@@ -374,7 +377,8 @@
 			// unbind keys event
 			me.input.unbindKey(me.input.KEY.S);
 			me.input.unbindKey(me.input.KEY.H);
-			me.event.unsubscribe(this.handler);
+			me.event.unsubscribe(this.keyHandler);
+			me.event.unsubscribe(this.levelHandler);
 		}
 
 

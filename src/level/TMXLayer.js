@@ -414,7 +414,7 @@
 
 			// detect if the layer is a collision map
 			this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
-			if (this.isCollisionMap && !me.debug.renderCollisionMap) {
+			if (this.isCollisionMap === true) {
 				// force the layer as invisible
 				this.setOpacity(0);
 			}
