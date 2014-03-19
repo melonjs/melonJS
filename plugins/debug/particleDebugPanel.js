@@ -52,8 +52,8 @@
 
         /** @private */
         init : function() {
-            // call the parent constructor
-            this.parent();
+            // call the super constructor
+            this._super.init();
 
             this.rect = new me.Rect(new me.Vector2d(0, me.video.getHeight() - 60), 200, 60);
 
@@ -112,26 +112,26 @@
 
             // patch me.ParticleEmitter.init
             me.plugin.patch(me.ParticleEmitter, 'init', function(x, y, image) {
-                this.parent(x, y, image);   
+                this._super.init(x, y, image);   
                 _this.emitterCount++;
             });
 
             // patch me.ParticleEmitter.destroy
             me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
-                this.parent();   
+                this._super.destroy();   
                 _this.emitterCount--;
             });
 
             // patch me.Particle.init
             me.plugin.patch(me.Particle, 'init', function(emitter) {
-                this.parent(emitter);   
+                this._super.init(emitter);   
                 _this.particleCount++;
             });
 
             // patch me.Particle.destroy
 //          me.plugin.patch(me.Particle, 'destroy', function() {
             me.Particle.prototype.destroy = function() {
-//              this.parent();  
+//              this._super.destroy();  
                 _this.particleCount--;
             };
 //          });
@@ -139,7 +139,7 @@
             // patch me.game.update
             me.plugin.patch(me.game, 'update', function(time) {
                 var startTime = now();
-                this.parent(time);  
+                this._super.update(time);  
                 // calculate the update time
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
@@ -147,7 +147,7 @@
             // patch me.game.draw
             me.plugin.patch(me.game, 'draw', function() {
                 var startTime = now();
-                this.parent();
+                this._super.draw();
                 // calculate the drawing time
                 _this.frameDrawTimeSamples.push(now() - startTime);
             });
@@ -155,7 +155,7 @@
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, 'update', function(time) {
                 var startTime = now();
-                var value = this.parent(time);  
+                var value = this._super.update(time);  
                 // calculate the update time
                 _this.updateTime += now() - startTime;
                 return value;
@@ -164,7 +164,7 @@
             // patch me.ParticleContainer.draw
             me.plugin.patch(me.ParticleContainer, 'draw', function(context, rect) {
                 var startTime = now();
-                this.parent(context, rect);
+                this._super.draw(context, rect);
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });

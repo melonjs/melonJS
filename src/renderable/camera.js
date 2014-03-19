@@ -77,7 +77,7 @@
 		/** @ignore */
 		init : function(minX, minY, maxX, maxY) {
 			// viewport coordinates
-			this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
+			this._super.init(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
 			// real worl limits
 			this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);

@@ -61,7 +61,7 @@
         
 		/** @ignore */
 		init : function(x, y, w, h, gid) {
-			this.parent(new me.Vector2d(x * w, y * h), w, h);
+			this._super.init(new me.Vector2d(x * w, y * h), w, h);
 			
 			// Tile col / row pos
 			this.col = x;

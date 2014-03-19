@@ -50,8 +50,9 @@
 
 		// Set all starting values present on the target object
 		for ( var field in object ) {
-
-			_valuesStart[ field ] = parseFloat(object[field], 10);
+			if(typeof object !== 'object') {
+				_valuesStart[ field ] = parseFloat(object[field], 10);
+			}
 
 		}
 

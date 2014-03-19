@@ -103,7 +103,7 @@
 	/**
 	 * a Generic Object Entity<br>
 	 * Object Properties (settings) are to be defined in Tiled, <br>
-	 * or when calling the parent constructor
+	 * or when calling the super constructor
 	 *
 	 * @class
 	 * @extends me.Renderable
@@ -170,8 +170,8 @@
 
 		/** @ignore */
 		init : function(x, y, settings) {
-			// call the parent constructor
-			this.parent(this.pos.set(x,y),
+			// call the super constructor
+			this._super.init(this.pos.set(x,y),
 						settings.width,
 						settings.height);
 
@@ -802,9 +802,9 @@
 			if (this.shapes.length) {
 				return this.getShape().getBounds(rect);
 			} else {
-				// call the parent me.Rect.getBounds()
+				// call the _super me.Rect.getBounds()
 				// translate back for the position to be relative to the entity
-				return this.parent(rect).translate(-this.pos.x, -this.pos.y);
+				return this._super.init(rect).translate(-this.pos.x, -this.pos.y);
 			}
 		},
 
@@ -884,8 +884,8 @@
 	{
 		/** @ignore */
 		init : function(x, y, settings) {
-			// call the parent constructor
-			this.parent(x, y, settings);
+			// call the super constructor
+			this._super.init(x, y, settings);
 
 			this.type = me.game.COLLECTABLE_OBJECT;
 
@@ -911,7 +911,7 @@
 	{
 		/** @ignore */
 		init : function(x, y, settings) {
-			this.parent(x, y, settings);
+			this._super.init(x, y, settings);
 
 			this.nextlevel = settings.to;
 

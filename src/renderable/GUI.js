@@ -30,8 +30,8 @@
 	 *       settings.image = "button";
 	 *       settings.spritewidth = 100;
 	 *       settings.spriteheight = 50;
-	 *       // parent constructor
-	 *       this.parent(x, y, settings);
+	 *       // super constructor
+	 *       this._super.init(x, y, settings);
 	 *       // define the object z order
 	 *       this.z = 4;     
 	 *    },
@@ -68,7 +68,7 @@
 		 * @ignore
 		 */
 		 init : function(x, y, settings) {
-			this.parent(x, y, 
+			this._super.init(x, y, 
 						((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image), 
 						settings.spritewidth, 
 						settings.spriteheight);
@@ -122,7 +122,7 @@
 		/**
 		 * OnDestroy notification function<br>
 		 * Called by engine before deleting the object<br>
-		 * be sure to call the parent function if overwritten
+		 * be sure to call the _super function if overwritten
 		 * @name onDestroyEvent
 		 * @memberOf me.GUI_Object
 		 * @public

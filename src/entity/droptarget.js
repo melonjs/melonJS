@@ -44,7 +44,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @param {Object} settings the additional entity settings
          */
         init: function (x, y, settings) {
-            this.parent(x, y, settings);
+            this._super.init(x, y, settings);
             Event.subscribe(Event.DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
         },

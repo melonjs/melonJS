@@ -117,7 +117,7 @@
             ];
 
             // this will actually call this object setShspe function..
-            this.parent(v, w, h);
+            this._super.init(v, w, h);
    
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape

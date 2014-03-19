@@ -357,8 +357,8 @@
          * @ignore
          */
         init: function(x, y, settings) {
-            // call the parent constructor
-            this.parent(
+            // call the super constructor
+            this._super.init(
                     new me.Vector2d(x, y),
                     Infinity, 
                     Infinity 

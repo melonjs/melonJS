@@ -39,7 +39,7 @@
 		/** @ignore */
 		init : function(font, size, scale, firstChar) {
 			// font name and type
-			this.parent(font, null, null);
+			this._super.init(font, null, null);
 			
 			// first char in the ascii table
 			this.firstChar = firstChar || 0x20;

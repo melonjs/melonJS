@@ -96,8 +96,8 @@
 			// font name and type
 			this.setFont(font, size, fillStyle, textAlign);
 			
-            // parent constructor
-            this.parent(this.pos, 0, this.fontSize.y);
+            // super constructor
+            this._super.init(this.pos, 0, this.fontSize.y);
 		},
 
 		/**

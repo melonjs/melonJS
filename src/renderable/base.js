@@ -128,8 +128,8 @@
          * @ignore
          */
         init : function(pos, width, height) {
-            // call the parent constructor
-            this.parent(pos, width, height);
+            // call the super constructor
+            this._super.init(pos, width, height);
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
@@ -190,8 +190,8 @@
 		 * @param {Context2d} context 2d Context on which draw our object
 		 **/
 		draw : function(context, color) {
-			// draw the parent rectangle
-			this.parent(context, color);
+			// draw the super's rectangle
+			this._super.draw(context, color);
 		}
 	});
 

@@ -6,7 +6,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 {	
 	init:function (x, y) {
 		// call the constructor
-		this.parent(x, y , { image: me.loader.getImage("mole"), spritewidth: 178, spriteheight: 140});
+		this._super.init(x, y , { image: me.loader.getImage("mole"), spritewidth: 178, spriteheight: 140});
 		
 		// idle animation
 		this.addAnimation ("idle",  [0]);
@@ -117,8 +117,8 @@ game.MoleEntity = me.AnimationSheet.extend(
 	update : function ( dt )
 	{
 		if (this.isVisible) {
-			// call the parent function to manage animation
-			this.parent( dt );
+			// call the super function to manage animation
+			this._super.update( dt );
 		
 			// hide the mode after 1/2 sec
 			if (this.isOut===true) {
@@ -159,8 +159,8 @@ game.MoleManager = me.ObjectEntity.extend(
 		var settings = {};
 		settings.width = 10;
 		settings.height = 10;
-		// call the parent constructor
-		this.parent(0, 0, settings);
+		// call the super constructor
+		this._super.init(0, 0, settings);
 		
 		// add the first row of moles
 		for ( var i = 0; i < 3; i ++) {

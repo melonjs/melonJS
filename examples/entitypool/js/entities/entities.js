@@ -1,6 +1,6 @@
 game.Background = me.Renderable.extend({
   init : function() {
-    this.parent(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
+    this._super.init(new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height);
     this.z = 1;
   },
   draw : function(ctx) {
@@ -17,20 +17,20 @@ game.MainEntity = me.ObjectEntity.extend({
       width : 32,
       height : 32
     };
-    this.parent(x, y, settings);
+    this._super.init(x, y, settings);
     this.z = 2;
     this.renderable.addAnimation('idle', [0], 1);
     this.renderable.setCurrentAnimation('idle');
   },
 
   update: function(delta) {
-    this.parent(delta);
+    this._super.update(delta);
   }
 });
 
 game.RenderableEntity = me.Renderable.extend({
   init : function(x, y) {
-    this.parent(new me.Vector2d(x, y), 100, 100);
+    this._super.init(new me.Vector2d(x, y), 100, 100);
     this.z = 2;
   },
 

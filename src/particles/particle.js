@@ -22,8 +22,8 @@
          * @ignore
          */
         init: function(emitter) {
-            // Call the parent constructor
-            this.parent(emitter.getRandomPoint(), emitter.image.width, emitter.image.height);
+            // Call the super constructor
+            this._super.init(emitter.getRandomPoint(), emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;

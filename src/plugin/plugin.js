@@ -65,7 +65,7 @@
 		 *   // display something in the console
 		 *   console.log("duh");
 		 *   // call the original me.game.update function
-		 *   this.parent();
+		 *   this._super.update();
 		 * });
 		 */
 		singleton.patch = function(proto, name, fn){

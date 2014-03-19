@@ -77,8 +77,8 @@
 			// sprite moves in and out of the viewport
 			this.isSprite = true;
 
-			// call the parent constructor
-			this.parent(new me.Vector2d(x, y),
+			// call the super constructor
+			this._super.init(new me.Vector2d(x, y),
 						spritewidth  || image.width,
 						spriteheight || image.height);
 						
@@ -415,7 +415,7 @@
 			var image = settings['region'] || settings['image'];
 
 			// call the constructor
-			this.parent(x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
+			this._super.init(x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
 						
 			// store the current atlas information
 			this.textureAtlas = null;
@@ -648,7 +648,7 @@
                         else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
-                            this.parent( dt );
+                            this._super.update( dt );
                             return false;
                         }
                     }
@@ -656,10 +656,10 @@
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
 
-                    return this.parent( dt ) || true;
+                    return this._super.update( dt ) || true;
                 }
 			}
-			return this.parent( dt );
+			return this._super.update( dt );
 		}
 	});
 

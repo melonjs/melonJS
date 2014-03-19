@@ -105,8 +105,8 @@
 		 * @ignore
 		 */
 		init : function(x, y, width, height) {
-			// call the parent constructor
-			this.parent(
+			// call the _super constructor
+			this._super.init(
 				new me.Vector2d(x || 0, y || 0),
 				width || Infinity,
 				height || Infinity 

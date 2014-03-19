@@ -89,7 +89,7 @@
 			// loading flag
 			this.initialized = false;
 
-			this.parent(new me.Vector2d(), 0, 0);
+			this._super.init(new me.Vector2d(), 0, 0);
 		},
 		
         /**
@@ -202,7 +202,7 @@
 	                this.objectGroups[i].destroy();
 	                this.objectGroups[i] = null;
 	            }
-	            // call parent reset function
+	            // call super reset function
 	            this.tilesets = null;
 	            this.mapLayers.length = 0;
 	            this.objectGroups.length = 0;

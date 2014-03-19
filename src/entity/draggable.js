@@ -17,7 +17,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @param {Object} settings the additional entity settings
          */
         init: function (x, y, settings) {
-            this.parent(x, y, settings);
+            this._super.init(x, y, settings);
             this.dragging = false;
             this.dragId = null;
             this.grabOffset = new Vector(0,0);

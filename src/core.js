@@ -305,7 +305,7 @@ window.me = window.me || {};
 	 * some "Javascript API" patch & enhancement
 	 */
 
-	var initializing = false, fnTest = /var xyz/.test(function() {/**@nosideeffects*/var xyz;}) ? /\bparent\b/ : /[\D|\d]*/;
+	var initializing = false;
 
 	/**
 	 * The built in Object Object.
@@ -428,13 +428,13 @@ window.me = window.me || {};
 	 * {
 	 *    init : function()
 	 *    {
-	 *       this.parent( false );
+	 *       this._super.init( false );
 	 *    },
 	 *
 	 *    dance : function()
 	 *    {
 	 *       // Call the inherited version of dance()
-	 *       return this.parent();
+	 *       return this._super.dance();
 	 *    },
 	 *
 	 *    swingSword : function()
@@ -455,7 +455,7 @@ window.me = window.me || {};
 	 * n instanceof Ninja && n instanceof Person && n instanceof Class
 	 */
 	Object.extend = function(prop) {
-		// _super rename to parent to ease code reading
+		// store local reference of the parent prototype
 		var parent = this.prototype;
 
 		// Instantiate a base class (but only create the instance,
@@ -464,30 +464,12 @@ window.me = window.me || {};
 		var proto = new this();
 		initializing = false;
 
-		function addSuper(name, fn) {
-			return function() {
-				var tmp = this.parent;
-
-				// Add a new ._super() method that is the same method
-				// but on the super-class
-				this.parent = parent[name];
-
-				// The method only need to be bound temporarily, so we
-				// remove it when we're done executing
-				var ret = fn.apply(this, arguments);
-				this.parent = tmp;
-
-				return ret;
-			};
-		}
-
-		// Copy the properties over onto the new prototype
+		// Copy the properties & functions over onto the new prototype
 		for ( var name in prop) {
-			// Check if we're overwriting an existing function
-			proto[name] = typeof prop[name] === "function" &&
-						  typeof parent[name] === "function" &&
-						  fnTest.test(prop[name]) ? addSuper(name, prop[name]) : prop[name];
+			proto[name] = prop[name];
 		}
+
+		proto['_super'] = parent;
 
 		// The dummy class constructor
 		function Class() {

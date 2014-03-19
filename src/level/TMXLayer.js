@@ -20,8 +20,8 @@
 	 me.ColorLayer = me.Renderable.extend({
 		// constructor
 		init: function(name, color, z) {
-			// parent constructor
-			this.parent(new me.Vector2d(0, 0), Infinity, Infinity);
+			// suoer constructor
+			this._super.init(new me.Vector2d(0, 0), Infinity, Infinity);
 
 			// apply given parameters
 			this.name = name;
@@ -116,7 +116,7 @@
             // set layer width & height
 			width  = width ? Math.min(viewport.width, width)   : viewport.width;
 			height = height? Math.min(viewport.height, height) : viewport.height;
-			this.parent(new me.Vector2d(0, 0), width, height);
+			this._super.init(new me.Vector2d(0, 0), width, height);
 
 			// displaying order
 			this.z = z;
@@ -305,7 +305,7 @@
 	me.CollisionTiledLayer = me.Renderable.extend({
 		// constructor
 		init: function(width, height) {
-			this.parent(new me.Vector2d(0, 0), width, height);
+			this._super.init(new me.Vector2d(0, 0), width, height);
 
 			this.isCollisionMap = true;
 
@@ -363,8 +363,8 @@
 
 		/** @ignore */
 		init: function(tilewidth, tileheight, orientation, tilesets, zOrder) {
-			// parent constructor
-			this.parent(new me.Vector2d(0, 0), 0, 0);
+			// super constructor
+			this._super.init(new me.Vector2d(0, 0), 0, 0);
 
 			// tile width & height
 			this.tilewidth  = tilewidth;
