@@ -23,7 +23,7 @@
         /**
          * origin point of the PolyShape
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @name pos
          * @memberOf me.PolyShape
          */
@@ -32,7 +32,7 @@
         /**
          * Array of points defining the polyshape
          * @public
-         * @type me.Vector2d[]
+         * @type {me.Vector2d[]}
          * @name points
          * @memberOf me.PolyShape
          */
@@ -41,7 +41,7 @@
         /**
          * Specified if the shape is closed (i.e. polygon)
          * @public
-         * @type boolean
+         * @type {boolean}
          * @name closed
          * @memberOf me.PolyShape
          */

@@ -15,8 +15,8 @@
      * @memberOf me
      * @constructor
      * @param {me.Vector2d} v top-left origin position of the Ellipse
-     * @param {int} w width of the elipse
-     * @param {int} h height of the elipse
+     * @param {Number} w width of the elipse
+     * @param {Number} h height of the elipse
      */
     me.Ellipse = Object.extend(
     /** @scope me.Ellipse.prototype */  {
@@ -24,7 +24,7 @@
         /**
          * center point of the Ellipse
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @name pos
          * @memberOf me.Ellipse
          */
@@ -33,7 +33,7 @@
         /**
          * radius (x/y) of the ellipse
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @name radius
          * @memberOf me.Ellipse
          */
@@ -55,8 +55,8 @@
          * @memberOf me.Ellipse
          * @function
          * @param {me.Vector2d} v top-left origin position of the Ellipse
-         * @param {int} w width of the Ellipse
-         * @param {int} h height of the Ellipse  
+         * @param {Number} w width of the Ellipse
+         * @param {Number} h height of the Ellipse  
          */
         setShape : function(v, w, h) {
             this.radius.set(w/2, h/2);

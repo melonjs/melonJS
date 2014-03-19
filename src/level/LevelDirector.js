@@ -59,10 +59,7 @@
 			// add all defined layers
 			var layers = level.getLayers();
 			for ( var i = layers.length; i--;) {
-				// don't add the collision layer
-				if (!layers[i].isCollisionMap) {
-					container.addChild(layers[i]);
-				}
+				container.addChild(layers[i]);
 			}
 
 			// change the viewport bounds
