@@ -14,8 +14,8 @@
      * @memberOf me
      * @constructor
      * @param {me.Vector2d} v x,y position of the rectange
-     * @param {int} w width of the rectangle
-     * @param {int} h height of the rectangle
+     * @param {Number} w width of the rectangle
+     * @param {Number} h height of the rectangle
      */
     me.Rect = Object.extend(
     /** @scope me.Rect.prototype */ {
@@ -23,7 +23,7 @@
         /**
          * position of the Rectange
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @name pos
          * @memberOf me.Rect
          */
@@ -33,7 +33,7 @@
          * allow expanding and contracting the rect with a vector<br>
          * while keeping its original size and shape<br>
          * @ignore
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @name rangeV
          * @memberOf me.Rect
          * @see me.Rect#addV
@@ -44,7 +44,7 @@
          * left coordinate of the Rectange<br>
          * takes in account the adjusted size of the rectangle (if set)
          * @public
-         * @type Int
+         * @type {Number}
          * @name left
          * @memberOf me.Rect
          */
@@ -54,7 +54,7 @@
          * right coordinate of the Rectange<br>
          * takes in account the adjusted size of the rectangle (if set)
          * @public
-         * @type Int
+         * @type {Number}
          * @name right
          * @memberOf me.Rect
          */
@@ -64,7 +64,7 @@
          * bottom coordinate of the Rectange<br>
          * takes in account the adjusted size of the rectangle (if set)
          * @public
-         * @type Int
+         * @type {Number}
          * @name bottom
          * @memberOf me.Rect
          */
@@ -74,7 +74,7 @@
          * top coordinate of the Rectange<br>
          * takes in account the adjusted size of the rectangle (if set)
          * @public
-         * @type Int
+         * @type {Number}
          * @name top
          * @memberOf me.Rect
          */
@@ -83,7 +83,7 @@
         /**
          * width of the Rectange
          * @public
-         * @type Int
+         * @type {Number}
          * @name width
          * @memberOf me.Rect
          */
@@ -91,7 +91,7 @@
         /**
          * height of the Rectange
          * @public
-         * @type Int
+         * @type {Number}
          * @name height
          * @memberOf me.Rect
          */
