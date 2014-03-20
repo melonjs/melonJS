@@ -130,6 +130,7 @@
         init : function(pos, width, height) {
             // call the super constructor
             this._super.init(pos, width, height);
+            this.pos = pos;
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);

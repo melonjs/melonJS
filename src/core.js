@@ -458,14 +458,11 @@ window.me = window.me || {};
 		// store local reference of the parent prototype
 		var parent = this.prototype;
 
-		// Instantiate a base class (but only create the instance,
-		// don't run the init constructor)
 		initializing = true;
 		var proto = new this();
 		initializing = false;
 
-		// Copy the properties & functions over onto the new prototype
-		for ( var name in prop) {
+		for(var name in prop) {
 			proto[name] = prop[name];
 		}
 
@@ -473,7 +470,7 @@ window.me = window.me || {};
 
 		// The dummy class constructor
 		function Class() {
-			if (!initializing) {
+			if(!initializing) {
 				for( var prop in this ) {
 					// deepcopy properties if required
 					if( typeof(this[prop]) === 'object' ) {
