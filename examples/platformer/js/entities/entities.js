@@ -13,11 +13,11 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		this.alwaysUpdate = true;
 
 		// walking & jumping speed
-		this._super.setVelocity(3, 15);
-		this._super.setFriction(0.4,0);
+		this.setVelocity(3, 15);
+		this.setFriction(0.4,0);
 		
 		// update the collision shape rect
-		var shape = this._super.getShape();
+		var shape = this.getShape();
 		shape.pos.y = 16;
 		shape.resize(this.width, shape.height - shape.pos.y);
 
