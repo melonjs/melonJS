@@ -81,7 +81,9 @@
 			this._super.init(new me.Vector2d(x, y),
 						spritewidth  || image.width,
 						spriteheight || image.height);
-						
+
+			this.width = this._super.width;
+			this.height = this._super.height;
 			// cache image reference
 			this.image = image;
 

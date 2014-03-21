@@ -63,6 +63,8 @@ var Smilie = me.ObjectEntity.extend({
             64 + Math.random() * (768 - 64 * 2 - 16), {
                 width : 16,
                 height : 16,
+                spritewidth : 16,
+                spriteheight : 16,
                 image : game.assets[i % 5].name
             }
         );
