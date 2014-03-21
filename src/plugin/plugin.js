@@ -135,7 +135,7 @@
 			me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
 			
 			// inheritance check
-			if (!(me.plugin[name] instanceof me.plugin.Base)) {
+			if (!me.plugin[name] || !(me.plugin[name]._super instanceof me.plugin.Base)) {
 				throw "melonJS: Plugin should extend the me.plugin.Base Class !";
 			}
 		};
