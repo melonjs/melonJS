@@ -463,7 +463,9 @@ window.me = window.me || {};
 		initializing = false;
 
 		for(var name in prop) {
-			proto[name] = prop[name];
+			//if(typeof prop[name] !== 'function') {
+				proto[name] = prop[name];
+			//}
 		}
 
 		proto['_super'] = parent;
@@ -471,10 +473,10 @@ window.me = window.me || {};
 		// The dummy class constructor
 		function Class() {
 			if(!initializing) {
-				for( var prop in this ) {
+				for( var property in this ) {
 					// deepcopy properties if required
-					if( typeof(this[prop]) === 'object' ) {
-						this[prop] = deepcopy(this[prop]);
+					if( typeof(this[property]) === 'object' ) {
+						this[property] = deepcopy(this[property]);
 					}
 				}
 				if (this.init) {

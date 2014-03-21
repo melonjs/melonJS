@@ -79,6 +79,9 @@
 			// viewport coordinates
 			this._super.init(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
 
+			// store reference to super position
+			this.pos = this._super.pos;
+
 			// real worl limits
 			this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);
 
@@ -189,6 +192,10 @@
 			// force a camera update
 			this.updateTarget();
 
+		},
+
+		getBounds: function(rect) {
+			return this._super.rect.getBounds(rect);
 		},
 
 		/**

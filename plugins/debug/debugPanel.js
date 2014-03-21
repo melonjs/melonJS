@@ -145,7 +145,7 @@
 			// patch timer.js
 			me.plugin.patch(me.timer, "update", function (time) {
 				// call the original me.timer.update function
-				this._super.init(time);
+				this.parent(time);
 
 				// call the FPS counter
 				me.timer.countFPS();
@@ -155,7 +155,7 @@
 			me.plugin.patch(me.game, 'update', function(time) {
 				var frameUpdateStartTime = window.performance.now();
 
-				this._super.init(time);
+				this.parent(time);
 
 				// calculate the update time
 				_this.frameUpdateTime = window.performance.now() - frameUpdateStartTime;
@@ -165,7 +165,7 @@
 			me.plugin.patch(me.game, 'draw', function() {
 				var frameDrawStartTime = window.performance.now();
 
-				this._super.init();
+				this.parent();
 
 				// calculate the drawing time
 				_this.frameDrawTime = window.performance.now() - frameDrawStartTime;
@@ -174,7 +174,7 @@
 			// patch sprite.js
 			me.plugin.patch(me.SpriteObject, "draw", function (context) {
 				// call the original me.SpriteObject function
-				this._super.init(context);
+				this.parent(context);
 
 				// draw the sprite rectangle
 				if (me.debug.renderHitBox) {
@@ -186,7 +186,7 @@
 			// patch entities.js
 			me.plugin.patch(me.ObjectEntity, "draw", function (context) {
 				// call the original me.game.draw function
-				this._super.init(context);
+				this.parent(context);
 
 				// check if debug mode is enabled
 				if (me.debug.renderHitBox && this.shapes.length) {
