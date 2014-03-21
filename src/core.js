@@ -458,17 +458,15 @@ window.me = window.me || {};
 		// store local reference of the parent prototype
 		var parent = this.prototype;
 
-		initializing = true;
-		var proto = new this();
-		initializing = false;
+		// initializing = true;
+		// var proto = new this();
+		// initializing = false;
 
-		for(var name in prop) {
-			//if(typeof prop[name] !== 'function') {
-				proto[name] = prop[name];
-			//}
-		}
+		// for(var name in prop) {
+		// 	proto[name] = prop[name];
+		// }
 
-		proto['_super'] = parent;
+		prop['_super'] = parent;
 
 		// The dummy class constructor
 		function Class() {
@@ -486,7 +484,7 @@ window.me = window.me || {};
 			return this;
 		}
 		// Populate our constructed prototype object
-		Class.prototype = proto;
+		Class.prototype = prop;
 		// Enforce the constructor to be what we expect
 		Class.constructor = Class;
 		// And make this class extendable

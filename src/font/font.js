@@ -95,9 +95,11 @@
 
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
+            
+            // reference super of super, as the _super renderable wont have a set position yet
+            this.pos = this._super._super.pos;
             // super constructor
             this._super.init(this.pos, 0, this.fontSize.y);
-            this.pos = this._super.pos;
         },
 
         /**

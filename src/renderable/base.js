@@ -131,6 +131,7 @@
             // call the super constructor
             this._super.init(pos, width, height);
             this.rect = this._super; // bad idea?
+            this.pos = this._super.pos;
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
@@ -148,6 +149,10 @@
 		 */
 		getOpacity : function() {
 			return this.alpha;
+		},
+
+		getBounds : function(rect) {
+			return this.rect.getBounds(rect);
 		},
 
 		/**
