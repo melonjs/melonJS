@@ -29,31 +29,27 @@
     particleDebugPanel = me.plugin.Base.extend(
     /** @scope me.debug.Panel.prototype */
     {
-
-        // Object "Game Unique Identifier"
-        GUID : null,
-
-        // to hold the debug options 
-        // clickable rect area
-        area : {},
-        
-        // panel position and size
-        rect : null,
-        
-        // for z ordering
-        // make it ridiculously high
-        z : Infinity,
-        
-        // visibility flag
-        visible : true,
-        
         // minimum melonJS version expected
         version : "1.0.0",
 
         /** @private */
         init : function() {
             // call the super constructor
-            this._super.init();
+            this._super(me.plugin.Base, 'init');
+
+            // to hold the debug options 
+            // clickable rect area
+            this.area = {};
+            
+            // panel position and size
+            this.rect = null;
+            
+            // for z ordering
+            // make it ridiculously high
+            this.z = Infinity;
+            
+            // visibility flag
+            this.visible = true;
 
             this.rect = new me.Rect(new me.Vector2d(0, me.video.getHeight() - 60), 200, 60);
 
@@ -112,34 +108,31 @@
 
             // patch me.ParticleEmitter.init
             me.plugin.patch(me.ParticleEmitter, 'init', function(x, y, image) {
-                this._super.init(x, y, image);   
+                this.parent(x, y, image);   
                 _this.emitterCount++;
             });
 
             // patch me.ParticleEmitter.destroy
             me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
-                this._super.destroy();   
+                this.parent();
                 _this.emitterCount--;
             });
 
             // patch me.Particle.init
             me.plugin.patch(me.Particle, 'init', function(emitter) {
-                this._super.init(emitter);   
+                this.parent(emitter);   
                 _this.particleCount++;
             });
 
             // patch me.Particle.destroy
-//          me.plugin.patch(me.Particle, 'destroy', function() {
             me.Particle.prototype.destroy = function() {
-//              this._super.destroy();  
                 _this.particleCount--;
             };
-//          });
 
             // patch me.game.update
             me.plugin.patch(me.game, 'update', function(time) {
                 var startTime = now();
-                this._super.update(time);  
+                this.parent(time);  
                 // calculate the update time
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
@@ -147,7 +140,7 @@
             // patch me.game.draw
             me.plugin.patch(me.game, 'draw', function() {
                 var startTime = now();
-                this._super.draw();
+                this.parent();
                 // calculate the drawing time
                 _this.frameDrawTimeSamples.push(now() - startTime);
             });
@@ -155,7 +148,7 @@
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, 'update', function(time) {
                 var startTime = now();
-                var value = this._super.update(time);  
+                var value = this.parent(time);  
                 // calculate the update time
                 _this.updateTime += now() - startTime;
                 return value;
@@ -164,7 +157,7 @@
             // patch me.ParticleContainer.draw
             me.plugin.patch(me.ParticleContainer, 'draw', function(context, rect) {
                 var startTime = now();
-                this._super.draw(context, rect);
+                this.parent(context, rect);
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });
