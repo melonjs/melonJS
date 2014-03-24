@@ -4,9 +4,7 @@
  * http://www.melonjs.org/
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * Convert first character of a string to uppercase, if it's a letter.
      * @ignore
@@ -18,13 +16,13 @@
     var capitalize = function (str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
     };
-    
+
     /**
      * A collection of utilities to ease porting between different user agents.
      * @namespace me.agent
      * @memberOf me
      */
-    me.agent = (function() {
+    me.agent = (function () {
         var api = {};
 
         /**
@@ -45,14 +43,16 @@
          */
         api.prefixed = function (name, obj) {
             obj = obj || window;
-            if (name in obj) return obj[name];
+            if (name in obj) {
+                return obj[name];
+            }
 
             var uc_name = capitalize(name);
 
             var result;
             vendors.some(function (vendor) {
                 var name = vendor + uc_name;
-                return result = (name in obj) ? obj[name] : undefined;
+                return (result = (name in obj) ? obj[name] : undefined);
             });
             return result;
         };
@@ -88,6 +88,4 @@
 
         return api;
     })();
-
-
-})(window);
+})();

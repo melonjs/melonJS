@@ -4,23 +4,18 @@
  * http://www.melonjs.org/
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * @namespace me.input
      * @memberOf me
      */
-    me.input = (function() {
-
+    me.input = (function () {
         // hold public stuff in our singleton
         var obj = {};
 
-        /*---------------------------------------------
-
-            PRIVATE STUFF
-
-          ---------------------------------------------*/
+        /*
+         * PRIVATE STUFF
+         */
 
         /**
          * prevent event propagation
@@ -45,12 +40,9 @@
             return false;
         };
 
-
-        /*---------------------------------------------
-
-            PUBLIC STUFF
-
-          ---------------------------------------------*/
+        /*
+         * PUBLIC STUFF
+         */
 
         /**
          * Global flag to specify if melonJS should prevent default browser action on registered key events <br>
@@ -65,10 +57,5 @@
 
         // return our object
         return obj;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

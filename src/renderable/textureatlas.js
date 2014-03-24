@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * a local constant for the -(Math.PI / 2) value
      * @ignore
@@ -57,13 +55,13 @@
         /**
          * @ignore
          */
-        init : function(atlas, texture) {
+        init : function (atlas, texture) {
             if (atlas && atlas.meta) {
                 // Texture Packer
                 if (atlas.meta.app.contains("texturepacker")) {
                     this.format = "texturepacker";
                     // set the texture
-                    if (texture===undefined) {
+                    if (typeof(texture) === "undefined") {
                         var name = me.utils.getBasename(atlas.meta.image);
                         this.texture = me.loader.getImage(name);
                         if (this.texture === null) {
@@ -97,7 +95,7 @@
          */
         initFromTexturePacker : function (data) {
             var atlas = {};
-            data.frames.forEach(function(frame) {
+            data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
                 if (frame.hasOwnProperty("filename")) {
                     atlas[frame.filename] = {
@@ -111,8 +109,8 @@
                         ),
                         // non trimmed size, but since we don't support trimming both value are the same
                         //sourceSize: new me.Vector2d(frame.sourceSize.w,frame.sourceSize.h),
-                        rotated : frame.rotated===true,
-                        trimmed : frame.trimmed===true
+                        rotated : frame.rotated === true,
+                        trimmed : frame.trimmed === true
                     };
                 }
             });
@@ -126,7 +124,7 @@
          * @function
          * @return {Image}
          */
-        getTexture : function() {
+        getTexture : function () {
             return this.texture;
         },
 
@@ -138,7 +136,7 @@
          * @param {String} name name of the sprite
          * @return {Object}
          */
-        getRegion : function(name) {
+        getRegion : function (name) {
             var region = this.atlas[name];
             if (region) {
                 return {
@@ -149,7 +147,7 @@
                     height: region.frame.height,
                     hWidth: region.frame.width / 2,
                     hHeight: region.frame.height / 2,
-                    angle : (region.rotated===true) ? nhPI : 0
+                    angle : (region.rotated === true) ? nhPI : 0
                 };
             }
             return null;
@@ -175,11 +173,15 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createSpriteFromName : function(name) {
+        createSpriteFromName : function (name) {
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
-                var sprite = new me.SpriteObject(0,0, this.getTexture(), region.width, region.height);
+                var sprite = new me.SpriteObject(
+                    0, 0,
+                    this.getTexture(),
+                    region.width, region.height
+                );
                 // set the sprite offset within the texture
                 sprite.offset.setV(region.offset);
                 // set angle if defined
@@ -231,7 +233,7 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createAnimationFromName : function(names) {
+        createAnimationFromName : function (names) {
             var tpAtlas = [], indices = {};
             // iterate through the given names
             // and create a "normalized" atlas
@@ -255,8 +257,4 @@
             });
         }
     });
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

@@ -3,6 +3,14 @@
  * https://github.com/sole/Tween.js
  */
 
+/* jshint -W011 */
+/* jshint -W013 */
+/* jshint -W089 */
+/* jshint -W093 */
+/* jshint -W098 */
+/* jshint -W108 */
+/* jshint -W116 */
+
 (function() {
 
 	/**
@@ -46,7 +54,7 @@
 		var _onStartCallbackFired = false;
 		var _onUpdateCallback = null;
 		var _onCompleteCallback = null;
-		
+
 
 		// Set all starting values present on the target object
 		for ( var field in object ) {
@@ -57,7 +65,7 @@
 
 		/**
 		 * reset the tween object to default value
-		 * @ignore 
+		 * @ignore
 		 */
 		this.onResetEvent = function ( object ) {
 			_object = object;
@@ -75,7 +83,7 @@
 			_onUpdateCallback = null;
 			_onCompleteCallback = null;
 		};
-		
+
 		/**
 		 * object properties to be updated and duration
 		 * @name me.Tween#to
@@ -112,7 +120,7 @@
 			me.game.world.addChild(this);
 
 			_startTime = (typeof(time) === 'undefined' ? me.timer.getTime() : time) + _delayTime;
-		
+
 			for ( var property in _valuesEnd ) {
 
 				// check if an Array was provided as property value
@@ -182,7 +190,7 @@
 		});
 
 		/**
-		 * Repeat the tween 
+		 * Repeat the tween
 		 * @name me.Tween#repeat
 		 * @public
 		 * @function
@@ -194,7 +202,7 @@
 			return this;
 
 		};
-		
+
 		/**
 		 * allows the tween to bounce back to their original value when finished
 		 * @name me.Tween#yoyo
@@ -294,16 +302,16 @@
 			return this;
 
 		};
-		
+
 		/** @ignore*/
 		this.update = function ( dt ) {
-            
+
 			// the original Tween implementation expect
 			// a timestamp and not a time delta
 			var time = me.timer.getTime();
-            
+
 			var property;
-            
+
 			if ( time < _startTime ) {
 
 				return true;
