@@ -23,7 +23,7 @@
          */
         init: function(emitter) {
             // call the super constructor
-            this._super.init();
+            this._super(me.ObjectContainer, "init");
 
             // don't sort the particles by z-index
             this.autoSort = false;
@@ -85,7 +85,7 @@
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super.init(context, rect);
+                this._super(me.ObjectContainer, "draw", [context, rect]);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {

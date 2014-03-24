@@ -8,33 +8,6 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
     'use strict';
     return Entity.extend({
         /**
-         * constant for the overlaps method
-         * @public
-         * @constant
-         * @type String
-         * @name CHECKMETHOD_OVERLAP
-         * @memberOf me.DroptargetEntity
-         */
-        CHECKMETHOD_OVERLAP: "overlaps",
-        /**
-         * constant for the contains method
-         * @public
-         * @constant
-         * @type String
-         * @name CHECKMETHOD_CONTAINS
-         * @memberOf me.DroptargetEntity
-         */
-        CHECKMETHOD_CONTAINS: "contains",
-        /**
-         * the checkmethod we want to use
-         * @public
-         * @constant
-         * @type String
-         * @name checkMethod
-         * @memberOf me.DroptargetEntity
-         */
-        checkMethod: null,
-        /**
          * Constructor
          * @name init
          * @memberOf me.DroptargetEntity
@@ -44,7 +17,34 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @param {Object} settings the additional entity settings
          */
         init: function (x, y, settings) {
-            this._super.init(x, y, settings);
+            /**
+             * constant for the overlaps method
+             * @public
+             * @constant
+             * @type String
+             * @name CHECKMETHOD_OVERLAP
+             * @memberOf me.DroptargetEntity
+             */
+            this.CHECKMETHOD_OVERLAP = "overlaps";
+            /**
+             * constant for the contains method
+             * @public
+             * @constant
+             * @type String
+             * @name CHECKMETHOD_CONTAINS
+             * @memberOf me.DroptargetEntity
+             */
+            this.CHECKMETHOD_CONTAINS = "contains";
+            /**
+             * the checkmethod we want to use
+             * @public
+             * @constant
+             * @type String
+             * @name checkMethod
+             * @memberOf me.DroptargetEntity
+             */
+            this.checkMethod = null;
+            this._super(Entity, "init", [x, y, settings]);
             Event.subscribe(Event.DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
         },

@@ -25,64 +25,61 @@
     me.Matrix2d = Object.extend(
     /** @scope me.Matrix2d.prototype */    {
     
-        /**
-         * the m1,1 value in the matrix (a)
-         * @public
-         * @type Number
-         * @name a
-         * @memberOf me.Matrix2d
-         */
-        a : 1,
-        
-        /**
-         * the m1,2 value in the matrix (b)
-         * @public
-         * @type Number
-         * @name b
-         * @memberOf me.Matrix2d
-         */
-        b : 0,
-
-        /**
-         * the m2,1 value in the matrix (c)
-         * @public
-         * @type Number
-         * @name c
-         * @memberOf me.Matrix2d
-         */
-        c : 0,
-
-        /**
-         * the m2,2 value in the matrix (d)
-         * @public
-         * @type Number
-         * @name d
-         * @memberOf me.Matrix2d
-         */
-        d : 1,
-
-        /**
-         * The delta x value in the matrix (e)
-         * @public
-         * @type Number
-         * @name e
-         * @memberOf me.Matrix2d
-         */
-        e : 0,
-
-        /**
-         * The delta y value in the matrix (f)
-         * @public
-         * @type Number
-         * @name f
-         * @memberOf me.Matrix2d
-         */
-        f : 0,
-
-
         /** @ignore */
         init : function(a, b, c, d, e, f) {
-            this.set(a || 1, b || 0, c || 0, d || 1, e || 0, f || 0);    
+            /**
+             * the m1,1 value in the matrix (a)
+             * @public
+             * @type Number
+             * @name a
+             * @memberOf me.Matrix2d
+             */
+            this.a = a || 1;
+
+            /**
+             * the m1,2 value in the matrix (b)
+             * @public
+             * @type Number
+             * @name b
+             * @memberOf me.Matrix2d
+             */
+            this.b = b || 0;
+
+            /**
+             * the m2,1 value in the matrix (c)
+             * @public
+             * @type Number
+             * @name c
+             * @memberOf me.Matrix2d
+             */
+            this.c = c || 0;
+
+            /**
+             * the m2,2 value in the matrix (d)
+             * @public
+             * @type Number
+             * @name d
+             * @memberOf me.Matrix2d
+             */
+            this.d = d || 1;
+
+            /**
+             * The delta x value in the matrix (e)
+             * @public
+             * @type Number
+             * @name e
+             * @memberOf me.Matrix2d
+             */
+            this.e = e || 0;
+
+            /**
+             * The delta y value in the matrix (f)
+             * @public
+             * @type Number
+             * @name f
+             * @memberOf me.Matrix2d
+             */
+            this.f = f || 0;
         },
 
         /**

@@ -3,7 +3,7 @@
  */
 game.Rect = me.Renderable.extend({
     "init" : function (pos, w, h, color) {
-        this._super.init(pos, w, h);
+        this._super(me.Renderable, "init", [pos, w, h]);
         this.z = 0;
         this.color = color;
     },
@@ -19,7 +19,7 @@ game.Rect = me.Renderable.extend({
  */
 game.Entity = me.ObjectEntity.extend({
     "init" : function (x, y, settings) {
-        this._super.init(x, y, settings);
+        this._super(me.ObjectEntity, "init", [x, y, settings]);
         this.z = 1;
         this.renderable = new me.ObjectContainer(0, 0, 50, 50);
         this.renderable.addChild(new game.Rect(
@@ -57,7 +57,7 @@ game.Entity = me.ObjectEntity.extend({
  */
 game.FloatingEntity = me.ObjectEntity.extend({
     "init" : function (x, y, settings) {
-        this._super.init(x, y, settings);
+        this._super(me.ObjectEntity, "init", x, y, settings);
         this.z = 1;
         this.floating = true;
         this.renderable = new me.ObjectContainer(0, 0, 50, 50);

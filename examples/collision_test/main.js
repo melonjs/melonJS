@@ -58,15 +58,17 @@ var PlayScreen = me.ScreenObject.extend( {
 
 var Smilie = me.ObjectEntity.extend({
     init : function (i) {
-        this._super.init(
-            64 + Math.random() * (1024 - 64 * 2 - 16),
+        this._super(
+            me.ObjectEntity,
+            "init",
+            [ 64 + Math.random() * (1024 - 64 * 2 - 16),
             64 + Math.random() * (768 - 64 * 2 - 16), {
                 width : 16,
                 height : 16,
                 spritewidth : 16,
                 spriteheight : 16,
                 image : game.assets[i % 5].name
-            }
+            }]
         );
         this.collidable = true;
     },
@@ -76,7 +78,7 @@ var Smilie = me.ObjectEntity.extend({
         
          me.game.world.collide(this, true);
 
-        return this._super.update(dt);
+        return this._super(me.ObjectEntity, update, dt);
     }
 });
     

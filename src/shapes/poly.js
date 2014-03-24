@@ -20,40 +20,38 @@
     me.PolyShape = Object.extend(
     /** @scope me.PolyShape.prototype */ {
 
-        /**
-         * origin point of the PolyShape
-         * @public
-         * @type {me.Vector2d}
-         * @name pos
-         * @memberOf me.PolyShape
-         */
-        pos :  new me.Vector2d(),
-         
-        /**
-         * Array of points defining the polyshape
-         * @public
-         * @type {me.Vector2d[]}
-         * @name points
-         * @memberOf me.PolyShape
-         */
-        points : null,
-
-        /**
-         * Specified if the shape is closed (i.e. polygon)
-         * @public
-         * @type {boolean}
-         * @name closed
-         * @memberOf me.PolyShape
-         */
-        closed : false,
-        
-
-        // the shape type
-        shapeType : "PolyShape",
-        
-        
         /** @ignore */
         init : function(v, points, closed) {
+            /**
+             * origin point of the PolyShape
+             * @public
+             * @type {me.Vector2d}
+             * @name pos
+             * @memberOf me.PolyShape
+             */
+            this.pos = new me.Vector2d();
+             
+            /**
+             * Array of points defining the polyshape
+             * @public
+             * @type {me.Vector2d[]}
+             * @name points
+             * @memberOf me.PolyShape
+             */
+            this.points = null;this.
+
+            /**
+             * Specified if the shape is closed (i.e. polygon)
+             * @public
+             * @type {boolean}
+             * @name closed
+             * @memberOf me.PolyShape
+             */
+            this.closed = false;
+            
+
+            // the shape type
+            this.shapeType = "PolyShape";
             this.setShape(v, points, closed);
         },
 

@@ -37,27 +37,26 @@
     /** @scope me.TextureAtlas.prototype */
     {
         /**
-         * to identify the atlas format (e.g. texture packer)
-         * @ignore
-         */
-        format: null,
-
-        /**
-         * the image texture itself
-         * @ignore
-         */
-        texture : null,
-
-        /**
-         * the atlas dictionnary
-         * @ignore
-         */
-        atlas: null,
-
-        /**
          * @ignore
          */
         init : function(atlas, texture) {
+            /**
+             * to identify the atlas format (e.g. texture packer)
+             * @ignore
+             */
+            this.format = null;
+
+            /**
+             * the image texture itself
+             * @ignore
+             */
+            this.texture = null;
+
+            /**
+             * the atlas dictionnary
+             * @ignore
+             */
+            this.atlas = null;
             if (atlas && atlas.meta) {
                 // Texture Packer
                 if (atlas.meta.app.contains("texturepacker")) {

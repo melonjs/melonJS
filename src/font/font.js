@@ -28,78 +28,73 @@
     me.Font = me.Renderable.extend(
     /** @scope me.Font.prototype */ {
 
-        // private font properties
-        /** @ignore */
-        font : 'Arial',
-        fontSize : new me.Vector2d(),
-       
-        /**
-         * defines the color used to draw the font.<br>
-         * Default value : "#000000"
-         * @public
-         * @type String
-         * @name me.Font#fillStyle
-         */
-        fillStyle : "#000000",
-
-        /**
-         * defines the color used to draw the font stroke.<br>
-         * Default value : "#000000"
-         * @public
-         * @type String
-         * @name me.Font#strokeStyle
-         */
-        strokeStyle : "#000000",
-        
-        /**
-         * sets the current line width, in pixels, when drawing stroke
-         * Default value : 1
-         * @public
-         * @type Number
-         * @name me.Font#lineWidth 
-         */
-        lineWidth  : 1,
-        
-        /**
-         * Set the default text alignment (or justification),<br>
-         * possible values are "left", "right", and "center".<br>
-         * Default value : "left"
-         * @public
-         * @type String
-         * @name me.Font#textAlign
-         */
-        textAlign : "left",
-        
-        /**
-         * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
-         * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
-         * Default value : "top"
-         * @public
-         * @type String
-         * @name me.Font#textBaseline
-         */
-        textBaseline : "top",
-        
-        /**
-         * Set the line spacing height (when displaying multi-line strings). <br>
-         * Current font height will be multiplied with this value to set the line height.
-         * Default value : 1.0
-         * @public
-         * @type Number
-         * @name me.Font#lineHeight
-         */
-        lineHeight : 1.0,
-        
         /** @ignore */
         init : function(font, size, fillStyle, textAlign) {
+            // private font properties
+            /** @ignore */
+            this.font = 'Arial';
+            this.fontSize = new me.Vector2d();
+           
+            /**
+             * defines the color used to draw the font.<br>
+             * Default value : "#000000"
+             * @public
+             * @type String
+             * @name me.Font#fillStyle
+             */
+            this.fillStyle = "#000000";
 
+            /**
+             * defines the color used to draw the font stroke.<br>
+             * Default value : "#000000"
+             * @public
+             * @type String
+             * @name me.Font#strokeStyle
+             */
+            this.strokeStyle = "#000000";
+            
+            /**
+             * sets the current line width, in pixels, when drawing stroke
+             * Default value : 1
+             * @public
+             * @type Number
+             * @name me.Font#lineWidth 
+             */
+            this.lineWidth = 1;
+            
+            /**
+             * Set the default text alignment (or justification),<br>
+             * possible values are "left", "right", and "center".<br>
+             * Default value : "left"
+             * @public
+             * @type String
+             * @name me.Font#textAlign
+             */
+            this.textAlign = "left";
+            
+            /**
+             * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+             * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+             * Default value : "top"
+             * @public
+             * @type String
+             * @name me.Font#textBaseline
+             */
+            this.textBaseline = "top";
+            
+            /**
+             * Set the line spacing height (when displaying multi-line strings). <br>
+             * Current font height will be multiplied with this value to set the line height.
+             * Default value : 1.0
+             * @public
+             * @type Number
+             * @name me.Font#lineHeight
+             */
+            this.lineHeight = 1.0;
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
-            
-            // reference super of super, as the _super renderable wont have a set position yet
-            this.pos = this._super._super.pos;
             // super constructor
-            this._super.init(this.pos, 0, this.fontSize.y);
+            this._super(me.Renderable, "init", [this.pos, 0, this.fontSize.y]);
         },
 
         /**

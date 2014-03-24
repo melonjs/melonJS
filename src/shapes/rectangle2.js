@@ -31,17 +31,6 @@
     /** @scope me.Rect.prototype */ {
 
         /**
-         * allow expanding and contracting the rect with a vector<br>
-         * while keeping its original size and shape<br>
-         * @ignore
-         * @type me.Vector2d
-         * @name rangeV
-         * @memberOf me.Rect
-         * @see me.Rect#addV
-         */
-        rangeV : new me.Vector2d(),
-
-        /**
          * left coordinate of the Rectange<br>
          * takes in account the adjusted size of the rectangle (if set)
          * @public
@@ -107,7 +96,16 @@
         
         /** @ignore */
         init : function(v, w, h) {
-
+            /**
+             * allow expanding and contracting the rect with a vector<br>
+             * while keeping its original size and shape<br>
+             * @ignore
+             * @type me.Vector2d
+             * @name rangeV
+             * @memberOf me.Rect
+             * @see me.Rect#addV
+             */
+            this.rangeV = new me.Vector2d();
             // create 4 default vertices
             this.points = [
                 new me.Vector2d(),
@@ -117,7 +115,7 @@
             ];
 
             // this will actually call this object setShspe function..
-            this._super.init(v, w, h);
+            this._super(me.PolyShape, "init", [v, w, h]);
    
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape
