@@ -1,50 +1,19 @@
 /*global module:false*/
 module.exports = function(grunt) {
-    var sourceFiles = [
-        'src/core.js',
-        'src/system/device.js',
-        'src/system/timer.js',
-        'src/math/vector.js',
-        'src/math/shape.js',
-        'src/debug/debug.js',
-        'src/renderable/base.js',
-        'src/renderable/sprite.js',
-        'src/renderable/texturepacker.js',
-        'src/renderable/camera.js',
-        'src/renderable/GUI.js',
-        'src/renderable/container.js',
-        'src/entity/entity.js',
-        'src/state/state.js',
-        'src/loader/loadingscreen.js',
-        'src/loader/loader.js',
-        'src/font/font.js',
-        'src/audio/audio.js',
-        'src/video/video.js',
-        'src/input/input.js',
-        'src/utils/utils.js',
-        'src/system/save.js',
-        'src/level/TMXConstants.js',
-        'src/level/TMXUtils.js',
-        'src/level/TMXObjectGroup.js',
-        'src/level/TMXTileset.js',
-        'src/level/TMXRenderer.js',
-        'src/level/TMXLayer.js',
-        'src/level/TMXTiledMap.js',
-        'src/level/TMXMapReader.js',
-        'src/level/LevelDirector.js',
-        'src/vendors/tween.js',
-        'src/vendors/minpubsub.src.js',
-        'src/plugin/plugin.js'
-    ];
+    var sourceFiles = grunt.file.readJSON('sourceFiles.json');
 
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        path: {
+            main: 'build/<%= pkg.name %>-<%= pkg.version %>.js',
+            min: 'build/<%= pkg.name %>-<%= pkg.version %>-min.js'
+        },
 
         concat: {
             dist: {
                 src: sourceFiles,
-                dest: 'build/<%= pkg.name %>-<%= pkg.version %>.js'
+                dest: '<%= path.main %>'
             }
         },
 
@@ -62,7 +31,7 @@ module.exports = function(grunt) {
                     {
                         expand: true,
                         flatten: true,
-                        src: [ 'build/<%= pkg.name %>-<%= pkg.version %>.js' ],
+                        src: [  '<%= path.main %>' ],
                         dest: 'build/'
                     }
                 ]
@@ -86,8 +55,8 @@ module.exports = function(grunt) {
             },
             dist: {
                 files: {
-                    'build/<%= pkg.name %>-<%= pkg.version %>-min.js': [
-                        '<%= concat.dist.dest %>'
+                    '<%= path.min %>': [
+                        '<%= path.main %>'
                     ]
                 }
             }
@@ -106,15 +75,15 @@ module.exports = function(grunt) {
 
             afterConcat: {
                 files: {
-                    src: [ '<%= concat.dist.dest %>' ]
+                    src: [ '<%= path.main %>' ]
                 }
             }
         },
 
         clean: {
             dist: [
-                'build/<%= pkg.name %>-<%= pkg.version %>.js',
-                'build/<%= pkg.name %>-<%= pkg.version %>-min.js'
+                '<%= path.main %>',
+                '<%= path.min %>'
             ],
             jsdoc: [
                 'build/docs',
@@ -144,6 +113,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-jsdoc');
     grunt.loadNpmTasks('grunt-replace');
 
     // Custom Tasks

@@ -4,6 +4,11 @@
 
 root = true
 
-; All JavaScript files should use tabs unless specified otherwise
+; All JavaScript files should use spaces unless specified otherwise
 [**.js]
-indent_style = tab
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true

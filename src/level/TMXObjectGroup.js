@@ -50,15 +50,6 @@
 		height : 0,
 		
 		/**
-		 * group visibility state
-		 * @public
-		 * @type Boolean
-		 * @name name
-		 * @memberOf me.TMXObjectGroup
-		 */
-		visible : false,
-		
-		/**
 		 * group z order
 		 * @public
 		 * @type Number
@@ -76,60 +67,40 @@
 		 * @memberOf me.TMXObjectGroup
 		 */
 		objects : [],
-
+		
 		/**
-		 * constructor from XML content
+		 * constructor
 		 * @ignore
 		 * @function
 		 */
-		initFromXML : function(name, tmxObjGroup, tilesets, z) {
-			
-			this.name    = name;
-			this.width   = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_WIDTH);
-			this.height  = me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_HEIGHT);
-			this.visible = (me.mapReader.TMXParser.getIntAttribute(tmxObjGroup, me.TMX_TAG_VISIBLE, 1) === 1);
-			this.opacity = me.mapReader.TMXParser.getFloatAttribute(tmxObjGroup, me.TMX_TAG_OPACITY, 1.0).clamp(0.0, 1.0);
-			this.z       = z;
-			this.objects = [];
-		
-			// check if we have any user-defined properties
-			if (tmxObjGroup.firstChild && (tmxObjGroup.firstChild.nextSibling.nodeName === me.TMX_TAG_PROPERTIES))  {
-				me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObjGroup);
-			}
-			
-			var data = tmxObjGroup.getElementsByTagName(me.TMX_TAG_OBJECT);
-			for ( var i = 0; i < data.length; i++) {
-				var object = new me.TMXObject();
-				object.initFromXML(data[i], tilesets, z);
-				this.objects.push(object);
-			}
-		},
-		
-		/**
-		 * constructor from JSON content
-		 * @ignore
-		 * @function
-		 */
-		initFromJSON : function(name, tmxObjGroup, tilesets, z) {
+		init : function(name, tmxObjGroup, tilesets, z) {
 			var self = this;
 			
 			this.name    = name;
 			this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
 			this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
-			this.visible = tmxObjGroup[me.TMX_TAG_VISIBLE];
-			this.opacity = parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0);
 			this.z       = z;
 			this.objects  = [];
+
+			var visible = typeof(tmxObjGroup[me.TMX_TAG_VISIBLE]) !== 'undefined' ? tmxObjGroup[me.TMX_TAG_VISIBLE] : true;
+			
+			this.opacity = (visible===true)?parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0):0;
 			
 			// check if we have any user-defined properties 
-			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObjGroup);
+			me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
 			
-			// parse all TMX objects
-			tmxObjGroup["objects"].forEach(function(tmxObj) {
-				var object = new me.TMXObject();
-				object.initFromJSON(tmxObj, tilesets, z);
-				self.objects.push(object);
-			});
+			// parse all objects
+            // (under `objects` for XML converted map, under `object` for native json map)
+            var _objects = tmxObjGroup["objects"] || tmxObjGroup["object"];
+            if (Array.isArray(_objects) === true) {
+                // JSON native format
+                _objects.forEach(function(tmxObj) {
+                    self.objects.push(new me.TMXObject(tmxObj, tilesets, z));
+                });
+            } else {
+                self.objects.push(new me.TMXObject(_objects, tilesets, z));
+            }
+            
 		},
 		
 		/**
@@ -137,7 +108,7 @@
 		 * @ignore
 		 * @function
 		 */
-		reset : function() {
+		destroy : function() {
 			// clear all allocated objects
 			this.objects = null;
 		},
@@ -237,6 +208,16 @@
 		 */
 		gid : undefined,
 
+
+		/**
+		 * object type 
+		 * @public
+		 * @type String
+		 * @name type
+		 * @memberOf me.TMXObject
+		 */
+		type : undefined,
+
 		/**
 		 * if true, the object is a polygone
 		 * @public
@@ -265,75 +246,11 @@
 		points : undefined,
 
 		/**
-		 * constructor from XML content
+		 * constructor
 		 * @ignore
 		 * @function
 		 */
-		initFromXML :  function(tmxObj, tilesets, z) {
-			this.name = me.mapReader.TMXParser.getStringAttribute(tmxObj, me.TMX_TAG_NAME);
-			this.x = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_X);
-			this.y = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_Y);
-			this.z = z;
-
-			this.width = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_WIDTH, 0);
-			this.height = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_HEIGHT, 0);
-			this.gid = me.mapReader.TMXParser.getIntAttribute(tmxObj, me.TMX_TAG_GID, null);
-            
-            this.isEllipse = false;
-            this.isPolygon = false;
-            this.isPolyline = false;
-            
-
-			// check if the object has an associated gid	
-			if (this.gid) {
-				this.setImage(this.gid, tilesets);
-			} else {
-                
-                // check if this is an ellipse 
-                if (tmxObj.getElementsByTagName(me.TMX_TAG_ELLIPSE).length) {
-                    this.isEllipse = true;
-                } else {
-					// polygone || polyline
-					var points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYGON);
-					if (points.length) {
-						this.isPolygon = true;
-					} else {
-						points = tmxObj.getElementsByTagName(me.TMX_TAG_POLYLINE);
-						if (points.length) {
-							this.isPolyline = true;
-						}
-					}
-                    if (points.length) {
-                        this.points = [];
-                        // get a point array
-                        var point = me.mapReader.TMXParser.getStringAttribute(
-							points[0], 
-							me.TMX_TAG_POINTS
-                        ).split(" ");
-                        // and normalize them into an array of vectors
-                        for (var i = 0, v; i < point.length; i++) {
-                            v = point[i].split(",");
-                            this.points.push(new me.Vector2d(+v[0], +v[1]));
-                        }
-                    }	
-                }
-			}
-			
-			// Adjust the Position to match Tiled
-			me.game.renderer.adjustPosition(this);
-			
-			// set the object properties
-			me.TMXUtils.applyTMXPropertiesFromXML(this, tmxObj);
-		},
-		
-
-		/**
-		 * constructor from JSON content
-		 * @ignore
-		 * @function
-		 */
-		initFromJSON :  function(tmxObj, tilesets, z) {
-			
+		init :  function(tmxObj, tilesets, z) {
 			this.name = tmxObj[me.TMX_TAG_NAME];
 			this.x = parseInt(tmxObj[me.TMX_TAG_X], 10);
 			this.y = parseInt(tmxObj[me.TMX_TAG_Y], 10);
@@ -342,6 +259,8 @@
 			this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0, 10);
 			this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0, 10);
 			this.gid = parseInt(tmxObj[me.TMX_TAG_GID], 10) || null;
+
+			this.type = tmxObj[me.TMX_TAG_TYPE];
 			
 			this.isEllipse = false;
             this.isPolygon = false;
@@ -365,12 +284,23 @@
 							this.isPolyline = true;
 						}
                     }
-                    if (points !== undefined) {
+                    if (typeof(points) !== 'undefined') {
                         this.points = [];
-                        var self = this;
-                        points.forEach(function(point) {
-                            self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
-                        });
+                        if (typeof(points["points"]) !== 'undefined') {
+                            // get a point array
+                            points = points["points"].split(" ");
+                            // and normalize them into an array of vectors
+                            for (var i = 0, v; i < points.length; i++) {
+                                v = points[i].split(",");
+                                this.points.push(new me.Vector2d(+v[0], +v[1]));
+                            }
+                        } else {
+                            // already an object (native json format)
+                            var self = this;
+                            points.forEach(function(point) {
+                                self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
+                            });
+                        }
                     }
                    }
 			}
@@ -379,7 +309,7 @@
 			me.game.renderer.adjustPosition(this);
 			
 			// set the object properties
-			me.TMXUtils.applyTMXPropertiesFromJSON(this, tmxObj);
+			me.TMXUtils.applyTMXProperties(this, tmxObj);
 		},
 		
 		/**
@@ -403,6 +333,34 @@
 
 			// get the corresponding tile into our object
 			this.image = tileset.getTileImage(tmxTile);
+            
+			// set a generic name if not defined
+			if (typeof (this.name) === 'undefined') {
+				this.name = 'TileObject';
+			}
+		},
+
+		/**
+		 * return the corresponding shape object
+		 * @name getShape
+		 * @memberOf me.TMXObject
+         * @public
+		 * @function
+		 * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+		 */
+		getShape : function() {
+            // add an ellipse shape
+            if (this.isEllipse === true) {
+                return new me.Ellipse(new me.Vector2d(0,0), this.width, this.height);
+            }
+
+            // add a polyshape
+            if ((this.isPolygon === true) || (this.isPolyline === true)) {    
+                return new me.PolyShape(new me.Vector2d(0,0), this.points, this.isPolygon);
+            }
+
+            // it's a rectangle
+            return new me.Rect(new me.Vector2d(0,0), this.width, this.height);
 		},
 		
 		/**

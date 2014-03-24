@@ -15,7 +15,7 @@
 	 */
 
 	me.loader = (function() {
-		// hold public stuff in our singletong
+		// hold public stuff in our singleton
 		var obj = {};
 
 		// contains all the images loaded
@@ -24,15 +24,13 @@
 		var tmxList = {};
 		// contains all the binary files loaded
 		var binList = {};
-		// contains all the texture atlas files
-		var atlasList = {};
 		// contains all the JSON files
 		var jsonList = {};
 		// flag to check loading status
 		var resourceCount = 0;
 		var loadCount = 0;
 		var timerId = 0;
-		
+
 
 		/**
 		 * check the loading status
@@ -58,9 +56,9 @@
 
 		/**
 		 * load Images
-		 *	
-		 *	call example : 
-		 *	
+		 *
+		 *	call example :
+		 *
 		 *	preloadImages(
 		 *				 [{name: 'image1', src: 'images/image1.png'},
 		 *				  {name: 'image2', src: 'images/image2.png'},
@@ -68,7 +66,7 @@
 		 *				  {name: 'image4', src: 'images/image4.png'}]);
 		 * @ignore
 		 */
-		
+
 		function preloadImage(img, onload, onerror) {
 			// create new Image object and add to list
 			imgList[img.name] = new Image();
@@ -82,10 +80,32 @@
 		 * @ignore
 		 */
 		function preloadTMX(tmxData, onload, onerror) {
+
+			function addToTMXList(data,format) {
+				// set the TMX content
+				tmxList[tmxData.name] = {
+					data: data,
+					isTMX: (tmxData.type === "tmx"),
+					format : format
+				};
+			}
+
+			// add the tmx to the levelDirector
+			if (tmxData.type === "tmx") {
+				me.levelDirector.addTMXLevel(tmxData.name);
+			}
+			
+			//if the data is in the tmxData object, don't get it via a XMLHTTPRequest
+			if (tmxData.data) {
+				addToTMXList(tmxData.data,tmxData.format);
+				onload();
+				return;
+			}
+			
 			var xmlhttp = new XMLHttpRequest();
 			// check the data format ('tmx', 'json')
 			var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
-			
+
 			if (xmlhttp.overrideMimeType) {
 				if (format === 'json') {
 					xmlhttp.overrideMimeType('application/json');
@@ -93,13 +113,9 @@
 					xmlhttp.overrideMimeType('text/xml');
 				}
 			}
-			
+
 			xmlhttp.open("GET", tmxData.src + obj.nocache, true);
 
-			// add the tmx to the levelDirector
-			if (tmxData.type === "tmx") {
-				me.levelDirector.addTMXLevel(tmxData.name);
-			}
 
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
@@ -109,10 +125,10 @@
 					// (With Chrome use "--allow-file-access-from-files --disable-web-security")
 					if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
 						var result = null;
-						
+
 						// parse response
 						switch (format) {
-							case 'xml': 
+							case 'xml':
 							case 'tmx':
 								// ie9 does not fully implement the responseXML
 								if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
@@ -121,24 +137,23 @@
 								} else {
 									result = xmlhttp.responseXML;
 								}
-								// change the data format
-								format = 'xml';
+                                // converts to a JS object
+								// (returns with map as a the root object, to match native json format)
+								result = me.TMXUtils.parse(result).map;
+                                // force format to json
+								format = 'json';
 								break;
 
 							case 'json':
 								result = JSON.parse(xmlhttp.responseText);
 								break;
-							
+
 							default:
 								throw "melonJS: TMX file format " + format + "not supported !";
 						}
-												
-						// get the TMX content
-						tmxList[tmxData.name] = {
-							data: result,
-							isTMX: (tmxData.type === "tmx"),
-							format : format
-						};
+
+						//set the TMX content
+						addToTMXList(result,format);
 						
 						// fire the callback
 						onload();
@@ -150,21 +165,21 @@
 			// send the request
 			xmlhttp.send(null);
 		}
-		
-		
+
+
 		/**
 		 * preload TMX files
 		 * @ignore
 		 */
 		function preloadJSON(data, onload, onerror) {
 			var xmlhttp = new XMLHttpRequest();
-			
+
 			if (xmlhttp.overrideMimeType) {
 				xmlhttp.overrideMimeType('application/json');
 			}
-			
+
 			xmlhttp.open("GET", data.src + obj.nocache, true);
-						
+
 			// set the callbacks
 			xmlhttp.ontimeout = onerror;
 			xmlhttp.onreadystatechange = function() {
@@ -184,7 +199,7 @@
 			// send the request
 			xmlhttp.send(null);
 		}
-			
+
 		/**
 		 * preload Binary files
 		 * @ignore
@@ -201,7 +216,7 @@
 				if (arrayBuffer) {
 					var byteArray = new Uint8Array(arrayBuffer);
 					var buffer = [];
-					for (var i = 0; i < byteArray.byteLength; i++) { 
+					for (var i = 0; i < byteArray.byteLength; i++) {
 						buffer[i] = String.fromCharCode(byteArray[i]);
 					}
 					binList[data.name] = buffer.join("");
@@ -211,7 +226,7 @@
 			};
 			httpReq.send();
 		}
-		
+
 		/**
 		 * to enable/disable caching
 		 * @ignore
@@ -220,9 +235,9 @@
 
 
 		/* ---
-			
+
 			PUBLIC STUFF
-				
+
 			---	*/
 
 		/**
@@ -241,7 +256,7 @@
 		/**
 		 * onProgress callback<br>
 		 * each time a resource is loaded, the loader will fire the specified function,
-		 * giving the actual progress [0 ... 1], as argument.
+		 * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
 		 * @public
 		 * @callback
 		 * @name onProgress
@@ -258,7 +273,7 @@
 		 * @ignore
 		 */
 
-		obj.onResourceLoaded = function(e) {
+		obj.onResourceLoaded = function(res) {
 
 			// increment the loading counter
 			loadCount++;
@@ -267,11 +282,11 @@
 			var progress = obj.getLoadProgress();
 			if (obj.onProgress) {
 				// pass the load progress in percent, as parameter
-				obj.onProgress(progress);
+				obj.onProgress(progress, res);
 			}
-			me.event.publish(me.event.LOADER_PROGRESS, [progress]);
+			me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
 		};
-		
+
 		/**
 		 * on error callback for image loading
 		 * @ignore
@@ -279,7 +294,7 @@
 		obj.onLoadingError = function(res) {
 			throw "melonJS: Failed loading resource " + res.src;
 		};
-		
+
 		/**
 		 * enable the nocache mechanism
 		 * @ignore
@@ -294,11 +309,15 @@
 		 * each resource item must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
 		 * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
+		 * each resource except type "tmx" must contain the following field :<br>
 		 * - src     : path and file name of the resource<br>
+		 * (!) for tmx :<br>
+		 * - src     : path and file name of the resource<br>
+		 * or<br>
+		 * - data    : the json or xml object representation of the tmx file<br>
+		 * - format  : "xml" or "json"<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * <br>
 		 * @name preload
 		 * @memberOf me.loader
@@ -306,7 +325,7 @@
 		 * @function
 		 * @param {Object[]} resources
 		 * @example
-		 * var g_resources = [ 
+		 * var g_resources = [
 		 *   // PNG tileset
 		 *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
 		 *   // PNG packed texture
@@ -316,12 +335,14 @@
 		 *   // TMX level (XML & JSON)
 		 *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
 		 *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
-		 *   // audio ressources
-		 *   {name: "bgmusic", type: "audio",  src: "data/audio/",  channel: 1,  stream: true},
-		 *   {name: "cling",   type: "audio",  src: "data/audio/",  channel: 2},
+		 *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}},
+		 *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}},
+		 *   // audio resources
+		 *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
+		 *   {name: "cling",   type: "audio",  src: "data/audio/"},
 		 *   // binary file
 		 *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
-		 *   // JSON file (used for texturePacker) 
+		 *   // JSON file (used for texturePacker)
 		 *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
 		 * ];
 		 * ...
@@ -332,7 +353,7 @@
 		obj.preload = function(res) {
 			// parse the resources
 			for ( var i = 0; i < res.length; i++) {
-				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
+				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj, res[i]), obj.onLoadingError.bind(obj, res[i]));
 			}
 			// check load status
 			checkLoadStatus();
@@ -340,14 +361,18 @@
 
 		/**
 		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
-		 * Given parmeter must contain the following fields :<br>
+		 * Given parameter must contain the following fields :<br>
 		 * - name    : internal name of the resource<br>
-		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"
+		 * - type    : "audio", binary", "image", "json", "tmx", "tsx"<br>
+		 * each resource except type "tmx" must contain the following field :<br>
 		 * - src     : path and file name of the resource<br>
+		 * (!) for tmx :<br>
+		 * - src     : path and file name of the resource<br>
+		 * or<br>
+		 * - data    : the json or xml object representation of the tmx file<br>
+		 * - format  : "xml" or "json"<br>
 		 * (!) for audio :<br>
 		 * - src     : path (only) where resources are located<br>
-		 * - channel : optional number of channels to be created<br>
-		 * - stream  : optional boolean to enable audio streaming<br>
 		 * @name load
 		 * @memberOf me.loader
 		 * @public
@@ -358,13 +383,12 @@
 		 * @example
 		 * // load an image asset
 		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-		 * 
-		 * // start streaming music
+		 *
+		 * // start loading music
 		 * me.loader.load({
 		 *     name   : "bgmusic",
 		 *     type   : "audio",
-		 *     src    : "data/audio/",
-		 *     stream : true
+		 *     src    : "data/audio/"
 		 * }, function() {
 		 *     me.audio.play("bgmusic");
 		 * });
@@ -395,12 +419,8 @@
 					return 1;
 
 				case "audio":
-					// only load is sound is enable
-					if (me.audio.isAudioEnable()) {
-						me.audio.load(res, onload, onerror);
-						return 1;
-					}
-					break;
+					me.audio.load(res, onload, onerror);
+					return 1;
 
 				default:
 					throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
@@ -436,7 +456,7 @@
 						// cocoonJS implements a dispose function to free
 						// corresponding allocated texture in memory
 						imgList[res.name].dispose();
-					} 
+					}
 					delete imgList[res.name];
 					return true;
 
@@ -446,7 +466,7 @@
 
 					delete jsonList[res.name];
 					return true;
-					
+
 				case "tmx":
 				case "tsx":
 					if (!(res.name in tmxList))
@@ -476,47 +496,34 @@
 
 			// unload all binary resources
 			for (name in binList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "binary"
+				});
 
 			// unload all image resources
 			for (name in imgList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "image"
+				});
 
 			// unload all tmx resources
 			for (name in tmxList)
-				obj.unload(name);
-			
-			// unload all atlas resources
-			for (name in atlasList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "tmx"
+				});
 
 			// unload all in json resources
 			for (name in jsonList)
-				obj.unload(name);
+				obj.unload({
+					"name" : name,
+					"type" : "json"
+				});
 
 			// unload all audio resources
 			me.audio.unloadAll();
-		};
-
-		/**
-		 * return the specified TMX object storing type
-		 * @name getTMXFormat
-		 * @memberOf me.loader
-		 * @public
-		 * @function
-		 * @param {String} tmx name of the tmx/tsx element ("map1");
-		 * @return {String} 'xml' or 'json'
-		 */
-		obj.getTMXFormat = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (elt in tmxList)
-				return tmxList[elt].format;
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
-
 		};
 
 		/**
@@ -526,7 +533,7 @@
 		 * @public
 		 * @function
 		 * @param {String} tmx name of the tmx/tsx element ("map1");
-		 * @return {TMx} 
+		 * @return {TMx}
 		 */
 		obj.getTMX = function(elt) {
 			// avoid case issue
@@ -538,7 +545,7 @@
 				return null;
 			}
 		};
-		
+
 		/**
 		 * return the specified Binary object
 		 * @name getBinary
@@ -546,7 +553,7 @@
 		 * @public
 		 * @function
 		 * @param {String} name of the binary object ("ymTrack");
-		 * @return {Object} 
+		 * @return {Object}
 		 */
 		obj.getBinary = function(elt) {
 			// avoid case issue
@@ -568,7 +575,7 @@
 		 * @public
 		 * @function
 		 * @param {String} Image name of the Image element ("tileset-platformer");
-		 * @return {Image} 
+		 * @return {Image}
 		 */
 
 		obj.getImage = function(elt) {
@@ -591,7 +598,7 @@
 		 * @public
 		 * @function
 		 * @param {String} Name for the json file to load
-		 * @return {Object} 
+		 * @return {Object}
 		 */
 		obj.getJSON = function(elt) {
 			elt = elt.toLowerCase();
@@ -610,7 +617,7 @@
 		 * @public
 		 * @function
 		 * @deprecated use callback instead
-		 * @return {Number} 
+		 * @return {Number}
 		 */
 
 		obj.getLoadProgress = function() {

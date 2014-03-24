@@ -95,220 +95,6 @@
 		collidable : true
 	};
 
-
-	/**
-	 * A pool of Object entity <br>
-	 * This object is used for object pooling - a technique that might speed up your game
-	 * if used properly. <br>
-	 * If some of your classes will be instantiated and removed a lot at a time, it is a
-	 * good idea to add the class to this entity pool. A separate pool for that class
-	 * will be created, which will reuse objects of the class. That way they won't be instantiated
-	 * each time you need a new one (slowing your game), but stored into that pool and taking one
-	 * already instantiated when you need it.<br><br>
-	 * This object is also used by the engine to instantiate objects defined in the map,
-	 * which means, that on level loading the engine will try to instantiate every object
-	 * found in the map, based on the user defined name in each Object Properties<br>
-	 * <img src="images/object_properties.png"/><br>
-	 * There is no constructor function for me.entityPool, this is a static object
-	 * @namespace me.entityPool
-	 * @memberOf me
-	 */
-	me.entityPool = (function() {
-		// hold public stuff in our singletong
-		var obj = {};
-
-		/*---------------------------------------------
-
-			PRIVATE STUFF
-
-		---------------------------------------------*/
-		var entityClass = {};
-
-		/*---------------------------------------------
-
-			PUBLIC STUFF
-
-		---------------------------------------------*/
-
-		/*---
-
-			init
-
-			---*/
-
-		obj.init = function() {
-			// add default entity object
-			obj.add("me.ObjectEntity", me.ObjectEntity);
-			obj.add("me.CollectableEntity", me.CollectableEntity);
-			obj.add("me.LevelEntity", me.LevelEntity);
-			obj.add("me.Tween", me.Tween, true);
-		};
-
-		/**
-		 * Add an object to the pool. <br>
-		 * Pooling must be set to true if more than one such objects will be created. <br>
-		 * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
-		 * See examples in {@link me.entityPool#newInstanceOf}
-		 * @name add
-		 * @memberOf me.entityPool
-		 * @public
-		 * @function
-		 * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
-		 * @param {Object} class corresponding Class to be instantiated
-		 * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
-		 * - speeds up the game by reusing existing objects
-		 * @example
-		 * // add our users defined entities in the entity pool
-		 * me.entityPool.add("playerspawnpoint", PlayerEntity);
-		 * me.entityPool.add("cherryentity", CherryEntity, true);
-		 * me.entityPool.add("heartentity", HeartEntity, true);
-		 * me.entityPool.add("starentity", StarEntity, true);
-		 */
-		obj.add = function(className, entityObj, pooling) {
-			if (!pooling) {
-				entityClass[className.toLowerCase()] = {
-					"class" : entityObj,
-					"pool" : undefined
-				};
-				return;
-			}
-
-			entityClass[className.toLowerCase()] = {
-				"class" : entityObj,
-				"pool" : [],
-				"active" : []
-			};
-		};
-
-		/**
-		 * Return a new instance of the requested object (if added into the object pool)
-		 * @name newInstanceOf
-		 * @memberOf me.entityPool
-		 * @public
-		 * @function
-		 * @param {String} className as used in {@link me.entityPool#add}
-		 * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
-		 * @example
-		 * me.entityPool.add("player", PlayerEntity);
-		 * var player = me.entityPool.newInstanceOf("player");
-		 * @example
-		 * me.entityPool.add("bullet", BulletEntity, true);
-		 * me.entityPool.add("enemy", EnemyEntity, true);
-		 * // ...
-		 * // when we need to manually create a new bullet:
-		 * var bullet = me.entityPool.newInstanceOf("bullet", x, y, direction);
-		 * // ...
-		 * // params aren't a fixed number
-		 * // when we need new enemy we can add more params, that the object construct requires:
-		 * var enemy = me.entityPool.newInstanceOf("enemy", x, y, direction, speed, power, life);
-		 * // ...
-		 * // when we want to destroy existing object, the remove 
-		 * // function will ensure the object can then be reallocated later
-		 * me.game.remove(enemy);
-		 * me.game.remove(bullet);
-		 */
-
-		obj.newInstanceOf = function(data) {
-			var name = typeof data === 'string' ? data.toLowerCase() : undefined;
-			var args = Array.prototype.slice.call(arguments);
-			if (name && entityClass[name]) {
-				var proto;
-				if (!entityClass[name]['pool']) {
-					proto = entityClass[name]["class"];
-					args[0] = proto;
-					return new (proto.bind.apply(proto, args))();
-				}
-				
-				var obj, entity = entityClass[name];
-				proto = entity["class"];
-				if (entity["pool"].length > 0) {
-					obj = entity["pool"].pop();
-                    // call the object init function if defined (JR's Inheritance)
-					if (typeof obj.init === "function") {
-						obj.init.apply(obj, args.slice(1));
-					}
-					// call the object onResetEvent function if defined
-					if (typeof obj.onResetEvent === "function") {
-						obj.onResetEvent.apply(obj, args.slice(1));
-					}
-				} else {
-					args[0] = proto;
-					obj = new (proto.bind.apply(proto, args))();
-					obj.className = name;
-				}
-
-				entity["active"].push(obj);
-				return obj;
-			}
-
-			// Tile objects can be created with a GID attribute;
-			// The TMX parser will use it to create the image property.
-			var settings = arguments[3];
-			if (settings && settings.gid && settings.image) {
-				return new me.SpriteObject(settings.x, settings.y, settings.image);
-			}
-
-			if (name) {
-				console.error("Cannot instantiate entity of type '" + data + "': Class not found!");
-			}
-			return null;
-		};
-
-		/**
-		 * purge the entity pool from any inactive object <br>
-		 * Object pooling must be enabled for this function to work<br>
-		 * note: this will trigger the garbage collector
-		 * @name purge
-		 * @memberOf me.entityPool
-		 * @public
-		 * @function
-		 */
-		obj.purge = function() {
-			for (var className in entityClass) {
-				entityClass[className]["pool"] = [];
-			}
-		};
-
-		/**
-		 * Remove object from the entity pool <br>
-		 * Object pooling for the object class must be enabled,
-		 * and object must have been instantiated using {@link me.entityPool#newInstanceOf},
-		 * otherwise this function won't work
-		 * @name freeInstance
-		 * @memberOf me.entityPool
-		 * @public
-		 * @function
-		 * @param {Object} instance to be removed 
-		 */
-		obj.freeInstance = function(obj) {
-
-			var name = obj.className;
-			if (!name || !entityClass[name]) {
-				return;
-			}
-
-			var notFound = true;
-			for (var i = 0, len = entityClass[name]["active"].length; i < len; i++) {
-				if (entityClass[name]["active"][i] === obj) {
-					notFound = false;
-					entityClass[name]["active"].splice(i, 1);
-					break;
-				}
-			}
-
-			if (notFound) {
-				return;
-			}
-
-			entityClass[name]["pool"].push(obj);
-		};
-
-		// return our object
-		return obj;
-
-	})();
-
-
 	/************************************************************************************/
 	/*                                                                                  */
 	/*      a generic object entity                                                     */
@@ -329,7 +115,7 @@
 	 */
 	me.ObjectEntity = me.Renderable.extend(
 	/** @scope me.ObjectEntity.prototype */ {
-	
+
 		/**
 		 * define the type of the object<br>
 		 * default value : none<br>
@@ -349,28 +135,24 @@
 		 * @memberOf me.ObjectEntity
 		 */
 		collidable : true,
-		
-		
-		/**
-		 * Entity collision Box<br>
-		 * (reference to me.ObjectEntity.shapes[0].getBounds)
-		 * @public
-		 * @deprecated
-		 * @type me.Rect
-		 * @name collisionBox
-		 * @memberOf me.ObjectEntity
-		 */
-		collisionBox : null,
 
 		/**
-		 * Entity collision shapes<br>
-		 * (RFU - Reserved for Future Usage)
-		 * @protected
-		 * @type Object[]
+		 * The collision shapes of the entity <br>
+		 * (note: only shape at index 0 is used in melonJS 1.0.x)
+		 * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]} 
 		 * @name shapes
 		 * @memberOf me.ObjectEntity
 		 */
-		shapes : null,
+		shapes : [],
+        
+		/**
+		 * The current shape index
+		 * @ignore
+		 * @type Number
+		 * @name shapeIndex
+		 * @memberOf me.ObjectEntity
+		 */
+		shapeIndex : 0,
 
 		/**
 		 * The entity renderable object (if defined)
@@ -380,24 +162,19 @@
 		 * @memberOf me.ObjectEntity
 		 */
 		renderable : null,
-		
+
 		// just to keep track of when we flip
 		lastflipX : false,
 		lastflipY : false,
-		
-		
+
+
 		/** @ignore */
 		init : function(x, y, settings) {
-            // instantiate pos here to avoid
-            // later re-instantiation
-            if (this.pos === null) {
-                this.pos = new me.Vector2d();
-            }            
 			// call the parent constructor
 			this.parent(this.pos.set(x,y),
-						~~settings.spritewidth  || ~~settings.width,
-						~~settings.spriteheight || ~~settings.height);
-			
+						settings.width,
+						settings.height);
+
 			if (settings.image) {
 				var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
 				this.renderable = new me.AnimationSheet(0, 0, image,
@@ -405,7 +182,7 @@
 														~~settings.spriteheight,
 														~~settings.spacing,
 														~~settings.margin);
-				
+
 				// check for user defined transparent color
 				if (settings.transparent_color) {
 					this.renderable.setTransparency(settings.transparent_color);
@@ -424,7 +201,7 @@
              */
             if (this.vel === undefined) {
                 this.vel = new me.Vector2d();
-            }    
+            }
             this.vel.set(0,0);
 
             /**
@@ -436,9 +213,9 @@
              */
             if (this.accel === undefined) {
                 this.accel = new me.Vector2d();
-            }    
+            }
             this.accel.set(0,0);
-            
+
             /**
              * entity current friction<br>
              * @public
@@ -447,7 +224,7 @@
              */
             if (this.friction === undefined) {
                 this.friction = new me.Vector2d();
-            }    
+            }
             this.friction.set(0,0);
 
             /**
@@ -459,9 +236,9 @@
              */
             if (this.maxVel === undefined) {
                 this.maxVel = new me.Vector2d();
-            }    
+            }
             this.maxVel.set(1000, 1000);
-        
+
 			// some default contants
 			/**
 			 * Default gravity value of the entity<br>
@@ -476,9 +253,6 @@
 			 */
 			this.gravity = me.sys.gravity!==undefined ? me.sys.gravity : 0.98;
 
-			// just to identify our object
-			this.isEntity = true;
-			
 			/**
 			 * dead/living state of the entity<br>
 			 * default value : true
@@ -488,15 +262,6 @@
 			 * @memberOf me.ObjectEntity
 			 */
 			this.alive = true;
-			
-			// make sure it's visible by default
-			this.visible = true;
-			
-			// and also non floating by default
-			this.floating = false;
-			
-			// and non persistent per default
-			this.isPersistent = false;
 
 			/**
 			 * falling state of the object<br>
@@ -550,18 +315,18 @@
 			 */
 			this.disableTopLadderCollision = false;
 
-			// to enable collision detection			
+			// to enable collision detection
 			this.collidable = typeof(settings.collidable) !== "undefined" ?	settings.collidable : true;
-			
+
 			// default objec type
 			this.type = settings.type || 0;
-			
+
 			// default flip value
 			this.lastflipX = this.lastflipY = false;
-			
+
 			// ref to the collision map
 			this.collisionMap = me.game.collisionMap;
-						
+
 			/**
 			 * Define if an entity can go through breakable tiles<br>
 			 * default value : false<br>
@@ -581,69 +346,59 @@
 			 */
 			this.onTileBreak = null;
 
-            // add a default shape 
-            if (settings.isEllipse===true) {
-                // ellipse
-                this.addShape(new me.Ellipse(new me.Vector2d(0,0), this.width, this.height));
-            } 
-            else if ((settings.isPolygon===true) || (settings.isPolyline===true)) {
-                // add a polyshape
-                this.addShape(new me.PolyShape(new me.Vector2d(0,0), settings.points, settings.isPolygon));
-                // set the entity object based on the bounding box size ?
-                this.width = this.collisionBox.width;
-                this.height = this.collisionBox.height;
-            } 
-            else {
-                // add a rectangle
-                this.addShape(new me.Rect(new me.Vector2d(0,0), this.width, this.height));
-            }
-             
-            
+			if (typeof (settings.getShape) === 'function') {
+				// add the given collision shape to the object
+				this.addShape(settings.getShape());
 
-		},
-
-		/**
-		 * specify the size of the hit box for collision detection<br>
-		 * (allow to have a specific size for each object)<br>
-		 * e.g. : object with resized collision box :<br>
-		 * <img src="images/me.Rect.colpos.png"/>
-		 * @name updateColRect
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Number} x x offset (specify -1 to not change the width)
-		 * @param {Number} w width of the hit box
-		 * @param {Number} y y offset (specify -1 to not change the height)
-		 * @param {Number} h height of the hit box
-		 */
-		updateColRect : function(x, w, y, h) {
-			this.collisionBox.adjustSize(x, w, y, h);
+				// ---- TODO : fix this bug, as it should not matter!
+				if (this.getShape().shapeType === 'PolyShape') {
+					this._bounds = this.getBounds();
+					this.resize(this._bounds.width, this._bounds.height);
+				}
+				// ----
+			}
 		},
 
         /**
-		 * add a collision shape to this entity<
+		 * add a collision shape to this entity
 		 * @name addShape
 		 * @memberOf me.ObjectEntity
          * @public
 		 * @function
-		 * @param {me.objet} shape a shape object
+		 * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
 		 */
 		addShape : function(shape) {
-			if (this.shapes === null) {
-                this.shapes = [];
-            }
             this.shapes.push(shape);
-            
-            // some hack to get the collisionBox working in this branch
-            // to be removed once the ticket #103 will be done
-            if (this.shapes.length === 1) {
-                this.collisionBox = this.shapes[0].getBounds();
-                // collisionBox pos vector is a reference to this pos vector
-                this.collisionBox.pos = this.pos;
-                // offset position vector
-                this.pos.add(this.shapes[0].offset);
-            }
 		},
-         
+
+		/**
+		 * return the current collision shape for this entity
+		 * @name getShape
+		 * @memberOf me.ObjectEntity
+         * @public
+		 * @function
+		 * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+		 */
+		getShape : function() {
+			return this.shapes[this.shapeIndex];
+		},
+
+		/**
+		 * change the current collision shape for this entity
+		 * @name setShape
+		 * @memberOf me.ObjectEntity
+		 * @public
+		 * @function
+		 * @param {Number} index shape index
+		 */
+		setShape : function(index) {
+			if (typeof(this.shapes[index]) !== 'undefined') {
+				this.shapeIndex = index;
+				return;
+			}
+			throw "melonJS (me.Entity): Shape (" + index + ") not defined";
+		},
+        
 		/**
 		 * onCollision Event function<br>
 		 * called by the game manager when the object collide with shtg<br>
@@ -657,8 +412,9 @@
 		 */
 		onCollision : function(res, obj) {
 			// destroy the object if collectable
-			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT))
-				me.game.remove(this);
+			if (this.collidable	&& (this.type === me.game.COLLECTABLE_OBJECT)) {
+				me.game.world.removeChild(this);
+			}
 		},
 
 		/**
@@ -707,7 +463,7 @@
 			this.friction.x = x || 0;
 			this.friction.y = y || 0;
 		},
-		
+
 		/**
 		 * Flip object on horizontal axis
 		 * @name flipX
@@ -723,7 +479,9 @@
 					this.renderable.flipX(flip);
 				}
 				// flip the collision box
-				this.collisionBox.flipX(this.width);
+				if (this.getShape().flipX) {
+					this.getShape().flipX(this.width);
+				}
 			}
 		},
 
@@ -742,100 +500,11 @@
 					this.renderable.flipY(flip);
 				}
 				// flip the collision box
-				this.collisionBox.flipY(this.height);
+				if (this.getShape().flipY) {
+					this.getShape().flipY(this.height);
+				}
 			}
 		},
-
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity move left of right<br>
-		 * @name doWalk
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Boolean} left will automatically flip horizontally the entity sprite
-		 * @protected
-		 * @deprecated
-		 * @example
-		 * if (me.input.isKeyPressed('left'))
-		 * {
-		 *     this.doWalk(true);
-		 * }
-		 * else if (me.input.isKeyPressed('right'))
-		 * {
-		 *     this.doWalk(false);
-		 * }
-		 */
-		doWalk : function(left) {
-			this.flipX(left);
-			this.vel.x += (left) ? -this.accel.x * me.timer.tick : this.accel.x * me.timer.tick;
-		},
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity move up and down<br>
-		 * only valid is the player is on a ladder
-		 * @name doClimb
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Boolean} up will automatically flip vertically the entity sprite
-		 * @protected
-		 * @deprecated
-		 * @example
-		 * if (me.input.isKeyPressed('up'))
-		 * {
-		 *     this.doClimb(true);
-		 * }
-		 * else if (me.input.isKeyPressed('down'))
-		 * {
-		 *     this.doClimb(false);
-		 * }
-		 */
-		doClimb : function(up) {
-			// add the player x acceleration to the y velocity
-			if (this.onladder) {
-				this.vel.y = (up) ? -this.accel.x * me.timer.tick
-						: this.accel.x * me.timer.tick;
-				this.disableTopLadderCollision = !up;
-				return true;
-			}
-			return false;
-		},
-
-
-		/**
-		 * helper function for platform games: <br>
-		 * make the entity jump<br>
-		 * @name doJump
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @protected
-		 * @deprecated
-		 */
-		doJump : function() {
-			// only jump if standing
-			if (!this.jumping && !this.falling) {
-				this.vel.y = -this.maxVel.y * me.timer.tick;
-				this.jumping = true;
-				return true;
-			}
-			return false;
-		},
-
-		/**
-		 * helper function for platform games: <br>
-		 * force to the entity to jump (for double jump)<br>
-		 * @name forceJump
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @protected
-		 * @deprecated
-		 */
-		forceJump : function() {
-			this.jumping = this.falling = false;
-			this.doJump();
-		},
-
 
 		/**
 		 * return the distance to the specified entity
@@ -853,7 +522,7 @@
 			var dy = (this.pos.y + this.hHeight) - (e.pos.y + e.hHeight);
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		
+
 		/**
 		 * return the distance to the specified point
 		 * @name distanceToPoint
@@ -870,7 +539,7 @@
 			var dy = (this.pos.y + this.hHeight) - (v.y);
 			return Math.sqrt(dx*dx+dy*dy);
 		},
-		
+
 		/**
 		 * return the angle to the specified entity
 		 * @name angleTo
@@ -887,8 +556,8 @@
 			var ay = (e.pos.y + e.hHeight) - (this.pos.y + this.hHeight);
 			return Math.atan2(ay, ax);
 		},
-		
-		
+
+
 		/**
 		 * return the angle to the specified point
 		 * @name angleToPoint
@@ -908,26 +577,25 @@
 
 
 		/**
-		 * handle the player movement on a slope
-		 * and update vel value
+		 * adjust the given rect to the given slope tile
 		 * @ignore
 		 */
-		checkSlope : function(tile, left) {
+		checkSlope : function(rect, tile, left) {
 
 			// first make the object stick to the tile
-			this.pos.y = tile.pos.y - this.height;
+			rect.pos.y = tile.pos.y - rect.height;
 
 			// normally the check should be on the object center point,
 			// but since the collision check is done on corner, we must do the same thing here
 			if (left)
-				this.slopeY = tile.height - (this.collisionBox.right + this.vel.x - tile.pos.x);
+				this.slopeY = tile.height - (rect.right + this.vel.x - tile.pos.x);
 			else
-				this.slopeY = (this.collisionBox.left + this.vel.x - tile.pos.x);
+				this.slopeY = (rect.left + this.vel.x - tile.pos.x);
 
 			// cancel y vel
 			this.vel.y = 0;
 			// set player position (+ workaround when entering/exiting slopes tile)
-			this.pos.y += this.slopeY.clamp(0, tile.height);
+			rect.pos.y += this.slopeY.clamp(0, tile.height);
 
 		},
 
@@ -1008,12 +676,19 @@
 		updateMovement : function() {
 
 			this.computeVelocity(this.vel);
-			
+
 			// Adjust position only on collidable object
 			var collision;
 			if (this.collidable) {
+				// temporary stuff until ticket #103 is done (this function will disappear anyway)
+				// save the collision box offset
+				this._bounds = this.getBounds(this._bounds);
+				this.__offsetX = this._bounds.pos.x;
+				this.__offsetY = this._bounds.pos.y;
+				this._bounds.translateV(this.pos);
+
 				// check for collision
-				collision = this.collisionMap.checkCollision(this.collisionBox, this.vel);
+				collision = this.collisionMap.checkCollision(this._bounds, this.vel);
 
 				// update some flags
 				this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -1028,17 +703,17 @@
 					this.onladder = collision.yprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.y > 0) {
-						if (collision.yprop.isSolid	|| 
-							(collision.yprop.isPlatform && (this.collisionBox.bottom - 1 <= collision.ytile.pos.y)) ||
+						if (collision.yprop.isSolid	||
+							(collision.yprop.isPlatform && (this._bounds.bottom - 1 <= collision.ytile.pos.y)) ||
 							(collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
 							// adjust position to the corresponding tile
-							this.pos.y = ~~this.pos.y;
-							this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0 ;
+							this._bounds.pos.y = ~~this._bounds.pos.y;
+							this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0 ;
 							this.falling = false;
 						}
 						else if (collision.yprop.isSlope && !this.jumping) {
 							// we stop falling
-							this.checkSlope(collision.ytile, collision.yprop.isLeftSlope);
+							this.checkSlope(this._bounds, collision.ytile, collision.yprop.isLeftSlope);
 							this.falling = false;
 						}
 						else if (collision.yprop.isBreakable) {
@@ -1050,8 +725,8 @@
 							}
 							else {
 								// adjust position to the corresponding tile
-								this.pos.y = ~~this.pos.y;
-								this.vel.y = (this.falling) ?collision.ytile.pos.y - this.collisionBox.bottom: 0;
+								this.collision.pos.y = ~~this.collision.pos.y;
+								this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0;
 								this.falling = false;
 							}
 						}
@@ -1072,7 +747,7 @@
 					this.onladder = collision.xprop.isLadder || collision.yprop.isTopLadder;
 
 					if (collision.xprop.isSlope && !this.jumping) {
-						this.checkSlope(collision.xtile, collision.xprop.isLeftSlope);
+						this.checkSlope(this._bounds, collision.xtile, collision.xprop.isLeftSlope);
 						this.falling = false;
 					} else {
 						// can walk through the platform & ladder
@@ -1089,6 +764,12 @@
 						}
 					}
 				}
+
+				// temporary stuff until ticket #103 is done (this function will disappear anyway)
+				this.pos.set(
+					this._bounds.pos.x - this.__offsetX,
+					this._bounds.pos.y - this.__offsetY
+				);
 			}
 
 			// update player position
@@ -1098,81 +779,33 @@
 			return collision;
 
 		},
-		
-		/**
-		 * Checks if this entity collides with others entities.
-		 * @public
-		 * @name collide
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {Boolean} [multiple=false] check for multiple collision
-		 * @return {me.Vector2d} collision vector or an array of collision vector (if multiple collision){@link me.Rect#collideVsAABB}
-		 * @example
-		 * // update player movement
-		 * this.updateMovement();
-		 *
-		 * // check for collision with other objects
-		 * res = this.collide();
-		 *
-		 * // check if we collide with an enemy :
-		 * if (res && (res.obj.type == me.game.ENEMY_OBJECT))
-		 * {
-		 *   if (res.x != 0)
-		 *   {
-		 *      // x axis
-		 *      if (res.x<0)
-		 *         console.log("x axis : left side !");
-		 *      else
-		 *         console.log("x axis : right side !");
-		 *   }
-		 *   else
-		 *   {
-		 *      // y axis
-		 *      if (res.y<0)
-		 *         console.log("y axis : top side !");
-		 *      else
-		 *         console.log("y axis : bottom side !");
-		 *   }
-		 * }
-		 */
-		collide : function(multiple) {
-			return me.game.collide(this, multiple || false);
-		},
 
-		/**
-		 * Checks if the specified entity collides with others entities of the specified type.
-		 * @public
-		 * @name collideType
-		 * @memberOf me.ObjectEntity
-		 * @function
-		 * @param {String} type Entity type to be tested for collision
-		 * @param {Boolean} [multiple=false] check for multiple collision
-		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
-		 */
-		collideType : function(type, multiple) {
-			return me.game.collideType(this, type, multiple || false);
-		},
-		
 		/** @ignore */
-		update : function() {
+		update : function( dt ) {
 			if (this.renderable) {
-				return this.renderable.update();
+				return this.renderable.update( dt );
 			}
 			return false;
 		},
-		
-		/**
-		 * @ignore	
-		 */
-		getBounds : function() {
-			if (this.renderable) {
-				// translate the renderable position since its 
-				// position is relative to this entity
-				return this.renderable.getBounds().translateV(this.pos);
+
+        /**
+         * returns the bounding box for this entity, the smallest rectangle object completely containing the entity current shape.
+         * @name getBounds
+         * @memberOf me.ObjectEntity
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle    
+         */
+		getBounds : function(rect) {
+			if (this.shapes.length) {
+				return this.getShape().getBounds(rect);
+			} else {
+				// call the parent me.Rect.getBounds()
+				// translate back for the position to be relative to the entity
+				return this.parent(rect).translate(-this.pos.x, -this.pos.y);
 			}
-			return null;
 		},
-		
+
 		/**
 		 * object draw<br>
 		 * not to be called by the end user<br>
@@ -1188,15 +821,19 @@
 			if (this.renderable) {
 				// translate the renderable position (relative to the entity)
 				// and keeps it in the entity defined bounds
-				// anyway to optimize this ?
-				var x = ~~(this.pos.x + (this.anchorPoint.x * (this.width - this.renderable.width)));
-				var y = ~~(this.pos.y + (this.anchorPoint.y * (this.height - this.renderable.height)));
+				var bounds = this;
+				if (this.shapes.length && this.getShape().shapeType === 'PolyShape') {
+					// use the corresponding bounding box
+					bounds = this.getBounds(this._bounds).translateV(this.pos);
+				}
+				var x = ~~(bounds.pos.x + (this.anchorPoint.x * (bounds.width - this.renderable.width)));
+				var y = ~~(bounds.pos.y + (this.anchorPoint.y * (bounds.height - this.renderable.height)));
 				context.translate(x, y);
 				this.renderable.draw(context);
 				context.translate(-x, -y);
 			}
 		},
-		
+
 		/**
 		 * Destroy function<br>
 		 * @ignore
@@ -1208,8 +845,8 @@
 				this.renderable = null;
 			}
 			this.onDestroyEvent.apply(this, arguments);
-            this.collisionBox = null;
             this.shapes = [];
+            this.shapeIndex = 0;
 		},
 
 		/**
@@ -1279,7 +916,7 @@
 			this.fade = settings.fade;
 			this.duration = settings.duration;
 			this.fading = false;
-			
+
 			// a temp variable
 			this.gotolevel = settings.to;
 		},

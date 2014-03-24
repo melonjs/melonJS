@@ -39,7 +39,6 @@
 		var _reversed = false;
 		var _delayTime = 0;
 		var _startTime = null;
-		var _pauseTime = 0;
 		var _easingFunction = me.Tween.Easing.Linear.None;
 		var _interpolationFunction = me.Tween.Interpolation.Linear;
 		var _chainedTweens = [];
@@ -105,15 +104,14 @@
 		 * @public
 		 * @function
 		 */
-		this.start = function () {
+		this.start = function ( time ) {
 
 			_onStartCallbackFired = false;
 
 			// add the tween to the object pool on start
 			me.game.world.addChild(this);
 
-			_startTime = me.timer.getTime() + _delayTime;
-			_pauseTime = 0;
+			_startTime = (typeof(time) === 'undefined' ? me.timer.getTime() : time) + _delayTime;
 		
 			for ( var property in _valuesEnd ) {
 
@@ -154,7 +152,7 @@
 		this.stop = function () {
 			// ensure the tween has not been removed previously
 			if (me.game.world.hasChild(this)) {
-				me.game.world.removeChild(this);
+				me.game.world.removeChildNow(this);
 			}
 			return this;
 		};
@@ -172,24 +170,14 @@
 			return this;
 
 		};
-		
-		/**
-		 * Calculate delta to pause the tween
-		 * @ignore
-		 */
-		me.event.subscribe(me.event.STATE_PAUSE, function onPause() {
-			if (_startTime) {
-				_pauseTime = me.timer.getTime();
-			}
-		});
 
 		/**
 		 * Calculate delta to resume the tween
 		 * @ignore
 		 */
-		me.event.subscribe(me.event.STATE_RESUME, function onResume() {
-			if (_startTime && _pauseTime) {
-				_startTime += me.timer.getTime() - _pauseTime;
+		me.event.subscribe(me.event.STATE_RESUME, function onResume(elapsed) {
+			if (_startTime) {
+				_startTime += elapsed;
 			}
 		});
 
@@ -308,12 +296,14 @@
 		};
 		
 		/** @ignore*/
-		this.update = function ( /*time*/ ) {
-
-			var property;
-			
+		this.update = function ( dt ) {
+            
+			// the original Tween implementation expect
+			// a timestamp and not a time delta
 			var time = me.timer.getTime();
-
+            
+			var property;
+            
 			if ( time < _startTime ) {
 
 				return true;
@@ -398,9 +388,8 @@
 					return true;
 
 				} else {
-				
 					// remove the tween from the object pool
-					me.game.world.removeChild(this);
+					me.game.world.removeChildNow(this);
 
 					if ( _onCompleteCallback !== null ) {
 

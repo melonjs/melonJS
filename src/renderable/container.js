@@ -8,19 +8,29 @@
 (function(window) {
 
 	/**
+	 * Private function to re-use for object removal in a defer
+	 * @ignore
+	 */
+	var deferredRemove = function(child, keepalive) {
+		if(child.ancestor) {
+			child.ancestor.removeChildNow(child, keepalive);
+		}
+	};
+
+	/**
 	 * A global "translation context" for nested ObjectContainers
 	 * @ignore
 	 */
 	var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
 
 	/**
-	 * A global "floating entity" reference counter for nested ObjectContainers
+	 * A global "floating children" reference counter for nested ObjectContainers
 	 * @ignore
 	 */
 	var globalFloatingCounter = 0;
 
 	/**
-	 * EntityContainer represents a collection of child objects
+	 * ObjectContainer represents a collection of child objects
 	 * @class
 	 * @extends me.Renderable
 	 * @memberOf me
@@ -34,7 +44,7 @@
 		/** @scope me.ObjectContainer.prototype */ {
 
 		/**
-		 * The property of entity that should be used to sort on <br>
+		 * The property of the child object that should be used to sort on <br>
 		 * value : "x", "y", "z" (default: me.game.sortOn)
 		 * @public
 		 * @type String
@@ -44,7 +54,7 @@
 		sortOn : "z",
 		
 		/** 
-		 * Specify if the entity list should be automatically sorted when adding a new child
+		 * Specify if the children list should be automatically sorted when adding a new child
 		 * @public
 		 * @type Boolean
 		 * @name autoSort
@@ -65,6 +75,12 @@
 		children : null,
 
 		/**
+		 * Container bounds
+		 * @ignore
+		 */	
+		bounds : null,
+        
+		/**
 		 * Enable collision detection for this container (default true)<br>
 		 * @public
 		 * @type Boolean
@@ -72,6 +88,16 @@
 		 * @memberOf me.ObjectContainer
 		 */
 		collidable : true,
+        
+		/**
+		 * the container default transformation matrix
+		 * @public
+		 * @type me.Matrix2d
+		 * @name transform
+		 * @memberOf me.ObjectContainer
+		 */
+		transform : new me.Matrix2d(),
+		
 		
 
 		/** 
@@ -82,13 +108,16 @@
 			// call the parent constructor
 			this.parent(
 				new me.Vector2d(x || 0, y || 0),
-				width || Infinity, 
+				width || Infinity,
 				height || Infinity 
 			);
+			// init the bounds to an empty rect
+			this.bounds = new me.Rect(new me.Vector2d(0,0), 0, 0);
 			this.children = [];
 			// by default reuse the global me.game.setting
 			this.sortOn = me.game.sortOn;
 			this.autoSort = true;
+            this.transform.identity();
 		},
 
 
@@ -99,10 +128,11 @@
 		 * @memberOf me.ObjectContainer
 		 * @function
 		 * @param {me.Renderable} child
+		 * @param {number} [zIndex] forces the z index of the child to the specified value.
 		 */
-		addChild : function(child) {
+		addChild : function(child, zIndex) {
 			if(typeof(child.ancestor) !== 'undefined') {
-				child.ancestor.removeChild(child);
+				child.ancestor.removeChildNow(child);
 			} else {
 				// only allocate a GUID if the object has no previous ancestor 
 				// (e.g. move one child from one container to another)
@@ -111,11 +141,16 @@
 					child.GUID = me.utils.createGUID();
 				}
             }
+            
+            // change the child z-index if one is specified
+            if (typeof(zIndex) === 'number') {
+                child.z = zIndex;
+            }
 
             // specify a z property to infinity if not defined
-			if (typeof child.z === 'undefined') {
-				child.z = Infinity;
-			}
+            if (typeof child.z === 'undefined') {
+                child.z = Infinity;
+            }
 
 			child.ancestor = this;
             
@@ -139,7 +174,7 @@
 			if((index >= 0) && (index < this.children.length)) {
 				
 				if(typeof(child.ancestor) !== 'undefined') {
-					child.ancestor.removeChild(child);
+					child.ancestor.removeChildNow(child);
 				} else {
 					// only allocate a GUID if the object has no previous ancestor 
 					// (e.g. move one child from one container to another)
@@ -181,7 +216,7 @@
 				this.children[index2] = child;
 				
 			} else {
-				throw "melonJS (me.ObjectContainer): " + child + " Both the supplied entities must be a child of the caller " + this;
+				throw "melonJS (me.ObjectContainer): " + child + " Both the supplied childs must be a child of the caller " + this;
 			}
 		},
 
@@ -227,7 +262,7 @@
 		 * return the child corresponding to the given property and value.<br>
 		 * note : avoid calling this function every frame since
 		 * it parses the whole object tree each time
-		 * @name getEntityByProp
+		 * @name getChildByProp
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
@@ -235,12 +270,12 @@
 		 * @param {String} value Value of the property
 		 * @return {me.Renderable[]} Array of childs
 		 * @example
-		 * // get the first entity called "mainPlayer" in a specific container :
-		 * ent = myContainer.getEntityByProp("name", "mainPlayer");
+		 * // get the first child object called "mainPlayer" in a specific container :
+		 * ent = myContainer.getChildByProp("name", "mainPlayer");
 		 * // or query the whole world :
-		 * ent = me.game.world.getEntityByProp("name", "mainPlayer");
+		 * ent = me.game.world.getChildByProp("name", "mainPlayer");
 		 */
-		getEntityByProp : function(prop, value)	{
+		getChildByProp : function(prop, value)	{
 			var objList = [];	
 			// for string comparaisons
 			var _regExp = new RegExp(value, "i");
@@ -258,26 +293,105 @@
 			for (var i = this.children.length, obj; i--, obj = this.children[i];) {
 				if (obj instanceof me.ObjectContainer) {
 					compare(obj, prop);
-					objList = objList.concat(obj.getEntityByProp(prop, value));
-				} else if (obj.isEntity) {
+					objList = objList.concat(obj.getChildByProp(prop, value));
+				} else {
 					compare(obj, prop);
 				}
 			}
 			return objList;
 		},
 		
+
 		/**
-		 * Removes (and optionally destroys) a child from the container.<br>
-		 * (removal is immediate and unconditional)<br>
-		 * Never use keepalive=true with objects from {@link me.entityPool}. Doing so will create a memory leak.
+		 * returns the list of childs with the specified name<br>
+		 * as defined in Tiled (Name field of the Object Properties)<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name getChildByName
+		 * @memberOf me.ObjectContainer
+		 * @public
+		 * @function
+		 * @param {String} name entity name
+		 * @return {me.Renderable[]} Array of childs
+		 */
+		getChildByName : function(name) {
+			return this.getChildByProp("name", name);
+		},
+		
+		/**
+		 * return the child corresponding to the specified GUID<br>
+		 * note : avoid calling this function every frame since
+		 * it parses the whole object list each time
+		 * @name getChildByGUID
+		 * @memberOf me.ObjectContainer
+		 * @public
+		 * @function
+		 * @param {String} GUID entity GUID
+		 * @return {me.Renderable} corresponding child or null
+		 */
+		getChildByGUID : function(guid) {
+			var obj = this.getChildByProp("GUID", guid);
+			return (obj.length>0)?obj[0]:null;
+		},
+        
+        
+        /**
+         * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
+         * @name getBounds
+         * @memberOf me.ObjectContainer
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle    
+         */
+        getBounds : function(rect) {
+            var _bounds = (typeof(rect) !== 'undefined') ? rect : this.bounds;
+            
+            // reset the rect with default values
+            _bounds.pos.set(Infinity, Infinity);
+            _bounds.resize(-Infinity, -Infinity);
+            
+            var childBounds;
+            for ( var i = this.children.length, child; i--, child = this.children[i];) {
+                if(child.isRenderable) {
+                    childBounds = child.getBounds();
+                    // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
+                    // TODO : getBounds should always return something anyway
+                    if (childBounds !== null) {
+                        _bounds.union(childBounds);
+                    }
+                }
+            }
+            // TODO : cache the value until any childs are modified? (next frame?) 
+            return _bounds;
+        },
+
+		/**
+		 * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
 		 * @name removeChild
 		 * @memberOf me.ObjectContainer
+		 * @public
 		 * @function
 		 * @param {me.Renderable} child
 		 * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
 		 */
 		removeChild : function(child, keepalive) {
+			if(child.ancestor) {
+				deferredRemove.defer(this, child, keepalive);
+			}
+		},
 
+
+		/**
+		 * Removes (and optionally destroys) a child from the container.<br>
+		 * (removal is immediate and unconditional)<br>
+		 * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
+		 * @name removeChildNow
+		 * @memberOf me.ObjectContainer
+		 * @function
+		 * @param {me.Renderable} child
+		 * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+		 */
+		removeChildNow : function(child, keepalive) {
 			if  (this.hasChild(child)) {
 				
 				child.ancestor = undefined;
@@ -287,13 +401,13 @@
 						child.destroy();
 					}
 
-					me.entityPool.freeInstance(child);
+					me.pool.push(child);
 				}
 				
 				this.children.splice( this.getChildIndex(child), 1 );
 			
 			} else {
-				throw "melonJS (me.ObjectContainer): " + child + " The supplied entity must be a child of the caller " + this;
+				throw "melonJS (me.ObjectContainer): " + child + " The supplied child must be a child of the caller " + this;
 			}
 		},
         
@@ -380,7 +494,7 @@
 		},
 		
 		/**
-		 * Checks if the specified entity collides with others entities in this container
+		 * Checks if the specified child collides with others childs in this container
 		 * @name collide
 		 * @memberOf me.ObjectContainer
 		 * @public
@@ -388,19 +502,40 @@
 		 * @param {me.Renderable} obj Object to be tested for collision
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+		 * @example
+		 * // check for collision between this object and others
+		 * res = me.game.world.collide(this);
+		 *
+		 * // check if we collide with an enemy :
+		 * if (res && (res.obj.type == game.constants.ENEMY_OBJECT)) {
+		 *   if (res.x != 0) {
+		 *      // x axis
+		 *      if (res.x<0)
+		 *         console.log("x axis : left side !");
+		 *      else
+		 *         console.log("x axis : right side !");
+		 *   }
+		 *   else {
+		 *      // y axis
+		 *      if (res.y<0)
+		 *         console.log("y axis : top side !");
+		 *      else
+		 *         console.log("y axis : bottom side !");
+		 *   }
+		 * }
 		 */
 		collide : function(objA, multiple) {
 			return this.collideType(objA, null, multiple);
 		},
 		
 		/**
-		 * Checks if the specified entity collides with others entities in this container
+		 * Checks if the specified child collides with others childs in this container
 		 * @name collideType
 		 * @memberOf me.ObjectContainer
 		 * @public
 		 * @function
 		 * @param {me.Renderable} obj Object to be tested for collision
-		 * @param {String} [type=undefined] Entity type to be tested for collision
+		 * @param {String} [type=undefined] child type to be tested for collision
 		 * @param {Boolean} [multiple=false] check for multiple collision
 		 * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
 		 */
@@ -429,10 +564,18 @@
 						}
 						
 					} else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
-			
-						res = obj.collisionBox["collideWith"+objA.shapeType].call(obj.collisionBox, objA.collisionBox);
+
+						this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
+						this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
+					
+						res = this._boundsA["collideWith"+this._boundsB.shapeType].call(
+							this._boundsA, 
+							this._boundsB
+						);
+
 						
 						if (res.x !== 0 || res.y !== 0) {
+
 							// notify the object
 							obj.onCollision.call(obj, res, objA);
 							// return the type (deprecated)
@@ -481,7 +624,7 @@
 					self.pendingSort = null;
 					// make sure we redraw everything
 					me.game.repaint();
-				}.defer(this));
+				}.defer(this, this));
 			}
 		},
 		
@@ -525,15 +668,18 @@
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				// don't remove it if a persistent object
 				if ( !obj.isPersistent ) {
-					this.removeChild(obj);
+					this.removeChildNow(obj);
 				}	
 			}
+            
+            // reset the transformation matrix
+            this.transform.identity();
 		},
 
 		/**
 		 * @ignore
 		 */
-		update : function() {
+		update : function( dt ) {
 			var isDirty = false;
 			var isFloating = false;
 			var isPaused = me.state.isPaused();
@@ -556,21 +702,19 @@
                     }
 
                     // Translate global context
-                    isTranslated = (obj.visible && !isFloating);
+                    isTranslated = !isFloating;
                     if (isTranslated) {
                         x = obj.pos.x;
                         y = obj.pos.y;
                         globalTranslation.translateV(obj.pos);
-                        globalTranslation.set(globalTranslation.pos, obj.width, obj.height);
+                        globalTranslation.resize(obj.width, obj.height);
                     }
 
                     // check if object is visible
-                    obj.inViewport = obj.visible && (
-                        isFloating || viewport.isVisible(globalTranslation)
-                    );
+                    obj.inViewport = isFloating || viewport.isVisible(globalTranslation);
 
                     // update our object
-                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update();
+                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update( dt );
 
                     // Undo global context translation
                     if (isTranslated) {
@@ -581,13 +725,12 @@
                         globalFloatingCounter--;
                     }
                     
-                } else {
-                
+                } else {                
                     // just directly call update() for non renderable object
-                    isDirty |= obj.update();
+                    isDirty |= obj.update( dt );
                 }
-			}
-
+            }
+             
 			return isDirty;
 		},
 
@@ -599,9 +742,15 @@
             var isFloating = false;
 			
 			this.drawCount = 0;			
-
-			// save the current context
-			context.save();
+            
+            context.save();
+            
+			// apply the container current transform
+			context.transform(
+                this.transform.a, this.transform.b,
+                this.transform.c, this.transform.d, 
+                this.transform.e, this.transform.f
+            );
             
 			// apply the group opacity
 			context.globalAlpha *= this.getOpacity();
@@ -611,7 +760,7 @@
 
 			for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
 				isFloating = obj.floating;
-				if (obj.isRenderable && (obj.inViewport || (isFloating && obj.visible))) {
+				if ((obj.inViewport || isFloating) && obj.isRenderable) {
 
 					if (isFloating === true) {
 						context.save();
@@ -632,9 +781,9 @@
 					this.drawCount++;
 				}
 			}
+            
+            context.restore();
 
-			// restore the context
-			context.restore();
 		}
 
 	});

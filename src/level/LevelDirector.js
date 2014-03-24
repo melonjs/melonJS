@@ -31,6 +31,139 @@
 		var levelIdx = [];
 		// current level index
 		var currentLevelIdx = 0;
+        
+		/**
+		 * Load a TMX level
+		 * @name loadTMXLevel
+		 * @memberOf me.game
+		 * @private
+		 * @param {String} level to be loaded
+		 * @param {me.ObjectContainer} target container
+		 * @ignore
+		 * @function
+		 */
+		var loadTMXLevel = function(level, container) {
+			
+			// disable auto-sort for the given container
+			container.autoSort = false;
+			
+			// load our map
+			me.game.currentLevel = level;
+
+			// get the collision map
+			me.game.collisionMap = me.game.currentLevel.getLayerByName("collision");
+			if (!me.game.collisionMap || !me.game.collisionMap.isCollisionMap) {
+				console.error("WARNING : no collision map detected");
+			}
+
+			// add all defined layers
+			var layers = level.getLayers();
+			for ( var i = layers.length; i--;) {
+				container.addChild(layers[i]);
+			}
+
+			// change the viewport bounds
+            me.game.viewport.setBounds(
+				0,0,
+				Math.max(level.width, me.game.viewport.width),
+				Math.max(level.height, me.game.viewport.height)
+            );
+                                       
+
+			// game world as default container
+			var targetContainer = container;
+
+			// load all ObjectGroup and Object definition
+			var objectGroups = level.getObjectGroups();
+			
+			for ( var g = 0; g < objectGroups.length; g++) {
+				
+				var group = objectGroups[g];
+
+				if (me.game.mergeGroup === false) {
+
+					// create a new container with Infinite size (?)
+					// note: initial position and size seems to be meaningless in Tiled
+					// https://github.com/bjorn/tiled/wiki/TMX-Map-Format :
+					// x: Defaults to 0 and can no longer be changed in Tiled Qt.
+					// y: Defaults to 0 and can no longer be changed in Tiled Qt.
+					// width: The width of the object group in tiles. Meaningless.
+					// height: The height of the object group in tiles. Meaningless.
+					targetContainer = new me.ObjectContainer();
+					
+					// set additional properties
+					targetContainer.name = group.name;
+					targetContainer.z = group.z;
+					targetContainer.setOpacity(group.opacity);                  
+                 
+					// disable auto-sort
+					targetContainer.autoSort = false;
+				}
+
+				// iterate through the group and add all object into their
+				// corresponding target Container
+				for ( var o = 0; o < group.objects.length; o++) {
+					
+					// TMX object settings
+					var settings = group.objects[o];
+                    
+					var obj = me.pool.pull(
+						settings.name, 
+						settings.x, settings.y,
+						// 'TileObject' will instantiate a Sprite Object
+						settings.name === 'TileObject' ? settings.image : settings
+					);
+                    
+					// ignore if the pull function does not return a corresponding object
+					if (obj) {
+						
+						// set the obj z order correspondingly to its parent container/group
+						obj.z = group.z;
+
+						//apply group opacity value to the child objects if group are merged
+						if (me.game.mergeGroup === true && obj.isRenderable === true) {
+							obj.setOpacity(obj.getOpacity() * group.opacity);
+							// and to child renderables if any
+							if (obj.renderable instanceof me.Renderable) {
+								obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
+							}
+						}                        
+						// add the obj into the target container
+						targetContainer.addChild(obj);
+					}
+				}
+
+				// if we created a new container
+				if (me.game.mergeGroup === false) {
+										
+					// add our container to the world
+					container.addChild(targetContainer);
+					
+					// re-enable auto-sort
+					targetContainer.autoSort = true;	
+				
+				}
+
+			}
+
+			// sort everything (recursively)
+			container.sort(true);
+			
+			// re-enable auto-sort
+			container.autoSort = true;
+
+			// translate the display if required
+			me.game.world.transform.translateV( me.game.currentLevel.pos );
+
+			// fire the callback if defined
+			if (me.game.onLevelLoaded) {
+				me.game.onLevelLoaded.call(me.game.onLevelLoaded, level.name);
+			}
+			//publish the corresponding message
+			me.event.publish(me.event.LEVEL_LOADED, [level.name]);
+
+		};
+
 		
 		/*---------------------------------------------
 			
@@ -128,9 +261,9 @@
 				// and pass the level id as parameter
 				me.utils.resetGUID(levelId);
 				
-				// reset the current (previous) level
+				// clean the current (previous) level
 				if (levels[obj.getCurrentLevelId()]) {
-					levels[obj.getCurrentLevelId()].reset();
+					levels[obj.getCurrentLevelId()].destroy();
 				}
 				
 				// read the map data
@@ -139,13 +272,13 @@
 				// update current level index
 				currentLevelIdx = levelIdx.indexOf(levelId);
 				
-				// add the specified level to the game manager
-				me.game.loadTMXLevel(levels[levelId]);
+				// add the specified level to the game world
+				loadTMXLevel(levels[levelId], me.game.world);
 				
 				if (wasRunning) {
 					// resume the game loop if it was
 					// previously running
-					me.state.restart.defer();
+					me.state.restart.defer(this);
 				}
 			} else {
 				throw "melonJS: no level loader defined";

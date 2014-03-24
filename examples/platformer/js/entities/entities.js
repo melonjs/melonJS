@@ -16,8 +16,11 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		this.setVelocity(3, 15);
 		this.setFriction(0.4,0);
 		
-		// update the hit box
-		this.updateColRect(20,32, -1,0);
+		// update the collision shape rect
+		var shape = this.getShape();
+		shape.pos.y = 16;
+		shape.resize(this.width, shape.height - shape.pos.y);
+
 		this.dying = false;
 		
 		this.mutipleJump = 1;
@@ -29,11 +32,11 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		me.input.bindKey(me.input.KEY.LEFT,	 "left");
 		me.input.bindKey(me.input.KEY.RIGHT, "right");
 		me.input.bindKey(me.input.KEY.X,	"jump", true);
-		me.input.bindKey(me.input.KEY.UP,	"up");
+		me.input.bindKey(me.input.KEY.UP,	"jump", true);
 		me.input.bindKey(me.input.KEY.DOWN,	"down");
 
-		me.input.bindKey(me.input.KEY.A,	 "left");
-		me.input.bindKey(me.input.KEY.D, "right");
+		me.input.bindKey(me.input.KEY.A,	"left");
+		me.input.bindKey(me.input.KEY.D,	"right");
 		me.input.bindKey(me.input.KEY.W,	"up");
 		me.input.bindKey(me.input.KEY.S,	"down");
 
@@ -60,7 +63,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		update the player pos
 		
 	------			*/
-	update : function () {
+	update : function (dt) {
 		
 		if (me.input.isKeyPressed('left'))	{
 			this.vel.x -= this.accel.x * me.timer.tick;
@@ -89,7 +92,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		// check if we fell into a hole
 		if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
 			// if yes reset the game
-			me.game.remove(this);
+			me.game.world.removeChild(this);
 			me.game.viewport.fadeIn('#fff', 150, function(){
 				me.audio.play("die", false);
 				me.levelDirector.reloadLevel();
@@ -99,7 +102,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		// check for collision with sthg
-		var res = me.game.collide(this);
+		var res = me.game.world.collide(this);
 
 		if (res) {
 			switch (res.obj.type) {	
@@ -126,7 +129,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		
 		// check if we moved (a "stand" animation would definitely be cleaner)
 		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this.parent();
+			this.parent(dt);
 			return true;
 		}
 		
@@ -140,7 +143,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 	hurt : function () {
 		if (!this.renderable.flickering)
 		{
-			this.renderable.flicker(45);
+			this.renderable.flicker(750);
 			// flash the screen
 			me.game.viewport.fadeIn("#FFFFFF", 75);
 			me.audio.play("die", false);
@@ -163,8 +166,8 @@ game.CoinEntity = me.CollectableEntity.extend({
 		// add the coin sprite as renderable
 		this.renderable = game.texture.createSpriteFromName("coin.png");
 		
-		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);
+		// set the renderable position to center
+		this.anchorPoint.set(0.5, 0.5);
 		
 	},		
 	
@@ -179,7 +182,7 @@ game.CoinEntity = me.CollectableEntity.extend({
 		
 		//avoid further collision and delete it
 		this.collidable = false;
-		me.game.remove(this);
+		me.game.world.removeChild(this);
 	}
 	
 });
@@ -193,19 +196,26 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
+
+		// save the area size defined in Tiled
+		var width = settings.width || settings.spritewidth;
+		var height = settings.height || settings.spriteheight;
+
+		// adjust the setting size to the sprite one
+		settings.width = settings.spritewidth;
+		settings.height = settings.spriteheight;
+
 		// call the parent constructor
 		this.parent(x, y , settings);
 		
-		// apply gravity setting if specified
-		this.gravity = settings.gravity || me.sys.gravity;
-
-		// set start/end position
+		// set start/end position based on the initial area size
 		x = this.pos.x;
-		var width = settings.width || this.width;
 		this.startX = x;
 		this.endX   = x + width - settings.spritewidth
 		this.pos.x  = x + width - settings.spritewidth;
 		
+		// apply gravity setting if specified
+		this.gravity = settings.gravity || me.sys.gravity;
 		this.walkLeft = false;
 
 		// walking & jumping speed
@@ -223,7 +233,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 	/**
 	 * manage the enemy movement
 	 */
-	update : function () {
+	update : function (dt) {
 		
 		if (this.alive)	{
 			if (this.walkLeft && this.pos.x <= this.startX) {
@@ -235,15 +245,14 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 				this.walkLeft = true;
 				this.flipX(false);
 			}
-		} else {
-			this.vel.x = 0;
-		}
 		
-		// check & update movement
-		this.updateMovement();
-		
+			// check & update movement
+			this.updateMovement();
+
+		} 
+
 		// return true if we moved of if flickering
-		return (this.parent() || this.vel.x != 0 || this.vel.y != 0);
+		return (this.parent(dt) || this.vel.x != 0 || this.vel.y != 0);
 	},
 	
 	/**
@@ -261,7 +270,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 			this.renderable.setCurrentAnimation("dead");
 			// make it flicker and call destroy once timer finished
 			var self = this;
-			this.renderable.flicker(45, function(){me.game.remove(self)});
+			this.renderable.flicker(750, function(){me.game.world.removeChild(self)});
 			// dead sfx
 			me.audio.play("enemykill", false);
 			// give some score

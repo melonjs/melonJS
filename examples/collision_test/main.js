@@ -18,12 +18,8 @@ var game = {
             return;
         }
 
-        // Run fast!
-        me.sys.useNativeAnimFrame = true;
-
         // install the debug panel plugin
         me.plugin.register(debugPanel, "debug");
-        me.debug.renderCollisionMap = true;
         me.debug.renderCollisionGrid = true;
 
         // set all resources to be loaded
@@ -48,10 +44,14 @@ var game = {
 var PlayScreen = me.ScreenObject.extend( {
     onResetEvent: function() {
         me.levelDirector.loadLevel("level");
+        // make the collision layer also visible since we also use it for the background
+        me.game.currentLevel.getLayerByName("collision").setOpacity(1);
+        // set the corresponding flag in the debug panel
+        me.debug.renderCollisionMap = true;
 
         // Add some objects
         for (var i = 0; i < 200; i++) {
-            me.game.add(new Smilie(i), 2);
+            me.game.world.addChild(new Smilie(i), 3);
         }
     }
 });
@@ -61,21 +61,20 @@ var Smilie = me.ObjectEntity.extend({
         this.parent(
             64 + Math.random() * (1024 - 64 * 2 - 16),
             64 + Math.random() * (768 - 64 * 2 - 16), {
-                spritewidth : 16,
-                spriteheight : 16,
+                width : 16,
+                height : 16,
                 image : game.assets[i % 5].name
             }
         );
         this.collidable = true;
     },
 
-    update : function () {
+    update : function (dt) {
         this.updateMovement();
         
-        if (me.game.collide)
-            me.game.collide(this, true);
+         me.game.world.collide(this, true);
 
-        return this.parent();
+        return this.parent(dt);
     }
 });
     

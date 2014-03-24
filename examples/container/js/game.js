@@ -16,7 +16,7 @@ var game = {
         // add "#debug" to the URL to enable the debug Panel
         if (document.location.hash === "#debug") {
             window.onReady(function () {
-                me.plugin.register.defer(debugPanel, "debug");
+                me.plugin.register.defer(this, debugPanel, "debug");
             });
         }
 
@@ -39,18 +39,6 @@ var game = {
     loaded: function () {
         // set the "Play/Ingame" Screen Object
         me.state.set(me.state.PLAY, new game.PlayScreen());
-
-        /*
-        me.entityPool.add("mainPlayer", game.PlayerEntity);
-        // add our enemy entity in the entity pool
-        me.entityPool.add("SlimeEntity", game.SlimeEnemyEntity);
-        me.entityPool.add("FlyEntity", game.FlyEnemyEntity);
-        me.entityPool.add("CoinEntity", game.CoinEntity);
-
-        // load the texture atlas file
-        // this will be used by object entities later
-        game.texture = new me.TextureAtlas(me.loader.getJSON("texture"), me.loader.getImage("texture"));
-        */
 
         // switch to PLAY state
         me.state.change(me.state.PLAY);

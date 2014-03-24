@@ -5,7 +5,7 @@ melonJS
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 
-Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster
+Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod
 
 [melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
@@ -25,6 +25,7 @@ and currently features :
 - Transition effects
 - A basic set of Object Entities (to be extended)
 - Object Pooling
+- Basic Particle System
 - Basic animation management
 - Standard spritesheet and Packed Textures (Texture Packer, ShoeBox) support
 - A state manager (to easily manage loading, menu, options, in-game state)
@@ -70,7 +71,7 @@ then we can install the melonJS required dependencies, by typing :
 
 Once all the above done, we are ready to build melonJS :
 
-    $ cd melonJS
+    $ cd melonJS (if not already in the melonJS directory)
     $ grunt
 
 Both plain and minified library will be available under the "build" directory.
@@ -85,15 +86,9 @@ And for Ubuntu:
 
     $ export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 
-
-JSDoc also requires specific dependencies to be installed :
-
-    $ cd melonJS/tasks/jsdoc
-    $ npm install
-
 Then do the following to actually build the documentation :
 
-    $ cd melonJS
+    $ cd melonJS (if not already in the melonJS directory)
     $ grunt doc
 
 The generated documentation will be then available under the "docs" directory

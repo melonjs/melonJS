@@ -6,7 +6,7 @@
  */
 
 (function($) {
-	
+
 	/**
 	 * A base class for renderable objects.
 	 * @class
@@ -25,7 +25,7 @@
 		 * @ignore
 		 */
 		isRenderable : true,
-        
+
        /**
 		* (G)ame (U)nique (Id)entifier" <br>
 		* a GUID will be allocated for any renderable object added <br>
@@ -36,16 +36,6 @@
 		* @memberOf me.Renderable
 		*/
 		GUID : undefined,
-		
-		/**
-		 * the visible state of the renderable object<br>
-		 * default value : true
-		 * @public
-		 * @type Boolean
-		 * @name visible
-		 * @memberOf me.Renderable
-		 */
-		visible : true,
 
 		/**
 		 * Whether the renderable object is visible and within the viewport<br>
@@ -87,7 +77,7 @@
 		 * @memberOf me.Renderable
 		 */
 		isPersistent : false,
-		
+
 		/**
 		 * Define if a renderable follows screen coordinates (floating)<br>
 		 * or the world coordinates (not floating)<br>
@@ -108,12 +98,12 @@
 		 * @memberOf me.Renderable
 		 */
 		z : 0,
-        
+
         /**
 		 * Define the object anchoring point<br>
 		 * This is used when positioning, or scaling the object<br>
 		 * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>
-		 * (0, 0) means the top-left corner, <br> 
+		 * (0, 0) means the top-left corner, <br>
 		 * (1, 1) means the bottom-right corner, <br>
 		 * default anchoring point is the center (0.5, 0.5) of the object.
 		 * @public
@@ -121,12 +111,13 @@
 		 * @name anchorPoint
 		 * @memberOf me.Renderable
 		 */
-		anchorPoint: null,
-        
+		anchorPoint: new me.Vector2d(),
+
 		/**
 		 * Define the renderable opacity<br>
+		 * Set to zero if you do not wish an object to be drawn
 		 * @see me.Renderable#setOpacity
-		 * @see me.Renderable#getOpacity 
+		 * @see me.Renderable#getOpacity
 		 * @public
 		 * @type Number
 		 * @name me.Renderable#alpha
@@ -141,15 +132,12 @@
             this.parent(pos, width, height);
 
             // set the default anchor point (middle of the renderable)
-            if (this.anchorPoint === null) {
-                this.anchorPoint = new me.Vector2d();
-            }
             this.anchorPoint.set(0.5, 0.5);
-            
+
 			// ensure it's fully opaque by default
-			this.setOpacity(1.0);	
+			this.setOpacity(1.0);
         },
-        
+
 		/**
 		 * get the renderable alpha channel value<br>
 		 * @name getOpacity
@@ -160,7 +148,7 @@
 		getOpacity : function() {
 			return this.alpha;
 		},
-		
+
 		/**
 		 * set the renderable alpha channel value<br>
 		 * @name setOpacity
@@ -171,6 +159,10 @@
 		setOpacity : function(alpha) {
 			if (typeof (alpha) === "number") {
 				this.alpha = alpha.clamp(0.0,1.0);
+				// Set to 1 if alpha is NaN
+				if (this.alpha !== this.alpha) {
+					this.alpha = 1.0;
+				}
 			}
 		},
 
@@ -181,9 +173,10 @@
 		 * @memberOf me.Renderable
 		 * @function
 		 * @protected
+         * @param {Number} dt time since the last update in milliseconds.
 		 * @return false
 		 **/
-		update : function() {
+		update : function( dt ) {
 			return false;
 		},
 
@@ -201,7 +194,7 @@
 			this.parent(context, color);
 		}
 	});
-	
+
 
 	/*---------------------------------------------------------*/
 	// END END END

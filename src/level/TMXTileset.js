@@ -51,6 +51,12 @@
          * @name me.Tile#tileset
          */
         tileset : null,
+        
+        /** 
+         * the tile transformation matrix (if defined)
+         * @ignore
+         */
+        transform : null,
 		
         
 		/** @ignore */
@@ -95,10 +101,43 @@
 			 */
 			this.flipped = this.flipX || this.flipY || this.flipAD;
 			
+            // create a transformation matrix if required
+            if (this.flipped === true) {
+                this.createTransform();
+            }
+            
 			// clear out the flags and set the tileId
 			this.tileId &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
-
-		}
+		},
+        
+		/**
+		 * create a transformation matrix for this tilee
+		 * @ignore
+		 */
+		createTransform : function() {
+			if (this.transform === null) {
+				this.transform = new me.Matrix2d();
+			}
+			// reset the matrix (in case it was already defined)
+			this.transform.identity();
+            
+			if (this.flipAD){
+				// Use shearing to swap the X/Y axis
+				this.transform.set(0,1,1,0);
+				this.transform.translate(0, this.height - this.width);                
+			}
+			if (this.flipX){
+				this.transform.a *= -1;
+				this.transform.c *= -1;
+				this.transform.translate((this.flipAD ? this.height : this.width), 0);
+				
+			}
+			if (this.flipY){
+				this.transform.b *= -1;
+				this.transform.d *= -1;
+				this.transform.translate(0, (this.flipAD ? this.width : this.height));
+			}
+		},
 	});
 	
     /**
@@ -120,84 +159,20 @@
 			TOPLADDER : "topladder",
 			BREAKABLE : "breakable"
 		},
+        
+		// tile properties (collidable, etc..)
+		TileProperties : [],
 
-		init: function() {
-			// tile properties (collidable, etc..)
-			this.TileProperties = [];
-
-			// a cache for offset value
-			this.tileXOffset = [];
-			this.tileYOffset = [];
-		},
+		// a cache for offset value
+		tileXOffset : [],
+		tileYOffset : [],
 
 		// constructor
-		initFromXML: function (xmltileset) {
-
+		init: function (tileset) {
 			// first gid
-			this.firstgid = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_FIRSTGID);
-			
-
-			var src = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_SOURCE);
-			if (src) {
-				// load TSX
-				src = me.utils.getBasename(src);
-				xmltileset = me.loader.getTMX(src);
-
-				if (!xmltileset) {
-					throw "melonJS:" + src + " TSX tileset not found";
-				}
-
-				// FIXME: This is ok for now, but it wipes out the
-				// XML currently loaded into the global `me.mapReader.TMXParser`
-				me.mapReader.TMXParser.parseFromString(xmltileset);
-				xmltileset = me.mapReader.TMXParser.getFirstElementByTagName("tileset");
-			}
-			
-			this.name = me.mapReader.TMXParser.getStringAttribute(xmltileset, me.TMX_TAG_NAME);
-			this.tilewidth = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEWIDTH);
-			this.tileheight = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_TILEHEIGHT);
-			this.spacing = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_SPACING, 0);
-			this.margin = me.mapReader.TMXParser.getIntAttribute(xmltileset, me.TMX_TAG_MARGIN, 0);
-		
-
-			// set tile offset properties (if any)
-			this.tileoffset = new me.Vector2d(0,0);
-			var offset = xmltileset.getElementsByTagName(me.TMX_TAG_TILEOFFSET);
-			if (offset.length>0) {
-				this.tileoffset.x = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_X);
-				this.tileoffset.y = me.mapReader.TMXParser.getIntAttribute(offset[0], me.TMX_TAG_Y);
-			}
-			
-			// set tile properties, if any
-			var tileInfo = xmltileset.getElementsByTagName(me.TMX_TAG_TILE);
-			for ( var i = 0; i < tileInfo.length; i++) {
-				var tileID = me.mapReader.TMXParser.getIntAttribute(tileInfo[i], me.TMX_TAG_ID) + this.firstgid;
-				// apply tiled defined properties
-				var prop = {};
-				me.TMXUtils.applyTMXPropertiesFromXML(prop, tileInfo[i]);
-				this.setTileProperty(tileID, prop);
-			}
-			
-			// check for the texture corresponding image
-			var imagesrc = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_SOURCE);
-			var image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)):null;
-			if (!image) {
-				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = xmltileset.getElementsByTagName(me.TMX_TAG_IMAGE)[0].getAttribute(me.TMX_TAG_TRANS);
-			
-			this.initFromImage(image, trans);
-			
-		},
-		
-		// constructor
-		initFromJSON: function (tileset) {
-			// first gid
-			this.firstgid = tileset[me.TMX_TAG_FIRSTGID];
-
+			this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
 			var src = tileset[me.TMX_TAG_SOURCE];
-			if (src) {
+			if (src && me.utils.getFileExtension(src).toLowerCase() === 'tsx') {
 				// load TSX
 				src = me.utils.getBasename(src);
 				// replace tiletset with a local variable
@@ -224,45 +199,55 @@
 				this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y], 10);
 			}
 			
-			var tileInfo = tileset["tileproperties"];
 			// set tile properties, if any
-			for(var i in tileInfo) {
-				var prop = {};
-				me.TMXUtils.mergeProperties(prop, tileInfo[i]);
-				this.setTileProperty(parseInt(i, 10) + this.firstgid, prop);
-			}
+            var tileInfo = tileset["tileproperties"];
+			if (tileInfo) {
+                // native JSON format
+                for(var i in tileInfo) {
+                    this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
+                }
+            } else if (tileset[me.TMX_TAG_TILE]) {
+                // converted XML format
+                tileInfo = tileset[me.TMX_TAG_TILE];
+                if (!Array.isArray(tileInfo)) {
+                    tileInfo = [ tileInfo ];
+				}
+				// iterate it
+                for ( var j = 0; j < tileInfo.length; j++) {
+                    var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
+                    var prop = {};
+                    me.TMXUtils.applyTMXProperties(prop, tileInfo[j]);
+                    //apply tiled defined properties
+                    this.setTileProperty(tileID, prop);
+                }
+            }
 			
 			// check for the texture corresponding image
-			var imagesrc = me.utils.getBasename(tileset[me.TMX_TAG_IMAGE]);
-			var image = imagesrc ? me.loader.getImage(imagesrc) : null;
-			if (!image) {
+			// manage inconstency between XML and JSON format
+			var imagesrc = typeof(tileset[me.TMX_TAG_IMAGE]) === 'string' ? 
+				tileset[me.TMX_TAG_IMAGE] :
+				tileset[me.TMX_TAG_IMAGE].source;
+			// extract base name
+			imagesrc = me.utils.getBasename(imagesrc);
+			this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
+			
+			if (!this.image) {
 				console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
-			}
-			// check if transparency is defined for a specific color
-			var trans = tileset[me.TMX_TAG_TRANS] || null;
-
-			this.initFromImage(image, trans);
-		},
-		
-		
-		// constructor
-		initFromImage: function (image, transparency) {
-			if (image) {
-				this.image = image;
+			} else {
 				// number of tiles per horizontal line 
 				this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-			}
-			
-			// compute the last gid value in the tileset
-			this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
-		  
-			// set Color Key for transparency if needed
-			if (transparency !== null && this.image) {
-				// applyRGB Filter (return a context object)
-				this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
-			}
-			
+				this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));				
+				// compute the last gid value in the tileset
+				this.lastgid = this.firstgid + ( ((this.hTileCount * this.vTileCount) - 1) || 0);
+			  
+				// check if transparency is defined for a specific color
+				var transparency = tileset[me.TMX_TAG_TRANS] || tileset[me.TMX_TAG_IMAGE][me.TMX_TAG_TRANS];
+				// set Color Key for transparency if needed
+				if (typeof(transparency) !== 'undefined') {
+					// applyRGB Filter (return a context object)
+					this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
+				}
+			}	
 		},
 		
 		/**
@@ -373,50 +358,29 @@
 		drawTile : function(context, dx, dy, tmxTile) {
 			// check if any transformation is required
 			if (tmxTile.flipped) {
-				var m11 = 1; // Horizontal scaling factor
-				var m12 = 0; // Vertical shearing factor
-				var m21 = 0; // Horizontal shearing factor
-				var m22 = 1; // Vertical scaling factor
-				var mx	= dx; 
-				var my	= dy;
-				// set initial value to zero since we use a transform matrix
-				dx = dy = 0;
-				
-				context.save();
-								
-				if (tmxTile.flipAD){
-					// Use shearing to swap the X/Y axis
-					m11=0;
-					m12=1;
-					m21=1;
-					m22=0;
-					// Compensate for the swap of image dimensions
-					my += this.tileheight - this.tilewidth;
-				}
-				if (tmxTile.flipX){
-					m11 = -m11;
-					m21 = -m21;
-					mx += tmxTile.flipAD ? this.tileheight : this.tilewidth;
-					
-				}
-				if (tmxTile.flipY){
-					m12 = -m12;
-					m22 = -m22;
-					my += tmxTile.flipAD ? this.tilewidth : this.tileheight;
-				}
-				// set the transform matrix
-				context.transform(m11, m12, m21, m22, mx, my);
+                context.save();
+                // apply the tile current transform
+                var transform = tmxTile.transform;
+                context.transform(
+                    transform.a, transform.b,
+                    transform.c, transform.d, 
+                    transform.e + dx, transform.f + dy
+                );
+                // reset both values as managed through transform();
+                dx = dy = 0;
 			}
 			
 			// get the local tileset id
 			var tileid = tmxTile.tileId - this.firstgid;
 			
 			// draw the tile
-			context.drawImage(this.image, 
-							  this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
-							  this.tilewidth, this.tileheight, 
-							  dx, dy, 
-							  this.tilewidth, this.tileheight);
+			context.drawImage(
+				this.image, 
+				this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
+				this.tilewidth, this.tileheight, 
+				dx, dy, 
+				this.tilewidth, this.tileheight
+			);
 
 			if  (tmxTile.flipped)  {
 				// restore the context to the previous state

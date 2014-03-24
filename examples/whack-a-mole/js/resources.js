@@ -50,14 +50,12 @@ game.resources = [
 	/*{  
 		name: "laugh",
 		type: "audio",
-		src: "data/sfx/",
-		channel : 4
+		src: "data/sfx/"
 	},*/
 	// ow audio FX
 	{  
 		name: "ow",
 		type: "audio",
-		src: "data/sfx/",
-		channel : 2
+		src: "data/sfx/"
 	}
 ];
