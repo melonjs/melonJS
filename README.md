@@ -78,15 +78,7 @@ Both plain and minified library will be available under the "build" directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
-melonJS uses [JSDoc3](https://github.com/jsdoc3/jsdoc), the documentation processor, and requires [Java](http://java.com/en/download/index.jsp) to be installed, and a special `JAVA_HOME` environment variable to be set. E.g. for Mac OS X :
-
-    $ export JAVA_HOME=/System/Library/Frameworks/JavaVM.framework/Home
-
-And for Ubuntu:
-
-    $ export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
-
-Then do the following to actually build the documentation :
+Just do the following to actually build the documentation :
 
     $ cd melonJS (if not already in the melonJS directory)
     $ grunt doc
