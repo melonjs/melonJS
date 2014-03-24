@@ -94,7 +94,7 @@
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
             // super constructor
-            this._super(me.Renderable, "init", [this.pos, 0, this.fontSize.y]);
+            this._super(me.Renderable, "init", this.pos, 0, this.fontSize.y);
         },
 
         /**

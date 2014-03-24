@@ -77,9 +77,9 @@
             this.isSprite = true;
 
             // call the super constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y),
+            this._super(me.Renderable, "init", new me.Vector2d(x, y),
                 spritewidth  || image.width,
-                spriteheight || image.height]);
+                spriteheight || image.height);
             // cache image reference
             this.image = image;
 
@@ -368,32 +368,31 @@
     me.AnimationSheet = me.SpriteObject.extend(
     /** @scope me.AnimationSheet.prototype */
     {        
-        // Spacing and margin
-        /** @ignore */
-        spacing: 0,
-        /** @ignore */
-        margin: 0,
-
-        /**
-         * pause and resume animation<br>
-         * default value : false;
-         * @public
-         * @type Boolean
-         * @name me.AnimationSheet#animationpause
-         */
-        animationpause : false,
-
-        /**
-         * animation cycling speed (delay between frame in ms)<br>
-         * default value : 100ms;
-         * @public
-         * @type Number
-         * @name me.AnimationSheet#animationspeed
-         */
-        animationspeed : 100,
-
         /** @ignore */
         init : function(x, y, settings) {
+            // Spacing and margin
+            /** @ignore */
+            this.spacing = 0;
+            /** @ignore */
+            this.margin = 0;
+
+            /**
+             * pause and resume animation<br>
+             * default value : false;
+             * @public
+             * @type Boolean
+             * @name me.AnimationSheet#animationpause
+             */
+            this.animationpause = false;
+
+            /**
+             * animation cycling speed (delay between frame in ms)<br>
+             * default value : 100ms;
+             * @public
+             * @type Number
+             * @name me.AnimationSheet#animationspeed
+             */
+            this.animationspeed = 100;
             // hold all defined animation
             this.anim = {};
 
@@ -413,7 +412,7 @@
             var image = settings['region'] || settings['image'];
 
             // call the constructor
-            this._super(me.SpriteObject, "init", [x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin]);
+            this._super(me.SpriteObject, "init", x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
                         
             // store the current atlas information
             this.textureAtlas = null;

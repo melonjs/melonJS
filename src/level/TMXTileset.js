@@ -51,7 +51,7 @@
              * @ignore
              */
             this.transform = null;
-            this._super(me.Rect, "init", [new me.Vector2d(x * w, y * h), w, h]);
+            this._super(me.Rect, "init", new me.Vector2d(x * w, y * h), w, h);
             
             // Tile col / row pos
             this.col = x;

@@ -23,7 +23,7 @@
          */
         init: function(emitter) {
             // Call the super constructor
-            this._super(me.Renderable, "init", [emitter.getRandomPoint(), emitter.image.width, emitter.image.height]);
+            this._super(me.Renderable, "init", emitter.getRandomPoint(), emitter.image.width, emitter.image.height);
 
             // Particle will always update
             this.alwaysUpdate = true;

@@ -74,9 +74,9 @@
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
-                [new me.Vector2d(x || 0, y || 0),
+                new me.Vector2d(x || 0, y || 0),
                 width || Infinity,
-                height || Infinity]
+                height || Infinity
             );
             // init the bounds to an empty rect
             /**

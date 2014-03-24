@@ -115,7 +115,7 @@
             ];
 
             // this will actually call this object setShspe function..
-            this._super(me.PolyShape, "init", [v, w, h]);
+            this._super(me.PolyShape, "init", v, w, h);
    
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape

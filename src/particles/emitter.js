@@ -360,9 +360,9 @@
             this._super(
                 me.Rect,
                 "init",
-                [ new me.Vector2d(x, y),
+                new me.Vector2d(x, y),
                 Infinity, 
-                Infinity ]
+                Infinity
             );
 
             // don't sort the particles by z-index

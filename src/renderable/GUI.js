@@ -31,7 +31,7 @@
      *       settings.spritewidth = 100;
      *       settings.spriteheight = 50;
      *       // super constructor
-     *       this._super(me.GUI_Object, "init", [x, y, settings]);
+     *       this._super(me.GUI_Object, "init", x, y, settings);
      *       // define the object z order
      *       this.z = 4;     
      *    },
@@ -67,10 +67,10 @@
             
             // object has been updated (clicked,etc..)    
             this.updated = false;
-            this._super(me.SpriteObject, "init", [x, y, 
+            this._super(me.SpriteObject, "init", x, y, 
                 ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image), 
                 settings.spritewidth, 
-                settings.spriteheight]);
+                settings.spriteheight);
             
             // GUI items use screen coordinates
             this.floating = true;

@@ -44,7 +44,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
              * @memberOf me.DroptargetEntity
              */
             this.checkMethod = null;
-            this._super(Entity, "init", [x, y, settings]);
+            this._super(Entity, "init", x, y, settings);
             Event.subscribe(Event.DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
         },
