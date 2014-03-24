@@ -7,20 +7,15 @@
  *
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * There is no constructor function for me.audio.
      * @namespace me.audio
      * @memberOf me
      */
-    me.audio = (function() {
-
+    me.audio = (function () {
         /*
-         * ---------------------------------------------
          * PRIVATE STUFF
-         * ---------------------------------------------
          */
 
         // hold public stuff in our singleton
@@ -39,18 +34,16 @@
         // a retry counter
         var retry_counter = 0;
 
-
         /**
          * event listener callback on load error
          * @ignore
          */
-
         function soundLoadError(sound_id, onerror_cb) {
             // check the retry counter
             if (retry_counter++ > 3) {
                 // something went wrong
                 var errmsg = "melonJS: failed loading " + sound_id;
-                if (me.sys.stopOnAudioError===false) {
+                if (me.sys.stopOnAudioError === false) {
                     // disable audio
                     me.audio.disable();
                     // call error callback if defined
@@ -59,20 +52,20 @@
                     }
                     // warning
                     console.log(errmsg + ", disabling audio");
-                } else {
+                }
+                else {
                     // throw an exception and stop everything !
                     throw errmsg;
                 }
             // else try loading again !
-            } else {
+            }
+            else {
                 audioTracks[sound_id].load();
             }
         }
 
         /*
-         *---------------------------------------------
          * PUBLIC STUFF
-         *---------------------------------------------
          */
 
         /**
@@ -92,14 +85,14 @@
          * // on Opera the loader will however load audio.ogg files
          * me.audio.init("mp3,ogg");
          */
-        obj.init = function(audioFormat) {
+        obj.init = function (audioFormat) {
             if (!me.initialized) {
                 throw "melonJS: me.audio.init() called before engine initialization.";
             }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
             // convert it into an array
-            this.audioFormats = audioFormat.split(',');
+            this.audioFormats = audioFormat.split(",");
         };
 
         /**
@@ -112,7 +105,7 @@
          * @public
          * @function
          */
-        obj.enable = function() {
+        obj.enable = function () {
             this.unmuteAll();
         };
 
@@ -124,7 +117,7 @@
          * @public
          * @function
          */
-        obj.disable = function() {
+        obj.disable = function () {
             this.muteAll();
         };
 
@@ -136,27 +129,27 @@
          * - src     : source path<br>
          * @ignore
          */
-        obj.load = function(sound, onload_cb, onerror_cb) {
+        obj.load = function (sound, onload_cb, onerror_cb) {
             var urls = [];
-            for(var i = 0; i < this.audioFormats.length; i++) {
+            for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
             }
             var soundclip = new Howl({
                 urls : urls,
                 volume : Howler.volume(),
-                onend : function(soundId) {
-                    if(callbacks[soundId]) {
+                onend : function (soundId) {
+                    if (callbacks[soundId]) {
                         // fire call back if it exists, then delete it
                         callbacks[soundId]();
                         callbacks[soundId] = null;
                     }
                 },
-                onloaderror : function() {
+                onloaderror : function () {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
-                onload : function() {
+                onload : function () {
                     retry_counter = 0;
-                    if(onload_cb) {
+                    if (onload_cb) {
                         onload_cb();
                     }
                 }
@@ -191,14 +184,13 @@
          * // play the "gameover_sfx" audio clip with a lower volume level
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
-
-        obj.play = function(sound_id, loop, callback, volume) {
+        obj.play = function (sound_id, loop, callback, volume) {
             var sound = audioTracks[sound_id.toLowerCase()];
-            if(sound && typeof sound !== 'undefined') {
+            if (sound && typeof sound !== "undefined") {
                 sound.loop(loop || false);
-                sound.volume(typeof(volume) === 'number' ? volume.clamp(0.0, 1.0) : Howler.volume());
-                if (typeof(callback) === 'function') {
-                    sound.play(function(soundId) {
+                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
+                if (typeof(callback) === "function") {
+                    sound.play(function (soundId) {
                         callbacks[soundId] = callback;
                     });
                 }
@@ -221,9 +213,9 @@
          * @example
          * me.audio.stop("cling");
          */
-        obj.stop = function(sound_id) {
+        obj.stop = function (sound_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
-            if(sound && typeof sound !== 'undefined') {
+            if (sound && typeof sound !== "undefined") {
                 sound.stop();
             }
         };
@@ -240,9 +232,9 @@
          * @example
          * me.audio.pause("cling");
          */
-        obj.pause = function(sound_id) {
+        obj.pause = function (sound_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
-            if(sound && typeof sound !== 'undefined') {
+            if (sound && typeof sound !== "undefined") {
                 sound.pause();
             }
         };
@@ -261,7 +253,7 @@
          * @example
          * me.audio.playTrack("awesome_music");
          */
-        obj.playTrack = function(sound_id, volume) {
+        obj.playTrack = function (sound_id, volume) {
             current_track = me.audio.play(sound_id, true, null, volume);
             current_track_id = sound_id.toLowerCase();
         };
@@ -280,7 +272,7 @@
          * // stop the current music
          * me.audio.stopTrack();
          */
-        obj.stopTrack = function() {
+        obj.stopTrack = function () {
             if (current_track) {
                 current_track.pause();
                 current_track_id = null;
@@ -296,7 +288,7 @@
          * @function
          * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
          */
-        obj.setVolume = function(volume) {
+        obj.setVolume = function (volume) {
             Howler.volume(volume);
         };
 
@@ -308,7 +300,7 @@
          * @function
          * @returns {Number} current volume value in Float [0.0 - 1.0] .
          */
-        obj.getVolume = function() {
+        obj.getVolume = function () {
             return Howler.volume();
         };
 
@@ -320,11 +312,11 @@
          * @function
          * @param {String} sound_id audio clip id
          */
-        obj.mute = function(sound_id, mute) {
+        obj.mute = function (sound_id, mute) {
             // if not defined : true
-            mute = (mute === undefined)?true:!!mute;
+            mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_id.toLowerCase()];
-            if(sound && typeof sound !== 'undefined') {
+            if (sound && typeof(sound) !== "undefined") {
                 sound.mute(true);
             }
         };
@@ -337,7 +329,7 @@
          * @function
          * @param {String} sound_id audio clip id
          */
-        obj.unmute = function(sound_id) {
+        obj.unmute = function (sound_id) {
             obj.mute(sound_id, false);
         };
 
@@ -348,7 +340,7 @@
          * @public
          * @function
          */
-        obj.muteAll = function() {
+        obj.muteAll = function () {
             Howler.mute();
         };
 
@@ -359,7 +351,7 @@
          * @public
          * @function
          */
-        obj.unmuteAll = function() {
+        obj.unmuteAll = function () {
             Howler.unmute();
         };
 
@@ -371,7 +363,7 @@
          * @function
          * @return {String} audio track id
          */
-        obj.getCurrentTrack = function() {
+        obj.getCurrentTrack = function () {
             return current_track_id;
         };
 
@@ -385,7 +377,7 @@
          * @example
          * me.audio.pauseTrack();
          */
-        obj.pauseTrack = function() {
+        obj.pauseTrack = function () {
             if (current_track) {
                 current_track.pause();
             }
@@ -407,7 +399,7 @@
          * // resume the music
          * me.audio.resumeTrack();
          */
-        obj.resumeTrack = function() {
+        obj.resumeTrack = function () {
             if (current_track) {
                 current_track.play();
             }
@@ -425,10 +417,11 @@
          * @example
          * me.audio.unload("awesome_music");
          */
-        obj.unload = function(sound_id) {
+        obj.unload = function (sound_id) {
             sound_id = sound_id.toLowerCase();
-            if (!(sound_id in audioTracks))
+            if (!(sound_id in audioTracks)) {
                 return false;
+            }
 
             if (current_track_id === sound_id) {
                 obj.stopTrack();
@@ -453,18 +446,15 @@
          * @example
          * me.audio.unloadAll();
          */
-        obj.unloadAll = function() {
+        obj.unloadAll = function () {
             for (var sound_id in audioTracks) {
-                obj.unload(sound_id);
+                if (audioTracks.hasOwnProperty(sound_id)) {
+                    obj.unload(sound_id);
+                }
             }
         };
 
         // return our object
         return obj;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

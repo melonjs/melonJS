@@ -8,6 +8,14 @@
  *  MIT License
  */
 
+/* jshint -W013 */
+/* jshint -W015 */
+/* jshint -W031 */
+/* jshint -W083 */
+/* jshint -W098 */
+/* jshint -W108 */
+/* jshint -W116 */
+
 (function() {
   // setup
   var cache = {};

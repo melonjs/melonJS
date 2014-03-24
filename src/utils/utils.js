@@ -4,16 +4,13 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * Base64 decoding
      * @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
      * @ignore
      */
-    var Base64 = (function() {
-
+    var Base64 = (function () {
         // hold public stuff in our singleton
         var singleton = {};
 
@@ -21,14 +18,14 @@
         var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
         // public method for decoding
-        singleton.decode = function(input) {
+        singleton.decode = function (input) {
 
             // make sure our input string has the right format
             input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 
             if (me.device.nativeBase64) {
                 // use native decoder
-                return $.atob(input);
+                return window.atob(input);
             }
             else {
                 // use cross-browser decoding
@@ -54,7 +51,7 @@
                     }
                 }
 
-                output = output.join('');
+                output = output.join("");
                 return output;
             }
         };
@@ -69,17 +66,13 @@
      * @namespace me.utils
      * @memberOf me
      */
-
-    me.utils = (function() {
+    me.utils = (function () {
         // hold public stuff in our singleton
         var api = {};
 
-
-        /*---------------------------------------------
-
-           PRIVATE STUFF
-
-         ---------------------------------------------*/
+        /*
+         * PRIVATE STUFF
+         */
 
         // guid default value
         var GUID_base  = "";
@@ -89,11 +82,9 @@
         var removepath = /^.*(\\|\/|\:)/;
         var removeext = /\.[^\.]*$/;
 
-        /*---------------------------------------------
-
-            PUBLIC STUFF
-
-            ---------------------------------------------*/
+        /*
+         * PUBLIC STUFF
+         */
 
         /**
          * Decode a base64 encoded string into a binary string
@@ -104,7 +95,7 @@
          * @param {String} input Base64 encoded data
          * @return {String} Binary string
          */
-        api.decodeBase64 = function(input) {
+        api.decodeBase64 = function (input) {
             return Base64.decode(input);
         };
 
@@ -118,16 +109,17 @@
          * @param {Number} [bytes] number of bytes per array entry
          * @return {Number[]} Array of bytes
          */
-        api.decodeBase64AsArray = function(input, bytes) {
+        api.decodeBase64AsArray = function (input, bytes) {
             bytes = bytes || 1;
 
             var dec = Base64.decode(input), i, j, len;
 
             // use a typed array if supported
             var ar;
-            if (typeof window.Uint32Array === 'function') {
+            if (typeof window.Uint32Array === "function") {
                 ar = new Uint32Array(dec.length / bytes);
-            } else {
+            }
+            else {
                 ar = [];
             }
 
@@ -150,7 +142,7 @@
          * @param  {String} format compressed data format ("gzip","zlib")
          * @return {Number[]} Array of bytes
          */
-        api.decompress = function(data, format) {
+        api.decompress = function () {
             throw "melonJS: GZIP/ZLIB compressed TMX Tile Map not supported!";
         };
 
@@ -164,13 +156,13 @@
          * @param  {Number} limit row split limit
          * @return {Number[]} Int Array
          */
-        api.decodeCSV = function(input, limit) {
+        api.decodeCSV = function (input, limit) {
             input = input.trim().split("\n");
 
             var result = [];
-            for ( var i = 0; i < input.length; i++) {
+            for (var i = 0; i < input.length; i++) {
                 var entries = input[i].split(",", limit);
-                for ( var e = 0; e < entries.length; e++) {
+                for (var e = 0; e < entries.length; e++) {
                     result.push(+entries[e]);
                 }
             }
@@ -186,8 +178,8 @@
          * @param  {String} path path containing the filename
          * @return {String} the base name without path information.
          */
-        api.getBasename = function(path) {
-            return path.replace(removepath, '').replace(removeext, '');
+        api.getBasename = function (path) {
+            return path.replace(removepath, "").replace(removeext, "");
         };
 
         /**
@@ -199,7 +191,7 @@
          * @param  {String} path path containing the filename
          * @return {String} filename extension.
          */
-        api.getFileExtension = function(path) {
+        api.getFileExtension = function (path) {
             return path.substring(path.lastIndexOf(".") + 1, path.length);
         };
 
@@ -212,16 +204,17 @@
          * @param {Image|Canvas} image Image to read
          * @return {ImageData} Canvas ImageData object
          */
-        api.getPixels = function(arg) {
+        api.getPixels = function (arg) {
             if (arg instanceof HTMLImageElement) {
                 var _context = me.video.getContext2d(
                     me.video.createCanvas(arg.width, arg.height)
                 );
                 _context.drawImage(arg, 0, 0);
                 return _context.getImageData(0, 0, arg.width, arg.height);
-            } else {
+            }
+            else {
                 // canvas !
-                return arg.getContext('2d').getImageData(0, 0, arg.width, arg.height);
+                return arg.getContext("2d").getImageData(0, 0, arg.width, arg.height);
             }
         };
 
@@ -231,7 +224,7 @@
          * per level / object
          * @ignore
          */
-        api.resetGUID = function(base) {
+        api.resetGUID = function (base) {
             // also ensure it's only 8bit ASCII characters
             GUID_base  = base.toString().toUpperCase().toHex();
             GUID_index = 0;
@@ -242,7 +235,7 @@
          * Game Unique ID
          * @ignore
          */
-        api.createGUID = function() {
+        api.createGUID = function () {
             return GUID_base + "-" + (GUID_index++);
         };
 
@@ -251,16 +244,14 @@
          * @ignore
          * @TODO Move this somewhere else
          */
-        api.applyFriction = function(v, f) {
-            return (v+f<0)?v+(f*me.timer.tick):(v-f>0)?v-(f*me.timer.tick):0;
+        api.applyFriction = function (v, f) {
+            return (
+                (v + f < 0) ? v + (f * me.timer.tick) :
+                (v - f > 0) ? v - (f * me.timer.tick) : 0
+            );
         };
 
         // return our object
         return api;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

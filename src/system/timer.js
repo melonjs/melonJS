@@ -4,24 +4,20 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
      * There is no constructor function for me.timer
      * @namespace me.timer
      * @memberOf me
      */
-    me.timer = (function() {
+    me.timer = (function () {
         // hold public stuff in our api
         var api = {};
 
-        /*---------------------------------------------
-            
-            PRIVATE STUFF
-                
-            ---------------------------------------------*/
+        /*
+         * PRIVATE STUFF
+         */
 
         //hold element to display fps
         var framecount = 0;
@@ -39,23 +35,23 @@
         var timers = [];
         var timerId = 0;
 
-        /** 
+        /**
          * @ignore
          */
         var clearTimer = function (timerId) {
             for (var i = 0, len = timers.length; i < len; i++) {
                 if (timers[i].timerId === timerId) {
-                    timers.splice( i, 1 );
+                    timers.splice(i, 1);
                     break;
                 }
-            }   
+            }
         };
 
         /**
          * update timers
          * @ignore
          */
-        var updateTimers = function( dt ) {
+        var updateTimers = function (dt) {
             for (var i = 0, len = timers.length; i < len; i++) {
                 var _timer = timers[i];
                 if (!(_timer.pauseable && me.state.isPaused())) {
@@ -72,11 +68,9 @@
             }
         };
 
-        /*---------------------------------------------
-            
-            PUBLIC STUFF
-                
-            ---------------------------------------------*/
+        /*
+         * PUBLIC STUFF
+         */
 
         /**
          * last game tick value
@@ -95,12 +89,12 @@
          * @memberOf me.timer
          */
         api.fps = 0;
-        
+
         /**
          * init the timer
          * @ignore
          */
-        api.init = function() {
+        api.init = function () {
             // reset variables to initial state
             api.reset();
             now = last = 0;
@@ -113,7 +107,7 @@
          * @ignore
          * @function
          */
-        api.reset = function() {
+        api.reset = function () {
             // set to "now"
             last = now = window.performance.now();
             delta = 0;
@@ -132,7 +126,7 @@
          * @return {Number}  timeoutID the numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
          * @function
          */
-        api.setTimeout = function(func, delay, pauseable) {
+        api.setTimeout = function (func, delay, pauseable) {
             timers.push({
                 func: func,
                 delay : delay,
@@ -154,7 +148,7 @@
          * @return {Number} intervalID the numerical ID of the timeout, which can be used later with me.timer.clearInterval().
          * @function
          */
-        api.setInterval = function(func, delay, pauseable) {
+        api.setInterval = function (func, delay, pauseable) {
             timers.push({
                 func: func,
                 delay : delay,
@@ -173,7 +167,7 @@
          * @function
          * @param {Number}  timeoutID ID of the timeout to be cleared
          */
-        api.clearTimeout = function(timeoutID) {
+        api.clearTimeout = function (timeoutID) {
             clearTimer.defer(this, timeoutID);
         };
 
@@ -184,7 +178,7 @@
          * @function
          * @param {Number} intervalID ID of the interval to be cleared
          */
-        api.clearInterval = function(intervalID) {
+        api.clearInterval = function (intervalID) {
             clearTimer.defer(this, intervalID);
         };
 
@@ -196,7 +190,7 @@
          * @return {Number}
          * @function
          */
-        api.getTime = function() {
+        api.getTime = function () {
             return now;
         };
 
@@ -207,9 +201,9 @@
          * @return {Number}
          * @function
          */
-        api.getDelta = function() {
-         
-            return delta;            
+        api.getDelta = function () {
+
+            return delta;
         };
 
         /**
@@ -219,7 +213,7 @@
          * @memberOf me.timer
          * @function
          */
-        api.countFPS = function() {
+        api.countFPS = function () {
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
@@ -236,12 +230,12 @@
          * @return {Number} time elapsed since the last update
          * @ignore
          */
-        api.update = function(time) {
+        api.update = function (time) {
 
             last = now;
-            
+
             now = time;
-                       
+
             delta = (now - last);
 
             // get the game tick
@@ -255,7 +249,5 @@
 
         // return our apiect
         return api;
-
     })();
-
-})(window);
+})();

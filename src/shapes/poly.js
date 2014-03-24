@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-    
+(function () {
     /**
      * a polyshape (polygone/polyline) Object
      * @class
@@ -15,11 +13,11 @@
      * @constructor
      * @param {me.Vector2d} v origin point of the PolyShape
      * @param {me.Vector2d[]} points array of vector defining the polyshape
-     * @param {boolean} closed true if a polygone, false if a polyline     
+     * @param {boolean} closed true if a polygone, false if a polyline
      */
     me.PolyShape = Object.extend(
-    /** @scope me.PolyShape.prototype */ {
-
+    /** @scope me.PolyShape.prototype */
+    {
         /**
          * origin point of the PolyShape
          * @public
@@ -28,7 +26,7 @@
          * @memberOf me.PolyShape
          */
         pos :  new me.Vector2d(),
-         
+
         /**
          * Array of points defining the polyshape
          * @public
@@ -46,14 +44,12 @@
          * @memberOf me.PolyShape
          */
         closed : false,
-        
 
         // the shape type
         shapeType : "PolyShape",
-        
-        
+
         /** @ignore */
-        init : function(v, points, closed) {
+        init : function (v, points, closed) {
             this.setShape(v, points, closed);
         },
 
@@ -64,9 +60,9 @@
          * @function
          * @param {me.Vector2d} v origin point of the PolyShape
          * @param {me.Vector2d[]} points array of vector defining the polyshape
-         * @param {boolean} closed true if a polygone, false if a polyline     
+         * @param {boolean} closed true if a polygone, false if a polyline
          */
-        setShape : function(v, points, closed) {
+        setShape : function (v, points, closed) {
             this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
@@ -82,11 +78,11 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.PolyShape} this polyShape    
+         * @return {me.PolyShape} this polyShape
          */
-        translate : function(x, y) {
-            this.pos.x+=x;
-            this.pos.y+=y;
+        translate : function (x, y) {
+            this.pos.x += x;
+            this.pos.y += y;
             return this;
         },
 
@@ -96,9 +92,9 @@
          * @memberOf me.PolyShape
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.PolyShape} this polyShape    
+         * @return {me.PolyShape} this polyShape
          */
-        translateV : function(v) {
+        translateV : function (v) {
             this.pos.add(v);
             return this;
         },
@@ -111,13 +107,13 @@
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
          */
-        containsPointV: function(v) {
+        containsPointV: function (v) {
             return this.containsPoint(v.x, v.y);
         },
 
         /**
          * check if this polyShape contains the specified point <br>
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br> 
+         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
          *  bounding rect, as the function can be highly consuming with complex shapes)
          * @name containsPoint
          * @memberOf me.polyShape
@@ -126,17 +122,17 @@
          * @param  {Number} y y coordinate
          * @return {boolean} true if contains
          */
-        containsPoint: function(x, y) {
+        containsPoint: function (x, y) {
             var intersects = false;
             var posx = this.pos.x, posy = this.pos.y;
             var points = this.points;
             var len = points.length;
 
             //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-            for (var i = 0, j = len-1; i < len; j = i++) {
+            for (var i = 0, j = len - 1; i < len; j = i++) {
                 var iy = points[i].y + posy, ix = points[i].x + posx,
                     jy = points[j].y + posy, jx = points[j].x + posx;
-                if ( ((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix) ) {
+                if (((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix)) {
                     intersects = !intersects;
                 }
             }
@@ -151,59 +147,57 @@
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} the bounding box Rectangle object
          */
-        getBounds : function(rect) {
+        getBounds : function (rect) {
             var pos = this.pos.clone(), right = 0, bottom = 0;
-            this.points.forEach(function(point) {
+            this.points.forEach(function (point) {
                 pos.x = Math.min(pos.x, point.x);
                 pos.y = Math.min(pos.y, point.y);
                 right = Math.max(right, point.x);
                 bottom = Math.max(bottom, point.y);
             });
-            if (typeof(rect) !== 'undefined') {
+            if (typeof(rect) !== "undefined") {
                 return rect.setShape(pos, right - pos.x, bottom - pos.y);
-            } else {
+            }
+            else {
                 return new me.Rect(pos, right - pos.x, bottom - pos.y);
             }
         },
-        
+
         /**
          * clone this PolyShape
          * @name clone
          * @memberOf me.PolyShape
          * @function
-         * @return {me.PolyShape} new PolyShape    
+         * @return {me.PolyShape} new PolyShape
          */
-        clone : function() {
+        clone : function () {
             var copy = [];
-            this.points.forEach(function(point) {
+            this.points.forEach(function (point) {
                 copy.push(new me.Vector2d(point.x, point.y));
             });
             return new me.PolyShape(this.pos.clone(), copy, this.closed);
         },
 
-
         /**
          * debug purpose
          * @ignore
          */
-        draw : function(context, color) {
+        draw : function (context, color) {
             context.save();
             context.translate(-this.pos.x, -this.pos.y);
             context.strokeStyle = color || "red";
             context.beginPath();
             context.moveTo(this.points[0].x, this.points[0].y);
-            this.points.forEach(function(point) {
+            this.points.forEach(function (point) {
                 context.lineTo(point.x, point.y);
                 context.moveTo(point.x, point.y);
-            
+
             });
-            if (this.closed===true) {
+            if (this.closed === true) {
                 context.lineTo(this.points[0].x, this.points[0].y);
             }
             context.stroke();
             context.restore();
         }
-
     });
-
-})(window);
+})();
