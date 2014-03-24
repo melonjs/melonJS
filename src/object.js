@@ -243,7 +243,8 @@ Object.defineProperty(Object.prototype, "extend", {
 
                 Object.defineProperty(Class.prototype, key, {
                     "configurable" : true,
-                    "value" : descriptor[key]
+                    "value" : descriptor[key],
+                    "writable" : true
                 });
             });
         }

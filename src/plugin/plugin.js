@@ -80,10 +80,9 @@
 				// override the function with the new one
 				proto[name] = (function(name, fn){
 					return function() {
-						var tmp = this.parent;
 						this.parent = _parent;
-						var ret = fn.apply(this, arguments);			 
-						this.parent = tmp;
+						var ret = fn.apply(this, arguments);
+						this.parent = null;
 						return ret;
 					};
 				})( name, fn );
