@@ -251,7 +251,7 @@
 
     pe.ShapeWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(pe.WidgetBase, 'init', new me.Vector2d(0, 0), 0, 0);
+            this._super(me.Renderable, 'init', new me.Vector2d(0, 0), 0, 0);
             this.z = Infinity;
             this.color = color;
         },
@@ -272,7 +272,7 @@
         init : function(color) {
             this.originalSize = 40;
             this.createGradients(color, this.originalSize);
-            this._super(pe.WidgetBase, 'init', new me.Vector2d(0, 0), this.originalSize, this.originalSize);
+            this._super(me.Renderable, 'init', new me.Vector2d(0, 0), this.originalSize, this.originalSize);
             this.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
@@ -445,7 +445,7 @@
 
     pe.VectorWidget.Helper = me.Renderable.extend({
         init : function(widget, color) {
-            this._super(pe.WidgetBase, 'init', new me.Vector2d(0, 0), 0, 0);
+            this._super(me.Renderable, 'init', new me.Vector2d(0, 0), 0, 0);
             this.widget = widget;
             this.z = Infinity;
             this.color = color.toRGBA();
@@ -475,7 +475,7 @@
 
     pe.VelocityWidget = pe.VectorWidget.extend({
         init : function() {
-            this._super(pe.WidgetBase, 'init', "velocity", new me.Color(229, 216, 47, 0.3));
+            this._super(pe.VectorWidget, 'init', "velocity", new me.Color(229, 216, 47, 0.3));
             this.scale = 30;
         },
         onVectorChanged : function(vector) {
@@ -495,7 +495,7 @@
 
     pe.ForceWidget = pe.VectorWidget.extend({
         init : function() {
-            this._super(pe.WidgetBase, 'init', "force", new me.Color(79, 214, 72, 0.3));
+            this._super(pe.VectorWidget, 'init', "force", new me.Color(79, 214, 72, 0.3));
             this.scale = 300;
         },
         onVectorChanged : function(vector) {
