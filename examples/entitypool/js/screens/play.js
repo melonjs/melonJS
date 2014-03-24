@@ -13,7 +13,7 @@
       
       me.game.world.addChild(new (me.Renderable.extend({
         init: function() {
-            this._super(me.Renderable, 'init', new me.Vector2d(), 100, 100);
+            this._super(me.Renderable, 'init', [new me.Vector2d(), 100, 100]);
             this.drawn = false;
             this.elapsed = 0;
         },

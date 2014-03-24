@@ -164,7 +164,7 @@ if (!Function.prototype.bind) {
  * var Ninja = Person.extend({
  *     "init" : function() {
  *         // Call the super constructor, passing a single argument
- *         this._super(Person, "init", false);
+ *         this._super(Person, "init", [false]);
  *     },
  *     "dance" : function() {
  *         // Call the overridden dance() method
@@ -178,7 +178,7 @@ if (!Function.prototype.bind) {
  * var Pirate = Person.extend(Ninja, {
  *     "init" : function() {
  *         // Call the super constructor, passing a single argument
- *         this._super(Person, "init", true);
+ *         this._super(Person, "init", [true]);
  *     }
  * });
  *
@@ -203,67 +203,69 @@ if (!Function.prototype.bind) {
  *
  * console.log(r instanceof Ninja); // => false
  */
-Object.defineProperty(Object.prototype, "extend", {
-    "value" : function () {
-        var methods = {};
-        var mixins = Array.prototype.slice.call(arguments, 0);
+(function () {
+    Object.defineProperty(Object.prototype, "extend", {
+        "value" : function () {
+            var methods = {};
+            var mixins = Array.prototype.slice.call(arguments, 0);
 
-        /**
-         * The class constructor which creates the `_super` shortcut method
-         * and calls the user `init` constructor if defined.
-         * @ignore
-         */
-        function Class() {
             /**
-             * Special method that acts as a proxy to the super class.
-             * @name _super
+             * The class constructor which creates the `_super` shortcut method
+             * and calls the user `init` constructor if defined.
              * @ignore
              */
-            this._super = function (superClass, method) {
-                return superClass.prototype[method].apply(
-                    this,
-                    Array.prototype.slice.call(arguments, 2)
-                );
-            };
-
-            // Call the user constructor
-            if (this.init) {
-                this.init.apply(this, arguments);
+            function Class() {
+                // Call the user constructor
+                if(typeof this.init === 'function') {
+                    this.init.apply(this, arguments);
+                }
+                return this;
             }
-            return this;
-        }
 
-        /**
-         * Apply methods to the class prototype.
-         * @ignore
-         */
-        function apply_methods(descriptor) {
-            Object.keys(descriptor).forEach(function (key) {
-                methods[key] = descriptor[key];
+            // Apply superClass
+            Class.prototype = Object.create(this.prototype);
 
-                Object.defineProperty(Class.prototype, key, {
-                    "configurable" : true,
-                    "value" : descriptor[key]
-                });
+            // Apply all mixin methods to the class prototype
+            mixins.forEach(function (mixin) {
+                apply_methods(Class, methods, mixin.__methods__ || mixin);
             });
+
+            // Apply syntactic sugar for accessing methods on super classes
+            Object.defineProperty(Class.prototype, "_super", {
+                "value" : _super
+            });
+
+            // Create a hidden property on the class itself
+            // List of methods, used for applying classes as mixins
+            Object.defineProperty(Class, "__methods__", {
+                "value" : methods
+            });
+
+            return Class;
         }
+    });
 
-        // Apply superClass
-        Class.prototype = Object.create(this.prototype);
-
-        // Apply all mixin methods to the class prototype
-        mixins.forEach(function (mixin) {
-            apply_methods(mixin.__methods__ || mixin);
+    /**
+     * Apply methods to the class prototype.
+     * @ignore
+     */
+    function apply_methods(Class, methods, descriptor) {
+        Object.keys(descriptor).forEach(function (method) {
+            methods[method] = descriptor[method];
+            
+            Object.defineProperty(Class.prototype, method, {
+                "configurable" : true,
+                "value" : descriptor[method]
+            });
         });
-
-        // Apply constructor
-        Class.prototype.constructor = Class.prototype.init || Class;
-
-        // Create a hidden property on the class itself to use for mixins
-        Object.defineProperty(Class, "__methods__", {
-            "value" : methods
-        });
-
-        return Class;
     }
-});
+
+    /**
+     * Special method that acts as a proxy to the super class.
+     * @name _super
+     * @ignore
+     */
+    function _super(superClass, method, args) {
+        return superClass.prototype[method].apply(this, args);
+    };
+})();

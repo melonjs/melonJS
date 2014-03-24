@@ -170,9 +170,9 @@
             this.lastflipY = false;
             // call the super constructor
             this.pos = new me.Vector2d(x, y);
-            this._super(me.Renderable, "init", this.pos,
+            this._super(me.Renderable, "init", [this.pos,
                         settings.width,
-                        settings.height);
+                        settings.height]);
 
             if (settings.image) {
                 var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
@@ -884,7 +884,7 @@
         /** @ignore */
         init : function(x, y, settings) {
             // call the super constructor
-            this._super(me.ObjectEntity, "init", x, y, settings);
+            this._super(me.ObjectEntity, "init", [x, y, settings]);
 
             this.type = me.game.COLLECTABLE_OBJECT;
 
@@ -910,7 +910,7 @@
     {
         /** @ignore */
         init : function(x, y, settings) {
-            this._super(me.ObjectEntity, "init", x, y, settings);
+            this._super(me.ObjectEntity, "init", [x, y, settings]);
 
             this.nextlevel = settings.to;
 

@@ -128,7 +128,7 @@
              */
             this.alpha = 1.0;
             // call the super constructor
-            this._super(me.Rect, "init", pos, width, height);
+            this._super(me.Rect, "init", [pos, width, height]);
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
@@ -149,7 +149,7 @@
         },
 
         getBounds : function(rect) {
-            return this._super(me.Rect, 'getBounds', rect);
+            return this._super(me.Rect, 'getBounds', [rect]);
         },
 
         /**
@@ -194,7 +194,7 @@
          **/
         draw : function(context, color) {
             // draw the super's rectangle
-            this._super(me.Rect, "draw", context, color);
+            this._super(me.Rect, "draw", [context, color]);
         }
     });
 

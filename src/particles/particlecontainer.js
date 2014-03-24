@@ -85,7 +85,7 @@
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super(me.ObjectContainer, "draw", context, rect);
+                this._super(me.ObjectContainer, "draw", [context, rect]);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {

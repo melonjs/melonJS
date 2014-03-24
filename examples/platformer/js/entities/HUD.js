@@ -42,7 +42,7 @@ game.HUD.ScoreItem = me.Renderable.extend( {
 		
 		// call the super constructor 
 		// (size does not matter here)
-		this._super(me.Renderable, 'init', new me.Vector2d(x, y), 10, 10);
+		this._super(me.Renderable, 'init', [new me.Vector2d(x, y), 10, 10]);
 		
 		// create a font
 		this.font = new me.BitmapFont("atascii", {x:24});

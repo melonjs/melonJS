@@ -4,7 +4,7 @@ game.square = me.DraggableEntity.extend({
      */
     init: function (x, y, settings) {
         // call the super constructor
-        this._super(me.DraggableEntity, 'init', x, y, settings);
+        this._super(me.DraggableEntity, 'init', [x, y, settings]);
         // set the color to white
         this.color = "white";
     },
@@ -26,13 +26,13 @@ game.square = me.DraggableEntity.extend({
      */
     dragStart: function (e) {
         // call the super function
-        this._super(me.DraggableEntity, 'dragStart', e);
+        this._super(me.DraggableEntity, 'dragStart', [e]);
         // set the color to blue
         this.color = 'blue';
     },
     dragEnd: function (e) {
         // call the super function
-        this._super(me.DraggableEntity, 'dragEnd', e);
+        this._super(me.DraggableEntity, 'dragEnd', [e]);
         // set the color to white
         this.color = 'white';
     }

@@ -77,9 +77,9 @@
             this.isSprite = true;
 
             // call the super constructor
-            this._super(me.Renderable, "init", new me.Vector2d(x, y),
+            this._super(me.Renderable, "init", [new me.Vector2d(x, y),
                 spritewidth  || image.width,
-                spriteheight || image.height);
+                spriteheight || image.height]);
             // cache image reference
             this.image = image;
 
@@ -412,7 +412,7 @@
             var image = settings['region'] || settings['image'];
 
             // call the constructor
-            this._super(me.SpriteObject, "init", x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
+            this._super(me.SpriteObject, "init", [x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin]);
                         
             // store the current atlas information
             this.textureAtlas = null;
@@ -645,7 +645,7 @@
                         else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
-                            this._super(me.SpriteObject, "update", dt );
+                            this._super(me.SpriteObject, "update", [dt] );
                             return false;
                         }
                     }
@@ -653,10 +653,10 @@
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
 
-                    return this._super(me.SpriteObject, "update", dt ) || true;
+                    return this._super(me.SpriteObject, "update", [dt] ) || true;
                 }
             }
-            return this._super(me.SpriteObject, "update", dt );
+            return this._super(me.SpriteObject, "update", [dt] );
         }
     });
 
