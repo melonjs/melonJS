@@ -38,7 +38,7 @@
              * @name points
              * @memberOf me.PolyShape
              */
-            this.points = null;this.
+            this.points = null;
 
             /**
              * Specified if the shape is closed (i.e. polygon)

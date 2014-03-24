@@ -32,7 +32,6 @@
         init : function(font, size, fillStyle, textAlign) {
             // private font properties
             /** @ignore */
-            this.font = 'Arial';
             this.fontSize = new me.Vector2d();
            
             /**
@@ -42,7 +41,7 @@
              * @type String
              * @name me.Font#fillStyle
              */
-            this.fillStyle = "#000000";
+            this.fillStyle = fillStyle || "#000000";
 
             /**
              * defines the color used to draw the font stroke.<br>
@@ -70,7 +69,7 @@
              * @type String
              * @name me.Font#textAlign
              */
-            this.textAlign = "left";
+            this.textAlign = textAlign || "left";
             
             /**
              * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
