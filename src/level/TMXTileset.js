@@ -69,25 +69,25 @@
              * True if the tile is flipped horizontally<br>
              * @public
              * @type Boolean
-             * @name me.Tile#flipX
+             * @name me.Tile#flippedX
              */
-            this.flipX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
+            this.flippedX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
             
             /**
              * True if the tile is flipped vertically<br>
              * @public
              * @type Boolean
-             * @name me.Tile#flipY
+             * @name me.Tile#flippedY
              */
-            this.flipY  = (this.tileId & FlippedVerticallyFlag) !== 0;
+            this.flippedY  = (this.tileId & FlippedVerticallyFlag) !== 0;
             
             /**
              * True if the tile is flipped anti-diagonally<br>
              * @public
              * @type Boolean
-             * @name me.Tile#flipAD
+             * @name me.Tile#flippedAD
              */
-            this.flipAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
+            this.flippedAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
             
             /**
              * Global flag that indicates if the tile is flipped<br>
@@ -95,7 +95,7 @@
              * @type Boolean
              * @name me.Tile#flipped
              */
-            this.flipped = this.flipX || this.flipY || this.flipAD;
+            this.flipped = this.flippedX || this.flippedY || this.flippedAD;
             
             // create a transformation matrix if required
             if (this.flipped === true) {
@@ -117,21 +117,21 @@
             // reset the matrix (in case it was already defined)
             this.transform.identity();
             
-            if (this.flipAD){
+            if (this.flippedAD){
                 // Use shearing to swap the X/Y axis
                 this.transform.set(0,1,1,0);
                 this.transform.translate(0, this.height - this.width);                
             }
-            if (this.flipX){
+            if (this.flippedX){
                 this.transform.a *= -1;
                 this.transform.c *= -1;
-                this.transform.translate((this.flipAD ? this.height : this.width), 0);
+                this.transform.translate((this.flippedAD ? this.height : this.width), 0);
                 
             }
-            if (this.flipY){
+            if (this.flippedY){
                 this.transform.b *= -1;
                 this.transform.d *= -1;
-                this.transform.translate(0, (this.flipAD ? this.width : this.height));
+                this.transform.translate(0, (this.flippedAD ? this.width : this.height));
             }
         },
     });

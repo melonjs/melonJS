@@ -169,7 +169,8 @@
             this.lastflipX = false;
             this.lastflipY = false;
             // call the super constructor
-            this._super(me.Renderable, "init", this.pos.set(x,y),
+            this.pos = new me.Vector2d(x, y);
+            this._super(me.Renderable, "init", this.pos,
                         settings.width,
                         settings.height);
 

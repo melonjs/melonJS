@@ -80,7 +80,7 @@ game.droptarget = me.DroptargetEntity.extend({
         // save a reference to this to use in the timeout
         var self = this;
         // call the super function
-        this._super.draw(e);
+        this._super(me.DroptargetEntity, 'draw', e);
         // indicate a succesful drop
         this.color = 'green';
         // set the color back to red after a second
@@ -96,7 +96,7 @@ game.droptarget2 = game.droptarget.extend({
      */
     init: function (x, y, settings) {
         // call the super constructor
-        this._super.init(x, y, settings);
+        this._super(game.droptarget, 'init', x, y, settings);
         // set the color to white
         this.color = "red";
         // set the font we want to use

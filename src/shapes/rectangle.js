@@ -20,93 +20,51 @@
     me.Rect = Object.extend(
     /** @scope me.Rect.prototype */ {
     
-        /**
-         * position of the Rectange
-         * @public
-         * @type {me.Vector2d}
-         * @name pos
-         * @memberOf me.Rect
-         */
-        pos : new me.Vector2d(),
-
-        /**
-         * allow expanding and contracting the rect with a vector<br>
-         * while keeping its original size and shape<br>
-         * @ignore
-         * @type {me.Vector2d}
-         * @name rangeV
-         * @memberOf me.Rect
-         * @see me.Rect#addV
-         */
-        rangeV : new me.Vector2d(),
-
-        /**
-         * left coordinate of the Rectange<br>
-         * takes in account the adjusted size of the rectangle (if set)
-         * @public
-         * @type {Number}
-         * @name left
-         * @memberOf me.Rect
-         */
-         // define later in the constructor
-        
-        /**
-         * right coordinate of the Rectange<br>
-         * takes in account the adjusted size of the rectangle (if set)
-         * @public
-         * @type {Number}
-         * @name right
-         * @memberOf me.Rect
-         */
-         // define later in the constructor
-         
-        /**
-         * bottom coordinate of the Rectange<br>
-         * takes in account the adjusted size of the rectangle (if set)
-         * @public
-         * @type {Number}
-         * @name bottom
-         * @memberOf me.Rect
-         */
-        // define later in the constructor
-        
-        /**
-         * top coordinate of the Rectange<br>
-         * takes in account the adjusted size of the rectangle (if set)
-         * @public
-         * @type {Number}
-         * @name top
-         * @memberOf me.Rect
-         */
-        // define later in the constructor
-         
-        /**
-         * width of the Rectange
-         * @public
-         * @type {Number}
-         * @name width
-         * @memberOf me.Rect
-         */
-        width : 0,
-        /**
-         * height of the Rectange
-         * @public
-         * @type {Number}
-         * @name height
-         * @memberOf me.Rect
-         */
-        height : 0,
-
-        // half width/height
-        hWidth : 0,
-        hHeight : 0,
-
-        // the shape type
-        shapeType : "Rectangle",
-        
         /** @ignore */
         init : function(v, w, h) {
+            /**
+             * position of the Rectange
+             * @public
+             * @type {me.Vector2d}
+             * @name pos
+             * @memberOf me.Rect
+             */
+            this.pos = new me.Vector2d();
 
+            /**
+             * allow expanding and contracting the rect with a vector<br>
+             * while keeping its original size and shape<br>
+             * @ignore
+             * @type {me.Vector2d}
+             * @name rangeV
+             * @memberOf me.Rect
+             * @see me.Rect#addV
+             */
+            this.rangeV = new me.Vector2d();
+            
+            /**
+             * width of the Rectange
+             * @public
+             * @type {Number}
+             * @name width
+             * @memberOf me.Rect
+             */
+            this.width = 0;
+            /**
+             * height of the Rectange
+             * @public
+             * @type {Number}
+             * @name height
+             * @memberOf me.Rect
+             */
+            this.height = 0;
+
+            // half width/height
+            this.hWidth = 0;
+            this.hHeight = 0;
+
+            // the shape type
+            this.shapeType = "Rectangle";
             this.pos.setV(v);
             
             // Allow expanding and contracting the rect with a vector
@@ -121,7 +79,14 @@
             this.hHeight = ~~(h / 2);
             
             // redefine some properties to ease our life when getting the rectangle coordinates
-            // redefine some properties to ease our life when getting the rectangle coordinates
+            /**
+             * left coordinate of the Rectange<br>
+             * takes in account the adjusted size of the rectangle (if set)
+             * @public
+             * @type {Number}
+             * @name left
+             * @memberOf me.Rect
+             */
             Object.defineProperty(this, "left", {
                 get : function() {
                     var x = this.pos.x;
@@ -130,7 +95,15 @@
                 },
                 configurable : true
             });
-            
+
+            /**
+             * right coordinate of the Rectange<br>
+             * takes in account the adjusted size of the rectangle (if set)
+             * @public
+             * @type {Number}
+             * @name right
+             * @memberOf me.Rect
+             */
             Object.defineProperty(this, "right", {
                 get : function() {
                     var x = this.pos.x + this.width;
@@ -140,6 +113,14 @@
                 configurable : true
             });
 
+            /**
+             * top coordinate of the Rectange<br>
+             * takes in account the adjusted size of the rectangle (if set)
+             * @public
+             * @type {Number}
+             * @name top
+             * @memberOf me.Rect
+             */
             Object.defineProperty(this, "top", {
                 get : function() {
                     var y = this.pos.y;
@@ -149,6 +130,14 @@
                 configurable : true
             });
 
+            /**
+             * bottom coordinate of the Rectange<br>
+             * takes in account the adjusted size of the rectangle (if set)
+             * @public
+             * @type {Number}
+             * @name bottom
+             * @memberOf me.Rect
+             */
             Object.defineProperty(this, "bottom", {
                 get : function() {
                     var y = this.pos.y + this.height;
