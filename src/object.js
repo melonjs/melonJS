@@ -216,9 +216,7 @@ if (!Function.prototype.bind) {
              */
             function Class() {
                 // Call the user constructor
-                if(typeof this.init === 'function') {
-                    this.init.apply(this, arguments);
-                }
+                this.init.apply(this, arguments);
                 return this;
             }
 
@@ -229,6 +227,11 @@ if (!Function.prototype.bind) {
             mixins.forEach(function (mixin) {
                 apply_methods(Class, methods, mixin.__methods__ || mixin);
             });
+
+            // Verify constructor exists
+            if (!("init" in Class.prototype)) {
+                throw "Object.extend: Class is missing a constructor named `init`";
+            }
 
             // Apply syntactic sugar for accessing methods on super classes
             Object.defineProperty(Class.prototype, "_super", {
@@ -252,7 +255,11 @@ if (!Function.prototype.bind) {
     function apply_methods(Class, methods, descriptor) {
         Object.keys(descriptor).forEach(function (method) {
             methods[method] = descriptor[method];
-            
+
+            if (typeof(descriptor[method]) !== "function") {
+                throw "Object.extend: Method `" + method + "` is not a function!";
+            }
+
             Object.defineProperty(Class.prototype, method, {
                 "configurable" : true,
                 "value" : descriptor[method]

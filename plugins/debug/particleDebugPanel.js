@@ -29,11 +29,10 @@
     particleDebugPanel = me.plugin.Base.extend(
     /** @scope me.debug.Panel.prototype */
     {
-        // minimum melonJS version expected
-        version : "1.0.0",
-
         /** @private */
         init : function() {
+            // minimum melonJS version expected
+            this.version = "1.0.0";
             // call the super constructor
             this._super(me.plugin.Base, 'init');
 

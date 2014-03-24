@@ -30,11 +30,8 @@
     /** @scope me.debug.Panel.prototype */
     {
 
-        // minimum melonJS version expected
-        version : "1.0.0",
         /** @private */
         init : function(showKey, hideKey) {
-
             // to hold the debug options
             // clickable rect area
             this.area = {};
@@ -57,6 +54,7 @@
 
             // call the super constructor
             this._super(me.plugin.Base, 'init');
+            this.version = '1.0.0';
 
             this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
 

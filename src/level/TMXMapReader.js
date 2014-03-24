@@ -19,6 +19,9 @@
      * @ignore
      */
     me.TMXMapReader = Object.extend({
+        init: function() {
+
+        },
         readMap: function (map) {
             // if already loaded, do nothing
             if (map.initialized) {

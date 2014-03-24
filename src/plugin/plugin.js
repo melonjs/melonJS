@@ -33,19 +33,17 @@
         singleton.Base = Object.extend(
         /** @scope me.plugin.Base.prototype */
         {
-            /**
-             * define the minimum required <br>
-             * version of melonJS  <br>
-             * this need to be defined by the plugin
-             * @public
-             * @type String
-             * @name me.plugin.Base#version
-             */
-            version : undefined,
-            
             /** @ignore */
             init : function() {
-                //empty for now !
+                /**
+                 * define the minimum required <br>
+                 * version of melonJS  <br>
+                 * this need to be defined by the plugin
+                 * @public
+                 * @type String
+                 * @name me.plugin.Base#version
+                 */
+                this.version = undefined;
             }
         });
 
@@ -118,13 +116,6 @@
                 console.error ("plugin " + name + " already registered");
             }
             
-            // compatibility testing
-            if (plugin.prototype.version === undefined) {
-                throw "melonJS: Plugin version not defined !";
-            } else if (me.sys.checkVersion(plugin.prototype.version) > 0) {
-                throw ("melonJS: Plugin version mismatch, expected: "+ plugin.prototype.version +", got: " + me.version);
-            }
-            
             // get extra arguments
             var _args = []; 
             if (arguments.length > 2) {
@@ -135,6 +126,13 @@
             // try to instantiate the plugin
             _args[0] = plugin;
             me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
+
+            // compatibility testing
+            if (me.plugin[name].version === undefined) {
+                throw "melonJS: Plugin version not defined !";
+            } else if (me.sys.checkVersion(me.plugin[name].version) > 0) {
+                throw ("melonJS: Plugin version mismatch, expected: "+ me.plugin[name].version +", got: " + me.version);
+            }
             
             // inheritance check
             if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
