@@ -37,6 +37,7 @@
   },
   "scripts": {
     "install": "(bower install || true) && grunt",
-    "release": "grunt release"
+    "release": "grunt release",
+    "test": "grunt test"
   }
 }
