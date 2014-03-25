@@ -1,4 +1,4 @@
-describe("me.Color`", function () {
+describe("me.Color", function () {
 
     var red_color = new me.Color(255, 0, 0);
     var green_color = new me.Color().parseCSS("green");
