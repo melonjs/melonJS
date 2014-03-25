@@ -108,7 +108,7 @@
 
     me.state = (function () {
         // hold public stuff in our singleton
-        var obj = {};
+        var api = {};
 
         /*-------------------------------------------
             PRIVATE STUFF
@@ -250,7 +250,7 @@
          * @name LOADING
          * @memberOf me.state
          */
-        obj.LOADING = 0;
+        api.LOADING = 0;
 
         /**
          * default state value for Menu Screen
@@ -259,7 +259,7 @@
          * @memberOf me.state
          */
 
-        obj.MENU = 1;
+        api.MENU = 1;
         /**
          * default state value for "Ready" Screen
          * @constant
@@ -267,7 +267,7 @@
          * @memberOf me.state
          */
 
-        obj.READY = 2;
+        api.READY = 2;
         /**
          * default state value for Play Screen
          * @constant
@@ -275,7 +275,7 @@
          * @memberOf me.state
          */
 
-        obj.PLAY = 3;
+        api.PLAY = 3;
         /**
          * default state value for Game Over Screen
          * @constant
@@ -283,7 +283,7 @@
          * @memberOf me.state
          */
 
-        obj.GAMEOVER = 4;
+        api.GAMEOVER = 4;
         /**
          * default state value for Game End Screen
          * @constant
@@ -291,7 +291,7 @@
          * @memberOf me.state
          */
 
-        obj.GAME_END = 5;
+        api.GAME_END = 5;
         /**
          * default state value for High Score Screen
          * @constant
@@ -299,7 +299,7 @@
          * @memberOf me.state
          */
 
-        obj.SCORE = 6;
+        api.SCORE = 6;
         /**
          * default state value for Credits Screen
          * @constant
@@ -307,14 +307,14 @@
          * @memberOf me.state
          */
 
-        obj.CREDITS = 7;
+        api.CREDITS = 7;
         /**
          * default state value for Settings Screen
          * @constant
          * @name SETTINGS
          * @memberOf me.state
          */
-        obj.SETTINGS = 8;
+        api.SETTINGS = 8;
 
         /**
          * default state value for user defined constants<br>
@@ -327,7 +327,7 @@
          * var STATE_ERROR = me.state.USER + 2;
          * var STATE_CUTSCENE = me.state.USER + 3;
          */
-        obj.USER = 100;
+        api.USER = 100;
 
         /**
          * onPause callback
@@ -335,7 +335,7 @@
          * @name onPause
          * @memberOf me.state
          */
-        obj.onPause = null;
+        api.onPause = null;
 
         /**
          * onResume callback
@@ -343,7 +343,7 @@
          * @name onResume
          * @memberOf me.state
          */
-        obj.onResume = null;
+        api.onResume = null;
 
         /**
          * onStop callback
@@ -351,7 +351,7 @@
          * @name onStop
          * @memberOf me.state
          */
-        obj.onStop = null;
+        api.onStop = null;
 
         /**
          * onRestart callback
@@ -359,14 +359,14 @@
          * @name onRestart
          * @memberOf me.state
          */
-        obj.onRestart = null;
+        api.onRestart = null;
 
         /**
          * @ignore
          */
-        obj.init = function () {
+        api.init = function () {
             // set the embedded loading screen
-            obj.set(obj.LOADING, new me.DefaultLoadingScreen());
+            api.set(api.LOADING, new me.DefaultLoadingScreen());
         };
 
         /**
@@ -377,9 +377,9 @@
          * @function
          * @param {Boolean} pauseTrack pause current track on screen stop.
          */
-        obj.stop = function (music) {
+        api.stop = function (music) {
             // only stop when we are not loading stuff
-            if ((_state !== obj.LOADING) && obj.isRunning()) {
+            if ((_state !== api.LOADING) && api.isRunning()) {
                 // stop the main loop
                 _stopRunLoop();
                 // current music stop
@@ -393,8 +393,8 @@
                 // publish the stop notification
                 me.event.publish(me.event.STATE_STOP);
                 // any callback defined ?
-                if (typeof(obj.onStop) === "function") {
-                    obj.onStop();
+                if (typeof(api.onStop) === "function") {
+                    api.onStop();
                 }
             }
         };
@@ -407,9 +407,9 @@
          * @function
          * @param {Boolean} pauseTrack pause current track on screen pause
          */
-        obj.pause = function (music) {
+        api.pause = function (music) {
             // only pause when we are not loading stuff
-            if ((_state !== obj.LOADING) && !obj.isPaused()) {
+            if ((_state !== api.LOADING) && !api.isPaused()) {
                 // stop the main loop
                 _pauseRunLoop();
                 // current music stop
@@ -423,8 +423,8 @@
                 // publish the pause event
                 me.event.publish(me.event.STATE_PAUSE);
                 // any callback defined ?
-                if (typeof(obj.onPause) === "function") {
-                    obj.onPause();
+                if (typeof(api.onPause) === "function") {
+                    api.onPause();
                 }
             }
         };
@@ -437,8 +437,8 @@
          * @function
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
-        obj.restart = function (music) {
-            if (!obj.isRunning()) {
+        api.restart = function (music) {
+            if (!api.isRunning()) {
                 // restart the main loop
                 _startRunLoop();
                 // current music stop
@@ -455,8 +455,8 @@
                 // publish the restart notification
                 me.event.publish(me.event.STATE_RESTART, [ _pauseTime ]);
                 // any callback defined ?
-                if (typeof(obj.onRestart) === "function") {
-                    obj.onRestart();
+                if (typeof(api.onRestart) === "function") {
+                    api.onRestart();
                 }
             }
         };
@@ -469,8 +469,8 @@
          * @function
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
-        obj.resume = function (music) {
-            if (obj.isPaused()) {
+        api.resume = function (music) {
+            if (api.isPaused()) {
                 // resume the main loop
                 _resumeRunLoop();
                 // current music stop
@@ -484,8 +484,8 @@
                 // publish the resume event
                 me.event.publish(me.event.STATE_RESUME, [ _pauseTime ]);
                 // any callback defined ?
-                if (typeof(obj.onResume) === "function") {
-                    obj.onResume();
+                if (typeof(api.onResume) === "function") {
+                    api.onResume();
                 }
             }
         };
@@ -498,7 +498,7 @@
          * @function
          * @return {Boolean} true if a "process is running"
          */
-        obj.isRunning = function () {
+        api.isRunning = function () {
             return _animFrameId !== -1;
         };
 
@@ -510,7 +510,7 @@
          * @function
          * @return {Boolean} true if the game is paused
          */
-        obj.isPaused = function () {
+        api.isPaused = function () {
             return _isPaused;
         };
 
@@ -523,7 +523,7 @@
          * @param {Number} state @see me.state#Constant
          * @param {me.ScreenObject}
          */
-        obj.set = function (state, so) {
+        api.set = function (state, so) {
             _screenObject[state] = {};
             _screenObject[state].screen = so;
             _screenObject[state].transition = true;
@@ -538,7 +538,7 @@
          * @function
          * @return {me.ScreenObject}
          */
-        obj.current = function () {
+        api.current = function () {
             return _screenObject[_state].screen;
         };
 
@@ -552,7 +552,7 @@
          * @param {String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          */
-        obj.transition = function (effect, color, duration) {
+        api.transition = function (effect, color, duration) {
             if (effect === "fade") {
                 _fade.color = color;
                 _fade.duration = duration;
@@ -566,7 +566,7 @@
          * @public
          * @function
          */
-        obj.setTransition = function (state, enable) {
+        api.setTransition = function (state, enable) {
             _screenObject[state].transition = enable;
         };
 
@@ -583,7 +583,7 @@
          * // "level_1" and the number 3
          * me.state.change(me.state.PLAY, "level_1", 3);
          */
-        obj.change = function (state) {
+        api.change = function (state) {
             // Protect against undefined ScreenObject
             if (typeof(_screenObject[state]) === "undefined") {
                 throw "melonJS : Undefined ScreenObject for state '" + state + "'";
@@ -625,11 +625,11 @@
          * @function
          * @param {Number} state @see me.state#Constant
          */
-        obj.isCurrent = function (state) {
+        api.isCurrent = function (state) {
             return _state === state;
         };
 
         // return our object
-        return obj;
+        return api;
     })();
 })();
