@@ -5,7 +5,8 @@
  * @desc Used to make a game entity draggable
  */
 me.DraggableEntity = (function (Entity, Input, Event, Vector) {
-    'use strict';
+    "use strict";
+
     return Entity.extend({
         /**
          * Constructor
@@ -20,11 +21,12 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this._super(Entity, "init", [x, y, settings]);
             this.dragging = false;
             this.dragId = null;
-            this.grabOffset = new Vector(0,0);
+            this.grabOffset = new Vector(0, 0);
             this.onPointerEvent = Input.registerPointerEvent;
             this.removePointerEvent = Input.releasePointerEvent;
             this.initEvents();
         },
+
         /**
          * Initializes the events the modules needs to listen to
          * It translates the pointer events to me.events
@@ -35,7 +37,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @memberOf me.DraggableEntity
          * @function
          */
-         initEvents: function () {
+        initEvents: function () {
             var self = this;
             this.mouseDown = function (e) {
                 this.translatePointerEvent(e, Event.DRAGSTART);
@@ -43,8 +45,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this.mouseUp = function (e) {
                 this.translatePointerEvent(e, Event.DRAGEND);
             };
-            this.onPointerEvent('pointerdown', this, this.mouseDown.bind(this));
-            this.onPointerEvent('pointerup', this, this.mouseUp.bind(this));
+            this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
+            this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
             Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
             Event.subscribe(Event.DRAGSTART, function (e, draggable) {
                 if (draggable === self) {
@@ -56,7 +58,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
                     self.dragEnd(e);
                 }
             });
-         },
+        },
+
         /**
          * Translates a pointer event to a me.event
          * @name init
@@ -69,6 +72,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
         translatePointerEvent: function (e, translation) {
             Event.publish(translation, [e, this]);
         },
+
         /**
          * Gets called when the user starts dragging the entity
          * @name dragStart
@@ -85,6 +89,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
                 return false;
             }
         },
+
         /**
          * Gets called when the user drags this entity around
          * @name dragMove
@@ -100,6 +105,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
                 }
             }
         },
+
         /**
          * Gets called when the user stops dragging the entity
          * @name dragEnd
@@ -107,13 +113,14 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @function
          * @param {Object} x the pointer event
          */
-        dragEnd: function (e) {
+        dragEnd: function () {
             if (this.dragging === true) {
                 this.pointerId = undefined;
                 this.dragging = false;
                 return false;
             }
         },
+
         /**
          * Destructor
          * @name destroy
@@ -124,8 +131,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             Event.unsubscribe(Event.MOUSEMOVE, this.dragMove);
             Event.unsubscribe(Event.DRAGSTART, this.dragStart);
             Event.unsubscribe(Event.DRAGEND, this.dragEnd);
-            this.removePointerEvent('pointerdown', this);
-            this.removePointerEvent('pointerup', this);
+            this.removePointerEvent("pointerdown", this);
+            this.removePointerEvent("pointerup", this);
         }
     });
 }(me.ObjectEntity, me.input, me.event, me.Vector2d));

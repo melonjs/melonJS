@@ -5,28 +5,28 @@
     "maxerr"        : 50,       // {int} Maximum error before stopping
 
     // Enforcing
-    "bitwise"       : false,   // true: Prohibit bitwise operators (&, |, ^, etc.)
-    "camelcase"     : false,   // true: Identifiers must be in camelCase
-    "curly"         : false,   // true: Require {} for every new block or scope
-    "eqeqeq"        : true,    // true: Require triple equals (===) for comparison
-    "forin"         : false,    // true: Require filtering for..in loops with obj.hasOwnProperty()
-    "immed"         : true,    // true: Require immediate invocations to be wrapped in parens e.g. `(function () { } ());`
-    //"indent"        : 4,      // {int} Number of spaces to use for indentation
-    "latedef"       : true,    // true: Require variables/functions to be defined before being used
-    "newcap"        : true,    // true: Require capitalization of all constructor functions e.g. `new F()`
+    "bitwise"       : false,    // true: Prohibit bitwise operators (&, |, ^, etc.)
+    "camelcase"     : false,    // true: Identifiers must be in camelCase
+    "curly"         : true,     // true: Require {} for every new block or scope
+    "eqeqeq"        : true,     // true: Require triple equals (===) for comparison
+    "forin"         : true,     // true: Require filtering for..in loops with obj.hasOwnProperty()
+    "immed"         : true,     // true: Require immediate invocations to be wrapped in parens e.g. `(function () { } ());`
+    "indent"        : 4,        // {int} Number of spaces to use for indentation
+    "latedef"       : true,     // true: Require variables/functions to be defined before being used
+    "newcap"        : true,     // true: Require capitalization of all constructor functions e.g. `new F()`
     "noarg"         : true,     // true: Prohibit use of `arguments.caller` and `arguments.callee`
     "noempty"       : true,     // true: Prohibit use of empty blocks
-    "nonew"         : false,    // true: Prohibit use of constructors for side-effects (without assignment)
+    "nonew"         : true,     // true: Prohibit use of constructors for side-effects (without assignment)
     "plusplus"      : false,    // true: Prohibit use of `++` & `--`
-    "quotmark"      : false,    // Quotation mark consistency:
+    "quotmark"      : "double", // Quotation mark consistency:
                                 //   false    : do nothing (default)
                                 //   true     : ensure whatever is used is consistent
                                 //   "single" : require single quotes
                                 //   "double" : require double quotes
     "undef"         : true,     // true: Require all non-global variables to be declared (prevents global leaks)
-    "unused"        : false,     // true: Require all defined variables be used
-    "strict"        : false,     // true: Requires all functions run in ES5 Strict Mode
-    "trailing"      : false,    // true: Prohibit trailing whitespaces
+    "unused"        : true,     // true: Require all defined variables be used
+    "strict"        : false,    // true: Requires all functions run in ES5 Strict Mode
+    "trailing"      : true,     // true: Prohibit trailing whitespaces
     "maxparams"     : false,    // {int} Max number of formal params allowed per function
     "maxdepth"      : false,    // {int} Max depth of nested blocks (within functions)
     "maxstatements" : false,    // {int} Max number statements per function
@@ -35,7 +35,7 @@
 
     // Relaxing
     "asi"           : false,     // true: Tolerate Automatic Semicolon Insertion (no semicolons)
-    "boss"          : true,      // true: Tolerate assignments where comparisons would be expected
+    "boss"          : false,     // true: Tolerate assignments where comparisons would be expected
     "debug"         : false,     // true: Allow debugger statements e.g. browser breakpoints.
     "eqnull"        : true,      // true: Tolerate use of `== null`
     "es5"           : false,     // true: Allow ES5 syntax (ex: getters and setters)
@@ -50,14 +50,14 @@
     "lastsemic"     : false,     // true: Tolerate omitting a semicolon for the last statement of a 1-line block
     "laxbreak"      : false,     // true: Tolerate possibly unsafe line breakings
     "laxcomma"      : false,     // true: Tolerate comma-first style coding
-    "loopfunc"      : true,     // true: Tolerate functions being defined in loops
+    "loopfunc"      : false,     // true: Tolerate functions being defined in loops
     "multistr"      : false,     // true: Tolerate multi-line strings
     "notypeof "     : false,     // true: Disable the check on the use of the typeof operator (result vs given string)
     "proto"         : false,     // true: Tolerate using the `__proto__` property
     "scripturl"     : false,     // true: Tolerate script-targeted URLs
-    "smarttabs"     : true,      // true: Tolerate mixed tabs/spaces when used for alignment
+    "smarttabs"     : false,     // true: Tolerate mixed tabs/spaces when used for alignment
     "shadow"        : false,     // true: Allows re-define variables later in code e.g. `var x=1; x=2;`
-    "sub"           : true,      // true: Tolerate using `[]` notation when it can still be expressed in dot notation
+    "sub"           : false,     // true: Tolerate using `[]` notation when it can still be expressed in dot notation
     "supernew"      : false,     // true: Tolerate `new function () { ... };` and `new Object;`
     "validthis"     : false,     // true: Tolerate using this in a non-constructor function
 
@@ -80,7 +80,7 @@
     "nomen"         : false,    // true: Prohibit dangling `_` in variables
     "onevar"        : false,    // true: Allow only one `var` statement per function
     "passfail"      : false,    // true: Stop on first error
-    "white"         : false,    // true: Check against strict whitespace and indentation rules
+    "white"         : true,     // true: Check against strict whitespace and indentation rules
 
     // Custom Globals
     "globals"       : {
@@ -96,5 +96,5 @@
         "Howl" : true,
         "Howler" : true,
         "exports" : true // commonJS and friends
-    } 
+    }
 }

@@ -4,7 +4,6 @@
  * http://www.melonjs.org
  *
  */
-
 (function($) {
 
     /**
@@ -144,12 +143,8 @@
          * @function
          * @return {Number} current opacity value between 0 and 1
          */
-        getOpacity : function() {
+        getOpacity : function () {
             return this.alpha;
-        },
-
-        getBounds : function(rect) {
-            return this._super(me.Rect, 'getBounds', [rect]);
         },
 
         /**
@@ -159,9 +154,9 @@
          * @function
          * @param {Number} alpha opacity value between 0 and 1
          */
-        setOpacity : function(alpha) {
+        setOpacity : function (alpha) {
             if (typeof (alpha) === "number") {
-                this.alpha = alpha.clamp(0.0,1.0);
+                this.alpha = alpha.clamp(0.0, 1.0);
                 // Set to 1 if alpha is NaN
                 if (this.alpha !== this.alpha) {
                     this.alpha = 1.0;
@@ -179,7 +174,7 @@
          * @param {Number} dt time since the last update in milliseconds.
          * @return false
          **/
-        update : function( dt ) {
+        update : function () {
             return false;
         },
 
@@ -192,14 +187,9 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function(context, color) {
-            // draw the super's rectangle
-            this._super(me.Rect, "draw", [context, color]);
+        draw : function (context, color) {
+            // draw the parent rectangle
+            this.parent(context, color);
         }
     });
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

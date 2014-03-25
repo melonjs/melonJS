@@ -4,9 +4,7 @@
  * http://www.melonjs.org/
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * The built in Event Object
      * @external Event
@@ -66,11 +64,9 @@
      * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh466123.aspx
      */
 
-    /*---------------------------------------------
-
-        PRIVATE STUFF
-
-      ---------------------------------------------*/
+    /*
+     * PRIVATE STUFF
+     */
 
     // Reference to base class
     var obj = me.input;
@@ -82,7 +78,7 @@
     var pointerInitialized = false;
 
     // to keep track of the supported wheel event
-    var wheeltype = 'mousewheel';
+    var wheeltype = "mousewheel";
 
     // Track last event timestamp to prevent firing events out of order
     var lastTimeStamp = 0;
@@ -92,32 +88,32 @@
 
     // list of standard pointer event type
     var pointerEventList = [
-        'mousewheel',
-        'pointermove',
-        'pointerdown',
-        'pointerup',
-        'pointercancel',
+        "mousewheel",
+        "pointermove",
+        "pointerdown",
+        "pointerup",
+        "pointercancel",
         undefined,
         undefined
     ];
 
     // previous MS prefixed pointer event type
     var MSPointerEventList = [
-        'mousewheel',
-        'MSPointerMove',
-        'MSPointerDown',
-        'MSPointerUp',
-        'MSPointerCancel',
+        "mousewheel",
+        "MSPointerMove",
+        "MSPointerDown",
+        "MSPointerUp",
+        "MSPointerCancel",
         undefined,
         undefined
     ];
 
     // legacy mouse event type
     var mouseEventList = [
-        'mousewheel',
-        'mousemove',
-        'mousedown',
-        'mouseup',
+        "mousewheel",
+        "mousemove",
+        "mousedown",
+        "mouseup",
         undefined,
         undefined,
         undefined
@@ -126,16 +122,16 @@
     // iOS style touch event type
     var touchEventList = [
         undefined,
-        'touchmove',
-        'touchstart',
-        'touchend',
-        'touchcancel',
+        "touchmove",
+        "touchstart",
+        "touchend",
+        "touchcancel",
         undefined,
         undefined
     ];
 
     // internal constants
-    var MOUSE_WHEEL     = 0;
+    //var MOUSE_WHEEL   = 0;
     var POINTER_MOVE    = 1;
     var POINTER_DOWN    = 2;
     var POINTER_UP      = 3;
@@ -159,14 +155,13 @@
      */
     obj._offset = null;
 
-
     /**
      * addEventListerner for the specified event list and callback
      * @ignore
      */
     function registerEventListener(eventList, callback) {
         for (var x = 2; x < eventList.length; ++x) {
-            if (eventList[x] !== undefined) {
+            if (typeof(eventList[x]) !== "undefined") {
                 me.video.getScreenCanvas().addEventListener(eventList[x], callback, false);
             }
         }
@@ -180,7 +175,7 @@
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
             changedTouches.push({ x: 0, y: 0 });
-            obj.mouse.pos = new me.Vector2d(0,0);
+            obj.mouse.pos = new me.Vector2d(0, 0);
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
             // Automatically update relative canvas position on scroll
@@ -192,10 +187,10 @@
             ), false);
 
             // check standard
-            if(navigator.pointerEnabled) {
+            if (navigator.pointerEnabled) {
                 activeEventList = pointerEventList;
             }
-            else if(navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
+            else if (navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
             else if (me.device.touch) { //  `touch****` events for iOS/Android devices
@@ -213,9 +208,9 @@
             window.addEventListener(wheeltype, onMouseWheel, false);
 
             // set the PointerMove/touchMove/MouseMove event
-            if (obj.throttlingInterval === undefined) {
+            if (typeof(obj.throttlingInterval) === "undefined") {
                 // set the default value
-                obj.throttlingInterval = Math.floor(1000/me.sys.fps);
+                obj.throttlingInterval = Math.floor(1000 / me.sys.fps);
             }
             // if time interval <= 16, disable the feature
             if (obj.throttlingInterval < 17) {
@@ -261,11 +256,13 @@
 
         if (handlers) {
             // get the current screen to world offset
-            me.game.viewport.localToWorld(0,0, viewportOffset);
-            for(var t=0, l=changedTouches.length; t<l; t++) {
+            me.game.viewport.localToWorld(0, 0, viewportOffset);
+            for (var t = 0, l = changedTouches.length; t < l; t++) {
                 // Do not fire older events
                 if (typeof(e.timeStamp) !== "undefined") {
-                    if (e.timeStamp < lastTimeStamp) continue;
+                    if (e.timeStamp < lastTimeStamp) {
+                        continue;
+                    }
                     lastTimeStamp = e.timeStamp;
                 }
 
@@ -281,12 +278,13 @@
                 e.gameWorldX = e.gameScreenX + viewportOffset.x;
                 e.gameWorldY = e.gameScreenY + viewportOffset.y;
                 // parse all handlers
-                for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+                for (var i = handlers.length, handler; i--, (handler = handlers[i]);) {
                     /* Set gameX and gameY depending on floating. */
                     if (handler.floating === true) {
                         e.gameX = e.gameScreenX;
                         e.gameY = e.gameScreenY;
-                    } else {
+                    }
+                    else {
                         e.gameX = e.gameWorldX;
                         e.gameY = e.gameWorldY;
                     }
@@ -316,7 +314,7 @@
         var local;
 
         // reset the touch array cache
-        changedTouches.length=0;
+        changedTouches.length = 0;
 
         // PointerEvent or standard Mouse event
         if (!event.touches) {
@@ -326,7 +324,7 @@
         }
         // iOS/Android like touch event
         else {
-            for(var i=0, l=event.changedTouches.length; i<l; i++) {
+            for (var i = 0, l = event.changedTouches.length; i < l; i++) {
                 var t = event.changedTouches[i];
                 local = obj.globalToLocal(t.clientX, t.clientY);
                 local.id = t.identifier;
@@ -360,10 +358,10 @@
                 deltaY: e.deltaY,
                 deltaZ: e.deltaZ
             };
-            if ( wheeltype === "mousewheel" ) {
-                _event.deltaY = - 1/40 * e.wheelDelta;
+            if (wheeltype === "mousewheel") {
+                _event.deltaY = - 1 / 40 * e.wheelDelta;
                 // Webkit also support wheelDeltaX
-                e.wheelDeltaX && ( _event.deltaX = - 1/40 * e.wheelDeltaX );
+                e.wheelDeltaX && (_event.deltaX = - 1 / 40 * e.wheelDeltaX);
             }
             // dispatch mouse event to registered object
             if (dispatchEvent(_event)) {
@@ -410,21 +408,20 @@
 
         // check if mapped to a key
         if (keycode) {
-            if (e.type === activeEventList[POINTER_DOWN])
+            if (e.type === activeEventList[POINTER_DOWN]) {
                 return obj._keydown(e, keycode, button + 1);
-            else // 'mouseup' or 'touchend'
+            }
+            else { // 'mouseup' or 'touchend'
                 return obj._keyup(e, keycode, button + 1);
+            }
         }
 
         return true;
     }
 
-
-    /*---------------------------------------------
-
-        PUBLIC STUFF
-
-      ---------------------------------------------*/
+    /*
+     * PUBLIC STUFF
+     */
 
     /**
      * Mouse information<br>
@@ -471,7 +468,7 @@
      * @param {Number} y the global y coordinate to be translated.
      * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
      * @example
-     * onMouseEvent : function(e) {
+     * onMouseEvent : function (e) {
      *    // convert the given into local (viewport) relative coordinates
      *    var pos = me.input.globalToLocal(e.clientX, e,clientY);
      *    // do something with pos !
@@ -484,8 +481,8 @@
         y -= offset.top;
         var scale = me.sys.scale;
         if (scale.x !== 1.0 || scale.y !== 1.0) {
-            x/= scale.x;
-            y/= scale.y;
+            x /= scale.x;
+            y /= scale.y;
         }
         return new me.Vector2d(x * pixelRatio, y * pixelRatio);
     };
@@ -517,8 +514,9 @@
         enablePointerEvent();
 
         // throw an exception if no action is defined for the specified keycode
-        if (!obj._KeyBinding[keyCode])
-          throw "melonJS : no action defined for keycode " + keyCode;
+        if (!obj._KeyBinding[keyCode]) {
+            throw "melonJS : no action defined for keycode " + keyCode;
+        }
         // map the mouse button to the keycode
         obj.mouse.bind[button] = keyCode;
     };
@@ -532,9 +530,12 @@
      * @example
      * me.input.unbindPointer(me.input.mouse.LEFT);
      */
-    obj.unbindPointer = function(button) {
+    obj.unbindPointer = function (button) {
         // clear the event status
-        obj.mouse.bind[typeof(button) === 'undefined'?me.input.mouse.LEFT:button] = null;
+        obj.mouse.bind[
+            typeof(button) === "undefined" ?
+            me.input.mouse.LEFT : button
+        ] = null;
     };
 
 
@@ -585,15 +586,15 @@
 
         // calculate the given elemments bounding rect
         var bounds = rect.getBounds();
-        if (typeof (rect.getShape) === 'undefined') {
+        if (typeof (rect.getShape) === "undefined") {
             bounds.translate(-rect.pos.x, -rect.pos.y);
         }
         // initialize the handler
         evtHandlers[eventType].push({
-            rect: rect,
-            bounds: bounds,
-            cb: callback,
-            floating: _float
+            rect : rect,
+            bounds : bounds,
+            cb : callback,
+            floating : _float
         });
         return;
     };
@@ -612,8 +613,8 @@
      * // release the registered object/region on the 'pointerdown' event
      * me.input.releasePointerEvent('pointerdown', this);
      */
-    obj.releasePointerEvent = function(eventType, rect) {
-         if (pointerEventList.indexOf(eventType) === -1) {
+    obj.releasePointerEvent = function (eventType, rect) {
+        if (pointerEventList.indexOf(eventType) === -1) {
             throw "melonJS : invalid event type : " + eventType;
         }
 
@@ -628,7 +629,7 @@
         }
         var handlers = evtHandlers[eventType];
         if (handlers) {
-            for (var i = handlers.length, handler; i--, handler = handlers[i];) {
+            for (var i = handlers.length, handler; i--, (handler = handlers[i]);) {
                 if (handler.rect === rect) {
                     // make sure all references are null
                     handler.rect = handler.bounds = handler.cb = handler.floating = null;
@@ -636,7 +637,6 @@
                 }
             }
         }
-        return;
     };
 
     /**
@@ -650,13 +650,9 @@
     obj._translatePointerEvents = function () {
         // listen to mouse move (and touch move) events on the viewport
         // and convert them to a system event by default
-        obj.registerPointerEvent('pointermove', me.game.viewport, function (e) {
+        obj.registerPointerEvent("pointermove", me.game.viewport, function (e) {
             me.event.publish(me.event.MOUSEMOVE, [e]);
             return false;
         });
     };
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

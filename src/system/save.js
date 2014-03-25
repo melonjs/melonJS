@@ -4,10 +4,8 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-    
-    /** 
+(function () {
+    /**
      * A singleton object to access the device localStorage area
      * @example
      * // Initialize "score" and "lives" with default values
@@ -32,23 +30,21 @@
      * @namespace me.save
      * @memberOf me
      */
-
     me.save = (function () {
         // Variable to hold the object data
         var data = {};
 
         // a function to check if the given key is a reserved word
-        function isReserved (key) {
+        function isReserved(key) {
             return (key === "add" || key === "remove");
         }
 
         // Public API
         var api = {
-
             /**
              * @ignore
              */
-            _init: function() {
+            _init: function () {
                 // Load previous data if local Storage is supported
                 if (me.device.localStorage === true) {
                     var keys = JSON.parse(localStorage.getItem("me.save")) || [];
@@ -70,7 +66,9 @@
              */
             add : function (props) {
                 Object.keys(props).forEach(function (key) {
-                    if (isReserved(key)) return;
+                    if (isReserved(key)) {
+                        return;
+                    }
 
                     (function (prop) {
                         Object.defineProperty(api, prop, {
@@ -112,7 +110,7 @@
              */
             remove : function (key) {
                 if (!isReserved(key)) {
-                    if (typeof data[key] !== 'undefined') {
+                    if (typeof data[key] !== "undefined") {
                         delete data[key];
                         if (me.device.localStorage === true) {
                             localStorage.removeItem("me.save." + key);
@@ -124,6 +122,5 @@
         };
 
         return api;
-
     })();
-})(window);
+})();

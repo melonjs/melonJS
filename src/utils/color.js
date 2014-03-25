@@ -3,9 +3,7 @@
  * Copyright (C) 2011 - 2013, Olivier Biot, Jason Oster
  * http://www.melonjs.org
  */
-
-(function(window) {
-
+(function () {
     var cssToRGB = {
         // CSS1
         "black"                 : [   0,   0,   0 ],
@@ -171,7 +169,8 @@
      * @param {Number} [a=1.0] alpha value
      */
     me.Color = Object.extend(
-    /** @scope me.Color.prototype */ {
+    /** @scope me.Color.prototype */
+    {
 
         /** @ignore */
         init : function (r, g, b, a) {
@@ -396,7 +395,7 @@
             // TODO : Memoize this function by caching its input
 
             // Remove the # if present
-            if (hexColor.charAt(0) === '#') {
+            if (hexColor.charAt(0) === "#") {
                 hexColor = hexColor.substring(1, hexColor.length);
             }
 
@@ -469,5 +468,4 @@
         }
 
     });
-
-})(window);
+})();

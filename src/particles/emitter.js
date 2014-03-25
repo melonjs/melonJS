@@ -4,10 +4,9 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
+(function () {
     // generate a default image for the particles
-    var pixel = (function() {
+    var pixel = (function () {
         var canvas = me.video.createCanvas(1, 1);
         var context = me.video.getContext2d(canvas);
         context.fillStyle = "#fff";
@@ -17,7 +16,7 @@
 
     /**
      * me.ParticleEmitterSettings contains the default settings for me.ParticleEmitter.<br>
-     * 
+     *
      * @protected
      * @class
      * @memberOf me
@@ -292,7 +291,7 @@
          */
         framesToSkip : 0
     };
-    
+
     /**
      * Particle Emitter Object.
      * @class
@@ -353,7 +352,6 @@
             // Emitter is emitting particles
             /** @ignore */
             this._enabled = false;
-
             // Emitter will always update
             this.isRenderable = false;
             // call the super constructor
@@ -361,7 +359,7 @@
                 me.Rect,
                 "init",
                 [new me.Vector2d(x, y),
-                Infinity, 
+                Infinity,
                 Infinity]
             );
 
@@ -377,8 +375,8 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "z", {
-                get : function() { return this.container.z; },
-                set : function(value) { this.container.z = value; },
+                get : function () { return this.container.z; },
+                set : function (value) { this.container.z = value; },
                 enumerable : true,
                 configurable : true
             });
@@ -390,8 +388,8 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "floating", {
-                get : function() { return this.container.floating; },
-                set : function(value) { this.container.floating = value; },
+                get : function () { return this.container.floating; },
+                set : function (value) { this.container.floating = value; },
                 enumerable : true,
                 configurable : true
             });
@@ -400,7 +398,7 @@
             this.reset(settings);
         },
 
-        destroy: function() {
+        destroy: function () {
             this.reset();
         },
 
@@ -411,7 +409,7 @@
          * @function
          * @return {me.Vector2d} new vector
          */
-        getRandomPoint: function() {
+        getRandomPoint: function () {
             var vector = this.pos.clone();
             vector.x += Number.prototype.random(-this.hWidth, this.hWidth);
             vector.y += Number.prototype.random(-this.hHeight, this.hHeight);
@@ -425,11 +423,11 @@
          * @name reset
          * @memberOf me.ParticleEmitter
          */
-        reset: function(settings) {
+        reset: function (settings) {
             // check if settings exists and create a dummy object if necessary
             settings = settings || {};
             var defaults = me.ParticleEmitterSettings;
-            
+
             var width = (typeof settings.width === "number") ? settings.width : defaults.width;
             var height = (typeof settings.height === "number") ? settings.height : defaults.height;
             this.resize(width, height);
@@ -466,7 +464,7 @@
 
         // Add count particles in the game world
         /** @ignore */
-        addParticles: function(count) {
+        addParticles: function (count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle to the container
                 var particle = me.pool.pull("me.Particle", this);
@@ -483,7 +481,7 @@
          * @name isRunning
          * @memberOf me.ParticleEmitter
          */
-        isRunning: function() {
+        isRunning: function () {
             return this._enabled && this._stream;
         },
 
@@ -496,7 +494,7 @@
          * @name streamParticles
          * @memberOf me.ParticleEmitter
          */
-        streamParticles: function(duration) {
+        streamParticles: function (duration) {
             this._enabled = true;
             this._stream = true;
             this.frequency = Math.max(this.frequency, 1);
@@ -510,7 +508,7 @@
          * @name stopStream
          * @memberOf me.ParticleEmitter
          */
-        stopStream: function() {
+        stopStream: function () {
             this._enabled = false;
         },
 
@@ -523,7 +521,7 @@
          * @name burstParticles
          * @memberOf me.ParticleEmitter
          */
-        burstParticles: function(total) {
+        burstParticles: function (total) {
             this._enabled = true;
             this._stream = false;
             this.addParticles((typeof total === "number") ? total : this.totalParticles);
@@ -535,7 +533,7 @@
         /**
          * @ignore
          */
-        update: function(dt) {
+        update: function (dt) {
             // Launch new particles, if emitter is Stream
             if ((this._enabled) && (this._stream)) {
                 // Check if the emitter has duration set
@@ -554,10 +552,12 @@
                 // Check for new particles launch
                 var particlesCount = this.container.children.length;
                 if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
-                    if ((particlesCount + this.maxParticles) <= this.totalParticles)
+                    if ((particlesCount + this.maxParticles) <= this.totalParticles) {
                         this.addParticles(this.maxParticles);
-                    else
+                    }
+                    else {
                         this.addParticles(this.totalParticles - particlesCount);
+                    }
 
                     this._frequencyTimer = 0;
                 }
@@ -565,9 +565,4 @@
             return true;
         },
     });
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

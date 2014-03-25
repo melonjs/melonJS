@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-    
+(function () {
     /**
      * an ellipse Object
      * (Tiled specifies top-left coordinates, and width and height of the ellipse)
@@ -19,8 +17,8 @@
      * @param {Number} h height of the elipse
      */
     me.Ellipse = Object.extend(
-    /** @scope me.Ellipse.prototype */  {
-    
+    {
+        /** @scope me.Ellipse.prototype */
         /** @ignore */
         init : function(v, w, h) {
             /**
@@ -31,7 +29,7 @@
              * @memberOf me.Ellipse
              */
             this.pos = new me.Vector2d();
-             
+
             /**
              * radius (x/y) of the ellipse
              * @public
@@ -40,7 +38,7 @@
              * @memberOf me.Ellipse
              */
             this.radius = new me.Vector2d();
-            
+
             // the shape type
             this.shapeType = "Ellipse";
             this.setShape(v, w, h);
@@ -53,11 +51,11 @@
          * @function
          * @param {me.Vector2d} v top-left origin position of the Ellipse
          * @param {Number} w width of the Ellipse
-         * @param {Number} h height of the Ellipse  
+         * @param {Number} h height of the Ellipse
          */
-        setShape : function(v, w, h) {
-            this.radius.set(w/2, h/2);
-            this.pos.setV(v).add(this.radius); 
+        setShape : function (v, w, h) {
+            this.radius.set(w / 2, h / 2);
+            this.pos.setV(v).add(this.radius);
             return this;
         },
 
@@ -68,11 +66,11 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Ellipse} this Ellipse    
+         * @return {me.Ellipse} this Ellipse
          */
-        translate : function(x, y) {
-            this.pos.x+=x;
-            this.pos.y+=y;
+        translate : function (x, y) {
+            this.pos.x += x;
+            this.pos.y += y;
             return this;
         },
 
@@ -82,9 +80,9 @@
          * @memberOf me.Ellipse
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this Ellipse    
+         * @return {me.Rect} this Ellipse
          */
-        translateV : function(v) {
+        translateV : function (v) {
             this.pos.add(v);
             return this;
         },
@@ -97,7 +95,7 @@
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
          */
-        containsPointV: function(v) {
+        containsPointV: function (v) {
             return this.containsPoint(v.x, v.y);
         },
 
@@ -110,12 +108,15 @@
          * @param  {Number} y y coordinate
          * @return {boolean} true if contains
          */
-        containsPoint: function(x, y) {
+        containsPoint: function (x, y) {
             // Make position relative to object center point.
             x -= this.pos.x;
             y -= this.pos.y;
             // Pythagorean theorem.
-            return ((x*x) / (this.radius.x * this.radius.x)) + ((y*y) / (this.radius.y * this.radius.y)) <= 1.0;
+            return (
+                ((x * x) / (this.radius.x * this.radius.x)) +
+                ((y * y) / (this.radius.y * this.radius.y))
+            ) <= 1.0;
         },
 
         /**
@@ -126,45 +127,48 @@
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} the bounding box Rectangle object
          */
-        getBounds : function(rect) {
-             if (typeof(rect) !== 'undefined') {
+        getBounds : function (rect) {
+            if (typeof(rect) !== "undefined") {
                 return rect.setShape(
-                    this.pos.clone().sub(this.radius), 
-                    this.radius.x * 2, 
+                    this.pos.clone().sub(this.radius),
+                    this.radius.x * 2,
                     this.radius.y * 2
                 );
-            } else {
-                //will return a rect, with pos being the top-left coordinates 
+            }
+            else {
+                //will return a rect, with pos being the top-left coordinates
                 return new me.Rect(
-                    this.pos.clone().sub(this.radius), 
-                    this.radius.x * 2, 
+                    this.pos.clone().sub(this.radius),
+                    this.radius.x * 2,
                     this.radius.y * 2
                 );
             }
         },
-        
+
         /**
          * clone this Ellipse
          * @name clone
          * @memberOf me.Ellipse
          * @function
-         * @return {me.Ellipse} new Ellipse 
+         * @return {me.Ellipse} new Ellipse
          */
-        clone : function() {
+        clone : function () {
             return new me.Ellipse(this.pos, this.radius.x * 2, this.radius.y * 2);
         },
-
 
         /**
          * debug purpose
          * @ignore
          */
-        draw : function(context, color) {
+        draw : function (context, color) {
             // http://tinyurl.com/opnro2r
             context.save();
             context.beginPath();
 
-            context.translate(this.pos.x-this.radius.x, this.pos.y-this.radius.y);
+            context.translate(
+                this.pos.x - this.radius.x,
+                this.pos.y - this.radius.y
+            );
             context.scale(this.radius.x, this.radius.y);
             context.arc(1, 1, 1, 0, 2 * Math.PI, false);
 
@@ -173,5 +177,4 @@
             context.stroke();
         }
     });
-
-})(window);
+})();

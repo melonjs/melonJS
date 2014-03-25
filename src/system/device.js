@@ -4,15 +4,13 @@
  * http://www.melonjs.org
  *
  */
-(function(window) {
-
+(function () {
     /**
      * A singleton object representing the device capabilities and specific events
      * @namespace me.device
      * @memberOf me
      */
-    me.device = (function() {
-
+    me.device = (function () {
         // defines object for holding public information/functionality.
         var obj = {};
         // private properties
@@ -24,7 +22,7 @@
          * check the device capapbilities
          * @ignore
          */
-        obj._check = function() {
+        obj._check = function () {
 
             // detect device type/platform
             me.device._detectDevice();
@@ -35,21 +33,21 @@
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
-            me.device.touch = ('createTouch' in document) || ('ontouchstart' in window) ||
+            me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
                               (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
 
             // accelerometer detection
             me.device.hasAccelerometer = (
-                (typeof (window.DeviceMotionEvent) !== 'undefined') || (
-                    (typeof (window.Windows) !== 'undefined') &&
-                    (typeof (Windows.Devices.Sensors.Accelerometer) === 'function')
+                (typeof (window.DeviceMotionEvent) !== "undefined") || (
+                    (typeof (window.Windows) !== "undefined") &&
+                    (typeof (Windows.Devices.Sensors.Accelerometer) === "function")
                 )
             );
 
             // pointerlock detection
             this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
 
-            if(this.hasPointerLockSupport) {
+            if (this.hasPointerLockSupport) {
                 document.exitPointerLock = me.agent.prefixed("exitPointerLock", document);
             }
 
@@ -79,7 +77,7 @@
             me.device._detectAudio();
 
             // set pause/stop action on losing focus
-            window.addEventListener("blur", function() {
+            window.addEventListener("blur", function () {
                 if (me.sys.stopOnBlur) {
                     me.state.stop(true);
                 }
@@ -88,7 +86,7 @@
                 }
             }, false);
             // set restart/resume action on gaining focus
-            window.addEventListener("focus", function() {
+            window.addEventListener("focus", function () {
                 if (me.sys.stopOnBlur) {
                     me.state.restart(true);
                 }
@@ -99,9 +97,9 @@
 
 
             // Set the name of the hidden property and the change event for visibility
-            var hidden, visibilityChange; 
+            var hidden, visibilityChange;
             if (typeof document.hidden !== "undefined") {
-                // Opera 12.10 and Firefox 18 and later support 
+                // Opera 12.10 and Firefox 18 and later support
                 hidden = "hidden";
                 visibilityChange = "visibilitychange";
             } else if (typeof document.mozHidden !== "undefined") {
@@ -116,7 +114,7 @@
             }
 
             // add the corresponding event listener
-            document.addEventListener(visibilityChange, 
+            document.addEventListener(visibilityChange,
                 function () {
                     if (document[hidden]) {
                         if (me.sys.stopOnBlur) {
@@ -135,15 +133,13 @@
                     }
                 }, false
             );
-
-
         };
 
         /**
          * detect the device type
          * @ignore
          */
-        obj._detectDevice = function() {
+        obj._detectDevice = function () {
             // detect platform
             me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
             // iOS Device ?
@@ -159,25 +155,27 @@
          * check the audio capapbilities
          * @ignore
          */
-        obj._detectAudio = function() {
+        obj._detectAudio = function () {
             // check for browser codec support
             me.device.sound = !Howler.noAudio;
 
             if (me.device.sound) {
                 var audioTest = new Audio();
                 me.device.audioCodecs = {
-                    mp3: !!audioTest.canPlayType('audio/mpeg;').replace(/^no$/, ''),
-                    opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
-                    ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
-                    wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
-                    m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
-                    mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
-                    weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')
+                    mp3: !!audioTest.canPlayType("audio/mpeg;").replace(/^no$/, ""),
+                    opus: !!audioTest.canPlayType("audio/ogg; codecs=\"opus\"").replace(/^no$/, ""),
+                    ogg: !!audioTest.canPlayType("audio/ogg; codecs=\"vorbis\"").replace(/^no$/, ""),
+                    wav: !!audioTest.canPlayType("audio/wav; codecs=\"1\"").replace(/^no$/, ""),
+                    m4a: !!(audioTest.canPlayType("audio/x-m4a;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
+                    mp4: !!(audioTest.canPlayType("audio/x-mp4;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
+                    weba: !!audioTest.canPlayType("audio/webm; codecs=\"vorbis\"").replace(/^no$/, "")
                 };
             }
         };
 
-        // ----- PUBLIC Properties & Functions -----
+        /*
+         * PUBLIC Properties & Functions
+         */
 
         // Browser capabilities
 
@@ -207,6 +205,7 @@
          * @memberOf me.device
          */
         obj.sound = false;
+
         /**
          * Browser Local Storage capabilities <br>
          * (this flag will be set to false if cookies are blocked)
@@ -216,6 +215,7 @@
          * @memberOf me.device
          */
         obj.localStorage = false;
+
         /**
          * Browser accelerometer capabilities
          * @type Boolean
@@ -241,7 +241,7 @@
          * @name hasFullscreenSupport
          * @memberOf me.device
          */
-         obj.hasFullscreenSupport = false;
+        obj.hasFullscreenSupport = false;
 
          /**
          * Browser pointerlock api support
@@ -250,7 +250,7 @@
          * @name hasPointerLockSupport
          * @memberOf me.device
          */
-         obj.hasPointerLockSupport = false;
+        obj.hasPointerLockSupport = false;
 
         /**
          * Browser Base64 decoding capability
@@ -259,7 +259,7 @@
          * @name nativeBase64
          * @memberOf me.device
          */
-        obj.nativeBase64 = (typeof(window.atob) === 'function');
+        obj.nativeBase64 = (typeof(window.atob) === "function");
 
         /**
          * Touch capabilities
@@ -359,7 +359,6 @@
          */
         obj.accelerationZ = 0;
 
-
         /**
          * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
          * @public
@@ -411,8 +410,8 @@
          *    }
          * });
          */
-        obj.requestFullscreen = function(element) {
-            if(this.hasFullscreenSupport) {
+        obj.requestFullscreen = function (element) {
+            if (this.hasFullscreenSupport) {
                 element = element || me.video.getWrapper();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
                                             element.mozRequestFullScreen;
@@ -427,8 +426,8 @@
          * @memberOf me.device
          * @function
          */
-        obj.exitFullscreen = function() {
-            if(this.hasFullscreenSupport) {
+        obj.exitFullscreen = function () {
+            if (this.hasFullscreenSupport) {
                 document.exitFullscreen();
             }
         };
@@ -439,9 +438,9 @@
          * @memberOf me.device
          * @function
          */
-        obj.getPixelRatio = function() {
+        obj.getPixelRatio = function () {
 
-            if (devicePixelRatio===null) {
+            if (devicePixelRatio === null) {
                 var _context = me.video.getScreenContext();
                 var _devicePixelRatio = window.devicePixelRatio || 1,
                     _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", _context) || 1;
@@ -458,7 +457,7 @@
          * @param {String} [type="local"]
          * @return me.save object
          */
-        obj.getStorage = function(type) {
+        obj.getStorage = function (type) {
 
             type = type || "local";
 
@@ -484,7 +483,8 @@
                 obj.accelerationX = e.reading.accelerationX;
                 obj.accelerationY = e.reading.accelerationY;
                 obj.accelerationZ = e.reading.accelerationZ;
-            } else {
+            }
+            else {
                 // Accelerometer information
                 obj.accelerationX = e.accelerationIncludingGravity.x;
                 obj.accelerationY = e.accelerationIncludingGravity.y;
@@ -506,35 +506,36 @@
          * @memberOf me.device
          * @function
          * @example
-         *   document.addEventListener( 'pointerlockchange', pointerlockchange, false );
-         *   document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
-         *   document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+         * document.addEventListener("pointerlockchange", pointerlockchange, false);
+         * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
+         * document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
          *
-         *   document.addEventListener( 'pointerlockerror', pointerlockerror, false );
-         *   document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
-         *   document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+         * document.addEventListener("pointerlockerror", pointerlockerror, false);
+         * document.addEventListener("mozpointerlockerror", pointerlockerror, false);
+         * document.addEventListener("webkitpointerlockerror", pointerlockerror, false);
          */
-        obj.turnOnPointerLock = function() {
-            if(this.hasPointerLockSupport) {
+        obj.turnOnPointerLock = function () {
+            if (this.hasPointerLockSupport) {
                 var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
-                    var fullscreenchange = function(event) {
+                    var fullscreenchange = function () {
                         if ((me.agent.prefixed("fullscreenElement", document) ||
-                             document.mozFullScreenElement) === element) {
+                            document.mozFullScreenElement) === element) {
 
-                            document.removeEventListener( 'fullscreenchange', fullscreenchange );
-                            document.removeEventListener( 'mozfullscreenchange', fullscreenchange );
+                            document.removeEventListener("fullscreenchange", fullscreenchange);
+                            document.removeEventListener("mozfullscreenchange", fullscreenchange);
                             element.requestPointerLock = me.agent.prefixed("requestPointerLock", element);
                             element.requestPointerLock();
                         }
                     };
 
-                    document.addEventListener( 'fullscreenchange', fullscreenchange, false );
-                    document.addEventListener( 'mozfullscreenchange', fullscreenchange, false );
+                    document.addEventListener("fullscreenchange", fullscreenchange, false);
+                    document.addEventListener("mozfullscreenchange", fullscreenchange, false);
 
                     me.device.requestFullscreen();
 
-                } else {
+                }
+                else {
                     element.requestPointerLock();
                 }
             }
@@ -546,8 +547,8 @@
          * @memberOf me.device
          * @function
          */
-        obj.turnOffPointerLock = function() {
-            if(this.hasPointerLockSupport) {
+        obj.turnOffPointerLock = function () {
+            if (this.hasPointerLockSupport) {
                 document.exitPointerLock();
             }
         };
@@ -563,10 +564,11 @@
         obj.watchAccelerometer = function () {
             if (me.device.hasAccelerometer) {
                 if (!accelInitialized) {
-                    if (typeof Windows === 'undefined') {
+                    if (typeof Windows === "undefined") {
                         // add a listener for the devicemotion event
-                        window.addEventListener('devicemotion', onDeviceMotion, false);
-                    } else {
+                        window.addEventListener("devicemotion", onDeviceMotion, false);
+                    }
+                    else {
                         // On Windows 8 Device
                         var accelerometer = Windows.Devices.Sensors.Accelerometer.getDefault();
                         if (accelerometer) {
@@ -575,7 +577,7 @@
                             var Interval = minInterval >= 16 ? minInterval : 25;
                             accelerometer.reportInterval = Interval;
 
-                            accelerometer.addEventListener('readingchanged', onDeviceMotion, false);
+                            accelerometer.addEventListener("readingchanged", onDeviceMotion, false);
                         }
                     }
                     accelInitialized = true;
@@ -592,16 +594,16 @@
          * @public
          * @function
          */
-        obj.unwatchAccelerometer = function() {
+        obj.unwatchAccelerometer = function () {
             if (accelInitialized) {
-                if (typeof Windows === 'undefined') {
+                if (typeof Windows === "undefined") {
                     // add a listener for the mouse
-                    window.removeEventListener('devicemotion', onDeviceMotion, false);
+                    window.removeEventListener("devicemotion", onDeviceMotion, false);
                 } else {
                     // On Windows 8 Devices
                     var accelerometer = Windows.Device.Sensors.Accelerometer.getDefault();
 
-                    accelerometer.removeEventListener('readingchanged', onDeviceMotion, false);
+                    accelerometer.removeEventListener("readingchanged", onDeviceMotion, false);
                 }
                 accelInitialized = false;
             }
@@ -615,9 +617,9 @@
          * @function
          * @return {Boolean} false if not supported by the device
          */
-        obj.watchDeviceOrientation = function() {
-            if(me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
-                window.addEventListener('deviceorientation', onDeviceRotate, false);
+        obj.watchDeviceOrientation = function () {
+            if (me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
+                window.addEventListener("deviceorientation", onDeviceRotate, false);
                 deviceOrientationInitialized = true;
             }
             return false;
@@ -630,9 +632,9 @@
          * @public
          * @function
          */
-        obj.unwatchDeviceOrientation = function() {
-            if(deviceOrientationInitialized) {
-                window.removeEventListener('deviceorientation', onDeviceRotate, false);
+        obj.unwatchDeviceOrientation = function () {
+            if (deviceOrientationInitialized) {
+                window.removeEventListener("deviceorientation", onDeviceRotate, false);
                 deviceOrientationInitialized = false;
             }
         };
@@ -657,7 +659,7 @@
          * // cancel any existing vibrations
          * navigator.vibrate(0);
          */
-        obj.vibrate = function(pattern) {
+        obj.vibrate = function (pattern) {
             if (navigator.vibrate) {
                 navigator.vibrate(pattern);
             }
@@ -687,5 +689,4 @@
             }
         }
     });
-
-})(window);
+})();

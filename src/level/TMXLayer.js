@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * a generic Color Layer Object
      * @class
@@ -17,10 +15,10 @@
      * @param {String}  color   a CSS color value
      * @param {Number}  z       z position
      */
-     me.ColorLayer = me.Renderable.extend({
+    me.ColorLayer = me.Renderable.extend({
         // constructor
-        init: function(name, color, z) {
-            // suoer constructor
+        init: function (name, color, z) {
+            // parent constructor
             this._super(me.Renderable, "init", [new me.Vector2d(0, 0), Infinity, Infinity]);
 
             // apply given parameters
@@ -33,7 +31,7 @@
          * draw the color layer
          * @ignore
          */
-        draw : function(context, rect) {
+        draw : function (context, rect) {
             // set layer opacity
             var _alpha = context.globalAlpha;
             context.globalAlpha *= this.getOpacity();
@@ -49,7 +47,6 @@
         }
     });
 
-
     /**
      * a generic Image Layer Object
      * @class
@@ -63,8 +60,8 @@
      * @param {Number} z           z position
      * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
      */
-     me.ImageLayer = me.Renderable.extend({
 
+    me.ImageLayer = me.Renderable.extend({
         /**
          * Define if and how an Image Layer should be repeated.<br>
          * By default, an Image Layer is repeated both vertically and horizontally.<br>
@@ -97,7 +94,7 @@
          * @ignore
          * @function
          */
-        init: function(name, width, height, imagesrc, z, ratio) {
+        init: function (name, width, height, imagesrc, z, ratio) {
             // layer name
             this.name = name;
 
@@ -114,8 +111,8 @@
             var viewport = me.game.viewport;
 
             // set layer width & height
-            width  = width ? Math.min(viewport.width, width)   : viewport.width;
-            height = height? Math.min(viewport.height, height) : viewport.height;
+            width  = (width  ? Math.min(viewport.width, width)   : viewport.width);
+            height = (height ? Math.min(viewport.height, height) : viewport.height);
             this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
 
             // displaying order
@@ -140,7 +137,7 @@
             this.floating = true;
 
             // default value for repeat
-            this._repeat = 'repeat';
+            this._repeat = "repeat";
 
             this.repeatX = true;
             this.repeatY = true;
@@ -177,20 +174,19 @@
 
             // register to the viewport change notification
             this.handle = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
-
         },
-
 
         /**
          * updateLayer function
          * @ignore
          * @function
          */
-        updateLayer : function(vpos) {
+        updateLayer : function (vpos) {
             if (0 === this.ratio.x && 0 === this.ratio.y) {
                 // static image
                 return;
-            } else if(this.repeatX || this.repeatY) {
+            }
+            else if (this.repeatX || this.repeatY) {
                 // parallax / scrolling image
                 this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
                 this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
@@ -209,10 +205,10 @@
          * draw the image layer
          * @ignore
          */
-        draw : function(context, rect) {
+        draw : function (context, rect) {
             // translate default position using the anchorPoint value
             var viewport = me.game.viewport;
-            var shouldTranslate = this.anchorPoint.y !==0 || this.anchorPoint.x !==0;
+            var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0;
             var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
             var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
 
@@ -226,16 +222,18 @@
             var sw, sh;
 
             // if not scrolling ratio define, static image
-            if (0 === this.ratio.x && 0 === this.ratio.y){
+            if (0 === this.ratio.x && 0 === this.ratio.y) {
                 // static image
                 sw = Math.min(rect.width, this.imagewidth);
                 sh = Math.min(rect.height, this.imageheight);
 
-                context.drawImage(this.image,
-                                  rect.left, rect.top,        //sx, sy
-                                  sw,         sh,            //sw, sh
-                                  rect.left, rect.top,        //dx, dy
-                                  sw,         sh);            //dw, dh
+                context.drawImage(
+                    this.image,
+                    rect.left, rect.top,    // sx, sy
+                    sw, sh,                 // sw, sh
+                    rect.left, rect.top,    // dx, dy
+                    sw, sh                  // dw, dh
+                );
             }
             // parallax / scrolling image
             // todo ; broken with dirtyRect enabled
@@ -262,9 +260,10 @@
                         sy = 0;
                         dy += sh;
                         sh = Math.min(this.imageheight, this.height - dy);
-                    } while( this.repeatY && (dy < this.height));
+
+                    } while (this.repeatY && (dy < this.height));
                     dx += sw;
-                    if (!this.repeatX || (dx >= this.width) ) {
+                    if (!this.repeatX || (dx >= this.width)) {
                         // done ("end" of the viewport)
                         break;
                     }
@@ -274,7 +273,7 @@
                     sy = ~~this.pos.y;
                     dy = 0;
                     sh = Math.min(this.imageheight - ~~this.pos.y, this.height);
-                } while( true );
+                } while (true);
             }
 
             if (shouldTranslate) {
@@ -283,7 +282,7 @@
         },
 
         // called when the layer is destroyed
-        destroy : function() {
+        destroy : function () {
             // cancel the event subscription
             if (this.handle)  {
                 me.event.unsubscribe(this.handle);
@@ -295,7 +294,6 @@
         }
     });
 
-
     /**
      * a generic collision tile based layer object
      * @memberOf me
@@ -304,19 +302,17 @@
      */
     me.CollisionTiledLayer = me.Renderable.extend({
         // constructor
-        init: function(width, height) {
+        init: function (width, height) {
             this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
 
             this.isCollisionMap = true;
-
         },
 
         /**
          * only test for the world limit
          * @ignore
-         **/
-
-        checkCollision : function(obj, pv) {
+         */
+        checkCollision : function (obj, pv) {
             var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
             var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
 
@@ -359,7 +355,7 @@
     me.TMXLayer = me.Renderable.extend({
 
         /** @ignore */
-        init: function(tilewidth, tileheight, orientation, tilesets, zOrder) {
+        init: function (tilewidth, tileheight, orientation, tilesets, zOrder) {
             // super constructor
             this._super(me.Renderable, "init", [new me.Vector2d(0, 0), 0, 0]);
 
@@ -379,33 +375,31 @@
 
             this.tilesets = tilesets;
             // the default tileset
-            this.tileset = this.tilesets?this.tilesets.getTilesetByIndex(0):null;
+            this.tileset = (this.tilesets ? this.tilesets.getTilesetByIndex(0) : null);
 
             // for displaying order
             this.z = zOrder;
         },
 
         /** @ignore */
-        initFromJSON: function(layer) {
+        initFromJSON: function (layer) {
             // additional TMX flags
             this.name = layer[me.TMX_TAG_NAME];
             this.cols = parseInt(layer[me.TMX_TAG_WIDTH], 10);
             this.rows = parseInt(layer[me.TMX_TAG_HEIGHT], 10);
 
             // layer opacity
-            var visible = typeof(layer[me.TMX_TAG_VISIBLE]) !== 'undefined' ? layer[me.TMX_TAG_VISIBLE] : true;
-            this.setOpacity(visible?parseFloat(layer[me.TMX_TAG_OPACITY]):0);
+            var visible = typeof(layer[me.TMX_TAG_VISIBLE]) !== "undefined" ? layer[me.TMX_TAG_VISIBLE] : true;
+            this.setOpacity(visible ? parseFloat(layer[me.TMX_TAG_OPACITY]) : 0);
 
             // layer "real" size
             this.width = this.cols * this.tilewidth;
             this.height = this.rows * this.tileheight;
-
-
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, layer);
 
             // check for the correct rendering method
-            if (typeof (this.preRender) === 'undefined') {
+            if (typeof (this.preRender) === "undefined") {
                 this.preRender = me.sys.preRender;
             }
 
@@ -428,7 +422,7 @@
          * @ignore
          * @function
          */
-        destroy : function() {
+        destroy : function () {
             // clear all allocated objects
             if (this.preRender) {
                 this.layerCanvas = null;
@@ -445,7 +439,7 @@
          * set the layer renderer
          * @ignore
          */
-        setRenderer : function(renderer) {
+        setRenderer : function (renderer) {
             this.renderer = renderer;
         },
 
@@ -453,18 +447,16 @@
          * Create all required arrays
          * @ignore
          */
-        initArray : function(w, h) {
+        initArray : function (w, h) {
             // initialize the array
             this.layerData = [];
-            for ( var x = 0; x < w; x++) {
+            for (var x = 0; x < w; x++) {
                 this.layerData[x] = [];
-                for ( var y = 0; y < h; y++) {
+                for (var y = 0; y < h; y++) {
                     this.layerData[x][y] = null;
                 }
             }
         },
-
-
 
         /**
          * Return the TileId of the Tile at the specified position
@@ -476,9 +468,9 @@
          * @param {Number} y y coordinate in pixel
          * @return {Number} TileId
          */
-        getTileId : function(x, y) {
-            var tile = this.getTile(x,y);
-            return tile ? tile.tileId : null;
+        getTileId : function (x, y) {
+            var tile = this.getTile(x, y);
+            return (tile ? tile.tileId : null);
         },
 
         /**
@@ -491,7 +483,7 @@
          * @param {Number} y y coordinate in pixel
          * @return {me.Tile} Tile Object
          */
-        getTile : function(x, y) {
+        getTile : function (x, y) {
             return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
         },
 
@@ -506,11 +498,12 @@
          * @param {Number} tileId tileId
          * @return {me.Tile} the corresponding newly created tile object
          */
-        setTile : function(x, y, tileId) {
+        setTile : function (x, y, tileId) {
             var tile = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
             if (!this.tileset.contains(tile.tileId)) {
                 tile.tileset = this.tileset = this.tilesets.getTilesetByGid(tile.tileId);
-            } else {
+            }
+            else {
                 tile.tileset = this.tileset;
             }
             this.layerData[x][y] = tile;
@@ -526,16 +519,14 @@
          * @param {Number} x x position
          * @param {Number} y y position
          */
-        clearTile : function(x, y) {
+        clearTile : function (x, y) {
             // clearing tile
             this.layerData[x][y] = null;
             // erase the corresponding area in the canvas
             if (this.preRender) {
-                this.layerSurface.clearRect(x * this.tilewidth,    y * this.tileheight, this.tilewidth, this.tileheight);
+                this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
         },
-
-
         /**
          * check for collision
          * obj - obj
@@ -543,8 +534,7 @@
          * res : result collision object
          * @ignore
          */
-        checkCollision : function(obj, pv) {
-
+        checkCollision : function (obj, pv) {
             var x = (pv.x < 0) ? ~~(obj.left + pv.x) : Math.ceil(obj.right  - 1 + pv.x);
             var y = (pv.y < 0) ? ~~(obj.top  + pv.y) : Math.ceil(obj.bottom - 1 + pv.y);
             //to return tile collision detection
@@ -560,13 +550,15 @@
             //var tile;
             if (x <= 0 || x >= this.width) {
                 res.x = pv.x;
-            } else if (pv.x !== 0 ) {
+            }
+            else if (pv.x !== 0) {
                 // x, bottom corner
                 res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
                 if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
                     res.x = pv.x; // reuse pv.x to get a
                     res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-                } else {
+                }
+                else {
                     // x, top corner
                     res.xtile = this.getTile(x, ~~obj.top);
                     if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
@@ -582,7 +574,8 @@
             if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
                 res.y = pv.y || 1;
                 res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-            } else { // right, y corner
+            }
+            else { // right, y corner
                 res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
                 if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
                     res.y = pv.y || 1;
@@ -597,8 +590,7 @@
          * draw a tileset layer
          * @ignore
          */
-        draw : function(context, rect) {
-
+        draw : function (context, rect) {
             // use the offscreen canvas
             if (this.preRender) {
 
@@ -609,13 +601,13 @@
 
                 if (this.layerSurface.globalAlpha > 0) {
                     // draw using the cached canvas
-                    context.drawImage(this.layerCanvas,
-                                      rect.pos.x, //sx
-                                      rect.pos.y, //sy
-                                      width, height,    //sw, sh
-                                      rect.pos.x, //dx
-                                      rect.pos.y, //dy
-                                      width, height);   //dw, dh
+                    context.drawImage(
+                        this.layerCanvas,
+                        rect.pos.x, rect.pos.y, // sx,sy
+                        width, height,          // sw,sh
+                        rect.pos.x, rect.pos.y, // dx,dy
+                        width, height           // dw,dh
+                    );
                 }
             }
             // dynamically render the layer
@@ -623,7 +615,6 @@
                 // set the layer alpha value
                 var _alpha = context.globalAlpha;
                 context.globalAlpha *= this.getOpacity();
-                
                 if (context.globalAlpha > 0) {
                     // draw the layer
                     this.renderer.drawTileLayer(context, this, rect);
@@ -634,8 +625,4 @@
             }
         }
     });
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

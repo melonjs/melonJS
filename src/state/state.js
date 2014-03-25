@@ -7,8 +7,7 @@
  *
  */
 
-(function($) {
-
+(function () {
     /**
      * A class skeleton for "Screen" Object <br>
      * every "screen" object (title screen, credits, ingame, etc...) to be managed <br>
@@ -28,7 +27,7 @@
          * Object reset function
          * @ignore
          */
-        reset : function() {
+        reset : function () {
             // reset the game manager
             me.game.reset();
             // call the onReset Function
@@ -39,7 +38,7 @@
          * destroy function
          * @ignore
          */
-        destroy : function() {
+        destroy : function () {
             // notify the object
             this.onDestroyEvent.apply(this, arguments);
         },
@@ -55,7 +54,7 @@
          * @param {} [arguments...] optional arguments passed when switching state
          * @see me.state#change
          */
-        onResetEvent : function() {
+        onResetEvent : function () {
             // to be extended
         },
 
@@ -66,14 +65,14 @@
          * @memberOf me.ScreenObject
          * @function
          */
-        onDestroyEvent : function() {
+        onDestroyEvent : function () {
             // to be extended
         }
 
     });
 
     // based on the requestAnimationFrame polyfill by Erik Möller
-    (function() {
+    (function () {
         var lastTime = 0;
         // get unprefixed rAF and cAF, if present
         var requestAnimationFrame = me.agent.prefixed("requestAnimationFrame");
@@ -81,17 +80,17 @@
                                    me.agent.prefixed("cancelRequestAnimationFrame");
 
         if (!requestAnimationFrame || !cancelAnimationFrame) {
-            requestAnimationFrame = function(callback, element) {
+            requestAnimationFrame = function (callback) {
                 var currTime = window.performance.now();
                 var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function() {
+                var id = window.setTimeout(function () {
                     callback(currTime + timeToCall);
                 }, timeToCall);
                 lastTime = currTime + timeToCall;
                 return id;
             };
 
-            cancelAnimationFrame = function(id) {
+            cancelAnimationFrame = function (id) {
                 window.clearTimeout(id);
             };
         }
@@ -109,8 +108,7 @@
      * @memberOf me
      */
 
-    me.state = (function() {
-
+    me.state = (function () {
         // hold public stuff in our singleton
         var obj = {};
 
@@ -195,7 +193,7 @@
             me.game.draw();
             // schedule the next frame update
             if (_animFrameId !== -1) {
-                   _animFrameId = window.requestAnimationFrame(_renderFrame);
+                _animFrameId = window.requestAnimationFrame(_renderFrame);
             }
         }
 
@@ -223,8 +221,7 @@
                 _screenObject[_state].screen.destroy();
             }
 
-            if (_screenObject[state])
-            {
+            if (_screenObject[state]) {
                 // set the global variable
                 _state = state;
 
@@ -242,12 +239,12 @@
 
                 // force repaint
                 me.game.repaint();
-             }
+            }
         }
 
-        /*---------------------------------------------
-            PUBLIC STUFF
-         ---------------------------------------------*/
+        /*
+         * PUBLIC STUFF
+         */
 
         /**
          * default state value for Loading Screen
@@ -256,12 +253,14 @@
          * @memberOf me.state
          */
         obj.LOADING = 0;
+
         /**
          * default state value for Menu Screen
          * @constant
          * @name MENU
          * @memberOf me.state
          */
+
         obj.MENU = 1;
         /**
          * default state value for "Ready" Screen
@@ -269,6 +268,7 @@
          * @name READY
          * @memberOf me.state
          */
+
         obj.READY = 2;
         /**
          * default state value for Play Screen
@@ -276,6 +276,7 @@
          * @name PLAY
          * @memberOf me.state
          */
+
         obj.PLAY = 3;
         /**
          * default state value for Game Over Screen
@@ -283,6 +284,7 @@
          * @name GAMEOVER
          * @memberOf me.state
          */
+
         obj.GAMEOVER = 4;
         /**
          * default state value for Game End Screen
@@ -290,6 +292,7 @@
          * @name GAME_END
          * @memberOf me.state
          */
+
         obj.GAME_END = 5;
         /**
          * default state value for High Score Screen
@@ -297,6 +300,7 @@
          * @name SCORE
          * @memberOf me.state
          */
+
         obj.SCORE = 6;
         /**
          * default state value for Credits Screen
@@ -304,6 +308,7 @@
          * @name CREDITS
          * @memberOf me.state
          */
+
         obj.CREDITS = 7;
         /**
          * default state value for Settings Screen
@@ -361,7 +366,7 @@
         /**
          * @ignore
          */
-        obj.init = function() {
+        obj.init = function () {
             // set the embedded loading screen
             obj.set(obj.LOADING, new me.DefaultLoadingScreen());
         };
@@ -374,7 +379,7 @@
          * @function
          * @param {Boolean} pauseTrack pause current track on screen stop.
          */
-        obj.stop = function(music) {
+        obj.stop = function (music) {
             // only stop when we are not loading stuff
             if ((_state !== obj.LOADING) && obj.isRunning()) {
                 // stop the main loop
@@ -390,7 +395,7 @@
                 // publish the stop notification
                 me.event.publish(me.event.STATE_STOP);
                 // any callback defined ?
-                if (typeof(obj.onStop) === 'function') {
+                if (typeof(obj.onStop) === "function") {
                     obj.onStop();
                 }
             }
@@ -404,7 +409,7 @@
          * @function
          * @param {Boolean} pauseTrack pause current track on screen pause
          */
-        obj.pause = function(music) {
+        obj.pause = function (music) {
             // only pause when we are not loading stuff
             if ((_state !== obj.LOADING) && !obj.isPaused()) {
                 // stop the main loop
@@ -420,7 +425,7 @@
                 // publish the pause event
                 me.event.publish(me.event.STATE_PAUSE);
                 // any callback defined ?
-                if (typeof(obj.onPause) === 'function') {
+                if (typeof(obj.onPause) === "function") {
                     obj.onPause();
                 }
             }
@@ -434,7 +439,7 @@
          * @function
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
-        obj.restart = function(music) {
+        obj.restart = function (music) {
             if (!obj.isRunning()) {
                 // restart the main loop
                 _startRunLoop();
@@ -450,9 +455,9 @@
                 me.game.repaint();
 
                 // publish the restart notification
-                me.event.publish(me.event.STATE_RESTART, [_pauseTime]);
+                me.event.publish(me.event.STATE_RESTART, [ _pauseTime ]);
                 // any callback defined ?
-                if (typeof(obj.onRestart) === 'function') { 
+                if (typeof(obj.onRestart) === "function") {
                     obj.onRestart();
                 }
             }
@@ -466,21 +471,22 @@
          * @function
          * @param {Boolean} resumeTrack resume current track on screen resume
          */
-        obj.resume = function(music) {
+        obj.resume = function (music) {
             if (obj.isPaused()) {
                 // resume the main loop
                 _resumeRunLoop();
                 // current music stop
-                if (music === true)
+                if (music === true) {
                     me.audio.resumeTrack();
+                }
 
                 // calculate the elpased time
                 _pauseTime = window.performance.now() - _pauseTime;
 
                 // publish the resume event
-                me.event.publish(me.event.STATE_RESUME, [_pauseTime]);
+                me.event.publish(me.event.STATE_RESUME, [ _pauseTime ]);
                 // any callback defined ?
-                if (typeof(obj.onResume) === 'function') {
+                if (typeof(obj.onResume) === "function") {
                     obj.onResume();
                 }
             }
@@ -494,7 +500,7 @@
          * @function
          * @return {Boolean} true if a "process is running"
          */
-        obj.isRunning = function() {
+        obj.isRunning = function () {
             return _animFrameId !== -1;
         };
 
@@ -506,7 +512,7 @@
          * @function
          * @return {Boolean} true if the game is paused
          */
-        obj.isPaused = function() {
+        obj.isPaused = function () {
             return _isPaused;
         };
 
@@ -519,7 +525,7 @@
          * @param {Number} state @see me.state#Constant
          * @param {me.ScreenObject}
          */
-        obj.set = function(state, so) {
+        obj.set = function (state, so) {
             _screenObject[state] = {};
             _screenObject[state].screen = so;
             _screenObject[state].transition = true;
@@ -534,7 +540,7 @@
          * @function
          * @return {me.ScreenObject}
          */
-        obj.current = function() {
+        obj.current = function () {
             return _screenObject[_state].screen;
         };
 
@@ -548,7 +554,7 @@
          * @param {String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          */
-        obj.transition = function(effect, color, duration) {
+        obj.transition = function (effect, color, duration) {
             if (effect === "fade") {
                 _fade.color = color;
                 _fade.duration = duration;
@@ -562,7 +568,7 @@
          * @public
          * @function
          */
-        obj.setTransition = function(state, enable) {
+        obj.setTransition = function (state, enable) {
             _screenObject[state].transition = enable;
         };
 
@@ -579,7 +585,7 @@
          * // "level_1" and the number 3
          * me.state.change(me.state.PLAY, "level_1", 3);
          */
-        obj.change = function(state) {
+        obj.change = function (state) {
             // Protect against undefined ScreenObject
             if (typeof(_screenObject[state]) === "undefined") {
                 throw "melonJS : Undefined ScreenObject for state '" + state + "'";
@@ -593,13 +599,16 @@
             // if fading effect
             if (_fade.duration && _screenObject[state].transition) {
                 /** @ignore */
-                _onSwitchComplete = function() {
+                _onSwitchComplete = function () {
                     me.game.viewport.fadeOut(_fade.color, _fade.duration);
                 };
-                me.game.viewport.fadeIn(_fade.color, _fade.duration,
-                                        function() {
-                                            _switchState.defer(this, state);
-                                        });
+                me.game.viewport.fadeIn(
+                    _fade.color,
+                    _fade.duration,
+                    function () {
+                        _switchState.defer(this, state);
+                    }
+                );
 
             }
             // else just switch without any effects
@@ -607,7 +616,6 @@
                 // wait for the last frame to be
                 // "finished" before switching
                 _switchState.defer(this, state);
-
             }
         };
 
@@ -619,17 +627,11 @@
          * @function
          * @param {Number} state @see me.state#Constant
          */
-        obj.isCurrent = function(state) {
+        obj.isCurrent = function (state) {
             return _state === state;
         };
 
         // return our object
         return obj;
-
     })();
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

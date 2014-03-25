@@ -6,14 +6,12 @@
  * Font / Bitmap font
  *
  * ASCII Table
- * http://www.asciitable.com/ 
+ * http://www.asciitable.com/
  * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
  *
  * -> first char " " 32d (0x20);
  */
-
-(function(window) {
-
+(function () {
     /**
      * a generic system font object.
      * @class
@@ -33,7 +31,7 @@
             // private font properties
             /** @ignore */
             this.fontSize = new me.Vector2d();
-           
+
             /**
              * defines the color used to draw the font.<br>
              * Default value : "#000000"
@@ -51,16 +49,16 @@
              * @name me.Font#strokeStyle
              */
             this.strokeStyle = "#000000";
-            
+
             /**
              * sets the current line width, in pixels, when drawing stroke
              * Default value : 1
              * @public
              * @type Number
-             * @name me.Font#lineWidth 
+             * @name me.Font#lineWidth
              */
             this.lineWidth = 1;
-            
+
             /**
              * Set the default text alignment (or justification),<br>
              * possible values are "left", "right", and "center".<br>
@@ -70,7 +68,7 @@
              * @name me.Font#textAlign
              */
             this.textAlign = textAlign || "left";
-            
+
             /**
              * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
              * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
@@ -80,7 +78,7 @@
              * @name me.Font#textBaseline
              */
             this.textBaseline = "top";
-            
+
             /**
              * Set the line spacing height (when displaying multi-line strings). <br>
              * Current font height will be multiplied with this value to set the line height.
@@ -103,7 +101,7 @@
          * @memberOf me.Font
          * @function
          */
-        bold : function() {
+        bold : function () {
             this.font = "bold " + this.font;
         },
 
@@ -113,7 +111,7 @@
          * @memberOf me.Font
          * @function
          */
-        italic : function() {
+        italic : function () {
             this.font = "italic " + this.font;
         },
 
@@ -130,18 +128,18 @@
          * font.setFont("Arial", 20, "white");
          * font.setFont("Arial", "1.5em", "white");
          */
-        setFont : function(font, size, fillStyle, textAlign) {
+        setFont : function (font, size, fillStyle, textAlign) {
             // font name and type
             var font_names = font.split(",").map(function (value) {
                 value = value.trim();
                 return (
                     !/(^".*"$)|(^'.*'$)/.test(value)
-                ) ? '"' + value + '"' : value;
+                ) ? "\"" + value + "\"" : value;
             });
-            
+
             this.fontSize.y = parseInt(size, 10);
             this.height = this.fontSize.y;
-            
+
             if (typeof size === "number") {
                 size += "px";
             }
@@ -161,21 +159,24 @@
          * @param {String} text
          * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
          */
-        measureText : function(context, text) {
+        measureText : function (context, text) {
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
-            
+
             this.height = this.width = 0;
-            
-            var strings = (""+text).split("\n");
+
+            var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
                 this.width = Math.max(context.measureText(strings[i].trimRight()).width, this.width);
                 this.height += this.fontSize.y * this.lineHeight;
             }
-            return {width: this.width, height: this.height};
+            return {
+                width : this.width,
+                height : this.height
+            };
         },
 
         /**
@@ -188,26 +189,24 @@
          * @param {Number} x
          * @param {Number} y
          */
-        draw : function(context, text, x, y) {
+        draw : function (context, text, x, y) {
             // update initial position
-            this.pos.set(x,y);
-            
+            this.pos.set(x, y);
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
-                   
-            var strings = (""+text).split("\n");
+
+            var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
                 // draw the string
                 context.fillText(strings[i].trimRight(), ~~x, ~~y);
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
-            
         },
-        
+
         /**
          * draw a stroke text at the specified coord, as defined <br>
          * by the `lineWidth` and `fillStroke` properties. <br>
@@ -220,10 +219,10 @@
          * @param {Number} x
          * @param {Number} y
          */
-        drawStroke : function(context, text, x, y) {
+        drawStroke : function (context, text, x, y) {
             // update initial position
-            this.pos.set(x,y);
-            
+            this.pos.set(x, y);
+
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;
@@ -231,8 +230,8 @@
             context.lineWidth = this.lineWidth;
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
-                   
-            var strings = (""+text).split("\n");
+
+            var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
                 var _string = strings[i].trimRight();
                 // draw the border
@@ -243,9 +242,5 @@
                 y += this.fontSize.y * this.lineHeight;
             }
         }
-        
     });
-
-    
-
-})(window);
+})();

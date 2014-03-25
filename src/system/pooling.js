@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * A pool of Object entity <br>
      * This object is used for object pooling - a technique that might speed up your game
@@ -23,24 +21,21 @@
      * @namespace me.pool
      * @memberOf me
      */
-    me.pool = (function() {
+    me.pool = (function () {
         // hold public stuff in our singleton
         var api = {};
 
         var entityClass = {};
 
-        /*---------------------------------------------
-
-            PUBLIC STUFF
-
-        ---------------------------------------------*/
+        /*
+         * PUBLIC STUFF
+         */
 
         /**
          * Constructor
          * @ignore
          */
-
-        api.init = function() {
+        api.init = function () {
             // add default entity object
             api.register("me.ObjectEntity", me.ObjectEntity);
             api.register("me.CollectableEntity", me.CollectableEntity);
@@ -71,7 +66,7 @@
          * me.pool.register("heartentity", HeartEntity, true);
          * me.pool.register("starentity", StarEntity, true);
          */
-        api.register = function(className, entityObj, pooling) {
+        api.register = function (className, entityObj, pooling) {
             if (!pooling) {
                 entityClass[className.toLowerCase()] = {
                     "class" : entityObj,
@@ -113,13 +108,12 @@
          * me.game.world.removeChild(enemy);
          * me.game.world.removeChild(bullet);
          */
-
-        api.pull = function(data) {
-            var name = typeof data === 'string' ? data.toLowerCase() : undefined;
+        api.pull = function (data) {
+            var name = typeof data === "string" ? data.toLowerCase() : undefined;
             var args = Array.prototype.slice.call(arguments);
             if (name && entityClass[name]) {
                 var proto;
-                if (!entityClass[name]['pool']) {
+                if (!entityClass[name].pool) {
                     proto = entityClass[name]["class"];
                     args[0] = proto;
                     return new (proto.bind.apply(proto, args))();
@@ -127,8 +121,8 @@
 
                 var obj, entity = entityClass[name];
                 proto = entity["class"];
-                if (entity["pool"].length > 0) {
-                    obj = entity["pool"].pop();
+                if (entity.pool.length > 0) {
+                    obj = entity.pool.pop();
                     // call the object init function if defined (JR's Inheritance)
                     if (typeof obj.init === "function") {
                         obj.init.apply(obj, args.slice(1));
@@ -137,7 +131,8 @@
                     if (typeof obj.onResetEvent === "function") {
                         obj.onResetEvent.apply(obj, args.slice(1));
                     }
-                } else {
+                }
+                else {
                     args[0] = proto;
                     obj = new (proto.bind.apply(proto, args))();
                     obj.className = name;
@@ -160,9 +155,11 @@
          * @public
          * @function
          */
-        api.purge = function() {
+        api.purge = function () {
             for (var className in entityClass) {
-                entityClass[className]["pool"] = [];
+                if (entityClass.hasOwnProperty(className)) {
+                    entityClass[className].pool = [];
+                }
             }
         };
 
@@ -177,22 +174,17 @@
          * @function
          * @param {Object} instance to be recycled
          */
-        api.push = function(obj) {
+        api.push = function (obj) {
             var name = obj.className;
-            if (typeof(name) === 'undefined' || !entityClass[name]) {
+            if (typeof(name) === "undefined" || !entityClass[name]) {
                 // object is not registered, don't do anything
                 return;
             }
             // store back the object instance for later recycling
-            entityClass[name]["pool"].push(obj);
+            entityClass[name].pool.push(obj);
         };
 
         // return our object
         return api;
-
     })();
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

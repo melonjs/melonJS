@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * A Simple object to display a sprite on screen.
      * @class
@@ -25,7 +23,6 @@
     me.SpriteObject = me.Renderable.extend(
     /** @scope me.SpriteObject.prototype */
     {
-        // default scale ratio of the object
         /**
          * @ignore
          */
@@ -62,7 +59,7 @@
              * @ignore
              */
             this._sourceAngle = 0;
-            
+
             // image reference
             this.image = null;
 
@@ -90,10 +87,10 @@
 
             // set the default sprite index & offset
             this.offset.set(0, 0);
-            
+
             // non persistent per default
             this.isPersistent = false;
-            
+
             // and not flickering
             this.flickering = false;
         },
@@ -106,11 +103,15 @@
          * @deprecated Use PNG or GIF with transparency instead
          * @param {String} color color key in "#RRGGBB" format
          */
-        setTransparency : function(col) {
+        setTransparency : function (col) {
             // remove the # if present
             col = (col.charAt(0) === "#") ? col.substring(1, 7) : col;
             // applyRGB Filter (return a context object)
-            this.image = me.video.applyRGBFilter(this.image, "transparent", col.toUpperCase()).canvas;
+            this.image = me.video.applyRGBFilter(
+                this.image,
+                "transparent",
+                col.toUpperCase()
+            ).canvas;
         },
 
         /**
@@ -120,10 +121,9 @@
          * @function
          * @return {Boolean}
          */
-        isFlickering : function() {
+        isFlickering : function () {
             return this.flickering;
         },
-
 
         /**
          * make the object flicker
@@ -135,12 +135,12 @@
          * @example
          * // make the object flicker for 1 second
          * // and then remove it
-         * this.flicker(1000, function()
+         * this.flicker(1000, function ()
          * {
          *    me.game.world.removeChild(this);
          * });
          */
-        flicker : function(duration, callback) {
+        flicker : function (duration, callback) {
             this.flickerDuration = duration;
             if (this.flickerDuration <= 0) {
                 this.flickering = false;
@@ -151,7 +151,6 @@
             }
         },
 
-
         /**
          * Flip object on horizontal axis
          * @name flipX
@@ -159,7 +158,7 @@
          * @function
          * @param {Boolean} flip enable/disable flip
          */
-        flipX : function(flip) {
+        flipX : function (flip) {
             if (flip !== this.lastflipX) {
                 this.lastflipX = flip;
 
@@ -178,7 +177,7 @@
          * @function
          * @param {Boolean} flip enable/disable flip
          */
-        flipY : function(flip) {
+        flipY : function (flip) {
             if (flip !== this.lastflipY) {
                 this.lastflipY = flip;
 
@@ -198,9 +197,9 @@
          * @param {Number} ratioX x scaling ratio
          * @param {Number} ratioY y scaling ratio
          */
-        resize : function(ratioX, ratioY) {
+        resize : function (ratioX, ratioY) {
             var x = ratioX;
-            var y = typeof (ratioY) !== undefined ? ratioX : ratioY;
+            var y = typeof (ratioY) !== "undefined" ? ratioX : ratioY;
             if (x > 0) {
                 this.scale.x = this.scale.x < 0.0 ? -x : x;
             }
@@ -211,18 +210,17 @@
             this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
 
         },
-        
+
         /**
          * Resize the sprite around his center<br>
          * @name resizeV
          * @memberOf me.SpriteObject
          * @function
-         * @param {me.Vector2d} vector ratio 
+         * @param {me.Vector2d} vector ratio
          */
-        resizeV : function(ratio) {
+        resizeV : function (ratio) {
             this.resize(ratio.x, ratio.y);
         },
-
 
         /**
          * sprite update<br>
@@ -234,13 +232,14 @@
          * @protected
          * @return false
          **/
-        update : function( dt ) {
+        update : function (dt) {
             //update the "flickering" state if necessary
             if (this.flickering) {
                 this.flickerDuration -= dt;
                 if (this.flickerDuration < 0) {
-                    if (this.flickercb)
+                    if (this.flickercb) {
                         this.flickercb();
+                    }
                     this.flicker(-1);
                 }
                 return true;
@@ -258,40 +257,43 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function(context) {
-
+        draw : function (context) {
             // do nothing if we are flickering
             if (this.flickering) {
                 this.flickerState = !this.flickerState;
-                if (!this.flickerState) return;
+                if (!this.flickerState) {
+                    return;
+                }
             }
             // save context
             context.save();
             // sprite alpha value
             context.globalAlpha *= this.getOpacity();
-            
+
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
 
             var w = this.width, h = this.height;
             var angle = this.angle + this._sourceAngle;
 
-            if ((this.scaleFlag) || (angle!==0)) {
+            if ((this.scaleFlag) || (angle !== 0)) {
                 // calculate pixel pos of the anchor point
                 var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
                 // translate to the defined anchor point
                 context.translate(xpos + ax, ypos + ay);
                 // scale
-                if (this.scaleFlag)
+                if (this.scaleFlag) {
                     context.scale(this.scale.x, this.scale.y);
-                if (angle!==0)
+                }
+                if (angle !== 0) {
                     context.rotate(angle);
+                }
 
-                if (this._sourceAngle!==0) {
+                if (this._sourceAngle !== 0) {
                     // swap w and h for rotated source images
                     w = this.height;
                     h = this.width;
-                    
+
                     xpos = -ay;
                     ypos = -ax;
                 }
@@ -302,11 +304,14 @@
                 }
             }
 
-            context.drawImage(this.image,
-                            this.offset.x, this.offset.y,
-                            w, h,
-                            xpos, ypos,
-                            w, h);
+
+            context.drawImage(
+                this.image,
+                this.offset.x, this.offset.y,   // sx,sy
+                w, h,                           // sw,sh
+                xpos, ypos,                     // dx,dy
+                w, h                            // dw,dh
+            );
 
             // restore context
             context.restore();
@@ -316,7 +321,7 @@
          * Destroy function<br>
          * @ignore
          */
-        destroy : function() {
+        destroy : function () {
             this.onDestroyEvent.apply(this, arguments);
         },
 
@@ -327,12 +332,10 @@
          * @memberOf me.SpriteObject
          * @function
          */
-        onDestroyEvent : function() {
+        onDestroyEvent : function () {
             // to be extended !
         }
-
     });
-    
 
     /**
      * an object to manage animation
@@ -367,9 +370,9 @@
      */
     me.AnimationSheet = me.SpriteObject.extend(
     /** @scope me.AnimationSheet.prototype */
-    {        
+    {
         /** @ignore */
-        init : function(x, y, settings) {
+        init : function (x, y, settings) {
             // Spacing and margin
             /** @ignore */
             this.spacing = 0;
@@ -401,7 +404,6 @@
 
             // default animation sequence
             this.current = null;
-                        
             // default animation speed (ms)
             this.animationspeed = 100;
 
@@ -413,34 +415,35 @@
 
             // call the constructor
             this._super(me.SpriteObject, "init", [x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin]);
-                        
+
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
-            
+
             // build the local textureAtlas
             this.buildLocalAtlas(settings['atlas'], settings['atlasIndices'], image);
-            
+
             // create a default animation sequence with all sprites
             this.addAnimation("default", null);
-            
+
             // set as default
             this.setCurrentAnimation("default");
         },
-        
         /**
          * build the local (private) atlas
          * @ignore
          */
+
         buildLocalAtlas : function (atlas, indices, image) {
             // reinitialze the atlas
             if(image === null || typeof image === 'undefined') {
-                image = this.image
+                image = this.image;
             }
             if (atlas !== undefined) {
                 this.textureAtlas = atlas;
                 this.atlasIndices = indices;
-            } else {
+            }
+            else {
                 // regular spritesheet
                 this.textureAtlas = [];
                 // calculate the sprite count (line, col)
@@ -474,14 +477,17 @@
 
         /**
          * add an animation <br>
-         * For fixed-sized cell sprite sheet, the index list must follow the logic as per the following example :<br>
+         * For fixed-sized cell sprite sheet, the index list must follow the
+         * logic as per the following example :<br>
          * <img src="images/spritesheet_grid.png"/>
          * @name addAnimation
          * @memberOf me.AnimationSheet
          * @function
          * @param {String} name animation id
-         * @param {Number[]|String[]} index list of sprite index or name defining the animation
-         * @param {Number} [animationspeed] cycling speed for animation in ms (delay between each frame).
+         * @param {Number[]|String[]} index list of sprite index or name
+         * defining the animation
+         * @param {Number} [animationspeed] cycling speed for animation in ms
+         * (delay between each frame).
          * @see me.AnimationSheet#animationspeed
          * @example
          * // walking animation
@@ -493,7 +499,7 @@
          * // slower animation
          * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
          */
-        addAnimation : function(name, index, animationspeed) {
+        addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {
                 name : name,
                 frame : [],
@@ -502,13 +508,12 @@
                 animationspeed: animationspeed || this.animationspeed,
                 nextFrame : 0
             };
-            
 
             if (index == null) {
                 index = [];
                 var j = 0;
                 // create a default animation with all frame
-                this.textureAtlas.forEach(function() {
+                this.textureAtlas.forEach(function () {
                     index[j] = j++;
                 });
             }
@@ -527,14 +532,15 @@
             }
             this.anim[name].length = this.anim[name].frame.length;
         },
-        
+
         /**
          * set the current animation
          * @name setCurrentAnimation
          * @memberOf me.AnimationSheet
          * @function
          * @param {String} name animation id
-         * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+         * @param {String|Function} [onComplete] animation id to switch to when
+         * complete, or callback
          * @example
          * // set "walk" animation
          * this.setCurrentAnimation("walk");
@@ -545,7 +551,7 @@
          * // set "die" animation, and remove the object when finished
          * this.setCurrentAnimation("die", (function () {
          *    me.game.world.removeChild(this);
-         *      return false; // do not reset to first frame
+         *    return false; // do not reset to first frame
          * }).bind(this));
          *
          * // set "attack" animation, and pause for a short duration
@@ -557,10 +563,10 @@
          *        this.setCurrentAnimation("standing");
          *    }, 1000);
          *
-         *      return false; // do not reset to first frame
+         *    return false; // do not reset to first frame
          * }).bind(this));
          **/
-        setCurrentAnimation : function(name, resetAnim) {
+        setCurrentAnimation : function (name, resetAnim) {
             if (this.anim[name]) {
                 this.current = this.anim[name];
                 this.resetAnim = resetAnim || null;
@@ -583,7 +589,7 @@
          *    // do something funny...
          * }
          */
-        isCurrentAnimation : function(name) {
+        isCurrentAnimation : function (name) {
             return this.current.name === name;
         },
 
@@ -597,7 +603,7 @@
          * //reset the current animation to the first frame
          * this.setAnimationFrame();
          */
-        setAnimationFrame : function(idx) {
+        setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
             var frame = this.current.frame[this.current.idx];
             this.offset = frame.offset;
@@ -607,7 +613,7 @@
             this.hHeight = frame.hHeight;
             this._sourceAngle = frame.angle;
         },
-        
+
         /**
          * return the current animation frame index.
          * @name getCurrentAnimationFrame
@@ -615,7 +621,7 @@
          * @function
          * @return {Number} current animation frame index
          */
-        getCurrentAnimationFrame : function() {
+        getCurrentAnimationFrame : function () {
             return this.current.idx;
         },
 
@@ -628,40 +634,36 @@
          * @protected
          * @param {Number} dt time since the last update in milliseconds.
          */
-        update : function( dt ) {
+        update : function (dt) {
             // update animation if necessary
             if (!this.animationpause) {
                 this.current.nextFrame -= dt;
-                if (this.current.nextFrame <=0) {
+                if (this.current.nextFrame <= 0) {
                     this.setAnimationFrame(++this.current.idx);
-                    
+
                     // switch animation if we reach the end of the strip
                     // and a callback is defined
                     if (this.current.idx === 0 && this.resetAnim)  {
                         // if string, change to the corresponding animation
-                        if (typeof this.resetAnim === "string")
+                        if (typeof this.resetAnim === "string") {
                             this.setCurrentAnimation(this.resetAnim);
+                        }
                         // if function (callback) call it
-                        else if (typeof this.resetAnim === "function" && this.resetAnim() === false) {
+                        else if (typeof this.resetAnim === "function" &&
+                                 this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
                             this._super(me.SpriteObject, "update", [dt] );
                             return false;
                         }
                     }
-                    
+
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
-
                     return this._super(me.SpriteObject, "update", [dt] ) || true;
                 }
             }
             return this._super(me.SpriteObject, "update", [dt] );
         }
     });
-
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

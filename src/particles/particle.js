@@ -4,8 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
+(function () {
     /**
      * Single Particle Object.
      * @class
@@ -17,11 +16,10 @@
     me.Particle = me.Renderable.extend(
     /** @scope me.Particle.prototype */
     {
-        
         /**
          * @ignore
          */
-        init: function(emitter) {
+        init : function (emitter) {
             // Call the super constructor
             this._super(me.Renderable, "init", [emitter.getRandomPoint(), emitter.image.width, emitter.image.height]);
 
@@ -44,10 +42,14 @@
 
             // Set the start and end particle Scale as defined in emitter
             // clamp the values as minimum and maximum scales range
-            this.startScale = Number.prototype.random(emitter.minStartScale, emitter.maxStartScale).
-                            clamp(emitter.minStartScale, emitter.maxStartScale);
-            this.endScale = Number.prototype.random(emitter.minEndScale, emitter.maxEndScale).
-                            clamp(emitter.minEndScale, emitter.maxEndScale);
+            this.startScale = Number.prototype.random(
+                emitter.minStartScale,
+                emitter.maxStartScale
+            ).clamp(emitter.minStartScale, emitter.maxStartScale);
+            this.endScale = Number.prototype.random(
+                emitter.minEndScale,
+                emitter.maxEndScale
+            ).clamp(emitter.minEndScale, emitter.maxEndScale);
 
             // Set the particle Gravity and Wind (horizontal gravity) as defined in emitter
             this.gravity = emitter.gravity;
@@ -83,7 +85,7 @@
          * @ignore
          * @param {Number} dt time since the last update in milliseconds
          */
-        update: function(dt) {
+        update : function (dt) {
             // move things forward independent of the current frame rate
             var skew = dt * this._deltaInv;
 
@@ -95,10 +97,11 @@
 
             // Resize the particle as particle Age Ratio
             var scale = this.startScale;
-            if(this.startScale > this.endScale) {
+            if (this.startScale > this.endScale) {
                 scale *= ageRatio;
                 scale = (scale < this.endScale) ? this.endScale : scale;
-            } else if(this.startScale < this.endScale) {
+            }
+            else if (this.startScale < this.endScale) {
                 scale /= ageRatio;
                 scale = (scale > this.endScale) ? this.endScale : scale;
             }
@@ -118,11 +121,11 @@
             this.pos.x += this.vel.x * skew;
             this.pos.y += this.vel.y * skew;
 
-            // Return true if the particle is not dead yet 
+            // Return true if the particle is not dead yet
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
-        draw: function(context) {
+        draw : function (context) {
             context.save();
 
             // particle alpha value
@@ -130,16 +133,20 @@
 
             // translate to the defined anchor point and scale it
             var transform = this.transform;
-            context.transform(transform.a, transform.b,
-                              transform.c, transform.d,
-                              ~~this.pos.x, ~~this.pos.y);
+            context.transform(
+                transform.a, transform.b,
+                transform.c, transform.d,
+                ~~this.pos.x, ~~this.pos.y
+            );
 
             var w = this.width, h = this.height;
-            context.drawImage(this.image,
-                            0, 0,
-                            w, h,
-                            -w / 2, -h / 2,
-                            w, h);
+            context.drawImage(
+                this.image,
+                0, 0,
+                w, h,
+                -w / 2, -h / 2,
+                w, h
+            );
 
             context.restore();
         }

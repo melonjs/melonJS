@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function($) {
-
+(function () {
     /**
      * a generic 2D Vector Object
      * @class
@@ -38,7 +36,7 @@
              */
             this.y = y || 0;
         },
-        
+
         /**
          * set the Vector x and y properties to the given values<br>
          * @name set
@@ -48,7 +46,7 @@
          * @param {Number} y
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        set : function(x, y) {
+        set : function (x, y) {
             this.x = x;
             this.y = y;
             return this;
@@ -61,7 +59,7 @@
          * @function
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        setZero : function() {
+        setZero : function () {
             return this.set(0, 0);
         },
 
@@ -73,7 +71,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        setV : function(v) {
+        setV : function (v) {
             this.x = v.x;
             this.y = v.y;
             return this;
@@ -87,7 +85,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        add : function(v) {
+        add : function (v) {
             this.x += v.x;
             this.y += v.y;
             return this;
@@ -101,7 +99,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        sub : function(v) {
+        sub : function (v) {
             this.x -= v.x;
             this.y -= v.y;
             return this;
@@ -116,12 +114,12 @@
          * @param {Number} [y=x]
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        scale : function(x, y) {
+        scale : function (x, y) {
             this.x *= x;
-            this.y *= typeof (y) !== 'undefined' ? y : x;
+            this.y *= typeof (y) !== "undefined" ? y : x;
             return this;
         },
-        
+
         /**
          * Multiply this vector values by the passed vector
          * @name scale
@@ -130,7 +128,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        scaleV : function(v) {
+        scaleV : function (v) {
             this.x *= v.x;
             this.y *= v.y;
             return this;
@@ -144,7 +142,7 @@
          * @param {Number} value
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        div : function(n) {
+        div : function (n) {
             this.x /= n;
             this.y /= n;
             return this;
@@ -157,11 +155,13 @@
          * @function
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        abs : function() {
-            if (this.x < 0)
+        abs : function () {
+            if (this.x < 0) {
                 this.x = -this.x;
-            if (this.y < 0)
+            }
+            if (this.y < 0) {
                 this.y = -this.y;
+            }
             return this;
         },
 
@@ -174,10 +174,10 @@
          * @param {Number} high
          * @return {me.Vector2d} new me.Vector2d
          */
-        clamp : function(low, high) {
+        clamp : function (low, high) {
             return new me.Vector2d(this.x.clamp(low, high), this.y.clamp(low, high));
         },
-        
+
         /**
          * Clamp this vector value within the specified value range
          * @name clampSelf
@@ -187,7 +187,7 @@
          * @param {Number} high
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        clampSelf : function(low, high) {
+        clampSelf : function (low, high) {
             this.x = this.x.clamp(low, high);
             this.y = this.y.clamp(low, high);
             return this;
@@ -201,7 +201,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        minV : function(v) {
+        minV : function (v) {
             this.x = this.x < v.x ? this.x : v.x;
             this.y = this.y < v.y ? this.y : v.y;
             return this;
@@ -215,7 +215,7 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        maxV : function(v) {
+        maxV : function (v) {
             this.x = this.x > v.x ? this.x : v.x;
             this.y = this.y > v.y ? this.y : v.y;
             return this;
@@ -228,10 +228,10 @@
          * @function
          * @return {me.Vector2d} new me.Vector2d
          */
-        floor : function() {
+        floor : function () {
             return new me.Vector2d(~~this.x, ~~this.y);
         },
-        
+
         /**
          * Floor this vector values
          * @name floorSelf
@@ -239,12 +239,12 @@
          * @function
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        floorSelf : function() {
+        floorSelf : function () {
             this.x = ~~this.x;
             this.y = ~~this.y;
             return this;
         },
-        
+
         /**
          * Ceil the vector values
          * @name ceil
@@ -252,10 +252,10 @@
          * @function
          * @return {me.Vector2d} new me.Vector2d
          */
-        ceil : function() {
+        ceil : function () {
             return new me.Vector2d(Math.ceil(this.x), Math.ceil(this.y));
         },
-        
+
         /**
          * Ceil this vector values
          * @name ceilSelf
@@ -263,7 +263,7 @@
          * @function
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        ceilSelf : function() {
+        ceilSelf : function () {
             this.x = Math.ceil(this.x);
             this.y = Math.ceil(this.y);
             return this;
@@ -276,7 +276,7 @@
          * @function
          * @return {me.Vector2d} new me.Vector2d
          */
-        negate : function() {
+        negate : function () {
             return new me.Vector2d(-this.x, -this.y);
         },
 
@@ -287,7 +287,7 @@
          * @function
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        negateSelf : function() {
+        negateSelf : function () {
             this.x = -this.x;
             this.y = -this.y;
             return this;
@@ -301,12 +301,12 @@
          * @param {me.Vector2d} v
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        copy : function(v) {
+        copy : function (v) {
             this.x = v.x;
             this.y = v.y;
             return this;
         },
-        
+
         /**
          * return true if the two vectors are the same
          * @name equals
@@ -315,7 +315,7 @@
          * @param {me.Vector2d} v
          * @return {Boolean}
          */
-        equals : function(v) {
+        equals : function (v) {
             return ((this.x === v.x) && (this.y === v.y));
         },
 
@@ -325,8 +325,8 @@
          * @memberOf me.Vector2d
          * @function
          * @return {Number}
-         */        
-         length : function() {
+         */
+        length : function () {
             return Math.sqrt(this.x * this.x + this.y * this.y);
         },
 
@@ -336,8 +336,8 @@
          * @memberOf me.Vector2d
          * @function
          * @return {Number}
-         */        
-        normalize : function() {
+         */
+        normalize : function () {
             var len = this.length();
             // some limit test
             if (len < Number.MIN_VALUE) {
@@ -356,8 +356,8 @@
          * @function
          * @param {me.Vector2d} v
          * @return {Number}
-         */    
-        dotProduct : function(/**me.Vector2d*/ v) {
+         */
+        dotProduct : function (/**me.Vector2d*/ v) {
             return this.x * v.x + this.y * v.y;
         },
 
@@ -368,11 +368,11 @@
          * @function
          * @param {me.Vector2d} v
          * @return {Number}
-         */            
-        distance : function(v) {
+         */
+        distance : function (v) {
             return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y) * (this.y - v.y));
         },
-        
+
         /**
          * return the angle between this vector and the passed one
          * @name angle
@@ -380,8 +380,8 @@
          * @function
          * @param {me.Vector2d} v
          * @return {Number} angle in radians
-         */            
-        angle : function(v) {
+         */
+        angle : function (v) {
             return Math.atan2((v.y - this.y), (v.x - this.x));
         },
 
@@ -391,8 +391,8 @@
          * @memberOf me.Vector2d
          * @function
          * @return {me.Vector2d} new me.Vector2d
-         */            
-        clone : function() {
+         */
+        clone : function () {
             return new me.Vector2d(this.x, this.y);
         },
 
@@ -402,11 +402,9 @@
          * @memberOf me.Vector2d
          * @function
          * @return {String}
-         */            
-         toString : function() {
-            return 'x:' + this.x + ',y:' + this.y;
+         */
+        toString : function () {
+            return "x:" + this.x + ",y:" + this.y;
         }
-
     });
-    
-})(window);
+})();

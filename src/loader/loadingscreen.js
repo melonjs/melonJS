@@ -3,32 +3,23 @@
  * @copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
-
-(function(window) {
-
+(function () {
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend ({
-    
+
         init: function(v, w, h) {
             this._super(me.Renderable, 'init', [v, w, h]);
-            // flag to know if we need to refresh the display
-            this.invalidate = false;
-            
+
             // default progress bar height
             this.barHeight = 4;
-            
+
             // current progress
-            this.progress = 0;
-        },
-        
-        // make sure the screen is refreshed every frame 
-        onProgressUpdate : function(progress) {
             this.progress = Math.floor(progress * this.width);
             this.invalidate = true;
         },
-        
-        // make sure the screen is refreshed every frame 
-        update : function( dt ) {
+
+        // make sure the screen is refreshed every frame
+        update : function () {
             if (this.invalidate === true) {
                 // clear the flag
                 this.invalidate = false;
@@ -38,29 +29,28 @@
             // else return false
             return false;
         },
-        
+
          // draw function
-        draw : function(context) {
+        draw : function (context) {
             // draw the progress bar
             context.fillStyle = "black";
-            context.fillRect(0, (this.height/2)-(this.barHeight/2), this.width, this.barHeight);
+            context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
             context.fillStyle = "#55aa00";
-            context.fillRect(2, (this.height/2)-(this.barHeight/2), this.progress, this.barHeight);
+            context.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
         }
     });
-    
+
     // the melonJS Logo
-    var IconLogo = me.Renderable.extend ({
-        // constructor
-        init : function(x, y) {
+    var IconLogo = me.Renderable.extend({
+        init : function (x, y) {
             this._super(me.Renderable, "init", [new me.Vector2d(x, y), 100, 85]);
         },
-        
+
         // 100x85 Logo
         // generated using Illustrator and the Ai2Canvas plugin
-        draw : function (context) {        
+        draw : function (context) {
             context.save();
-            
+
             // translate to destination point
             context.translate(this.pos.x, this.pos.y);
 
@@ -90,15 +80,15 @@
             context.lineJoin = "miter";
             context.miterLimit = 4.0;
             context.stroke();
-            
+
             context.restore();
         }
     });
-    
+
     // the melonJS Text Logo
-    var TextLogo = me.Renderable.extend ({
+    var TextLogo = me.Renderable.extend({
         // constructor
-        init : function(w, h) {
+        init : function (w, h) {
             this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
             this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
             this.logo2 = new me.Font('century gothic', 32, '#55aa00', 'middle');
@@ -111,12 +101,12 @@
             var logo1_width = this.logo1.measureText(context, "melon").width;
             var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
             var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
-                
+
             // draw the melonJS string
-            this.logo1.draw(context, 'melon', xpos , ypos);
+            this.logo1.draw(context, "melon", xpos, ypos);
             xpos += logo1_width;
-            this.logo2.draw(context, 'JS', xpos, ypos);
-        }        
+            this.logo2.draw(context, "JS", xpos, ypos);
+        }
 
     });
 
@@ -127,45 +117,41 @@
      * @constructor
      */
     me.DefaultLoadingScreen = me.ScreenObject.extend({
-
         // call when the loader is resetted
-        onResetEvent : function() {
-        
+        onResetEvent : function () {
             me.game.reset();
-            
+
             // background color
             me.game.world.addChild(new me.ColorLayer("background", "#202020", 0));
-            
+
             // progress bar
             var progressBar = new ProgressBar(
-                new me.Vector2d(), 
-                me.video.getWidth(), 
+                new me.Vector2d(),
+                me.video.getWidth(),
                 me.video.getHeight()
-            ); 
+            );
             this.handle = me.event.subscribe(
-                me.event.LOADER_PROGRESS, 
+                me.event.LOADER_PROGRESS,
                 progressBar.onProgressUpdate.bind(progressBar)
             );
             me.game.world.addChild(progressBar, 1);
-            
+
             // melonJS text & logo
-            var icon = new IconLogo (
+            var icon = new IconLogo(
                 (me.video.getWidth() - 100) / 2,
                 (me.video.getHeight() / 2) - (progressBar.barHeight / 2) - 90
             );
             me.game.world.addChild(icon, 1);
             me.game.world.addChild(new TextLogo(me.video.getWidth(), me.video.getHeight()), 1);
         },
-        
+
         // destroy object at end of loading
-        onDestroyEvent : function() {
+        onDestroyEvent : function () {
             // cancel the callback
             if (this.handle)  {
                 me.event.unsubscribe(this.handle);
                 this.handle = null;
             }
         }
-        
     });
-    // --- END ---
-})(window);
+})();

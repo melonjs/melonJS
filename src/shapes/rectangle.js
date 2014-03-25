@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-    
+(function () {
     /**
      * a rectangle Object
      * @class
@@ -19,7 +17,7 @@
      */
     me.Rect = Object.extend(
     /** @scope me.Rect.prototype */ {
-    
+
         /** @ignore */
         init : function(v, w, h) {
             /**
@@ -41,7 +39,7 @@
              * @see me.Rect#addV
              */
             this.rangeV = new me.Vector2d();
-            
+
             /**
              * width of the Rectange
              * @public
@@ -66,7 +64,7 @@
             // the shape type
             this.shapeType = "Rectangle";
             this.pos.setV(v);
-            
+
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape
             this.rangeV.set(0, 0);
@@ -77,7 +75,7 @@
             // half width/height
             this.hWidth = ~~(w / 2);
             this.hHeight = ~~(h / 2);
-            
+
             // redefine some properties to ease our life when getting the rectangle coordinates
             /**
              * left coordinate of the Rectange<br>
@@ -88,14 +86,13 @@
              * @memberOf me.Rect
              */
             Object.defineProperty(this, "left", {
-                get : function() {
+                get : function () {
                     var x = this.pos.x;
                     var xv = x + this.rangeV.x;
                     return x < xv ? x : xv;
                 },
                 configurable : true
             });
-
             /**
              * right coordinate of the Rectange<br>
              * takes in account the adjusted size of the rectangle (if set)
@@ -105,7 +102,7 @@
              * @memberOf me.Rect
              */
             Object.defineProperty(this, "right", {
-                get : function() {
+                get : function () {
                     var x = this.pos.x + this.width;
                     var xv = x + this.rangeV.x;
                     return x > xv ? x : xv;
@@ -122,7 +119,7 @@
              * @memberOf me.Rect
              */
             Object.defineProperty(this, "top", {
-                get : function() {
+                get : function () {
                     var y = this.pos.y;
                     var yv = y + this.rangeV.y;
                     return y < yv ? y : yv;
@@ -139,14 +136,13 @@
              * @memberOf me.Rect
              */
             Object.defineProperty(this, "bottom", {
-                get : function() {
+                get : function () {
                     var y = this.pos.y + this.height;
                     var yv = y + this.rangeV.y;
                     return y > yv ? y : yv;
                 },
                 configurable : true
             });
-
         },
 
         /**
@@ -159,13 +155,13 @@
          * @param {Number} h height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        setShape : function(v, w, h) {
+        setShape : function (v, w, h) {
             // set the new position vector
             this.pos.setV(v);
-            
+
             // resize
             this.resize(w, h);
-            
+
             return this;
         },
 
@@ -178,13 +174,13 @@
          * @param {Number} h new height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        resize : function(w, h) {
+        resize : function (w, h) {
             this.width = w;
             this.height = h;
-            
+
             this.hWidth = ~~(w / 2);
             this.hHeight = ~~(h / 2);
-            
+
             return this;
         },
 
@@ -194,27 +190,28 @@
          * @memberOf me.Rect
          * @function
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle    
+         * @return {me.Rect} new rectangle
          */
-        getBounds : function(rect) {
-            if (typeof(rect) !== 'undefined') {
+        getBounds : function (rect) {
+            if (typeof(rect) !== "undefined") {
                 return rect.setShape(this.pos, this.width, this.height);
-            } else {
+            }
+            else {
                 return this.clone();
             }
         },
-        
+
         /**
          * clone this rectangle
          * @name clone
          * @memberOf me.Rect
          * @function
-         * @return {me.Rect} new rectangle    
+         * @return {me.Rect} new rectangle
          */
-        clone : function() {
+        clone : function () {
             return new me.Rect(this.pos, this.width, this.height);
         },
-        
+
         /**
          * translate the rect by the specified offset
          * @name translate
@@ -222,11 +219,11 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Rect} this rectangle    
+         * @return {me.Rect} this rectangle
          */
-        translate : function(x, y) {
-            this.pos.x+=x;
-            this.pos.y+=y;
+        translate : function (x, y) {
+            this.pos.x += x;
+            this.pos.y += y;
             return this;
         },
 
@@ -236,9 +233,9 @@
          * @memberOf me.Rect
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle    
+         * @return {me.Rect} this rectangle
          */
-        translateV : function(v) {
+        translateV : function (v) {
             return this.translate(v.x, v.y);
         },
 
@@ -250,7 +247,7 @@
          * @param {me.Vector2d} v vector offset
          * @return {me.Rect} this rectangle
          */
-        addV : function(v) {
+        addV : function (v) {
             this.rangeV.setV(v);
             return this;
         },
@@ -261,46 +258,46 @@
          * @memberOf me.Rect
          * @function
          * @param {me.Rect} rect other rectangle to union with
-         * @return {me.Rect} the union(ed) rectangle     
+         * @return {me.Rect} the union(ed) rectangle
          */
-        union : function(/** {me.Rect} */ r) {
+        union : function (/** {me.Rect} */ r) {
             var x1 = Math.min(this.left, r.left);
             var y1 = Math.min(this.top, r.top);
 
-            this.resize (
+            this.resize(
                 Math.max(this.right, r.right) - x1,
                 Math.max(this.bottom, r.bottom) - y1
             );
-            
+
             this.pos.set(x1, y1);
-           
+
             return this;
         },
 
         /**
-         *    
+         *
          * flip on X axis
          * usefull when used as collision box, in a non symetric way
          * @ignore
          * @param sw the sprite width
          */
-        flipX : function(sw) {
+        flipX : function (sw) {
             this.pos.x = sw - this.width - this.pos.x;
             return this;
         },
 
         /**
-         *    
+         *
          * flip on Y axis
          * usefull when used as collision box, in a non symetric way
          * @ignore
          * @param sh the height width
          */
-        flipY : function(sh) {
+        flipY : function (sh) {
             this.pos.y = sh - this.height - this.pos.y;
             return this;
         },
-        
+
         /**
          * return true if this rectangle is equal to the specified one
          * @name equals
@@ -309,11 +306,13 @@
          * @param {me.Rect} rect
          * @return {Boolean}
          */
-        equals : function(r) {
-            return (this.left   === r.left  && 
-                    this.right  === r.right && 
-                    this.top    === r.top   &&
-                    this.bottom === r.bottom);
+        equals : function (r) {
+            return (
+                this.left   === r.left  &&
+                this.right  === r.right &&
+                this.top    === r.top   &&
+                this.bottom === r.bottom
+            );
         },
 
         /**
@@ -324,13 +323,15 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function(r)    {
-            return (this.left < r.right && 
-                    r.left < this.right && 
-                    this.top < r.bottom &&
-                    r.top < this.bottom);
+        overlaps : function (r)    {
+            return (
+                this.left < r.right &&
+                r.left < this.right &&
+                this.top < r.bottom &&
+                r.top < this.bottom
+            );
         },
-        
+
         /**
          * check if this rectangle is within the specified one
          * @name within
@@ -339,10 +340,10 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if within
          */
-        within: function(r) {
+        within: function (r) {
             return r.contains(this);
         },
-        
+
         /**
          * check if this rectangle contains the specified one
          * @name contains
@@ -351,13 +352,15 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if contains
          */
-        contains: function(r) {
-            return (r.left >= this.left && 
-                    r.right <= this.right &&
-                    r.top >= this.top && 
-                    r.bottom <= this.bottom);
+        contains: function (r) {
+            return (
+                r.left >= this.left &&
+                r.right <= this.right &&
+                r.top >= this.top &&
+                r.bottom <= this.bottom
+            );
         },
-        
+
         /**
          * check if this rectangle contains the specified point
          * @name containsPointV
@@ -366,7 +369,7 @@
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
          */
-        containsPointV: function(v) {
+        containsPointV: function (v) {
             return this.containsPoint(v.x, v.y);
         },
 
@@ -379,40 +382,44 @@
          * @param  {Number} y y coordinate
          * @return {boolean} true if contains
          */
-        containsPoint: function(x, y) {
-            return  (x >= this.left && x <= this.right && 
-                    (y >= this.top) && y <= this.bottom);
+        containsPoint: function (x, y) {
+            return (
+                x >= this.left &&
+                x <= this.right &&
+                y >= this.top &&
+                y <= this.bottom
+            );
         },
 
         /**
          * AABB vs AABB collission dectection<p>
-         * If there was a collision, the return vector will contains the following values: 
+         * If there was a collision, the return vector will contains the following values:
          * @example
-         * if (v.x != 0 || v.y != 0)
-         * {
-         *   if (v.x != 0)
-         *   {
-         *      // x axis
-         *      if (v.x<0)
-         *         console.log("x axis : left side !");
-         *      else
-         *         console.log("x axis : right side !");
-         *   }
-         *   else
-         *   {
-         *      // y axis
-         *      if (v.y<0)
-         *         console.log("y axis : top side !");
-         *      else
-         *         console.log("y axis : bottom side !");            
-         *   }
-         *        
+         * if (v.x != 0 || v.y != 0) {
+         *     if (v.x != 0) {
+         *         // x axis
+         *         if (v.x < 0) {
+         *             console.log("x axis : left side !");
+         *         }
+         *         else {
+         *             console.log("x axis : right side !");
+         *         }
+         *     }
+         *     else {
+         *         // y axis
+         *         if (v.y < 0) {
+         *             console.log("y axis : top side !");
+         *         }
+         *         else {
+         *             console.log("y axis : bottom side !");
+         *         }
+         *     }
          * }
          * @ignore
          * @param {me.Rect} rect
-         * @return {me.Vector2d} 
+         * @return {me.Vector2d}
          */
-        collideWithRectangle : function(/** {me.Rect} */ rect) {
+        collideWithRectangle : function (/** {me.Rect} */ rect) {
             // response vector
             var p = new me.Vector2d(0, 0);
 
@@ -442,12 +449,10 @@
          * debug purpose
          * @ignore
          */
-        draw : function(context, color) {
+        draw : function (context, color) {
             // draw the rectangle
             context.strokeStyle = color || "red";
             context.strokeRect(this.left, this.top, this.width, this.height);
-
         }
     });
-
-})(window);
+})();

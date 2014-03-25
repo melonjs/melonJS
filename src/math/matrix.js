@@ -4,9 +4,7 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * a Matrix2d Object.<br>
      * the identity matrix and parameters position : <br>
@@ -24,7 +22,7 @@
      */
     me.Matrix2d = Object.extend(
     /** @scope me.Matrix2d.prototype */    {
-    
+
         /** @ignore */
         init : function(a, b, c, d, e, f) {
             /**
@@ -91,7 +89,7 @@
          * @function
          * @return {me.Matrix2d} this matrix
          */
-        identity : function() {
+        identity : function () {
             this.set(1, 0, 0, 1, 0, 0);
             return this;
         },
@@ -109,13 +107,13 @@
          * @param {Number} [f] The delta y (dy) value in the matrix
          * @return {me.Matrix2d} this matrix
          */
-        set : function(a ,b, c, d, e, f) {
+        set : function (a, b, c, d, e, f) {
             this.a = a;
             this.b = b;
             this.c = c;
             this.d = d;
-            this.e = typeof(e) !== 'undefined' ? e : this.e;
-            this.f = typeof(f) !== 'undefined' ? f : this.f;
+            this.e = typeof(e) !== "undefined" ? e : this.e;
+            this.f = typeof(f) !== "undefined" ? f : this.f;
             return this;
         },
 
@@ -132,7 +130,7 @@
          * @param {Number} [f] The delta y (dy) value in the matrix
          * @return {me.Matrix2d} this matrix
          */
-        multiply : function(a, b, c, d, e, f) {
+        multiply : function (a, b, c, d, e, f) {
             var a1 = this.a;
             var b1 = this.b;
             var c1 = this.c;
@@ -156,11 +154,10 @@
          * @param {Number} sy a number representing the abscissa of the scaling vector.
          * @return {me.Matrix2d} this matrix
          */
-        scale : function(sx ,sy) {
-         
+        scale : function (sx, sy) {
             this.a *= sx;
             this.d *= sy;
-            
+
             this.e *= sx;
             this.f *= sy;
 
@@ -175,7 +172,7 @@
          * @param {Number} angle an angle in radians representing the angle of the rotation. A positive angle denotes a clockwise rotation, a negative angle a counter-clockwise one.
          * @return {me.Matrix2d} this matrix
          */
-        rotate : function(angle) {
+        rotate : function (angle) {
             if (angle !== 0) {
                 var cos = Math.cos(angle);
                 var sin = Math.sin(angle);
@@ -204,7 +201,7 @@
          * @param {me.Vector2d} y the y coordindates to translate the matrix by
          * @return {me.Matrix2d} this matrix
          */
-        translate : function(x, y) {
+        translate : function (x, y) {
             this.e += x;
             this.f += y;
 
@@ -219,7 +216,7 @@
          * @param {me.Vector2d} v the vector to translate the matrix by
          * @return {me.Matrix2d} this matrix
          */
-        translateV : function(v) {
+        translateV : function (v) {
             return this.translate(v.x, v.y);
         },
 
@@ -230,7 +227,7 @@
          * @function
          * @return {Boolean}
          **/
-        isIdentity : function() {
+        isIdentity : function () {
             return (this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.e === 0 && this.f === 0);
         },
 
@@ -241,10 +238,8 @@
          * @function
          * @return {me.Matrix2d}
          */
-         clone : function() {
-             return new me.Matrix2d(this.a, this.b, this.c, this.d, this.e, this.f);
-         }
-        
+        clone : function () {
+            return new me.Matrix2d(this.a, this.b, this.c, this.d, this.e, this.f);
+        }
     });
-
-})(window);
+})();

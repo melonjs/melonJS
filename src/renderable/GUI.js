@@ -4,14 +4,13 @@
  * http://www.melonjs.org
  *
  */
-
 (function($) {
-    
+
     /**
      * GUI Object<br>
      * A very basic object to manage GUI elements <br>
      * The object simply register on the "pointerdown" <br>
-     * or "touchstart" event and call the onClick function" 
+     * or "touchstart" event and call the onClick function"
      * @class
      * @extends me.SpriteObject
      * @memberOf me
@@ -23,7 +22,7 @@
      *
      * // create a basic GUI Object
      * var myButton = me.GUI_Object.extend(
-     * {    
+     * {
      *    init:function(x, y)
      *    {
      *       var settings = {}
@@ -33,9 +32,9 @@
      *       // super constructor
      *       this._super(me.GUI_Object, "init", [x, y, settings]);
      *       // define the object z order
-     *       this.z = 4;     
+     *       this.z = 4;
      *    },
-     *    
+     *
      *    // output something in the console
      *    // when the object is clicked
      *    onClick:function(event)
@@ -45,14 +44,14 @@
      *       return false;
      *    }
      * });
-     * 
+     *
      * // add the object at pos (10,10)
      * me.game.world.addChild(new myButton(10,10));
      *
      */
     me.GUI_Object = me.SpriteObject.extend({
     /** @scope me.GUI_Object.prototype */
-    
+
         /**
          * @ignore
          */
@@ -64,17 +63,17 @@
              * @name me.GUI_Object#isClickable
              */
             this.isClickable = true;
-            
-            // object has been updated (clicked,etc..)    
+
+            // object has been updated (clicked,etc..)
             this.updated = false;
-            this._super(me.SpriteObject, "init", [x, y, 
-                ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image), 
-                settings.spritewidth, 
+            this._super(me.SpriteObject, "init", [x, y,
+                ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
+                settings.spritewidth,
                 settings.spriteheight]);
-            
+
             // GUI items use screen coordinates
             this.floating = true;
-            
+
             // register on mouse event
             me.input.registerPointerEvent('pointerdown', this, this.clicked.bind(this));
 
@@ -84,7 +83,7 @@
          * return true if the object has been clicked
          * @ignore
          */
-        update : function( dt ) {
+        update : function () {
             if (this.updated) {
                 // clear the flag
                 this.updated = false;
@@ -92,18 +91,18 @@
             }
             return false;
         },
-        
+
         /**
          * function callback for the pointerdown event
          * @ignore
          */
-        clicked : function(event) {
+        clicked : function (event) {
             if (this.isClickable) {
                 this.updated = true;
                 return this.onClick(event);
             }
         },
-    
+
         /**
          * function called when the object is clicked <br>
          * to be extended <br>
@@ -114,26 +113,21 @@
          * @function
          * @param {Event} event the event object
          */
-        onClick : function(event) {
+        onClick : function () {
             return false;
         },
-        
+
         /**
          * OnDestroy notification function<br>
          * Called by engine before deleting the object<br>
-         * be sure to call the _super function if overwritten
+         * be sure to call the parent function if overwritten
          * @name onDestroyEvent
          * @memberOf me.GUI_Object
          * @public
          * @function
          */
-        onDestroyEvent : function() {
-            me.input.releasePointerEvent('pointerdown', this);
+        onDestroyEvent : function () {
+            me.input.releasePointerEvent("pointerdown", this);
         }
-
     });
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

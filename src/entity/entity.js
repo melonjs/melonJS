@@ -5,12 +5,14 @@
  *
  */
 
-(function($) {
+(function () {
 
     /**
      * me.ObjectSettings contains the object attributes defined in Tiled<br>
-     * and is created by the engine and passed as parameter to the corresponding object when loading a level<br>
-     * the field marked Mandatory are to be defined either in Tiled, or in the before calling the parent constructor<br>
+     * and is created by the engine and passed as parameter to the corresponding
+     * object when loading a level<br>
+     * the field marked Mandatory are to be defined either in Tiled, or in the
+     * before calling the parent constructor<br>
      * <img src="images/object_properties.png"/><br>
      * @class
      * @protected
@@ -73,7 +75,6 @@
          */
         spriteheight : null,
 
-
         /**
          * custom type for collision detection<br>
          * OPTIONAL
@@ -95,15 +96,14 @@
         collidable : true
     };
 
-    /************************************************************************************/
-    /*                                                                                  */
-    /*      a generic object entity                                                     */
-    /*                                                                                  */
-    /************************************************************************************/
+    /*
+     * A generic object entity
+     */
+
     /**
      * a Generic Object Entity<br>
      * Object Properties (settings) are to be defined in Tiled, <br>
-     * or when calling the super constructor
+     * or when calling the parent constructor
      *
      * @class
      * @extends me.Renderable
@@ -111,7 +111,8 @@
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
-     * @param {me.ObjectSettings} settings Object Properties as defined in Tiled <br> <img src="images/object_properties.png"/>
+     * @param {me.ObjectSettings} settings Object Properties as defined in Tiled<br>
+     * <img src="images/object_properties.png"/>
      */
     me.ObjectEntity = me.Renderable.extend(
     /** @scope me.ObjectEntity.prototype */ {
@@ -141,12 +142,12 @@
             /**
              * The collision shapes of the entity <br>
              * (note: only shape at index 0 is used in melonJS 1.0.x)
-             * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]} 
+             * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.ObjectEntity
              */
             this.shapes = [];
-            
+
             /**
              * The current shape index
              * @ignore
@@ -191,7 +192,7 @@
             }
 
             // set the object entity name
-            this.name = settings.name?settings.name.toLowerCase():"";
+            this.name = settings.name ? settings.name.toLowerCase() : "";
 
             /**
              * entity current velocity<br>
@@ -200,10 +201,10 @@
              * @name vel
              * @memberOf me.ObjectEntity
              */
-            if (this.vel === undefined) {
+            if (typeof(this.vel) === "undefined") {
                 this.vel = new me.Vector2d();
             }
-            this.vel.set(0,0);
+            this.vel.set(0, 0);
 
             /**
              * entity current acceleration<br>
@@ -212,10 +213,10 @@
              * @name accel
              * @memberOf me.ObjectEntity
              */
-            if (this.accel === undefined) {
+            if (typeof(this.accel) === "undefined") {
                 this.accel = new me.Vector2d();
             }
-            this.accel.set(0,0);
+            this.accel.set(0, 0);
 
             /**
              * entity current friction<br>
@@ -223,10 +224,10 @@
              * @name friction
              * @memberOf me.ObjectEntity
              */
-            if (this.friction === undefined) {
+            if (typeof(this.friction) === "undefined") {
                 this.friction = new me.Vector2d();
             }
-            this.friction.set(0,0);
+            this.friction.set(0, 0);
 
             /**
              * max velocity (to limit entity velocity)<br>
@@ -235,7 +236,7 @@
              * @name maxVel
              * @memberOf me.ObjectEntity
              */
-            if (this.maxVel === undefined) {
+            if (typeof(this.maxVel) === "undefined") {
                 this.maxVel = new me.Vector2d();
             }
             this.maxVel.set(1000, 1000);
@@ -252,7 +253,7 @@
              * @name gravity
              * @memberOf me.ObjectEntity
              */
-            this.gravity = me.sys.gravity!==undefined ? me.sys.gravity : 0.98;
+            this.gravity = typeof(me.sys.gravity) !== "undefined" ? me.sys.gravity : 0.98;
 
             /**
              * dead/living state of the entity<br>
@@ -275,6 +276,7 @@
              * @memberOf me.ObjectEntity
              */
             this.falling = false;
+
             /**
              * jumping state of the object<br>
              * equal true if the entity is jumping<br>
@@ -288,6 +290,7 @@
 
             // some usefull slope variable
             this.slopeY = 0;
+
             /**
              * equal true if the entity is standing on a slope<br>
              * @readonly
@@ -297,6 +300,7 @@
              * @memberOf me.ObjectEntity
              */
             this.onslope = false;
+
             /**
              * equal true if the entity is on a ladder<br>
              * @readonly
@@ -317,7 +321,10 @@
             this.disableTopLadderCollision = false;
 
             // to enable collision detection
-            this.collidable = typeof(settings.collidable) !== "undefined" ?    settings.collidable : true;
+            this.collidable = (
+                typeof(settings.collidable) !== "undefined" ?
+                settings.collidable : true
+            );
 
             // default objec type
             this.type = settings.type || 0;
@@ -347,12 +354,12 @@
              */
             this.onTileBreak = null;
 
-            if (typeof (settings.getShape) === 'function') {
+            if (typeof (settings.getShape) === "function") {
                 // add the given collision shape to the object
                 this.addShape(settings.getShape());
 
                 // ---- TODO : fix this bug, as it should not matter!
-                if (this.getShape().shapeType === 'PolyShape') {
+                if (this.getShape().shapeType === "PolyShape") {
                     this._bounds = this.getBounds();
                     this.resize(this._bounds.width, this._bounds.height);
                 }
@@ -368,7 +375,7 @@
          * @function
          * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
          */
-        addShape : function(shape) {
+        addShape : function (shape) {
             this.shapes.push(shape);
         },
 
@@ -380,7 +387,7 @@
          * @function
          * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
          */
-        getShape : function() {
+        getShape : function () {
             return this.shapes[this.shapeIndex];
         },
 
@@ -392,18 +399,19 @@
          * @function
          * @param {Number} index shape index
          */
-        setShape : function(index) {
-            if (typeof(this.shapes[index]) !== 'undefined') {
+        setShape : function (index) {
+            if (typeof(this.shapes[index]) !== "undefined") {
                 this.shapeIndex = index;
                 return;
             }
             throw "melonJS (me.Entity): Shape (" + index + ") not defined";
         },
-        
+
         /**
          * onCollision Event function<br>
          * called by the game manager when the object collide with shtg<br>
-         * by default, if the object type is Collectable, the destroy function is called
+         * by default, if the object type is Collectable, the destroy function
+         * is called
          * @name onCollision
          * @memberOf me.ObjectEntity
          * @function
@@ -411,16 +419,17 @@
          * @param {me.ObjectEntity} obj the other object that hit this object
          * @protected
          */
-        onCollision : function(res, obj) {
+        onCollision : function () {
             // destroy the object if collectable
-            if (this.collidable    && (this.type === me.game.COLLECTABLE_OBJECT)) {
+            if (this.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
                 me.game.world.removeChild(this);
             }
         },
 
         /**
          * set the entity default velocity<br>
-         * note : velocity is by default limited to the same value, see setMaxVelocity if needed<br>
+         * note : velocity is by default limited to the same value, see
+         * setMaxVelocity if needed<br>
          * @name setVelocity
          * @memberOf me.ObjectEntity
          * @function
@@ -429,12 +438,12 @@
          * @protected
          */
 
-        setVelocity : function(x, y) {
+        setVelocity : function (x, y) {
             this.accel.x = x !== 0 ? x : this.accel.x;
             this.accel.y = y !== 0 ? y : this.accel.y;
 
             // limit by default to the same max value
-            this.setMaxVelocity(x,y);
+            this.setMaxVelocity(x, y);
         },
 
         /**
@@ -446,7 +455,7 @@
          * @param {Number} y max velocity on y axis
          * @protected
          */
-        setMaxVelocity : function(x, y) {
+        setMaxVelocity : function (x, y) {
             this.maxVel.x = x;
             this.maxVel.y = y;
         },
@@ -460,7 +469,7 @@
          * @param {Number} y vertical friction
          * @protected
          */
-        setFriction : function(x, y) {
+        setFriction : function (x, y) {
             this.friction.x = x || 0;
             this.friction.y = y || 0;
         },
@@ -472,7 +481,7 @@
          * @function
          * @param {Boolean} flip enable/disable flip
          */
-        flipX : function(flip) {
+        flipX : function (flip) {
             if (flip !== this.lastflipX) {
                 this.lastflipX = flip;
                 if (this.renderable && this.renderable.flipX) {
@@ -493,7 +502,7 @@
          * @function
          * @param {Boolean} flip enable/disable flip
          */
-        flipY : function(flip) {
+        flipY : function (flip) {
             if (flip !== this.lastflipY) {
                 this.lastflipY = flip;
                 if (this.renderable  && this.renderable.flipY) {
@@ -515,13 +524,12 @@
          * @param {me.ObjectEntity} entity Entity
          * @return {Number} distance
          */
-        distanceTo: function(e)
-        {
+        distanceTo: function (e) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var dx = (this.pos.x + this.hWidth)  - (e.pos.x + e.hWidth);
             var dy = (this.pos.y + this.hHeight) - (e.pos.y + e.hHeight);
-            return Math.sqrt(dx*dx+dy*dy);
+            return Math.sqrt(dx * dx + dy * dy);
         },
 
         /**
@@ -532,13 +540,12 @@
          * @param {me.Vector2d} vector vector
          * @return {Number} distance
          */
-        distanceToPoint: function(v)
-        {
+        distanceToPoint: function (v) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var dx = (this.pos.x + this.hWidth)  - (v.x);
             var dy = (this.pos.y + this.hHeight) - (v.y);
-            return Math.sqrt(dx*dx+dy*dy);
+            return Math.sqrt(dx * dx + dy * dy);
         },
 
         /**
@@ -549,8 +556,7 @@
          * @param {me.ObjectEntity} entity Entity
          * @return {Number} angle in radians
          */
-        angleTo: function(e)
-        {
+        angleTo: function (e) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var ax = (e.pos.x + e.hWidth) - (this.pos.x + this.hWidth);
@@ -567,8 +573,7 @@
          * @param {me.Vector2d} vector vector
          * @return {Number} angle in radians
          */
-        angleToPoint: function(v)
-        {
+        angleToPoint: function (v) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var ax = (v.x) - (this.pos.x + this.hWidth);
@@ -581,17 +586,22 @@
          * adjust the given rect to the given slope tile
          * @ignore
          */
-        checkSlope : function(rect, tile, left) {
+        checkSlope : function (rect, tile, left) {
 
             // first make the object stick to the tile
             rect.pos.y = tile.pos.y - rect.height;
 
             // normally the check should be on the object center point,
-            // but since the collision check is done on corner, we must do the same thing here
-            if (left)
-                this.slopeY = tile.height - (rect.right + this.vel.x - tile.pos.x);
-            else
+            // but since the collision check is done on corner, we must do the
+            // same thing here
+            if (left) {
+                this.slopeY = tile.height - (
+                    rect.right + this.vel.x - tile.pos.x
+                );
+            }
+            else {
                 this.slopeY = (rect.left + this.vel.x - tile.pos.x);
+            }
 
             // cancel y vel
             this.vel.y = 0;
@@ -604,32 +614,34 @@
          * compute the new velocity value
          * @ignore
          */
-        computeVelocity : function(vel) {
+        computeVelocity : function (vel) {
 
             // apply gravity (if any)
             if (this.gravity) {
                 // apply a constant gravity (if not on a ladder)
-                vel.y += !this.onladder?(this.gravity * me.timer.tick):0;
+                vel.y += !this.onladder ? (this.gravity * me.timer.tick) : 0;
 
                 // check if falling / jumping
                 this.falling = (vel.y > 0);
-                this.jumping = this.falling?false:this.jumping;
+                this.jumping = (this.falling ? false : this.jumping);
             }
 
             // apply friction
-            if (this.friction.x)
-                vel.x = me.utils.applyFriction(vel.x,this.friction.x);
-            if (this.friction.y)
-                vel.y = me.utils.applyFriction(vel.y,this.friction.y);
+            if (this.friction.x) {
+                vel.x = me.utils.applyFriction(vel.x, this.friction.x);
+            }
+            if (this.friction.y) {
+                vel.y = me.utils.applyFriction(vel.y, this.friction.y);
+            }
 
             // cap velocity
-            if (vel.y !== 0)
-                vel.y = vel.y.clamp(-this.maxVel.y,this.maxVel.y);
-            if (vel.x !== 0)
-                vel.x = vel.x.clamp(-this.maxVel.x,this.maxVel.x);
+            if (vel.y !== 0) {
+                vel.y = vel.y.clamp(-this.maxVel.y, this.maxVel.y);
+            }
+            if (vel.x !== 0) {
+                vel.x = vel.x.clamp(-this.maxVel.x, this.maxVel.x);
+            }
         },
-
-
 
         /**
          * handle the player movement, "trying" to update his position<br>
@@ -659,7 +671,7 @@
          *   else
          *      console.log("x axis : right side !");
          * }
-         * else if(res.y != 0)
+         * else if (res.y != 0)
          * {
          *    // y axis
          *    if (res.y<0)
@@ -674,14 +686,14 @@
          * // check player status after collision check
          * var updated = (this.vel.x!=0 || this.vel.y!=0);
          */
-        updateMovement : function() {
-
+        updateMovement : function () {
             this.computeVelocity(this.vel);
 
             // Adjust position only on collidable object
             var collision;
             if (this.collidable) {
-                // temporary stuff until ticket #103 is done (this function will disappear anyway)
+                // temporary stuff until ticket #103 is done
+                // (this function will disappear anyway)
                 // save the collision box offset
                 this._bounds = this.getBounds(this._bounds);
                 this.__offsetX = this._bounds.pos.x;
@@ -695,67 +707,84 @@
                 this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
                 // clear the ladder flag
                 this.onladder = false;
-
-
+                var prop = collision.yprop;
+                var tile = collision.ytile;
 
                 // y collision
                 if (collision.y) {
                     // going down, collision with the floor
-                    this.onladder = collision.yprop.isLadder || collision.yprop.isTopLadder;
+                    this.onladder = prop.isLadder || prop.isTopLadder;
 
                     if (collision.y > 0) {
-                        if (collision.yprop.isSolid    ||
-                            (collision.yprop.isPlatform && (this._bounds.bottom - 1 <= collision.ytile.pos.y)) ||
-                            (collision.yprop.isTopLadder && !this.disableTopLadderCollision)) {
+                        if (prop.isSolid ||
+                            (prop.isPlatform && (this._bounds.bottom - 1 <= tile.pos.y)) ||
+                            (prop.isTopLadder && !this.disableTopLadderCollision)) {
+
                             // adjust position to the corresponding tile
                             this._bounds.pos.y = ~~this._bounds.pos.y;
-                            this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0 ;
+                            this.vel.y = (
+                                this.falling ?
+                                tile.pos.y - this._bounds.bottom : 0
+                            );
                             this.falling = false;
                         }
-                        else if (collision.yprop.isSlope && !this.jumping) {
+                        else if (prop.isSlope && !this.jumping) {
                             // we stop falling
-                            this.checkSlope(this._bounds, collision.ytile, collision.yprop.isLeftSlope);
+                            this.checkSlope(
+                                this._bounds,
+                                tile,
+                                prop.isLeftSlope
+                            );
                             this.falling = false;
                         }
-                        else if (collision.yprop.isBreakable) {
+                        else if (prop.isBreakable) {
                             if  (this.canBreakTile) {
                                 // remove the tile
-                                me.game.currentLevel.clearTile(collision.ytile.col, collision.ytile.row);
-                                if (this.onTileBreak)
+                                me.game.currentLevel.clearTile(
+                                    tile.col,
+                                    tile.row
+                                );
+                                if (this.onTileBreak) {
                                     this.onTileBreak();
+                                }
                             }
                             else {
                                 // adjust position to the corresponding tile
                                 this.collision.pos.y = ~~this.collision.pos.y;
-                                this.vel.y = (this.falling) ?collision.ytile.pos.y - this._bounds.bottom: 0;
+                                this.vel.y = (
+                                    this.falling ?
+                                    tile.pos.y - this._bounds.bottom : 0
+                                );
                                 this.falling = false;
                             }
                         }
                     }
                     // going up, collision with ceiling
                     else if (collision.y < 0) {
-                        if (!collision.yprop.isPlatform    && !collision.yprop.isLadder && !collision.yprop.isTopLadder) {
+                        if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
                             this.falling = true;
                             // cancel the y velocity
                             this.vel.y = 0;
                         }
                     }
                 }
+                prop = collision.xprop;
+                tile = collision.xtile;
 
                 // x collision
                 if (collision.x) {
+                    this.onladder = prop.isLadder || prop.isTopLadder;
 
-                    this.onladder = collision.xprop.isLadder || collision.yprop.isTopLadder;
-
-                    if (collision.xprop.isSlope && !this.jumping) {
-                        this.checkSlope(this._bounds, collision.xtile, collision.xprop.isLeftSlope);
+                    if (prop.isSlope && !this.jumping) {
+                        this.checkSlope(this._bounds, tile, prop.isLeftSlope);
                         this.falling = false;
-                    } else {
+                    }
+                    else {
                         // can walk through the platform & ladder
-                        if (!collision.xprop.isPlatform && !collision.xprop.isLadder && !collision.xprop.isTopLadder) {
-                            if (collision.xprop.isBreakable    && this.canBreakTile) {
+                        if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
+                            if (prop.isBreakable && this.canBreakTile) {
                                 // remove the tile
-                                me.game.currentLevel.clearTile(collision.xtile.col, collision.xtile.row);
+                                me.game.currentLevel.clearTile(tile.col, tile.row);
                                 if (this.onTileBreak) {
                                     this.onTileBreak();
                                 }
@@ -782,28 +811,30 @@
         },
 
         /** @ignore */
-        update : function( dt ) {
+        update : function (dt) {
             if (this.renderable) {
-                return this.renderable.update( dt );
+                return this.renderable.update(dt);
             }
             return false;
         },
 
         /**
-         * returns the bounding box for this entity, the smallest rectangle object completely containing the entity current shape.
+         * returns the bounding box for this entity, the smallest rectangle
+         * object completely containing the entity current shape.
          * @name getBounds
          * @memberOf me.ObjectEntity
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle    
+         * @param {me.Rect} [rect] an optional rectangle object to use when
+         * returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle
          */
-        getBounds : function(rect) {
+        getBounds : function (rect) {
             if (this.shapes.length) {
                 return this.getShape().getBounds(rect);
             } else {
-                // call the _super me.Rect.getBounds()
+                // call the parent me.Rect.getBounds()
                 // translate back for the position to be relative to the entity
-                return this._super(me.Rect, "getBounds").translate(-this.pos.x, -this.pos.y);
+                return this.parent(rect).translate(-this.pos.x, -this.pos.y);
             }
         },
 
@@ -817,18 +848,22 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function(context) {
+        draw : function (context) {
             // draw the sprite if defined
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
                 var bounds = this;
-                if (this.shapes.length && this.getShape().shapeType === 'PolyShape') {
+                if (this.shapes.length && this.getShape().shapeType === "PolyShape") {
                     // use the corresponding bounding box
                     bounds = this.getBounds(this._bounds).translateV(this.pos);
                 }
-                var x = ~~(bounds.pos.x + (this.anchorPoint.x * (bounds.width - this.renderable.width)));
-                var y = ~~(bounds.pos.y + (this.anchorPoint.y * (bounds.height - this.renderable.height)));
+                var x = ~~(bounds.pos.x + (
+                    this.anchorPoint.x * (bounds.width - this.renderable.width)
+                ));
+                var y = ~~(bounds.pos.y + (
+                    this.anchorPoint.y * (bounds.height - this.renderable.height)
+                ));
                 context.translate(x, y);
                 this.renderable.draw(context);
                 context.translate(-x, -y);
@@ -839,7 +874,7 @@
          * Destroy function<br>
          * @ignore
          */
-        destroy : function() {
+        destroy : function () {
             // free some property objects
             if (this.renderable) {
                 this.renderable.destroy.apply(this.renderable, arguments);
@@ -857,18 +892,17 @@
          * @memberOf me.ObjectEntity
          * @function
          */
-        onDestroyEvent : function() {
+        onDestroyEvent : function () {
             // to be extended !
         }
 
 
     });
 
-    /************************************************************************************/
-    /*                                                                                  */
-    /*      a Collectable entity                                                        */
-    /*                                                                                  */
-    /************************************************************************************/
+    /*
+     * A Collectable entity
+     */
+
     /**
      * @class
      * @extends me.ObjectEntity
@@ -885,17 +919,14 @@
         init : function(x, y, settings) {
             // call the super constructor
             this._super(me.ObjectEntity, "init", [x, y, settings]);
-
             this.type = me.game.COLLECTABLE_OBJECT;
-
         }
     });
 
-    /************************************************************************************/
-    /*                                                                                  */
-    /*      a level entity                                                              */
-    /*                                                                                  */
-    /************************************************************************************/
+    /*
+     * A level entity
+     */
+
     /**
      * @class
      * @extends me.ObjectEntity
@@ -909,8 +940,8 @@
     /** @scope me.LevelEntity.prototype */
     {
         /** @ignore */
-        init : function(x, y, settings) {
-            this._super(me.ObjectEntity, "init", [x, y, settings]);
+        init : function (x, y, settings) {
+            this.parent(x, y, settings);
 
             this.nextlevel = settings.to;
 
@@ -925,7 +956,7 @@
         /**
          * @ignore
          */
-        onFadeComplete : function() {
+        onFadeComplete : function () {
             me.levelDirector.loadLevel(this.gotolevel);
             me.game.viewport.fadeOut(this.fade, this.duration);
         },
@@ -938,7 +969,7 @@
          * @param {String} [level=this.nextlevel] name of the level to load
          * @protected
          */
-        goTo : function(level) {
+        goTo : function (level) {
             this.gotolevel = level || this.nextlevel;
             // load a level
             //console.log("going to : ", to);
@@ -954,12 +985,8 @@
         },
 
         /** @ignore */
-        onCollision : function() {
+        onCollision : function () {
             this.goTo();
         }
     });
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

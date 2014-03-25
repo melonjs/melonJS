@@ -4,15 +4,13 @@
  * http://www.melonjs.org
  *
  */
-
-(function(window) {
-
+(function () {
     /**
      * Private function to re-use for object removal in a defer
      * @ignore
      */
-    var deferredRemove = function(child, keepalive) {
-        if(child.ancestor) {
+    var deferredRemove = function (child, keepalive) {
+        if (child.ancestor) {
             child.ancestor.removeChildNow(child, keepalive);
         }
     };
@@ -41,19 +39,19 @@
      * @param {number} [h=me.game.viewport.height] height of the container
      */
     me.ObjectContainer = me.Renderable.extend(
-        /** @scope me.ObjectContainer.prototype */ {
-
-        /** 
+    /** @scope me.ObjectContainer.prototype */
+    {
+        /**
          * constructor
          * @ignore
          */
         init : function(x, y, width, height) {
-            /** 
+            /**
              * keep track of pending sort
              * @ignore
              */
             this.pendingSort = null;
-            
+
             /**
              * Enable collision detection for this container (default true)<br>
              * @public
@@ -62,7 +60,7 @@
              * @memberOf me.ObjectContainer
              */
             this.collidable = true;
-            
+
             /**
              * the container default transformation matrix
              * @public
@@ -99,13 +97,14 @@
              * @memberOf me.ObjectContainer
              */
             this.sortOn = me.game.sortOn;
-            /** 
+            /**
              * Specify if the children list should be automatically sorted when adding a new child
              * @public
              * @type Boolean
              * @name autoSort
              * @memberOf me.ObjectContainer
              */
+
             this.autoSort = true;
             this.transform.identity();
         },
@@ -124,33 +123,30 @@
             if(typeof(child.ancestor) !== 'undefined') {
                 child.ancestor.removeChildNow(child);
             } else {
-                // only allocate a GUID if the object has no previous ancestor 
+                // only allocate a GUID if the object has no previous ancestor
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
                     child.GUID = me.utils.createGUID();
                 }
             }
-            
+
             // change the child z-index if one is specified
-            if (typeof(zIndex) === 'number') {
+            if (typeof(zIndex) === "number") {
                 child.z = zIndex;
             }
 
             // specify a z property to infinity if not defined
-            if (typeof child.z === 'undefined') {
+            if (typeof child.z === "undefined") {
                 child.z = Infinity;
             }
 
             child.ancestor = this;
-            
             this.children.push(child);
-            
             if (this.autoSort === true) {
                 this.sort();
             }
         },
-        
         /**
          * Add a child to the container at the specified index<br>
          * (the list won't be sorted after insertion)
@@ -160,25 +156,25 @@
          * @param {me.Renderable} child
          * @param {Number} index
          */
+
         addChildAt : function(child, index) {
             if((index >= 0) && (index < this.children.length)) {
-                
+
                 if(typeof(child.ancestor) !== 'undefined') {
                     child.ancestor.removeChildNow(child);
                 } else {
-                    // only allocate a GUID if the object has no previous ancestor 
+                    // only allocate a GUID if the object has no previous ancestor
                     // (e.g. move one child from one container to another)
                     if (child.isRenderable) {
                         // allocated a GUID value
                         child.GUID = me.utils.createGUID();
                     }
                 }
-                
                 child.ancestor = this;
-                
+
                 this.children.splice(index, 0, child);
-            
-            } else {
+            }
+            else {
                 throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
             }
         },
@@ -194,9 +190,8 @@
         swapChildren : function(child, child2) {
             var index = this.getChildIndex( child );
             var index2 = this.getChildIndex( child2 );
-            
+
             if ((index !== -1) && (index2 !== -1)) {
-                
                 // swap z index
                 var _z = child.z;
                 child.z = child2.z;
@@ -204,7 +199,6 @@
                 // swap the positions..
                 this.children[index] = child2;
                 this.children[index2] = child;
-                
             } else {
                 throw "melonJS (me.ObjectContainer): " + child + " Both the supplied childs must be a child of the caller " + this;
             }
@@ -224,7 +218,7 @@
                 throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
             }
         },
-        
+
         /**
          * Returns the index of the Child
          * @name getChildAt
@@ -247,7 +241,7 @@
         hasChild : function(child) {
             return this === child.ancestor;
         },
-        
+
         /**
          * return the child corresponding to the given property and value.<br>
          * note : avoid calling this function every frame since
@@ -266,7 +260,7 @@
          * ent = me.game.world.getChildByProp("name", "mainPlayer");
          */
         getChildByProp : function(prop, value)    {
-            var objList = [];    
+            var objList = [];
             // for string comparaisons
             var _regExp = new RegExp(value, "i");
 
@@ -284,13 +278,13 @@
                 if (obj instanceof me.ObjectContainer) {
                     compare(obj, prop);
                     objList = objList.concat(obj.getChildByProp(prop, value));
-                } else {
+                }
+                else {
                     compare(obj, prop);
                 }
             }
             return objList;
         },
-        
 
         /**
          * returns the list of childs with the specified name<br>
@@ -304,10 +298,11 @@
          * @param {String} name entity name
          * @return {me.Renderable[]} Array of childs
          */
+
         getChildByName : function(name) {
             return this.getChildByProp("name", name);
         },
-        
+
         /**
          * return the child corresponding to the specified GUID<br>
          * note : avoid calling this function every frame since
@@ -323,26 +318,25 @@
             var obj = this.getChildByProp("GUID", guid);
             return (obj.length>0)?obj[0]:null;
         },
-        
-        
+
         /**
          * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
          * @name getBounds
          * @memberOf me.ObjectContainer
          * @function
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle    
+         * @return {me.Rect} new rectangle
          */
-        getBounds : function(rect) {
-            var _bounds = (typeof(rect) !== 'undefined') ? rect : this.bounds;
-            
+        getBounds : function (rect) {
+            var _bounds = (typeof(rect) !== "undefined") ? rect : this.bounds;
+
             // reset the rect with default values
             _bounds.pos.set(Infinity, Infinity);
             _bounds.resize(-Infinity, -Infinity);
-            
+
             var childBounds;
-            for ( var i = this.children.length, child; i--, child = this.children[i];) {
-                if(child.isRenderable) {
+            for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+                if (child.isRenderable) {
                     childBounds = child.getBounds();
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
@@ -351,7 +345,7 @@
                     }
                 }
             }
-            // TODO : cache the value until any childs are modified? (next frame?) 
+            // TODO : cache the value until any childs are modified? (next frame?)
             return _bounds;
         },
 
@@ -364,8 +358,8 @@
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
-        removeChild : function(child, keepalive) {
-            if(child.ancestor) {
+        removeChild : function (child, keepalive) {
+            if (child.ancestor) {
                 deferredRemove.defer(this, child, keepalive);
             }
         },
@@ -383,7 +377,7 @@
          */
         removeChildNow : function(child, keepalive) {
             if  (this.hasChild(child)) {
-                
+
                 child.ancestor = undefined;
 
                 if (!keepalive) {
@@ -393,14 +387,14 @@
 
                     me.pool.push(child);
                 }
-                
+
                 this.children.splice( this.getChildIndex(child), 1 );
-            
+
             } else {
                 throw "melonJS (me.ObjectContainer): " + child + " The supplied child must be a child of the caller " + this;
             }
         },
-        
+
         /**
          * Automatically set the specified property of all childs to the given value
          * @name setChildsProperty
@@ -410,15 +404,16 @@
          * @param {Object} value property value
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
+
         setChildsProperty : function(prop, val, recursive) {
             for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
                 if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
                     obj.setChildsProperty(prop, val, recursive);
-                } 
+                }
                 obj[prop] = val;
             }
         },
-        
+
         /**
          * Move the child in the group one step forward (z depth).
          * @name moveUp
@@ -426,11 +421,11 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveUp : function(child) {
+        moveUp : function (child) {
             var childIndex = this.getChildIndex(child);
-            if (childIndex -1 >= 0) {
+            if (childIndex - 1 >= 0) {
                 // note : we use an inverted loop
-                this.swapChildren(child, this.getChildAt(childIndex-1));
+                this.swapChildren(child, this.getChildAt(childIndex - 1));
             }
         },
 
@@ -441,11 +436,11 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveDown : function(child) {
+        moveDown : function (child) {
             var childIndex = this.getChildIndex(child);
-            if (childIndex+1 < this.children.length) {
+            if (childIndex + 1 < this.children.length) {
                 // note : we use an inverted loop
-                this.swapChildren(child, this.getChildAt(childIndex+1));
+                this.swapChildren(child, this.getChildAt(childIndex + 1));
             }
         },
 
@@ -456,7 +451,7 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveToTop : function(child) {
+        moveToTop : function (child) {
             var childIndex = this.getChildIndex(child);
             if (childIndex > 0) {
                 // note : we use an inverted loop
@@ -473,16 +468,16 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveToBottom : function(child) {
+        moveToBottom : function (child) {
             var childIndex = this.getChildIndex(child);
-            if (childIndex < (this.children.length -1)) {
+            if (childIndex < (this.children.length - 1)) {
                 // note : we use an inverted loop
-                this.splice((this.children.length -1), 0, this.splice(childIndex, 1)[0]);
+                this.splice((this.children.length - 1), 0, this.splice(childIndex, 1)[0]);
                 // increment our child z value based on the next child depth
-                child.z = this.children[(this.children.length -2)].z - 1;
+                child.z = this.children[(this.children.length - 2)].z - 1;
             }
         },
-        
+
         /**
          * Checks if the specified child collides with others childs in this container
          * @name collide
@@ -498,26 +493,30 @@
          *
          * // check if we collide with an enemy :
          * if (res && (res.obj.type == game.constants.ENEMY_OBJECT)) {
-         *   if (res.x != 0) {
-         *      // x axis
-         *      if (res.x<0)
-         *         console.log("x axis : left side !");
-         *      else
-         *         console.log("x axis : right side !");
-         *   }
-         *   else {
-         *      // y axis
-         *      if (res.y<0)
-         *         console.log("y axis : top side !");
-         *      else
-         *         console.log("y axis : bottom side !");
-         *   }
+         *     if (res.x != 0) {
+         *         // x axis
+         *         if (res.x < 0) {
+         *             console.log("x axis : left side !");
+         *         }
+         *         else {
+         *             console.log("x axis : right side !");
+         *         }
+         *     }
+         *     else {
+         *         // y axis
+         *         if (res.y < 0) {
+         *             console.log("y axis : top side !");
+         *         }
+         *         else {
+         *             console.log("y axis : bottom side !");
+         *         }
+         *     }
          * }
          */
-        collide : function(objA, multiple) {
+        collide : function (objA, multiple) {
             return this.collideType(objA, null, multiple);
         },
-        
+
         /**
          * Checks if the specified child collides with others childs in this container
          * @name collideType
@@ -529,43 +528,39 @@
          * @param {Boolean} [multiple=false] check for multiple collision
          * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
          */
-        collideType : function(objA, type, multiple) {
+        collideType : function (objA, type, multiple) {
             var res, mres;
             // make sure we have a boolean
-            multiple = multiple===true ? true : false;
-            if (multiple===true) {
+            multiple = (multiple === true ? true : false);
+            if (multiple === true) {
                 mres = [];
-            } 
+            }
 
             // this should be replace by a list of the 4 adjacent cell around the object requesting collision
-            for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
-            
-                if ( (obj.inViewport || obj.alwaysUpdate ) && obj.collidable ) {
-                    
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+                if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable) {
                     // recursivly check through
                     if (obj instanceof me.ObjectContainer) {
-                    
-                        res = obj.collideType(objA, type, multiple); 
+                        res = obj.collideType(objA, type, multiple);
                         if (multiple) {
                             mres.concat(res);
-                        } else if (res) {
+                        }
+                        else if (res) {
                             // the child container returned collision information
                             return res;
                         }
-                        
-                    } else if ( (obj !== objA) && (!type || (obj.type === type)) ) {
 
+                    }
+                    else if ((obj !== objA) && (!type || (obj.type === type))) {
                         this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
                         this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
-                    
-                        res = this._boundsA["collideWith"+this._boundsB.shapeType].call(
-                            this._boundsA, 
+
+                        res = this._boundsA["collideWith" + this._boundsB.shapeType].call(
+                            this._boundsA,
                             this._boundsB
                         );
 
-                        
                         if (res.x !== 0 || res.y !== 0) {
-
                             // notify the object
                             obj.onCollision.call(obj, res, objA);
                             // return the type (deprecated)
@@ -581,9 +576,9 @@
                     }
                 }
             }
-            return multiple?mres:null;
+            return (multiple ? mres : null);
         },
-        
+
         /**
          * Manually trigger the sort of all the childs in the container</p>
          * @name sort
@@ -592,13 +587,13 @@
          * @function
          * @param {Boolean} [recursive=false] recursively sort all containers if true
          */
-        sort : function(recursive) {
-                        
+        sort : function (recursive) {
+
             // do nothing if there is already a pending sort
             if (this.pendingSort === null) {
                 if (recursive === true) {
                     // trigger other child container sort function (if any)
-                    for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+                    for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                         if (obj instanceof me.ObjectContainer) {
                             // note : this will generate one defered sorting function
                             // for each existing containe
@@ -607,61 +602,63 @@
                     }
                 }
                 /** @ignore */
-                this.pendingSort = (function (self) {
+                this.pendingSort = function (self) {
                     // sort everything in this container
-                    self.children.sort(self["_sort"+self.sortOn.toUpperCase()]);
+                    self.children.sort(self["_sort" + self.sortOn.toUpperCase()]);
                     // clear the defer id
                     self.pendingSort = null;
                     // make sure we redraw everything
                     me.game.repaint();
-                }.defer(this, this));
+                }.defer(this, this);
             }
         },
-        
+
         /**
          * Z Sorting function
          * @ignore
          */
-        _sortZ : function (a,b) {
+        _sortZ : function (a, b) {
             return (b.z) - (a.z);
         },
+
         /**
          * X Sorting function
          * @ignore
          */
-        _sortX : function(a,b) { 
+        _sortX : function (a, b) {
             /* ? */
             var result = (b.z - a.z);
             return (result ? result : ((b.pos && b.pos.x) - (a.pos && a.pos.x)) || 0);
         },
+
         /**
          * Y Sorting function
          * @ignore
          */
-        _sortY : function(a,b) {
+        _sortY : function (a, b) {
             var result = (b.z - a.z);
             return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
         },
-        
-        
+
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function() {
+        destroy : function () {
             // cancel any sort operation
             if (this.pendingSort) {
                 clearTimeout(this.pendingSort);
                 this.pendingSort = null;
             }
+
             // delete all children
-            for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 // don't remove it if a persistent object
-                if ( !obj.isPersistent ) {
+                if (!obj.isPersistent) {
                     this.removeChildNow(obj);
-                }    
+                }
             }
-            
+
             // reset the transformation matrix
             this.transform.identity();
         },
@@ -669,7 +666,7 @@
         /**
          * @ignore
          */
-        update : function( dt ) {
+        update : function (dt) {
             var isDirty = false;
             var isFloating = false;
             var isPaused = me.state.isPaused();
@@ -678,14 +675,13 @@
             var y;
             var viewport = me.game.viewport;
 
-            for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
                     // skip this object
                     continue;
                 }
-                
-                if ( obj.isRenderable ) {
 
+                if (obj.isRenderable) {
                     isFloating = (globalFloatingCounter > 0 || obj.floating);
                     if (isFloating) {
                         globalFloatingCounter++;
@@ -704,7 +700,7 @@
                     obj.inViewport = isFloating || viewport.isVisible(globalTranslation);
 
                     // update our object
-                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update( dt );
+                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
 
                     // Undo global context translation
                     if (isTranslated) {
@@ -714,50 +710,48 @@
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;
                     }
-                    
-                } else {                
+                }
+                else {
                     // just directly call update() for non renderable object
-                    isDirty |= obj.update( dt );
+                    isDirty |= obj.update(dt);
                 }
             }
-             
             return isDirty;
         },
 
         /**
          * @ignore
          */
-        draw : function(context, rect) {
+        draw : function (context, rect) {
             var viewport = me.game.viewport;
             var isFloating = false;
-            
-            this.drawCount = 0;            
-            
+
+            this.drawCount = 0;
+
             context.save();
-            
+
             // apply the container current transform
             context.transform(
                 this.transform.a, this.transform.b,
-                this.transform.c, this.transform.d, 
+                this.transform.c, this.transform.d,
                 this.transform.e, this.transform.f
             );
-            
+
             // apply the group opacity
             context.globalAlpha *= this.getOpacity();
-            
+
             // translate to the container position
             context.translate(this.pos.x, this.pos.y);
 
-            for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 isFloating = obj.floating;
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
-
                     if (isFloating === true) {
                         context.save();
                         // translate back object
                         context.translate(
-                            viewport.screenX -this.pos.x, 
-                            viewport.screenY -this.pos.y
+                            viewport.screenX - this.pos.x,
+                            viewport.screenY - this.pos.y
                         );
                     }
 
@@ -771,13 +765,8 @@
                     this.drawCount++;
                 }
             }
-            
+
             context.restore();
-
         }
-
     });
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

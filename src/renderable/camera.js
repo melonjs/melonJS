@@ -5,8 +5,7 @@
  *
  */
 
-(function($) {
-
+(function () {
     // some ref shortcut
     var MIN = Math.min, MAX = Math.max;
 
@@ -23,7 +22,6 @@
      */
     me.Viewport = me.Renderable.extend(
     /** @scope me.Viewport.prototype */ {
-
         /** @ignore */
         init : function(minX, minY, maxX, maxY) {
             /**
@@ -48,7 +46,7 @@
             };
 
             /**
-             * Camera bounds 
+             * Camera bounds
              * @public
              * @constant
              * @type me.Rect
@@ -87,7 +85,7 @@
             // target to follow
             this.target = null;
 
-            // default value follow 
+            // default value follow
             this.follow_axis = this.AXIS.NONE;
 
             // shake variables
@@ -151,7 +149,7 @@
          * @param {Number} [x=0]
          * @param {Number} [y=0]
          */
-        reset : function(x, y) {
+        reset : function (x, y) {
             // reset the initial viewport position to 0,0
             this.pos.x = x || 0;
             this.pos.y = y || 0;
@@ -159,9 +157,8 @@
             // reset the target
             this.target = null;
 
-            // reset default axis value for follow 
+            // reset default axis value for follow
             this.follow_axis = null;
-
         },
 
         /**
@@ -172,12 +169,11 @@
          * @param {Number} w deadzone width
          * @param {Number} h deadzone height
          */
-        setDeadzone : function(w, h) {
-            
+        setDeadzone : function (w, h) {
             if (this.deadzone === null) {
                 this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
             }
-            
+
             // reusing the old code for now...
             this.deadzone.pos.set(
                 ~~((this.width - w) / 2),
@@ -187,7 +183,6 @@
 
             // force a camera update
             this.updateTarget();
-
         },
 
         getBounds: function(rect) {
@@ -204,7 +199,7 @@
          * @param {Number} w world width limit
          * @param {Number} h world height limit
          */
-        setBounds : function(x, y, w, h) {
+        setBounds : function (x, y, w, h) {
             this.bounds.pos.set(x, y);
             this.bounds.resize(w, h);
         },
@@ -214,19 +209,24 @@
          * @name follow
          * @memberOf me.Viewport
          * @function
-         * @param {me.ObjectEntity|me.Vector2d} target ObjectEntity or Position Vector to follow
+         * @param {me.ObjectEntity|me.Vector2d} target ObjectEntity or Position
+         * Vector to follow
          * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
          */
-        follow : function(target, axis) {
-            if (target instanceof me.ObjectEntity)
+        follow : function (target, axis) {
+            if (target instanceof me.ObjectEntity) {
                 this.target = target.pos;
-            else if (target instanceof me.Vector2d)
+            }
+            else if (target instanceof me.Vector2d) {
                 this.target = target;
-            else
+            }
+            else {
                 throw "melonJS: invalid target for viewport.follow";
+            }
             // if axis is null, camera is moved on target center
-            this.follow_axis = (typeof(axis) === "undefined" ? this.AXIS.BOTH : axis);
-            
+            this.follow_axis = (
+                typeof(axis) === "undefined" ? this.AXIS.BOTH : axis
+            );
             // force a camera update
             this.updateTarget();
         },
@@ -242,10 +242,10 @@
          * // Move the viewport up by four pixels
          * me.game.viewport.move(0, -4);
          */
-        move : function(x, y) {
+        move : function (x, y) {
             this.moveTo(~~(this.pos.x + x), ~~(this.pos.y + y));
         },
-        
+
         /**
          * move the viewport to the specified coordinates
          * @name moveTo
@@ -254,18 +254,25 @@
          * @param {Number} x
          * @param {Number} y
          */
-        moveTo : function(x, y) {
-            this.pos.x = (~~x).clamp(this.bounds.pos.x, this.bounds.width - this.width);
-            this.pos.y = (~~y).clamp(this.bounds.pos.y, this.bounds.height - this.height);
+
+        moveTo : function (x, y) {
+            this.pos.x = (~~x).clamp(
+                this.bounds.pos.x,
+                this.bounds.width - this.width
+            );
+            this.pos.y = (~~y).clamp(
+                this.bounds.pos.y,
+                this.bounds.height - this.height
+            );
 
             //publish the corresponding message
             me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
         },
-        
+
         /** @ignore */
-        updateTarget : function() {
+        updateTarget : function () {
             var updated = false;
-            
+
             if (this.target) {
                 switch (this.follow_axis) {
                     case this.AXIS.NONE:
@@ -287,17 +294,16 @@
 
                     default:
                         break;
-                    }
+                }
             }
 
             return updated;
         },
 
         /** @ignore */
-        update : function( dt ) {
-            
+        update : function (dt) {
             var updated = this.updateTarget();
-            
+
             if (this._shake.duration > 0) {
                 this._shake.duration -= dt;
                 if (this._shake.duration <= 0) {
@@ -327,7 +333,7 @@
             }
 
             // check for fade/flash effect
-            if ((this._fadeIn.tween!=null) || (this._fadeOut.tween!=null)) {
+            if ((this._fadeIn.tween != null) || (this._fadeOut.tween != null)) {
                 updated = true;
             }
 
@@ -335,21 +341,24 @@
         },
 
         /**
-         * shake the camera 
+         * shake the camera
          * @name shake
          * @memberOf me.Viewport
          * @function
-         * @param {Number} intensity maximum offset that the screen can be moved while shaking
+         * @param {Number} intensity maximum offset that the screen can be moved
+         * while shaking
          * @param {Number} duration expressed in milliseconds
-         * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] specify on which axis you want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
+         * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] specify on which axis you
+         * want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
          * @param {Function} [onComplete] callback once shaking effect is over
          * @example
          * // shake it baby !
          * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
          */
-        shake : function(intensity, duration, axis, onComplete) {
-            if (this._shake.duration > 0)
+        shake : function (intensity, duration, axis, onComplete) {
+            if (this._shake.duration > 0) {
                 return;
+            }
 
             this._shake = {
                 intensity : intensity,
@@ -369,11 +378,13 @@
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          */
-        fadeOut : function(color, duration, onComplete) {
+        fadeOut : function (color, duration, onComplete) {
             this._fadeOut.color = me.pool.pull("me.Color").parseHex(color);
             this._fadeOut.color.alpha = 1.0;
             this._fadeOut.duration = duration || 1000; // convert to ms
-            this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color).to({alpha: 0.0}, this._fadeOut.duration ).onComplete(onComplete||null);
+            this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color)
+                .to({ alpha: 0.0 }, this._fadeOut.duration)
+                .onComplete(onComplete || null);
             this._fadeOut.tween.start();
         },
 
@@ -387,11 +398,13 @@
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          */
-        fadeIn : function(color, duration, onComplete) {
+        fadeIn : function (color, duration, onComplete) {
             this._fadeIn.color = me.pool.pull("me.Color").parseHex(color);
             this._fadeIn.color.alpha = 0.0;
             this._fadeIn.duration = duration || 1000; //convert to ms
-            this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color).to({alpha: 1.0}, this._fadeIn.duration ).onComplete(onComplete||null);
+            this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color)
+                .to({ alpha: 1.0 }, this._fadeIn.duration)
+                .onComplete(onComplete || null);
             this._fadeIn.tween.start();
         },
 
@@ -402,7 +415,7 @@
          * @function
          * @return {Number}
          */
-        getWidth : function() {
+        getWidth : function () {
             return this.width;
         },
 
@@ -413,7 +426,7 @@
          * @function
          * @return {Number}
          */
-        getHeight : function() {
+        getHeight : function () {
             return this.height;
         },
 
@@ -422,9 +435,9 @@
          * @name focusOn
          * @memberOf me.Viewport
          * @function
-         * @param {me.Renderable} 
+         * @param {me.Renderable}
          */
-        focusOn : function(target) {
+        focusOn : function (target) {
             var bounds = target.getBounds();
             this.moveTo(
                 target.pos.x + bounds.pos.x + bounds.hWidth,
@@ -440,7 +453,7 @@
          * @param {me.Rect} rect
          * @return {Boolean}
          */
-        isVisible : function(rect) {
+        isVisible : function (rect) {
             return rect.overlaps(this);
         },
 
@@ -451,14 +464,15 @@
          * @function
          * @param {Number} x
          * @param {Number} y
-         * @param {Number} [v] an optional vector object where to set the converted value
+         * @param {Number} [v] an optional vector object where to set the
+         * converted value
          * @return {me.Vector2d}
          */
-        localToWorld : function(x, y, v) {
+        localToWorld : function (x, y, v) {
             v = v || new me.Vector2d();
-            return (v.set(x,y)).add(this.pos).sub(me.game.currentLevel.pos);
+            return (v.set(x, y)).add(this.pos).sub(me.game.currentLevel.pos);
         },
-        
+
         /**
          * convert the given world coordinates into "local" (screen) coordinates
          * @name worldToLocal
@@ -466,20 +480,20 @@
          * @function
          * @param {Number} x
          * @param {Number} y
-          * @param {Number} [v] an optional vector object where to set the converted value
+         * @param {Number} [v] an optional vector object where to set the
+         * converted value
          * @return {me.Vector2d}
          */
-        worldToLocal : function(x, y, v) {
+        worldToLocal : function (x, y, v) {
             v = v || new me.Vector2d();
-            return (v.set(x,y)).sub(this.pos).add(me.game.currentLevel.pos);
+            return (v.set(x, y)).sub(this.pos).add(me.game.currentLevel.pos);
         },
-        
+
         /**
          * render the camera effects
          * @ignore
          */
-        draw : function(context) {
-            
+        draw : function (context) {
             // fading effect
             if (this._fadeIn.tween) {
                 me.video.clearSurface(context, this._fadeIn.color.toRGBA());
@@ -490,7 +504,7 @@
                     this._fadeIn.color = null;
                 }
             }
-            
+
             // flashing effect
             if (this._fadeOut.tween) {
                 me.video.clearSurface(context, this._fadeOut.color.toRGBA());
@@ -503,8 +517,4 @@
             }
         }
     });
-
-    /*---------------------------------------------------------*/
-    // END END END
-    /*---------------------------------------------------------*/
-})(window);
+})();

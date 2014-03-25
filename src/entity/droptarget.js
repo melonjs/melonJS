@@ -4,8 +4,9 @@
  * http://www.melonjs.org
  * @desc Used to make a game entity a droptarget
  */
-me.DroptargetEntity = (function (Entity, Event, Rect) {
-    'use strict';
+me.DroptargetEntity = (function (Entity, Event) {
+    "use strict";
+
     return Entity.extend({
         /**
          * Constructor
@@ -48,6 +49,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
             Event.subscribe(Event.DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
         },
+
         /**
          * Sets the collision method which is going to be used to check a valid drop
          * @name setCheckMethod
@@ -58,10 +60,11 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
         setCheckMethod: function (checkMethod) {
             //  We can improve this check,
             //  because now you can use every method in theory
-            if (this[checkMethod] !== undefined) {
+            if (typeof(this[checkMethod]) !== "undefined") {
                 this.checkMethod = this[checkMethod];
             }
         },
+
         /**
          * Checks if a dropped entity is dropped on the current entity
          * @name checkOnMe
@@ -75,6 +78,7 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
                 this.drop(draggableEntity);
             }
         },
+
         /**
          * Gets called when a draggable entity is dropped on the current entity
          * @name drop
@@ -82,9 +86,8 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
          * @function
          * @param {Object} draggableEntity the draggable entity that is dropped
          */
-        drop: function (draggableEntity) {
-            //  Could be used to fire default drop logic
-        },
+        drop: function () {},
+
         /**
          * Destructor
          * @name destroy
@@ -95,4 +98,4 @@ me.DroptargetEntity = (function (Entity, Event, Rect) {
             Event.unsubscribe(Event.DRAGEND, this.checkOnMe);
         }
     });
-}(me.ObjectEntity, me.event, me.Rect));
+}(me.ObjectEntity, me.event));

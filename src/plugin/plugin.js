@@ -3,23 +3,21 @@
  * Copyright (C) 2011 - 2013, Olivier BIOT
  * http://www.melonjs.org
  */
- 
-(function() {
-
+(function () {
     /**
      * There is no constructor function for me.plugin
      * @namespace me.plugin
      * @memberOf me
      */
     me.plugin = (function() {
-        
+
         // hold public stuff inside the singleton
         var singleton = {};
-        
+
         /*--------------
-            PUBLIC 
+            PUBLIC
           --------------*/
-        
+
         /**
         * a base Object for plugin <br>
         * plugin must be installed using the register function
@@ -47,7 +45,6 @@
             }
         });
 
-
         /**
          * patch a melonJS function
          * @name patch
@@ -57,9 +54,9 @@
          * @param {Object} proto target object
          * @param {String} name target function
          * @param {Function} fn replacement function
-         * @example 
+         * @example
          * // redefine the me.game.update function with a new one
-         * me.plugin.patch(me.game, "update", function () { 
+         * me.plugin.patch(me.game, "update", function () {
          *   // display something in the console
          *   console.log("duh");
          *   // call the original me.game.update function
@@ -115,14 +112,14 @@
             if (me.plugin[name]) {
                 console.error ("plugin " + name + " already registered");
             }
-            
+
             // get extra arguments
-            var _args = []; 
+            var _args = [];
             if (arguments.length > 2) {
                 // store extra arguments if any
                 _args = Array.prototype.slice.call(arguments, 1);
             }
-            
+
             // try to instantiate the plugin
             _args[0] = plugin;
             me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
@@ -133,15 +130,14 @@
             } else if (me.sys.checkVersion(me.plugin[name].version) > 0) {
                 throw ("melonJS: Plugin version mismatch, expected: "+ me.plugin[name].version +", got: " + me.version);
             }
-            
+
             // inheritance check
             if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
                 throw "melonJS: Plugin should extend the me.plugin.Base Class !";
             }
         };
-        
+
         // return our singleton
         return singleton;
-
     })();
 })();
