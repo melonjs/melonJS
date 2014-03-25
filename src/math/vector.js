@@ -18,7 +18,7 @@
     /** @scope me.Vector2d.prototype */
     {
         /** @ignore */
-        init : function(x, y) {
+        init : function (x, y) {
             /**
              * x value of the vector
              * @public

@@ -37,7 +37,7 @@
         /**
          * @ignore
          */
-        init : function(atlas, texture) {
+        init : function (atlas, texture) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore

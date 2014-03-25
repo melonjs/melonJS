@@ -26,7 +26,7 @@
     me.BitmapFont = me.Font.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
-        init : function(font, size, scale, firstChar) {
+        init : function (font, size, scale, firstChar) {
             /** @ignore */
             // scaled font size;
             this.sSize = new me.Vector2d();
@@ -156,7 +156,7 @@
                 }
 
                 // adjust y pos based on alignment value
-                switch(this.textBaseline) {
+                switch (this.textBaseline) {
                     case "middle":
                         y -= height * 0.5;
                         break;

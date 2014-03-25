@@ -31,7 +31,7 @@
      */
     me.Tile = me.Rect.extend({
         /** @ignore */
-        init : function(x, y, w, h, gid) {
+        init : function (x, y, w, h, gid) {
             /**
              * tileset
              * @public
@@ -107,18 +107,18 @@
             // reset the matrix (in case it was already defined)
             this.transform.identity();
 
-            if (this.flippedAD){
+            if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.set(0,1,1,0);
+                this.transform.set(0, 1, 1, 0);
                 this.transform.translate(0, this.height - this.width);
             }
-            if (this.flippedX){
+            if (this.flippedX) {
                 this.transform.a *= -1;
                 this.transform.c *= -1;
                 this.transform.translate((this.flippedAD ? this.height : this.width), 0);
 
             }
-            if (this.flippedY){
+            if (this.flippedY) {
                 this.transform.b *= -1;
                 this.transform.d *= -1;
                 this.transform.translate(0, (this.flippedAD ? this.width : this.height));
@@ -155,7 +155,7 @@
             this.tileYOffset = [];
             this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
             var src = tileset[me.TMX_TAG_SOURCE];
-            if (src && me.utils.getFileExtension(src).toLowerCase() === 'tsx') {
+            if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
                 // load TSX
                 src = me.utils.getBasename(src);
                 // replace tiletset with a local variable

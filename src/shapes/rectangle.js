@@ -19,7 +19,7 @@
     /** @scope me.Rect.prototype */ {
 
         /** @ignore */
-        init : function(v, w, h) {
+        init : function (v, w, h) {
             /**
              * position of the Rectange
              * @public

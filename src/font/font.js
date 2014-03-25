@@ -27,7 +27,7 @@
     /** @scope me.Font.prototype */ {
 
         /** @ignore */
-        init : function(font, size, fillStyle, textAlign) {
+        init : function (font, size, fillStyle, textAlign) {
             // private font properties
             /** @ignore */
             this.fontSize = new me.Vector2d();

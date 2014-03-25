@@ -9,7 +9,7 @@
      * @namespace me.plugin
      * @memberOf me
      */
-    me.plugin = (function() {
+    me.plugin = (function () {
 
         // hold public stuff inside the singleton
         var singleton = {};
@@ -32,7 +32,7 @@
         /** @scope me.plugin.Base.prototype */
         {
             /** @ignore */
-            init : function() {
+            init : function () {
                 /**
                  * define the minimum required <br>
                  * version of melonJS  <br>
@@ -63,9 +63,9 @@
          *   this._parent();
          * });
          */
-        singleton.patch = function(proto, name, fn){
+        singleton.patch = function (proto, name, fn) {
             // use the object prototype if possible
-            if (proto.prototype!==undefined) {
+            if (typeof proto.prototype !== "undefined") {
                 proto = proto.prototype;
             }
             // reuse the logic behind Object.extend
@@ -75,14 +75,14 @@
                 // override the function with the new one
                 Object.defineProperty(proto, name, {
                     "configurable" : true,
-                    "value" : (function(name, fn){
-                        return function() {
+                    "value" : (function (name, fn) {
+                        return function () {
                             this.parent = _parent;
                             var ret = fn.apply(this, arguments);
                             this.parent = null;
                             return ret;
                         };
-                    })( name, fn )
+                    })(name, fn)
                 });
             }
             else {
@@ -105,12 +105,12 @@
          * me.plugin.register(TestPlugin, "testPlugin");
          * // the plugin then also become available
          * // under then me.plugin namespace
-         * me.plugin.testPlugin.myFunction();
+         * me.plugin.testPlugin.myfunction ();
          */
-        singleton.register = function(plugin, name){
+        singleton.register = function (plugin, name) {
             // ensure me.plugin[name] is not already "used"
             if (me.plugin[name]) {
-                console.error ("plugin " + name + " already registered");
+                console.error("plugin " + name + " already registered");
             }
 
             // get extra arguments
@@ -128,7 +128,7 @@
             if (me.plugin[name].version === undefined) {
                 throw "melonJS: Plugin version not defined !";
             } else if (me.sys.checkVersion(me.plugin[name].version) > 0) {
-                throw ("melonJS: Plugin version mismatch, expected: "+ me.plugin[name].version +", got: " + me.version);
+                throw ("melonJS: Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version);
             }
 
             // inheritance check

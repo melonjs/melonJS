@@ -23,7 +23,7 @@
     me.Viewport = me.Renderable.extend(
     /** @scope me.Viewport.prototype */ {
         /** @ignore */
-        init : function(minX, minY, maxX, maxY) {
+        init : function (minX, minY, maxX, maxY) {
             /**
              * Axis definition :<br>
              * <p>
@@ -116,7 +116,7 @@
         // -- some private function ---
 
         /** @ignore */
-        _followH : function(target) {
+        _followH : function (target) {
             var _x = this.pos.x;
             if ((target.x - this.pos.x) > (this.deadzone.right)) {
                 this.pos.x = ~~MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
@@ -128,7 +128,7 @@
         },
 
         /** @ignore */
-        _followV : function(target) {
+        _followV : function (target) {
             var _y = this.pos.y;
             if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
                 this.pos.y = ~~MIN((target.y) - (this.deadzone.bottom),    this.bounds.height - this.height);
@@ -185,7 +185,7 @@
             this.updateTarget();
         },
 
-        getBounds: function(rect) {
+        getBounds: function (rect) {
             return this._super(me.Renderable, "getBounds", [rect]);
         },
 

@@ -19,7 +19,7 @@
     /** @scope me.PolyShape.prototype */ {
 
         /** @ignore */
-        init : function(v, points, closed) {
+        init : function (v, points, closed) {
             /**
              * origin point of the PolyShape
              * @public

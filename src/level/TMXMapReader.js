@@ -17,7 +17,7 @@
      * @ignore
      */
     me.TMXMapReader = Object.extend({
-        init: function() {
+        init: function () {
 
         },
 
@@ -26,7 +26,7 @@
             if (map.initialized) {
                 return;
             }
-            if  (this.JSONReader === null || typeof this.JSONReader === 'undefined') {
+            if  (this.JSONReader === null || typeof this.JSONReader === "undefined") {
                 this.JSONReader = new JSONMapReader();
             }
             this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));
@@ -147,7 +147,7 @@
      * @ignore
      */
     var JSONMapReader = me.TMXMapReader.extend({
-        init: function() {
+        init: function () {
 
         },
         readJSONMap: function (map, data) {

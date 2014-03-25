@@ -334,7 +334,7 @@
         /**
          * @ignore
          */
-        init: function(x, y, settings) {
+        init: function (x, y, settings) {
             // Emitter is Stream, launch particles constantly
             /** @ignore */
             this._stream = false;

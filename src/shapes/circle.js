@@ -20,7 +20,7 @@
     {
         /** @scope me.Ellipse.prototype */
         /** @ignore */
-        init : function(v, w, h) {
+        init : function (v, w, h) {
             /**
              * center point of the Ellipse
              * @public

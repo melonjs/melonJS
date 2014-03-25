@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function() {
+(function () {
 
     /**
      * TMX Object Group <br>
@@ -20,7 +20,7 @@
      * @constructor
      */
     me.TMXObjectGroup = Object.extend({
-        init : function(name, tmxObjGroup, tilesets, z) {
+        init : function (name, tmxObjGroup, tilesets, z) {
             /**
              * group name
              * @public
@@ -133,7 +133,7 @@
      * @constructor
      */
     me.TMXObject = Object.extend({
-        init :  function(tmxObj, tilesets, z) {
+        init :  function (tmxObj, tilesets, z) {
 
             /**
              * object point list (for polygone and polyline)

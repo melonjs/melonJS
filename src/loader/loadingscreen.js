@@ -5,10 +5,10 @@
  */
 (function () {
     // a basic progress bar object
-    var ProgressBar = me.Renderable.extend ({
+    var ProgressBar = me.Renderable.extend({
 
-         init: function (v, w, h) {
-            this._super(me.Renderable, 'init', [v, w, h]);
+        init: function (v, w, h) {
+            this._super(me.Renderable, "init", [v, w, h]);
             // flag to know if we need to refresh the display
             this.invalidate = false;
 
@@ -97,8 +97,8 @@
         // constructor
         init : function (w, h) {
             this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
-            this.logo1 = new me.Font('century gothic', 32, 'white', 'middle');
-            this.logo2 = new me.Font('century gothic', 32, '#55aa00', 'middle');
+            this.logo1 = new me.Font("century gothic", 32, "white", "middle");
+            this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
         },

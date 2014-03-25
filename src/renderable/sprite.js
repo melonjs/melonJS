@@ -26,7 +26,7 @@
         /**
          * @ignore
          */
-        init : function(x, y, image, spritewidth, spriteheight) {
+        init : function (x, y, image, spritewidth, spriteheight) {
 
             /** @ignore */
             this.scale = new me.Vector2d();
@@ -199,6 +199,7 @@
          * @param {Number} ratioY y scaling ratio
          */
         resize : function (ratioX, ratioY) {
+            var x = ratioX;
             var y = typeof(ratioY) === "undefined" ? ratioX : ratioY;
             if (x > 0) {
                 this.scale.x = this.scale.x < 0.0 ? -x : x;
@@ -373,7 +374,6 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-<<<<<<< HEAD
             // Spacing and margin
             /** @ignore */
             this.spacing = 0;
@@ -397,8 +397,6 @@
              * @name me.AnimationSheet#animationspeed
              */
             this.animationspeed = 100;
-=======
->>>>>>> 1.1.0-dev
             // hold all defined animation
             this.anim = {};
 
@@ -411,41 +409,22 @@
             this.animationspeed = 100;
 
             // Spacing and margin
-<<<<<<< HEAD
-            this.spacing = settings['spacing'] || 0;
-            this.margin = settings['margin'] || 0;
 
-            var image = settings['region'] || settings['image'];
-
-            // call the constructor
-            this._super(me.SpriteObject, "init", [x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin]);
-=======
             this.spacing = settings.spacing || 0;
             this.margin = settings.margin || 0;
 
             var image = settings.region || settings.image;
 
             // call the constructor
-            this.parent(
-                x, y,
-                settings.image,
-                settings.spritewidth,
-                settings.spriteheight,
-                this.spacing,
-                this.margin
-            );
->>>>>>> 1.1.0-dev
+            this._super(me.SpriteObject, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
 
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
 
             // build the local textureAtlas
-<<<<<<< HEAD
-            this.buildLocalAtlas(settings['atlas'], settings['atlasIndices'], image);
-=======
+
             this.buildLocalAtlas(settings.atlas, settings.atlasIndices, image);
->>>>>>> 1.1.0-dev
 
             // create a default animation sequence with all sprites
             this.addAnimation("default", null);
@@ -457,22 +436,13 @@
          * build the local (private) atlas
          * @ignore
          */
-<<<<<<< HEAD
 
         buildLocalAtlas : function (atlas, indices, image) {
             // reinitialze the atlas
-            if(image === null || typeof image === 'undefined') {
-                image = this.image;
-            }
-            if (atlas !== undefined) {
-=======
-        buildLocalAtlas : function (atlas, indices, image) {
-            // reinitialze the atlas
-            if (image === null || typeof(image) === "undefined") {
+            if (image === null || typeof image === "undefined") {
                 image = this.image;
             }
             if (typeof(atlas) !== "undefined") {
->>>>>>> 1.1.0-dev
                 this.textureAtlas = atlas;
                 this.atlasIndices = indices;
             }
@@ -486,22 +456,14 @@
                 );
                 var offsetX = 0;
                 var offsetY = 0;
-<<<<<<< HEAD
-                if(image['offset']) {
-=======
                 if (image.offset) {
->>>>>>> 1.1.0-dev
                     offsetX = image.offset.x;
                     offsetY = image.offset.y;
                 }
                 // build the local atlas
-                for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+                for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
                     this.textureAtlas[frame] = {
-<<<<<<< HEAD
-                        name: ''+frame,
-=======
                         name: "" + frame,
->>>>>>> 1.1.0-dev
                         offset: new me.Vector2d(
                             this.margin + (this.spacing + this.width) * (frame % spritecount.x) + offsetX,
                             this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x) + offsetY
@@ -560,7 +522,7 @@
             }
 
             // set each frame configuration (offset, size, etc..)
-            for ( var i = 0 , len = index.length ; i < len; i++) {
+            for (var i = 0, len = index.length; i < len; i++) {
                 if (typeof(index[i]) === "number") {
                     this.anim[name].frame[i] = this.textureAtlas[index[i]];
                 } else { // string
@@ -694,17 +656,17 @@
                                  this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
-                            this._super(me.SpriteObject, "update", [dt] );
+                            this._super(me.SpriteObject, "update", [dt]);
                             return false;
                         }
                     }
 
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
-                    return this._super(me.SpriteObject, "update", [dt] ) || true;
+                    return this._super(me.SpriteObject, "update", [dt]) || true;
                 }
             }
-            return this._super(me.SpriteObject, "update", [dt] );
+            return this._super(me.SpriteObject, "update", [dt]);
         }
     });
 })();

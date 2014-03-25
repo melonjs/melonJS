@@ -22,7 +22,7 @@ if (!Object.defineProperty) {
      * @param {string} prop The name of the property to be defined or modified.
      * @param {Object} desc The descriptor for the property being defined or modified.
      */
-    Object.defineProperty = function(obj, prop, desc) {
+    Object.defineProperty = function (obj, prop, desc) {
         // check if Object support __defineGetter function
         if (obj.__defineGetter__) {
             if (desc.get) {
@@ -45,7 +45,7 @@ if (!Object.defineProperty) {
  * @function
  * @param {Object} obj the object you want to throw in the mix
  */
- Object.defineProperty(Object.prototype, "mixin", {
+Object.defineProperty(Object.prototype, "mixin", {
     value: function (obj) {
         var i,
         self = this;
@@ -65,7 +65,7 @@ if (!Object.defineProperty) {
     configurable : false
 });
 
-if (typeof Object.create !== 'function') {
+if (typeof Object.create !== "function") {
     /**
      * Prototypal Inheritance Create Helper
      * @name create
@@ -82,8 +82,8 @@ if (typeof Object.create !== 'function') {
      * // make newObject inherits from oldObject
      * newObject = Object.create(oldObject);
      */
-    Object.create = function(o) {
-        var Fn = function() {};
+    Object.create = function (o) {
+        var Fn = function () {};
         Fn.prototype = o;
         return new Fn();
     };
@@ -122,7 +122,7 @@ if (!Function.prototype.bind) {
         var args = Array.prototype.slice.call(arguments, 1);
         var bound = function () {
             if (this instanceof bound) {
-                var result = target.apply( this, args.concat(Array.prototype.slice.call(arguments)));
+                var result = target.apply(this, args.concat(Array.prototype.slice.call(arguments)));
                 if (Object(result) === result) {
                     return result;
                 }
@@ -131,7 +131,7 @@ if (!Function.prototype.bind) {
                 return target.apply(that, args.concat(Array.prototype.slice.call(arguments)));
             }
         };
-        if(target.prototype) {
+        if (target.prototype) {
             Empty.prototype = target.prototype;
             bound.prototype = new Empty();
             Empty.prototype = null;
@@ -153,30 +153,30 @@ if (!Function.prototype.bind) {
  * @return {Object}
  * @example
  * var Person = Object.extend({
- *     "init" : function(isDancing) {
+ *     "init" : function (isDancing) {
  *         this.dancing = isDancing;
  *     },
- *     "dance" : function() {
+ *     "dance" : function () {
  *         return this.dancing;
  *     }
  * });
  *
  * var Ninja = Person.extend({
- *     "init" : function() {
+ *     "init" : function () {
  *         // Call the super constructor, passing a single argument
  *         this._super(Person, "init", [false]);
  *     },
- *     "dance" : function() {
+ *     "dance" : function () {
  *         // Call the overridden dance() method
  *         return this._super(Person, "dance");
  *     },
- *     "swingSword" : function() {
+ *     "swingSword" : function () {
  *         return true;
  *     }
  * });
  *
  * var Pirate = Person.extend(Ninja, {
- *     "init" : function() {
+ *     "init" : function () {
  *         // Call the super constructor, passing a single argument
  *         this._super(Person, "init", [true]);
  *     }
@@ -274,5 +274,5 @@ if (!Function.prototype.bind) {
      */
     function _super(superClass, method, args) {
         return superClass.prototype[method].apply(this, args);
-    };
+    }
 })();

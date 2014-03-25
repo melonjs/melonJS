@@ -4,7 +4,7 @@
  * http://www.melonjs.org
  *
  */
-(function($) {
+(function () {
 
     /**
      * GUI Object<br>
@@ -23,7 +23,7 @@
      * // create a basic GUI Object
      * var myButton = me.GUI_Object.extend(
      * {
-     *    init:function(x, y)
+     *    init:function (x, y)
      *    {
      *       var settings = {}
      *       settings.image = "button";
@@ -37,7 +37,7 @@
      *
      *    // output something in the console
      *    // when the object is clicked
-     *    onClick:function(event)
+     *    onClick:function (event)
      *    {
      *       console.log("clicked!");
      *       // don't propagate the event
@@ -55,7 +55,7 @@
         /**
          * @ignore
          */
-         init : function(x, y, settings) {
+        init : function (x, y, settings) {
             /**
              * object can be clicked or not
              * @public
@@ -75,7 +75,7 @@
             this.floating = true;
 
             // register on mouse event
-            me.input.registerPointerEvent('pointerdown', this, this.clicked.bind(this));
+            me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
 
         },
 

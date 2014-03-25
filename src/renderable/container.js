@@ -45,7 +45,7 @@
          * constructor
          * @ignore
          */
-        init : function(x, y, width, height) {
+        init : function (x, y, width, height) {
             /**
              * keep track of pending sort
              * @ignore
@@ -81,7 +81,7 @@
              * Container bounds
              * @ignore
              */
-            this.bounds = new me.Rect(new me.Vector2d(0,0), 0, 0);
+            this.bounds = new me.Rect(new me.Vector2d(0, 0), 0, 0);
             /**
              * The array of children of this container.
              * @ignore
@@ -119,10 +119,11 @@
          * @param {me.Renderable} child
          * @param {number} [zIndex] forces the z index of the child to the specified value.
          */
-        addChild : function(child, zIndex) {
-            if(typeof(child.ancestor) !== 'undefined') {
+        addChild : function (child, zIndex) {
+            if (typeof(child.ancestor) !== "undefined") {
                 child.ancestor.removeChildNow(child);
-            } else {
+            }
+            else {
                 // only allocate a GUID if the object has no previous ancestor
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
@@ -157,12 +158,12 @@
          * @param {Number} index
          */
 
-        addChildAt : function(child, index) {
-            if((index >= 0) && (index < this.children.length)) {
-
-                if(typeof(child.ancestor) !== 'undefined') {
+        addChildAt : function (child, index) {
+            if (index >= 0 && index < this.children.length) {
+                if (typeof(child.ancestor) !== "undefined") {
                     child.ancestor.removeChildNow(child);
-                } else {
+                }
+                else {
                     // only allocate a GUID if the object has no previous ancestor
                     // (e.g. move one child from one container to another)
                     if (child.isRenderable) {
@@ -187,9 +188,9 @@
          * @param {me.Renderable} child
          * @param {me.Renderable} child
          */
-        swapChildren : function(child, child2) {
-            var index = this.getChildIndex( child );
-            var index2 = this.getChildIndex( child2 );
+        swapChildren : function (child, child2) {
+            var index = this.getChildIndex(child);
+            var index2 = this.getChildIndex(child2);
 
             if ((index !== -1) && (index2 !== -1)) {
                 // swap z index
@@ -199,7 +200,8 @@
                 // swap the positions..
                 this.children[index] = child2;
                 this.children[index2] = child;
-            } else {
+            }
+            else {
                 throw "melonJS (me.ObjectContainer): " + child + " Both the supplied childs must be a child of the caller " + this;
             }
         },
@@ -211,10 +213,11 @@
          * @function
          * @param {Number} index
          */
-        getChildAt : function(index) {
-            if((index >= 0) && (index < this.children.length)) {
+        getChildAt : function (index) {
+            if (index >= 0 && index < this.children.length) {
                 return this.children[index];
-            } else {
+            }
+            else {
                 throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
             }
         },
@@ -226,8 +229,8 @@
          * @function
          * @param {me.Renderable} child
          */
-        getChildIndex : function(child) {
-            return this.children.indexOf( child );
+        getChildIndex : function (child) {
+            return this.children.indexOf(child);
         },
 
         /**
@@ -238,7 +241,7 @@
          * @param {me.Renderable} child
          * @return {Boolean}
          */
-        hasChild : function(child) {
+        hasChild : function (child) {
             return this === child.ancestor;
         },
 
@@ -259,22 +262,24 @@
          * // or query the whole world :
          * ent = me.game.world.getChildByProp("name", "mainPlayer");
          */
-        getChildByProp : function(prop, value)    {
+        getChildByProp : function (prop, value)    {
             var objList = [];
             // for string comparaisons
             var _regExp = new RegExp(value, "i");
 
             function compare(obj, prop) {
-                if (typeof (obj[prop]) === 'string') {
+                if (typeof (obj[prop]) === "string") {
                     if (obj[prop].match(_regExp)) {
                         objList.push(obj);
                     }
-                } else if (obj[prop] === value) {
+                }
+                else if (obj[prop] === value) {
                     objList.push(obj);
                 }
             }
 
-            for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+            for (var i = this.children.length; i >= 0; i--) {
+                var obj = this.children[i];
                 if (obj instanceof me.ObjectContainer) {
                     compare(obj, prop);
                     objList = objList.concat(obj.getChildByProp(prop, value));
@@ -299,7 +304,7 @@
          * @return {me.Renderable[]} Array of childs
          */
 
-        getChildByName : function(name) {
+        getChildByName : function (name) {
             return this.getChildByProp("name", name);
         },
 
@@ -314,9 +319,9 @@
          * @param {String} GUID entity GUID
          * @return {me.Renderable} corresponding child or null
          */
-        getChildByGUID : function(guid) {
+        getChildByGUID : function (guid) {
             var obj = this.getChildByProp("GUID", guid);
-            return (obj.length>0)?obj[0]:null;
+            return (obj.length > 0) ? obj[0] : null;
         },
 
         /**
@@ -375,22 +380,23 @@
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
-        removeChildNow : function(child, keepalive) {
+        removeChildNow : function (child, keepalive) {
             if  (this.hasChild(child)) {
 
                 child.ancestor = undefined;
 
                 if (!keepalive) {
-                    if (typeof (child.destroy) === 'function') {
+                    if (typeof (child.destroy) === "function") {
                         child.destroy();
                     }
 
                     me.pool.push(child);
                 }
 
-                this.children.splice( this.getChildIndex(child), 1 );
+                this.children.splice(this.getChildIndex(child), 1);
 
-            } else {
+            }
+            else {
                 throw "melonJS (me.ObjectContainer): " + child + " The supplied child must be a child of the caller " + this;
             }
         },
@@ -405,8 +411,9 @@
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
 
-        setChildsProperty : function(prop, val, recursive) {
-            for ( var i = this.children.length, obj; i--, obj = this.children[i];) {
+        setChildsProperty : function (prop, val, recursive) {
+            for (var i = this.children.length; i >= 0; i--) {
+                var obj = this.children[i];
                 if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
                     obj.setChildsProperty(prop, val, recursive);
                 }

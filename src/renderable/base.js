@@ -4,7 +4,7 @@
  * http://www.melonjs.org
  *
  */
-(function($) {
+(function () {
 
     /**
      * A base class for renderable objects.
@@ -22,7 +22,7 @@
         /**
          * @ignore
          */
-        init : function(pos, width, height) {
+        init : function (pos, width, height) {
             /**
              * to identify the object as a renderable object
              * @ignore
@@ -189,7 +189,7 @@
          **/
         draw : function (context, color) {
             // draw the parent rectangle
-            this._super(me.Rect, 'draw', [context, color]);
+            this._super(me.Rect, "draw", [context, color]);
         }
     });
 })();

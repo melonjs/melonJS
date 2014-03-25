@@ -118,7 +118,7 @@
     /** @scope me.ObjectEntity.prototype */ {
 
         /** @ignore */
-        init : function(x, y, settings) {
+        init : function (x, y, settings) {
             /**
              * define the type of the object<br>
              * default value : none<br>
@@ -834,7 +834,7 @@
             } else {
                 // call the parent me.Rect.getBounds()
                 // translate back for the position to be relative to the entity
-                return this._super(me.Renderable, 'getBounds', [rect]).translate(-this.pos.x, -this.pos.y);
+                return this._super(me.Renderable, "getBounds", [rect]).translate(-this.pos.x, -this.pos.y);
             }
         },
 
@@ -916,7 +916,7 @@
     /** @scope me.CollectableEntity.prototype */
     {
         /** @ignore */
-        init : function(x, y, settings) {
+        init : function (x, y, settings) {
             // call the super constructor
             this._super(me.ObjectEntity, "init", [x, y, settings]);
             this.type = me.game.COLLECTABLE_OBJECT;
@@ -941,7 +941,7 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            this._super(me.ObjectEntity, 'init', [x, y, settings]);
+            this._super(me.ObjectEntity, "init", [x, y, settings]);
 
             this.nextlevel = settings.to;
 

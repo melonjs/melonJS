@@ -24,7 +24,7 @@
     /** @scope me.Matrix2d.prototype */    {
 
         /** @ignore */
-        init : function(a, b, c, d, e, f) {
+        init : function (a, b, c, d, e, f) {
             /**
              * the m1,1 value in the matrix (a)
              * @public
