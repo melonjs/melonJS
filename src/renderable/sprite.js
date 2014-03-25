@@ -199,7 +199,7 @@
          */
         resize : function (ratioX, ratioY) {
             var x = ratioX;
-            var y = typeof (ratioY) !== "undefined" ? ratioX : ratioY;
+            var y = typeof (ratioY) === "undefined" ? ratioX : ratioY;
             if (x > 0) {
                 this.scale.x = this.scale.x < 0.0 ? -x : x;
             }

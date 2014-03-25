@@ -26,7 +26,7 @@
             if (map.initialized) {
                 return;
             }
-            if  (this.JSONReader === null) {
+            if  (this.JSONReader === null || typeof this.JSONReader === 'undefined') {
                 this.JSONReader = new JSONMapReader();
             }
             this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));

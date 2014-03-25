@@ -189,7 +189,7 @@
          **/
         draw : function (context, color) {
             // draw the parent rectangle
-            this.parent(context, color);
+            this._super(me.Rect, 'draw', [context, color]);
         }
     });
 })();

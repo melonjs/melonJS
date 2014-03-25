@@ -97,7 +97,7 @@
             // bind the "S" and "H" keys
             me.input.bindKey(showKey || me.input.KEY.S, "show", false, false);
             me.input.bindKey(hideKey || me.input.KEY.H, "hide", false, false);
-            
+
             // add some keyboard shortcuts
             var self = this;
             this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
@@ -107,7 +107,7 @@
                     self.hide();
                 }
             });
-            
+
             // re-apply panel settings on level changes
             this.levelHandler = me.event.subscribe(me.event.LEVEL_LOADED, function () {
                 var layer = me.game.currentLevel.getLayerByName("collision");
@@ -231,7 +231,7 @@
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible
-                this.visible = true;         
+                this.visible = true;
             }
         },
 

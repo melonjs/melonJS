@@ -7,13 +7,20 @@
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend ({
 
-        init: function(v, w, h) {
+         init: function (v, w, h) {
             this._super(me.Renderable, 'init', [v, w, h]);
+            // flag to know if we need to refresh the display
+            this.invalidate = false;
 
             // default progress bar height
             this.barHeight = 4;
 
             // current progress
+            this.progress = 0;
+        },
+
+        // make sure the screen is refreshed every frame
+        onProgressUpdate : function (progress) {
             this.progress = Math.floor(progress * this.width);
             this.invalidate = true;
         },

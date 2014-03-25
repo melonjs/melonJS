@@ -834,7 +834,7 @@
             } else {
                 // call the parent me.Rect.getBounds()
                 // translate back for the position to be relative to the entity
-                return this.parent(rect).translate(-this.pos.x, -this.pos.y);
+                return this._super(me.Renderable, 'getBounds', [rect]).translate(-this.pos.x, -this.pos.y);
             }
         },
 
@@ -941,7 +941,7 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            this.parent(x, y, settings);
+            this._super(me.ObjectEntity, 'init', [x, y, settings]);
 
             this.nextlevel = settings.to;
 
