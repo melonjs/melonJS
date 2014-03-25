@@ -105,6 +105,15 @@ module.exports = function(grunt) {
                     template: 'tasks/jsdoc-template/melonjs'
                 }
             }
+        },
+        jasmine : {
+            src: sourceFiles,
+            options : {
+                specs: grunt.file.readJSON('testSpecs.json'),
+                helpers: ['tests/spec/SpecHelper.js']
+            }
+
+
         }
 
     });
@@ -115,6 +124,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-jsdoc');
     grunt.loadNpmTasks('grunt-replace');
+    grunt.loadNpmTasks('grunt-contrib-jasmine');
+
 
     // Custom Tasks
     grunt.loadTasks('tasks');
@@ -123,4 +134,5 @@ module.exports = function(grunt) {
     grunt.registerTask('default', ['concat', 'replace:dist', 'uglify']);
     grunt.registerTask('lint', ['jshint:beforeConcat', 'concat', 'replace:dist', 'jshint:afterConcat']);
     grunt.registerTask('doc', ['replace:docs', 'jsdoc']);
+    grunt.registerTask('test', ['lint', 'jasmine']);
 };
