@@ -147,7 +147,8 @@
             if (this.flickerDuration <= 0) {
                 this.flickering = false;
                 this.flickercb = null;
-            } else if (!this.flickering) {
+            }
+            else if (!this.flickering) {
                 this.flickercb = callback;
                 this.flickering = true;
             }
@@ -201,7 +202,7 @@
          */
         resize : function (ratioX, ratioY) {
             var x = ratioX;
-            var y = typeof (ratioY) === "undefined" ? ratioX : ratioY;
+            var y = typeof(ratioY) === "undefined" ? ratioX : ratioY;
             if (x > 0) {
                 this.scale.x = this.scale.x < 0.0 ? -x : x;
             }
@@ -392,20 +393,27 @@
             this.animationspeed = 100;
 
             // Spacing and margin
-            this.spacing = settings['spacing'] || 0;
-            this.margin = settings['margin'] || 0;
+            this.spacing = settings.spacing || 0;
+            this.margin = settings.margin || 0;
 
-            var image = settings['region'] || settings['image'];
+            var image = settings.region || settings.image;
 
             // call the constructor
-            this.parent(x, y, settings['image'], settings['spritewidth'], settings['spriteheight'], this.spacing, this.margin);
+            this.parent(
+                x, y,
+                settings.image,
+                settings.spritewidth,
+                settings.spriteheight,
+                this.spacing,
+                this.margin
+            );
 
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
 
             // build the local textureAtlas
-            this.buildLocalAtlas(settings['atlas'], settings['atlasIndices'], image);
+            this.buildLocalAtlas(settings.atlas, settings.atlasIndices, image);
 
             // create a default animation sequence with all sprites
             this.addAnimation("default", null);
@@ -420,10 +428,10 @@
          */
         buildLocalAtlas : function (atlas, indices, image) {
             // reinitialze the atlas
-            if(image === null || typeof image === 'undefined') {
+            if (image === null || typeof(image) === "undefined") {
                 image = this.image;
             }
-            if (atlas !== undefined) {
+            if (typeof(atlas) !== "undefined") {
                 this.textureAtlas = atlas;
                 this.atlasIndices = indices;
             }
@@ -437,14 +445,14 @@
                 );
                 var offsetX = 0;
                 var offsetY = 0;
-                if(image['offset']) {
+                if (image.offset) {
                     offsetX = image.offset.x;
                     offsetY = image.offset.y;
                 }
                 // build the local atlas
-                for ( var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+                for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
                     this.textureAtlas[frame] = {
-                        name: ''+frame,
+                        name: "" + frame,
                         offset: new me.Vector2d(
                             this.margin + (this.spacing + this.width) * (frame % spritecount.x) + offsetX,
                             this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x) + offsetY
