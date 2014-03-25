@@ -19,7 +19,7 @@
          */
 
         // hold public stuff in our singleton
-        var obj = {};
+        var api = {};
 
         // audio channel list
         var audioTracks = {};
@@ -85,7 +85,7 @@
          * // on Opera the loader will however load audio.ogg files
          * me.audio.init("mp3,ogg");
          */
-        obj.init = function (audioFormat) {
+        api.init = function (audioFormat) {
             if (!me.initialized) {
                 throw "melonJS: me.audio.init() called before engine initialization.";
             }
@@ -105,7 +105,7 @@
          * @public
          * @function
          */
-        obj.enable = function () {
+        api.enable = function () {
             this.unmuteAll();
         };
 
@@ -117,7 +117,7 @@
          * @public
          * @function
          */
-        obj.disable = function () {
+        api.disable = function () {
             this.muteAll();
         };
 
@@ -129,7 +129,7 @@
          * - src     : source path<br>
          * @ignore
          */
-        obj.load = function (sound, onload_cb, onerror_cb) {
+        api.load = function (sound, onload_cb, onerror_cb) {
             var urls = [];
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
@@ -184,7 +184,7 @@
          * // play the "gameover_sfx" audio clip with a lower volume level
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
-        obj.play = function (sound_id, loop, callback, volume) {
+        api.play = function (sound_id, loop, callback, volume) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.loop(loop || false);
@@ -213,7 +213,7 @@
          * @example
          * me.audio.stop("cling");
          */
-        obj.stop = function (sound_id) {
+        api.stop = function (sound_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.stop();
@@ -232,7 +232,7 @@
          * @example
          * me.audio.pause("cling");
          */
-        obj.pause = function (sound_id) {
+        api.pause = function (sound_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.pause();
@@ -253,7 +253,7 @@
          * @example
          * me.audio.playTrack("awesome_music");
          */
-        obj.playTrack = function (sound_id, volume) {
+        api.playTrack = function (sound_id, volume) {
             current_track = me.audio.play(sound_id, true, null, volume);
             current_track_id = sound_id.toLowerCase();
         };
@@ -272,7 +272,7 @@
          * // stop the current music
          * me.audio.stopTrack();
          */
-        obj.stopTrack = function () {
+        api.stopTrack = function () {
             if (current_track) {
                 current_track.pause();
                 current_track_id = null;
@@ -288,7 +288,7 @@
          * @function
          * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
          */
-        obj.setVolume = function (volume) {
+        api.setVolume = function (volume) {
             Howler.volume(volume);
         };
 
@@ -300,7 +300,7 @@
          * @function
          * @returns {Number} current volume value in Float [0.0 - 1.0] .
          */
-        obj.getVolume = function () {
+        api.getVolume = function () {
             return Howler.volume();
         };
 
@@ -312,7 +312,7 @@
          * @function
          * @param {String} sound_id audio clip id
          */
-        obj.mute = function (sound_id, mute) {
+        api.mute = function (sound_id, mute) {
             // if not defined : true
             mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_id.toLowerCase()];
@@ -329,8 +329,8 @@
          * @function
          * @param {String} sound_id audio clip id
          */
-        obj.unmute = function (sound_id) {
-            obj.mute(sound_id, false);
+        api.unmute = function (sound_id) {
+            api.mute(sound_id, false);
         };
 
         /**
@@ -340,7 +340,7 @@
          * @public
          * @function
          */
-        obj.muteAll = function () {
+        api.muteAll = function () {
             Howler.mute();
         };
 
@@ -351,7 +351,7 @@
          * @public
          * @function
          */
-        obj.unmuteAll = function () {
+        api.unmuteAll = function () {
             Howler.unmute();
         };
 
@@ -363,7 +363,7 @@
          * @function
          * @return {String} audio track id
          */
-        obj.getCurrentTrack = function () {
+        api.getCurrentTrack = function () {
             return current_track_id;
         };
 
@@ -377,7 +377,7 @@
          * @example
          * me.audio.pauseTrack();
          */
-        obj.pauseTrack = function () {
+        api.pauseTrack = function () {
             if (current_track) {
                 current_track.pause();
             }
@@ -399,7 +399,7 @@
          * // resume the music
          * me.audio.resumeTrack();
          */
-        obj.resumeTrack = function () {
+        api.resumeTrack = function () {
             if (current_track) {
                 current_track.play();
             }
@@ -417,17 +417,17 @@
          * @example
          * me.audio.unload("awesome_music");
          */
-        obj.unload = function (sound_id) {
+        api.unload = function (sound_id) {
             sound_id = sound_id.toLowerCase();
             if (!(sound_id in audioTracks)) {
                 return false;
             }
 
             if (current_track_id === sound_id) {
-                obj.stopTrack();
+                api.stopTrack();
             }
             else {
-                obj.stop(sound_id);
+                api.stop(sound_id);
             }
             // destroy the Howl object
             audioTracks[sound_id].unload();
@@ -446,15 +446,15 @@
          * @example
          * me.audio.unloadAll();
          */
-        obj.unloadAll = function () {
+        api.unloadAll = function () {
             for (var sound_id in audioTracks) {
                 if (audioTracks.hasOwnProperty(sound_id)) {
-                    obj.unload(sound_id);
+                    api.unload(sound_id);
                 }
             }
         };
 
         // return our object
-        return obj;
+        return api;
     })();
 })();

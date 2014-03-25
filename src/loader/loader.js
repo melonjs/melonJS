@@ -13,7 +13,7 @@
      */
     me.loader = (function () {
         // hold public stuff in our singleton
-        var obj = {};
+        var api = {};
 
         // contains all the images loaded
         var imgList = {};
@@ -35,12 +35,12 @@
         function checkLoadStatus() {
             if (loadCount === resourceCount) {
                 // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-                if (obj.onload) {
+                if (api.onload) {
                     // make sure we clear the timer
                     clearTimeout(timerId);
                     // trigger the onload callback
                     setTimeout(function () {
-                        obj.onload();
+                        api.onload();
                         me.event.publish(me.event.LOADER_COMPLETE);
                     }, 300);
                 }
@@ -69,7 +69,7 @@
             imgList[img.name] = new Image();
             imgList[img.name].onload = onload;
             imgList[img.name].onerror = onerror;
-            imgList[img.name].src = img.src + obj.nocache;
+            imgList[img.name].src = img.src + api.nocache;
         }
 
         /**
@@ -111,7 +111,7 @@
                 }
             }
 
-            xmlhttp.open("GET", tmxData.src + obj.nocache, true);
+            xmlhttp.open("GET", tmxData.src + api.nocache, true);
 
 
             // set the callbacks
@@ -176,7 +176,7 @@
                 xmlhttp.overrideMimeType("application/json");
             }
 
-            xmlhttp.open("GET", data.src + obj.nocache, true);
+            xmlhttp.open("GET", data.src + api.nocache, true);
 
             // set the callbacks
             xmlhttp.ontimeout = onerror;
@@ -207,7 +207,7 @@
             var httpReq = new XMLHttpRequest();
 
             // load our file
-            httpReq.open("GET", data.src + obj.nocache, true);
+            httpReq.open("GET", data.src + api.nocache, true);
             httpReq.responseType = "arraybuffer";
             httpReq.onerror = onerror;
             httpReq.onload = function () {
@@ -230,7 +230,7 @@
          * to enable/disable caching
          * @ignore
          */
-        obj.nocache = "";
+        api.nocache = "";
 
         /*
          * PUBLIC STUFF
@@ -247,7 +247,7 @@
          * // set a callback when everything is loaded
          * me.loader.onload = this.loaded.bind(this);
          */
-        obj.onload = undefined;
+        api.onload = undefined;
 
         /**
          * onProgress callback<br>
@@ -262,21 +262,21 @@
          * // set a callback for progress notification
          * me.loader.onProgress = this.updateProgress.bind(this);
          */
-        obj.onProgress = undefined;
+        api.onProgress = undefined;
 
         /**
          *  just increment the number of already loaded resources
          * @ignore
          */
-        obj.onResourceLoaded = function (res) {
+        api.onResourceLoaded = function (res) {
             // increment the loading counter
             loadCount++;
 
             // callback ?
-            var progress = obj.getLoadProgress();
-            if (obj.onProgress) {
+            var progress = api.getLoadProgress();
+            if (api.onProgress) {
                 // pass the load progress in percent, as parameter
-                obj.onProgress(progress, res);
+                api.onProgress(progress, res);
             }
             me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
         };
@@ -285,7 +285,7 @@
          * on error callback for image loading
          * @ignore
          */
-        obj.onLoadingError = function (res) {
+        api.onLoadingError = function (res) {
             throw "melonJS: Failed loading resource " + res.src;
         };
 
@@ -293,8 +293,8 @@
          * enable the nocache mechanism
          * @ignore
          */
-        obj.setNocache = function (enable) {
-            obj.nocache = enable ? "?" + parseInt(Math.random() * 10000000, 10) : "";
+        api.setNocache = function (enable) {
+            api.nocache = enable ? "?" + parseInt(Math.random() * 10000000, 10) : "";
         };
 
 
@@ -344,13 +344,13 @@
          * // set all resources to be loaded
          * me.loader.preload(g_resources);
          */
-        obj.preload = function (res) {
+        api.preload = function (res) {
             // parse the resources
             for (var i = 0; i < res.length; i++) {
-                resourceCount += obj.load(
+                resourceCount += api.load(
                     res[i],
-                    obj.onResourceLoaded.bind(obj, res[i]),
-                    obj.onLoadingError.bind(obj, res[i])
+                    api.onResourceLoaded.bind(api, res[i]),
+                    api.onLoadingError.bind(api, res[i])
                 );
             }
             // check load status
@@ -391,7 +391,7 @@
          *     me.audio.play("bgmusic");
          * });
          */
-        obj.load = function (res, onload, onerror) {
+        api.load = function (res, onload, onerror) {
             // fore lowercase for the resource name
             res.name = res.name.toLowerCase();
             // check ressource type
@@ -435,7 +435,7 @@
          * @return {Boolean} true if unloaded
          * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
          */
-        obj.unload = function (res) {
+        api.unload = function (res) {
             res.name = res.name.toLowerCase();
             switch (res.type) {
                 case "binary":
@@ -491,13 +491,13 @@
          * @function
          * @example me.loader.unloadAll();
          */
-        obj.unloadAll = function () {
+        api.unloadAll = function () {
             var name;
 
             // unload all binary resources
             for (name in binList) {
                 if (binList.hasOwnProperty(name)) {
-                    obj.unload({
+                    api.unload({
                         "name" : name,
                         "type" : "binary"
                     });
@@ -507,7 +507,7 @@
             // unload all image resources
             for (name in imgList) {
                 if (imgList.hasOwnProperty(name)) {
-                    obj.unload({
+                    api.unload({
                         "name" : name,
                         "type" : "image"
                     });
@@ -517,7 +517,7 @@
             // unload all tmx resources
             for (name in tmxList) {
                 if (tmxList.hasOwnProperty(name)) {
-                    obj.unload({
+                    api.unload({
                         "name" : name,
                         "type" : "tmx"
                     });
@@ -527,7 +527,7 @@
             // unload all in json resources
             for (name in jsonList) {
                 if (jsonList.hasOwnProperty(name)) {
-                    obj.unload({
+                    api.unload({
                         "name" : name,
                         "type" : "json"
                     });
@@ -547,7 +547,7 @@
          * @param {String} tmx name of the tmx/tsx element ("map1");
          * @return {TMx}
          */
-        obj.getTMX = function (elt) {
+        api.getTMX = function (elt) {
             // avoid case issue
             elt = elt.toLowerCase();
             if (elt in tmxList) {
@@ -568,7 +568,7 @@
          * @param {String} name of the binary object ("ymTrack");
          * @return {Object}
          */
-        obj.getBinary = function (elt) {
+        api.getBinary = function (elt) {
             // avoid case issue
             elt = elt.toLowerCase();
             if (elt in binList) {
@@ -590,7 +590,7 @@
          * @param {String} Image name of the Image element ("tileset-platformer");
          * @return {Image}
          */
-        obj.getImage = function (elt) {
+        api.getImage = function (elt) {
             // avoid case issue
             elt = elt.toLowerCase();
             if (elt in imgList) {
@@ -613,7 +613,7 @@
          * @param {String} Name for the json file to load
          * @return {Object}
          */
-        obj.getJSON = function (elt) {
+        api.getJSON = function (elt) {
             elt = elt.toLowerCase();
             if (elt in jsonList) {
                 return jsonList[elt];
@@ -632,11 +632,11 @@
          * @deprecated use callback instead
          * @return {Number}
          */
-        obj.getLoadProgress = function () {
+        api.getLoadProgress = function () {
             return loadCount / resourceCount;
         };
 
         // return our object
-        return obj;
+        return api;
     })();
 })();
