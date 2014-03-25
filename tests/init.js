@@ -7,7 +7,7 @@
 
         initMelon = function (callback) {
             game.PlayScreen = me.ScreenObject.extend({
-                /** 
+                /**
                  *  action to perform on state change
                  */
                 onResetEvent: function() {
@@ -31,7 +31,7 @@
             me.state.set(me.state.PLAY, new game.PlayScreen());
             me.state.change(me.state.PLAY);
         },
-        
+
         // loads the Jasmine environment, runs tests
         loadJasmine = function () {
             var jasmineEnv = jasmine.getEnv();
@@ -50,8 +50,7 @@
         // init MelonJS
         window.onReady(function () {
             initMelon(function () {
-                loadJasmine().bind(this);
+                loadJasmine.bind(this)();
             });
         });
-        
 }());

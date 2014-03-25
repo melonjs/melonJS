@@ -14,7 +14,7 @@
      */
     me.event = (function () {
         // hold public stuff inside the singleton
-        var obj = {};
+        var api = {};
 
         /**
          * the channel/subscription hash
@@ -34,7 +34,7 @@
          * @type String
          * @name me.event#STATE_PAUSE
          */
-        obj.STATE_PAUSE = "me.state.onPause";
+        api.STATE_PAUSE = "me.state.onPause";
 
         /**
          * Channel Constant for when the game is resumed <br>
@@ -44,7 +44,7 @@
          * @type String
          * @name me.event#STATE_RESUME
          */
-        obj.STATE_RESUME = "me.state.onResume";
+        api.STATE_RESUME = "me.state.onResume";
 
         /**
          * Channel Constant when the game is stopped <br>
@@ -54,7 +54,7 @@
          * @type String
          * @name me.event#STATE_STOP
          */
-        obj.STATE_STOP = "me.state.onStop";
+        api.STATE_STOP = "me.state.onStop";
 
         /**
          * Channel Constant for when the game is restarted <br>
@@ -64,7 +64,7 @@
          * @type String
          * @name me.event#STATE_RESTART
          */
-        obj.STATE_RESTART = "me.state.onRestart";
+        api.STATE_RESTART = "me.state.onRestart";
 
         /**
          * Channel Constant for when the game manager is initialized <br>
@@ -74,7 +74,7 @@
          * @type String
          * @name me.event#GAME_INIT
          */
-        obj.GAME_INIT = "me.game.onInit";
+        api.GAME_INIT = "me.game.onInit";
 
         /**
          * Channel Constant for when a level is loaded <br>
@@ -84,7 +84,7 @@
          * @type String
          * @name me.event#LEVEL_LOADED
          */
-        obj.LEVEL_LOADED = "me.game.onLevelLoaded";
+        api.LEVEL_LOADED = "me.game.onLevelLoaded";
 
         /**
          * Channel Constant for when everything has loaded <br>
@@ -94,7 +94,7 @@
          * @type String
          * @name me.event#LOADER_COMPLETE
          */
-        obj.LOADER_COMPLETE = "me.loader.onload";
+        api.LOADER_COMPLETE = "me.loader.onload";
 
         /**
          * Channel Constant for displaying a load progress indicator <br>
@@ -104,7 +104,7 @@
          * @type String
          * @name me.event#LOADER_PROGRESS
          */
-        obj.LOADER_PROGRESS = "me.loader.onProgress";
+        api.LOADER_PROGRESS = "me.loader.onProgress";
 
         /**
          * Channel Constant for pressing a binded key <br>
@@ -133,7 +133,7 @@
          *   }
          * });
          */
-        obj.KEYDOWN = "me.input.keydown";
+        api.KEYDOWN = "me.input.keydown";
 
         /**
          * Channel Constant for releasing a binded key <br>
@@ -155,7 +155,7 @@
          *   }
          * });
          */
-        obj.KEYUP = "me.input.keyup";
+        api.KEYUP = "me.input.keyup";
 
         /**
          * Channel Constant for mousemove or dragmove events on the game viewport <br>
@@ -165,7 +165,7 @@
          * @type String
          * @name me.event#MOUSEMOVE
          */
-        obj.MOUSEMOVE = "me.game.pointermove";
+        api.MOUSEMOVE = "me.game.pointermove";
 
         /**
          * Channel Constant for dragstart events on a Draggable entity <br>
@@ -177,7 +177,7 @@
          * @type String
          * @name me.event#DRAGSTART
          */
-        obj.DRAGSTART = "me.game.dragstart";
+        api.DRAGSTART = "me.game.dragstart";
 
         /**
          * Channel Constant for dragend events on a Draggable entity <br>
@@ -189,7 +189,7 @@
          * @type String
          * @name me.event#DRAGEND
          */
-        obj.DRAGEND = "me.game.dragend";
+        api.DRAGEND = "me.game.dragend";
 
         /**
          * Channel Constant for when the (browser) window is resized <br>
@@ -199,7 +199,7 @@
          * @type String
          * @name me.event#WINDOW_ONRESIZE
          */
-        obj.WINDOW_ONRESIZE = "window.onresize";
+        api.WINDOW_ONRESIZE = "window.onresize";
 
         /**
          * Channel Constant for when the device is rotated <br>
@@ -209,7 +209,7 @@
          * @type String
          * @name me.event#WINDOW_ONORIENTATION_CHANGE
          */
-        obj.WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
+        api.WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
 
         /**
          * Channel Constant for when the (browser) window is scrolled <br>
@@ -219,7 +219,7 @@
          * @type String
          * @name me.event#WINDOW_ONSCROLL
          */
-        obj.WINDOW_ONSCROLL = "window.onscroll";
+        api.WINDOW_ONSCROLL = "window.onscroll";
 
         /**
          * Channel Constant for when the viewport position is updated <br>
@@ -229,7 +229,7 @@
          * @type String
          * @name me.event#VIEWPORT_ONCHANGE
          */
-        obj.VIEWPORT_ONCHANGE = "viewport.onchange";
+        api.VIEWPORT_ONCHANGE = "viewport.onchange";
 
         /**
          * Publish some data on a channel
@@ -246,7 +246,7 @@
          * me.event.publish("/some/channel", ["a","b","c"]);
          *
          */
-        obj.publish = function (channel, args) {
+        api.publish = function (channel, args) {
             var subs = cache[channel],
                 len = subs ? subs.length : 0;
 
@@ -271,7 +271,7 @@
          * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
          */
 
-        obj.subscribe = function (channel, callback) {
+        api.subscribe = function (channel, callback) {
             if (!cache[channel]) {
                 cache[channel] = [];
             }
@@ -297,7 +297,7 @@
          * me.event.subscribe("/some/channel", callback);
          * me.event.unsubscribe("/some/channel", callback);
          */
-        obj.unsubscribe = function (handle, callback) {
+        api.unsubscribe = function (handle, callback) {
             var subs = cache[callback ? handle : handle[0]],
                 len = subs ? subs.length : 0;
 
@@ -311,6 +311,6 @@
         };
 
         // return our object
-        return obj;
+        return api;
     })();
 })();

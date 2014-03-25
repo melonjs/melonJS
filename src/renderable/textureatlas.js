@@ -246,7 +246,7 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0,0, {
+            return new me.AnimationSheet(0, 0, {
                 image: this.texture,
                 spritewidth: 0,
                 spriteheight: 0,
