@@ -1,0 +1,28 @@
+{"frames": [
+
+{
+	"filename": "backdrop.png",
+	"frame": {"x":2,"y":2,"w":960,"h":640},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":960,"h":640},
+	"sourceSize": {"w":960,"h":640}
+},
+{
+	"filename": "simplecharacter.png",
+	"frame": {"x":2,"y":644,"w":256,"h":256},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":256,"h":256},
+	"sourceSize": {"w":256,"h":256}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker ",
+	"version": "1.0",
+	"image": "texture.png",
+	"format": "RGBA8888",
+	"size": {"w":1024,"h":1024},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:1c5c857ef8eb8a36ac67c1465b318a7a:6372dcd161d24c7ac6b07ef5b1bbeac7:88db1022cd6b660616541d2788fcd4f7$"
+}
+}

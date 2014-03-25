@@ -11,7 +11,7 @@
      */
     me.input = (function () {
         // hold public stuff in our singleton
-        var obj = {};
+        var api = {};
 
         /*
          * PRIVATE STUFF
@@ -21,7 +21,7 @@
          * prevent event propagation
          * @ignore
          */
-        obj._preventDefault = function (e) {
+        api._preventDefault = function (e) {
             // stop event propagation
             if (e.stopPropagation) {
                 e.stopPropagation();
@@ -53,9 +53,9 @@
          * @name preventDefault
          * @memberOf me.input
          */
-        obj.preventDefault = true;
+        api.preventDefault = true;
 
         // return our object
-        return obj;
+        return api;
     })();
 })();
