@@ -1,5 +1,7 @@
 /*global module:false*/
 module.exports = function(grunt) {
+    'use strict';
+
     var sourceFiles = grunt.file.readJSON('sourceFiles.json');
 
     // Project configuration.
