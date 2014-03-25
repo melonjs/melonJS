@@ -1,0 +1,8 @@
+[
+    "tests/spec/Color.js",
+    "tests/spec/DeepCopy.js",
+    "tests/spec/ObjectProperties.js",
+    "tests/spec/Rectangle.js",
+    "tests/spec/shim.js",
+    "tests/spec/Inheritance.js"
+]
