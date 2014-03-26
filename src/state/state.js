@@ -19,7 +19,10 @@
      * @see me.state
      */
     me.ScreenObject = Object.extend(
-    /** @scope me.ScreenObject.prototype */ {
+    /** @scope me.ScreenObject.prototype */
+    {
+        /** @ignore */
+        init: function () {},
 
         /**
          * Object reset function
@@ -66,7 +69,6 @@
         onDestroyEvent : function () {
             // to be extended
         }
-
     });
 
     // based on the requestAnimationFrame polyfill by Erik Möller
@@ -245,7 +247,7 @@
          */
 
         /**
-         * default state value for Loading Screen
+         * default state ID for Loading Screen
          * @constant
          * @name LOADING
          * @memberOf me.state
@@ -253,7 +255,7 @@
         obj.LOADING = 0;
 
         /**
-         * default state value for Menu Screen
+         * default state ID for Menu Screen
          * @constant
          * @name MENU
          * @memberOf me.state
@@ -261,7 +263,7 @@
 
         obj.MENU = 1;
         /**
-         * default state value for "Ready" Screen
+         * default state ID for "Ready" Screen
          * @constant
          * @name READY
          * @memberOf me.state
@@ -269,7 +271,7 @@
 
         obj.READY = 2;
         /**
-         * default state value for Play Screen
+         * default state ID for Play Screen
          * @constant
          * @name PLAY
          * @memberOf me.state
@@ -277,7 +279,7 @@
 
         obj.PLAY = 3;
         /**
-         * default state value for Game Over Screen
+         * default state ID for Game Over Screen
          * @constant
          * @name GAMEOVER
          * @memberOf me.state
@@ -285,7 +287,7 @@
 
         obj.GAMEOVER = 4;
         /**
-         * default state value for Game End Screen
+         * default state ID for Game End Screen
          * @constant
          * @name GAME_END
          * @memberOf me.state
@@ -293,7 +295,7 @@
 
         obj.GAME_END = 5;
         /**
-         * default state value for High Score Screen
+         * default state ID for High Score Screen
          * @constant
          * @name SCORE
          * @memberOf me.state
@@ -301,7 +303,7 @@
 
         obj.SCORE = 6;
         /**
-         * default state value for Credits Screen
+         * default state ID for Credits Screen
          * @constant
          * @name CREDITS
          * @memberOf me.state
@@ -309,7 +311,7 @@
 
         obj.CREDITS = 7;
         /**
-         * default state value for Settings Screen
+         * default state ID for Settings Screen
          * @constant
          * @name SETTINGS
          * @memberOf me.state
@@ -317,7 +319,7 @@
         obj.SETTINGS = 8;
 
         /**
-         * default state value for user defined constants<br>
+         * default state ID for user defined constants<br>
          * @constant
          * @name USER
          * @memberOf me.state
@@ -520,8 +522,43 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {Number} state @see me.state#Constant
-         * @param {me.ScreenObject}
+         * @param {Number} state State ID (see constants)
+         * @param {me.ScreenObject} so Instantiated ScreenObject to associate
+         * with state ID
+         * @example
+         * var MenuButton = me.GUI_Object.extend({
+         *     "onClick" : function () {
+         *         // Change to the PLAY state when the button is clicked
+         *         me.state.change(me.state.PLAY);
+         *         return true;
+         *     }
+         * });
+         *
+         * var MenuScreen = me.ScreenObject.extend({
+         *     onResetEvent: function() {
+         *         // Load background image
+         *         me.game.world.addChild(
+         *             new me.ImageLayer("bg", 0, 0, "bg"),
+         *             0 // z-index
+         *         );
+         *
+         *         // Add a button
+         *         me.game.world.addChild(
+         *             new MenuButton(350, 200, { "image" : "start" }),
+         *             1 // z-index
+         *         );
+         *
+         *         // Play music
+         *         me.audio.playTrack("menu");
+         *     },
+         *
+         *     "onDestroyEvent" : function () {
+         *         // Stop music
+         *         me.audio.stopTrack();
+         *     }
+         * });
+         *
+         * me.state.set(me.state.MENU, new MenuScreen());
          */
         obj.set = function (state, so) {
             _screenObject[state] = {};
@@ -565,6 +602,8 @@
          * @memberOf me.state
          * @public
          * @function
+         * @param {Number} state State ID (see constants)
+         * @param {Boolean} enable
          */
         obj.setTransition = function (state, enable) {
             _screenObject[state].transition = enable;
@@ -576,7 +615,7 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {Number} state @see me.state#Constant
+         * @param {Number} state State ID (see constants)
          * @param {} [arguments...] extra arguments to be passed to the reset functions
          * @example
          * // The onResetEvent method on the play screen will receive two args:
@@ -623,7 +662,7 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {Number} state @see me.state#Constant
+         * @param {Number} state State ID (see constants)
          */
         obj.isCurrent = function (state) {
             return _state === state;
