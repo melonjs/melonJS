@@ -115,8 +115,8 @@
      * <img src="images/object_properties.png"/>
      */
     me.ObjectEntity = me.Renderable.extend(
-    /** @scope me.ObjectEntity.prototype */ {
-
+    /** @scope me.ObjectEntity.prototype */
+    {
         /** @ignore */
         init : function (x, y, settings) {
             /**
