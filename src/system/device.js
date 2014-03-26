@@ -112,27 +112,30 @@
                 hidden = "webkitHidden";
                 visibilityChange = "webkitvisibilitychange";
             }
-
-            // add the corresponding event listener
-            document.addEventListener(visibilityChange,
-                function () {
-                    if (document[hidden]) {
-                        if (me.sys.stopOnBlur) {
-                            me.state.stop(true);
+                 
+            // register on the event if supported
+            if (typeof (visibilityChange) === "string") {
+                // add the corresponding event listener
+                document.addEventListener(visibilityChange,
+                    function () {
+                        if (document[hidden]) {
+                            if (me.sys.stopOnBlur) {
+                                me.state.stop(true);
+                            }
+                            if (me.sys.pauseOnBlur) {
+                                me.state.pause(true);
+                            }
+                        } else {
+                            if (me.sys.stopOnBlur) {
+                                me.state.restart(true);
+                            }
+                            if (me.sys.resumeOnFocus) {
+                                me.state.resume(true);
+                            }
                         }
-                        if (me.sys.pauseOnBlur) {
-                            me.state.pause(true);
-                        }
-                    } else {
-                        if (me.sys.stopOnBlur) {
-                            me.state.restart(true);
-                        }
-                        if (me.sys.resumeOnFocus) {
-                            me.state.resume(true);
-                        }
-                    }
-                }, false
-            );
+                    }, false
+                );
+            }
         };
 
         /**
