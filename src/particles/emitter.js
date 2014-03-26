@@ -331,36 +331,36 @@
     me.ParticleEmitter = me.Rect.extend(
     /** @scope me.ParticleEmitter.prototype */
     {
-        // Emitter is Stream, launch particles constantly
-            /** @ignore */
-        _stream: false,
-
-        // Frequency timer (in ms) for emitter launch new particles
-        // used only in stream emitter
-            /** @ignore */
-        _frequencyTimer: 0,
-
-        // Time of live (in ms) for emitter launch new particles
-        // used only in stream emitter
-            /** @ignore */
-        _durationTimer: 0,
-
-        // Emitter is emitting particles
-            /** @ignore */
-        _enabled: false,
-
-        // Emitter will always update
-        isRenderable : false,
-
         /**
          * @ignore
          */
         init: function (x, y, settings) {
-            // call the parent constructor
-            this.parent(
-                new me.Vector2d(x, y),
+            // Emitter is Stream, launch particles constantly
+            /** @ignore */
+            this._stream = false;
+
+            // Frequency timer (in ms) for emitter launch new particles
+            // used only in stream emitter
+            /** @ignore */
+            this._frequencyTimer = 0;
+
+            // Time of live (in ms) for emitter launch new particles
+            // used only in stream emitter
+            /** @ignore */
+            this._durationTimer = 0;
+
+            // Emitter is emitting particles
+            /** @ignore */
+            this._enabled = false;
+            // Emitter will always update
+            this.isRenderable = false;
+            // call the super constructor
+            this._super(
+                me.Rect,
+                "init",
+                [new me.Vector2d(x, y),
                 Infinity,
-                Infinity
+                Infinity]
             );
 
             // don't sort the particles by z-index

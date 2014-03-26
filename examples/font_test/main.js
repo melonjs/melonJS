@@ -49,7 +49,7 @@ var FontTest = me.Renderable.extend ({
 
     // constructor
     init: function() {
-        this.parent(new me.Vector2d(), me.video.getWidth(), me.video.getHeight());
+        this._super(me.Renderable, 'init', [new me.Vector2d(), me.video.getWidth(), me.video.getHeight()]);
 
         // a default white color object
         this.color = new me.Color(255, 255, 255);

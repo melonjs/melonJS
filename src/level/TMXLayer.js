@@ -19,7 +19,7 @@
         // constructor
         init: function (name, color, z) {
             // parent constructor
-            this.parent(new me.Vector2d(0, 0), Infinity, Infinity);
+            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), Infinity, Infinity]);
 
             // apply given parameters
             this.name = name;
@@ -60,6 +60,7 @@
      * @param {Number} z           z position
      * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
      */
+
     me.ImageLayer = me.Renderable.extend({
         /**
          * Define if and how an Image Layer should be repeated.<br>
@@ -112,7 +113,7 @@
             // set layer width & height
             width  = (width  ? Math.min(viewport.width, width)   : viewport.width);
             height = (height ? Math.min(viewport.height, height) : viewport.height);
-            this.parent(new me.Vector2d(0, 0), width, height);
+            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
 
             // displaying order
             this.z = z;
@@ -259,6 +260,7 @@
                         sy = 0;
                         dy += sh;
                         sh = Math.min(this.imageheight, this.height - dy);
+
                     } while (this.repeatY && (dy < this.height));
                     dx += sw;
                     if (!this.repeatX || (dx >= this.width)) {
@@ -301,7 +303,7 @@
     me.CollisionTiledLayer = me.Renderable.extend({
         // constructor
         init: function (width, height) {
-            this.parent(new me.Vector2d(0, 0), width, height);
+            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
 
             this.isCollisionMap = true;
         },
@@ -351,13 +353,11 @@
      * @param {Number} zOrder layer z-order
      */
     me.TMXLayer = me.Renderable.extend({
-        // the layer data array
-        layerData : null,
 
         /** @ignore */
         init: function (tilewidth, tileheight, orientation, tilesets, zOrder) {
-            // parent constructor
-            this.parent(new me.Vector2d(0, 0), 0, 0);
+            // super constructor
+            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), 0, 0]);
 
             // tile width & height
             this.tilewidth  = tilewidth;
@@ -395,7 +395,6 @@
             // layer "real" size
             this.width = this.cols * this.tilewidth;
             this.height = this.rows * this.tileheight;
-
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, layer);
 
@@ -528,7 +527,6 @@
                 this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
         },
-
         /**
          * check for collision
          * obj - obj
@@ -617,7 +615,6 @@
                 // set the layer alpha value
                 var _alpha = context.globalAlpha;
                 context.globalAlpha *= this.getOpacity();
-
                 if (context.globalAlpha > 0) {
                     // draw the layer
                     this.renderer.drawTileLayer(context, this, rect);

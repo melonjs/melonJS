@@ -10,12 +10,13 @@
      * @memberOf me
      */
     me.plugin = (function () {
+
         // hold public stuff inside the singleton
         var singleton = {};
 
-        /*
-         * PUBLIC
-         */
+        /*--------------
+            PUBLIC
+          --------------*/
 
         /**
         * a base Object for plugin <br>
@@ -30,19 +31,17 @@
         singleton.Base = Object.extend(
         /** @scope me.plugin.Base.prototype */
         {
-            /**
-             * define the minimum required <br>
-             * version of melonJS  <br>
-             * this need to be defined by the plugin
-             * @public
-             * @type String
-             * @name me.plugin.Base#version
-             */
-            version : undefined,
-
             /** @ignore */
             init : function () {
-                //empty for now !
+                /**
+                 * define the minimum required <br>
+                 * version of melonJS  <br>
+                 * this need to be defined by the plugin
+                 * @public
+                 * @type String
+                 * @name me.plugin.Base#version
+                 */
+                this.version = undefined;
             }
         });
 
@@ -61,12 +60,12 @@
          *   // display something in the console
          *   console.log("duh");
          *   // call the original me.game.update function
-         *   this.parent();
+         *   this._parent();
          * });
          */
         singleton.patch = function (proto, name, fn) {
             // use the object prototype if possible
-            if (typeof(proto.prototype) !== "undefined") {
+            if (typeof proto.prototype !== "undefined") {
                 proto = proto.prototype;
             }
             // reuse the logic behind Object.extend
@@ -74,15 +73,17 @@
                 // save the original function
                 var _parent = proto[name];
                 // override the function with the new one
-                proto[name] = (function (name, fn) {
-                    return function () {
-                        var tmp = this.parent;
-                        this.parent = _parent;
-                        var ret = fn.apply(this, arguments);
-                        this.parent = tmp;
-                        return ret;
-                    };
-                })(name, fn);
+                Object.defineProperty(proto, name, {
+                    "configurable" : true,
+                    "value" : (function (name, fn) {
+                        return function () {
+                            this.parent = _parent;
+                            var ret = fn.apply(this, arguments);
+                            this.parent = null;
+                            return ret;
+                        };
+                    })(name, fn)
+                });
             }
             else {
                 console.error(name + " is not an existing function");
@@ -104,20 +105,12 @@
          * me.plugin.register(TestPlugin, "testPlugin");
          * // the plugin then also become available
          * // under then me.plugin namespace
-         * me.plugin.testPlugin.myFunction ();
+         * me.plugin.testPlugin.myfunction ();
          */
         singleton.register = function (plugin, name) {
             // ensure me.plugin[name] is not already "used"
             if (me.plugin[name]) {
                 console.error("plugin " + name + " already registered");
-            }
-
-            // compatibility testing
-            if (typeof(plugin.prototype.version) === "undefined") {
-                throw "melonJS: Plugin version not defined!";
-            }
-            else if (me.sys.checkVersion(plugin.prototype.version) > 0) {
-                throw ("melonJS: Plugin version mismatch, expected: " + plugin.prototype.version + ", got: " + me.version);
             }
 
             // get extra arguments
@@ -131,11 +124,19 @@
             _args[0] = plugin;
             me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
 
+            // compatibility testing
+            if (me.plugin[name].version === undefined) {
+                throw "melonJS: Plugin version not defined !";
+            } else if (me.sys.checkVersion(me.plugin[name].version) > 0) {
+                throw ("melonJS: Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version);
+            }
+
             // inheritance check
-            if (!(me.plugin[name] instanceof me.plugin.Base)) {
+            if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
                 throw "melonJS: Plugin should extend the me.plugin.Base Class !";
             }
         };
+
         // return our singleton
         return singleton;
     })();

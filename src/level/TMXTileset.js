@@ -30,38 +30,34 @@
      * @param {Number} tileId tileId
      */
     me.Tile = me.Rect.extend({
-        /**
-         * tileId
-         * @public
-         * @type int
-         * @name me.Tile#tileId
-         */
-        tileId : null,
-
-        /**
-         * tileset
-         * @public
-         * @type me.TMXTileset
-         * @name me.Tile#tileset
-         */
-        tileset : null,
-
-        /**
-         * the tile transformation matrix (if defined)
-         * @ignore
-         */
-        transform : null,
-
         /** @ignore */
         init : function (x, y, w, h, gid) {
-            this.parent(new me.Vector2d(x * w, y * h), w, h);
+            /**
+             * tileset
+             * @public
+             * @type me.TMXTileset
+             * @name me.Tile#tileset
+             */
+            this.tileset = null;
+
+            /**
+             * the tile transformation matrix (if defined)
+             * @ignore
+             */
+            this.transform = null;
+            this._super(me.Rect, "init", [new me.Vector2d(x * w, y * h), w, h]);
 
             // Tile col / row pos
             this.col = x;
             this.row = y;
 
+            /**
+             * tileId
+             * @public
+             * @type int
+             * @name me.Tile#tileId
+             */
             this.tileId = gid;
-
             /**
              * True if the tile is flipped horizontally<br>
              * @public
@@ -69,22 +65,20 @@
              * @name me.Tile#flipX
              */
             this.flipX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
-
             /**
              * True if the tile is flipped vertically<br>
              * @public
              * @type Boolean
-             * @name me.Tile#flipY
+             * @name me.Tile#flippedY
              */
-            this.flipY  = (this.tileId & FlippedVerticallyFlag) !== 0;
-
+            this.flippedY  = (this.tileId & FlippedVerticallyFlag) !== 0;
             /**
              * True if the tile is flipped anti-diagonally<br>
              * @public
              * @type Boolean
-             * @name me.Tile#flipAD
+             * @name me.Tile#flippedAD
              */
-            this.flipAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
+            this.flippedAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
 
             /**
              * Global flag that indicates if the tile is flipped<br>
@@ -92,8 +86,7 @@
              * @type Boolean
              * @name me.Tile#flipped
              */
-            this.flipped = this.flipX || this.flipY || this.flipAD;
-
+            this.flipped = this.flippedX || this.flippedY || this.flippedAD;
             // create a transformation matrix if required
             if (this.flipped === true) {
                 this.createTransform();
@@ -114,21 +107,21 @@
             // reset the matrix (in case it was already defined)
             this.transform.identity();
 
-            if (this.flipAD) {
+            if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
                 this.transform.set(0, 1, 1, 0);
                 this.transform.translate(0, this.height - this.width);
             }
-            if (this.flipX) {
+            if (this.flippedX) {
                 this.transform.a *= -1;
                 this.transform.c *= -1;
-                this.transform.translate((this.flipAD ? this.height : this.width), 0);
+                this.transform.translate((this.flippedAD ? this.height : this.width), 0);
 
             }
-            if (this.flipY) {
+            if (this.flippedY) {
                 this.transform.b *= -1;
                 this.transform.d *= -1;
-                this.transform.translate(0, (this.flipAD ? this.width : this.height));
+                this.transform.translate(0, (this.flippedAD ? this.width : this.height));
             }
         },
     });
@@ -140,27 +133,26 @@
      * @constructor
      */
     me.TMXTileset = Object.extend({
-        // tile types
-        type : {
-            SOLID : "solid",
-            PLATFORM : "platform",
-            L_SLOPE : "lslope",
-            R_SLOPE : "rslope",
-            LADDER : "ladder",
-            TOPLADDER : "topladder",
-            BREAKABLE : "breakable"
-        },
-
-        // tile properties (collidable, etc..)
-        TileProperties : [],
-
-        // a cache for offset value
-        tileXOffset : [],
-        tileYOffset : [],
-
         // constructor
         init: function (tileset) {
             // first gid
+            // tile types
+            this.type = {
+                SOLID : "solid",
+                PLATFORM : "platform",
+                L_SLOPE : "lslope",
+                R_SLOPE : "rslope",
+                LADDER : "ladder",
+                TOPLADDER : "topladder",
+                BREAKABLE : "breakable"
+            };
+
+            // tile properties (collidable, etc..)
+            this.TileProperties = [];
+
+            // a cache for offset value
+            this.tileXOffset = [];
+            this.tileYOffset = [];
             this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
             var src = tileset[me.TMX_TAG_SOURCE];
             if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
@@ -180,18 +172,22 @@
             this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH], 10);
             this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT], 10);
             this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0, 10);
+
             this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] || 0, 10);
 
             // set tile offset properties (if any)
             this.tileoffset = new me.Vector2d(0, 0);
+
             var offset = tileset[me.TMX_TAG_TILEOFFSET];
             if (offset) {
                 this.tileoffset.x = parseInt(offset[me.TMX_TAG_X], 10);
                 this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y], 10);
             }
 
+
             // set tile properties, if any
             var tileInfo = tileset.tileproperties;
+
             if (tileInfo) {
                 // native JSON format
                 for (var i in tileInfo) {
@@ -207,6 +203,7 @@
                     tileInfo = [ tileInfo ];
                 }
                 // iterate it
+
                 for (var j = 0; j < tileInfo.length; j++) {
                     var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
@@ -251,6 +248,7 @@
          * @ignore
          * @function
          */
+
         setTileProperty : function (gid, prop) {
             // check what we found and adjust property
             prop.isSolid = prop.type ? prop.type.toLowerCase() === this.type.SOLID : false;
@@ -277,6 +275,7 @@
          * @param {Number} gid
          * @return {Boolean}
          */
+
         contains : function (gid) {
             return gid >= this.firstgid && gid <= this.lastgid;
         },
@@ -317,13 +316,6 @@
         isTileCollidable : function (tileId) {
             return this.TileProperties[tileId].isCollidable;
         },
-
-        /*
-        //return collectable status of the specifiled tile
-        isTileCollectable : function (tileId) {
-            return this.TileProperties[tileId].isCollectable;
-        },
-         */
 
         /**
          * return the x offset of the specified tile in the tileset image
@@ -386,7 +378,6 @@
 
 
     });
-
     /**
      * an object containing all tileset
      * @class

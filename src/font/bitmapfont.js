@@ -26,19 +26,17 @@
     me.BitmapFont = me.Font.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
-        // scaled font size;
-        sSize : new me.Vector2d(),
-        // first char in the ascii table
-        firstChar : 0x20,
-
-        // #char per row
-        charCount : 0,
-
-        /** @ignore */
         init : function (font, size, scale, firstChar) {
-            // font name and type
-            this.parent(font, null, null);
+            /** @ignore */
+            // scaled font size;
+            this.sSize = new me.Vector2d();
+            // first char in the ascii table
+            this.firstChar = 0x20;
 
+            // #char per row
+            this.charCount = 0;
+            // font name and type
+            this._super(me.Font, "init", [font, null, null]);
             // first char in the ascii table
             this.firstChar = firstChar || 0x20;
 
@@ -48,7 +46,6 @@
             // set a default alignement
             this.textAlign = "left";
             this.textBaseline = "top";
-
             // resize if necessary
             if (scale) {
                 this.resize(scale);

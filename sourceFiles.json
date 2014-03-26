@@ -1,4 +1,5 @@
 [
+    "src/object.js",
     "src/core.js",
     "src/system/agent.js",
     "src/system/device.js",

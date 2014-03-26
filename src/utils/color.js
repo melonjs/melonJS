@@ -172,45 +172,44 @@
     /** @scope me.Color.prototype */
     {
 
-        /**
-         * Color Red Component
-         * @name r
-         * @memberOf me.Color
-         * @type {Number}
-         * @readonly
-         */
-        r : 0,
-
-        /**
-         * Color Green Component
-         * @name g
-         * @memberOf me.Color
-         * @type {Number}
-         * @readonly
-         */
-        g : 0,
-
-        /**
-         * Color Blue Component
-         * @name b
-         * @memberOf me.Color
-         * @type {Number}
-         * @readonly
-         */
-        b : 0,
-
-        /**
-         * Color alpha Component
-         * @name alpha
-         * @memberOf me.Color
-         * @type {Number}
-         * @readonly
-         */
-        alpha : 1.0,
-
         /** @ignore */
         init : function (r, g, b, a) {
-            return this.onResetEvent(r, g, b, a);
+            /**
+             * Color Red Component
+             * @name r
+             * @memberOf me.Color
+             * @type {Number}
+             * @readonly
+             */
+            this.r = r || 0;
+
+            /**
+             * Color Green Component
+             * @name g
+             * @memberOf me.Color
+             * @type {Number}
+             * @readonly
+             */
+            this.g = g || 0;
+
+            /**
+             * Color Blue Component
+             * @name b
+             * @memberOf me.Color
+             * @type {Number}
+             * @readonly
+             */
+            this.b = b || 0;
+
+            /**
+             * Color alpha Component
+             * @name alpha
+             * @memberOf me.Color
+             * @type {Number}
+             * @readonly
+             */
+            this.alpha = a || 1.0;
+            return this;
         },
 
         /**

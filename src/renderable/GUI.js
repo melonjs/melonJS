@@ -5,6 +5,7 @@
  *
  */
 (function () {
+
     /**
      * GUI Object<br>
      * A very basic object to manage GUI elements <br>
@@ -20,60 +21,62 @@
      * @example
      *
      * // create a basic GUI Object
-     * var myButton = me.GUI_Object.extend({
-     *     init : function (x, y) {
-     *         var settings = {}
-     *         settings.image = "button";
-     *         settings.spritewidth = 100;
-     *         settings.spriteheight = 50;
-     *         // parent constructor
-     *         this.parent(x, y, settings);
-     *         // define the object z order
-     *         this.z = 4;
-     *     },
+     * var myButton = me.GUI_Object.extend(
+     * {
+     *    init:function (x, y)
+     *    {
+     *       var settings = {}
+     *       settings.image = "button";
+     *       settings.spritewidth = 100;
+     *       settings.spriteheight = 50;
+     *       // super constructor
+     *       this._super(me.GUI_Object, "init", [x, y, settings]);
+     *       // define the object z order
+     *       this.z = 4;
+     *    },
      *
-     *     // output something in the console
-     *     // when the object is clicked
-     *     onClick : function (event) {
-     *         console.log("clicked!");
-     *         // don't propagate the event
-     *         return false;
-     *     }
+     *    // output something in the console
+     *    // when the object is clicked
+     *    onClick:function (event)
+     *    {
+     *       console.log("clicked!");
+     *       // don't propagate the event
+     *       return false;
+     *    }
      * });
      *
      * // add the object at pos (10,10)
      * me.game.world.addChild(new myButton(10,10));
+     *
      */
-    me.GUI_Object = me.SpriteObject.extend(
+    me.GUI_Object = me.SpriteObject.extend({
     /** @scope me.GUI_Object.prototype */
-    {
-        /**
-         * object can be clicked or not
-         * @public
-         * @type boolean
-         * @name me.GUI_Object#isClickable
-         */
-        isClickable : true,
-
-        // object has been updated (clicked,etc..)
-        updated : false,
 
         /**
          * @ignore
          */
         init : function (x, y, settings) {
-            this.parent(
-                x, y,
+            /**
+             * object can be clicked or not
+             * @public
+             * @type boolean
+             * @name me.GUI_Object#isClickable
+             */
+            this.isClickable = true;
+
+            // object has been updated (clicked,etc..)
+            this.updated = false;
+            this._super(me.SpriteObject, "init", [x, y,
                 ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
                 settings.spritewidth,
-                settings.spriteheight
-            );
+                settings.spriteheight]);
 
             // GUI items use screen coordinates
             this.floating = true;
 
             // register on mouse event
             me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
+
         },
 
         /**

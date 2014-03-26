@@ -11,7 +11,7 @@ game.HUD.Container = me.ObjectContainer.extend({
 
 	init: function() {
 		// call the constructor
-		this.parent();
+		this._super(me.ObjectContainer, 'init');
 		
 		// persistent across level change
 		this.isPersistent = true;
@@ -43,9 +43,9 @@ game.HUD.ScoreItem = me.Renderable.extend( {
 	 */
 	init: function(score, align, x, y) {
 		
-		// call the parent constructor 
+		// call the super constructor 
 		// (size does not matter here)
-		this.parent(new me.Vector2d(x, y), 10, 10); 
+		this._super(me.Renderable, 'init', [new me.Vector2d(x, y), 10, 10]); 
 		
 		// create a font
 		this.font = new me.BitmapFont("atascii", {x:24});

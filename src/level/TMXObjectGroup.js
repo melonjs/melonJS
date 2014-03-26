@@ -8,6 +8,7 @@
  *
  */
 (function () {
+
     /**
      * TMX Object Group <br>
      * contains the object group definition as defined in Tiled. <br>
@@ -19,60 +20,53 @@
      * @constructor
      */
     me.TMXObjectGroup = Object.extend({
-        /**
-         * group name
-         * @public
-         * @type String
-         * @name name
-         * @memberOf me.TMXObjectGroup
-         */
-        name : null,
-
-        /**
-         * group width
-         * @public
-         * @type Number
-         * @name name
-         * @memberOf me.TMXObjectGroup
-         */
-        width : 0,
-
-        /**
-         * group height
-         * @public
-         * @type Number
-         * @name name
-         * @memberOf me.TMXObjectGroup
-         */
-        height : 0,
-
-        /**
-         * group z order
-         * @public
-         * @type Number
-         * @name name
-         * @memberOf me.TMXObjectGroup
-         */
-        z : 0,
-
-        /**
-         * group objects list definition
-         * @see me.TMXObject
-         * @public
-         * @type Array
-         * @name name
-         * @memberOf me.TMXObjectGroup
-         */
-        objects : [],
-
-        /**
-         * constructor
-         * @ignore
-         * @function
-         */
         init : function (name, tmxObjGroup, tilesets, z) {
-            var self = this;
+            /**
+             * group name
+             * @public
+             * @type String
+             * @name name
+             * @memberOf me.TMXObjectGroup
+             */
+            this.name = null;
 
+            /**
+             * group width
+             * @public
+             * @type Number
+             * @name name
+             * @memberOf me.TMXObjectGroup
+             */
+            this.width = 0;
+
+            /**
+             * group height
+             * @public
+             * @type Number
+             * @name name
+             * @memberOf me.TMXObjectGroup
+             */
+            this.height = 0;
+
+            /**
+             * group z order
+             * @public
+             * @type Number
+             * @name name
+             * @memberOf me.TMXObjectGroup
+             */
+            this.z = 0;
+
+            /**
+             * group objects list definition
+             * @see me.TMXObject
+             * @public
+             * @type Array
+             * @name name
+             * @memberOf me.TMXObjectGroup
+             */
+            this.objects = [];
+            var self = this;
             this.name    = name;
             this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
             this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
@@ -104,6 +98,7 @@
          * @ignore
          * @function
          */
+
         destroy : function () {
             // clear all allocated objects
             this.objects = null;
@@ -138,125 +133,102 @@
      * @constructor
      */
     me.TMXObject = Object.extend({
-        /**
-         * object name
-         * @public
-         * @type String
-         * @name name
-         * @memberOf me.TMXObject
-         */
-        name : null,
+        init :  function (tmxObj, tilesets, z) {
 
-        /**
-         * object x position
-         * @public
-         * @type Number
-         * @name x
-         * @memberOf me.TMXObject
-         */
-        x : 0,
-
-        /**
-         * object y position
-         * @public
-         * @type Number
-         * @name y
-         * @memberOf me.TMXObject
-         */
-        y : 0,
-
-        /**
-         * object width
-         * @public
-         * @type Number
-         * @name width
-         * @memberOf me.TMXObject
-         */
-        width : 0,
-
-        /**
-         * object height
-         * @public
-         * @type Number
-         * @name height
-         * @memberOf me.TMXObject
-         */
-        height : 0,
-
-        /**
-         * object z order
-         * @public
-         * @type Number
-         * @name z
-         * @memberOf me.TMXObject
-         */
-        z : 0,
-
-        /**
-         * object gid value
-         * when defined the object is a tiled object
-         * @public
-         * @type Number
-         * @name gid
-         * @memberOf me.TMXObject
-         */
-        gid : undefined,
-
-        /**
-         * object type
-         * @public
-         * @type String
-         * @name type
-         * @memberOf me.TMXObject
-         */
-        type : undefined,
-
-        /**
-         * if true, the object is a polygone
-         * @public
-         * @type Boolean
-         * @name isPolygon
-         * @memberOf me.TMXObject
-         */
-        isPolygon : false,
-
-        /**
-         * f true, the object is a polygone
-         * @public
-         * @type Boolean
-         * @name isPolyline
-         * @memberOf me.TMXObject
-         */
-        isPolyline : false,
-
-        /**
-         * object point list (for polygone and polyline)
-         * @public
-         * @type Vector2d[]
-         * @name points
-         * @memberOf me.TMXObject
-         */
-        points : undefined,
-
-        /**
-         * constructor
-         * @ignore
-         * @function
-         */
-        init : function (tmxObj, tilesets, z) {
+            /**
+             * object point list (for polygone and polyline)
+             * @public
+             * @type Vector2d[]
+             * @name points
+             * @memberOf me.TMXObject
+             */
+            this.points = undefined;
+            /**
+             * object name
+             * @public
+             * @type String
+             * @name name
+             * @memberOf me.TMXObject
+             */
             this.name = tmxObj[me.TMX_TAG_NAME];
+            /**
+             * object x position
+             * @public
+             * @type Number
+             * @name x
+             * @memberOf me.TMXObject
+             */
             this.x = parseInt(tmxObj[me.TMX_TAG_X], 10);
+            /**
+             * object y position
+             * @public
+             * @type Number
+             * @name y
+             * @memberOf me.TMXObject
+             */
             this.y = parseInt(tmxObj[me.TMX_TAG_Y], 10);
+            /**
+             * object z order
+             * @public
+             * @type Number
+             * @name z
+             * @memberOf me.TMXObject
+             */
             this.z = parseInt(z, 10);
 
+            /**
+             * object width
+             * @public
+             * @type Number
+             * @name width
+             * @memberOf me.TMXObject
+             */
             this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0, 10);
+
+            /**
+             * object height
+             * @public
+             * @type Number
+             * @name height
+             * @memberOf me.TMXObject
+             */
             this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0, 10);
+
+            /**
+             * object gid value
+             * when defined the object is a tiled object
+             * @public
+             * @type Number
+             * @name gid
+             * @memberOf me.TMXObject
+             */
             this.gid = parseInt(tmxObj[me.TMX_TAG_GID], 10) || null;
 
+            /**
+             * object type
+             * @public
+             * @type String
+             * @name type
+             * @memberOf me.TMXObject
+             */
             this.type = tmxObj[me.TMX_TAG_TYPE];
 
             this.isEllipse = false;
+            /**
+             * if true, the object is a polygone
+             * @public
+             * @type Boolean
+             * @name isPolygon
+             * @memberOf me.TMXObject
+             */
             this.isPolygon = false;
+            /**
+             * f true, the object is a polygone
+             * @public
+             * @type Boolean
+             * @name isPolyline
+             * @memberOf me.TMXObject
+             */
             this.isPolyline = false;
 
             // check if the object has an associated gid
@@ -324,6 +296,7 @@
             this.spritewidth = this.width;
 
             // the object corresponding tile
+
             var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
 
             // get the corresponding tile into our object
@@ -357,7 +330,6 @@
             // it's a rectangle
             return new me.Rect(new me.Vector2d(0, 0), this.width, this.height);
         },
-
         /**
          * getObjectPropertyByName
          * @ignore

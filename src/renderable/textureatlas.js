@@ -28,34 +28,34 @@
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
-     * 
+     *
      * // or if you wish to specify the atlas
      */
     me.TextureAtlas = Object.extend(
     /** @scope me.TextureAtlas.prototype */
     {
         /**
-         * to identify the atlas format (e.g. texture packer)
-         * @ignore
-         */
-        format: null,
-
-        /**
-         * the image texture itself
-         * @ignore
-         */
-        texture : null,
-
-        /**
-         * the atlas dictionnary
-         * @ignore
-         */
-        atlas: null,
-
-        /**
          * @ignore
          */
         init : function (atlas, texture) {
+            /**
+             * to identify the atlas format (e.g. texture packer)
+             * @ignore
+             */
+            this.format = null;
+
+            /**
+             * the image texture itself
+             * @ignore
+             */
+            this.texture = texture || null;
+
+            /**
+             * the atlas dictionnary
+             * @ignore
+             */
+            this.atlas = atlas || null;
+
             if (atlas && atlas.meta) {
                 // Texture Packer
                 if (atlas.meta.app.contains("texturepacker")) {

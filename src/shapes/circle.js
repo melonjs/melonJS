@@ -17,31 +17,30 @@
      * @param {Number} h height of the elipse
      */
     me.Ellipse = Object.extend(
-    /** @scope me.Ellipse.prototype */
     {
-        /**
-         * center point of the Ellipse
-         * @public
-         * @type {me.Vector2d}
-         * @name pos
-         * @memberOf me.Ellipse
-         */
-        pos : new me.Vector2d(),
-
-        /**
-         * radius (x/y) of the ellipse
-         * @public
-         * @type {me.Vector2d}
-         * @name radius
-         * @memberOf me.Ellipse
-         */
-        radius : new me.Vector2d(),
-
-        // the shape type
-        shapeType : "Ellipse",
-
+        /** @scope me.Ellipse.prototype */
         /** @ignore */
         init : function (v, w, h) {
+            /**
+             * center point of the Ellipse
+             * @public
+             * @type {me.Vector2d}
+             * @name pos
+             * @memberOf me.Ellipse
+             */
+            this.pos = new me.Vector2d();
+
+            /**
+             * radius (x/y) of the ellipse
+             * @public
+             * @type {me.Vector2d}
+             * @name radius
+             * @memberOf me.Ellipse
+             */
+            this.radius = new me.Vector2d();
+
+            // the shape type
+            this.shapeType = "Ellipse";
             this.setShape(v, w, h);
         },
 
