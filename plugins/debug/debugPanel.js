@@ -32,6 +32,12 @@
 
         /** @private */
         init : function(showKey, hideKey) {
+            // call the super constructor
+            this._super(me.plugin.Base, 'init');
+
+            // minimum melonJS version expected
+            this.version = "1.1.0";
+
             // to hold the debug options
             // clickable rect area
             this.area = {};
@@ -51,10 +57,6 @@
 
             // frame draw time in ms
             this.frameDrawTime = 0;
-
-            // call the super constructor
-            this._super(me.plugin.Base, 'init');
-            this.version = '1.0.0';
 
             this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
 

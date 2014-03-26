@@ -31,10 +31,11 @@
     {
         /** @private */
         init : function() {
-            // minimum melonJS version expected
-            this.version = "1.0.0";
             // call the super constructor
             this._super(me.plugin.Base, 'init');
+
+            // minimum melonJS version expected
+            this.version = "1.1.0";
 
             // to hold the debug options 
             // clickable rect area

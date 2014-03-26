@@ -34,14 +34,14 @@
             /** @ignore */
             init : function () {
                 /**
-                 * define the minimum required <br>
-                 * version of melonJS  <br>
-                 * this need to be defined by the plugin
+                 * define the minimum required version of melonJS<br>
+                 * this can be overridden by the plugin
                  * @public
                  * @type String
+                 * @default "@VERSION"
                  * @name me.plugin.Base#version
                  */
-                this.version = undefined;
+                this.version = "@VERSION";
             }
         });
 
@@ -124,16 +124,14 @@
             _args[0] = plugin;
             me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
 
-            // compatibility testing
-            if (me.plugin[name].version === undefined) {
-                throw "melonJS: Plugin version not defined !";
-            } else if (me.sys.checkVersion(me.plugin[name].version) > 0) {
-                throw ("melonJS: Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version);
-            }
-
             // inheritance check
             if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
                 throw "melonJS: Plugin should extend the me.plugin.Base Class !";
+            }
+
+            // compatibility testing
+            if (me.sys.checkVersion(me.plugin[name].version) > 0) {
+                throw "melonJS: Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version;
             }
         };
 
