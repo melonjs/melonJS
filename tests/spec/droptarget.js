@@ -18,7 +18,7 @@
             createDraggable = function (position, dimensions) {
                 var Draggable = DraggableEntity.extend({
                     init: function (x, y, settings) {
-                        this.parent(x, y, settings);
+                        this._super(DraggableEntity, 'init', [x, y, settings]);
                         this.color = 'white';
                     },
                     update: function () {
@@ -39,7 +39,7 @@
             createDroptarget = function (position, dimensions) {
                 var Droptarget = DroptargetEntity.extend({
                     init: function (x, y, settings) {
-                        this.parent(x, y, settings);
+                        this._super(me.DroptargetEntity, 'init', [x, y, settings]);
                         this.color = 'red';
                     },
                     enableContains: function() {

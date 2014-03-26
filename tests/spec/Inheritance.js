@@ -1,4 +1,4 @@
-describe("John Resig Simple Inheritance", function () {
+describe("Jay Simple Inheritance", function () {
     var Person = Object.extend({
         init: function(isDancing) {
             this.dancing = isDancing;
@@ -10,11 +10,11 @@ describe("John Resig Simple Inheritance", function () {
 
     var Ninja = Person.extend({
         init: function() {
-            this.parent( false );
+            this._super(Person, 'init', [false] );
         },
         dance: function() {
             // Call the inherited version of dance()
-            return this.parent();
+            return this._super(Person, 'dance');
         },
         swingSword: function() {
             return true;

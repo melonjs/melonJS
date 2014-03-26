@@ -20,7 +20,9 @@
      */
     me.ScreenObject = Object.extend(
     /** @scope me.ScreenObject.prototype */ {
+        init: function () {
 
+        },
         /**
          * Object reset function
          * @ignore

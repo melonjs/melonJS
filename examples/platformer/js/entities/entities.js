@@ -7,7 +7,7 @@
 game.PlayerEntity = me.ObjectEntity.extend({	
 	init: function(x, y, settings) {
 		// call the constructor
-		this.parent(x, y , settings);
+		this._super(me.ObjectEntity, 'init', [x, y , settings]);
 
 		// player can exit the viewport (jumping, falling into a hole, etc.)
 		this.alwaysUpdate = true;
@@ -129,7 +129,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		
 		// check if we moved (a "stand" animation would definitely be cleaner)
 		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this.parent(dt);
+			this._super(me.ObjectEntity, 'update', [dt]);
 			return true;
 		}
 		
@@ -160,8 +160,8 @@ game.CoinEntity = me.CollectableEntity.extend({
 	 */
 	init: function (x, y, settings) {
 		
-		// call the parent constructor
-		this.parent(x, y , settings);
+		// call the super constructor
+		this._super(me.CollectableEntity, 'init', [x, y , settings]);
 
 		// add the coin sprite as renderable
 		this.renderable = game.texture.createSpriteFromName("coin.png");
@@ -205,8 +205,8 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		settings.width = settings.spritewidth;
 		settings.height = settings.spriteheight;
 
-		// call the parent constructor
-		this.parent(x, y , settings);
+		// call the super constructor
+		this._super(me.ObjectEntity, 'init', [x, y , settings]);
 		
 		// set start/end position based on the initial area size
 		x = this.pos.x;
@@ -252,7 +252,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		} 
 
 		// return true if we moved of if flickering
-		return (this.parent(dt) || this.vel.x != 0 || this.vel.y != 0);
+		return (this._super(me.ObjectEntity, 'update', [dt]) || this.vel.x != 0 || this.vel.y != 0);
 	},
 	
 	/**
@@ -289,8 +289,8 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
-		// parent constructor
-		this.parent(x, y, settings);
+		// super constructor
+		this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
 	
 		// set a renderable
 		this.renderable = game.texture.createAnimationFromName([
@@ -324,8 +324,8 @@ game.FlyEnemyEntity = game.PathEnemyEntity.extend({
 	 * constructor
 	 */
 	init: function (x, y, settings) {
-		// parent constructor
-		this.parent(x, y, settings);
+		// super constructor
+		this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
 	
 		// set a renderable
 		this.renderable = game.texture.createAnimationFromName([

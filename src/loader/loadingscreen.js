@@ -6,14 +6,18 @@
 (function () {
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend({
-        // flag to know if we need to refresh the display
-        invalidate : false,
 
-        // default progress bar height
-        barHeight : 4,
+        init: function (v, w, h) {
+            this._super(me.Renderable, "init", [v, w, h]);
+            // flag to know if we need to refresh the display
+            this.invalidate = false;
 
-        // current progress
-        progress : 0,
+            // default progress bar height
+            this.barHeight = 4;
+
+            // current progress
+            this.progress = 0;
+        },
 
         // make sure the screen is refreshed every frame
         onProgressUpdate : function (progress) {
@@ -45,9 +49,8 @@
 
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
-        // constructor
         init : function (x, y) {
-            this.parent(new me.Vector2d(x, y), 100, 85);
+            this._super(me.Renderable, "init", [new me.Vector2d(x, y), 100, 85]);
         },
 
         // 100x85 Logo
@@ -93,7 +96,7 @@
     var TextLogo = me.Renderable.extend({
         // constructor
         init : function (w, h) {
-            this.parent(new me.Vector2d(), w, h);
+            this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
             this.logo1 = new me.Font("century gothic", 32, "white", "middle");
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();

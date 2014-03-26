@@ -23,62 +23,60 @@
     me.SpriteObject = me.Renderable.extend(
     /** @scope me.SpriteObject.prototype */
     {
-        // default scale ratio of the object
-        /** @ignore */
-        scale : new me.Vector2d(),
-
-        // if true, image flipping/scaling is needed
-        scaleFlag : false,
-
-        // just to keep track of when we flip
-        lastflipX : false,
-        lastflipY : false,
-
-        // z position (for ordering display)
-        z : 0,
-
-        // image offset
-        offset : new me.Vector2d(),
-
-        /**
-         * Set the angle (in Radians) of a sprite to rotate it <br>
-         * WARNING: rotating sprites decreases performances
-         * @public
-         * @type Number
-         * @name me.SpriteObject#angle
-         */
-        angle: 0,
-
-        /**
-         * Source rotation angle for pre-rotating the source image<br>
-         * Commonly used for TexturePacker
-         * @ignore
-         */
-        _sourceAngle: 0,
-
-        // image reference
-        image : null,
-
-        // to manage the flickering effect
-        flickering : false,
-        flickerDuration : 0,
-        flickercb : null,
-        flickerState : false,
-
         /**
          * @ignore
          */
         init : function (x, y, image, spritewidth, spriteheight) {
 
+            /** @ignore */
+            this.scale = new me.Vector2d();
+
+            // if true, image flipping/scaling is needed
+            this.scaleFlag = false;
+
+            // just to keep track of when we flip
+            this.lastflipX = false;
+            this.lastflipY = false;
+
+            // z position (for ordering display)
+            this.z = 0;
+
+            // image offset
+            this.offset = new me.Vector2d();
+
+            /**
+             * Set the angle (in Radians) of a sprite to rotate it <br>
+             * WARNING: rotating sprites decreases performances
+             * @public
+             * @type Number
+             * @name me.SpriteObject#angle
+             */
+            this.angle = 0;
+
+            /**
+             * Source rotation angle for pre-rotating the source image<br>
+             * Commonly used for TexturePacker
+             * @ignore
+             */
+            this._sourceAngle = 0;
+
+            // image reference
+            this.image = null;
+
+            // to manage the flickering effect
+            this.flickering = false;
+            this.flickerDuration = 0;
+            this.flickercb = null;
+            this.flickerState = false;
+
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
 
-            // call the parent constructor
-            this.parent(new me.Vector2d(x, y),
-                        spritewidth  || image.width,
-                        spriteheight || image.height);
-
+            // call the super constructor
+            this._super(me.Renderable, "init", [new me.Vector2d(x, y),
+                spritewidth  || image.width,
+                spriteheight || image.height]);
             // cache image reference
             this.image = image;
 
@@ -307,6 +305,7 @@
                 }
             }
 
+
             context.drawImage(
                 this.image,
                 this.offset.x, this.offset.y,   // sx,sy
@@ -347,39 +346,57 @@
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
-     * @param {Image} image reference of the animation sheet
-     * @param {Number} spritewidth width of a single sprite within the spritesheet
-     * @param {Number} [spriteheight=image.height] height of a single sprite within the spritesheet
+     * @param {Object} settings Contains additional parameters for the animation sheet:
+     * <ul>
+     * <li>{Image} image to use for the animation</li>
+     * <li>{Number} spritewidth - of a single sprite within the spritesheet</li>
+     * <li>{Number} spriteheight - height of a single sprite within the spritesheet</li>
+     * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
+     * </ul>
+     * @example
+     * // standalone image
+     * var animationSheet = new me.AnimationSheet(0, 0, {
+     *   image: me.loader.getImage('animationsheet'),
+     *   spritewidth: 64,
+     *   spriteheight: 64
+     * });
+     * // from a texture
+     * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
+     * var animationSheet = new me.AnimationSheet(0, 0, {
+     *   image: texture,
+     *   spritewidth: 64,
+     *   spriteheight: 64,
+     *   region: texture.getRegion('animationsheet')
+     * });
      */
     me.AnimationSheet = me.SpriteObject.extend(
     /** @scope me.AnimationSheet.prototype */
     {
-        // Spacing and margin
-        /** @ignore */
-        spacing: 0,
-        /** @ignore */
-        margin: 0,
-
-        /**
-         * pause and resume animation<br>
-         * default value : false;
-         * @public
-         * @type Boolean
-         * @name me.AnimationSheet#animationpause
-         */
-        animationpause : false,
-
-        /**
-         * animation cycling speed (delay between frame in ms)<br>
-         * default value : 100ms;
-         * @public
-         * @type Number
-         * @name me.AnimationSheet#animationspeed
-         */
-        animationspeed : 100,
-
         /** @ignore */
         init : function (x, y, settings) {
+            // Spacing and margin
+            /** @ignore */
+            this.spacing = 0;
+            /** @ignore */
+            this.margin = 0;
+
+            /**
+             * pause and resume animation<br>
+             * default value : false;
+             * @public
+             * @type Boolean
+             * @name me.AnimationSheet#animationpause
+             */
+            this.animationpause = false;
+
+            /**
+             * animation cycling speed (delay between frame in ms)<br>
+             * default value : 100ms;
+             * @public
+             * @type Number
+             * @name me.AnimationSheet#animationspeed
+             */
+            this.animationspeed = 100;
             // hold all defined animation
             this.anim = {};
 
@@ -388,31 +405,25 @@
 
             // default animation sequence
             this.current = null;
-
             // default animation speed (ms)
             this.animationspeed = 100;
 
             // Spacing and margin
+
             this.spacing = settings.spacing || 0;
             this.margin = settings.margin || 0;
 
             var image = settings.region || settings.image;
 
             // call the constructor
-            this.parent(
-                x, y,
-                settings.image,
-                settings.spritewidth,
-                settings.spriteheight,
-                this.spacing,
-                this.margin
-            );
+            this._super(me.SpriteObject, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
 
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
 
             // build the local textureAtlas
+
             this.buildLocalAtlas(settings.atlas, settings.atlasIndices, image);
 
             // create a default animation sequence with all sprites
@@ -421,14 +432,14 @@
             // set as default
             this.setCurrentAnimation("default");
         },
-
         /**
          * build the local (private) atlas
          * @ignore
          */
+
         buildLocalAtlas : function (atlas, indices, image) {
             // reinitialze the atlas
-            if (image === null || typeof(image) === "undefined") {
+            if (image === null || typeof image === "undefined") {
                 image = this.image;
             }
             if (typeof(atlas) !== "undefined") {
@@ -514,16 +525,11 @@
             for (var i = 0, len = index.length; i < len; i++) {
                 if (typeof(index[i]) === "number") {
                     this.anim[name].frame[i] = this.textureAtlas[index[i]];
-                }
-                else { // string
+                } else { // string
                     if (this.atlasIndices === null) {
-                        throw "melonjs: string parameters for addAnimation " +
-                            " are only allowed for TextureAtlas ";
-                    }
-                    else {
-                        this.anim[name].frame[i] = this.textureAtlas[
-                            this.atlasIndices[index[i]]
-                        ];
+                        throw "melonjs: string parameters for addAnimation are only allowed for TextureAtlas ";
+                    } else {
+                        this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
                     }
                 }
             }
@@ -650,18 +656,17 @@
                                  this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
-                            this.parent(dt);
+                            this._super(me.SpriteObject, "update", [dt]);
                             return false;
                         }
                     }
 
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
-
-                    return this.parent(dt) || true;
+                    return this._super(me.SpriteObject, "update", [dt]) || true;
                 }
             }
-            return this.parent(dt);
+            return this._super(me.SpriteObject, "update", [dt]);
         }
     });
 })();

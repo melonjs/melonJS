@@ -3,8 +3,8 @@ game.ShapeObject = me.ObjectEntity.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(me.ObjectEntity, 'init', [x, y, settings]);
         this.hover = false;
         this.handler = me.event.subscribe("pointermove", this.mouseMove.bind(this));
 
@@ -56,7 +56,7 @@ game.ShapeObject = me.ObjectEntity.extend({
      */
     draw: function (context) {
         context.globalAlpha = this.hover ? 1.0 : 0.5;
-        this.parent(context);
+        this._super(me.ObjectEntity, 'draw', [context]);
         context.globalAlpha = 1.0;
     }
 });
@@ -66,8 +66,8 @@ game.Square = game.ShapeObject.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a rectangular shape
         this.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
@@ -90,8 +90,8 @@ game.Circle = game.ShapeObject.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add an ellipse shape
         this.addShape(new me.Ellipse({x:0, y:0}, this.width, this.height));
@@ -115,8 +115,8 @@ game.Poly = game.ShapeObject.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a polygone shape
         this.addShape(new me.PolyShape({x:0, y:0}, [
@@ -152,7 +152,7 @@ game.Poly = game.ShapeObject.extend({
     onSelect : function (event) {
         // recheck using the polygone shape
         if (this.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-            return this.parent(event);
+            return this._super(game.ShapeObject, 'onSelect', [event]);
         }
         return true;
     },
