@@ -274,7 +274,7 @@
          */
         obj.stopTrack = function () {
             if (current_track) {
-                current_track.pause();
+                current_track.stop();
                 current_track_id = null;
                 current_track = null;
             }
