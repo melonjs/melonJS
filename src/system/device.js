@@ -73,9 +73,6 @@
                 api.localStorage = false;
             }
 
-            // detect audio capabilities
-            me.device._detectAudio();
-
             // set pause/stop action on losing focus
             window.addEventListener("blur", function () {
                 if (me.sys.stopOnBlur) {
@@ -112,7 +109,7 @@
                 hidden = "webkitHidden";
                 visibilityChange = "webkitvisibilitychange";
             }
-                 
+
             // register on the event if supported
             if (typeof (visibilityChange) === "string") {
                 // add the corresponding event listener
@@ -154,28 +151,6 @@
             me.device.wp = me.device.ua.match(/Windows Phone/i) || false;
         };
 
-        /**
-         * check the audio capapbilities
-         * @ignore
-         */
-        api._detectAudio = function () {
-            // check for browser codec support
-            me.device.sound = !Howler.noAudio;
-
-            if (me.device.sound) {
-                var audioTest = new Audio();
-                me.device.audioCodecs = {
-                    mp3: !!audioTest.canPlayType("audio/mpeg;").replace(/^no$/, ""),
-                    opus: !!audioTest.canPlayType("audio/ogg; codecs=\"opus\"").replace(/^no$/, ""),
-                    ogg: !!audioTest.canPlayType("audio/ogg; codecs=\"vorbis\"").replace(/^no$/, ""),
-                    wav: !!audioTest.canPlayType("audio/wav; codecs=\"1\"").replace(/^no$/, ""),
-                    m4a: !!(audioTest.canPlayType("audio/x-m4a;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
-                    mp4: !!(audioTest.canPlayType("audio/x-mp4;") || audioTest.canPlayType("audio/aac;")).replace(/^no$/, ""),
-                    weba: !!audioTest.canPlayType("audio/webm; codecs=\"vorbis\"").replace(/^no$/, "")
-                };
-            }
-        };
-
         /*
          * PUBLIC Properties & Functions
          */
@@ -190,24 +165,6 @@
          * @memberOf me.device
          */
         api.ua = navigator.userAgent;
-
-        /**
-         * list of supported audio codecs
-         * @type enum
-         * @readonly
-         * @name audioCodecs
-         * @memberOf me.device
-         */
-        api.audioCodecs = {};
-
-        /**
-         * Browser Audio capabilities
-         * @type Boolean
-         * @readonly
-         * @name sound
-         * @memberOf me.device
-         */
-        api.sound = false;
 
         /**
          * Browser Local Storage capabilities <br>
@@ -691,5 +648,20 @@
                 return false;
             }
         }
+    });
+
+    /**
+     * Returns true if the browser/device has audio capabilities.
+     * @name sound
+     * @memberOf me.device
+     * @public
+     * @type Boolean
+     * @readonly
+     * @return {boolean}
+     */
+    Object.defineProperty(me.device, "sound", {
+        get: function () {
+                return !Howler.noAudio;
+            }
     });
 })();
