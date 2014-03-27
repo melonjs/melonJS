@@ -423,12 +423,6 @@
                 return false;
             }
 
-            if (current_track_id === sound_id) {
-                obj.stopTrack();
-            }
-            else {
-                obj.stop(sound_id);
-            }
             // destroy the Howl object
             audioTracks[sound_id].unload();
             delete audioTracks[sound_id];
