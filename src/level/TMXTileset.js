@@ -64,7 +64,7 @@
              * @type Boolean
              * @name me.Tile#flipX
              */
-            this.flipX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
+            this.flippedX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
             /**
              * True if the tile is flipped vertically<br>
              * @public
