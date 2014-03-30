@@ -462,7 +462,7 @@
             var childIndex = this.getChildIndex(child);
             if (childIndex > 0) {
                 // note : we use an inverted loop
-                this.splice(0, 0, this.splice(childIndex, 1)[0]);
+                this.children.splice(0, 0, this.children.splice(childIndex, 1)[0]);
                 // increment our child z value based on the previous child depth
                 child.z = this.children[1].z + 1;
             }
@@ -479,7 +479,7 @@
             var childIndex = this.getChildIndex(child);
             if (childIndex < (this.children.length - 1)) {
                 // note : we use an inverted loop
-                this.splice((this.children.length - 1), 0, this.splice(childIndex, 1)[0]);
+                this.children.splice((this.children.length - 1), 0, this.children.splice(childIndex, 1)[0]);
                 // increment our child z value based on the next child depth
                 child.z = this.children[(this.children.length - 2)].z - 1;
             }

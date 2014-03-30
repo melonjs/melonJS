@@ -274,7 +274,7 @@
          */
         api.stopTrack = function () {
             if (current_track) {
-                current_track.pause();
+                current_track.stop();
                 current_track_id = null;
                 current_track = null;
             }
@@ -423,12 +423,6 @@
                 return false;
             }
 
-            if (current_track_id === sound_id) {
-                api.stopTrack();
-            }
-            else {
-                api.stop(sound_id);
-            }
             // destroy the Howl object
             audioTracks[sound_id].unload();
             delete audioTracks[sound_id];
