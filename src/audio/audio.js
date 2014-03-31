@@ -29,7 +29,7 @@
 
         // current music
         var current_track_id = null;
-        var current_track = null;
+        var current_track_instance = null;
 
         // a retry counter
         var retry_counter = 0;
@@ -63,6 +63,11 @@
                 audioTracks[sound_id].load();
             }
         }
+
+        function setTrackInstance(id) {
+            current_track_instance = id;
+        }
+
 
         /*
          * PUBLIC STUFF
@@ -189,22 +194,13 @@
             if (sound && typeof sound !== "undefined") {
                 sound.loop(loop || false);
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
-                if (typeof(callback) === "function") {
-                    sound.play(function (soundId) {
-                        callbacks[soundId] = callback;
-                    });
-                }
-                else {
-                    sound.play();
-                }
-
+                sound.play(null, callback);
                 return sound;
             }
         };
 
         /**
          * stop the specified sound on all channels
-         *
          * @name stop
          * @memberOf me.audio
          * @public
@@ -243,7 +239,6 @@
          * play the specified audio track<br>
          * this function automatically set the loop property to true<br>
          * and keep track of the current sound being played.
-         *
          * @name playTrack
          * @memberOf me.audio
          * @public
@@ -254,8 +249,13 @@
          * me.audio.playTrack("awesome_music");
          */
         obj.playTrack = function (sound_id, volume) {
-            current_track = me.audio.play(sound_id, true, null, volume);
             current_track_id = sound_id.toLowerCase();
+            return me.audio.play(
+                current_track_id,
+                true,
+                navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined,
+                volume
+            );
         };
 
         /**
@@ -273,11 +273,67 @@
          * me.audio.stopTrack();
          */
         obj.stopTrack = function () {
-            if (current_track) {
-                current_track.stop();
+            if (current_track_id !== null) {
+                audioTracks[current_track_id].stop(
+                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
+                );
                 current_track_id = null;
-                current_track = null;
             }
+        };
+
+        /**
+         * pause the current audio track
+         *
+         * @name pauseTrack
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @example
+         * me.audio.pauseTrack();
+         */
+        obj.pauseTrack = function () {
+            if (current_track_id !== null) {
+                audioTracks[current_track_id].pause(
+                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
+                );
+            }
+        };
+
+        /**
+         * resume the previously paused audio track
+         *
+         * @name resumeTrack
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_id audio track id
+         * @example
+         * // play an awesome music
+         * me.audio.playTrack("awesome_music");
+         * // pause the audio track
+         * me.audio.pauseTrack();
+         * // resume the music
+         * me.audio.resumeTrack();
+         */
+        obj.resumeTrack = function () {
+            if (current_track_id !== null) {
+                audioTracks[current_track_id].play(
+                    null,
+                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
+                );
+            }
+        };
+
+        /**
+         * returns the current track Id
+         * @name getCurrentTrack
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @return {String} audio track id
+         */
+        obj.getCurrentTrack = function () {
+            return current_track_id;
         };
 
         /**
@@ -353,56 +409,6 @@
          */
         obj.unmuteAll = function () {
             Howler.unmute();
-        };
-
-        /**
-         * returns the current track Id
-         * @name getCurrentTrack
-         * @memberOf me.audio
-         * @public
-         * @function
-         * @return {String} audio track id
-         */
-        obj.getCurrentTrack = function () {
-            return current_track_id;
-        };
-
-        /**
-         * pause the current audio track
-         *
-         * @name pauseTrack
-         * @memberOf me.audio
-         * @public
-         * @function
-         * @example
-         * me.audio.pauseTrack();
-         */
-        obj.pauseTrack = function () {
-            if (current_track) {
-                current_track.pause();
-            }
-        };
-
-        /**
-         * resume the previously paused audio track
-         *
-         * @name resumeTrack
-         * @memberOf me.audio
-         * @public
-         * @function
-         * @param {String} sound_id audio track id
-         * @example
-         * // play an awesome music
-         * me.audio.playTrack("awesome_music");
-         * // pause the audio track
-         * me.audio.pauseTrack();
-         * // resume the music
-         * me.audio.resumeTrack();
-         */
-        obj.resumeTrack = function () {
-            if (current_track) {
-                current_track.play();
-            }
         };
 
         /**
