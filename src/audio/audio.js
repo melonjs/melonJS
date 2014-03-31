@@ -204,7 +204,6 @@
 
         /**
          * stop the specified sound on all channels
-         *
          * @name stop
          * @memberOf me.audio
          * @public
@@ -243,7 +242,6 @@
          * play the specified audio track<br>
          * this function automatically set the loop property to true<br>
          * and keep track of the current sound being played.
-         *
          * @name playTrack
          * @memberOf me.audio
          * @public
@@ -256,6 +254,7 @@
         obj.playTrack = function (sound_id, volume) {
             current_track = me.audio.play(sound_id, true, null, volume);
             current_track_id = sound_id.toLowerCase();
+            return current_track;
         };
 
         /**
