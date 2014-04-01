@@ -176,7 +176,7 @@
          * @param {Boolean}
          *            [loop=false] loop audio
          * @param {Function}
-         *            [callback] callback function
+         *            [callback] returns the unique playback id for this sound instance.
          * @param {Number}
          *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
          * @example
@@ -206,32 +206,33 @@
          * @public
          * @function
          * @param {String} sound_id audio clip id
+         * @param {String} [id] the play instance ID.
          * @example
          * me.audio.stop("cling");
          */
-        obj.stop = function (sound_id) {
+        obj.stop = function (sound_id, instance_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
-                sound.stop();
+                sound.stop(instance_id);
             }
         };
 
         /**
          * pause the specified sound on all channels<br>
          * this function does not reset the currentTime property
-         *
          * @name pause
          * @memberOf me.audio
          * @public
          * @function
          * @param {String} sound_id audio clip id
+         * @param {String} [id] the play instance ID.
          * @example
          * me.audio.pause("cling");
          */
-        obj.pause = function (sound_id) {
+        obj.pause = function (sound_id, instance_id) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
-                sound.pause();
+                sound.pause(instance_id);
             }
         };
 
