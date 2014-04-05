@@ -634,6 +634,9 @@
                 this.falling = (vel.y > 0);
                 this.jumping = (this.falling ? false : this.jumping);
             }
+			else {
+				this.falling = false;
+			}
 
             // apply friction
             if (this.friction.x) {
