@@ -9,6 +9,8 @@ Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod
 
 [melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
 
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/melonjs/melonjs/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
 About melonJS
 -------------------------------------------------------------------------------
 
