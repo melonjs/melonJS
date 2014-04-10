@@ -48,7 +48,7 @@
         visible : true,
         
         // minimum melonJS version expected
-        version : "1.0.0",
+        version : "1.0.1",
 
         /** @private */
         init : function() {

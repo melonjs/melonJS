@@ -1,5 +1,8 @@
 Version History
 ---------------
+1.0.1
+* Entity : Disable falling flag when gravity is disabled
+
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
 * Core : cleaned-up/renamed conflicting set function in shape and font objects
