@@ -2,6 +2,7 @@ Version History
 ---------------
 1.0.1
 * Entity : Disable falling flag when gravity is disabled
+* Entity : Fix an exception in ObjectEntity.checkCollision()
 
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function

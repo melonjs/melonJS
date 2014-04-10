@@ -1251,6 +1251,7 @@ window.me = window.me || {};
                         y : 0
                     }
                 };
+                api.defaultCollisionMap = new me.CollisionTiledLayer(0, 0);
 
                 // set as initialized
                 initialized = true;
@@ -1280,6 +1281,7 @@ window.me = window.me || {};
                     y : 0
                 }
             };
+            api.collisionMap = api.defaultCollisionMap;
 
             // reset the transform matrix to the normal one
             frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
