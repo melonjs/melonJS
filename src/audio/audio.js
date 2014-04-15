@@ -307,7 +307,6 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio track id
          * @example
          * // play an awesome music
          * me.audio.playTrack("awesome_music");
