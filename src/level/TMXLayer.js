@@ -485,7 +485,11 @@
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
-            return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+            var row = this.layerData[~~(x / this.tilewidth)];
+            if (row) {
+                return row[~~(y / this.tileheight)];
+            }
+            return undefined;
         },
 
         /**
@@ -529,6 +533,16 @@
             }
         },
 
+        _isOutOfMap: function(x,y) {
+
+            var coordOfTile = this.renderer.pixelToTileCoords(x,y);
+            if (coordOfTile.x <= 0 || coordOfTile.x >= this.rows) return true;
+            if (coordOfTile.y <= 0 || coordOfTile.y >= this.cols) return true;
+
+            return false;
+
+        },
+
         /**
          * check for collision
          * obj - obj
@@ -550,7 +564,7 @@
             };
 
             //var tile;
-            if (x <= 0 || x >= this.width) {
+            if (this._isOutOfMap(x,y) && pv.x !== 0) {
                 res.x = pv.x;
             }
             else if (pv.x !== 0) {
@@ -571,7 +585,7 @@
             }
 
             // check for y movement
-            if (y <= 0 || y >= this.height) {
+            if (this._isOutOfMap(x,y) && pv.y !== 0) {
                 res.y = pv.y;
             } else {
                 // left, y corner
