@@ -775,7 +775,7 @@
                     // going up, collision with ceiling
                     else if (collision.y < 0) {
                         if (!this.jumping && !prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
-                            this.falling = true;
+                            this.falling = (this.gravity != 0);
                             // cancel the y velocity
                             this.vel.y = 0;
                         }
