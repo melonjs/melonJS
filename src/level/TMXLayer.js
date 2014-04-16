@@ -485,9 +485,10 @@
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
-            var row = this.layerData[~~(x / this.tilewidth)];
+            var coordOfTile = this.renderer.pixelToTileCoords(x,y);
+            var row = this.layerData[Math.ceil(coordOfTile.x)];
             if (row) {
-                return row[~~(y / this.tileheight)];
+                return row[Math.ceil(coordOfTile.y)];
             }
             return undefined;
         },
