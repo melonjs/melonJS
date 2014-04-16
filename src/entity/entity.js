@@ -291,7 +291,7 @@
              * @name jumping
              * @memberOf me.ObjectEntity
              */
-            this.jumping = true;
+            this.jumping = false;
 
             // some usefull slope variable
             this.slopeY = 0;
@@ -768,11 +768,13 @@
                                 );
                                 this.falling = false;
                             }
+                        } else if (!this.falling) {
+                            this.vel.y = 0;
                         }
                     }
                     // going up, collision with ceiling
                     else if (collision.y < 0) {
-                        if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
+                        if (!this.jumping && !prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
                             this.falling = true;
                             // cancel the y velocity
                             this.vel.y = 0;

@@ -571,17 +571,21 @@
             }
 
             // check for y movement
-            // left, y corner
-            res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
-            if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-                res.y = pv.y || 1;
-                res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-            }
-            else { // right, y corner
-                res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+            if (y <= 0 || y >= this.height) {
+                res.y = pv.y;
+            } else {
+                // left, y corner
+                res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
                 if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
                     res.y = pv.y || 1;
                     res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+                }
+                else { // right, y corner
+                    res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+                    if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+                        res.y = pv.y || 1;
+                        res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+                    }
                 }
             }
             // return the collide object
