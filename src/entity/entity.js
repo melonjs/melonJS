@@ -761,7 +761,7 @@
                             }
                             else {
                                 // adjust position to the corresponding tile
-                                this.collision.pos.y = ~~this.collision.pos.y;
+                                this._bounds.pos.y = ~~this._bounds.pos.y;
                                 this.vel.y = (
                                     this.falling ?
                                     tile.pos.y - this._bounds.bottom : 0
