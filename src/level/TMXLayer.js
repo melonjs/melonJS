@@ -485,7 +485,12 @@
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
-            return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+            var coordOfTile = this.renderer.pixelToTileCoords(x,y);
+            var row = this.layerData[Math.ceil(coordOfTile.x)];
+            if (row) {
+                return row[Math.ceil(coordOfTile.y)];
+            }
+            return undefined;
         },
 
         /**
@@ -529,6 +534,16 @@
             }
         },
 
+        _isOutOfMap: function(x,y) {
+
+            var coordOfTile = this.renderer.pixelToTileCoords(x,y);
+            if (coordOfTile.x <= 0 || coordOfTile.x >= this.rows) return true;
+            if (coordOfTile.y <= 0 || coordOfTile.y >= this.cols) return true;
+
+            return false;
+
+        },
+
         /**
          * check for collision
          * obj - obj
@@ -550,7 +565,7 @@
             };
 
             //var tile;
-            if (x <= 0 || x >= this.width) {
+            if (this._isOutOfMap(x,y) && pv.x !== 0) {
                 res.x = pv.x;
             }
             else if (pv.x !== 0) {
@@ -571,17 +586,21 @@
             }
 
             // check for y movement
-            // left, y corner
-            res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
-            if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-                res.y = pv.y || 1;
-                res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-            }
-            else { // right, y corner
-                res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+            if (this._isOutOfMap(x,y) && pv.y !== 0) {
+                res.y = pv.y;
+            } else {
+                // left, y corner
+                res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
                 if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
                     res.y = pv.y || 1;
                     res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+                }
+                else { // right, y corner
+                    res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
+                    if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
+                        res.y = pv.y || 1;
+                        res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
+                    }
                 }
             }
             // return the collide object

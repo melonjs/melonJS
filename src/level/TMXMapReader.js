@@ -145,7 +145,7 @@
      * @constructor
      * @ignore
      */
-    var JSONMapReader = me.TMXMapReader.extend({
+    JSONMapReader = me.TMXMapReader.extend({
         readJSONMap: function (map, data) {
             if (!data) {
                 throw "melonJS:" + map.levelId + " TMX map not found";
