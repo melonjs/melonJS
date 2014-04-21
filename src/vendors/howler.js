@@ -1,5 +1,5 @@
 /*!
- *  howler.js v1.1.19.1 (custom melonJS version)
+ *  howler.js v1.1.20
  *  howlerjs.com
  *
  *  (c) 2013-2014, James Simpson of GoldFire Studios
@@ -178,6 +178,11 @@
     self._volume = o.volume !== undefined ? o.volume : 1;
     self._urls = o.urls || [];
     self._rate = o.rate || 1;
+
+    // allow forcing of a specific panningModel ('equalpower' or 'HRTF'),
+    // if none is specified, defaults to 'equalpower' and switches to 'HRTF'
+    // if 3d sound is used
+    self._model = o.model || null;
 
     // setup event functions
     self._onload = [o.onload || function() {}];
@@ -547,7 +552,7 @@
           } else {
             activeNode.bufferSource.stop(0);
           }
-        } else {
+        } else if (!isNaN(activeNode.duration)) {
           activeNode.pause();
           activeNode.currentTime = 0;
         }
@@ -769,6 +774,7 @@
           if (activeNode) {
             self._pos3d = [x, y, z];
             activeNode.panner.setPosition(x, y, z);
+            activeNode.panner.panningModel = self._model || 'HRTF';
           }
         }
       } else {
@@ -1010,6 +1016,7 @@
 
       // create the panner
       node[index].panner = ctx.createPanner();
+      node[index].panner.panningModel = self._model || 'equalpower';
       node[index].panner.setPosition(self._pos3d[0], self._pos3d[1], self._pos3d[2]);
       node[index].panner.connect(node[index]);
 
@@ -1079,12 +1086,17 @@
         }
 
         if (!self._webAudio) {
-           // remove the source if using HTML5 Audio
+          // remove the source if using HTML5 Audio
           nodes[i].src = '';
         } else {
           // disconnect the output from the master gain
           nodes[i].disconnect(0);
         }
+      }
+
+      // make sure all timeouts are cleared
+      for (i=0; i<self._onendTimer.length; i++) {
+        clearTimeout(self._onendTimer[i].timer);
       }
 
       // remove the reference in the global Howler object
