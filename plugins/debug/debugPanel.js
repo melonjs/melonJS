@@ -93,11 +93,13 @@
 			this.font = new me.Font('courier', 10, 'white');
 
 			// clickable areas
-			this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
-			this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
-
 			this.area.renderDirty = new me.Rect(new me.Vector2d(270,5),15,15);
 			this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
+            // some internal string/length
+            this.help_str      = "(s)how/(h)ide";
+            this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
+            this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.getSystemContext(), "Draw   : ").width * 3 + 310;
 
 			// some internal string/length
 			this.help_str	  = "(s)how/(h)ide";
@@ -308,11 +310,11 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, startX, endX) {
+        drawMemoryGraph : function (context, endX) {
             if (window.performance && window.performance.memory) {
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
-                var len = endX - startX;
+                var len = endX - this.memoryPositionX;
 
                 // remove the first item
                 this.samples.shift();
@@ -329,10 +331,10 @@
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', startX + 5 * this.mod, 5 * this.mod);
+                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX * this.mod, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", startX + 5 * this.mod, 5 * this.mod);
+                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX * this.mod, 5 * this.mod);
             }
         },
 
@@ -365,11 +367,10 @@
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
-            var startX = endX - this.help_str_len;
-            this.drawMemoryGraph(context, startX, endX);
+            this.drawMemoryGraph(context, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(context, this.help_str, startX, 18 * this.mod);
+            this.font.draw(context, this.help_str, endX - this.help_str_len, 18 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
