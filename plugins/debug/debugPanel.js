@@ -99,7 +99,7 @@
             this.help_str      = "(s)how/(h)ide";
             this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
             this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.getSystemContext(), "Draw   : ").width * 3 + 310;
+            this.memoryPositionX = this.font.measureText(me.video.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
 			// some internal string/length
 			this.help_str	  = "(s)how/(h)ide";
@@ -322,19 +322,19 @@
                 this.samples[len] = (usedHeap / totalHeap)  * 25;
 
                 // draw the graph
-                for (var x = len;x--;) {
+                for (var x = len; x >= 0; x--) {
                     var where = endX - (len - x);
                     context.beginPath();
                     context.strokeStyle = "lightblue";
-                    context.moveTo(where, 30);
-                    context.lineTo(where, 30 - (this.samples[x] || 0));
+                    context.moveTo(where, 30 * this.mod);
+                    context.lineTo(where, (30 - (this.samples[x] || 0)) * this.mod);
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX * this.mod, 5 * this.mod);
+                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX * this.mod, 5 * this.mod);
+                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
