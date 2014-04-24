@@ -1,11 +1,7 @@
 /**
- * @license MelonJS Game Engine
- * @copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * MelonJS Game Engine
+ * (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
- *
- * melonJS is licensed under the MIT License.
- * http://www.opensource.org/licenses/mit-license.php
- *
  */
 
  /**
@@ -14,6 +10,33 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
  */
 
+ 
+/* jshint ignore:start */
+/**
+ * Get the prototype of an Object.
+ * @memberOf external:Object#
+ * @alias getPrototypeOf
+ * @param {Object} obj Target object to inspect.
+ * @return {Prototype} Prototype of the target object.
+ */
+Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
+    return obj.__proto__;
+};
+
+/**
+ * Set the prototype of an Object.
+ * @memberOf external:Object#
+ * @alias setPrototypeOf
+ * @param {Object} obj Target object to modify.
+ * @param {Prototype} prototype New prototype for the target object.
+ * @return {Object} Modified target object.
+ */
+Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+    obj.__proto__ = prototype;
+    return obj;
+};
+/* jshint ignore:end */
+ 
 if (!Object.defineProperty) {
     /**
      * simple defineProperty function definition (if not supported by the browser)<br>
