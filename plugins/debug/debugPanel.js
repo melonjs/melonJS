@@ -89,9 +89,6 @@
             }
             this.font = new me.Font('courier', s, 'white');
 
-			// create a default font, with fixed char width
-			this.font = new me.Font('courier', 10, 'white');
-
 			// clickable areas
 			this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
       this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
