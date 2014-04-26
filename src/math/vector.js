@@ -122,7 +122,7 @@
 
         /**
          * Multiply this vector values by the passed vector
-         * @name scale
+         * @name scaleV
          * @memberOf me.Vector2d
          * @function
          * @param {me.Vector2d} v
