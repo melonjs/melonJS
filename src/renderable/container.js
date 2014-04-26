@@ -278,7 +278,7 @@
                 }
             }
 
-            for (var i = this.children.length; i >= 0; i--) {
+            for (var i = this.children.length - 1; i >= 0; i--) {
                 var obj = this.children[i];
                 if (obj instanceof me.ObjectContainer) {
                     compare(obj, prop);
