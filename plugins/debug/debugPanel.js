@@ -79,7 +79,13 @@
             this.alwaysUpdate = true;
 
             // create a default font, with fixed char width
-            this.font = new me.Font('courier', 10, 'white');
+            var s = 10;
+            this.mod = 1;
+            if(me.game.viewport.width < 500) {
+                s = 7;
+                this.mod = 0.7;
+            }
+            this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
             this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
@@ -92,6 +98,7 @@
             this.help_str      = "(s)how/(h)ide";
             this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
             this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -297,12 +304,11 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, startX, endX) {
+        drawMemoryGraph : function (context, endX) {
             if (window.performance && window.performance.memory) {
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
-
-                var len = endX - startX;
+                var len = endX - this.memoryPositionX;
 
                 // remove the first item
                 this.samples.shift();
@@ -310,19 +316,19 @@
                 this.samples[len] = (usedHeap / totalHeap)  * 25;
 
                 // draw the graph
-                for (var x = len;x--;) {
+                for (var x = len; x >= 0; x--) {
                     var where = endX - (len - x);
                     context.beginPath();
                     context.strokeStyle = "lightblue";
-                    context.moveTo(where, 30);
-                    context.lineTo(where, 30 - (this.samples[x] || 0));
+                    context.moveTo(where, 30 * this.mod);
+                    context.lineTo(where, (30 - (this.samples[x] || 0)) * this.mod);
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', startX + 5, 5);
+                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", startX + 5, 5);
+                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
@@ -338,30 +344,31 @@
             context.globalAlpha = 1.0;
 
             // # entities / draw
-            this.font.draw(context, "#objects : " + me.game.world.children.length, 5, 5);
-            this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5, 18);
+            this.font.draw(context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
 
             // debug checkboxes
-            this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100, 5);
-            this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100, 18);
+            this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(context, "?dirtyRect  [ ]",    200, 5);
-            this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200, 18);
+            this.font.draw(context, "?dirtyRect  [ ]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
-            this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310, 5);
+            this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310, 18);
+            this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
 
             // draw the memory heap usage
-            this.drawMemoryGraph(context, 425, this.rect.width - this.help_str_len - 10);
+            var endX = this.rect.width - 25;
+            this.drawMemoryGraph(context, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(context, this.help_str, this.rect.width - this.help_str_len - 5, 18);
+            this.font.draw(context, this.help_str, endX - this.help_str_len, 18 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
-            this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5);
+            this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
             context.restore();
 
