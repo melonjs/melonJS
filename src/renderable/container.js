@@ -42,76 +42,69 @@
     /** @scope me.ObjectContainer.prototype */
     {
         /**
-         * The property of the child object that should be used to sort on <br>
-         * value : "x", "y", "z" (default: me.game.sortOn)
-         * @public
-         * @type String
-         * @name sortOn
-         * @memberOf me.ObjectContainer
-         */
-        sortOn : "z",
-
-        /**
-         * Specify if the children list should be automatically sorted when adding a new child
-         * @public
-         * @type Boolean
-         * @name autoSort
-         * @memberOf me.ObjectContainer
-         */
-        autoSort : true,
-
-        /**
-         * keep track of pending sort
-         * @ignore
-         */
-        pendingSort : null,
-
-        /**
-         * The array of children of this container.
-         * @ignore
-         */
-        children : null,
-
-        /**
-         * Container bounds
-         * @ignore
-         */
-        bounds : null,
-
-        /**
-         * Enable collision detection for this container (default true)<br>
-         * @public
-         * @type Boolean
-         * @name collidable
-         * @memberOf me.ObjectContainer
-         */
-        collidable : true,
-
-        /**
-         * the container default transformation matrix
-         * @public
-         * @type me.Matrix2d
-         * @name transform
-         * @memberOf me.ObjectContainer
-         */
-        transform : new me.Matrix2d(),
-
-        /**
          * constructor
          * @ignore
          */
         init : function (x, y, width, height) {
-            // call the parent constructor
-            this.parent(
-                new me.Vector2d(x || 0, y || 0),
+            /**
+             * keep track of pending sort
+             * @ignore
+             */
+            this.pendingSort = null;
+
+            /**
+             * Enable collision detection for this container (default true)<br>
+             * @public
+             * @type Boolean
+             * @name collidable
+             * @memberOf me.ObjectContainer
+             */
+            this.collidable = true;
+
+            /**
+             * the container default transformation matrix
+             * @public
+             * @type me.Matrix2d
+             * @name transform
+             * @memberOf me.ObjectContainer
+             */
+            this.transform = new me.Matrix2d();
+            // call the _super constructor
+            this._super(me.Renderable,
+                "init",
+                [new me.Vector2d(x || 0, y || 0),
                 width || Infinity,
-                height || Infinity
+                height || Infinity]
             );
             // init the bounds to an empty rect
+            /**
+             * Container bounds
+             * @ignore
+             */
             this.bounds = new me.Rect(new me.Vector2d(0, 0), 0, 0);
+            /**
+             * The array of children of this container.
+             * @ignore
+             */
             this.children = [];
             // by default reuse the global me.game.setting
+            /**
+             * The property of the child object that should be used to sort on <br>
+             * value : "x", "y", "z" (default: me.game.sortOn)
+             * @public
+             * @type String
+             * @name sortOn
+             * @memberOf me.ObjectContainer
+             */
             this.sortOn = me.game.sortOn;
+            /**
+             * Specify if the children list should be automatically sorted when adding a new child
+             * @public
+             * @type Boolean
+             * @name autoSort
+             * @memberOf me.ObjectContainer
+             */
+
             this.autoSort = true;
             this.transform.identity();
         },
@@ -129,7 +122,8 @@
         addChild : function (child, zIndex) {
             if (typeof(child.ancestor) !== "undefined") {
                 child.ancestor.removeChildNow(child);
-            } else {
+            }
+            else {
                 // only allocate a GUID if the object has no previous ancestor
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
@@ -149,14 +143,11 @@
             }
 
             child.ancestor = this;
-
             this.children.push(child);
-
             if (this.autoSort === true) {
                 this.sort();
             }
         },
-
         /**
          * Add a child to the container at the specified index<br>
          * (the list won't be sorted after insertion)
@@ -166,8 +157,9 @@
          * @param {me.Renderable} child
          * @param {Number} index
          */
+
         addChildAt : function (child, index) {
-            if ((index >= 0) && (index < this.children.length)) {
+            if (index >= 0 && index < this.children.length) {
                 if (typeof(child.ancestor) !== "undefined") {
                     child.ancestor.removeChildNow(child);
                 }
@@ -179,7 +171,6 @@
                         child.GUID = me.utils.createGUID();
                     }
                 }
-
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
@@ -209,7 +200,6 @@
                 // swap the positions..
                 this.children[index] = child2;
                 this.children[index2] = child;
-
             }
             else {
                 throw "melonJS (me.ObjectContainer): " + child + " Both the supplied childs must be a child of the caller " + this;
@@ -224,7 +214,7 @@
          * @param {Number} index
          */
         getChildAt : function (index) {
-            if ((index >= 0) && (index < this.children.length)) {
+            if (index >= 0 && index < this.children.length) {
                 return this.children[index];
             }
             else {
@@ -272,7 +262,7 @@
          * // or query the whole world :
          * ent = me.game.world.getChildByProp("name", "mainPlayer");
          */
-        getChildByProp : function (prop, value)  {
+        getChildByProp : function (prop, value)    {
             var objList = [];
             // for string comparaisons
             var _regExp = new RegExp(value, "i");
@@ -282,12 +272,14 @@
                     if (obj[prop].match(_regExp)) {
                         objList.push(obj);
                     }
-                } else if (obj[prop] === value) {
+                }
+                else if (obj[prop] === value) {
                     objList.push(obj);
                 }
             }
 
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+            for (var i = this.children.length - 1; i >= 0; i--) {
+                var obj = this.children[i];
                 if (obj instanceof me.ObjectContainer) {
                     compare(obj, prop);
                     objList = objList.concat(obj.getChildByProp(prop, value));
@@ -298,7 +290,6 @@
             }
             return objList;
         },
-
 
         /**
          * returns the list of childs with the specified name<br>
@@ -312,6 +303,7 @@
          * @param {String} name entity name
          * @return {me.Renderable[]} Array of childs
          */
+
         getChildByName : function (name) {
             return this.getChildByProp("name", name);
         },
@@ -329,9 +321,8 @@
          */
         getChildByGUID : function (guid) {
             var obj = this.getChildByProp("GUID", guid);
-            return (obj.length > 0 ? obj[0] : null);
+            return (obj.length > 0) ? obj[0] : null;
         },
-
 
         /**
          * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
@@ -391,6 +382,7 @@
          */
         removeChildNow : function (child, keepalive) {
             if  (this.hasChild(child)) {
+
                 child.ancestor = undefined;
 
                 if (!keepalive) {
@@ -418,8 +410,10 @@
          * @param {Object} value property value
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
+
         setChildsProperty : function (prop, val, recursive) {
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+            for (var i = this.children.length; i >= 0; i--) {
+                var obj = this.children[i];
                 if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
                     obj.setChildsProperty(prop, val, recursive);
                 }
@@ -601,6 +595,7 @@
          * @param {Boolean} [recursive=false] recursively sort all containers if true
          */
         sort : function (recursive) {
+
             // do nothing if there is already a pending sort
             if (this.pendingSort === null) {
                 if (recursive === true) {
@@ -728,7 +723,6 @@
                     isDirty |= obj.update(dt);
                 }
             }
-
             return isDirty;
         },
 

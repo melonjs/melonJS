@@ -3,8 +3,8 @@ game.square = me.DraggableEntity.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(me.DraggableEntity, 'init', [x, y, settings]);
         // set the color to white
         this.color = "white";
         // set the font we want to use
@@ -31,14 +31,14 @@ game.square = me.DraggableEntity.extend({
      * dragStart overwrite function
      */
     dragStart: function (e) {
-        // call the parent function
-        this.parent(e);
+        // call the super function
+        this._super(me.DraggableEntity, 'dragStart', [e]);
         // set the color to blue
         this.color = 'blue';
     },
     dragEnd: function (e) {
-        // call the parent function
-        this.parent(e);
+        // call the super function
+        this._super(me.DraggableEntity, 'dragEnd', [e]);
         // set the color to white
         this.color = 'white';
     }
@@ -50,7 +50,7 @@ game.droptarget = me.DroptargetEntity.extend({
      */
     init: function (x, y, settings) {
         // call the parent constructor
-        this.parent(x, y, settings);
+        this._super(me.DroptargetEntity, 'init', [x, y, settings]);
         // set the color to white
         this.color = "red";
         // set the font we want to use
@@ -79,8 +79,8 @@ game.droptarget = me.DroptargetEntity.extend({
     drop: function (e) {
         // save a reference to this to use in the timeout
         var self = this;
-        // call the parent function
-        this.parent(e);
+        // call the super function
+        this._super(me.DroptargetEntity, 'draw', [e]);
         // indicate a succesful drop
         this.color = 'green';
         // set the color back to red after a second
@@ -95,8 +95,8 @@ game.droptarget2 = game.droptarget.extend({
      * constructor
      */
     init: function (x, y, settings) {
-        // call the parent constructor
-        this.parent(x, y, settings);
+        // call the super constructor
+        this._super(game.droptarget, 'init', [x, y, settings]);
         // set the color to white
         this.color = "red";
         // set the font we want to use

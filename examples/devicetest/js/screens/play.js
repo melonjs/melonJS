@@ -13,7 +13,7 @@ game.PlayScreen = me.ScreenObject.extend({
         // renderable to display device information
         me.game.world.addChild(new (me.Renderable.extend({
             init: function() {
-                this.parent(new me.Vector2d(), 100, 200);
+                this._super(me.Renderable, 'init', [new me.Vector2d(), 100, 200]);
                 this.font = new me.Font('arial', '24px', '#fff');
             },
             update: function() {

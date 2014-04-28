@@ -17,27 +17,23 @@
     me.Vector2d = Object.extend(
     /** @scope me.Vector2d.prototype */
     {
-        /**
-         * x value of the vector
-         * @public
-         * @type Number
-         * @name x
-         * @memberOf me.Vector2d
-         */
-        x : 0,
-
-        /**
-         * y value of the vector
-         * @public
-         * @type Number
-         * @name y
-         * @memberOf me.Vector2d
-         */
-        y : 0,
-
         /** @ignore */
         init : function (x, y) {
+            /**
+             * x value of the vector
+             * @public
+             * @type Number
+             * @name x
+             * @memberOf me.Vector2d
+             */
             this.x = x || 0;
+            /**
+             * y value of the vector
+             * @public
+             * @type Number
+             * @name y
+             * @memberOf me.Vector2d
+             */
             this.y = y || 0;
         },
 
@@ -126,7 +122,7 @@
 
         /**
          * Multiply this vector values by the passed vector
-         * @name scale
+         * @name scaleV
          * @memberOf me.Vector2d
          * @function
          * @param {me.Vector2d} v

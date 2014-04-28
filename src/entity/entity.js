@@ -115,80 +115,75 @@
      * <img src="images/object_properties.png"/>
      */
     me.ObjectEntity = me.Renderable.extend(
-    /** @scope me.ObjectEntity.prototype */ {
-
-        /**
-         * define the type of the object<br>
-         * default value : none<br>
-         * @public
-         * @type String
-         * @name type
-         * @memberOf me.ObjectEntity
-         */
-        type : 0,
-
-        /**
-         * flag to enable collision detection for this object<br>
-         * default value : true<br>
-         * @public
-         * @type Boolean
-         * @name collidable
-         * @memberOf me.ObjectEntity
-         */
-        collidable : true,
-
-        /**
-         * The collision shapes of the entity <br>
-         * (note: only shape at index 0 is used in melonJS 1.0.x)
-         * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
-         * @name shapes
-         * @memberOf me.ObjectEntity
-         */
-        shapes : [],
-
-        /**
-         * The current shape index
-         * @ignore
-         * @type Number
-         * @name shapeIndex
-         * @memberOf me.ObjectEntity
-         */
-        shapeIndex : 0,
-
-        /**
-         * The entity renderable object (if defined)
-         * @public
-         * @type me.Renderable
-         * @name renderable
-         * @memberOf me.ObjectEntity
-         */
-        renderable : null,
-
-        // just to keep track of when we flip
-        lastflipX : false,
-        lastflipY : false,
-
+    /** @scope me.ObjectEntity.prototype */
+    {
         /** @ignore */
         init : function (x, y, settings) {
-            // call the parent constructor
-            this.parent(
-                this.pos.set(x, y),
-                settings.width,
-                settings.height
-            );
+            /**
+             * define the type of the object<br>
+             * default value : none<br>
+             * @public
+             * @type String
+             * @name type
+             * @memberOf me.ObjectEntity
+             */
+            this.type = 0;
+
+            /**
+             * flag to enable collision detection for this object<br>
+             * default value : true<br>
+             * @public
+             * @type Boolean
+             * @name collidable
+             * @memberOf me.ObjectEntity
+             */
+            this.collidable = true;
+
+            /**
+             * The collision shapes of the entity <br>
+             * (note: only shape at index 0 is used in melonJS 1.0.x)
+             * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
+             * @name shapes
+             * @memberOf me.ObjectEntity
+             */
+            this.shapes = [];
+
+            /**
+             * The current shape index
+             * @ignore
+             * @type Number
+             * @name shapeIndex
+             * @memberOf me.ObjectEntity
+             */
+            this.shapeIndex = 0;
+
+            /**
+             * The entity renderable object (if defined)
+             * @public
+             * @type me.Renderable
+             * @name renderable
+             * @memberOf me.ObjectEntity
+             */
+            this.renderable = null;
+
+            // just to keep track of when we flip
+            this.lastflipX = false;
+            this.lastflipY = false;
+            // call the super constructor
+            this.pos = new me.Vector2d(x, y);
+            this._super(me.Renderable, "init", [this.pos,
+                        settings.width,
+                        settings.height]);
 
             if (settings.image) {
-                var image = (
-                    typeof settings.image === "string" ?
-                    me.loader.getImage(settings.image) : settings.image
-                );
-                this.renderable = new me.AnimationSheet(
-                    0, 0, image,
-                    ~~settings.spritewidth,
-                    ~~settings.spriteheight,
-                    ~~settings.spacing,
-                    ~~settings.margin
-                );
+                var image = typeof settings.image === "string" ? me.loader.getImage(settings.image) : settings.image;
+                this.renderable = new me.AnimationSheet(0, 0, {
+                    image: image,
+                    spritewidth: ~~settings.spritewidth,
+                    spriteheight: ~~settings.spriteheight,
+                    spacing: ~~settings.spacing,
+                    margin: ~~settings.margin
+                });
 
                 // check for user defined transparent color
                 if (settings.transparent_color) {
@@ -529,8 +524,7 @@
          * @param {me.ObjectEntity} entity Entity
          * @return {Number} distance
          */
-        distanceTo: function (e)
-        {
+        distanceTo: function (e) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var dx = (this.pos.x + this.hWidth)  - (e.pos.x + e.hWidth);
@@ -546,8 +540,7 @@
          * @param {me.Vector2d} vector vector
          * @return {Number} distance
          */
-        distanceToPoint: function (v)
-        {
+        distanceToPoint: function (v) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var dx = (this.pos.x + this.hWidth)  - (v.x);
@@ -563,8 +556,7 @@
          * @param {me.ObjectEntity} entity Entity
          * @return {Number} angle in radians
          */
-        angleTo: function (e)
-        {
+        angleTo: function (e) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var ax = (e.pos.x + e.hWidth) - (this.pos.x + this.hWidth);
@@ -581,8 +573,7 @@
          * @param {me.Vector2d} vector vector
          * @return {Number} angle in radians
          */
-        angleToPoint: function (v)
-        {
+        angleToPoint: function (v) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
             var ax = (v.x) - (this.pos.x + this.hWidth);
@@ -696,7 +687,6 @@
          * var updated = (this.vel.x!=0 || this.vel.y!=0);
          */
         updateMovement : function () {
-
             this.computeVelocity(this.vel);
 
             // Adjust position only on collidable object
@@ -717,7 +707,6 @@
                 this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
                 // clear the ladder flag
                 this.onladder = false;
-
                 var prop = collision.yprop;
                 var tile = collision.ytile;
 
@@ -773,13 +762,14 @@
                     // going up, collision with ceiling
                     else if (collision.y < 0) {
                         if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
-                            this.falling = true;
+                            if (this.gravity) {
+                                this.falling = true;
+                            }
                             // cancel the y velocity
                             this.vel.y = 0;
                         }
                     }
                 }
-
                 prop = collision.xprop;
                 tile = collision.xtile;
 
@@ -846,7 +836,7 @@
             } else {
                 // call the parent me.Rect.getBounds()
                 // translate back for the position to be relative to the entity
-                return this.parent(rect).translate(-this.pos.x, -this.pos.y);
+                return this._super(me.Renderable, "getBounds", [rect]).translate(-this.pos.x, -this.pos.y);
             }
         },
 
@@ -929,11 +919,9 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            // call the parent constructor
-            this.parent(x, y, settings);
-
+            // call the super constructor
+            this._super(me.ObjectEntity, "init", [x, y, settings]);
             this.type = me.game.COLLECTABLE_OBJECT;
-
         }
     });
 
@@ -955,7 +943,7 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            this.parent(x, y, settings);
+            this._super(me.ObjectEntity, "init", [x, y, settings]);
 
             this.nextlevel = settings.to;
 

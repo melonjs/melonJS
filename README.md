@@ -1,6 +1,6 @@
 melonJS
-========================================================================
-
+=======
+[![Build Status](https://travis-ci.org/melonjs/melonJS.svg?branch=1.1.0-dev)](https://travis-ci.org/melonjs/melonJS)
 
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
@@ -86,6 +86,15 @@ Just do the following to actually build the documentation :
     $ grunt doc
 
 The generated documentation will be then available under the "docs" directory
+
+Testing
+-------------------------------------------------------------------------------
+
+To run melonJS tests simply run the following:
+
+	$ grunt test
+
+This will run the jasmine spec tests with the output on the shell.
 
 Using melonJS
 -------------------------------------------------------------------------------

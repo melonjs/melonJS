@@ -17,14 +17,14 @@
      * @ignore
      */
     me.TMXMapReader = Object.extend({
-        JSONReader : null,
+        init: function () {},
 
         readMap: function (map) {
             // if already loaded, do nothing
             if (map.initialized) {
                 return;
             }
-            if  (this.JSONReader === null) {
+            if  (this.JSONReader === null || typeof this.JSONReader === "undefined") {
                 this.JSONReader = new JSONMapReader();
             }
             this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));
@@ -84,7 +84,6 @@
         setLayerData : function (layer, rawdata, encoding, compression) {
             // initialize the layer data array
             layer.initArray(layer.cols, layer.rows);
-
             // data
             var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
 
@@ -146,6 +145,9 @@
      * @ignore
      */
     var JSONMapReader = me.TMXMapReader.extend({
+        init: function () {
+
+        },
         readJSONMap: function (map, data) {
             if (!data) {
                 throw "melonJS:" + map.levelId + " TMX map not found";

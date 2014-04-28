@@ -29,31 +29,27 @@
     particleDebugPanel = me.plugin.Base.extend(
     /** @scope me.debug.Panel.prototype */
     {
-
-        // Object "Game Unique Identifier"
-        GUID : null,
-
-        // to hold the debug options 
-        // clickable rect area
-        area : {},
-        
-        // panel position and size
-        rect : null,
-        
-        // for z ordering
-        // make it ridiculously high
-        z : Infinity,
-        
-        // visibility flag
-        visible : true,
-        
-        // minimum melonJS version expected
-        version : "1.0.0",
-
         /** @private */
         init : function() {
-            // call the parent constructor
-            this.parent();
+            // call the super constructor
+            this._super(me.plugin.Base, 'init');
+
+            // minimum melonJS version expected
+            this.version = "1.1.0";
+
+            // to hold the debug options 
+            // clickable rect area
+            this.area = {};
+            
+            // panel position and size
+            this.rect = null;
+            
+            // for z ordering
+            // make it ridiculously high
+            this.z = Infinity;
+            
+            // visibility flag
+            this.visible = true;
 
             this.rect = new me.Rect(new me.Vector2d(0, me.video.getHeight() - 60), 200, 60);
 
@@ -118,7 +114,7 @@
 
             // patch me.ParticleEmitter.destroy
             me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
-                this.parent();   
+                this.parent();
                 _this.emitterCount--;
             });
 
@@ -129,12 +125,9 @@
             });
 
             // patch me.Particle.destroy
-//          me.plugin.patch(me.Particle, 'destroy', function() {
             me.Particle.prototype.destroy = function() {
-//              this.parent();  
                 _this.particleCount--;
             };
-//          });
 
             // patch me.game.update
             me.plugin.patch(me.game, 'update', function(time) {

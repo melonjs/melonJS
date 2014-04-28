@@ -12,7 +12,7 @@
      */
     me.device = (function () {
         // defines object for holding public information/functionality.
-        var obj = {};
+        var api = {};
         // private properties
         var accelInitialized = false;
         var deviceOrientationInitialized = false;
@@ -22,7 +22,7 @@
          * check the device capapbilities
          * @ignore
          */
-        obj._check = function () {
+        api._check = function () {
 
             // detect device type/platform
             me.device._detectDevice();
@@ -67,10 +67,10 @@
             navigator.vibrate = me.agent.prefixed("vibrate", navigator);
 
             try {
-                obj.localStorage = !!window.localStorage;
+                api.localStorage = !!window.localStorage;
             } catch (e) {
                 // the above generates an exception when cookies are blocked
-                obj.localStorage = false;
+                api.localStorage = false;
             }
 
             // set pause/stop action on losing focus
@@ -109,7 +109,7 @@
                 hidden = "webkitHidden";
                 visibilityChange = "webkitvisibilitychange";
             }
-                 
+
             // register on the event if supported
             if (typeof (visibilityChange) === "string") {
                 // add the corresponding event listener
@@ -139,7 +139,7 @@
          * detect the device type
          * @ignore
          */
-        obj._detectDevice = function () {
+        api._detectDevice = function () {
             // detect platform
             me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
             // iOS Device ?
@@ -150,7 +150,7 @@
             // Windows Device ?
             me.device.wp = me.device.ua.match(/Windows Phone/i) || false;
         };
-        
+
         /*
          * PUBLIC Properties & Functions
          */
@@ -164,7 +164,7 @@
          * @name ua
          * @memberOf me.device
          */
-        obj.ua = navigator.userAgent;
+        api.ua = navigator.userAgent;
 
         /**
          * Browser Local Storage capabilities <br>
@@ -174,7 +174,7 @@
          * @name localStorage
          * @memberOf me.device
          */
-        obj.localStorage = false;
+        api.localStorage = false;
 
         /**
          * Browser accelerometer capabilities
@@ -183,7 +183,7 @@
          * @name hasAccelerometer
          * @memberOf me.device
          */
-        obj.hasAccelerometer = false;
+        api.hasAccelerometer = false;
 
         /**
          * Browser device orientation
@@ -192,7 +192,7 @@
          * @name hasDeviceOrientation
          * @memberOf me.device
          */
-        obj.hasDeviceOrientation = false;
+        api.hasDeviceOrientation = false;
 
         /**
          * Browser full screen support
@@ -201,7 +201,7 @@
          * @name hasFullscreenSupport
          * @memberOf me.device
          */
-        obj.hasFullscreenSupport = false;
+        api.hasFullscreenSupport = false;
 
          /**
          * Browser pointerlock api support
@@ -210,7 +210,7 @@
          * @name hasPointerLockSupport
          * @memberOf me.device
          */
-        obj.hasPointerLockSupport = false;
+        api.hasPointerLockSupport = false;
 
         /**
          * Browser Base64 decoding capability
@@ -219,7 +219,7 @@
          * @name nativeBase64
          * @memberOf me.device
          */
-        obj.nativeBase64 = (typeof(window.atob) === "function");
+        api.nativeBase64 = (typeof(window.atob) === "function");
 
         /**
          * Touch capabilities
@@ -228,7 +228,7 @@
          * @name touch
          * @memberOf me.device
          */
-        obj.touch = false;
+        api.touch = false;
 
         /**
          * equals to true if a mobile device <br>
@@ -238,7 +238,7 @@
          * @name isMobile
          * @memberOf me.device
          */
-        obj.isMobile = false;
+        api.isMobile = false;
 
         /**
          * equals to true if the device is an iOS platform <br>
@@ -247,7 +247,7 @@
          * @name iOS
          * @memberOf me.device
          */
-        obj.iOS = false;
+        api.iOS = false;
 
         /**
          * equals to true if the device is an Android platform <br>
@@ -256,7 +256,7 @@
          * @name android
          * @memberOf me.device
          */
-        obj.android = false;
+        api.android = false;
 
         /**
          * equals to true if the device is an Android 2.x platform <br>
@@ -265,7 +265,7 @@
          * @name android2
          * @memberOf me.device
          */
-        obj.android2 = false;
+        api.android2 = false;
 
          /**
          * equals to true if the device is an Windows Phone platform <br>
@@ -274,7 +274,7 @@
          * @name wp
          * @memberOf me.device
          */
-        obj.wp = false;
+        api.wp = false;
 
         /**
          * The device current orientation status. <br>
@@ -287,7 +287,7 @@
          * @name orientation
          * @memberOf me.device
          */
-        obj.orientation = 0;
+        api.orientation = 0;
 
         /**
          * contains the g-force acceleration along the x-axis.
@@ -297,7 +297,7 @@
          * @name accelerationX
          * @memberOf me.device
          */
-        obj.accelerationX = 0;
+        api.accelerationX = 0;
 
         /**
          * contains the g-force acceleration along the y-axis.
@@ -307,7 +307,7 @@
          * @name accelerationY
          * @memberOf me.device
          */
-        obj.accelerationY = 0;
+        api.accelerationY = 0;
 
         /**
          * contains the g-force acceleration along the z-axis.
@@ -317,7 +317,7 @@
          * @name accelerationZ
          * @memberOf me.device
          */
-        obj.accelerationZ = 0;
+        api.accelerationZ = 0;
 
         /**
          * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
@@ -327,7 +327,7 @@
          * @name gamma
          * @memberOf me.device
          */
-        obj.gamma = 0;
+        api.gamma = 0;
 
         /**
          * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
@@ -337,7 +337,7 @@
          * @name beta
          * @memberOf me.device
          */
-        obj.beta = 0;
+        api.beta = 0;
 
         /**
          * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
@@ -348,7 +348,7 @@
          * @name alpha
          * @memberOf me.device
          */
-        obj.alpha = 0;
+        api.alpha = 0;
 
         /**
          * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
@@ -370,7 +370,7 @@
          *    }
          * });
          */
-        obj.requestFullscreen = function (element) {
+        api.requestFullscreen = function (element) {
             if (this.hasFullscreenSupport) {
                 element = element || me.video.getWrapper();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
@@ -386,7 +386,7 @@
          * @memberOf me.device
          * @function
          */
-        obj.exitFullscreen = function () {
+        api.exitFullscreen = function () {
             if (this.hasFullscreenSupport) {
                 document.exitFullscreen();
             }
@@ -398,7 +398,7 @@
          * @memberOf me.device
          * @function
          */
-        obj.getPixelRatio = function () {
+        api.getPixelRatio = function () {
 
             if (devicePixelRatio === null) {
                 var _context = me.video.getScreenContext();
@@ -417,7 +417,7 @@
          * @param {String} [type="local"]
          * @return me.save object
          */
-        obj.getStorage = function (type) {
+        api.getStorage = function (type) {
 
             type = type || "local";
 
@@ -440,22 +440,22 @@
         function onDeviceMotion(e) {
             if (e.reading) {
                 // For Windows 8 devices
-                obj.accelerationX = e.reading.accelerationX;
-                obj.accelerationY = e.reading.accelerationY;
-                obj.accelerationZ = e.reading.accelerationZ;
+                api.accelerationX = e.reading.accelerationX;
+                api.accelerationY = e.reading.accelerationY;
+                api.accelerationZ = e.reading.accelerationZ;
             }
             else {
                 // Accelerometer information
-                obj.accelerationX = e.accelerationIncludingGravity.x;
-                obj.accelerationY = e.accelerationIncludingGravity.y;
-                obj.accelerationZ = e.accelerationIncludingGravity.z;
+                api.accelerationX = e.accelerationIncludingGravity.x;
+                api.accelerationY = e.accelerationIncludingGravity.y;
+                api.accelerationZ = e.accelerationIncludingGravity.z;
             }
         }
 
         function onDeviceRotate(e) {
-            obj.gamma = e.gamma;
-            obj.beta = e.beta;
-            obj.alpha = e.alpha;
+            api.gamma = e.gamma;
+            api.beta = e.beta;
+            api.alpha = e.alpha;
         }
 
         /**
@@ -474,7 +474,7 @@
          * document.addEventListener("mozpointerlockerror", pointerlockerror, false);
          * document.addEventListener("webkitpointerlockerror", pointerlockerror, false);
          */
-        obj.turnOnPointerLock = function () {
+        api.turnOnPointerLock = function () {
             if (this.hasPointerLockSupport) {
                 var element = me.video.getWrapper();
                 if (me.device.ua.match(/Firefox/i)) {
@@ -507,7 +507,7 @@
          * @memberOf me.device
          * @function
          */
-        obj.turnOffPointerLock = function () {
+        api.turnOffPointerLock = function () {
             if (this.hasPointerLockSupport) {
                 document.exitPointerLock();
             }
@@ -521,7 +521,7 @@
          * @function
          * @return {Boolean} false if not supported by the device
          */
-        obj.watchAccelerometer = function () {
+        api.watchAccelerometer = function () {
             if (me.device.hasAccelerometer) {
                 if (!accelInitialized) {
                     if (typeof Windows === "undefined") {
@@ -554,7 +554,7 @@
          * @public
          * @function
          */
-        obj.unwatchAccelerometer = function () {
+        api.unwatchAccelerometer = function () {
             if (accelInitialized) {
                 if (typeof Windows === "undefined") {
                     // add a listener for the mouse
@@ -577,7 +577,7 @@
          * @function
          * @return {Boolean} false if not supported by the device
          */
-        obj.watchDeviceOrientation = function () {
+        api.watchDeviceOrientation = function () {
             if (me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
                 window.addEventListener("deviceorientation", onDeviceRotate, false);
                 deviceOrientationInitialized = true;
@@ -592,7 +592,7 @@
          * @public
          * @function
          */
-        obj.unwatchDeviceOrientation = function () {
+        api.unwatchDeviceOrientation = function () {
             if (deviceOrientationInitialized) {
                 window.removeEventListener("deviceorientation", onDeviceRotate, false);
                 deviceOrientationInitialized = false;
@@ -619,14 +619,14 @@
          * // cancel any existing vibrations
          * navigator.vibrate(0);
          */
-        obj.vibrate = function (pattern) {
+        api.vibrate = function (pattern) {
             if (navigator.vibrate) {
                 navigator.vibrate(pattern);
             }
         };
 
 
-        return obj;
+        return api;
     })();
 
     /**
@@ -649,7 +649,7 @@
             }
         }
     });
-    
+
     /**
      * Returns true if the browser/device has audio capabilities.
      * @name sound

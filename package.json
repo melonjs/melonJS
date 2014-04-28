@@ -1,6 +1,6 @@
 {
   "name": "melonJS",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "repository": {
@@ -32,10 +32,12 @@
     "grunt-contrib-uglify": "~0.2.7",
     "grunt-contrib-nodeunit": "~0.1.2",
     "grunt-replace": "~0.4.3",
-    "grunt-jsdoc": "~0.5.1"
+    "grunt-jsdoc": "~0.5.1",
+    "grunt-contrib-jasmine": "~0.6.3"
   },
   "scripts": {
     "install": "(bower install || true) && grunt",
-    "release": "grunt release"
+    "release": "grunt release",
+    "test": "grunt test"
   }
 }

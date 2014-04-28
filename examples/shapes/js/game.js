@@ -8,8 +8,8 @@ var game = {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
-		
-		me.plugin.register.defer(this, debugPanel, "debug");
+
+        me.plugin.register.defer(this, debugPanel, "debug");
 
         // set all ressources to be loaded
         me.loader.onload = this.loaded.bind(this);

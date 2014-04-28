@@ -22,69 +22,62 @@
      */
     me.Viewport = me.Renderable.extend(
     /** @scope me.Viewport.prototype */ {
-
-        /**
-         * Axis definition :<br>
-         * <p>
-         * AXIS.NONE<br>
-         * AXIS.HORIZONTAL<br>
-         * AXIS.VERTICAL<br>
-         * AXIS.BOTH
-         * </p>
-         * @public
-         * @constant
-         * @type enum
-         * @name AXIS
-         * @memberOf me.Viewport
-         */
-        AXIS : {
-            NONE : 0,
-            HORIZONTAL : 1,
-            VERTICAL : 2,
-            BOTH : 3
-        },
-
-        /**
-         * Camera bounds
-         * @public
-         * @constant
-         * @type me.Rect
-         * @name bounds
-         * @memberOf me.Viewport
-         */
-        bounds : null,
-
-        // camera deadzone
-        deadzone : null,
-
-        // target to follow
-        target : null,
-
-        // axis to follow
-        follow_axis : 0,
-
-        // shake parameters
-        _shake : null,
-
-        // fade parameters
-        _fadeIn : null,
-        _fadeOut : null,
-
-        // cache the screen rendering position
-        screenX : 0,
-        screenY : 0,
-
         /** @ignore */
         init : function (minX, minY, maxX, maxY) {
+            /**
+             * Axis definition :<br>
+             * <p>
+             * AXIS.NONE<br>
+             * AXIS.HORIZONTAL<br>
+             * AXIS.VERTICAL<br>
+             * AXIS.BOTH
+             * </p>
+             * @public
+             * @constant
+             * @type enum
+             * @name AXIS
+             * @memberOf me.Viewport
+             */
+            this.AXIS = {
+                NONE : 0,
+                HORIZONTAL : 1,
+                VERTICAL : 2,
+                BOTH : 3
+            };
+
+            /**
+             * Camera bounds
+             * @public
+             * @constant
+             * @type me.Rect
+             * @name bounds
+             * @memberOf me.Viewport
+             */
+            this.bounds = null;
+
+            // camera deadzone
+            this.deadzone = null;
+
+            // target to follow
+            this.target = null;
+
+            // axis to follow
+            this.follow_axis = 0;
+
+            // shake parameters
+            this._shake = null;
+            // fade parameters
+            this._fadeIn = null;
+            this._fadeOut = null;
+
+            // cache the screen rendering position
+            this.screenX = 0;
+            this.screenY = 0;
             // viewport coordinates
-            this.parent(new me.Vector2d(minX, minY), maxX - minX, maxY - minY);
+            this._super(me.Renderable, "init", [new me.Vector2d(minX, minY), maxX - minX, maxY - minY]);
 
             // real worl limits
-            this.bounds = new me.Rect(
-                new me.Vector2d(-Infinity, -Infinity),
-                Infinity,
-                Infinity
-            );
+            this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);
 
             // offset for shake effect
             this.offset = new me.Vector2d();
@@ -120,24 +113,16 @@
             this.setDeadzone(this.width / 6, this.height / 6);
         },
 
-        /*
-         * Private functions
-         */
+        // -- some private function ---
 
         /** @ignore */
         _followH : function (target) {
             var _x = this.pos.x;
             if ((target.x - this.pos.x) > (this.deadzone.right)) {
-                this.pos.x = ~~MIN(
-                    (target.x) - (this.deadzone.right),
-                    this.bounds.width - this.width
-                );
+                this.pos.x = ~~MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
             }
             else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
-                this.pos.x = ~~MAX(
-                    (target.x) - this.deadzone.pos.x,
-                    this.bounds.pos.x
-                );
+                this.pos.x = ~~MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
             }
             return (_x !== this.pos.x);
         },
@@ -146,23 +131,15 @@
         _followV : function (target) {
             var _y = this.pos.y;
             if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
-                this.pos.y = ~~MIN(
-                    (target.y) - (this.deadzone.bottom),
-                    this.bounds.height - this.height
-                );
+                this.pos.y = ~~MIN((target.y) - (this.deadzone.bottom),    this.bounds.height - this.height);
             }
             else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
-                this.pos.y = ~~MAX(
-                    (target.y) - this.deadzone.pos.y,
-                    this.bounds.pos.y
-                );
+                this.pos.y = ~~MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
             }
             return (_y !== this.pos.y);
         },
 
-        /*
-         * Public functions
-         */
+        // -- public function ---
 
         /**
          * reset the viewport to specified coordinates
@@ -193,7 +170,6 @@
          * @param {Number} h deadzone height
          */
         setDeadzone : function (w, h) {
-
             if (this.deadzone === null) {
                 this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
             }
@@ -207,6 +183,10 @@
 
             // force a camera update
             this.updateTarget();
+        },
+
+        getBounds: function (rect) {
+            return this._super(me.Renderable, "getBounds", [rect]);
         },
 
         /**
@@ -247,7 +227,6 @@
             this.follow_axis = (
                 typeof(axis) === "undefined" ? this.AXIS.BOTH : axis
             );
-
             // force a camera update
             this.updateTarget();
         },
@@ -275,6 +254,7 @@
          * @param {Number} x
          * @param {Number} y
          */
+
         moveTo : function (x, y) {
             this.pos.x = (~~x).clamp(
                 this.bounds.pos.x,

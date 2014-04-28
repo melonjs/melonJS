@@ -1,5 +1,12 @@
 Version History
 ---------------
+1.1.0
+* Core : Reorganized source code for all basic object definition/augmentation
+* Core : New CI and unit testing frameworks
+* Core : New object inheritance mechanism
+* Entity : Disable falling flag when gravity is disabled
+* Entity : Fix an exception in ObjectEntity.checkCollision()
+
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
 * Core : cleaned-up/renamed conflicting set function in shape and font objects

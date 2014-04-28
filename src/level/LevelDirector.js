@@ -14,7 +14,7 @@
      */
     me.levelDirector = (function () {
         // hold public stuff in our singletong
-        var obj = {};
+        var api = {};
 
         /*
          * PRIVATE STUFF
@@ -157,13 +157,13 @@
          * reset the level director
          * @ignore
          */
-        obj.reset = function () {};
+        api.reset = function () {};
 
         /**
          * add a level
          * @ignore
          */
-        obj.addLevel = function () {
+        api.addLevel = function () {
             throw "melonJS: no level loader defined";
         };
 
@@ -172,7 +172,7 @@
          * add a TMX level
          * @ignore
          */
-        obj.addTMXLevel = function (levelId, callback) {
+        api.addTMXLevel = function (levelId, callback) {
             // just load the level with the XML stuff
             if (levels[levelId] == null) {
                 //console.log("loading "+ levelId);
@@ -216,7 +216,7 @@
          * // load a level
          * me.levelDirector.loadLevel("a4_level1");
          */
-        obj.loadLevel = function (levelId) {
+        api.loadLevel = function (levelId) {
             // make sure it's a string
             levelId = levelId.toString().toLowerCase();
             // throw an exception if not existing
@@ -243,8 +243,8 @@
                 me.utils.resetGUID(levelId);
 
                 // clean the current (previous) level
-                if (levels[obj.getCurrentLevelId()]) {
-                    levels[obj.getCurrentLevelId()].destroy();
+                if (levels[api.getCurrentLevelId()]) {
+                    levels[api.getCurrentLevelId()].destroy();
                 }
 
                 // read the map data
@@ -276,7 +276,7 @@
          * @function
          * @return {String}
          */
-        obj.getCurrentLevelId = function () {
+        api.getCurrentLevelId = function () {
             return levelIdx[currentLevelIdx];
         };
 
@@ -287,10 +287,10 @@
          * @public
          * @function
          */
-        obj.reloadLevel = function () {
+        api.reloadLevel = function () {
             // reset the level to initial state
             //levels[currentLevel].reset();
-            return obj.loadLevel(obj.getCurrentLevelId());
+            return api.loadLevel(api.getCurrentLevelId());
         };
 
         /**
@@ -300,10 +300,10 @@
          * @public
          * @function
          */
-        obj.nextLevel = function () {
+        api.nextLevel = function () {
             //go to the next level
             if (currentLevelIdx + 1 < levelIdx.length) {
-                return obj.loadLevel(levelIdx[currentLevelIdx + 1]);
+                return api.loadLevel(levelIdx[currentLevelIdx + 1]);
             }
             else {
                 return false;
@@ -317,10 +317,10 @@
          * @public
          * @function
          */
-        obj.previousLevel = function () {
+        api.previousLevel = function () {
             // go to previous level
             if (currentLevelIdx - 1 >= 0) {
-                return obj.loadLevel(levelIdx[currentLevelIdx - 1]);
+                return api.loadLevel(levelIdx[currentLevelIdx - 1]);
             }
             else {
                 return false;
@@ -334,11 +334,11 @@
          * @public
          * @function
          */
-        obj.levelCount = function () {
+        api.levelCount = function () {
             return levelIdx.length;
         };
 
         // return our object
-        return obj;
+        return api;
     })();
 })();
