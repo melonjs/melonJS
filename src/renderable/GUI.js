@@ -107,7 +107,7 @@
             if (this.updated) {
                 // clear the flag
                 if(!this.released){
-					this.updated = false;					
+                    this.updated = false;					
                 }
                 return true;
             }
@@ -123,7 +123,7 @@
                 this.updated = true;
                 if(this.isHoldable){
                     if(this.holdTimeout!==null){
-						me.timer.clearTimeout(this.holdTimeout);
+                        me.timer.clearTimeout(this.holdTimeout);
                     }
                     this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
                     this.released = false;					
