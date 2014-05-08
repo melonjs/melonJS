@@ -47,6 +47,27 @@
     me.GUI_Object = me.SpriteObject.extend(
     /** @scope me.GUI_Object.prototype */
     {
+		/**
+		 * Tap and hold threshold timer
+		 * @ignore
+		 */
+		holdTimeout : null,
+		
+		/**
+		 * Tap and hold threshold timeout in ms (default 250)
+		 * @type {number}
+		 * @memberOf me.GUI_Object
+		 */
+		holdThreshold : 250,
+		
+		/**
+		 * object can be tap and hold
+		 * @public
+		 * @type boolean
+		 * @name me.GUI_Object#isHoldable
+		 */
+		isHoldable : true,
+		
         /**
          * object can be clicked or not
          * @public
@@ -57,7 +78,8 @@
 
         // object has been updated (clicked,etc..)
         updated : false,
-
+		released : true,
+		
         /**
          * @ignore
          */
@@ -74,6 +96,7 @@
 
             // register on mouse event
             me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
+			me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
         },
 
         /**
@@ -83,7 +106,9 @@
         update : function () {
             if (this.updated) {
                 // clear the flag
-                this.updated = false;
+				if(!this.released){
+	                this.updated = false;					
+				}
                 return true;
             }
             return false;
@@ -96,6 +121,13 @@
         clicked : function (event) {
             if (this.isClickable) {
                 this.updated = true;
+				if(this.isHoldable){
+					if(this.holdTimeout!==null){
+						me.timer.clearTimeout(this.holdTimeout);
+					}
+					this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
+					this.released = false;					
+				}
                 return this.onClick(event);
             }
         },
@@ -113,7 +145,53 @@
         onClick : function () {
             return false;
         },
+		
+        /**
+         * function callback for the pointerup event
+         * @ignore
+         */
+		release:function(event){
+			this.released = true;
+			me.timer.clearTimeout(this.holdTimeout);
+			return this.onRelease(event);
+		},
 
+        /**
+         * function called when the object is clicked <br>
+         * to be extended <br>
+         * return false if we need to stop propagating the event
+         * @name onClick
+         * @memberOf me.GUI_Object
+         * @public
+         * @function
+         * @param {Event} event the event object
+         */	
+		onRelease:function(){
+			return false;
+		},
+
+        /**
+         * function callback for the tap and hold timer event
+         * @ignore
+         */	
+		hold:function(){
+			me.timer.clearTimeout(this.holdTimeout);
+			if(!this.released){
+				this.onHold();
+			}
+		},
+
+        /**
+         * function called when the object is clicked and holded<br>
+         * to be extended <br>
+         * @name onHold
+         * @memberOf me.GUI_Object
+         * @public
+         * @function
+         */	
+		onHold:function(){		
+		},
+		
         /**
          * OnDestroy notification function<br>
          * Called by engine before deleting the object<br>
@@ -125,6 +203,7 @@
          */
         onDestroyEvent : function () {
             me.input.releasePointerEvent("pointerdown", this);
+			me.input.releasePointerEvent("pointerup", this);
         }
     });
 })();
