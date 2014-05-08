@@ -47,27 +47,27 @@
     me.GUI_Object = me.SpriteObject.extend(
     /** @scope me.GUI_Object.prototype */
     {
-		/**
-		 * Tap and hold threshold timer
-		 * @ignore
-		 */
-		holdTimeout : null,
-		
-		/**
-		 * Tap and hold threshold timeout in ms (default 250)
-		 * @type {number}
-		 * @memberOf me.GUI_Object
-		 */
-		holdThreshold : 250,
-		
-		/**
-		 * object can be tap and hold
-		 * @public
-		 * @type boolean
-		 * @name me.GUI_Object#isHoldable
-		 */
-		isHoldable : true,
-		
+        /**
+         * Tap and hold threshold timer
+         * @ignore
+         */
+        holdTimeout : null,
+
+        /**
+         * Tap and hold threshold timeout in ms (default 250)
+         * @type {number}
+         * @memberOf me.GUI_Object
+         */
+        holdThreshold : 250,
+
+        /**
+         * object can be tap and hold
+         * @public
+         * @type boolean
+         * @name me.GUI_Object#isHoldable
+         */
+        isHoldable : true,
+
         /**
          * object can be clicked or not
          * @public
@@ -78,7 +78,7 @@
 
         // object has been updated (clicked,etc..)
         updated : false,
-		released : true,
+        released : true,
 		
         /**
          * @ignore
@@ -96,7 +96,7 @@
 
             // register on mouse event
             me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-			me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
+            me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
         },
 
         /**
@@ -106,9 +106,9 @@
         update : function () {
             if (this.updated) {
                 // clear the flag
-				if(!this.released){
-	                this.updated = false;					
-				}
+                if(!this.released){
+					this.updated = false;					
+                }
                 return true;
             }
             return false;
@@ -121,12 +121,12 @@
         clicked : function (event) {
             if (this.isClickable) {
                 this.updated = true;
-				if(this.isHoldable){
-					if(this.holdTimeout!==null){
+                if(this.isHoldable){
+                    if(this.holdTimeout!==null){
 						me.timer.clearTimeout(this.holdTimeout);
-					}
-					this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
-					this.released = false;					
+                    }
+                    this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
+                    this.released = false;					
 				}
                 return this.onClick(event);
             }
@@ -166,20 +166,20 @@
          * @function
          * @param {Event} event the event object
          */	
-		onRelease:function(){
+        onRelease:function(){
 			return false;
-		},
+        },
 
         /**
          * function callback for the tap and hold timer event
          * @ignore
          */	
-		hold:function(){
-			me.timer.clearTimeout(this.holdTimeout);
-			if(!this.released){
-				this.onHold();
-			}
-		},
+        hold:function(){
+            me.timer.clearTimeout(this.holdTimeout);
+            if(!this.released){
+                this.onHold();
+            }
+        },
 
         /**
          * function called when the object is clicked and holded<br>
@@ -189,9 +189,9 @@
          * @public
          * @function
          */	
-		onHold:function(){		
-		},
-		
+        onHold:function(){		
+        },
+
         /**
          * OnDestroy notification function<br>
          * Called by engine before deleting the object<br>
@@ -204,6 +204,7 @@
         onDestroyEvent : function () {
             me.input.releasePointerEvent("pointerdown", this);
 			me.input.releasePointerEvent("pointerup", this);
+			me.timer.clearTimeout(this.holdTimeout);
         }
     });
 })();
