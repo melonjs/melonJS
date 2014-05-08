@@ -127,7 +127,7 @@
                     }
                     this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
                     this.released = false;					
-				}
+                }
                 return this.onClick(event);
             }
         },
@@ -150,11 +150,11 @@
          * function callback for the pointerup event
          * @ignore
          */
-		release:function(event){
-			this.released = true;
-			me.timer.clearTimeout(this.holdTimeout);
-			return this.onRelease(event);
-		},
+        release:function(event){
+            this.released = true;
+            me.timer.clearTimeout(this.holdTimeout);
+            return this.onRelease(event);
+        },
 
         /**
          * function called when the object is clicked <br>
@@ -167,7 +167,7 @@
          * @param {Event} event the event object
          */	
         onRelease:function(){
-			return false;
+            return false;
         },
 
         /**
@@ -203,8 +203,8 @@
          */
         onDestroyEvent : function () {
             me.input.releasePointerEvent("pointerdown", this);
-			me.input.releasePointerEvent("pointerup", this);
-			me.timer.clearTimeout(this.holdTimeout);
+            me.input.releasePointerEvent("pointerup", this);
+            me.timer.clearTimeout(this.holdTimeout);
         }
     });
 })();
