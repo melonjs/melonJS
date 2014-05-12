@@ -8,6 +8,7 @@ Version History
 * Audio : Sync'ed with last Howler version (as now officially and properly support CocoonJS)
 * Audio : melonJS now throws an exception when attemption to load audio assets before audio is initialized
 * TMX : Fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
+* Font : fixed opacity usage for me.BitmapFont object.
 
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
