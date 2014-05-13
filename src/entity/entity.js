@@ -157,6 +157,10 @@
 
         /** @ignore */
         init : function (x, y, settings) {
+            // ensure mandatory properties are defined
+            if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
+                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
+            }
             // call the parent constructor
             this.parent(
                 this.pos.set(x, y),
