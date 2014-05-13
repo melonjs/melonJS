@@ -23,74 +23,61 @@
          * object entity name<br>
          * as defined in the Tiled Object Properties
          * @public
-         * @type String
-         * @name name
+         * @property {String} name
          * @memberOf me.ObjectSettings
          */
         name : null,
 
         /**
          * image ressource name to be loaded<br>
-         * MANDATORY<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type String
-         * @name image
+         * @property {String} image
          * @memberOf me.ObjectSettings
          */
         image : null,
 
         /**
          * specify a transparent color for the image in rgb format (#rrggbb)<br>
-         * OPTIONAL<br>
          * (using this option will imply processing time on the image)
          * @public
          * @deprecated Use PNG or GIF with transparency instead
-         * @type String
-         * @name transparent_color
+         * @property {String=} transparent_color
          * @memberOf me.ObjectSettings
          */
         transparent_color : null,
 
         /**
          * width of a single sprite in the spritesheet<br>
-         * MANDATORY<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type Int
-         * @name spritewidth
+         * @property {Number=} spritewidth
          * @memberOf me.ObjectSettings
          */
         spritewidth : null,
 
         /**
          * height of a single sprite in the spritesheet<br>
-         * OPTIONAL<br>
          * if not specified the value will be set to the corresponding image height<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type Int
-         * @name spriteheight
+         * @property {Number=} spriteheight
          * @memberOf me.ObjectSettings
          */
         spriteheight : null,
 
         /**
-         * custom type for collision detection<br>
-         * OPTIONAL
+         * custom type for collision detection
          * @public
-         * @type String
-         * @name type
+         * @property {String=} type
          * @memberOf me.ObjectSettings
          */
         type : 0,
 
         /**
          * Enable collision detection for this object<br>
-         * OPTIONAL
          * @public
-         * @type Boolean
-         * @name collidable
+         * @property {Boolean=} collidable
          * @memberOf me.ObjectSettings
          */
         collidable : true
@@ -184,8 +171,8 @@
                 );
                 this.renderable = new me.AnimationSheet(
                     0, 0, image,
-                    ~~settings.spritewidth,
-                    ~~settings.spriteheight,
+                    ~~(settings.spritewidth || settings.width),
+                    ~~(settings.spriteheight || settings.height),
                     ~~settings.spacing,
                     ~~settings.margin
                 );
