@@ -56,7 +56,7 @@
         /**
          * Tap and hold threshold timeout in ms (default 250)
          * @type {number}
-         * @memberOf me.GUI_Object
+         * @name me.GUI_Object#holdThreshold
          */
         holdThreshold : 250,
 
@@ -66,7 +66,7 @@
          * @type boolean
          * @name me.GUI_Object#isHoldable
          */
-        isHoldable : true,
+        isHoldable : false,
 
         /**
          * object can be clicked or not
@@ -106,8 +106,8 @@
         update : function () {
             if (this.updated) {
                 // clear the flag
-                if(!this.released){
-                    this.updated = false;					
+                if (!this.released) {
+                    this.updated = false;
                 }
                 return true;
             }
@@ -121,12 +121,12 @@
         clicked : function (event) {
             if (this.isClickable) {
                 this.updated = true;
-                if(this.isHoldable){
-                    if(this.holdTimeout!==null){
+                if (this.isHoldable) {
+                    if (this.holdTimeout !== null) {
                         me.timer.clearTimeout(this.holdTimeout);
                     }
-                    this.holdTimeout = me.timer.setTimeout(this.hold.bind(this),this.holdThreshold,false);
-                    this.released = false;					
+                    this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                    this.released = false;
                 }
                 return this.onClick(event);
             }
@@ -150,7 +150,7 @@
          * function callback for the pointerup event
          * @ignore
          */
-        release:function(event){
+        release : function (event) {
             this.released = true;
             me.timer.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
@@ -165,18 +165,18 @@
          * @public
          * @function
          * @param {Event} event the event object
-         */	
-        onRelease:function(){
+         */
+        onRelease : function () {
             return false;
         },
 
         /**
          * function callback for the tap and hold timer event
          * @ignore
-         */	
-        hold:function(){
+         */
+        hold : function () {
             me.timer.clearTimeout(this.holdTimeout);
-            if(!this.released){
+            if (!this.released) {
                 this.onHold();
             }
         },
@@ -188,8 +188,8 @@
          * @memberOf me.GUI_Object
          * @public
          * @function
-         */	
-        onHold:function(){		
+         */
+        onHold : function () {
         },
 
         /**

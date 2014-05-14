@@ -11,6 +11,7 @@ Version History
 * Audio : melonJS now throws an exception when attemption to load audio assets before audio is initialized
 * TMX : Fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
 * Font : fixed opacity property usage for me.BitmapFont object.
+* Renderable : added a tap and hold feature to the me.GUI_Object object (juhanapaavola)
 
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
