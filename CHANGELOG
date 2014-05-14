@@ -6,6 +6,7 @@ Version History
 * Entity : Fixed a regression on breakable tiles
 * Entity : Use width and heigth by default if spritewidth and spriteheight are not defined
 * Entity : Throw an exception if mandatory fields width and height are not defined 
+* Entity : Fixed an exception in ObjectEntity.flipX/Y()
 * ObjectContainer : Use cyclic zIndex by default instead of Infinity
 * Audio : Sync'ed with last Howler version (as now officially and properly support CocoonJS)
 * Audio : melonJS now throws an exception when attemption to load audio assets before audio is initialized
