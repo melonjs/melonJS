@@ -485,7 +485,7 @@
                     this.renderable.flipX(flip);
                 }
                 // flip the collision box
-                if (this.getShape().flipX) {
+                if (this.shapes.length && (typeof this.getShape().flipX === "function")) {
                     this.getShape().flipX(this.width);
                 }
             }
@@ -506,7 +506,7 @@
                     this.renderable.flipY(flip);
                 }
                 // flip the collision box
-                if (this.getShape().flipY) {
+                if (this.shapes.length && (typeof this.getShape().flipY === "function")) {
                     this.getShape().flipY(this.height);
                 }
             }
@@ -834,13 +834,11 @@
          * @return {me.Rect} new rectangle
          */
         getBounds : function (rect) {
-            if (this.shapes.length) {
-                return this.getShape().getBounds(rect);
-            } else {
-                // call the parent me.Rect.getBounds()
-                // translate back for the position to be relative to the entity
-                return this.parent(rect).translate(-this.pos.x, -this.pos.y);
+            if (!this.shapes.length) {
+                // create one if there is no default shape
+                this.addShape(this.parent().translate(-this.pos.x, -this.pos.y));
             }
+            return this.getShape().getBounds(rect);
         },
 
         /**
