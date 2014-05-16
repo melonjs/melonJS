@@ -23,74 +23,61 @@
          * object entity name<br>
          * as defined in the Tiled Object Properties
          * @public
-         * @type String
-         * @name name
+         * @property {String} name
          * @memberOf me.ObjectSettings
          */
         name : null,
 
         /**
          * image ressource name to be loaded<br>
-         * MANDATORY<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type String
-         * @name image
+         * @property {String} image
          * @memberOf me.ObjectSettings
          */
         image : null,
 
         /**
          * specify a transparent color for the image in rgb format (#rrggbb)<br>
-         * OPTIONAL<br>
          * (using this option will imply processing time on the image)
          * @public
          * @deprecated Use PNG or GIF with transparency instead
-         * @type String
-         * @name transparent_color
+         * @property {String=} transparent_color
          * @memberOf me.ObjectSettings
          */
         transparent_color : null,
 
         /**
          * width of a single sprite in the spritesheet<br>
-         * MANDATORY<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type Int
-         * @name spritewidth
+         * @property {Number=} spritewidth
          * @memberOf me.ObjectSettings
          */
         spritewidth : null,
 
         /**
          * height of a single sprite in the spritesheet<br>
-         * OPTIONAL<br>
          * if not specified the value will be set to the corresponding image height<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @type Int
-         * @name spriteheight
+         * @property {Number=} spriteheight
          * @memberOf me.ObjectSettings
          */
         spriteheight : null,
 
         /**
-         * custom type for collision detection<br>
-         * OPTIONAL
+         * custom type for collision detection
          * @public
-         * @type String
-         * @name type
+         * @property {String=} type
          * @memberOf me.ObjectSettings
          */
         type : 0,
 
         /**
          * Enable collision detection for this object<br>
-         * OPTIONAL
          * @public
-         * @type Boolean
-         * @name collidable
+         * @property {Boolean=} collidable
          * @memberOf me.ObjectSettings
          */
         collidable : true
@@ -169,6 +156,12 @@
             // just to keep track of when we flip
             this.lastflipX = false;
             this.lastflipY = false;
+                        
+            // ensure mandatory properties are defined
+            if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
+                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
+            }
+            
             // call the super constructor
             this.pos = new me.Vector2d(x, y);
             this._super(me.Renderable, "init", [this.pos,
@@ -489,7 +482,7 @@
                     this.renderable.flipX(flip);
                 }
                 // flip the collision box
-                if (this.getShape().flipX) {
+                if (this.shapes.length && (typeof this.getShape().flipX === "function")) {
                     this.getShape().flipX(this.width);
                 }
             }
@@ -510,7 +503,7 @@
                     this.renderable.flipY(flip);
                 }
                 // flip the collision box
-                if (this.getShape().flipY) {
+                if (this.shapes.length && (typeof this.getShape().flipY === "function")) {
                     this.getShape().flipY(this.height);
                 }
             }
@@ -750,7 +743,7 @@
                             }
                             else {
                                 // adjust position to the corresponding tile
-                                this.collision.pos.y = ~~this.collision.pos.y;
+                                this._bounds.pos.y = ~~this._bounds.pos.y;
                                 this.vel.y = (
                                     this.falling ?
                                     tile.pos.y - this._bounds.bottom : 0
@@ -831,13 +824,11 @@
          * @return {me.Rect} new rectangle
          */
         getBounds : function (rect) {
-            if (this.shapes.length) {
-                return this.getShape().getBounds(rect);
-            } else {
-                // call the parent me.Rect.getBounds()
-                // translate back for the position to be relative to the entity
-                return this._super(me.Renderable, "getBounds", [rect]).translate(-this.pos.x, -this.pos.y);
+            if (!this.shapes.length) {
+                // create one if there is no default shape
+                this.addShape(this._super(me.Renderable, "getBounds", [rect]).translate(-this.pos.x, -this.pos.y));
             }
+            return this.getShape().getBounds(rect);
         },
 
         /**

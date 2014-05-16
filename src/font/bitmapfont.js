@@ -135,6 +135,11 @@
             var strings = ("" + text).split("\n");
             var lX = x;
             var height = this.sSize.y * this.lineHeight;
+            
+            // save the previous global alpha value
+            var _alpha = context.globalAlpha;
+            context.globalAlpha *= this.getOpacity();
+  
             // update initial position
             this.pos.set(x, y);
             for (var i = 0; i < strings.length; i++) {
@@ -170,7 +175,7 @@
                     default :
                         break;
                 }
-
+                
                 // draw the string
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
@@ -189,6 +194,8 @@
                 // increment line
                 y += height;
             }
+            // restore the previous global alpha value
+            context.globalAlpha = _alpha;
         }
     });
 })();

@@ -94,12 +94,13 @@ var FontTest = me.Renderable.extend ({
         y_pos = 0;
         this.bFont.textAlign = "right";
         for (var i = 1;i<5;i++) {
+            this.bFont.setOpacity (0.2 * i);
             this.bFont.resize(i);
             this.bFont.draw(context, "BITMAP TEST" , me.video.getWidth() , y_pos );
             y_pos+=this.bFont.measureText(context, "DUMMY").height;
             
         }
-
+        this.bFont.setOpacity (1);
         
         // font baseline test
         this.font.setFont('Arial', 16, this.color.toHex());

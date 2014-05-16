@@ -7,6 +7,20 @@ Version History
 * Entity : Disable falling flag when gravity is disabled
 * Entity : Fix an exception in ObjectEntity.checkCollision()
 
+1.0.1
+* Entity : Disable falling flag when gravity is disabled
+* Entity : Fix an exception in ObjectEntity.checkCollision()
+* Entity : Fixed a regression on breakable tiles
+* Entity : Use width and heigth by default if spritewidth and spriteheight are not defined
+* Entity : Throw an exception if mandatory fields width and height are not defined 
+* Entity : Fixed an exception in ObjectEntity.flipX/Y()
+* ObjectContainer : Use cyclic zIndex by default instead of Infinity
+* Audio : Sync'ed with last Howler version (as now officially and properly support CocoonJS)
+* Audio : melonJS now throws an exception when attemption to load audio assets before audio is initialized
+* TMX : Fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
+* Font : fixed opacity property usage for me.BitmapFont object.
+* Renderable : added a tap and hold feature to the me.GUI_Object object (juhanapaavola)
+
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
 * Core : cleaned-up/renamed conflicting set function in shape and font objects

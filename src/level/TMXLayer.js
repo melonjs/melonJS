@@ -121,7 +121,7 @@
             // default ratio for parallax
             this.ratio = new me.Vector2d(1.0, 1.0);
 
-            if (ratio) {
+            if (typeof(ratio) !== "undefined") {
                 // little hack for backward compatiblity
                 if (typeof(ratio) === "number") {
                     this.ratio.set(ratio, ratio);

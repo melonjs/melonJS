@@ -29,6 +29,7 @@
     particleDebugPanel = me.plugin.Base.extend(
     /** @scope me.debug.Panel.prototype */
     {
+
         /** @private */
         init : function() {
             // call the super constructor

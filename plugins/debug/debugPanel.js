@@ -57,7 +57,7 @@
 
             // frame draw time in ms
             this.frameDrawTime = 0;
-
+		
             this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
 
             // set the object GUID value

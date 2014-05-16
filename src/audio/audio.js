@@ -136,6 +136,9 @@
          */
         api.load = function (sound, onload_cb, onerror_cb) {
             var urls = [];
+            if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
+                throw "melonJS: target audio extension(s) should be set through me.audio.init() before calling the preloader.";
+            }
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
             }
@@ -307,7 +310,6 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio track id
          * @example
          * // play an awesome music
          * me.audio.playTrack("awesome_music");

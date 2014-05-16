@@ -139,7 +139,7 @@
 
             // specify a z property to infinity if not defined
             if (typeof child.z === "undefined") {
-                child.z = Infinity;
+                child.z = this.children.length;
             }
 
             child.ancestor = this;
