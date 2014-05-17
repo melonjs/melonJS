@@ -56,5 +56,6 @@
     me.TMX_TAG_POLYLINE            = "polyline";
     me.TMX_TAG_ELLIPSE             = "ellipse";
     me.TMX_TAG_POINTS              = "points";
+    me.TMX_TAG_RESOURCES           = [me.TMX_TAG_IMAGE];
     me.TMX_BACKGROUND_COLOR        = "backgroundcolor";
 })();
