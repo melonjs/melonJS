@@ -119,26 +119,34 @@
      */
 
     /**
-     * list of mappable keys :
-     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, ESCAPE, [0..9], [A..Z]
+     * Almost all keyboard keys that have code ASCII, like:
+     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, SPACE, TAB, BACKSPACE, [0..9], [A..Z], [NUMPAD0..NUMPAD9], [F1..F12]
      * @public
      * @enum {number}
      * @name KEY
      * @memberOf me.input
      */
     obj.KEY = {
+        "BACKSPACE" : 8,
         "TAB" : 9,
         "ENTER": 13,
         "SHIFT" : 16,
         "CTRL": 17,
-        "ALT": 18,
-        "PAUSE": 19,
+        "ALT" : 18,
+        "PAUSE" : 19,
+        "CAPSLOCK" : 20,
         "ESC" : 27,
         "SPACE" : 32,
-        "LEFT": 37,
-        "UP": 38,
+        "PAGEUP" : 33,
+        "PAGEDOWN" : 34,
+        "END" : 35,
+        "HOME" : 36,
+        "LEFT" : 37,
+        "UP" : 38,
         "RIGHT" : 39,
         "DOWN" : 40,
+        "INSERT" : 45,
+        "DELETE" : 46,
         "NUM0" : 48,
         "NUM1" : 49,
         "NUM2" : 50,
@@ -175,15 +183,47 @@
         "X" : 88,
         "Y" : 89,
         "Z" : 90,
-        "MULTIPLY": 106,
-        "ADD": 107,
-        "SUBSTRACT": 109,
-        "DECIMAL": 110,
-        "DIVIDE": 111,
-        "PLUS": 187,
-        "COMMA": 188,
-        "MINUS": 189,
-        "PERIOD": 190
+        "WINDOW_KEY" : 91,
+        "NUMPAD0" : 96,
+        "NUMPAD1" : 97,
+        "NUMPAD2" : 98,
+        "NUMPAD3" : 99,
+        "NUMPAD4" : 100,
+        "NUMPAD5" : 101,
+        "NUMPAD6" : 102,
+        "NUMPAD7" : 103,
+        "NUMPAD8" : 104,
+        "NUMPAD9" : 105,
+        "MULTIPLY" : 106,
+        "ADD" : 107,
+        "SUBSTRACT" : 109,
+        "DECIMAL" : 110,
+        "DIVIDE" : 111,
+        "F1" : 112,
+        "F2" : 113,
+        "F3" : 114,
+        "F4" : 115,
+        "F5" : 116,
+        "F6" : 117,
+        "F7" : 118,
+        "F8" : 119,
+        "F9" : 120,
+        "F10" : 121,
+        "F11" : 122,
+        "F12" : 123,
+        "NUMLOCK" : 144,
+        "SCROLL_LOCK" : 145,
+        "SEMICOLON" : 186,
+        "PLUS" : 187,
+        "COMMA" : 188,
+        "MINUS" : 189,
+        "PERIOD" : 190,
+        "FORWAND_SLASH" : 191,
+        "GRAVE_ACCENT" : 192,
+        "OPEN_BRACKET" : 219,
+        "BACK_SLASH" : 220,
+        "CLOSE_BRACKET" : 221,
+        "SINGLE_QUOTE" : 222
     };
 
     /**
@@ -267,6 +307,7 @@
      * me.input.bindKey(me.input.KEY.LEFT,  "left");
      * me.input.bindKey(me.input.KEY.RIGHT, "right");
      * me.input.bindKey(me.input.KEY.X,     "jump", true);
+     * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
      */
     obj.bindKey = function (keycode, action, lock, preventDefault) {
         // make sure the keyboard is enable
