@@ -29,11 +29,19 @@ module.exports = function(grunt) {
             },
 
             dist: {
+                options: {
+                    patterns: [
+                        {
+                            match: /this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*,\s*/g,
+                            replacement: '$1.prototype.$2.apply(this, '
+                        },
+                    ],
+                },
                 files: [
                     {
                         expand: true,
                         flatten: true,
-                        src: [  '<%= path.main %>' ],
+                        src: [ '<%= path.main %>' ],
                         dest: 'build/'
                     }
                 ]
