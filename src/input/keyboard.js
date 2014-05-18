@@ -119,9 +119,9 @@
      */
 
     /**
-     * Almost all keyboard keys that have code ASCII, like:
-     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, ESC, SPACE, TAB, BACKSPACE, PAUSE
-     * PAGE_UP, PAGE_DOWN, INSERT, DELETE, CAPS_LOCK, NUM_LOCK, SCROLL_LOCK, PRINT_SCREEN
+     * Almost all keyboard keys that have ASCII code, like:
+     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, ESC, SPACE, TAB, BACKSPACE, PAUSE,
+     * PAGE_UP, PAGE_DOWN, INSERT, DELETE, CAPS_LOCK, NUM_LOCK, SCROLL_LOCK, PRINT_SCREEN,
      * Keys [0..9], [A..Z], [NUMPAD0..NUMPAD9], [F1..F12]
      * @public
      * @enum {number}
