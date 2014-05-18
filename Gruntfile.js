@@ -32,8 +32,8 @@ module.exports = function(grunt) {
                 options: {
                     patterns: [
                         {
-                            match: /this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*,\s*/g,
-                            replacement: '$1.prototype.$2.apply(this, '
+                            match: /this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g,
+                            replacement: '$1.prototype.$2.apply(this$3'
                         },
                     ],
                 },
