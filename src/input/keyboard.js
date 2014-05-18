@@ -120,7 +120,9 @@
 
     /**
      * Almost all keyboard keys that have code ASCII, like:
-     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, PAUSE, ESC, SPACE, TAB, BACKSPACE, [0..9], [A..Z], [NUMPAD0..NUMPAD9], [F1..F12]
+     * LEFT, UP, RIGHT, DOWN, ENTER, SHIFT, CTRL, ALT, ESC, SPACE, TAB, BACKSPACE, PAUSE
+     * PAGE_UP, PAGE_DOWN, INSERT, DELETE, CAPS_LOCK, NUM_LOCK, SCROLL_LOCK, PRINT_SCREEN
+     * Keys [0..9], [A..Z], [NUMPAD0..NUMPAD9], [F1..F12]
      * @public
      * @enum {number}
      * @name KEY
@@ -134,17 +136,18 @@
         "CTRL" : 17,
         "ALT" : 18,
         "PAUSE" : 19,
-        "CAPSLOCK" : 20,
+        "CAPS_LOCK" : 20,
         "ESC" : 27,
         "SPACE" : 32,
-        "PAGEUP" : 33,
-        "PAGEDOWN" : 34,
+        "PAGE_UP" : 33,
+        "PAGE_DOWN" : 34,
         "END" : 35,
         "HOME" : 36,
         "LEFT" : 37,
         "UP" : 38,
         "RIGHT" : 39,
         "DOWN" : 40,
+        "PRINT_SCREEN" : 42,
         "INSERT" : 45,
         "DELETE" : 46,
         "NUM0" : 48,
@@ -211,7 +214,7 @@
         "F10" : 121,
         "F11" : 122,
         "F12" : 123,
-        "NUMLOCK" : 144,
+        "NUM_LOCK" : 144,
         "SCROLL_LOCK" : 145,
         "SEMICOLON" : 186,
         "PLUS" : 187,
