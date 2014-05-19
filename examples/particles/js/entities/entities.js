@@ -26,7 +26,7 @@ game.changeEmitter = function() {
         emitter.angleVariation = Number.prototype.degToRad(20);
 
         // move the emitter
-        emitter.translate(-100, 200);
+        emitter.translate(0, 200);
         break;
     case "smoke":
         // create an object with emitter params (optional)
@@ -82,7 +82,7 @@ game.changeEmitter = function() {
         emitter.speedVariation = 2;
 
         // move the emitter
-        emitter.pos.set(100, 300);
+        emitter.pos.set(10, 200);
         break;
     case "rain":
         // set emitter params
@@ -102,7 +102,7 @@ game.changeEmitter = function() {
         emitter.gravity = 0.6;
 
         // move the emitter
-        emitter.pos.set(100, 20);
+        emitter.pos.y = 20;
         break;
     case "cannon":
         // set emitter params
@@ -137,6 +137,9 @@ game.changeEmitter = function() {
         emitter.minLife = 1000;
         emitter.maxLife = 5000;
 
+        // move the emitter
+        emitter.pos.y = 200;
+
         // start the emitter, output all particles and stop
         // optional - inform the quantity of particles to emit
         emitter.stopStream();
@@ -153,7 +156,7 @@ game.changeEmitter = function() {
         emitter.maxLife = 2000;
 
         // move the emitter
-        emitter.pos.set(100, 300);
+        emitter.pos.set(100, 200);
 
         // start the emitter, output all particles and stop
         // optional - inform the quantity of particles to emit
@@ -175,7 +178,7 @@ game.changeEmitter = function() {
         emitter.gravity = 0.3;
 
         // move the emitter
-        emitter.pos.set(350, 20);
+        emitter.pos.y = 10;
 
         // start the emitter with continuous particle output
         // optional - inform the emitter time to launch particles
