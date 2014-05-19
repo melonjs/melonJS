@@ -280,6 +280,9 @@
             this._startDrag = this.startDrag.bind(this);
             this._stopDrag = this.stopDrag.bind(this);
             this._drag = this.drag.bind(this);
+
+            this.onDrag = function() {};
+
             me.input.registerPointerEvent("pointerup", me.game.viewport, this._stopDrag);
             me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
         },
@@ -354,8 +357,6 @@
                 this.onDrag(pos);
                 return false;
             }
-        },
-        onDrag : function(pos) {
         },
         draw : function(context, rect) {
             context.save();
