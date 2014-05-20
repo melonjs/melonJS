@@ -244,7 +244,7 @@
             if (object) {
                 this.dragHandler.floating = this.shape.floating = object.floating;
                 this.shape.setShape(object.pos, object.width, object.height);
-                this.dragHandler.setPosition(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
+                this.dragHandler.setPosition(object.pos.x + object.width, object.pos.y + object.height);
             }
         }
     });
@@ -257,7 +257,7 @@
         },
         setShape : function(v, w, h) {
             this.resize(w, h);
-            this.pos.set(v.x - this.hWidth, v.y - this.hHeight);
+            this.pos.set(v.x, v.y);
             return this;
         },
         draw : function(context) {
@@ -433,7 +433,7 @@
             var object = this.object;
             if (object) {
                 this.dragHandler.floating = this.shape.floating = object.floating;
-                this.origin.setV(object.pos);
+                this.origin.set(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
                 this.onSync(object);
                 this.shape.setShape(this.origin, this.vector.x, this.vector.y);
             }
@@ -570,8 +570,8 @@
                 this.shape.set(object);
                 var angle = object.angle - object.angleVariation;
                 var radius = (object.speed + object.speedVariation) * this.scale;
-                var x = object.pos.x + Math.cos(angle) * radius;
-                var y = object.pos.y - Math.sin(angle) * radius;
+                var x = object.pos.x + object.hWidth + Math.cos(angle) * radius;
+                var y = object.pos.y + object.hHeight - Math.sin(angle) * radius;
                 this.dragHandler.setPosition(x, y);
             }
         }
@@ -589,7 +589,7 @@
             this.z = Infinity;
         },
         set : function(object) {
-            this.pos.setV(object.pos);
+            this.pos.set(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
             this.startAngle = -(object.angle - object.angleVariation);
             this.endAngle = -(object.angle + object.angleVariation);
             this.minRadius = (object.speed - object.speedVariation) * this.scale;
