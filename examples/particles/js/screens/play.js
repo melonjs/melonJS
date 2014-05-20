@@ -42,7 +42,8 @@ game.PlayScreen = me.ScreenObject.extend({
                     } else {
                         pos = mousepos;
                     }
-                    obj.pos.setV(pos);
+                    obj.pos.x = pos.x - obj.hWidth;
+                    obj.pos.y = pos.y - obj.hHeight;
                 }
 
                 me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
