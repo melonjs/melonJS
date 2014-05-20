@@ -214,7 +214,7 @@
             var object = this.object;
             if (object) {
                 pos.sub(object.pos).clampSelf(0, Infinity);
-                object.resize(pos.x * 2, pos.y * 2);
+                object.resize(pos.x, pos.y);
                 me.event.publish("propertyChanged", [ object ]);
             }
         },
@@ -397,7 +397,8 @@
         onDrag : function(pos) {
             var object = this.object;
             if (object) {
-                pos.sub(object.pos);
+                pos.x -= object.pos.x + object.hWidth;
+                pos.y -= object.pos.y + object.hHeight;
                 var x = pos.x;
                 var y = pos.y;
                 if (x !== this.vector.x || y !== this.vector.y) {
@@ -525,7 +526,8 @@
         onDrag : function(pos) {
             var object = this.object;
             if (object) {
-                pos.sub(object.pos);
+                pos.x -= object.pos.x + object.hWidth;
+                pos.y -= object.pos.y + object.hHeight;
                 var variation = object.angle - Math.atan2(-pos.y, pos.x);
                 if (variation < -Math.PI / 2) {
                     variation += 2 * Math.PI;
