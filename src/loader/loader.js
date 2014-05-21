@@ -549,6 +549,7 @@
          */
         api.getTMX = function (elt) {
             // avoid case issue
+            elt = '' + elt;
             elt = elt.toLowerCase();
             if (elt in tmxList) {
                 return tmxList[elt].data;
@@ -570,6 +571,7 @@
          */
         api.getBinary = function (elt) {
             // avoid case issue
+            elt = '' + elt;
             elt = elt.toLowerCase();
             if (elt in binList) {
                 return binList[elt];
@@ -592,6 +594,7 @@
          */
         api.getImage = function (elt) {
             // avoid case issue
+            elt = '' + elt;
             elt = elt.toLowerCase();
             if (elt in imgList) {
                 // return the corresponding Image object
@@ -614,6 +617,7 @@
          * @return {Object}
          */
         api.getJSON = function (elt) {
+            elt = '' + elt;
             elt = elt.toLowerCase();
             if (elt in jsonList) {
                 return jsonList[elt];
