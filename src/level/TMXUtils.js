@@ -26,12 +26,12 @@
          * set and interpret a TMX property value
          * @ignore
          */
-        function setTMXValue(value, propertyName) {
+        function setTMXValue(value) {
             if (!value || value.isBoolean()) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (value.isNumeric() && me.TMX_TAG_RESOURCES.indexOf(propertyName) === -1) {
+            else if (value.isNumeric()) {
                 // check if numeric
                 value = Number(value);
             }
@@ -51,22 +51,15 @@
 
         var parseAttributes = function (obj, elt) {
             // do attributes
-            var propertyName;
             if (elt.attributes && elt.attributes.length > 0) {
                 for (var j = 0; j < elt.attributes.length; j++) {
                     var attribute = elt.attributes.item(j);
                     if (typeof(attribute.name) !== "undefined") {
                         // DOM4 (Attr no longer inherit from Node)
-                        obj[attribute.name] = setTMXValue(attribute.value, propertyName);
-                        if (attribute.name === "name") {
-                            propertyName = attribute.value;
-                        }
+                        obj[attribute.name] = setTMXValue(attribute.value);
                     } else {
                         // else use the deprecated ones
-                        obj[attribute.nodeName] = setTMXValue(attribute.nodeValue, propertyName);
-                        if (attribute.name === "name") {
-                            propertyName = attribute.value;
-                        }
+                        obj[attribute.nodeName] = setTMXValue(attribute.nodeValue);
                     }
                 }
             }
