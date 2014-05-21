@@ -170,8 +170,8 @@
 
             if (settings.image) {
                 var image = (
-                    typeof settings.image === "string" ?
-                    me.loader.getImage(settings.image) : settings.image
+                    typeof settings.image === "object" ?
+                    settings.image : me.loader.getImage(settings.image)
                 );
                 this.renderable = new me.AnimationSheet(
                     0, 0, image,
