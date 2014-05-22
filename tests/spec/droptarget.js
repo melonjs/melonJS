@@ -79,7 +79,7 @@
                 }
             };
 
-        beforeAll(function () {
+        beforeEach(function () {
             // get a reference to the canvas element
             canvas = Video.getScreenCanvas();
         });

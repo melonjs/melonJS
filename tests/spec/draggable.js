@@ -40,7 +40,7 @@
                 Event.publish(Event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
             };
 
-        beforeAll(function () {
+        beforeEach(function () {
             // get a reference to the canvas element
             canvas = Video.getScreenCanvas();
         });
