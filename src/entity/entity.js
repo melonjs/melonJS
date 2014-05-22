@@ -928,6 +928,14 @@
      * @param {Number} x the x coordinates of the object
      * @param {Number} y the y coordinates of the object
      * @param {me.ObjectSettings} settings object settings
+     * @example
+     * me.game.world.addChild(new me.LevelEntity(
+     *     x, y, {
+     *         "duration" : 250, // Fade duration (in ms)
+     *         "color" : "#000", // Fade color
+     *         "to" : "mymap2"   // TMX level to load
+     *     }
+     * ));
      */
     me.LevelEntity = me.ObjectEntity.extend(
     /** @scope me.LevelEntity.prototype */
