@@ -549,7 +549,7 @@
          */
         obj.getTMX = function (elt) {
             // avoid case issue
-            elt = '' + elt;
+            elt = "" + elt;
             elt = elt.toLowerCase();
             if (elt in tmxList) {
                 return tmxList[elt].data;
@@ -571,7 +571,7 @@
          */
         obj.getBinary = function (elt) {
             // avoid case issue
-            elt = '' + elt;
+            elt = "" + elt;
             elt = elt.toLowerCase();
             if (elt in binList) {
                 return binList[elt];
@@ -594,7 +594,7 @@
          */
         obj.getImage = function (elt) {
             // avoid case issue
-            elt = '' + elt;
+            elt = "" + elt;
             elt = elt.toLowerCase();
             if (elt in imgList) {
                 // return the corresponding Image object
@@ -617,7 +617,7 @@
          * @return {Object}
          */
         obj.getJSON = function (elt) {
-            elt = '' + elt;
+            elt = "" + elt;
             elt = elt.toLowerCase();
             if (elt in jsonList) {
                 return jsonList[elt];
