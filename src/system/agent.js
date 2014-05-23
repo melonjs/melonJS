@@ -9,7 +9,7 @@
      * Convert first character of a string to uppercase, if it's a letter.
      * @ignore
      * @function
-     * @name wordUpperCase
+     * @name capitalize
      * @param  {String} str Input string.
      * @return {String} String with first letter made uppercase.
      */
