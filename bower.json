@@ -6,7 +6,15 @@
     "type": "git",
     "url": "git://github.com/melonjs/melonJS.git"
   },
-  "dependencies": {
-    "jasmine": "https://github.com/pivotal/jasmine.git"
-  }
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "tasks",
+    "tests",
+    "AUTHORS",
+    "CHANGELOG",
+    "Gruntfile.js",
+    "*.json",
+    "*.md"
+  ]
 }
