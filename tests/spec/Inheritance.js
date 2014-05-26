@@ -12,7 +12,7 @@ describe("Jay Inheritance", function () {
         var Ninja = Person.extend({
             "init" : function () {
                 // Call the super constructor, passing a single argument
-                this._super(Person, "init", [ false ] );
+                this._super(Person, "init", [ false ]);
             },
             "dance" : function () {
                 // Call the overridden dance() method
@@ -109,10 +109,10 @@ describe("Jay Inheritance", function () {
             /**
              * XXX: Disabled because it fails under grunt-contrib-jasmine
              * Works in Chrome
-             */
             xit("can dance", function () {
                 expect(r.dance()).toEqual(true);
             });
+            */
 
             it("can swing a sword", function () {
                 expect(r.swingSword()).toEqual(true);
