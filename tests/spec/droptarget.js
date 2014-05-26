@@ -8,8 +8,8 @@
  */
 
 (function (DraggableEntity, DroptargetEntity, Event, Video) {
-    'use strict';
-    describe('entity.droptarget', function () {
+    "use strict";
+    describe("entity.droptarget", function () {
         var canvas,
             draggable,
             droptarget,
@@ -18,8 +18,8 @@
             createDraggable = function (position, dimensions) {
                 var Draggable = DraggableEntity.extend({
                     init: function (x, y, settings) {
-                        this._super(DraggableEntity, 'init', [x, y, settings]);
-                        this.color = 'white';
+                        this._super(DraggableEntity, "init", [x, y, settings]);
+                        this.color = "white";
                     },
                     update: function () {
                         return true;
@@ -36,13 +36,13 @@
                 me.game.world.addChild(draggable, 1);
             },
             // creates a test droptarget entity
-            createDroptarget = function (position, dimensions) {
+            createDroptarget = function () {
                 var Droptarget = DroptargetEntity.extend({
                     init: function (x, y, settings) {
-                        this._super(me.DroptargetEntity, 'init', [x, y, settings]);
-                        this.color = 'red';
+                        this._super(me.DroptargetEntity, "init", [x, y, settings]);
+                        this.color = "red";
                     },
-                    enableContains: function() {
+                    enableContains: function () {
                         this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
                     },
                     update: function () {
@@ -52,7 +52,7 @@
                         context.fillStyle = this.color;
                         context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
                     },
-                    drop: function (e) {
+                    drop: function () {
                         dropped = true;
                     }
                 });
@@ -91,8 +91,8 @@
             removeEntities();
         });
 
-        describe('checkmethod: contains', function () {
-            it('Should be able to detect a valid drop of a draggable', function () {
+        describe("checkmethod: contains", function () {
+            it("Should be able to detect a valid drop of a draggable", function () {
                 var startFrom = {x: 70, y: 70},
                     moveTo = {x: 220, y: 220};
                 // create a draggable
@@ -106,7 +106,7 @@
 
                 expect(dropped).toBeTruthy();
             });
-            it('Should not accept a drop outside of the check area', function () {
+            it("Should not accept a drop outside of the check area", function () {
                 var startFrom = {x: 70, y: 70},
                     moveTo = {x: 100, y: 100};
                 // create a draggable
@@ -122,8 +122,8 @@
             });
         });
 
-        describe('checkmethod: overlap', function () {
-            it('Should be able to detect a valid drop of a draggable', function () {
+        describe("checkmethod: overlap", function () {
+            it("Should be able to detect a valid drop of a draggable", function () {
                 var startFrom = {x: 70, y: 70},
                     moveTo = {x: 100, y: 100};
                 // create a draggable
@@ -135,7 +135,7 @@
 
                 expect(dropped).toBeTruthy();
             });
-            it('Should not accept a drop outside of the check area', function () {
+            it("Should not accept a drop outside of the check area", function () {
                 var startFrom = {x: 70, y: 70},
                     moveTo = {x: 500, y: 500};
                 // create a draggable
