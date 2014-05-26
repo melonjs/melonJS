@@ -12,7 +12,7 @@ describe("Jay Inheritance", function () {
         var Ninja = Person.extend({
             "init" : function () {
                 // Call the super constructor, passing a single argument
-                this._super(Person, 'init', [ false ] );
+                this._super(Person, "init", [ false ] );
             },
             "dance" : function () {
                 // Call the overridden dance() method
@@ -24,7 +24,7 @@ describe("Jay Inheritance", function () {
         });
 
         var Pirate = Person.extend(Ninja, {
-            "init" : function() {
+            "init" : function () {
                 // Call the super constructor, passing a single argument
                 this._super(Person, "init", [ true ]);
             }
@@ -273,7 +273,7 @@ describe("Jay Inheritance", function () {
             "foo" : function () {
                 return "foo";
             }
-        })
+        });
 
         var MixedIn = Base.extend(Extended, {
             "bar" : function () {

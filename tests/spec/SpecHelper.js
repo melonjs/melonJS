@@ -1,13 +1,13 @@
-beforeEach(function() {
+beforeEach(function () {
     jasmine.addMatchers({
-        toBeInstanceOf : function() {
+        toBeInstanceOf : function () {
             return {
-                compare: function(actual, expected) {
+                compare : function(actual, expected) {
                     return {
                         pass: actual instanceof expected
                     };
                 }
-            }
+            };
         }
     });
 });
@@ -34,7 +34,7 @@ beforeEach(function () {
  * A collection of helper functions which can be used in your tests
  */
 (function () {
-    'use strict';
+    "use strict";
 
     // Cross-browser helper for triggering events on elements
     /**
