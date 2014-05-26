@@ -3,6 +3,7 @@ module.exports = function(grunt) {
     'use strict';
 
     var sourceFiles = grunt.file.readJSON('sourceFiles.json');
+    var testSpecs = grunt.file.readJSON('testSpecs.json');
 
     // Project configuration.
     grunt.initConfig({
@@ -79,7 +80,7 @@ module.exports = function(grunt) {
 
             beforeConcat: {
                 files: {
-                    src: sourceFiles
+                    src: [testSpecs, sourceFiles]
                 }
             },
 
@@ -119,7 +120,7 @@ module.exports = function(grunt) {
         jasmine : {
             src: sourceFiles,
             options : {
-                specs: grunt.file.readJSON('testSpecs.json'),
+                specs: testSpecs,
                 helpers: ['tests/spec/SpecHelper.js']
             }
 
