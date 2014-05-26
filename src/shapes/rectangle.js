@@ -11,7 +11,7 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} v x,y position of the rectange
+     * @param {me.Vector2d} v x,y position of the Rectangle
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
@@ -21,7 +21,7 @@
         /** @ignore */
         init : function (v, w, h) {
             /**
-             * position of the Rectange
+             * position of the Rectangle
              * @public
              * @type {me.Vector2d}
              * @name pos
@@ -41,7 +41,7 @@
             this.rangeV = new me.Vector2d();
 
             /**
-             * width of the Rectange
+             * width of the Rectangle
              * @public
              * @type {Number}
              * @name width
@@ -49,7 +49,7 @@
              */
             this.width = 0;
             /**
-             * height of the Rectange
+             * height of the Rectangle
              * @public
              * @type {Number}
              * @name height
@@ -75,74 +75,6 @@
             // half width/height
             this.hWidth = ~~(w / 2);
             this.hHeight = ~~(h / 2);
-
-            // redefine some properties to ease our life when getting the rectangle coordinates
-            /**
-             * left coordinate of the Rectange<br>
-             * takes in account the adjusted size of the rectangle (if set)
-             * @public
-             * @type {Number}
-             * @name left
-             * @memberOf me.Rect
-             */
-            Object.defineProperty(this, "left", {
-                get : function () {
-                    var x = this.pos.x;
-                    var xv = x + this.rangeV.x;
-                    return x < xv ? x : xv;
-                },
-                configurable : true
-            });
-            /**
-             * right coordinate of the Rectange<br>
-             * takes in account the adjusted size of the rectangle (if set)
-             * @public
-             * @type {Number}
-             * @name right
-             * @memberOf me.Rect
-             */
-            Object.defineProperty(this, "right", {
-                get : function () {
-                    var x = this.pos.x + this.width;
-                    var xv = x + this.rangeV.x;
-                    return x > xv ? x : xv;
-                },
-                configurable : true
-            });
-
-            /**
-             * top coordinate of the Rectange<br>
-             * takes in account the adjusted size of the rectangle (if set)
-             * @public
-             * @type {Number}
-             * @name top
-             * @memberOf me.Rect
-             */
-            Object.defineProperty(this, "top", {
-                get : function () {
-                    var y = this.pos.y;
-                    var yv = y + this.rangeV.y;
-                    return y < yv ? y : yv;
-                },
-                configurable : true
-            });
-
-            /**
-             * bottom coordinate of the Rectange<br>
-             * takes in account the adjusted size of the rectangle (if set)
-             * @public
-             * @type {Number}
-             * @name bottom
-             * @memberOf me.Rect
-             */
-            Object.defineProperty(this, "bottom", {
-                get : function () {
-                    var y = this.pos.y + this.height;
-                    var yv = y + this.rangeV.y;
-                    return y > yv ? y : yv;
-                },
-                configurable : true
-            });
         },
 
         /**
@@ -455,4 +387,73 @@
             context.strokeRect(this.left, this.top, this.width, this.height);
         }
     });
+
+    // redefine some properties to ease our life when getting the rectangle coordinates
+    /**
+     * left coordinate of the Rectangle<br>
+     * takes in account the adjusted size of the rectangle (if set)
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "left", {
+        get : function () {
+            var x = this.pos.x;
+            var xv = x + this.rangeV.x;
+            return x < xv ? x : xv;
+        },
+        configurable : true
+    });
+    /**
+     * right coordinate of the Rectangle<br>
+     * takes in account the adjusted size of the rectangle (if set)
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "right", {
+        get : function () {
+            var x = this.pos.x + this.width;
+            var xv = x + this.rangeV.x;
+            return x > xv ? x : xv;
+        },
+        configurable : true
+    });
+
+    /**
+     * top coordinate of the Rectangle<br>
+     * takes in account the adjusted size of the rectangle (if set)
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "top", {
+        get : function () {
+            var y = this.pos.y;
+            var yv = y + this.rangeV.y;
+            return y < yv ? y : yv;
+        },
+        configurable : true
+    });
+
+    /**
+     * bottom coordinate of the Rectangle<br>
+     * takes in account the adjusted size of the rectangle (if set)
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "bottom", {
+        get : function () {
+            var y = this.pos.y + this.height;
+            var yv = y + this.rangeV.y;
+            return y > yv ? y : yv;
+        },
+        configurable : true
+    });
+
 })();
