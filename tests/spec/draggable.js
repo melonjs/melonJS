@@ -7,16 +7,16 @@
  */
 
 (function (DraggableEntity, Event, Video) {
-    'use strict';
-    describe('entity.draggable', function () {
+    "use strict";
+    describe("entity.draggable", function () {
         var canvas,
             draggable,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
                 var Draggable = DraggableEntity.extend({
                     init: function (x, y, settings) {
-                        this._super(DraggableEntity, 'init', [x, y, settings]);
-                        this.color = 'white';
+                        this._super(DraggableEntity, "init", [x, y, settings]);
+                        this.color = "white";
                     },
                     update: function () {
                         return true;
@@ -51,7 +51,7 @@
             }
         });
 
-        it('Should be able to drag an entity to a new location', function () {
+        it("Should be able to drag an entity to a new location", function () {
             var startFrom = {x: 70, y: 70},
                 moveTo = {x: 700, y: 500};
             // create a draggable

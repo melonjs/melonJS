@@ -95,6 +95,13 @@
         "webkitAudioContext" : true,
         "Howl" : true,
         "Howler" : true,
+        "describe" : true,
+        "it" : true,
+        "expect" : true,
+        "beforeEach" : true,
+        "afterEach" : true,
+        "xit" : true,
+        "xdescribe" : true,
         "exports" : true // commonJS and friends
     }
 }
