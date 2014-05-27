@@ -1,6 +1,7 @@
 Version History
 ---------------
 1.0.1
+* Core : Removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
 * Entity : Disable falling flag when gravity is disabled
 * Entity : Fix an exception in ObjectEntity.checkCollision()
 * Entity : Fixed a regression on breakable tiles
