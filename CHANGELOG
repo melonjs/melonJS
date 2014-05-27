@@ -3,7 +3,7 @@ Version History
 1.1.0
 * Core : Reorganized source code for all basic object definition/augmentation
 * Core : New CI and unit testing frameworks
-* Core : New object inheritance mechanism
+* Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
 
 1.0.1
 * Core : Removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
