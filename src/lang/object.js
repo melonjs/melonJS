@@ -10,7 +10,7 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
  */
 
- 
+
 /* jshint ignore:start */
 /**
  * Get the prototype of an Object.
@@ -36,7 +36,7 @@ Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
     return obj;
 };
 /* jshint ignore:end */
- 
+
 if (!Object.defineProperty) {
     /**
      * simple defineProperty function definition (if not supported by the browser)<br>
@@ -206,8 +206,7 @@ if (!Function.prototype.bind) {
             var mixins = Array.prototype.slice.call(arguments, 0);
 
             /**
-             * The class constructor which creates the `_super` shortcut method
-             * and calls the user `init` constructor if defined.
+             * The class constructor which calls the user `init` constructor.
              * @ignore
              */
             function Class() {
@@ -226,7 +225,7 @@ if (!Function.prototype.bind) {
 
             // Verify constructor exists
             if (!("init" in Class.prototype)) {
-                throw "Object.extend: Class is missing a constructor named `init`";
+                throw "extend: Class is missing a constructor named `init`";
             }
 
             // Apply syntactic sugar for accessing methods on super classes
@@ -253,7 +252,7 @@ if (!Function.prototype.bind) {
             methods[method] = descriptor[method];
 
             if (typeof(descriptor[method]) !== "function") {
-                throw "Object.extend: Method `" + method + "` is not a function!";
+                throw "extend: Method `" + method + "` is not a function";
             }
 
             Object.defineProperty(Class.prototype, method, {
