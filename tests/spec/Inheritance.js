@@ -108,8 +108,7 @@ describe("Jay Inheritance", function () {
 
             /**
              * XXX: Disabled because it fails under grunt-contrib-jasmine
-             * Works in Chrome
-             *
+             * Works in Chrome, Firefox, Safari, and Opera (12 and 21)
              */
             xit("can dance", function () {
                 expect(r.dance()).toEqual(true);
