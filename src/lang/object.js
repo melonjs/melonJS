@@ -61,33 +61,6 @@ if (!Object.defineProperty) {
     };
 }
 
-/**
- * Can be used to mix modules, to combine abilities
- * @name mixin
- * @memberOf external:Object#
- * @function
- * @param {Object} obj the object you want to throw in the mix
- */
-Object.defineProperty(Object.prototype, "mixin", {
-    value: function (obj) {
-        var i,
-        self = this;
-
-        // iterate over the mixin properties
-        for (i in obj) {
-            // if the current property belongs to the mixin
-            if (obj.hasOwnProperty(i)) {
-                // add the property to the mix
-                self[i] = obj[i];
-            }
-        }
-        // return the mixed object
-        return self;
-    },
-    enumerable : false,
-    configurable : false
-});
-
 if (typeof Object.create !== "function") {
     /**
      * Prototypal Inheritance Create Helper
