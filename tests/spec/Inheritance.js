@@ -109,6 +109,7 @@ describe("Jay Inheritance", function () {
             /**
              * XXX: Disabled because it fails under grunt-contrib-jasmine
              * Works in Chrome, Firefox, Safari, and Opera (12 and 21)
+             * PhantomJS bug: https://github.com/ariya/phantomjs/issues/11856
              */
             xit("can dance", function () {
                 expect(r.dance()).toEqual(true);
