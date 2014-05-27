@@ -5,13 +5,13 @@ Version History
 * Entity : Disable falling flag when gravity is disabled
 * Entity : Fix an exception in ObjectEntity.checkCollision()
 * Entity : Fixed a regression on breakable tiles
-* Entity : Use width and heigth by default if spritewidth and spriteheight are not defined
-* Entity : Throw an exception if mandatory fields width and height are not defined 
+* Entity : Use width and height by default if spritewidth and spriteheight are not defined
+* Entity : Throw an exception if mandatory fields width and height are not defined
 * Entity : Fixed an exception in ObjectEntity.flipX/Y()
 * Loader : Fixed asset loading when named as a number
 * ObjectContainer : Use cyclic zIndex by default instead of Infinity
 * Audio : Sync'ed with last Howler version (as now officially and properly support CocoonJS)
-* Audio : melonJS now throws an exception when attemption to load audio assets before audio is initialized
+* Audio : melonJS now throws an exception when attempting to load audio assets before audio is initialized
 * TMX : Fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
 * Font : fixed opacity property usage for me.BitmapFont object.
 * Renderable : added a tap and hold feature to the me.GUI_Object object (juhanapaavola)
@@ -31,15 +31,15 @@ Version History
 * Loader : added loading of TMX data from javascript (json) objects (paulmedwal)
 * Color : melonJS now defines a new me.Color class for advanced color manipulation
 * Particles : added basic Particle System, with emitters and particles (ciangames/insidiator)
-* Particles : added a particle emmiter editor, see the example folder (insidiator)
+* Particles : added a particle emitter editor, see the example folder (insidiator)
 * Device : added full cross-browser support for the Fullscreen API (see me.device)
 * Device : added support for the vibration API (me.device.vibrate)
 * Device : renamed the me.save.delete function to me.save.removed (delete is a reserved keyword)
 * Device : added support for the visibilitychange API (pause/stop state on window show/hidden status)
-* Audio : modernised (and also mobile compatible) web audio API based on the awesome Howler library 
+* Audio : modernised (and also mobile compatible) web audio API based on the awesome Howler library
 * Input : added the possibility to disable globally or per key the default browser action
 * Input : automatically enable keyboard even on desktop type devices
-* Input : the registerPointerEvent functio now only accepts the standardized Pointer Event names.
+* Input : the registerPointerEvent function now only accepts the standardized Pointer Event names.
 * TMX : added proper support for all shape type (collision is still however resolved using AABB detection)
 * TMX : XML TMX map are now converted to a JXON object on-the-fly, allowing to remove duplicated parsing code
 * TMX : added the Tiled "type" property to TMXObject
@@ -74,13 +74,13 @@ Version History
 * TMX : fixed an undefined tileset issue when adding a new Tile through the `setTile` function
 * documentation : fixed the parameter value of the hasChild function
 * Renderable : moved the opacity related getter/setter function into the Renderable class
-* Renderable : fixed group opacity setting fully overwritting renderable opacity settings
+* Renderable : fixed group opacity setting fully overwriting renderable opacity settings
 * ScreenObject : fixed cases where ScreenObjects may not be considered in the viewport
 * ObjectContainer : fixed rendering of nested containers
 
 0.9.9
 * General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)
-* General : added a renderable container object (me.ObjectContainer) and reorganise `me.game` accordingly
+* General : added a renderable container object (me.ObjectContainer) and reorganize `me.game` accordingly
 * General : added `me.game.world` as a reference to the game world root object container.
 * General : added a new me.save class to manage localStorage, and moved (deprecated) the old me.stat to the plugin repository
 * Core : improved game pause management (by swmuron)
@@ -117,7 +117,7 @@ Version History
 * Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 * Loader : the `tps` data type has been changed to a more generic `json` data type (agmcleaod)
 * Input : added MSPointer support (Halfman)
-* Input : normalized API and management of input event and enabled multi-touch for PointerEvent 
+* Input : normalized API and management of input event and enabled multi-touch for PointerEvent
 * Input : added throttling support for `****move` events
 * Core : main loop now uses requestAnimationFrame by default with a fallback to setTimeout
 * Video : added the possibility to specify a maximum size when enabling video scaling
@@ -152,7 +152,7 @@ Version History
 * TMX : added JSON map parsing support
 * TMX : small optimization for isometric rendering (`pixelToTileCoords()` function)
 * TMX : fixed access to inherited properties
-* TMX : added an entry point for a potential gzip/zlib TMX deccompression plugin
+* TMX : added an entry point for a potential gzip/zlib TMX decompression plugin
 * TMX : fixed object positioning on isometric maps (andyveliz)
 * TMX : property value convention for automatically JSON-decoding; prefix with `json:`
 * Video : fixed `viewport.shake()`
@@ -161,7 +161,7 @@ Version History
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
-* Core : Workaround for useNativeFrame when cancelAnimationRequest is not supported 
+* Core : Workaround for useNativeFrame when cancelAnimationRequest is not supported
 * Audio : added volume and mute control settings
 * Audio : added the possibility to stream audio elements
 * TMX : code optimization to lower memory usage
@@ -170,7 +170,7 @@ Version History
 
 0.9.5
 * Audio : added mp4/aac pre-loading support
-* Audio : added codec selection based on audio support level 
+* Audio : added codec selection based on audio support level
 * Core : fixed requestAnimationFrame
 * Core : added an official plugin API
 * Core : fixed a object removing and sorting lock issue
@@ -194,7 +194,7 @@ Version History
 * Entity : fixed visible property automatic setting
 * Entity : moved collision check outside of the Entity Object
 * Entity : cleaned and renamed the collision utility function
-* Entity : added the possiblity to check for multiple collision
+* Entity : added the possibility to check for multiple collision
 * Entity : added a `collideType` function to check for collision with a specific type
 * Entity : moved collisionBox from SpriteObject to Entity Object
 * Entity: added a distanceToPoint, angleTo and angleToPoint function
@@ -208,7 +208,7 @@ Version History
 * TMX : Parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
 * TMX : fixed the `getObjectGroupByName()` function
 * TMX : added support for custom tile type
-* Tutorial : fixed camel case issue in resource names 
+* Tutorial : fixed camel case issue in resource names
 * Tutorial : update the parallax part to reflect last changes in melonJS (Image Layer)
 * Video : added support for display scaling
 * Video : added a setImageSmoothing function
@@ -222,10 +222,10 @@ Version History
 * Core : added a flag to enable/disable automatic pause on loosing/gaining focus
 * Core : fixed rendering loop when using requestAnimationFrame (parasyte)
 * Core : added a renderCollisionMap debug setting (parasyte)
-* Core : use console.error instead of window.alert 
+* Core : use console.error instead of window.alert
 * Core : added the possibility to specify a user-defined sort function
 * Core : fixed mixing screenObject added as object, and TMX level loading
-* Core : fixed screenObject when extending update & draw function 
+* Core : fixed screenObject when extending update & draw function
 * Entity : added an anchor point for renderables (through SpriteObject)
 * Entity : added rotation support (through SpriteObject)
 * Entity : added the possibility to pause an animation (parasyte)
@@ -346,7 +346,7 @@ Version History
 * Core: fixed some kind of "lag" issues when deleting objects
 * Core: improved the requestAnimFrame usage, and fallback to setInterval. me.sys.useNativeAnimFrame to enable it (disable by default)
 * Core: optimized the way objects are managed in the game loop
-* Core: defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10) 
+* Core: defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10)
 * TMX: implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
 * TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
 * TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
@@ -388,6 +388,6 @@ Version History
 * Audio: partially fix crash audio in safari when audio is enabled
 * Core: fixed gfx glitches (rounding issues)
 
-0.7.6 (May 16, 2011) 
+0.7.6 (May 16, 2011)
 first public version with alex4 !
 www.melonjs.org is live :)
