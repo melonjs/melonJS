@@ -68,7 +68,7 @@
     "dojo"          : false,    // Dojo Toolkit
     "jquery"        : false,    // jQuery
     "mootools"      : false,    // MooTools
-    "node"          : false,    // Node.js
+    "node"          : true,     // Node.js
     "nonstandard"   : false,    // Widely adopted globals (escape, unescape, etc)
     "prototypejs"   : false,    // Prototype and Scriptaculous
     "rhino"         : false,    // Rhino
@@ -84,24 +84,29 @@
 
     // Custom Globals
     "globals"       : {
-        "me": true,
-        "console": true,
-        "throttle": true,
-        "Windows": true,
-        "alert": true,
-        "define" : true,
-        // Howler specific exceptions
-        "AudioContext" : true,
-        "webkitAudioContext" : true,
-        "Howl" : true,
-        "Howler" : true,
-        "describe" : true,
-        "it" : true,
-        "expect" : true,
-        "beforeEach" : true,
-        "afterEach" : true,
-        "xit" : true,
-        "xdescribe" : true,
-        "exports" : true // commonJS and friends
+        // melonJS
+        "me"            : false,
+        "throttle"      : false,
+        "Windows"       : false,
+        "define"        : false,
+
+        // Howler
+        "AudioContext"  : false,
+        "webkitAudioContext" : false,
+        "Howl"          : false,
+        "Howler"        : false,
+
+        // Jasmine
+        "jasmine"       : false,
+        "describe"      : false,
+        "it"            : false,
+        "expect"        : false,
+        "runs"          : false,
+        "waitsFor"      : false,
+        "beforeEach"    : false,
+        "afterEach"     : false,
+        "spyOn"         : false,
+        "xdescribe"     : false,
+        "xit"           : false
     }
 }
