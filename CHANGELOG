@@ -199,7 +199,7 @@ Version History
 * Entity : added the possibility to check for multiple collision
 * Entity : added a `collideType` function to check for collision with a specific type
 * Entity : moved collisionBox from SpriteObject to Entity Object
-* Entity: added a distanceToPoint, angleTo and angleToPoint function
+* Entity : added a distanceToPoint, angleTo and angleToPoint function
 * Tween : fixed tween when pausing game
 * Tween : various fixes and optimization from the official repository
 * TMX : fixed a bug that was preventing a non visible layer to be set visible later
