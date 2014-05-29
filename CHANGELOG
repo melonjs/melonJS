@@ -1,20 +1,22 @@
 Version History
 ---------------
 1.0.1
-* Core : Removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
-* Entity : Disable falling flag when gravity is disabled
-* Entity : Fix an exception in ObjectEntity.checkCollision()
-* Entity : Fixed a regression on breakable tiles
-* Entity : Use width and height by default if spritewidth and spriteheight are not defined
-* Entity : Throw an exception if mandatory fields width and height are not defined
-* Entity : Fixed an exception in ObjectEntity.flipX/Y()
-* Loader : Fixed asset loading when named as a number
-* ObjectContainer : Use cyclic zIndex by default instead of Infinity
-* Audio : Sync'ed with last Howler version (as now officially and properly support CocoonJS)
+* Core : removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
+* Entity : disable falling flag when gravity is disabled
+* Entity : fix an exception in ObjectEntity.checkCollision()
+* Entity : fixed a regression on breakable tiles
+* Entity : use width and height by default if spritewidth and spriteheight are not defined
+* Entity : throw an exception if mandatory fields width and height are not defined
+* Entity : fixed an exception in ObjectEntity.flipX/Y()
+* Loader : fixed asset loading when named as a number
+* ObjectContainer : use cyclic zIndex by default instead of Infinity
+* Audio : sync'ed with last Howler version (as now officially and properly support CocoonJS)
 * Audio : melonJS now throws an exception when attempting to load audio assets before audio is initialized
-* TMX : Fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
+* TMX : fixed a potential issue with ImageLayer when ratio is set to 0 in Tiled
 * Font : fixed opacity property usage for me.BitmapFont object.
 * Renderable : added a tap and hold feature to the me.GUI_Object object (juhanapaavola)
+* Particles : fixed the particle emitter bounds (aaschmitz)
+* Input : added several keyboard keys for input mapping (aaschmitz)
 
 1.0.0
 * Core : now pass the elapsed time as a parameter when calling any object update function
@@ -30,7 +32,7 @@ Version History
 * Loader : added resource information to loader progress event (warpten)
 * Loader : added loading of TMX data from javascript (json) objects (paulmedwal)
 * Color : melonJS now defines a new me.Color class for advanced color manipulation
-* Particles : added basic Particle System, with emitters and particles (ciangames/insidiator)
+* Particles : added basic Particle System, with emitters and particles (aaschmitz/insidiator)
 * Particles : added a particle emitter editor, see the example folder (insidiator)
 * Device : added full cross-browser support for the Fullscreen API (see me.device)
 * Device : added support for the vibration API (me.device.vibrate)
@@ -45,19 +47,19 @@ Version History
 * TMX : added the Tiled "type" property to TMXObject
 * TMX : melonJS will now respect the object size as defined in Tiled when parsing/creating related object in the game world
 * Timer : added a setTimeout and setIntveral function obeying the engine pause state
-* Tween : Fixed tweens to properly maintain time state when paused
+* Tween : fixed tweens to properly maintain time state when paused
 * Renderable : `collisionBox` has been replaced by a more cleaner implementation (see `getShape`/`addShape`/`getBounds`)
 * Renderable : the flicker function now takes the global flickering duration in ms (as opposed in frame count)
 * Renderable : removed the visible property
 
 0.9.11
-* Documentation : Numerous fixes and improvements
-* General : Fix initial loading for me.save, and update documentation
-* General : Fix detection of localStorage on some phones (agmcleod)
-* General : Fix uncaught exception when objects without a position vector are added to a container
-* Input : Fully support event-driven key input with me.event.KEYDOWN and me.event.KEYUP
-* Input : Multiple keys bound to the same action will no longer cancel each other
-* Input : Fixed pointerEvent support on IE11
+* Documentation : numerous fixes and improvements
+* General : fix initial loading for me.save, and update documentation
+* General : fix detection of localStorage on some phones (agmcleod)
+* General : fix uncaught exception when objects without a position vector are added to a container
+* Input : fully support event-driven key input with me.event.KEYDOWN and me.event.KEYUP
+* Input : multiple keys bound to the same action will no longer cancel each other
+* Input : fixed pointerEvent support on IE11
 * ObjectContainer : fixed rendering of nested containers (again) - Thanks to Peter Hull
 * ObjectContainer : fixed getEntityByProp with nested containers
 * Animation : (quick) fixed hWidth and hHeight not being updated when the frame size is different
@@ -72,7 +74,7 @@ Version History
 * Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default
 * TMX : fixed the imageLayer reset bug (when unsubscribing the viewport change event)
 * TMX : fixed an undefined tileset issue when adding a new Tile through the `setTile` function
-* documentation : fixed the parameter value of the hasChild function
+* Documentation : fixed the parameter value of the hasChild function
 * Renderable : moved the opacity related getter/setter function into the Renderable class
 * Renderable : fixed group opacity setting fully overwriting renderable opacity settings
 * ScreenObject : fixed cases where ScreenObjects may not be considered in the viewport
@@ -88,27 +90,27 @@ Version History
 * Core : moved all device read-only flags to the new me.device object
 * Core : fixed Opera Mobile detection when sniffing user agent
 * Core : improved orientation change detection, added me.device.orientation and a specific minpubsub channel
-* Core : Moved debug flags to the debugPanel plugin
+* Core : moved debug flags to the debugPanel plugin
 * Input : fixed accelerometer event registration when supported
 * Input : added support for windows 8 accelerometer (Halfman)
-* Input : Improved mouse wheel event support to be compatible with all recent browsers
+* Input : improved mouse wheel event support to be compatible with all recent browsers
 * Input : added support for the touchCancel and mousecancel events
-* Input : Added TAB key definition to key bindings (agmcleod)
+* Input : added TAB key definition to key bindings (agmcleod)
 * Loader : refreshed the loader a bit, and added the new logo
-* Loader : Fixed binary loader (agmcleod)
+* Loader : fixed binary loader (agmcleod)
 * Video : added support for CocoonJS 1.4 ('antialias' parameter and the new `dispose` function)
 * Video : added proper support for video scaling on High-DPI devices (no longer requires the JS hack in the index HTML file)
-* Video : Fix `me.sys.scalingInterpolation` when display is resized.
+* Video : fix `me.sys.scalingInterpolation` when display is resized.
 * TMX : fixed default group opacity value not being applied to child objects.
 * TMX : optimized tile rendering, by using a tileset reference in Tile object
 * TMX : added preliminary support for non rectangular shapes in Tiled (although currently converted to me.Rect)
-* TMX : Fixed multiple image backgrounds with `ratio` properties that are different values
+* TMX : fixed multiple image backgrounds with `ratio` properties that are different values
 * TMX : fixed me.ImageLayer drawing being delayed by one frame
 * Font : Font objects now properly extend me.Renderable
 * GUI : `HUD` objects have been completely replaced by me.ObjectContainer; See Platformer example for new HUD implementation pattern.
 * Animation : the `animationspeed` property, now defines the delay between frames in terms of milliseconds (as opposed to framecount)
-* Animation : Allow animation callback to prevent resetting to first frame by returning `false` *really fixed this time*
-* Shapes : New shapes added for future expansion: me.Ellipse, me.PolyShape
+* Animation : allow animation callback to prevent resetting to first frame by returning `false` *really fixed this time*
+* Shapes : new shapes added for future expansion: me.Ellipse, me.PolyShape
 * Shapes : `me.Rect.getRect()` renamed `getBounds()`
 * Tween : the tween implementation has been updated to the last official r11 version.
 * Camera : renamed the mislabeled worldToScreen and ScreenToWorld, and fixed a bug in one of the function.
@@ -124,7 +126,7 @@ Version History
 * Video : automatically limit the maximum size if the corresponding CSS properties are set
 * TMX : added the possibility to specify different axis value for the scrolling ratio
 * Font : fixed drawing characters with charCode smaller than the firstChar value.
-* Renderable : Allow animation callback to prevent resetting to first frame by returning `false
+* Renderable : allow animation callback to prevent resetting to first frame by returning `false
 * Core : added "Mobile" to `me.sys.isMobile` UA sniffer (fix Firefox OS detection)
 
 0.9.7
@@ -135,8 +137,8 @@ Version History
 * Core : now using `screencanvas` extension for CocoonJS
 * Core : fixed `me.game.remove()` destroying the object too early
 * Entity : ObjectEntity is now composed with a `renderable` component (does not anymore inherit from AnimationSheet)
-* Entity : Renderable default position is now set based on the me.ObjectEntity default anchor point.
-* Entity : Fixed ladder collision detection/management
+* Entity : renderable default position is now set based on the me.ObjectEntity default anchor point.
+* Entity : fixed ladder collision detection/management
 * Examples : new collision_test example (see ticket #103)
 * Examples : new font_test example
 * Font : changed default alignement to `left`/`top`
@@ -161,7 +163,7 @@ Version History
 
 0.9.6
 * General : fix compatibility issue with previous iOS(5.x) and Android version
-* Core : Workaround for useNativeFrame when cancelAnimationRequest is not supported
+* Core : workaround for useNativeFrame when cancelAnimationRequest is not supported
 * Audio : added volume and mute control settings
 * Audio : added the possibility to stream audio elements
 * TMX : code optimization to lower memory usage
@@ -197,7 +199,7 @@ Version History
 * Entity : added the possibility to check for multiple collision
 * Entity : added a `collideType` function to check for collision with a specific type
 * Entity : moved collisionBox from SpriteObject to Entity Object
-* Entity: added a distanceToPoint, angleTo and angleToPoint function
+* Entity : added a distanceToPoint, angleTo and angleToPoint function
 * Tween : fixed tween when pausing game
 * Tween : various fixes and optimization from the official repository
 * TMX : fixed a bug that was preventing a non visible layer to be set visible later
@@ -205,7 +207,7 @@ Version History
 * TMX : added official support for Opacity in TiledLayer, TMXLayer, colorLayer and ImageLayer
 * TMX : added support for TSX files
 * TMX : added a `repeat` property to Image Layer instances, similar to CSS background-position
-* TMX : Parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
+* TMX : parallax layer is now based on the new "official" Image Layer support (from Tiled 0.9.0)
 * TMX : fixed the `getObjectGroupByName()` function
 * TMX : added support for custom tile type
 * Tutorial : fixed camel case issue in resource names
@@ -231,7 +233,7 @@ Version History
 * Entity : added the possibility to pause an animation (parasyte)
 * Entity : fixed default position by using top-left coordinates as in Tiled
 * Entity : fixed invisible entities being removed when colliding
-* Font: fixed me.Font horizontal alignement
+* Font : fixed me.Font horizontal alignement
 * General : fixed & enhanced object/memory deallocation when switching levels
 * General : rewrote the parallax code using the new Generic Image Layer Object
 * General : added support for vertical parallax layer
@@ -253,13 +255,13 @@ Version History
 * TMX : fixed TMXObject not being declared correctly under the "me" namespace
 * Utils : fixed the HexToRGB function and added support for the 3 char format (#hhh)
 * Tween : fixed exception in the tween library (parasyte)
-* Documentation : Corrected and added missing documentation
+* Documentation : corrected and added missing documentation
 
 0.9.3
-* General : Better Error management and reporting
+* General : better error management and reporting
 * General : added a dummy console.log for platforms not supporting it
 * General : melonJS now uses Google Closure for library minification
-* General : Added a global gravity setting that will override entities default value if defined
+* General : added a global gravity setting that will override entities default value if defined
 * Core : now properly calls all objects onDestroyEvent function when resetting game
 * Core : added the possibility to define a callback when a level is fully loaded
 * Core : added a couple of utility functions (degToRad, radToDeg)
@@ -275,15 +277,15 @@ Version History
 * Loader : added binary file support
 * Loader : added possibility to dynamically load any resources (i.e. during the game)
 * AnimationSheet : the entire sprite-sheet is now use to create the default animation
-* Entity: fixed CollisionBox not being properly used on y axis when checking for collision
-* Entity: fixed CollisionBox issue when dealing with sub-pixel positioning
-* Entity: fixed setVelocity not setting y velocity when x velocity is null
-* Entity: added missing properties (GUID, name) in InvisibleEntity
-* Entity: fixed res.obj not defined in InvisibleEntity
-* HUD: added a removeItem function
-* GUI: rewrote the GUI Object accordingly to the new event management
+* Entity : fixed CollisionBox not being properly used on y axis when checking for collision
+* Entity : fixed CollisionBox issue when dealing with sub-pixel positioning
+* Entity : fixed setVelocity not setting y velocity when x velocity is null
+* Entity : added missing properties (GUID, name) in InvisibleEntity
+* Entity : fixed res.obj not defined in InvisibleEntity
+* HUD : added a removeItem function
+* GUI  : rewrote the GUI Object accordingly to the new event management
 * Geometry : added a containsPoint function
-* Geometry: added a floor() and ceil() function to Vector2d
+* Geometry : added a floor() and ceil() function to Vector2d
 * BitmapFont : fixed BitmapFont ignoring  'center' alignment
 * BitmapFont : avoid implicit object conversion when rendering a bitmapFont
 * Input : fixed use of numeric keys by using a proper constant value.
@@ -292,101 +294,101 @@ Version History
 * Input : (beta) multitouch support
 * Input : added Accelerometer event management
 * Documentation : added a lots of missing documentation on various API
-* Documentation : Added JS syntax highlighting in the tutorial
-* Documentation : Don't use onDestroyEvent to manage score in the examples
-* Documentation : Exposed more TMX objects and APIs
+* Documentation : added JS syntax highlighting in the tutorial
+* Documentation : don't use onDestroyEvent to manage score in the examples
+* Documentation : exposed more TMX objects and APIs
 
 0.9.2
-* General: melonJS is now licensed under the terms of the MIT License
-* General: added some Cake magic, allowing to use melonJS with CoffeeScript (by scan)
-* General: added melonJS UML Class Diagram in the official repository (by Ben2303)
-* General: melonJS now properly stays in it's own namespace (me)
-* Audio: configurable behavior in case of audio loading error
-* Core: fixed a shaking bug when collision box is not aligned with the sprite box
-* Core: fixed collision detection bug (object being tested again itself)
-* Core: refactored fading function using Tween objects (API CHANGE, see documentation)
-* Core: added a helper method to know the sign of an number
-* Core: Corrected variables definition (global->local)
-* Core: added a GUID (Game Unique Identifier) to objects
-* Core: getEntityByName now also returns non Entity Object (like layers)
-* Core: Fixed state change when using custom state values
-* Core: me.game.collide now also returns an object reference in the collision vector
-* Core: renamed and correctly initialize the localStorage flag capability
-* Doc: various documentation correction and improvements
-* Entity: added friction management
-* Entity: updateMovement function now returns a collision "vector" (API CHANGE, see documentation)
-* Entity: refactored/cleaned-up movement/collision function
-* Entity: added support for multiline spritesheet (fixed cell size)
-* Entity: added the possibility to define a specific transparent color for spritesheet
-* Entity: implemented a resize function, allowing to resize a sprite on the fly
-* Entity: optimized/refactored SpriteObject
-* Entity: fixed object with 1 single sprite (no animation) not begin updated
-* Entity: Added the possibility to also specify a callback when an animation is over
-* Entity: Fixed an initialization issue when using melonJS without a Tilemap
-* GUI: Corrected me.GUI_Object and added missing documentation
-* GUI: marked me.GUI_Object as deprecated, as it will be rewritten in a next release
-* Event: also cancel event bubbling
-* Font: added support for multiline fontsheet
-* HUD: added a setItemValue() function
-* HUD: corrected display issue on Opera
-* Loader: added possibility to add graphics resources after pre-loading (e.g. ingame)
-* TMX: use native Base64 decoding when available
-* Viewport: Object to follow can either be a Object Entity or a position Vector
-* Viewport: Fixed default value (if parameter not specified) for Axis to follow on
-* Video: cleaned-up the applyRGBFilter function
+* General : melonJS is now licensed under the terms of the MIT License
+* General : added some Cake magic, allowing to use melonJS with CoffeeScript (by scan)
+* General : added melonJS UML Class Diagram in the official repository (by Ben2303)
+* General : melonJS now properly stays in it's own namespace (me)
+* Audio : configurable behavior in case of audio loading error
+* Core : fixed a shaking bug when collision box is not aligned with the sprite box
+* Core : fixed collision detection bug (object being tested again itself)
+* Core : refactored fading function using Tween objects (API CHANGE, see documentation)
+* Core : added a helper method to know the sign of an number
+* Core : corrected variables definition (global->local)
+* Core : added a GUID (Game Unique Identifier) to objects
+* Core : getEntityByName now also returns non Entity Object (like layers)
+* Core : fixed state change when using custom state values
+* Core : me.game.collide now also returns an object reference in the collision vector
+* Core : renamed and correctly initialize the localStorage flag capability
+* Documentation : various documentation correction and improvements
+* Entity : added friction management
+* Entity : updateMovement function now returns a collision "vector" (API CHANGE, see documentation)
+* Entity : refactored/cleaned-up movement/collision function
+* Entity : added support for multiline spritesheet (fixed cell size)
+* Entity : added the possibility to define a specific transparent color for spritesheet
+* Entity : implemented a resize function, allowing to resize a sprite on the fly
+* Entity : optimized/refactored SpriteObject
+* Entity : fixed object with 1 single sprite (no animation) not begin updated
+* Entity : added the possibility to also specify a callback when an animation is over
+* Entity : fixed an initialization issue when using melonJS without a Tilemap
+* GUI : corrected me.GUI_Object and added missing documentation
+* GUI : marked me.GUI_Object as deprecated, as it will be rewritten in a next release
+* Event : also cancel event bubbling
+* Font : added support for multiline fontsheet
+* HUD : added a setItemValue() function
+* HUD : corrected display issue on Opera
+* Loader : added possibility to add graphics resources after pre-loading (e.g. ingame)
+* TMX : use native Base64 decoding when available
+* Viewport : object to follow can either be a Object Entity or a position Vector
+* Viewport : fixed default value (if parameter not specified) for Axis to follow on
+* Video : cleaned-up the applyRGBFilter function
 
 0.9.1
-* Core: "cache image" option (disabled by default) to use canvas instead of directly using Image Object
-* Core: add onPause and onResume callback when game is paused/resumed on losing/gaining focus
-* Core: added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
-* Core: object can now only be destroyed using me.game.remove(obj), made of ObjectEntity.destroy a private function
-* Core: beta dirty Rectangle support (only working for non scrolling level for now)
-* Core: experimental webGL wrapper
-* Core: added a getEntityByName function
-* Core: fixed some kind of "lag" issues when deleting objects
-* Core: improved the requestAnimFrame usage, and fallback to setInterval. me.sys.useNativeAnimFrame to enable it (disable by default)
-* Core: optimized the way objects are managed in the game loop
-* Core: defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10)
-* TMX: implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
-* TMX: fixed unnecessary canvas creation for the collision layer (should free some memory)
-* TMX: cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
-* TMX: added support for CSV data encoding
-* TMX: added support for flipped tiles, as supported in Tiled 0.7
-* TMX: added multiple tileset support
-* TMX: Added a "background_image" property. To be set through Tiled, and allowing to specify a fix background.
-* Entity: merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
-* Entity: added a distanceTo function
-* Viewport: fixed camera refresh when changing "deadzone" values
-* loader: added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
-* loader: fix progress notification when TMX files are loaded into the levelDirector
-* loader: added a retry counter for the audio loading : script will now stop and throw an exception after 3 unsuccessful loading attempts.
-* video: renamed "applyEffect" to "applyRGBFilter", and fixed an issue on Opera
-* audio: fixed compatibility issues with IE9/10
-* geometry : added a merge function to me.Rect
+* Core : "cache image" option (disabled by default) to use canvas instead of directly using Image Object
+* Core : add onPause and onResume callback when game is paused/resumed on losing/gaining focus
+* Core : added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
+* Core : object can now only be destroyed using me.game.remove(obj), made of ObjectEntity.destroy a private function
+* Core : beta dirty Rectangle support (only working for non scrolling level for now)
+* Core : experimental webGL wrapper
+* Core : added a getEntityByName function
+* Core : fixed some kind of "lag" issues when deleting objects
+* Core : improved the requestAnimFrame usage, and fallback to setInterval. me.sys.useNativeAnimFrame to enable it (disable by default)
+* Core : optimized the way objects are managed in the game loop
+* Core : defined (and used) a Object.defineProperty function to replace __defineGetter__ / __defineSetter__ (was not supported on IE9/IE10)
+* TMX : implemented Tiled "transparency" property for Tileset, allowing to specify which color should be transparent (note: this slows down level loading)
+* TMX : fixed unnecessary canvas creation for the collision layer (should free some memory)
+* TMX : cleaned/optimized data loading and fixed an issue on FF with XML parsing of "big" Base64 encoded maps (only first nodeValue was parsed by the engine)
+* TMX : added support for CSV data encoding
+* TMX : added support for flipped tiles, as supported in Tiled 0.7
+* TMX : added multiple tileset support
+* TMX : added a "background_image" property. To be set through Tiled, and allowing to specify a fix background.
+* Entity : merge AnimatedSpriteObject into SpriteObject. SpriteObject now takes an optional additional argument to create an animated sprite
+* Entity : added a distanceTo function
+* Viewport : fixed camera refresh when changing "deadzone" values
+* Loader : added a "onProgress" callback to get progress notification, removing the need to poll the loader each frame for loading progress
+* Loader : fix progress notification when TMX files are loaded into the levelDirector
+* Loader : added a retry counter for the audio loading : script will now stop and throw an exception after 3 unsuccessful loading attempts.
+* Video : renamed "applyEffect" to "applyRGBFilter", and fixed an issue on Opera
+* Audio : fixed compatibility issues with IE9/10
+* Geometry : added a merge function to me.Rect
 
 0.9.0
-* Doc: API documentation using jsdoc-toolkit (finally!)
-* Geometry: define getter for me.Rect coordinates (simplify code)
-* Level: support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
-* Entity: correctly implemented InvisibleEntity Objects (no longer inherit from ObjectEntity)
-* Entity: makes SpriteObjet inherit from me.Rect (make it easier to manage sprite pos and size)
-* Loader: cosmetic update of the preloader screen
-* Viewport: "rounding" issue fix in the viewportEntity (~~30% less CPU usage on Safari/OSX!)
-* TMX: cleaned & refactored tilemap collision detection (still not perfect though)
+* Documentation : API documentation using jsdoc-toolkit (finally!)
+* Geometry : define getter for me.Rect coordinates (simplify code)
+* Level : support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
+* Entity : correctly implemented InvisibleEntity Objects (no longer inherit from ObjectEntity)
+* Entity : makes SpriteObjet inherit from me.Rect (make it easier to manage sprite pos and size)
+* Loader : cosmetic update of the preloader screen
+* Viewport : "rounding" issue fix in the viewportEntity (~~30% less CPU usage on Safari/OSX!)
+* TMX : cleaned & refactored tilemap collision detection (still not perfect though)
 
 0.8.0
-* TMX: support for "TiledObject" (as supported in Tiled 0.6.2)
-* Entity: re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
-* Entity: moved collision function from AnimatedSpriteObject to ObjectEntity
+* TMX : support for "TiledObject" (as supported in Tiled 0.6.2)
+* Entity : re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
+* Entity : moved collision function from AnimatedSpriteObject to ObjectEntity
 
 0.7.9
-* Viewport: added some effects to the camera object (shaking, fading, ...)
-* Viewport: re-factored and fixed the camera/viewport code
-* Core: re-factored public objects using John Resig Inheritance mechanism.
-* Core: fixed the "bootstrap" (unnecessary double call)
-* Entity: re-factored parallax code & corrected a bug that was causing the layers to be drawn 2x times
-* Audio: partially fix crash audio in safari when audio is enabled
-* Core: fixed gfx glitches (rounding issues)
+* Viewport : added some effects to the camera object (shaking, fading, ...)
+* Viewport : re-factored and fixed the camera/viewport code
+* Core : re-factored public objects using John Resig Inheritance mechanism.
+* Core : fixed the "bootstrap" (unnecessary double call)
+* Entity : re-factored parallax code & corrected a bug that was causing the layers to be drawn 2x times
+* Audio : partially fix crash audio in safari when audio is enabled
+* Core : fixed gfx glitches (rounding issues)
 
 0.7.6 (May 16, 2011)
 first public version with alex4 !
