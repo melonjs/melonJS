@@ -14,7 +14,7 @@ describe("Audio tests", function () {
             },
             done,
             function () {
-                throw new Error("Failed to load `silence_mp3.mp3`");
+                throw new Error("Failed to load `silence.mp3`");
             }
         );
     });
@@ -31,7 +31,24 @@ describe("Audio tests", function () {
             },
             done,
             function () {
-                throw new Error("Failed to load `silence_ogg.ogg`");
+                throw new Error("Failed to load `silence.ogg`");
+            }
+        );
+    });
+
+    it("should load either an mp3 or ogg", function (done) {
+        // Initialize audio
+        expect(me.audio.init("mp3,ogg")).toEqual(true);
+
+        me.loader.load(
+            {
+                "name"  : "silence",
+                "type"  : "audio",
+                "src"   : "tests/data/sfx/"
+            },
+            done,
+            function () {
+                throw new Error("Failed to load `silence`");
             }
         );
     });
