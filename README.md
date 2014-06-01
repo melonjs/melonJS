@@ -89,12 +89,22 @@ The generated documentation will be then available under the "docs" directory
 
 Testing
 -------------------------------------------------------------------------------
+The recommended way to test is to start the `connect` server  in keepalive mode:
 
-To run melonJS tests simply run the following:
+    $ grunt connect:keepalive
 
-	$ grunt test
+Then navigate to http://localhost:8889/ in your browser. Stop the `connect`
+server when you are done by pressed `Ctrl+C` in the terminal.
 
-This will run the jasmine spec tests with the output on the shell.
+
+To run melonJS tests in node simply run the following:
+
+    $ grunt test
+
+This will run the jasmine spec tests with the output on the shell. This is not
+recommended because tests are run by PhantomJS in this mode, and there are a
+lot of known bugs and unsupported features in the version of WebKit shipped
+with PhantomJS.
 
 Using melonJS
 -------------------------------------------------------------------------------

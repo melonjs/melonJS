@@ -1,40 +1,41 @@
-beforeEach(function () {
-    jasmine.addMatchers({
-        toBeInstanceOf : function () {
-            return {
-                compare : function(actual, expected) {
-                    return {
-                        pass: actual instanceof expected
-                    };
-                }
-            };
-        }
-    });
-});
-
-var initialized = false;
-beforeEach(function () {
-    if (!initialized) {
-        initialized = true;
-        window.onReady(function () {
-            if (!me.video.init("screen", 1024, 768, true, "auto")) {
-                throw "me.video.init failed";
-            }
-
-            // Hide the screen
-            var scr = document.querySelector("#screen");
-            if (scr) {
-                scr.style.display = "none";
-            }
-        });
-    }
-});
-
 /**
  * A collection of helper functions which can be used in your tests
  */
 (function () {
     "use strict";
+    beforeEach(function () {
+        jasmine.addMatchers({
+            toBeInstanceOf : function () {
+                return {
+                    compare : function(actual, expected) {
+                        return {
+                            pass: actual instanceof expected
+                        };
+                    }
+                };
+            }
+        });
+    });
+
+    var initialized = false;
+    beforeEach(function () {
+        if (!initialized) {
+            initialized = true;
+            window.onReady(function () {
+                // Initialize video
+                if (!me.video.init("screen", 1024, 768, true, "auto")) {
+                    throw "me.video.init failed";
+                }
+
+                // Hide the screen
+                var scr = document.querySelector("#screen");
+                if (scr) {
+                    scr.style.display = "none";
+                }
+            });
+        }
+    });
+
 
     // Cross-browser helper for triggering events on elements
     /**

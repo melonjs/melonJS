@@ -84,11 +84,15 @@
          * @function
          * @param {String}
          *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
+         * @return {Boolean} Indicates whether audio initialization was successful
          * @example
          * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format
          * // i.e. on Safari, the loader will load all audio.mp3 files,
          * // on Opera the loader will however load audio.ogg files
-         * me.audio.init("mp3,ogg");
+         * if (!me.audio.init("mp3,ogg")) {
+         *     alert("Sorry but your browser does not support html 5 audio !");
+         *     return;
+         * }
          */
         api.init = function (audioFormat) {
             if (!me.initialized) {
@@ -98,6 +102,8 @@
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
             // convert it into an array
             this.audioFormats = audioFormat.split(",");
+
+            return !Howler.noAudio;
         };
 
         /**
@@ -179,7 +185,7 @@
          * @param {Boolean}
          *            [loop=false] loop audio
          * @param {Function}
-         *            [callback] returns the unique playback id for this sound instance.
+         *            [callback] Function to call when sound instance ends playing.
          * @param {Number}
          *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
          * @example
@@ -197,7 +203,14 @@
             if (sound && typeof sound !== "undefined") {
                 sound.loop(loop || false);
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
-                sound.play(null, callback);
+                if (typeof(callback) === "function") {
+                    sound.play("_default", function (soundId) {
+                        callbacks[soundId] = callback;
+                    });
+                }
+                else {
+                    sound.play();
+                }
                 return sound;
             }
         };

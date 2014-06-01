@@ -116,13 +116,30 @@ module.exports = function (grunt) {
                 }
             }
         },
+
         jasmine : {
             src : sourceFiles,
             options : {
                 specs : testSpecs,
-                helpers : [ "tests/spec/SpecHelper.js" ]
+                helpers : [ "tests/spec/SpecHelper.js" ],
+                host : "http://localhost:8889/"
             }
-        }
+        },
+
+        connect : {
+            server : {
+                options : {
+                    port : 8889
+                }
+            },
+
+            keepalive : {
+                options : {
+                    port : 8889,
+                    keepalive : true
+                }
+            }
+        },
     });
 
     grunt.loadNpmTasks("grunt-contrib-uglify");
@@ -132,13 +149,15 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-jsdoc");
     grunt.loadNpmTasks("grunt-replace");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
+    grunt.loadNpmTasks("grunt-contrib-connect");
 
     // Custom Tasks
     grunt.loadTasks("tasks");
 
     // Default task.
     grunt.registerTask("default", [ "test", "uglify" ]);
+    grunt.registerTask("build", [ "lint", "uglify" ]);
     grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat" ]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
-    grunt.registerTask("test", [ "lint", "jasmine" ]);
+    grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
 };
