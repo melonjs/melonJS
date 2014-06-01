@@ -1,8 +1,8 @@
 [
-    "tests/spec/Color.js",
-    "tests/spec/Rectangle.js",
-    "tests/spec/shim.js",
-    "tests/spec/Inheritance.js",
-    "tests/spec/draggable.js",
-    "tests/spec/droptarget.js"
+    "tests/spec/color-spec.js",
+    "tests/spec/rectangle-spec.js",
+    "tests/spec/shim-spec.js",
+    "tests/spec/inheritance-spec.js",
+    "tests/spec/draggable-spec.js",
+    "tests/spec/droptarget-spec.js"
 ]
