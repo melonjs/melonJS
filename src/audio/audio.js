@@ -205,7 +205,7 @@
             if (sound && typeof sound !== "undefined") {
                 sound.loop(loop || false);
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
-                if (typeof(onend) === "function" || typeof(onend) === "function") {
+                if (typeof(onend) === "function" || typeof(oncreate) === "function") {
                     sound.play("_default", function (soundId) {
                         if (onend) {
                             callbacks[soundId] = onend;
