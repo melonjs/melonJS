@@ -49,6 +49,15 @@ and currently features :
 - some basic GUI elements
 - a customizable loader, etc...
 
+Using melonJS
+-------------------------------------------------------------------------------
+Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
+
+Note that due to the 'cross-origin request' policy implemented in most browsers
+(that prevents from accessing local files), you will need to either disable this
+security check (see the tutorial), or better use a "personal" local web server
+like the `grunt connect` task that is used for building melonJS (see below).
+
 Building melonJS
 -------------------------------------------------------------------------------
 To build your own version of melonJS you will need to install :
@@ -87,7 +96,7 @@ The generated documentation will be then available under the "docs" directory
 
 Testing
 -------------------------------------------------------------------------------
-The recommended way to test is to start the `connect` server  in keepalive mode:
+The recommended way to test is to start the `connect` server in keepalive mode:
 
     $ grunt connect:keepalive
 
@@ -104,11 +113,11 @@ recommended because tests are run by PhantomJS in this mode, and there are a
 lot of known bugs and unsupported features in the version of WebKit shipped
 with PhantomJS.
 
-Using melonJS
+WIP Builds
 -------------------------------------------------------------------------------
-Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
-
-Note that due to the 'cross-origin request' policy implemented in most browsers (that prevents from accessing local files), you will need to either disable this security check (see the tutorial), or better use a "personal" local web server.
+melonJS uses Travis-CI for automated testing and build uploads. The latest build
+artifacts can be downloaded from the [melonjs-builds](http://melonjs-builds.s3.amazonaws.com/index.html?prefix=artifacts/)
+bucket.
 
 Questions, need help ?
 -------------------------------------------------------------------------------
