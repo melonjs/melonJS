@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function () {
+(function (TMXConstants) {
     /**
      * a collection of TMX utility Function
      * @final
@@ -128,7 +128,7 @@
          * @ignore
          */
         api.applyTMXProperties = function (obj, data) {
-            var properties = data[me.TMX_TAG_PROPERTIES];
+            var properties = data[TMXConstants.TMX_TAG_PROPERTIES];
             if (typeof(properties) !== "undefined") {
                 if (typeof(properties.property) !== "undefined") {
                     // XML converted format
@@ -159,4 +159,4 @@
         // return our object
         return api;
     })();
-})();
+})(me.TMXConstants);

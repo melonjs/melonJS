@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function () {
+(function (TMXConstants) {
     /*
      * Tileset Management
      */
@@ -153,8 +153,8 @@
             // a cache for offset value
             this.tileXOffset = [];
             this.tileYOffset = [];
-            this.firstgid = this.lastgid = tileset[me.TMX_TAG_FIRSTGID];
-            var src = tileset[me.TMX_TAG_SOURCE];
+            this.firstgid = this.lastgid = tileset[TMXConstants.TMX_TAG_FIRSTGID];
+            var src = tileset[TMXConstants.TMX_TAG_SOURCE];
             if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
                 // load TSX
                 src = me.utils.getBasename(src);
@@ -168,20 +168,20 @@
                 //information : UNTESTED as I did not find how to generate a JSON TSX file
             }
 
-            this.name = tileset[me.TMX_TAG_NAME];
-            this.tilewidth = parseInt(tileset[me.TMX_TAG_TILEWIDTH], 10);
-            this.tileheight = parseInt(tileset[me.TMX_TAG_TILEHEIGHT], 10);
-            this.spacing = parseInt(tileset[me.TMX_TAG_SPACING] || 0, 10);
+            this.name = tileset[TMXConstants.TMX_TAG_NAME];
+            this.tilewidth = parseInt(tileset[TMXConstants.TMX_TAG_TILEWIDTH], 10);
+            this.tileheight = parseInt(tileset[TMXConstants.TMX_TAG_TILEHEIGHT], 10);
+            this.spacing = parseInt(tileset[TMXConstants.TMX_TAG_SPACING] || 0, 10);
 
-            this.margin = parseInt(tileset[me.TMX_TAG_MARGIN] || 0, 10);
+            this.margin = parseInt(tileset[TMXConstants.TMX_TAG_MARGIN] || 0, 10);
 
             // set tile offset properties (if any)
             this.tileoffset = new me.Vector2d(0, 0);
 
-            var offset = tileset[me.TMX_TAG_TILEOFFSET];
+            var offset = tileset[TMXConstants.TMX_TAG_TILEOFFSET];
             if (offset) {
-                this.tileoffset.x = parseInt(offset[me.TMX_TAG_X], 10);
-                this.tileoffset.y = parseInt(offset[me.TMX_TAG_Y], 10);
+                this.tileoffset.x = parseInt(offset[TMXConstants.TMX_TAG_X], 10);
+                this.tileoffset.y = parseInt(offset[TMXConstants.TMX_TAG_Y], 10);
             }
 
 
@@ -196,16 +196,16 @@
                     }
                 }
             }
-            else if (tileset[me.TMX_TAG_TILE]) {
+            else if (tileset[TMXConstants.TMX_TAG_TILE]) {
                 // converted XML format
-                tileInfo = tileset[me.TMX_TAG_TILE];
+                tileInfo = tileset[TMXConstants.TMX_TAG_TILE];
                 if (!Array.isArray(tileInfo)) {
                     tileInfo = [ tileInfo ];
                 }
                 // iterate it
 
                 for (var j = 0; j < tileInfo.length; j++) {
-                    var tileID = tileInfo[j][me.TMX_TAG_ID] + this.firstgid;
+                    var tileID = tileInfo[j][TMXConstants.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
                     me.TMXUtils.applyTMXProperties(prop, tileInfo[j]);
                     //apply tiled defined properties
@@ -216,8 +216,8 @@
             // check for the texture corresponding image
             // manage inconstency between XML and JSON format
             var imagesrc = (
-                typeof(tileset[me.TMX_TAG_IMAGE]) === "string" ?
-                tileset[me.TMX_TAG_IMAGE] : tileset[me.TMX_TAG_IMAGE].source
+                typeof(tileset[TMXConstants.TMX_TAG_IMAGE]) === "string" ?
+                tileset[TMXConstants.TMX_TAG_IMAGE] : tileset[TMXConstants.TMX_TAG_IMAGE].source
             );
             // extract base name
             imagesrc = me.utils.getBasename(imagesrc);
@@ -234,7 +234,7 @@
                 this.lastgid = this.firstgid + (((this.hTileCount * this.vTileCount) - 1) || 0);
 
                 // check if transparency is defined for a specific color
-                var transparency = tileset[me.TMX_TAG_TRANS] || tileset[me.TMX_TAG_IMAGE][me.TMX_TAG_TRANS];
+                var transparency = tileset[TMXConstants.TMX_TAG_TRANS] || tileset[TMXConstants.TMX_TAG_IMAGE][TMXConstants.TMX_TAG_TRANS];
                 // set Color Key for transparency if needed
                 if (typeof(transparency) !== "undefined") {
                     // applyRGB Filter (return a context object)
@@ -433,4 +433,4 @@
             }
         }
     });
-})();
+})(me.TMXConstants);

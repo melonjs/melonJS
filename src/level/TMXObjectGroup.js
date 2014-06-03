@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function () {
+(function (TMXConstants) {
 
     /**
      * TMX Object Group <br>
@@ -68,14 +68,14 @@
             this.objects = [];
             var self = this;
             this.name    = name;
-            this.width   = tmxObjGroup[me.TMX_TAG_WIDTH];
-            this.height  = tmxObjGroup[me.TMX_TAG_HEIGHT];
+            this.width   = tmxObjGroup[TMXConstants.TMX_TAG_WIDTH];
+            this.height  = tmxObjGroup[TMXConstants.TMX_TAG_HEIGHT];
             this.z       = z;
             this.objects = [];
 
-            var visible = typeof(tmxObjGroup[me.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[me.TMX_TAG_VISIBLE] : true;
+            var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
 
-            this.opacity = (visible === true) ? parseFloat(tmxObjGroup[me.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
+            this.opacity = (visible === true) ? parseFloat(tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
@@ -150,7 +150,7 @@
              * @name name
              * @memberOf me.TMXObject
              */
-            this.name = tmxObj[me.TMX_TAG_NAME];
+            this.name = tmxObj[TMXConstants.TMX_TAG_NAME];
             /**
              * object x position
              * @public
@@ -158,7 +158,7 @@
              * @name x
              * @memberOf me.TMXObject
              */
-            this.x = parseInt(tmxObj[me.TMX_TAG_X], 10);
+            this.x = parseInt(tmxObj[TMXConstants.TMX_TAG_X], 10);
             /**
              * object y position
              * @public
@@ -166,7 +166,7 @@
              * @name y
              * @memberOf me.TMXObject
              */
-            this.y = parseInt(tmxObj[me.TMX_TAG_Y], 10);
+            this.y = parseInt(tmxObj[TMXConstants.TMX_TAG_Y], 10);
             /**
              * object z order
              * @public
@@ -183,7 +183,7 @@
              * @name width
              * @memberOf me.TMXObject
              */
-            this.width = parseInt(tmxObj[me.TMX_TAG_WIDTH] || 0, 10);
+            this.width = parseInt(tmxObj[TMXConstants.TMX_TAG_WIDTH] || 0, 10);
 
             /**
              * object height
@@ -192,7 +192,7 @@
              * @name height
              * @memberOf me.TMXObject
              */
-            this.height = parseInt(tmxObj[me.TMX_TAG_HEIGHT] || 0, 10);
+            this.height = parseInt(tmxObj[TMXConstants.TMX_TAG_HEIGHT] || 0, 10);
 
             /**
              * object gid value
@@ -202,7 +202,7 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = parseInt(tmxObj[me.TMX_TAG_GID], 10) || null;
+            this.gid = parseInt(tmxObj[TMXConstants.TMX_TAG_GID], 10) || null;
 
             /**
              * object type
@@ -211,7 +211,7 @@
              * @name type
              * @memberOf me.TMXObject
              */
-            this.type = tmxObj[me.TMX_TAG_TYPE];
+            this.type = tmxObj[TMXConstants.TMX_TAG_TYPE];
 
             this.isEllipse = false;
             /**
@@ -236,16 +236,16 @@
                 this.setImage(this.gid, tilesets);
             }
             else {
-                if (typeof(tmxObj[me.TMX_TAG_ELLIPSE]) !== "undefined") {
+                if (typeof(tmxObj[TMXConstants.TMX_TAG_ELLIPSE]) !== "undefined") {
                     this.isEllipse = true;
                 }
                 else {
-                    var points = tmxObj[me.TMX_TAG_POLYGON];
+                    var points = tmxObj[TMXConstants.TMX_TAG_POLYGON];
                     if (typeof(points) !== "undefined") {
                         this.isPolygon = true;
                     }
                     else {
-                        points = tmxObj[me.TMX_TAG_POLYLINE];
+                        points = tmxObj[TMXConstants.TMX_TAG_POLYLINE];
                         if (typeof(points) !== "undefined") {
                             this.isPolyline = true;
                         }
@@ -339,4 +339,4 @@
             return this[name];
         }
     });
-})();
+})(me.TMXConstants);

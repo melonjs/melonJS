@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function () {
+(function (TMXConstants) {
     /**
      * a TMX Tile Map Object
      * Tiled QT 0.7.x format
@@ -173,7 +173,7 @@
             }
 
             // return a fake collision layer if not found
-            if ((name.toLowerCase().contains(me.COLLISION_LAYER)) && (layer == null)) {
+            if ((name.toLowerCase().contains(TMXConstants.COLLISION_LAYER)) && (layer == null)) {
                 layer = new me.CollisionTiledLayer(
                     me.game.currentLevel.width,
                     me.game.currentLevel.height
@@ -229,4 +229,4 @@
             }
         }
     });
-})();
+})(me.TMXConstants);

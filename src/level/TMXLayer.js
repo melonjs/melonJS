@@ -4,7 +4,7 @@
  * http://www.melonjs.org
  *
  */
-(function () {
+(function (TMXConstants) {
     /**
      * a generic Color Layer Object
      * @class
@@ -384,13 +384,13 @@
         /** @ignore */
         initFromJSON: function (layer) {
             // additional TMX flags
-            this.name = layer[me.TMX_TAG_NAME];
-            this.cols = parseInt(layer[me.TMX_TAG_WIDTH], 10);
-            this.rows = parseInt(layer[me.TMX_TAG_HEIGHT], 10);
+            this.name = layer[TMXConstants.TMX_TAG_NAME];
+            this.cols = parseInt(layer[TMXConstants.TMX_TAG_WIDTH], 10);
+            this.rows = parseInt(layer[TMXConstants.TMX_TAG_HEIGHT], 10);
 
             // layer opacity
-            var visible = typeof(layer[me.TMX_TAG_VISIBLE]) !== "undefined" ? layer[me.TMX_TAG_VISIBLE] : true;
-            this.setOpacity(visible ? parseFloat(layer[me.TMX_TAG_OPACITY]) : 0);
+            var visible = typeof(layer[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? layer[TMXConstants.TMX_TAG_VISIBLE] : true;
+            this.setOpacity(visible ? parseFloat(layer[TMXConstants.TMX_TAG_OPACITY]) : 0);
 
             // layer "real" size
             this.width = this.cols * this.tilewidth;
@@ -404,7 +404,7 @@
             }
 
             // detect if the layer is a collision map
-            this.isCollisionMap = (this.name.toLowerCase().contains(me.COLLISION_LAYER));
+            this.isCollisionMap = (this.name.toLowerCase().contains(TMXConstants.COLLISION_LAYER));
             if (this.isCollisionMap === true) {
                 // force the layer as invisible
                 this.setOpacity(0);
@@ -625,4 +625,4 @@
             }
         }
     });
-})();
+})(me.TMXConstants);
