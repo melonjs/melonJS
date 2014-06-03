@@ -103,10 +103,10 @@
                 var shiftX =  ~~((width - this.width) / 2);
                 var shiftY =  ~~((height - this.height) / 2);
                 // update the map default position
-                this.pos.set({
-                    x : (shiftX > 0 ? shiftX : 0),
-                    y : (shiftY > 0 ? shiftY : 0)
-                });
+                this.pos.set(
+                    shiftX > 0 ? shiftX : 0,
+                    shiftY > 0 ? shiftY : 0
+                );
             }
         },
 
