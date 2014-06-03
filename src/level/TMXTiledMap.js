@@ -88,6 +88,27 @@
 
             this._super(me.Renderable, "init", [new me.Vector2d(), 0, 0]);
         },
+        
+        /**
+         * set the default map position based on the given viewport size
+         * @name me.TMXTileMap#setDefaultPosition
+         * @public
+         * @function
+         * @param {Number} width viewport width
+         * @param {Number} height viewport height
+         */
+        setDefaultPosition: function (width, height) {
+            // center the map if smaller than the current viewport
+            if ((this.width < width) || (this.height < height)) {
+                var shiftX =  ~~((width - this.width) / 2);
+                var shiftY =  ~~((height - this.height) / 2);
+                // update the map default position
+                this.pos.set({
+                    x : (shiftX > 0 ? shiftX : 0),
+                    y : (shiftY > 0 ? shiftY : 0)
+                });
+            }
+        },
 
         /**
          * return the corresponding object group definition

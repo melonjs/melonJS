@@ -21,134 +21,12 @@
 
         readMap: function (map) {
             // if already loaded, do nothing
-            if (map.initialized) {
+            if (map.initialized === true) {
                 return;
             }
-            if  (this.JSONReader === null || typeof this.JSONReader === "undefined") {
-                this.JSONReader = new JSONMapReader();
-            }
-            this.JSONReader.readJSONMap(map, me.loader.getTMX(map.levelId));
-
-
-            // center the map if smaller than the current viewport
-            if ((map.width < me.game.viewport.width) ||
-                (map.height < me.game.viewport.height)) {
-                var shiftX =  ~~((me.game.viewport.width - map.width) / 2);
-                var shiftY =  ~~((me.game.viewport.height - map.height) / 2);
-                // update the map default screen position
-                map.pos.add({
-                    x : (shiftX > 0 ? shiftX : 0),
-                    y : (shiftY > 0 ? shiftY : 0)
-                });
-            }
-
-            // flag as loaded
-            map.initialized = true;
-
-        },
-
-        /**
-         * set a compatible renderer object
-         * for the specified map
-         * TODO : put this somewhere else
-         * @ignore
-         */
-        getNewDefaultRenderer: function (obj) {
-            switch (obj.orientation) {
-                case "orthogonal":
-                    return new me.TMXOrthogonalRenderer(
-                        obj.cols,
-                        obj.rows,
-                        obj.tilewidth,
-                        obj.tileheight
-                    );
-
-                case "isometric":
-                    return new me.TMXIsometricRenderer(
-                        obj.cols,
-                        obj.rows,
-                        obj.tilewidth,
-                        obj.tileheight
-                    );
-
-                // if none found, throw an exception
-                default:
-                    throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
-            }
-        },
-
-        /**
-         * Set tiled layer Data
-         * @ignore
-         */
-        setLayerData : function (layer, rawdata, encoding, compression) {
-            // initialize the layer data array
-            layer.initArray(layer.cols, layer.rows);
-            // data
-            var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
-
-            // decode data based on encoding type
-            switch (encoding) {
-                case "json":
-                    // do nothing as data can be directly reused
-                    data = rawdata;
-                    break;
-                // CSV encoding
-                case me.TMX_TAG_CSV:
-                // Base 64 encoding
-                case me.TMX_TAG_ATTR_BASE64:
-                    // and then decode them
-                    if (encoding === me.TMX_TAG_CSV) {
-                        // CSV decode
-                        data = me.utils.decodeCSV(data, layer.cols);
-                    } else {
-                        // Base 64 decode
-                        data = me.utils.decodeBase64AsArray(data, 4);
-                        // check if data is compressed
-                        if (compression !== null) {
-                            data = me.utils.decompress(data, compression);
-                        }
-                    }
-                    break;
-
-
-                default:
-                    throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
-            }
-
-            var idx = 0;
-            // set everything
-            for (var y = 0 ; y < layer.rows; y++) {
-                for (var x = 0; x < layer.cols; x++) {
-                    // get the value of the gid
-                    var gid = (encoding == null) ? this.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
-                    // fill the array
-                    if (gid !== 0) {
-                        // add a new tile to the layer
-                        var tile = layer.setTile(x, y, gid);
-                        // draw the corresponding tile
-                        if (layer.preRender) {
-                            layer.renderer.drawTile(layer.layerSurface, x, y, tile, tile.tileset);
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    /**
-     * a JSON Map Reader
-     * Tiled QT 0.7.x format
-     * @class
-     * @memberOf me
-     * @constructor
-     * @ignore
-     */
-    var JSONMapReader = me.TMXMapReader.extend({
-        init: function () {
-
-        },
-        readJSONMap: function (map, data) {
+            
+            var data = me.loader.getTMX(map.levelId);
+            
             if (!data) {
                 throw "melonJS:" + map.levelId + " TMX map not found";
             }
@@ -241,8 +119,7 @@
                             break;
                     }
                 });
-            }
-            else if (typeof (data.layer) !== "undefined") {
+            } else if (typeof (data.layer) !== "undefined") {
                 // converted XML format
                 // in converted format, these are not under the generic layers structure
                 // and each element can be either an array of object of just one object
@@ -286,8 +163,99 @@
                     }
                 }
             }
+            
+            // flag as loaded
+            map.initialized = true;
         },
 
+         /**
+         * set a compatible renderer object
+         * for the specified map
+         * TODO : put this somewhere else
+         * @ignore
+         */
+        getNewDefaultRenderer: function (obj) {
+            switch (obj.orientation) {
+                case "orthogonal":
+                    return new me.TMXOrthogonalRenderer(
+                        obj.cols,
+                        obj.rows,
+                        obj.tilewidth,
+                        obj.tileheight
+                    );
+
+                case "isometric":
+                    return new me.TMXIsometricRenderer(
+                        obj.cols,
+                        obj.rows,
+                        obj.tilewidth,
+                        obj.tileheight
+                    );
+
+                // if none found, throw an exception
+                default:
+                    throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
+            }
+        },
+
+        /**
+         * Set tiled layer Data
+         * @ignore
+         */
+        setLayerData : function (layer, rawdata, encoding, compression) {
+            // initialize the layer data array
+            layer.initArray(layer.cols, layer.rows);
+            // data
+            var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
+
+            // decode data based on encoding type
+            switch (encoding) {
+                case "json":
+                    // do nothing as data can be directly reused
+                    data = rawdata;
+                    break;
+                // CSV encoding
+                case me.TMX_TAG_CSV:
+                // Base 64 encoding
+                case me.TMX_TAG_ATTR_BASE64:
+                    // and then decode them
+                    if (encoding === me.TMX_TAG_CSV) {
+                        // CSV decode
+                        data = me.utils.decodeCSV(data, layer.cols);
+                    } else {
+                        // Base 64 decode
+                        data = me.utils.decodeBase64AsArray(data, 4);
+                        // check if data is compressed
+                        if (compression !== null) {
+                            data = me.utils.decompress(data, compression);
+                        }
+                    }
+                    break;
+
+
+                default:
+                    throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+            }
+
+            var idx = 0;
+            // set everything
+            for (var y = 0 ; y < layer.rows; y++) {
+                for (var x = 0; x < layer.cols; x++) {
+                    // get the value of the gid
+                    var gid = (encoding == null) ? this.TMXParser.getIntAttribute(data[idx++], me.TMX_TAG_GID) : data[idx++];
+                    // fill the array
+                    if (gid !== 0) {
+                        // add a new tile to the layer
+                        var tile = layer.setTile(x, y, gid);
+                        // draw the corresponding tile
+                        if (layer.preRender) {
+                            layer.renderer.drawTile(layer.layerSurface, x, y, tile, tile.tileset);
+                        }
+                    }
+                }
+            }
+        },
+        
         readLayer: function (map, data, z) {
             var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
             // init the layer properly

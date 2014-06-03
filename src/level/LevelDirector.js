@@ -50,19 +50,23 @@
                 console.error("WARNING : no collision map detected");
             }
 
-            // add all defined layers
-            var layers = level.getLayers();
-            for (var i = layers.length; i--;) {
-                container.addChild(layers[i]);
-            }
-
             // change the viewport bounds
             me.game.viewport.setBounds(
                 0, 0,
                 Math.max(level.width, me.game.viewport.width),
                 Math.max(level.height, me.game.viewport.height)
             );
-
+            
+            // adjust map position based on the viewport size
+            // (only update the map position if the map is smaller than the viewport)
+            level.setDefaultPosition(me.game.viewport.width, me.game.viewport.height);
+            
+            // add all defined layers
+            var layers = level.getLayers();
+            for (var i = layers.length; i--;) {
+                container.addChild(layers[i]);
+            }
+            
             // game world as default container
             var targetContainer = container;
 
