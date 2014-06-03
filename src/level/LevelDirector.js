@@ -251,8 +251,8 @@
                     levels[api.getCurrentLevelId()].destroy();
                 }
 
-                // read the map data
-                me.mapReader.readMap(levels[levelId]);
+                // parse the give TMX file into the give level
+                me.mapReader.readMap(levels[levelId], me.loader.getTMX(levelId));
 
                 // update current level index
                 currentLevelIdx = levelIdx.indexOf(levelId);

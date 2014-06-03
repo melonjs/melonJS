@@ -19,16 +19,10 @@
     me.TMXMapReader = Object.extend({
         init: function () {},
 
-        readMap: function (map) {
+        readMap: function (map, data) {
             // if already loaded, do nothing
             if (map.initialized === true) {
                 return;
-            }
-            
-            var data = me.loader.getTMX(map.levelId);
-            
-            if (!data) {
-                throw "melonJS:" + map.levelId + " TMX map not found";
             }
 
             // to automatically increment z index
