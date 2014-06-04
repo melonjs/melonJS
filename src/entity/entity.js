@@ -168,22 +168,7 @@
                         settings.width,
                         settings.height]);
 
-            if (settings.image) {
-                var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
-                this.renderable = new me.AnimationSheet(0, 0, {
-                    "image" : image,
-                    "spritewidth" : ~~settings.spritewidth,
-                    "spriteheight" : ~~settings.spriteheight,
-                    "spacing" : ~~settings.spacing,
-                    "margin" : ~~settings.margin
-                });
-
-                // check for user defined transparent color
-                if (settings.transparent_color) {
-                    this.renderable.setTransparency(settings.transparent_color);
-                }
-            }
-
+ 
             // set the object entity name
             this.name = settings.name ? settings.name.toLowerCase() : "";
 
