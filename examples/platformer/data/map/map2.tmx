@@ -51,13 +51,13 @@
     <property name="spritewidth" value="72"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="20" x="1050" y="455">
+  <object name="me.Entity" gid="20" x="1050" y="455">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="19" x="1015" y="455">
+  <object name="me.Entity" gid="19" x="1015" y="455">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>

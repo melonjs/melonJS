@@ -4,20 +4,20 @@
 /*		a player entity																*/
 /*																					*/
 /************************************************************************************/
-game.PlayerEntity = me.ObjectEntity.extend({	
+game.PlayerEntity = me.Entity.extend({	
 	init: function(x, y, settings) {
 		// call the constructor
-		this._super(me.ObjectEntity, 'init', [x, y , settings]);
+		this._super(me.Entity, 'init', [x, y , settings]);
 
 		// player can exit the viewport (jumping, falling into a hole, etc.)
 		this.alwaysUpdate = true;
 
 		// walking & jumping speed
-		this.setVelocity(3, 15);
-		this.setFriction(0.4,0);
+		this.body.setVelocity(3, 15);
+		this.body.setFriction(0.4,0);
 		
 		// update the collision shape rect
-		var shape = this.getShape();
+		var shape = this.body.getShape();
 		shape.pos.y = 16;
 		shape.resize(this.width, shape.height - shape.pos.y);
 
@@ -66,10 +66,10 @@ game.PlayerEntity = me.ObjectEntity.extend({
 	update : function (dt) {
 		
 		if (me.input.isKeyPressed('left'))	{
-			this.vel.x -= this.accel.x * me.timer.tick;
+			this.body.vel.x -= this.body.accel.x * me.timer.tick;
 			this.flipX(true);
 		} else if (me.input.isKeyPressed('right')) {
-			this.vel.x += this.accel.x * me.timer.tick;
+			this.body.vel.x += this.body.accel.x * me.timer.tick;
 			this.flipX(false);
 		}
 		
@@ -77,17 +77,17 @@ game.PlayerEntity = me.ObjectEntity.extend({
 			this.jumping = true;
 
 			// reset the dblJump flag if off the ground
-			this.mutipleJump = (this.vel.y === 0)?1:this.mutipleJump;
+			this.mutipleJump = (this.body.vel.y === 0)?1:this.mutipleJump;
 			
 			if (this.mutipleJump<=2) {
 				// easy 'math' for double jump
-				this.vel.y -= (this.maxVel.y * this.mutipleJump++) * me.timer.tick;
+				this.body.vel.y -= (this.body.maxVel.y * this.mutipleJump++) * me.timer.tick;
 				me.audio.play("jump", false);
 			}
 		}
 			
 		// check for collision with environment
-		this.updateMovement();
+		this.body.update();
 		
 		// check if we fell into a hole
 		if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
@@ -109,7 +109,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 				case me.game.ENEMY_OBJECT : {
 					if ((res.y>0) && this.falling) {
 						// jump
-						this.vel.y -= this.maxVel.y * me.timer.tick;
+						this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
 					} else {
 						this.hurt();
 					}
@@ -118,7 +118,7 @@ game.PlayerEntity = me.ObjectEntity.extend({
 				
 				case "spikeObject" :{
 					// jump & die
-					this.vel.y -= this.maxVel.y * me.timer.tick;
+					this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
 					this.hurt();
 					break;
 				}
@@ -128,8 +128,8 @@ game.PlayerEntity = me.ObjectEntity.extend({
 		}
 		
 		// check if we moved (a "stand" animation would definitely be cleaner)
-		if (this.vel.x!=0 || this.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this._super(me.ObjectEntity, 'update', [dt]);
+		if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
+			this._super(me.Entity, 'update', [dt]);
 			return true;
 		}
 		
@@ -191,7 +191,7 @@ game.CoinEntity = me.CollectableEntity.extend({
  * An enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-game.PathEnemyEntity = me.ObjectEntity.extend({	
+game.PathEnemyEntity = me.Entity.extend({	
 	/**
 	 * constructor
 	 */
@@ -206,7 +206,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		settings.height = settings.spriteheight;
 
 		// call the super constructor
-		this._super(me.ObjectEntity, 'init', [x, y , settings]);
+		this._super(me.Entity, 'init', [x, y , settings]);
 		
 		// set start/end position based on the initial area size
 		x = this.pos.x;
@@ -219,7 +219,7 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		this.walkLeft = false;
 
 		// walking & jumping speed
-		this.setVelocity(settings.velX || 1, settings.velY || 6);
+		this.body.setVelocity(settings.velX || 1, settings.velY || 6);
 		
 		// make it collidable
 		this.collidable = true;
@@ -237,22 +237,22 @@ game.PathEnemyEntity = me.ObjectEntity.extend({
 		
 		if (this.alive)	{
 			if (this.walkLeft && this.pos.x <= this.startX) {
-				this.vel.x = this.accel.x * me.timer.tick;
+				this.body.vel.x = this.body.accel.x * me.timer.tick;
 				this.walkLeft = false;
 				this.flipX(true);
 			} else if (!this.walkLeft && this.pos.x >= this.endX) {
-				this.vel.x = -this.accel.x * me.timer.tick;
+				this.body.vel.x = -this.body.accel.x * me.timer.tick;
 				this.walkLeft = true;
 				this.flipX(false);
 			}
 		
 			// check & update movement
-			this.updateMovement();
+			this.body.update();
 
 		} 
 
 		// return true if we moved of if flickering
-		return (this._super(me.ObjectEntity, 'update', [dt]) || this.vel.x != 0 || this.vel.y != 0);
+		return (this._super(me.Entity, 'update', [dt]) || this.body.vel.x != 0 || this.body.vel.y != 0);
 	},
 	
 	/**

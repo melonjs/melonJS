@@ -209,12 +209,12 @@
          * @name follow
          * @memberOf me.Viewport
          * @function
-         * @param {me.ObjectEntity|me.Vector2d} target ObjectEntity or Position
+         * @param {me.Entity|me.Vector2d} target Entity or Position
          * Vector to follow
          * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
          */
         follow : function (target, axis) {
-            if (target instanceof me.ObjectEntity) {
+            if (target instanceof me.Entity) {
                 this.target = target.pos;
             }
             else if (target instanceof me.Vector2d) {

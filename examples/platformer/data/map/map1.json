@@ -45,7 +45,7 @@
                 {
                  "gid":19,
                  "height":0,
-                 "name":"me.ObjectEntity",
+                 "name":"me.Entity",
                  "properties":
                     {
                      "collidable":"true",
@@ -60,7 +60,7 @@
                 {
                  "gid":20,
                  "height":0,
-                 "name":"me.ObjectEntity",
+                 "name":"me.Entity",
                  "properties":
                     {
                      "collidable":"true",
@@ -75,7 +75,7 @@
                 {
                  "gid":20,
                  "height":0,
-                 "name":"me.ObjectEntity",
+                 "name":"me.Entity",
                  "properties":
                     {
                      "collidable":"true",
@@ -90,7 +90,7 @@
                 {
                  "gid":19,
                  "height":0,
-                 "name":"me.ObjectEntity",
+                 "name":"me.Entity",
                  "properties":
                     {
                      "collidable":"true",

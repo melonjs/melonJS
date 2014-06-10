@@ -7,10 +7,6 @@
 
 (function () {
 
-    /*
-     * A body object 
-     */
-
     /**
      * a Generic Body Object <br>
      * @class
@@ -206,7 +202,7 @@
 
             // call the super constructor
             this._super(
-                me.Rect, 
+                me.Rect,
                 "init", [
                     new me.Vector2d(),
                     entity.width,
@@ -271,7 +267,7 @@
          */
         updateBounds : function () {
             // TODO : take in account multiple shape
-            var _bounds = this.getShape().getBounds;
+            var _bounds = this.getShape().getBounds();
             // adjust the body bounding rect
             this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
@@ -293,7 +289,7 @@
         onCollision : function () {
             // destroy the object if collectable
             if (this.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
-                me.game.world.removeChild(this);
+                me.game.world.removeChild(this.entity);
             }
         },
 
@@ -490,7 +486,7 @@
                 var offsetX = this.pos.x;
                 var offsetY = this.pos.y;
                 //translate the body pos to real coordinates
-                this.translateV(entity.pos);
+                this.translateV(this.entity.pos);
 
                 // check for collision
                 collision = this.collisionMap.checkCollision(this, this.vel);
@@ -570,7 +566,7 @@
                     this.onladder = prop.isLadder || prop.isTopLadder;
 
                     if (prop.isSlope && !this.jumping) {
-                        this.checkSlope(this., tile, prop.isLeftSlope);
+                        this.checkSlope(this, tile, prop.isLeftSlope);
                         this.falling = false;
                     }
                     else {
@@ -591,8 +587,8 @@
 
                 // translate back to set the body relative to the entity
                 this.pos.set(
-                    this.entity.pos.x - offsetX,
-                    this.entity.pos.y - offsetY
+                    offsetX,
+                    offsetY
                 );
             }
 

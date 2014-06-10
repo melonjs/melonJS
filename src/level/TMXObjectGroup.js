@@ -125,8 +125,8 @@
 
     /**
      * a TMX Object defintion, as defined in Tiled. <br>
-     * note : object definition are translated into the virtual `me.game.world` using `me.ObjectEntity`.
-     * @see me.ObjectEntity
+     * note : object definition are translated into the virtual `me.game.world` using `me.Entity`.
+     * @see me.Entity
      * @class
      * @extends Object
      * @memberOf me

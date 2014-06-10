@@ -111,7 +111,7 @@
                     // ignore if the pull function does not return a corresponding object
                     if (obj) {
                         // if there is image defined in settings, add a corresponding renderable to the entity
-                        if (obj instanceof me.ObjectEntity && typeof settings.image !== "undefined") {
+                        if (obj instanceof me.Entity && typeof settings.image !== "undefined") {
                             var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                             obj.renderable = new me.AnimationSheet(0, 0, {
                                 "image" : image,
