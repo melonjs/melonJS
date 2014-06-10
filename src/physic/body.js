@@ -14,7 +14,7 @@
     /**
      * a Generic Body Object <br>
      * @class
-     * @extends me.Object
+     * @extends me.Rect
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
@@ -57,8 +57,6 @@
              */
             this.shapeIndex = 0;
             
-            // offset to the parent Entity Object position
-            this.pos = new me.Vector2d();
 
             /**
              * entity current velocity<br>
@@ -144,7 +142,7 @@
              * @memberOf me.Body
              */
             this.jumping = true;
-
+          
             // some usefull slope variable
             this.slopeY = 0;
 
@@ -167,6 +165,7 @@
              * @memberOf me.Body
              */
             this.onladder = false;
+            
             /**
              * equal true if the entity can go down on a ladder<br>
              * @readonly
@@ -176,16 +175,7 @@
              * @memberOf me.Body
              */
             this.disableTopLadderCollision = false;
-
-            // to enable collision detection
-            this.collidable = (
-                typeof(settings.collidable) !== "undefined" ?
-                settings.collidable : true
-            );
-
-            // ref to the collision map
-            this.collisionMap = me.game.collisionMap;
-
+            
             /**
              * Define if an entity can go through breakable tiles<br>
              * default value : false<br>
@@ -205,16 +195,28 @@
              */
             this.onTileBreak = null;
 
-            if (typeof (settings.getShape) === "function") {
-                // add the given collision shape to the object
-                this.addShape(settings.getShape());
+            // to enable collision detection
+            this.collidable = (
+                typeof(settings.collidable) !== "undefined" ?
+                settings.collidable : true
+            );
 
-                // ---- TODO : fix this bug, as it should not matter!
-                if (this.getShape().shapeType === "PolyShape") {
-                    this._bounds = this.getBounds();
-                    this.resize(this._bounds.width, this._bounds.height);
-                }
-                // ----
+            // ref to the collision map
+            this.collisionMap = me.game.collisionMap;
+
+            // call the super constructor
+            this._super(
+                me.Rect, 
+                "init", [
+                    new me.Vector2d(),
+                    entity.width,
+                    entity.height
+                ]
+            );
+
+            // add collision shape to the object if defined
+            if (typeof (settings.getShape) === "function") {
+                this.addShape(settings.getShape());
             }
         },
 
@@ -228,6 +230,7 @@
          */
         addShape : function (shape) {
             this.shapes.push(shape);
+            this.updateBounds();
         },
 
         /**
@@ -255,28 +258,25 @@
                 this.shapeIndex = index;
                 return;
             }
-            throw "melonJS (me.Entity): Shape (" + index + ") not defined";
+            throw "melonJS (me.Body): Shape (" + index + ") not defined";
         },
-        
         
         /**
-         * returns the bounding box for this body, the smallest rectangle
-         * object completely containing the entity current shape.
-         * @name getBounds
-         * @memberOf me.Entity
+         * update the body bounding rect (private)
+         * the body rect size is here used to cache the total bounding rect
+         * @protected
+         * @name updateBounds
+         * @memberOf me.Body
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when
-         * returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle
          */
-        getBounds : function (rect) {
-            // TODO: the body rect can be used to cache the total bounds (if more than 1 shape)
-            if (!this.shapes.length) {
-                // create one if there is no default shape
-                this.addShape(this._super(me.Renderable, "getBounds", [rect]).translate(-this.pos.x, -this.pos.y));
-            }
-            return this.getShape().getBounds(rect);
+        updateBounds : function () {
+            // TODO : take in account multiple shape
+            var _bounds = this.getShape().getBounds;
+            // adjust the body bounding rect
+            this.pos.setV(_bounds.pos);
+            this.resize(_bounds.width, _bounds.height);
         },
+        
 
         /**
          * onCollision Event function<br>
@@ -486,16 +486,14 @@
             // Adjust position only on collidable object
             var collision;
             if (this.collidable) {
-                // temporary stuff until ticket #103 is done
-                // (this function will disappear anyway)
                 // save the collision box offset
-                this._bounds = this.getBounds(this._bounds);
-                this.__offsetX = this._bounds.pos.x;
-                this.__offsetY = this._bounds.pos.y;
-                this._bounds.translateV(this.pos);
+                var offsetX = this.pos.x;
+                var offsetY = this.pos.y;
+                //translate the body pos to real coordinates
+                this.translateV(entity.pos);
 
                 // check for collision
-                collision = this.collisionMap.checkCollision(this._bounds, this.vel);
+                collision = this.collisionMap.checkCollision(this, this.vel);
 
                 // update some flags
                 this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -511,21 +509,21 @@
 
                     if (collision.y > 0) {
                         if (prop.isSolid ||
-                            (prop.isPlatform && (this._bounds.bottom - 1 <= tile.pos.y)) ||
+                            (prop.isPlatform && (this.bottom - 1 <= tile.pos.y)) ||
                             (prop.isTopLadder && !this.disableTopLadderCollision)) {
 
                             // adjust position to the corresponding tile
-                            this._bounds.pos.y = ~~this._bounds.pos.y;
+                            this.pos.y = ~~this.pos.y;
                             this.vel.y = (
                                 this.falling ?
-                                tile.pos.y - this._bounds.bottom : 0
+                                tile.pos.y - this.bottom : 0
                             );
                             this.falling = false;
                         }
                         else if (prop.isSlope && !this.jumping) {
                             // we stop falling
                             this.checkSlope(
-                                this._bounds,
+                                this,
                                 tile,
                                 prop.isLeftSlope
                             );
@@ -544,10 +542,10 @@
                             }
                             else {
                                 // adjust position to the corresponding tile
-                                this._bounds.pos.y = ~~this._bounds.pos.y;
+                                this.pos.y = ~~this.pos.y;
                                 this.vel.y = (
                                     this.falling ?
-                                    tile.pos.y - this._bounds.bottom : 0
+                                    tile.pos.y - this.bottom : 0
                                 );
                                 this.falling = false;
                             }
@@ -572,7 +570,7 @@
                     this.onladder = prop.isLadder || prop.isTopLadder;
 
                     if (prop.isSlope && !this.jumping) {
-                        this.checkSlope(this._bounds, tile, prop.isLeftSlope);
+                        this.checkSlope(this., tile, prop.isLeftSlope);
                         this.falling = false;
                     }
                     else {
@@ -591,15 +589,15 @@
                     }
                 }
 
-                // temporary stuff until ticket #103 is done (this function will disappear anyway)
+                // translate back to set the body relative to the entity
                 this.pos.set(
-                    this._bounds.pos.x - this.__offsetX,
-                    this._bounds.pos.y - this.__offsetY
+                    this.entity.pos.x - offsetX,
+                    this.entity.pos.y - offsetY
                 );
             }
 
-            // update player position
-            this.pos.add(this.vel);
+            // update player entity position
+            this.entity.pos.add(this.vel);
 
             // returns the collision "vector"
             return collision;

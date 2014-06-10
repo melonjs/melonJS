@@ -305,15 +305,12 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var bounds = this;
-                if (this.shapes.length && this.getShape().shapeType === "PolyShape") {
-                    // use the corresponding bounding box
-                    bounds = this.getBounds(this._bounds).translateV(this.pos);
-                }
-                var x = ~~(bounds.pos.x + (
+                var bounds = this.body;
+
+                var x = ~~(this.pos.x + bounds.pos.x + (
                     this.anchorPoint.x * (bounds.width - this.renderable.width)
                 ));
-                var y = ~~(bounds.pos.y + (
+                var y = ~~(this.pos.x + bounds.pos.y + (
                     this.anchorPoint.y * (bounds.height - this.renderable.height)
                 ));
                 context.translate(x, y);
