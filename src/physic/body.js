@@ -14,26 +14,15 @@
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
-     * @param {Object} settings object dictionary with shape definition
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
-        init : function (entity, settings) {
+        init : function (entity) {
           
             // reference to the parent entity
             this.entity = entity;
-            
-            /**
-             * flag to enable collision detection for this object<br>
-             * default value : true<br>
-             * @public
-             * @type Boolean
-             * @name collidable
-             * @memberOf me.Body
-             */
-            this.collidable = true;
 
             /**
              * The collision shapes of the entity <br>
@@ -191,29 +180,19 @@
              */
             this.onTileBreak = null;
 
-            // to enable collision detection
-            this.collidable = (
-                typeof(settings.collidable) !== "undefined" ?
-                settings.collidable : true
-            );
-
             // ref to the collision map
             this.collisionMap = me.game.collisionMap;
 
             // call the super constructor
+            this.pos = new me.Vector2d();
             this._super(
                 me.Rect,
                 "init", [
-                    new me.Vector2d(),
+                    this.pos,
                     entity.width,
                     entity.height
                 ]
             );
-
-            // add collision shape to the object if defined
-            if (typeof (settings.getShape) === "function") {
-                this.addShape(settings.getShape());
-            }
         },
 
         /**
@@ -288,7 +267,7 @@
          */
         onCollision : function () {
             // destroy the object if collectable
-            if (this.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
+            if (this.entity.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
                 me.game.world.removeChild(this.entity);
             }
         },
@@ -476,12 +455,12 @@
          * // check player status after collision check
          * var updated = (this.vel.x!=0 || this.vel.y!=0);
          */
-        update : function () {
+        update : function (/* dt */) {
             this.computeVelocity(this.vel);
 
             // Adjust position only on collidable object
             var collision;
-            if (this.collidable) {
+            if (this.entity.collidable) {
                 // save the collision box offset
                 var offsetX = this.pos.x;
                 var offsetY = this.pos.y;

@@ -124,22 +124,26 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
-
-            // just to keep track of when we flip
-            this.lastflipX = false;
-            this.lastflipY = false;
-                        
-            // ensure mandatory properties are defined
-            if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
-            }
+                    
+            /**
+             * flag to enable collision detection for this object<br>
+             * default value : true<br>
+             * @public
+             * @type Boolean
+             * @name collidable
+             * @memberOf me.Body
+             */
+            this.collidable = true;
             
-            // call the super constructor
-            this.pos = new me.Vector2d(x, y);
-            this._super(me.Renderable, "init", [this.pos,
-                        settings.width,
-                        settings.height]);
-
+            /**
+             * the entity body object
+             * @public
+             * @type me.Body
+             * @name body
+             * @memberOf me.Entity
+             */
+            this.body = null;
+            
             /**
              * Entity name<br>
              * as defined in the Tiled Object Properties
@@ -160,14 +164,38 @@
              */
             this.alive = true;
         
-            /**
-             * the entity body object
-             * @public
-             * @type me.Body
-             * @name body
-             * @memberOf me.Entity
-             */
-            this.body = new me.Body(this, settings);
+            
+            // just to keep track of when we flip
+            this.lastflipX = false;
+            this.lastflipY = false;
+            
+            // to enable collision detection
+            this.collidable = (
+                typeof(settings.collidable) !== "undefined" ?
+                settings.collidable : true
+            );
+                        
+            // ensure mandatory properties are defined
+            if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
+                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
+            }
+            
+            // call the super constructor
+            this.pos = new me.Vector2d(x, y);
+            this._super(me.Renderable, "init", [
+                this.pos,
+                settings.width,
+                settings.height
+            ]);
+            
+            // initialize a default body
+            this.body = new me.Body(this);
+            
+            // add collision shape to the entity body if defined
+            if (typeof (settings.getShape) === "function") {
+                this.body.addShape(settings.getShape());
+            }
+
         },
 
 
