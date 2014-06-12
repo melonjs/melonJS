@@ -3,6 +3,7 @@
     "tests/spec/rectangle-spec.js",
     "tests/spec/shim-spec.js",
     "tests/spec/inheritance-spec.js",
+    "tests/spec/plugin-spec.js",
     "tests/spec/draggable-spec.js",
     "tests/spec/droptarget-spec.js"
 ]
