@@ -34,7 +34,7 @@
 
             // detect touch capabilities
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (navigator.isCocoonJS) || (navigator.maxTouchPoints > 0);
+                              (navigator.isCocoonJS) || (me.device.pointerEnabled && (navigator.maxTouchPoints > 0));
 
             // accelerometer detection
             me.device.hasAccelerometer = (
