@@ -188,12 +188,12 @@
             });
 
             // patch entities.js
-            me.plugin.patch(me.ObjectEntity, "draw", function (context) {
+            me.plugin.patch(me.Entity, "draw", function (context) {
                 // call the original me.game.draw function
                 this.parent(context);
 
                 // check if debug mode is enabled
-                if (me.debug.renderHitBox && this.shapes.length) {
+                if (me.debug.renderHitBox) {
 
                     // translate to the object position
                     var translateX = this.pos.x ;
@@ -202,10 +202,10 @@
                     context.translate(translateX, translateY);
 
                     // draw the original shape
-                    this.getShape().draw(context, "red");
-                     if (this.getShape().shapeType!=="Rectangle") {
+                    this.body.draw(context, "red");
+                     if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
                          // draw the corresponding bounding box
-                        this.getShape().getBounds().draw(context, "red");
+                        this.body.getShape().draw(context, "red");
                     }
 
                     context.translate(-translateX, -translateY);
