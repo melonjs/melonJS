@@ -2,7 +2,10 @@
  * XXX: Audio is not supported in PhantomJS
  */
 describe("Audio tests", function () {
-    it("should load an mp3", function (done) {
+    var _it;
+
+    _it = (Howler.codecs("mp3") ? it : xit);
+    _it("should load an mp3", function (done) {
         // Initialize audio
         expect(me.audio.init("mp3")).toEqual(true);
 
@@ -19,7 +22,8 @@ describe("Audio tests", function () {
         );
     });
 
-    it("should load an ogg", function (done) {
+    _it = (Howler.codecs("ogg") ? it : xit);
+    _it("should load an ogg", function (done) {
         // Initialize audio
         expect(me.audio.init("ogg")).toEqual(true);
 
