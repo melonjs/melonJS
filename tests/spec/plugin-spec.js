@@ -26,7 +26,6 @@ describe("me.plugin", function () {
         });
 
         it("name should be 'John Smith'", function () {
-            console.log(obj.name);
             expect(obj.name).toEqual("John Smith");
         });
     });
