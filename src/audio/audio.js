@@ -148,7 +148,7 @@
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
             }
-            var soundclip = new Howl({
+            audioTracks[sound.name] = new Howl({
                 urls : urls,
                 volume : Howler.volume(),
                 onend : function (soundId) {
@@ -159,17 +159,17 @@
                     }
                 },
                 onloaderror : function () {
+                    audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
                 onload : function () {
+                    audioTracks[sound.name] = this;
                     retry_counter = 0;
                     if (onload_cb) {
                         onload_cb();
                     }
                 }
             });
-
-            audioTracks[sound.name] = soundclip;
 
             return 1;
         };
