@@ -1,5 +1,8 @@
 Version History
 ---------------
+1.0.2
+* Input : fixed event detection on Chrome 35+
+
 1.0.1
 * Core : removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
 * Entity : disable falling flag when gravity is disabled
