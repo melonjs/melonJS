@@ -176,7 +176,7 @@
                 this.children.splice(index, 0, child);
             }
             else {
-                throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for addChildAt()";
+                throw new me.ObjectContainer.Error("Index (" + index + ") Out Of Bounds for addChildAt()");
             }
         },
 
@@ -202,7 +202,7 @@
                 this.children[index2] = child;
             }
             else {
-                throw "melonJS (me.ObjectContainer): " + child + " Both the supplied childs must be a child of the caller " + this;
+                throw new me.ObjectContainer.Error(child + " Both the supplied childs must be a child of the caller " + this);
             }
         },
 
@@ -218,7 +218,7 @@
                 return this.children[index];
             }
             else {
-                throw "melonJS (me.ObjectContainer): Index (" + index + ") Out Of Bounds for getChildAt()";
+                throw new me.ObjectContainer.Error("Index (" + index + ") Out Of Bounds for getChildAt()");
             }
         },
 
@@ -397,7 +397,7 @@
 
             }
             else {
-                throw "melonJS (me.ObjectContainer): " + child + " The supplied child must be a child of the caller " + this;
+                throw new me.ObjectContainer.Error(child + " The supplied child must be a child of the caller " + this);
             }
         },
 
@@ -774,6 +774,20 @@
             }
 
             context.restore();
+        }
+    });
+
+    /**
+     * Base class for ObjectContainer exception handling.
+     * @name Error
+     * @memberOf me.ObjectContainer
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.ObjectContainer.Error = me.Renderable.Error.extend({
+        init : function (msg) {
+            this._super(me.Renderable.Error, "init", [ msg ]);
+            this.name = "me.ObjectContainer.Error";
         }
     });
 })();

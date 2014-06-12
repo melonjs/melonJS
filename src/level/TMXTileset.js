@@ -162,7 +162,7 @@
                 tileset = me.loader.getTMX(src);
 
                 if (!tileset) {
-                    throw "melonJS:" + src + " TSX tileset not found";
+                    throw new me.Error(src + " TSX tileset not found");
                 }
                 // normally tileset shoudld directly contains the required
                 //information : UNTESTED as I did not find how to generate a JSON TSX file
@@ -429,7 +429,7 @@
                 return this.tilesets[invalidRange];
             }
             else {
-                throw "no matching tileset found for gid " + gid;
+                throw new me.Error("no matching tileset found for gid " + gid);
             }
         }
     });

@@ -156,19 +156,19 @@
             // just to keep track of when we flip
             this.lastflipX = false;
             this.lastflipY = false;
-                        
+
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
+                throw new me.ObjectEntity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
-            
+
             // call the super constructor
             this.pos = new me.Vector2d(x, y);
             this._super(me.Renderable, "init", [this.pos,
                         settings.width,
                         settings.height]);
 
- 
+
             // set the object entity name
             this.name = settings.name ? settings.name.toLowerCase() : "";
 
@@ -382,7 +382,7 @@
                 this.shapeIndex = index;
                 return;
             }
-            throw "melonJS (me.Entity): Shape (" + index + ") not defined";
+            throw new me.ObjectEntity.Error("Shape (" + index + ") not defined");
         },
 
         /**
@@ -973,6 +973,20 @@
         /** @ignore */
         onCollision : function () {
             this.goTo();
+        }
+    });
+
+    /**
+     * Base class for ObjectEntity exception handling.
+     * @name Error
+     * @memberOf me.ObjectEntity
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.ObjectEntity.Error = me.Renderable.Error.extend({
+        init : function (msg) {
+            this._super(me.Renderable.Error, "init", [ msg ]);
+            this.name = "me.ObjectEntity.Error";
         }
     });
 })();

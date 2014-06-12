@@ -192,4 +192,18 @@
             this._super(me.Rect, "draw", [context, color]);
         }
     });
+
+    /**
+     * Base class for Renderable exception handling.
+     * @name Error
+     * @memberOf me.Renderable
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Renderable.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.Renderable.Error";
+        }
+    });
 })();

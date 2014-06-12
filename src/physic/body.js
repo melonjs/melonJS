@@ -8,7 +8,7 @@
 (function () {
 
     /*
-     * A body object 
+     * A body object
      */
 
     /**
@@ -25,10 +25,10 @@
     {
         /** @ignore */
         init : function (entity, settings) {
-          
+
             // reference to the parent entity
             this.entity = entity;
-            
+
             /**
              * flag to enable collision detection for this object<br>
              * default value : true<br>
@@ -56,7 +56,7 @@
              * @memberOf me.Body
              */
             this.shapeIndex = 0;
-            
+
 
             /**
              * entity current velocity<br>
@@ -142,7 +142,7 @@
              * @memberOf me.Body
              */
             this.jumping = true;
-          
+
             // some usefull slope variable
             this.slopeY = 0;
 
@@ -165,7 +165,7 @@
              * @memberOf me.Body
              */
             this.onladder = false;
-            
+
             /**
              * equal true if the entity can go down on a ladder<br>
              * @readonly
@@ -175,7 +175,7 @@
              * @memberOf me.Body
              */
             this.disableTopLadderCollision = false;
-            
+
             /**
              * Define if an entity can go through breakable tiles<br>
              * default value : false<br>
@@ -206,7 +206,7 @@
 
             // call the super constructor
             this._super(
-                me.Rect, 
+                me.Rect,
                 "init", [
                     new me.Vector2d(),
                     entity.width,
@@ -258,9 +258,9 @@
                 this.shapeIndex = index;
                 return;
             }
-            throw "melonJS (me.Body): Shape (" + index + ") not defined";
+            throw new me.Body.Error("Shape (" + index + ") not defined");
         },
-        
+
         /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
@@ -276,7 +276,7 @@
             this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
         },
-        
+
 
         /**
          * onCollision Event function<br>
@@ -616,4 +616,17 @@
         }
     });
 
+    /**
+     * Base class for Body exception handling.
+     * @name Error
+     * @memberOf me.Body
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Body.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.Body.Error";
+        }
+    });
 })();

@@ -65,7 +65,7 @@
                         var name = me.utils.getBasename(atlas.meta.image);
                         this.texture = me.loader.getImage(name);
                         if (this.texture === null) {
-                            throw "melonjs: Atlas texture '" + name + "' not found";
+                            throw new me.TextureAtlas.Error("Atlas texture '" + name + "' not found");
                         }
                     } else {
                         this.texture = texture;
@@ -74,7 +74,7 @@
                 // ShoeBox
                 if (atlas.meta.app.contains("ShoeBox")) {
                     if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
-                        throw "melonjs: ShoeBox requires the JSON exporter : https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx";
+                        throw new me.TextureAtlas.Error("ShoeBox requires the JSON exporter : https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx");
                     }
                     this.format = "ShoeBox";
                     // set the texture
@@ -86,7 +86,7 @@
 
             // if format not recognized
             if (this.atlas === null) {
-                throw "melonjs: texture atlas format not supported";
+                throw new me.TextureAtlas.Error("texture atlas format not supported");
             }
         },
 
@@ -198,7 +198,7 @@
                 return sprite;
             }
             // throw an error
-            throw "melonjs: TextureAtlas - region for " + name + " not found";
+            throw new me.TextureAtlas.Error("TextureAtlas - region for " + name + " not found");
         },
 
         /**
@@ -242,7 +242,7 @@
                 indices[names[i]] = i;
                 if (tpAtlas[i] == null) {
                     // throw an error
-                    throw "melonjs: TextureAtlas - region for " + names[i] + " not found";
+                    throw new me.TextureAtlas.Error("TextureAtlas - region for " + names[i] + " not found");
                 }
             }
             // instantiate a new animation sheet object
@@ -255,6 +255,20 @@
                 atlas: tpAtlas,
                 atlasIndices: indices
             });
+        }
+    });
+
+    /**
+     * Base class for TextureAtlas exception handling.
+     * @name Error
+     * @memberOf me.TextureAtlas
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.TextureAtlas.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.TextureAtlas.Error";
         }
     });
 })();

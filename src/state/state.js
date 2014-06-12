@@ -625,7 +625,7 @@
         api.change = function (state) {
             // Protect against undefined ScreenObject
             if (typeof(_screenObject[state]) === "undefined") {
-                throw "melonJS : Undefined ScreenObject for state '" + state + "'";
+                throw new me.Error("Undefined ScreenObject for state '" + state + "'");
             }
 
             _extraArgs = null;

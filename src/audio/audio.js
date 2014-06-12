@@ -55,7 +55,7 @@
                 }
                 else {
                     // throw an exception and stop everything !
-                    throw errmsg;
+                    throw new api.Error(errmsg);
                 }
             // else try loading again !
             }
@@ -72,6 +72,20 @@
         /*
          * PUBLIC STUFF
          */
+
+        /**
+         * Base class for Audio exception handling.
+         * @name Error
+         * @memberOf me.video
+         * @constructor
+         * @param {String} msg Error message.
+         */
+        api.Error = me.Error.extend({
+            init : function (msg) {
+                this._super(me.Error, "init", [ msg ]);
+                this.name = "me.audio.Error";
+            }
+        });
 
         /**
          * initialize the audio engine<br>
@@ -96,7 +110,7 @@
          */
         api.init = function (audioFormat) {
             if (!me.initialized) {
-                throw "melonJS: me.audio.init() called before engine initialization.";
+                throw new api.Error("me.audio.init() called before engine initialization.");
             }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
@@ -143,7 +157,7 @@
         api.load = function (sound, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
-                throw "melonJS: target audio extension(s) should be set through me.audio.init() before calling the preloader.";
+                throw new api.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
             }
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);

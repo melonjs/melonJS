@@ -126,12 +126,12 @@
 
             // inheritance check
             if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
-                throw "melonJS: Plugin should extend the me.plugin.Base Class !";
+                throw new me.Error("Plugin should extend the me.plugin.Base Class !");
             }
 
             // compatibility testing
             if (me.sys.checkVersion(me.plugin[name].version) > 0) {
-                throw "melonJS: Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version;
+                throw new me.Error("Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version);
             }
         };
 

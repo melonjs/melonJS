@@ -157,7 +157,7 @@
                     }
                 }
             }
-            
+
             // flag as loaded
             map.initialized = true;
         },
@@ -188,7 +188,7 @@
 
                 // if none found, throw an exception
                 default:
-                    throw "melonJS: " + obj.orientation + " type TMX Tile Map not supported!";
+                    throw new me.Error(obj.orientation + " type TMX Tile Map not supported!");
             }
         },
 
@@ -228,7 +228,7 @@
 
 
                 default:
-                    throw "melonJS: TMX Tile Map " + encoding + " encoding not supported!";
+                    throw new me.Error("TMX Tile Map " + encoding + " encoding not supported!");
             }
 
             var idx = 0;
@@ -249,7 +249,7 @@
                 }
             }
         },
-        
+
         readLayer: function (map, data, z) {
             var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
             // init the layer properly

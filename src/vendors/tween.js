@@ -227,7 +227,7 @@
 		 */
 		this.easing = function ( easing ) {
 			if (typeof easing !== 'function') {
-				throw "melonJS: invalid easing function for me.Tween.easing()";
+				throw new me.Tween.Error("invalid easing function for me.Tween.easing()");
 			}
 			_easingFunction = easing;
 			return this;
@@ -841,4 +841,17 @@
 
 	};
 
+	/**
+	 * Base class for Tween exception handling.
+	 * @name Error
+	 * @memberOf me.Tween
+	 * @constructor
+	 * @param {String} msg Error message.
+	 */
+	me.Tween.Error = me.Error.extend({
+		init : function (msg) {
+			this._super(me.Error, "init", [ msg ]);
+			this.name = "me.Tween.Error";
+		}
+	});
 })();

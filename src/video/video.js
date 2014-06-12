@@ -39,6 +39,20 @@
          */
 
         /**
+         * Base class for Video exception handling.
+         * @name Error
+         * @memberOf me.video
+         * @constructor
+         * @param {String} msg Error message.
+         */
+        api.Error = me.Error.extend({
+            init : function (msg) {
+                this._super(me.Error, "init", [ msg ]);
+                this.name = "me.video.Error";
+            }
+        });
+
+        /**
          * init the "video" part<p>
          * return false if initialization failed (canvas not supported)
          * @name init
@@ -61,7 +75,7 @@
         api.init = function (wrapperid, game_width, game_height, doublebuffering, scale, aspectRatio) {
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
-                throw "melonJS: me.video.init() called before engine initialization.";
+                throw new api.Error("me.video.init() called before engine initialization.");
             }
             // check given parameters
             double_buffering = doublebuffering || false;
@@ -240,7 +254,7 @@
          */
         api.createCanvas = function (width, height, screencanvas) {
             if (width === 0 || height === 0)  {
-                throw new Error("melonJS: width or height was zero, Canvas could not be initialized !");
+                throw new api.Error("width or height was zero, Canvas could not be initialized !");
             }
 
             var _canvas = document.createElement("canvas");
