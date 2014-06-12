@@ -12,17 +12,21 @@ describe("me.plugin", function () {
 
         me.plugin.patch(BaseObject, "setType", function (t) {
             this.parent(t);
-            this.name = "John Smith"
+            this.name = "John Smith";
         });
 
-        var obj = new BaseObject();
-        obj.setType("something_awesome");
+        var obj;
+        beforeEach(function () {
+            obj = new BaseObject();
+            obj.setType("something_awesome");
+        });
 
         it("type should be 'something_awesome'", function () {
             expect(obj.type).toEqual("something_awesome");
         });
 
         it("name should be 'John Smith'", function () {
+            console.log(obj.name);
             expect(obj.name).toEqual("John Smith");
         });
     });
