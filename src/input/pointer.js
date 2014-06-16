@@ -515,7 +515,7 @@
 
         // throw an exception if no action is defined for the specified keycode
         if (!obj._KeyBinding[keyCode]) {
-            throw "melonJS : no action defined for keycode " + keyCode;
+            throw new me.Error("no action defined for keycode " + keyCode);
         }
         // map the mouse button to the keycode
         obj.mouse.bind[button] = keyCode;
@@ -564,7 +564,7 @@
         enablePointerEvent();
 
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw "melonJS : invalid event type : " + eventType;
+            throw new me.Error("invalid event type : " + eventType);
         }
 
         // convert to supported event type if pointerEvent not natively supported
@@ -615,7 +615,7 @@
      */
     obj.releasePointerEvent = function (eventType, rect) {
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw "melonJS : invalid event type : " + eventType;
+            throw new me.Error("invalid event type : " + eventType);
         }
 
         // convert to supported event type if pointerEvent not natively supported

@@ -4,8 +4,8 @@
  * http://www.melonjs.org
  */
 
- /**
- * The built in Object Object.
+/**
+ * The built in Object object.
  * @external Object
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
  */
@@ -56,7 +56,7 @@ if (!Object.defineProperty) {
             }
         } else {
             // we should never reach this point....
-            throw "melonJS: Object.defineProperty not supported";
+            throw new TypeError("Object.defineProperty not supported");
         }
     };
 }
@@ -225,7 +225,9 @@ if (!Function.prototype.bind) {
 
             // Verify constructor exists
             if (!("init" in Class.prototype)) {
-                throw "extend: Class is missing a constructor named `init`";
+                throw new TypeError(
+                    "extend: Class is missing a constructor named `init`"
+                );
             }
 
             // Apply syntactic sugar for accessing methods on super classes
@@ -252,7 +254,9 @@ if (!Function.prototype.bind) {
             methods[method] = descriptor[method];
 
             if (typeof(descriptor[method]) !== "function") {
-                throw "extend: Method `" + method + "` is not a function";
+                throw new TypeError(
+                    "extend: Method `" + method + "` is not a function"
+                );
             }
 
             Object.defineProperty(Class.prototype, method, {

@@ -22,6 +22,8 @@
         if (!initialized) {
             initialized = true;
             window.onReady(function () {
+                me.sys.stopOnAudioError = false;
+
                 // Initialize video
                 if (!me.video.init("screen", 1024, 768, true, "auto")) {
                     throw "me.video.init failed";

@@ -147,7 +147,7 @@
                                 break;
 
                             default:
-                                throw "melonJS: TMX file format " + format + "not supported !";
+                                throw new api.Error("TMX file format " + format + "not supported !");
                         }
 
                         //set the TMX content
@@ -265,6 +265,20 @@
         api.onProgress = undefined;
 
         /**
+         * Base class for Loader exception handling.
+         * @name Error
+         * @memberOf me.loader
+         * @constructor
+         * @param {String} msg Error message.
+         */
+        api.Error = me.Error.extend({
+            init : function (msg) {
+                this._super(me.Error, "init", [ msg ]);
+                this.name = "me.loader.Error";
+            }
+        });
+
+        /**
          *  just increment the number of already loaded resources
          * @ignore
          */
@@ -286,7 +300,7 @@
          * @ignore
          */
         api.onLoadingError = function (res) {
-            throw "melonJS: Failed loading resource " + res.src;
+            throw new api.Error("Failed loading resource " + res.src);
         };
 
         /**
@@ -420,9 +434,8 @@
                     return 1;
 
                 default:
-                    throw "melonJS: me.loader.load : unknown or invalid resource type : " + res.type;
+                    throw new api.Error("load : unknown or invalid resource type : " + res.type);
             }
-            return 0;
         };
 
         /**
@@ -479,7 +492,7 @@
                     return me.audio.unload(res.name);
 
                 default:
-                    throw "melonJS: me.loader.unload : unknown or invalid resource type : " + res.type;
+                    throw new api.Error("unload : unknown or invalid resource type : " + res.type);
             }
         };
 

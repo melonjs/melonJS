@@ -143,7 +143,7 @@
          * @return {Number[]} Array of bytes
          */
         api.decompress = function () {
-            throw "melonJS: GZIP/ZLIB compressed TMX Tile Map not supported!";
+            throw new me.Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
         };
 
         /**

@@ -426,9 +426,8 @@
                     return me.save;
 
                 default :
-                    break;
+                    throw new me.Error("storage type " + type + " not supported");
             }
-            throw "melonJS : storage type " + type + " not supported";
         };
 
         /**

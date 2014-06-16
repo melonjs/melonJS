@@ -221,7 +221,7 @@
                 this.target = target;
             }
             else {
-                throw "melonJS: invalid target for viewport.follow";
+                throw new me.Renderable.Error("invalid target for viewport.follow");
             }
             // if axis is null, camera is moved on target center
             this.follow_axis = (

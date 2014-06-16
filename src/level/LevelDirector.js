@@ -56,17 +56,17 @@
                 Math.max(level.width, me.game.viewport.width),
                 Math.max(level.height, me.game.viewport.height)
             );
-            
+
             // adjust map position based on the viewport size
             // (only update the map position if the map is smaller than the viewport)
             level.setDefaultPosition(me.game.viewport.width, me.game.viewport.height);
-            
+
             // add all defined layers
             var layers = level.getLayers();
             for (var i = layers.length; i--;) {
                 container.addChild(layers[i]);
             }
-            
+
             // game world as default container
             var targetContainer = container;
 
@@ -126,7 +126,7 @@
                             }
                         }
 
-                    
+
                         // set the obj z order correspondingly to its parent container/group
                         obj.z = group.z;
 
@@ -185,7 +185,7 @@
          * @ignore
          */
         api.addLevel = function () {
-            throw "melonJS: no level loader defined";
+            throw new me.Error("no level loader defined");
         };
 
         /**
@@ -242,7 +242,7 @@
             levelId = levelId.toString().toLowerCase();
             // throw an exception if not existing
             if (typeof(levels[levelId]) === "undefined") {
-                throw ("melonJS: level " + levelId + " not found");
+                throw new me.Error("level " + levelId + " not found");
             }
 
             if (levels[levelId] instanceof me.TMXTileMap) {
@@ -284,7 +284,7 @@
                 }
             }
             else {
-                throw "melonJS: no level loader defined";
+                throw new me.Error("no level loader defined");
             }
             return true;
         };

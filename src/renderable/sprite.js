@@ -527,7 +527,7 @@
                     this.anim[name].frame[i] = this.textureAtlas[index[i]];
                 } else { // string
                     if (this.atlasIndices === null) {
-                        throw "melonjs: string parameters for addAnimation are only allowed for TextureAtlas ";
+                        throw new me.Renderable.Error("string parameters for addAnimation are only allowed for TextureAtlas");
                     } else {
                         this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
                     }
@@ -576,7 +576,7 @@
                 this.setAnimationFrame(this.current.idx); // or 0 ?
                 this.current.nextFrame = this.current.animationspeed;
             } else {
-                throw "melonJS: animation id '" + name + "' not defined";
+                throw new me.Renderable.Error("animation id '" + name + "' not defined");
             }
         },
 

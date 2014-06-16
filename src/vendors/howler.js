@@ -1,5 +1,5 @@
 /*!
- *  howler.js v1.1.20
+ *  howler.js v1.1.21
  *  howlerjs.com
  *
  *  (c) 2013-2014, James Simpson of GoldFire Studios
@@ -56,12 +56,13 @@
   }
 
   // create global controller
-  var HowlerGlobal = function() {
+  var HowlerGlobal = function(codecs) {
     this._volume = 1;
     this._muted = false;
     this.usingWebAudio = usingWebAudio;
     this.noAudio = noAudio;
     this._howls = [];
+    this._codecs = codecs;
   };
   HowlerGlobal.prototype = {
     /**
@@ -140,26 +141,37 @@
           }
         }
       }
+    },
+
+    /**
+     * Check for codec support.
+     * @param  {String} ext Audio file extention.
+     * @return {Boolean}
+     */
+    codecs: function(ext) {
+      return this._codecs[ext];
     }
   };
 
-  // allow access to the global audio controls
-  var Howler = new HowlerGlobal();
-
   // check for browser codec support
   var audioTest = null;
+  var codecs = {};
   if (!noAudio) {
     audioTest = new Audio();
-    var codecs = {
+    codecs = {
       mp3: !!audioTest.canPlayType('audio/mpeg;').replace(/^no$/, ''),
       opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
       ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
       wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
-      m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
-      mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+      aac: !!audioTest.canPlayType('audio/aac;').replace(/^no$/, ''),
+      m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+      mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
       weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')
     };
   }
+
+  // allow access to the global audio controls
+  var Howler = new HowlerGlobal(codecs);
 
   // setup the audio object
   var Howl = function(o) {
@@ -374,8 +386,18 @@
         node._sprite = sprite;
 
         // determine where to start playing from
-        var pos = (node._pos > 0) ? node._pos : self._sprite[sprite][0] / 1000,
+        var pos = (node._pos > 0) ? node._pos : self._sprite[sprite][0] / 1000;
+
+        // determine how long to play for
+        var duration = 0;
+        if (self._webAudio) {
           duration = self._sprite[sprite][1] / 1000 - node._pos;
+          if (node._pos > 0) {
+            pos = self._sprite[sprite][0] / 1000 + pos;
+          }
+        } else {
+          duration = self._sprite[sprite][1] / 1000 - (pos - self._sprite[sprite][0] / 1000);
+        }
 
         // determine if this sound should be looped
         var loop = !!(self._loop || self._sprite[sprite][2]);
@@ -935,9 +957,14 @@
       } else {
         self.load();
         newNode = self._audioNode[self._audioNode.length - 1];
-        newNode.addEventListener(navigator.isCocoonJS ? 'canplaythrough' : 'loadedmetadata', function() {
+
+        // listen for the correct load event and fire the callback
+        var listenerEvent = navigator.isCocoonJS ? 'canplaythrough' : 'loadedmetadata';
+        var listener = function() {
+          newNode.removeEventListener(listenerEvent, listener, false);
           callback(newNode);
-        });
+        };
+        newNode.addEventListener(listenerEvent, listener, false);
       }
     },
 
