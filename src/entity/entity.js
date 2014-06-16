@@ -177,7 +177,7 @@
                         
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw "melonjs: height and width properties are mandatory when passing settings parameters to an object entity";
+                throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
             
             // call the super constructor
@@ -472,6 +472,20 @@
         /** @ignore */
         onCollision : function () {
             this.goTo();
+        }
+    });
+    
+    /**
+     * Base class for Entity exception handling.
+     * @name Error
+     * @memberOf me.Entity
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Entity.Error = me.Renderable.Error.extend({
+        init : function (msg) {
+            this._super(me.Renderable.Error, "init", [ msg ]);
+            this.name = "me.Entity.Error";
         }
     });
 })();

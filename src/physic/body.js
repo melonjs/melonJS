@@ -233,7 +233,7 @@
                 this.shapeIndex = index;
                 return;
             }
-            throw "melonJS (me.Body): Shape (" + index + ") not defined";
+            throw new me.Body.Error("Shape (" + index + ") not defined");
         },
         
         /**
@@ -590,5 +590,18 @@
             this.shapeIndex = 0;
         }
     });
-
+    
+    /**
+     * Base class for Body exception handling.
+     * @name Error
+     * @memberOf me.Body
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Body.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.Body.Error";
+        }
+    });
 })();
