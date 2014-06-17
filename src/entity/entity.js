@@ -339,7 +339,7 @@
                 var x = ~~(this.pos.x + bounds.pos.x + (
                     this.anchorPoint.x * (bounds.width - this.renderable.width)
                 ));
-                var y = ~~(this.pos.x + bounds.pos.y + (
+                var y = ~~(this.pos.y + bounds.pos.y + (
                     this.anchorPoint.y * (bounds.height - this.renderable.height)
                 ));
                 context.translate(x, y);
