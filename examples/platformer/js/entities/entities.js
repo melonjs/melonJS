@@ -107,7 +107,7 @@ game.PlayerEntity = me.Entity.extend({
 		if (res) {
 			switch (res.obj.type) {	
 				case me.game.ENEMY_OBJECT : {
-					if ((res.y>0) && this.falling) {
+					if ((res.y>0) && this.body.falling) {
 						// jump
 						this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
 					} else {
@@ -215,7 +215,7 @@ game.PathEnemyEntity = me.Entity.extend({
 		this.pos.x  = x + width - settings.spritewidth;
 		
 		// apply gravity setting if specified
-		this.gravity = settings.gravity || me.sys.gravity;
+		this.body.gravity = settings.gravity || me.sys.gravity;
 		this.walkLeft = false;
 
 		// walking & jumping speed
@@ -261,7 +261,7 @@ game.PathEnemyEntity = me.Entity.extend({
 	onCollision : function (res, obj) {
 		// res.y >0 means touched by something on the bottom
 		// which mean at top position for this one
-		if (this.alive && (res.y > 0) && obj.falling) {
+		if (this.alive && (res.y > 0) && obj.body.falling) {
 			// make it dead
 			this.alive = false;
 			// and not collidable anymore

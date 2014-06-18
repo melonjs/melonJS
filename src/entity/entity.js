@@ -198,7 +198,23 @@
 
         },
 
-
+       /**
+         * returns the bounding box for this entity, the smallest rectangle object completely containing this entity body shapes
+         * @name getBounds
+         * @memberOf me.Entity
+         * @function
+         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
+         * @return {me.Rect} new rectangle
+         */
+        getBounds : function (rect) {
+            if (typeof(rect) !== "undefined") {
+                return rect.setShape(this.body.pos, this.body.width, this.body.height);
+            }
+            else {
+                return this.body.clone();
+            }
+        },
+        
         /**
          * Flip object on horizontal axis
          * @name flipX

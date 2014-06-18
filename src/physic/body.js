@@ -42,7 +42,6 @@
              */
             this.shapeIndex = 0;
             
-
             /**
              * entity current velocity<br>
              * @public
@@ -488,7 +487,6 @@
                             (prop.isTopLadder && !this.disableTopLadderCollision)) {
 
                             // adjust position to the corresponding tile
-                            this.pos.y = ~~this.pos.y;
                             this.vel.y = (
                                 this.falling ?
                                 tile.pos.y - this.bottom : 0
@@ -517,7 +515,6 @@
                             }
                             else {
                                 // adjust position to the corresponding tile
-                                this.pos.y = ~~this.pos.y;
                                 this.vel.y = (
                                     this.falling ?
                                     tile.pos.y - this.bottom : 0
@@ -565,6 +562,11 @@
                 }
 
                 // translate back to set the body relative to the entity
+                 // temporary stuff until ticket #103 is done (this function will disappear anyway)
+                this.entity.pos.set(
+                    this.pos.x - offsetX,
+                    this.pos.y - offsetX
+                );
                 this.pos.set(
                     offsetX,
                     offsetY
