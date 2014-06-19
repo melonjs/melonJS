@@ -148,7 +148,7 @@ game.MoleEntity = me.AnimationSheet.extend(
 /**
  * a mole manager (to manage movement, etc..)
  */
-game.MoleManager = me.ObjectEntity.extend(
+game.MoleManager = me.Entity.extend(
 {	
 	init: function ()
 	{
@@ -159,7 +159,7 @@ game.MoleManager = me.ObjectEntity.extend(
 		settings.width = 10;
 		settings.height = 10;
 		// call the super constructor
-		this._super(me.ObjectEntity, 'init', [0, 0, settings]);
+		this._super(me.Entity, 'init', [0, 0, settings]);
 		
 		// add the first row of moles
 		for ( var i = 0; i < 3; i ++) {

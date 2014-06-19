@@ -8,7 +8,7 @@ game.Background = me.Renderable.extend({
   }
 });
 
-game.MainEntity = me.ObjectEntity.extend({
+game.MainEntity = me.Entity.extend({
   init : function(x, y) {
     var settings = {
       image : 'basicImage',
@@ -17,14 +17,14 @@ game.MainEntity = me.ObjectEntity.extend({
       width : 32,
       height : 32
     };
-    this._super(me.ObjectEntity, 'init', [x, y, settings]);
+    this._super(me.Entity, 'init', [x, y, settings]);
     this.z = 2;
     this.renderable.addAnimation('idle', [0], 1);
     this.renderable.setCurrentAnimation('idle');
   },
 
   update: function(delta) {
-    this._super(me.ObjectEntity, 'update', [delta]);
+    this._super(me.Entity, 'update', [delta]);
   }
 });
 

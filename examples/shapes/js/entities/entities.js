@@ -1,10 +1,10 @@
-game.ShapeObject = me.ObjectEntity.extend({
+game.ShapeObject = me.Entity.extend({
      /**
      * constructor
      */
     init: function (x, y, settings) {
         // call the super constructor
-        this._super(me.ObjectEntity, 'init', [x, y, settings]);
+        this._super(me.Entity, 'init', [x, y, settings]);
         this.hover = false;
         this.handler = me.event.subscribe("pointermove", this.mouseMove.bind(this));
 
@@ -17,7 +17,7 @@ game.ShapeObject = me.ObjectEntity.extend({
      */
     mouseMove: function (event) {
         this.hover = this.inViewport && 
-                     this.getShape().containsPoint(
+                     this.body.getShape().containsPoint(
                         // shape object position is relative to the entity
                         event.gameX - this.pos.x, event.gameY - this.pos.y
                      );
@@ -56,7 +56,7 @@ game.ShapeObject = me.ObjectEntity.extend({
      */
     draw: function (context) {
         context.globalAlpha = this.hover ? 1.0 : 0.5;
-        this._super(me.ObjectEntity, 'draw', [context]);
+        this._super(me.Entity, 'draw', [context]);
         context.globalAlpha = 1.0;
     }
 });
@@ -70,7 +70,7 @@ game.Square = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a rectangular shape
-        this.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
+        this.body.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
 
         // pienapple
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 24);
@@ -94,7 +94,7 @@ game.Circle = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add an ellipse shape
-        this.addShape(new me.Ellipse({x:0, y:0}, this.width, this.height));
+        this.body.addShape(new me.Ellipse({x:0, y:0}, this.width, this.height));
 
         // tomato
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);
@@ -119,7 +119,7 @@ game.Poly = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a polygone shape
-        this.addShape(new me.PolyShape({x:0, y:0}, [
+        this.body.addShape(new me.PolyShape({x:0, y:0}, [
             // draw a star
             {x:0, y:0},
             {x:28, y:60},
@@ -134,7 +134,7 @@ game.Poly = game.ShapeObject.extend({
         ], true));
 
         // cache a copy of the corresponding shape bounds
-        this.polyBounds = this.getShape().getBounds();
+        this.polyBounds = this.body.getShape().getBounds();
 
         // star
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
@@ -151,7 +151,7 @@ game.Poly = game.ShapeObject.extend({
     // mouse down function
     onSelect : function (event) {
         // recheck using the polygone shape
-        if (this.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+        if (this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
             return this._super(game.ShapeObject, 'onSelect', [event]);
         }
         return true;
@@ -168,7 +168,7 @@ game.Poly = game.ShapeObject.extend({
                      // for polyshape first use the less expensive 
                      // test on the corresponding bounding rectangle
                      this.polyBounds.containsPoint(x, y) &&
-                     this.getShape().containsPoint(x, y);
+                     this.body.getShape().containsPoint(x, y);
 
         if (this.canMove) {
             // follow the mouse/finger

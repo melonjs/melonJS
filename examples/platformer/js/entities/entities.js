@@ -168,13 +168,17 @@ game.CoinEntity = me.CollectableEntity.extend({
 		
 		// set the renderable position to center
 		this.anchorPoint.set(0.5, 0.5);
+        
+        // set our collision callback function
+        this.body.onCollision = this.onCollision.bind(this);
 		
 	},		
 	
 	/** 
 	 * collision handling
 	 */
-	onCollision : function () {
+	onCollision : function (res, obj) {
+        console.log(obj);
 		// do something when collide
 		me.audio.play("cling", false);
 		// give some score
@@ -184,7 +188,6 @@ game.CoinEntity = me.CollectableEntity.extend({
 		this.collidable = false;
 		me.game.world.removeChild(this);
 	}
-	
 });
 
 /**
@@ -227,6 +230,9 @@ game.PathEnemyEntity = me.Entity.extend({
 		
 		// don't update the entities when out of the viewport
 		this.alwaysUpdate = false;
+        
+        // set our collision callback function
+        this.body.onCollision = this.onCollision.bind(this);
 	},
 		
 	
@@ -311,7 +317,8 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
 		this.renderable.setCurrentAnimation("walk");
 
 		// set the renderable position to bottom center
-		this.anchorPoint.set(0.5, 1.0);		
+		this.anchorPoint.set(0.5, 1.0);
+        
 	}
 });
 
