@@ -131,7 +131,7 @@
              * @public
              * @type Boolean
              * @name collidable
-             * @memberOf me.Body
+             * @memberOf me.Entity
              */
             this.collidable = true;
             
@@ -452,6 +452,9 @@
 
             // a temp variable
             this.gotolevel = settings.to;
+            
+            // set our collision callback function
+            this.body.onCollision = this.onCollision.bind(this);
         },
 
         /**

@@ -43,6 +43,18 @@
             this.shapeIndex = 0;
             
             /**
+             * onCollision callback<br>
+             * called by the game manager when the object body collide with shtg<br>
+             * @name onCollision
+             * @memberOf me.Body
+             * @function
+             * @param {me.Vector2d} res collision vector
+             * @param {me.Entity} obj the other entity object that hit this object
+             * @protected
+             */
+            this.onCollision = undefined;
+            
+            /**
              * entity current velocity<br>
              * @public
              * @type me.Vector2d
@@ -249,26 +261,6 @@
             // adjust the body bounding rect
             this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
-        },
-        
-
-        /**
-         * onCollision Event function<br>
-         * called by the game manager when the object collide with shtg<br>
-         * by default, if the object type is Collectable, the destroy function
-         * is called
-         * @name onCollision
-         * @memberOf me.Body
-         * @function
-         * @param {me.Vector2d} res collision vector
-         * @param {me.Body} obj the other object that hit this object
-         * @protected
-         */
-        onCollision : function () {
-            // destroy the object if collectable
-            if (this.entity.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
-                me.game.world.removeChild(this.entity);
-            }
         },
 
         /**

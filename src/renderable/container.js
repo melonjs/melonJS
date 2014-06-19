@@ -568,8 +568,10 @@
                         );
 
                         if (res.x !== 0 || res.y !== 0) {
-                            // notify the object
-                            obj.onCollision.call(obj, res, objA);
+                            if (typeof obj.body.onCollision === "function") {
+                                // notify the object
+                                obj.body.onCollision.call(obj.body, res, objA);
+                            }
                             // return the type (deprecated)
                             res.type = obj.type;
                             // return a reference of the colliding object
