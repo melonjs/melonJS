@@ -733,8 +733,6 @@
             var viewport = me.game.viewport;
             var isFloating = false;
 
-            this.drawCount = 0;
-
             context.save();
 
             // apply the container current transform
@@ -768,8 +766,6 @@
                     if (isFloating === true) {
                         context.restore();
                     }
-
-                    this.drawCount++;
                 }
             }
 
