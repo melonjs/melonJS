@@ -77,11 +77,13 @@
                 height || Infinity]
             );
             // init the bounds to an empty rect
+            
             /**
              * Container bounds
              * @ignore
              */
-            this.bounds = new me.Rect(new me.Vector2d(0, 0), 0, 0);
+            this.bounds = undefined;
+            
             /**
              * The array of children of this container.
              * @ignore
@@ -332,13 +334,14 @@
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} new rectangle
          */
-        getBounds : function (rect) {
-            var _bounds = (typeof(rect) !== "undefined") ? rect : this.bounds;
-
-            // reset the rect with default values
-            _bounds.pos.set(Infinity, Infinity);
-            _bounds.resize(-Infinity, -Infinity);
-
+        getBounds : function () {
+            if (!this.bounds) {
+                this.bounds = new me.Rect(new me.Vector2d(Infinity, Infinity), -Infinity, -Infinity);
+            } else {
+                // reset the rect with default values
+                this.bounds.pos.set(Infinity, Infinity);
+                this.bounds.resize(-Infinity, -Infinity);
+            }
             var childBounds;
             for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (child.isRenderable) {
@@ -346,12 +349,12 @@
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
                     if (childBounds !== null) {
-                        _bounds.union(childBounds);
+                        this.bounds.union(childBounds);
                     }
                 }
             }
             // TODO : cache the value until any childs are modified? (next frame?)
-            return _bounds;
+            return this.bounds;
         },
 
         /**
@@ -543,9 +546,6 @@
                 mres = [];
             }
             
-            // cache object A bounding rect
-            this._boundsA = objA.getBounds(this._boundsA);
-
             // this should be replace by a list of the 4 adjacent cell around the object requesting collision
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable) {
@@ -562,12 +562,13 @@
 
                     }
                     else if ((obj !== objA) && (!type || (obj.type === type))) {
-                        // cache the obj bounding Rect
-                        this._boundsB = obj.getBounds(this._boundsB);
+                        // quick reference to both object bounding box
+                        var _boundsA = objA.getBounds();
+                        var _boundsB = obj.getBounds();
 
-                        res = this._boundsB["collideWith" + this._boundsA.shapeType].call(
-                            this._boundsB,
-                            this._boundsA
+                        res = _boundsB["collideWith" + _boundsA.shapeType].call(
+                            _boundsB,
+                            _boundsA
                         );
 
                         if (res.x !== 0 || res.y !== 0) {

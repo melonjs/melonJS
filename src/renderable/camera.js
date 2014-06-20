@@ -185,10 +185,6 @@
             this.updateTarget();
         },
 
-        getBounds: function (rect) {
-            return this._super(me.Renderable, "getBounds", [rect]);
-        },
-
         /**
          * set the viewport boundaries (world limit)
          * @name setBounds

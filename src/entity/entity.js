@@ -206,16 +206,10 @@
          * @name getBounds
          * @memberOf me.Entity
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle
+         * @return {me.Rect} this entity bounding box Rectangle object
          */
-        getBounds : function (rect) {
-            if (typeof(rect) !== "undefined") {
-                return rect.setShape(this.body.pos, this.body.width, this.body.height);
-            }
-            else {
-                return this.body.clone();
-            }
+        getBounds : function () {
+            return this.body.getBounds();
         },
         
         /**

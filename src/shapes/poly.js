@@ -30,6 +30,15 @@
             this.pos = new me.Vector2d();
 
             /**
+             * The bounding rectangle for this shape
+             * @protected
+             * @type {me.Rect}
+             * @name bounds
+             * @memberOf me.PolyShape
+             */
+            this.bounds = undefined;
+
+            /**
              * Array of points defining the polyshape
              * @public
              * @type {me.Vector2d[]}
@@ -66,7 +75,8 @@
             this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
-            this.getBounds();
+            // TODO probably implement an updateBounds() function too
+            //this.getBounds();
 
             return this;
         },
@@ -144,23 +154,20 @@
          * @name getBounds
          * @memberOf me.PolyShape
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} the bounding box Rectangle object
+         * @return {me.Rect} this shape bounding box Rectangle object
          */
-        getBounds : function (rect) {
-            var pos = this.pos.clone(), right = 0, bottom = 0;
-            this.points.forEach(function (point) {
-                pos.x = Math.min(pos.x, point.x);
-                pos.y = Math.min(pos.y, point.y);
-                right = Math.max(right, point.x);
-                bottom = Math.max(bottom, point.y);
-            });
-            if (typeof(rect) !== "undefined") {
-                return rect.setShape(pos, right - pos.x, bottom - pos.y);
+        getBounds : function () {
+            if (!this.bounds) {
+                var pos = this.pos.clone(), right = 0, bottom = 0;
+                this.points.forEach(function (point) {
+                    pos.x = Math.min(pos.x, point.x);
+                    pos.y = Math.min(pos.y, point.y);
+                    right = Math.max(right, point.x);
+                    bottom = Math.max(bottom, point.y);
+                });
+                this.bounds = new me.Rect(pos, right - pos.x, bottom - pos.y);
             }
-            else {
-                return new me.Rect(pos, right - pos.x, bottom - pos.y);
-            }
+            return this.bounds;
         },
 
         /**
