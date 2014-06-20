@@ -178,7 +178,6 @@ game.CoinEntity = me.CollectableEntity.extend({
 	 * collision handling
 	 */
 	onCollision : function (res, obj) {
-        console.log(obj);
 		// do something when collide
 		me.audio.play("cling", false);
 		// give some score
