@@ -194,6 +194,9 @@
             // add collision shape to the entity body if defined
             if (typeof (settings.getShape) === "function") {
                 this.body.addShape(settings.getShape());
+            } else {
+                // else make the body bounds match the entity ones
+                this.body.updateBounds(this);
             }
 
         },
@@ -352,10 +355,10 @@
                 // and keeps it in the entity defined bounds
                 var bounds = this.body;
 
-                var x = ~~(this.pos.x + bounds.pos.x + (
+                var x = ~~(this.pos.x + bounds.offset.x + (
                     this.anchorPoint.x * (bounds.width - this.renderable.width)
                 ));
-                var y = ~~(this.pos.y + bounds.pos.y + (
+                var y = ~~(this.pos.y + bounds.offset.y + (
                     this.anchorPoint.y * (bounds.height - this.renderable.height)
                 ));
                 context.translate(x, y);

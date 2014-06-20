@@ -542,6 +542,9 @@
             if (multiple === true) {
                 mres = [];
             }
+            
+            // cache object A bounding rect
+            this._boundsA = objA.getBounds(this._boundsA);
 
             // this should be replace by a list of the 4 adjacent cell around the object requesting collision
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
@@ -559,12 +562,12 @@
 
                     }
                     else if ((obj !== objA) && (!type || (obj.type === type))) {
-                        this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
-                        this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
+                        // cache the obj bounding Rect
+                        this._boundsB = obj.getBounds(this._boundsB);
 
-                        res = this._boundsA["collideWith" + this._boundsB.shapeType].call(
-                            this._boundsA,
-                            this._boundsB
+                        res = this._boundsB["collideWith" + this._boundsA.shapeType].call(
+                            this._boundsB,
+                            this._boundsA
                         );
 
                         if (res.x !== 0 || res.y !== 0) {

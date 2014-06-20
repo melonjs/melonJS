@@ -166,8 +166,8 @@
             context.beginPath();
 
             context.translate(
-                this.pos.x - this.radius.x,
-                this.pos.y - this.radius.y
+                - this.radius.x,
+                - this.radius.y
             );
             context.scale(this.radius.x, this.radius.y);
             context.arc(1, 1, 1, 0, 2 * Math.PI, false);

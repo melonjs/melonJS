@@ -25,6 +25,15 @@
             this.entity = entity;
 
             /**
+             * Offset of the Body from the Entity position
+             * @ignore
+             * @type me.Vector2d
+             * @name offset
+             * @memberOf me.Body
+             */
+            this.offset = new me.Vector2d();
+
+            /**
              * The collision shapes of the entity <br>
              * (note: only shape at index 0 is used in melonJS 1.0.x)
              * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
@@ -195,11 +204,10 @@
             this.collisionMap = me.game.collisionMap;
 
             // call the super constructor
-            this.pos = new me.Vector2d();
             this._super(
                 me.Rect,
                 "init", [
-                    this.pos,
+                    this.entity.pos,
                     entity.width,
                     entity.height
                 ]
@@ -255,12 +263,14 @@
          * @memberOf me.Body
          * @function
          */
-        updateBounds : function () {
+        updateBounds : function (rect) {
             // TODO : take in account multiple shape
-            var _bounds = this.getShape().getBounds();
+            var _bounds = rect || this.getShape().getBounds();
             // adjust the body bounding rect
-            this.pos.setV(_bounds.pos);
+            this.offset.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
+            // calculate the body absolute position
+            this.pos.setV(this.entity.pos).add(this.offset);
         },
 
         /**
@@ -452,11 +462,9 @@
             // Adjust position only on collidable object
             var collision;
             if (this.entity.collidable) {
-                // save the collision box offset
-                var offsetX = this.pos.x;
-                var offsetY = this.pos.y;
-                //translate the body pos to real coordinates
-                this.translateV(this.entity.pos);
+
+                // calculate the body absolute position
+                this.pos.setV(this.entity.pos).add(this.offset);
 
                 // check for collision
                 collision = this.collisionMap.checkCollision(this, this.vel);
@@ -554,15 +562,8 @@
                 }
 
                 // translate back to set the body relative to the entity
-                 // temporary stuff until ticket #103 is done (this function will disappear anyway)
-                this.entity.pos.set(
-                    this.pos.x - offsetX,
-                    this.pos.y - offsetX
-                );
-                this.pos.set(
-                    offsetX,
-                    offsetY
-                );
+                // temporary stuff until ticket #103 is done (this function will disappear anyway)
+                this.entity.pos.setV(this.pos).sub(this.offset);
             }
 
             // update player entity position
