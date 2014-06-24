@@ -10,6 +10,10 @@ game.ShapeObject = me.Entity.extend({
 
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
+        
+        //register on mouse/touch event
+        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
+        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
     },
 
     /**
@@ -17,9 +21,9 @@ game.ShapeObject = me.Entity.extend({
      */
     mouseMove: function (event) {
         this.hover = this.inViewport && 
-                     this.body.getShape().containsPoint(
+                     this.body.getBounds().containsPoint(
                         // shape object position is relative to the entity
-                        event.gameX - this.pos.x, event.gameY - this.pos.y
+                        event.gameX, event.gameY
                      );
 
         if (this.canMove) {
@@ -28,14 +32,18 @@ game.ShapeObject = me.Entity.extend({
             this.pos.sub(this.grabOffset);
         }
     },
+    
 
     // mouse down function
     onSelect : function (event) {
-        this.grabOffset.set(event.gameX, event.gameY);
-        this.grabOffset.sub(this.pos);
-        this.canMove = true;
-        // don't propagate the event furthermore
-        return false;
+        if (this.body.getShape().shapeType === "Rectangle" || this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+            this.grabOffset.set(event.gameX, event.gameY);
+            this.grabOffset.sub(this.pos);
+            this.canMove = true;
+            // don't propagate the event furthermore
+            return false;
+        }
+        return true;
     },
 
     // mouse up function
@@ -51,6 +59,7 @@ game.ShapeObject = me.Entity.extend({
     update: function () {
         return true;
     },
+    
     /**
      * draw the square
      */
@@ -70,18 +79,13 @@ game.Square = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a rectangular shape
-        this.body.addShape(new me.Rect({x:0, y:0}, this.width, this.height));
+        this.body.addShape(new me.Rect(new me.Vector2d(0, 0), this.width, this.height));
 
         // pienapple
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 24);
         this.renderable.offset.x = 93;
         this.renderable.offset.y = 151;
         this.renderable.resize(7.5);
-
-        //register on mouse/touch event
-        // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
     }
 });
 
@@ -94,19 +98,13 @@ game.Circle = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add an ellipse shape
-        this.body.addShape(new me.Ellipse({x:0, y:0}, this.width, this.height));
+        this.body.addShape(new me.Ellipse(new me.Vector2d(0, 0), this.width, this.height));
 
         // tomato
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);
         this.renderable.offset.x = 65;
         this.renderable.offset.y = 153;
         this.renderable.resize(7.5);
-
-        //register on mouse/touch event
-        // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
-
     }
 });
 
@@ -119,7 +117,7 @@ game.Poly = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a polygone shape
-        this.body.addShape(new me.PolyShape({x:0, y:0}, [
+        this.body.addShape(new me.PolyShape(new me.Vector2d(0, 0), [
             // draw a star
             {x:0, y:0},
             {x:28, y:60},
@@ -133,47 +131,10 @@ game.Poly = game.ShapeObject.extend({
             {x:-28, y:60}
         ], true));
 
-        // cache a copy of the corresponding shape bounds
-        this.polyBounds = this.body.getShape().getBounds();
-
         // star
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
         this.renderable.resize(7.5);
-
-        //register on mouse/touch event
-        // (only register in child object once the collision shape is defined)
-        me.input.registerPointerEvent('pointerdown', this, this.onSelect.bind(this));
-        me.input.registerPointerEvent('pointerup', this, this.onRelease.bind(this));
-    },
-
-    // mouse down function
-    onSelect : function (event) {
-        // recheck using the polygone shape
-        if (this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-            return this._super(game.ShapeObject, 'onSelect', [event]);
-        }
-        return true;
-    },
-
-    /**
-     * mousemove function
-     */
-    mouseMove: function (event) {
-        // shape object position is relative to the entity
-        var x = event.gameX - this.pos.x, y = event.gameY - this.pos.y; 
-
-        this.hover = this.inViewport &&
-                     // for polyshape first use the less expensive 
-                     // test on the corresponding bounding rectangle
-                     this.polyBounds.containsPoint(x, y) &&
-                     this.body.getShape().containsPoint(x, y);
-
-        if (this.canMove) {
-            // follow the mouse/finger
-            this.pos.set(event.gameX, event.gameY);
-            this.pos.sub(this.grabOffset);
-        }
     }
 });
