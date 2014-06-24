@@ -107,6 +107,12 @@
 
             this.autoSort = true;
             this.transform.identity();
+            
+            /**
+             * Used by the debug panel plugin
+             * @ignore
+             */
+            this.drawCount = 0;
         },
 
 
@@ -732,7 +738,7 @@
         draw : function (context, rect) {
             var viewport = me.game.viewport;
             var isFloating = false;
-
+            
             this.drawCount = 0;
 
             context.save();
@@ -768,7 +774,7 @@
                     if (isFloating === true) {
                         context.restore();
                     }
-
+                    
                     this.drawCount++;
                 }
             }
