@@ -21,22 +21,31 @@ game.ShapeObject = me.Entity.extend({
      */
     mouseMove: function (event) {
         this.hover = this.inViewport && 
+                     // this is a globa; event, so first do 
+                     // a basic rectangle detection to save some cycles
                      this.body.getBounds().containsPoint(
-                        // shape object position is relative to the entity
                         event.gameX, event.gameY
+                     ) &&
+                     // check the shape if non rectangular
+                     this.body.getShape().containsPoint(
+                        // shape object position is relative to the entity
+                        event.gameX - this.pos.x, event.gameY - this.pos.y
                      );
 
         if (this.canMove) {
             // follow the mouse/finger
             this.pos.set(event.gameX, event.gameY);
             this.pos.sub(this.grabOffset);
+            // update the body bounds
+            this.body.updateBounds();
         }
     },
     
 
     // mouse down function
     onSelect : function (event) {
-        if (this.body.getShape().shapeType === "Rectangle" || this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+        // the pointer event system will use the object bounding rect, check then with with the exact shape
+        if (this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
             this.grabOffset.set(event.gameX, event.gameY);
             this.grabOffset.sub(this.pos);
             this.canMove = true;
