@@ -207,7 +207,7 @@
             this._super(
                 me.Rect,
                 "init", [
-                    this.entity.pos,
+                    entity.pos,
                     entity.width,
                     entity.height
                 ]

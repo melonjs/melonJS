@@ -194,16 +194,17 @@
 
                 // check if debug mode is enabled
                 if (me.debug.renderHitBox) {
+                    context.save();
                     // draw the bounding rect shape
                     this.body.getBounds().draw(context, "red");
-                     if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
-                        // draw the origingal shape if different from the  bounding rect
-                        context.save();
+                    context.translate(this.pos.x, this.pos.y);
+                    if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
+                        // draw the original shape if different from the  bounding rect
                         var shape = this.body.getShape();
-                        context.translate(this.pos.x + shape.pos.x, this.pos.y + shape.pos.y);
+                        context.translate(shape.pos.x, shape.pos.y);
                         shape.draw(context, "red");
-                        context.restore();
                     }
+                    context.restore();
                 }
 
                 if (me.debug.renderVelocity) {
