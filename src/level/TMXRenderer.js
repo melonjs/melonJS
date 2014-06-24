@@ -86,19 +86,19 @@
          */
         drawTileLayer : function (context, layer, rect) {
             // get top-left and bottom-right tile position
-            var start = this.pixelToTileCoords(rect.pos.x,
-                                               rect.pos.y).floorSelf();
-
-            var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
-                                             rect.pos.y + rect.height + this.tileheight).ceilSelf();
-
+            var startX = ~~(rect.pos.x / this.tilewidth);
+            var startY = ~~(rect.pos.y / this.tileheight);
+            
+            var endX = Math.ceil((rect.pos.x + rect.width + this.tilewidth)  / this.tilewidth);
+            var endY = Math.ceil((rect.pos.y + rect.height + this.tileheight) / this.tileheight);
+            
             //ensure we are in the valid tile range
-            end.x = end.x > this.cols ? this.cols : end.x;
-            end.y = end.y > this.rows ? this.rows : end.y;
+            endX = endX > this.cols ? this.cols : endX;
+            endY = endY > this.rows ? this.rows : endY;
 
             // main drawing loop
-            for (var y = start.y; y < end.y; y++) {
-                for (var x = start.x; x < end.x; x++) {
+            for (var y = startY; y < endY; y++) {
+                for (var x = startX; x < endX; x++) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
                         this.drawTile(context, x, y, tmxTile, tmxTile.tileset);
