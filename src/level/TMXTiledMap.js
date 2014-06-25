@@ -86,7 +86,9 @@
             // loading flag
             this.initialized = false;
 
-            this._super(me.Renderable, "init", [new me.Vector2d(), 0, 0]);
+			var zeroPoint = me.pool.pull("me.Vector2d");
+            this._super(me.Renderable, "init", [zeroPoint, 0, 0]);
+			me.pool.push(zeroPoint);
         },
         
         /**

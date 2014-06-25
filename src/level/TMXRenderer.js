@@ -41,8 +41,9 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
-            return new me.Vector2d(x / this.tilewidth,
-                                   y / this.tileheight);
+            return me.pool.pull("me.Vector2d",
+								x / this.tilewidth,
+                                y / this.tileheight);
         },
 
         /**
@@ -50,8 +51,9 @@
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(x * this.tilewidth,
-                                   y * this.tileheight);
+            return me.pool.pull("me.Vector2d",
+								x * this.tilewidth,
+                                y * this.tileheight);
         },
 
         /**
@@ -86,25 +88,28 @@
          */
         drawTileLayer : function (context, layer, rect) {
             // get top-left and bottom-right tile position
-            var startX = ~~(rect.pos.x / this.tilewidth);
-            var startY = ~~(rect.pos.y / this.tileheight);
-            
-            var endX = Math.ceil((rect.pos.x + rect.width + this.tilewidth)  / this.tilewidth);
-            var endY = Math.ceil((rect.pos.y + rect.height + this.tileheight) / this.tileheight);
-            
+            var start = this.pixelToTileCoords(rect.pos.x,
+                                               rect.pos.y).floorSelf();
+
+            var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
+                                             rect.pos.y + rect.height + this.tileheight).ceilSelf();
+
             //ensure we are in the valid tile range
-            endX = endX > this.cols ? this.cols : endX;
-            endY = endY > this.rows ? this.rows : endY;
+            end.x = end.x > this.cols ? this.cols : end.x;
+            end.y = end.y > this.rows ? this.rows : end.y;
 
             // main drawing loop
-            for (var y = startY; y < endY; y++) {
-                for (var x = startX; x < endX; x++) {
+            for (var y = start.y; y < end.y; y++) {
+                for (var x = start.x; x < end.x; x++) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
                         this.drawTile(context, x, y, tmxTile, tmxTile.tileset);
                     }
                 }
             }
+			
+			me.pool.push(start);
+			me.pool.push(end);
         }
     });
 
@@ -151,7 +156,7 @@
             var tileY = y / this.tileheight;
             var tileX = x / this.tilewidth;
 
-            return new me.Vector2d(tileY + tileX, tileY - tileX);
+            return me.pool.pull("me.Vector2d", tileY + tileX, tileY - tileX);
         },
 
         /**
@@ -159,9 +164,9 @@
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(
-                (x - y) * this.hTilewidth + this.originX,
-                (x + y) * this.hTileheight
+            return me.pool.pull("me.Vector2d",
+								(x - y) * this.hTilewidth + this.originX,
+								(x + y) * this.hTileheight
             );
         },
 
@@ -180,6 +185,7 @@
             obj.x = isoPos.x;
             obj.y = isoPos.y;
 
+			me.pool.push(isoPos);
             //return isoPos;
         },
 
@@ -249,7 +255,7 @@
             var shifted = inUpperHalf ^ inLeftHalf;
 
             // initialize the columItr vector
-            var columnItr = rowItr.clone();
+            var columnItr = me.pool.pull("me.Vector2d", rowItr.x, rowItr.y);
 
             // main drawing loop
             for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
@@ -283,6 +289,12 @@
                     shifted = false;
                 }
             }
+			
+			me.pool.push(rowItr);
+			me.pool.push(columnItr);
+			me.pool.push(TileEnd);
+			me.pool.push(rectEnd);
+			me.pool.push(startPos);
         }
     });
 })();

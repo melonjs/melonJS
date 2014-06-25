@@ -355,13 +355,15 @@
             // Emitter will always update
             this.isRenderable = false;
             // call the super constructor
+			var pos = me.pool.pull("me.Vector2d", x, y);
             this._super(
                 me.Rect,
                 "init",
-                [new me.Vector2d(x, y),
+                [pos,
                 Infinity,
                 Infinity]
             );
+			me.pool.push(pos);
 
             // don't sort the particles by z-index
             this.autoSort = false;

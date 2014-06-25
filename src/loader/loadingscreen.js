@@ -50,7 +50,9 @@
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
         init : function (x, y) {
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y), 100, 85]);
+			var pos = me.pool.pull("me.Vector2d", x, y);
+            this._super(me.Renderable, "init", [pos, 100, 85]);
+			me.pool.push(pos);
         },
 
         // 100x85 Logo
@@ -96,7 +98,9 @@
     var TextLogo = me.Renderable.extend({
         // constructor
         init : function (w, h) {
-            this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
+			var zeroPoint = me.pool.pull("me.Vector2d");
+            this._super(me.Renderable, "init", [zeroPoint, w, h]);
+			me.pool.push(zeroPoint);
             this.logo1 = new me.Font("century gothic", 32, "white", "middle");
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();
@@ -132,11 +136,13 @@
             me.game.world.addChild(new me.ColorLayer("background", "#202020", 0));
 
             // progress bar
+			var zeroPoint = me.pool.pull("me.Vector2d");
             var progressBar = new ProgressBar(
-                new me.Vector2d(),
+                zeroPoint,
                 me.video.getWidth(),
                 me.video.getHeight()
             );
+			me.pool.push(zeroPoint);
             this.handle = me.event.subscribe(
                 me.event.LOADER_PROGRESS,
                 progressBar.onProgressUpdate.bind(progressBar)

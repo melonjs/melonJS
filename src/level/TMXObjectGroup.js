@@ -317,18 +317,26 @@
          * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
          */
         getShape : function () {
+			var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+			
             // add an ellipse shape
             if (this.isEllipse === true) {
-                return new me.Ellipse(new me.Vector2d(0, 0), this.width, this.height);
+                var ellipse = new me.Ellipse(zeroPoint, this.width, this.height);
+				me.pool.push(zeroPoint);
+				return ellipse;
             }
 
             // add a polyshape
             if ((this.isPolygon === true) || (this.isPolyline === true)) {
-                return new me.PolyShape(new me.Vector2d(0, 0), this.points, this.isPolygon);
+                var polyShape = new me.PolyShape(zeroPoint, this.points, this.isPolygon);
+				me.pool.push(zeroPoint);
+				return polyShape;
             }
 
             // it's a rectangle
-            return new me.Rect(new me.Vector2d(0, 0), this.width, this.height);
+            var rectangle = new me.Rect(zeroPoint, this.width, this.height);
+			me.pool.push(zeroPoint);
+			return rectangle;
         },
         /**
          * getObjectPropertyByName

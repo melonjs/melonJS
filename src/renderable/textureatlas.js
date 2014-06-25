@@ -98,13 +98,15 @@
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
                 if (frame.hasOwnProperty("filename")) {
+					var framePos = me.pool.pull("me.Vector2d", frame.frame.x, frame.frame.y);
+					var sourcePos = me.pool.pull("me.Vector2d", frame.spriteSourceSize.x, frame.spriteSourceSize.y);
                     atlas[frame.filename] = {
                         frame: new me.Rect(
-                            new me.Vector2d(frame.frame.x, frame.frame.y),
+                            framePos,
                             frame.frame.w, frame.frame.h
                         ),
                         source: new me.Rect(
-                            new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
+                            sourcePos,
                             frame.spriteSourceSize.w, frame.spriteSourceSize.h
                         ),
                         // non trimmed size, but since we don't support trimming both value are the same
@@ -112,6 +114,8 @@
                         rotated : frame.rotated === true,
                         trimmed : frame.trimmed === true
                     };
+					me.pool.push(framePos);
+					me.pool.push(sourcePos);
                 }
             });
             return atlas;

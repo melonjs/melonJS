@@ -44,8 +44,11 @@
              * the tile transformation matrix (if defined)
              * @ignore
              */
+
             this.transform = null;
-            this._super(me.Rect, "init", [new me.Vector2d(x * w, y * h), w, h]);
+			var origin = me.pool.pull("me.Vector2d", x * w, y * h);
+            this._super(me.Rect, "init", [origin, w, h]);
+			me.pool.push(origin);
 
             // Tile col / row pos
             this.col = x;
