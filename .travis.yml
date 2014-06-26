@@ -10,7 +10,7 @@ before_script:
   - "gem install travis-artifacts"
 
 after_success:
-  - "travis-artifacts upload --path build/melonJS-1.1.0.js"
+  - "travis-artifacts upload --path build/melonJS-1.1.0.js --target-path artifacts/$TRAVIS_BRANCH/$TRAVIS_JOB_ID"
 
 env:
   global:
