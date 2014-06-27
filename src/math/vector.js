@@ -397,6 +397,21 @@
         },
 
         /**
+         * return a cloned copy of this vector, using the object pool
+         * @name cloneFromPool
+         * @memberOf me.Vector2d
+         * @example
+         * var clone = vect.cloneFromPool();
+         * // ... use clone ...
+         * me.pool.push(clone);
+         * @function
+         * @return {me.Vector2d} cloned vector which needs to be pushed back into me.pool
+         */
+        cloneFromPool : function () {
+            return me.pool.pull("me.Vector2d", this.x, this.y);
+        },
+
+        /**
          * convert the object to a string representation
          * @name toString
          * @memberOf me.Vector2d

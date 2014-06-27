@@ -19,9 +19,7 @@
      * A global "translation context" for nested ObjectContainers
      * @ignore
      */
-	//var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
     var globalTranslation = new me.Rect(new me.Vector2d(0, 0), 0, 0);
-	//me.pool.push(zeroPoint);
 
     /**
      * A global "floating children" reference counter for nested ObjectContainers

@@ -255,7 +255,7 @@
             var shifted = inUpperHalf ^ inLeftHalf;
 
             // initialize the columItr vector
-            var columnItr = me.pool.pull("me.Vector2d", rowItr.x, rowItr.y);
+            var columnItr = rowItr.cloneFromPool();
 
             // main drawing loop
             for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
