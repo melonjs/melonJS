@@ -130,7 +130,7 @@
                 this.transform.d *= -1;
                 this.transform.translate(0, (this.flipAD ? this.width : this.height));
             }
-        },
+        }
     });
 
     /**
