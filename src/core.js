@@ -729,10 +729,25 @@ window.me = window.me || {};
      * @param {Prototype} prototype New prototype for the target object.
      * @return {Object} Modified target object.
      */
-    Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
-        obj.__proto__ = prototype;
-        return obj;
-    };
+    if (!Object.setPrototypeOf) {
+        // IE11+ is identified through "Trident", so the following
+        // will only detect IE10 and lower versions.
+        if (navigator.userAgent.match(/MSIE/i)) {
+            Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+                /** IEx fix - copy object methods from the prototype to the new object **/
+                for (var prop in prototype) {
+                    obj[prop] = prototype[prop];
+                }
+                return obj;
+            };
+        } else {
+            // regular polyfill
+            Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
+                obj.__proto__ = prototype;
+                return obj;
+            };
+        }
+    }
     /* jshint ignore:end */
 
     /**
