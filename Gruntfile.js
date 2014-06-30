@@ -74,15 +74,18 @@ module.exports = function (grunt) {
 
         jshint : {
             options : {
-                jshintrc : ".jshintrc",
-                ignores : [
-                    "src/vendors/kami.js"
-                ]
+                jshintrc : ".jshintrc"
             },
 
             beforeConcat : {
                 files : {
                     src : [ testSpecs, sourceFiles, "Gruntfile.js" ]
+                }
+            },
+
+            afterConcat : {
+                field : {
+                    src : [ "<%= path.main %>" ]
                 }
             }
         },
@@ -154,7 +157,7 @@ module.exports = function (grunt) {
     // Default task.
     grunt.registerTask("default", [ "test", "uglify" ]);
     grunt.registerTask("build", [ "lint", "uglify" ]);
-    grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist"]);
+    grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
 };

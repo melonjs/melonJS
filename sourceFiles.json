@@ -51,7 +51,6 @@
     "src/vendors/tween.js",
     "src/vendors/minpubsub.src.js",
     "src/vendors/howler.js",
-    "src/vendors/kami.js",
     "src/plugin/plugin.js",
     "src/entity/draggable.js",
     "src/entity/droptarget.js",

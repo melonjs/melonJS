@@ -72,8 +72,14 @@
          *    return;
          * }
          */
-        api.init = function (wrapperid, game_width, game_height, doublebuffering, scale, aspectRatio) {
+        api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
             // ensure melonjs has been properly initialized
+            switch (renderer) {
+                case me.video.CANVAS:
+                    break;
+                case me.video.WEBGL:
+                    break;
+            }
             if (!me.initialized) {
                 throw new api.Error("me.video.init() called before engine initialization.");
             }
@@ -583,4 +589,8 @@
         // return our api
         return api;
     })();
+
+    me.video.CANVAS = 0;
+    me.video.WEBGL = 1;
+
 })();

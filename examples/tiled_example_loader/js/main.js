@@ -10,7 +10,7 @@ var game = {
 	 */
 	onload: function() {
 		
-		if (!me.video.init('jsapp', 800, 480)) {
+		if (!me.video.init('jsapp', me.video.CANVAS, 800, 480)) {
 			alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
 			return;
 		}

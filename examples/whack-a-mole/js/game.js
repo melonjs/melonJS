@@ -28,7 +28,7 @@ var game = {
 		me.sys.fps = 30;
 				
 		// initialize the video
-		if (!me.video.init('screen', 1024, 768, true ,'auto')) {
+		if (!me.video.init('screen', me.video.CANVAS, 1024, 768, true ,'auto')) {
 			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
 			return;
 		};
