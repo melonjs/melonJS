@@ -33,6 +33,7 @@
     "src/font/bitmapfont.js",
     "src/audio/audio.js",
     "src/video/video.js",
+    "src/video/webgl_renderer.js",
     "src/input/input.js",
     "src/input/keyboard.js",
     "src/input/pointer.js",

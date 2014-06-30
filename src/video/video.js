@@ -59,6 +59,7 @@
          * @memberOf me.video
          * @function
          * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
+         * @param {RendererType} me.video.CANVAS, me.video.WEBGL. State which renderer you prefer to use.
          * @param {Number} width game width
          * @param {Number} height game height
          * @param {Boolean} [double_buffering] enable/disable double buffering
@@ -72,14 +73,8 @@
          *    return;
          * }
          */
-        api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
+        api.init = function (wrapperid, rendererType, game_width, game_height, doublebuffering, scale, aspectRatio) {
             // ensure melonjs has been properly initialized
-            switch (renderer) {
-                case me.video.CANVAS:
-                    break;
-                case me.video.WEBGL:
-                    break;
-            }
             if (!me.initialized) {
                 throw new api.Error("me.video.init() called before engine initialization.");
             }
@@ -133,7 +128,7 @@
 
             // create the main screen canvas
             canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
-
+            
             // add our canvas
             if (wrapperid) {
                 wrapper = document.getElementById(wrapperid);
@@ -149,9 +144,6 @@
             if (!canvas.getContext) {
                 return false;
             }
-
-            // get the 2D context
-            context2D = api.getContext2d(canvas);
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
@@ -173,6 +165,16 @@
             if (window.getComputedStyle) {
                 var style = window.getComputedStyle(canvas, null);
                 me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
+            }
+
+            switch (renderType) {
+                case me.video.CANVAS:
+                    // get the 2D context
+                    context2D = api.getContext2d(canvas);
+                    break;
+                case me.video.WEBGL:
+                    webGLRenderer = me.webGLRenderer.init();
+                    break;
             }
 
             // trigger an initial resize();
