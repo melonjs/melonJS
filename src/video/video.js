@@ -18,6 +18,7 @@
         // internal variables
         var canvas = null;
         var context2D = null;
+        var webGLRenderer = null;
         var backBufferCanvas = null;
         var backBufferContext2D = null;
         var wrapper = null;
@@ -152,7 +153,7 @@
             }
 
             // create the back buffer if we use double buffering
-            if (double_buffering) {
+            if (double_buffering && renderType === me.video.CANVAS) {
                 backBufferCanvas = api.createCanvas(game_width, game_height, false);
                 backBufferContext2D = api.getContext2d(backBufferCanvas);
             }
@@ -428,15 +429,30 @@
             // update the global scale variable
             me.sys.scale.set(scaleX, scaleY);
 
-            // apply the new value
-            canvas.width = game_width_zoom = backBufferCanvas.width * scaleX;
-            canvas.height = game_height_zoom = backBufferCanvas.height * scaleY;
-            // adjust CSS style for High-DPI devices
-            if (me.device.getPixelRatio() > 1) {
-                canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
-                canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
+            var width = game_width_zoom = backBufferCanvas.width * scaleX;
+            var height = game_height_zoom = backBufferCanvas.height * scaleY;
+
+            if (webGLRenderer === null) {
+                // apply the new value
+                canvas.width = width
+                canvas.height = height;
+                
+                // adjust CSS style for High-DPI devices
+                if (me.device.getPixelRatio() > 1) {
+                    canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
+                    canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
+                }
+                me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
             }
-            me.video.setImageSmoothing(context2D, me.sys.scalingInterpolation);
+            else {
+                me.webGLRenderer.context.resize(width, height);
+                // adjust CSS style for High-DPI devices
+                if (me.device.getPixelRatio() > 1) {
+                    canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
+                    canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
+                }
+            }
+            
 
             // make sure we have the correct relative canvas position cached
             me.input._offset = me.video.getPos();
