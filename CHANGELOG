@@ -5,6 +5,10 @@ Version History
 * Core : New CI and unit testing frameworks
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
 
+1.0.2
+* Core : fixed general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
+* Input : fixed event detection on Chrome 35+
+
 1.0.1
 * Core : removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
 * Entity : disable falling flag when gravity is disabled
