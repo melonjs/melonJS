@@ -37,8 +37,7 @@
 
         /** @ignore */
         init : function (x, y) {
-            this.x = x || 0;
-            this.y = y || 0;
+            return this.set(x || 0, y || 0);
         },
 
         /**
@@ -51,6 +50,9 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         set : function (x, y) {
+            if (x !== +x || y !== +y) {
+                throw "melonjs: invalid x,y parameters for me.Vector2d (not a number)";
+            }
             this.x = x;
             this.y = y;
             return this;
