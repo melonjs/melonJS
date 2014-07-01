@@ -234,15 +234,17 @@
          * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
          */
         follow : function (target, axis) {
-            if (target instanceof me.ObjectEntity) {
+            if (typeof target.pos === 'object') {
                 this.target = target.pos;
-            }
-            else if (target instanceof me.Vector2d) {
+            } else {
                 this.target = target;
             }
-            else {
+            
+            // make sure the target contains x/y properties
+            if (typeof this.target.x === 'undefined' || typeof this.target.y === 'undefined') {
                 throw "melonJS: invalid target for viewport.follow";
             }
+            
             // if axis is null, camera is moved on target center
             this.follow_axis = (
                 typeof(axis) === "undefined" ? this.AXIS.BOTH : axis

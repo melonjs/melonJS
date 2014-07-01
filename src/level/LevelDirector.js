@@ -113,7 +113,7 @@
                         if (me.game.mergeGroup === true && obj.isRenderable === true) {
                             obj.setOpacity(obj.getOpacity() * group.opacity);
                             // and to child renderables if any
-                            if (obj.renderable instanceof me.Renderable) {
+                            if (null !== obj.renderable && "object" === typeof obj.renderable && obj.renderable.isRenderable === true) {
                                 obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                             }
                         }
