@@ -19,22 +19,7 @@
     {
         /** @ignore */
         init : function (x, y) {
-            /**
-             * x value of the vector
-             * @public
-             * @type Number
-             * @name x
-             * @memberOf me.Vector2d
-             */
-            this.x = x || 0;
-            /**
-             * y value of the vector
-             * @public
-             * @type Number
-             * @name y
-             * @memberOf me.Vector2d
-             */
-            this.y = y || 0;
+            return this.set(x || 0, y || 0);
         },
 
         /**
@@ -47,8 +32,28 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         set : function (x, y) {
+            if (x !== +x || y !== +y) {
+                throw "melonjs: invalid x,y parameters for me.Vector2d (not a number)";
+            }
+
+            /**
+             * x value of the vector
+             * @public
+             * @type Number
+             * @name x
+             * @memberOf me.Vector2d
+             */
             this.x = x;
+
+            /**
+             * y value of the vector
+             * @public
+             * @type Number
+             * @name y
+             * @memberOf me.Vector2d
+             */
             this.y = y;
+
             return this;
         },
 

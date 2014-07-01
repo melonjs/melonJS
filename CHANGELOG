@@ -6,7 +6,8 @@ Version History
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
 
 1.0.2
-* Core : fixed general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
+* Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
+* Geometry : added basic type check for the `me.Vector2d` constructor
 * Input : fixed event detection on Chrome 35+
 
 1.0.1
