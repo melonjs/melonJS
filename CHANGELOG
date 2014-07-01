@@ -1,6 +1,7 @@
 Version History
 ---------------
 1.0.2
+* Core : fixed general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
 * Input : fixed event detection on Chrome 35+
 
 1.0.1
