@@ -234,14 +234,14 @@
          * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
          */
         follow : function (target, axis) {
-            if (typeof target.pos === 'object') {
+            if (typeof target.pos === "object") {
                 this.target = target.pos;
             } else {
                 this.target = target;
             }
             
             // make sure the target contains x/y properties
-            if (typeof this.target.x === 'undefined' || typeof this.target.y === 'undefined') {
+            if (typeof this.target.x === "undefined" || typeof this.target.y === "undefined") {
                 throw "melonJS: invalid target for viewport.follow";
             }
             
