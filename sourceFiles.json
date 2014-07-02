@@ -32,6 +32,7 @@
     "src/font/font.js",
     "src/font/bitmapfont.js",
     "src/audio/audio.js",
+    "src/video/canvas_renderer.js",
     "src/video/video.js",
     "src/video/webgl_renderer.js",
     "src/input/input.js",
