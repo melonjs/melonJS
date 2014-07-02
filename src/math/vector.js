@@ -33,7 +33,9 @@
          */
         set : function (x, y) {
             if (x !== +x || y !== +y) {
-                throw "melonjs: invalid x,y parameters for me.Vector2d (not a number)";
+                throw new me.Vector2d.Error(
+                    "invalid x,y parameters (not a number)"
+                );
             }
 
             /**
@@ -410,6 +412,20 @@
          */
         toString : function () {
             return "x:" + this.x + ",y:" + this.y;
+        }
+    });
+
+    /**
+     * Base class for Vector2d exception handling.
+     * @name Error
+     * @memberOf me.Vector2d
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Vector2d.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.Vector2dError";
         }
     });
 })();
