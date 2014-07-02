@@ -4,14 +4,15 @@
         var api = {},
         canvas = null,
         WebGLContext = null,
-        gl = null;
+        gl = null,
+        color = null;
 
         api.init = function (width, height, c) {
             canvas = c;
             WebGLContext = require("kami").WebGLContext;
             this.context = new WebGLContext(width, height, canvas);
             gl = this.context.gl;
-            this.color = new me.Color();
+            color = new me.Color();
         };
 
         api.clearSurface = function (col) {
