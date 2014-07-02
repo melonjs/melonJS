@@ -29,7 +29,7 @@ a:active {
 {
 	width: 100%;
 	height: 110px;
-	background-color: #667F03;
+	background-color: #5EAE0E;
 }
 
 #logo_text
@@ -39,13 +39,13 @@ a:active {
 	width: 825px;
 	height: 100%;
 	padding-left: 1em;
-	border-left: 1px solid #667F03;
-	background: #667F03 url(../images/banner.png) 0 -40px no-repeat;
+	border-left: 1px solid #5EAE0E;
+	background: #5EAE0E;
 }
 
 #logo h1, #logo h2
 {
-	font: normal 300% 'century gothic', arial, sans-serif;
+	font: normal 300% 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	border-bottom: 0;
 	text-transform: none;
 	margin: 0;
@@ -84,8 +84,8 @@ a:active {
     padding: 1em 0 1em 1em;
     min-width: 825px;
     margin-left: 240px;
-    border-left: 1px solid #667F03;
-    border-bottom: 1px solid #667F03;
+    border-left: 1px solid #5EAE0E;
+    border-bottom: 1px solid #5EAE0E;
     background-color: #fff;
 }
 
@@ -99,7 +99,7 @@ section
 
 header
 {
-	background-color: #667F03;
+	background-color: #5EAE0E;
 	color: #fff;
 	padding: 3px;
 }
@@ -133,7 +133,7 @@ nav ul {
 }
 
 nav h2 a, nav h2 a:visited {
-    color: #667F03;
+    color: #5EAE0E;
     text-decoration: none;
 }
 
@@ -197,7 +197,7 @@ h4
 	letter-spacing: -0.01em;
 	margin-top: 16px;
 	margin: 18px 0 3px 0;
-	color: #667F03;
+	color: #5EAE0E;
 }
 
 h5, .container-overview .subsection-title
@@ -242,7 +242,7 @@ h6
 }
 
 .details { margin-top: 14px; }
-.details dt { width:100px; float:left; border-left: 2px solid #667F03; padding-left: 10px;  padding-top: 6px; }
+.details dt { width:100px; float:left; border-left: 2px solid #5EAE0E; padding-left: 10px;  padding-top: 6px; }
 .details dd { margin-left: 50px; }
 .details ul { margin: 0; }
 .details ul { list-style-type: none; }
@@ -264,7 +264,7 @@ h6
 
 .prettyprint
 {
-	border: 1px solid #667F03;
+	border: 1px solid #5EAE0E;
 	width: 80%;
     overflow: auto;
 }
@@ -283,7 +283,7 @@ h6
 	margin: 0;
 	background-color: #fff;
 	color: #000;
-	border-left: 3px #667F03 solid;
+	border-left: 3px #5EAE0E solid;
 }
 
 .params, .props
@@ -294,14 +294,14 @@ h6
 }
 
 .params .name, .props .name, .name code {
-	color: #667F03;
+	color: #5EAE0E;
 	font-family: Consolas, 'Lucida Console', Monaco, monospace;
 	font-size: 100%;
 }
 
 .params td, .params th, .props td, .props th
 {
-	border: 1px solid #667F03;
+	border: 1px solid #5EAE0E;
 	margin: 0px;
 	text-align: left;
 	vertical-align: top;
@@ -311,13 +311,13 @@ h6
 
 .params thead tr, .props thead tr
 {
-	background-color: #667F03;
+	background-color: #5EAE0E;
 	color: #fff;
 	font-weight: bold;
 }
 
 .params th, .props th { border-right: 1px solid #3d4d02; }
-.params thead .last, .props thead .last { border-right: 1px solid #667F03; }
+.params thead .last, .props thead .last { border-right: 1px solid #5EAE0E; }
 
 .disabled {
     color: #454545;
