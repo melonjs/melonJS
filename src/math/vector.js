@@ -425,7 +425,7 @@
     me.Vector2d.Error = me.Error.extend({
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Vector2dError";
+            this.name = "me.Vector2d.Error";
         }
     });
 })();
