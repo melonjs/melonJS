@@ -22,8 +22,8 @@ module.exports = function (grunt) {
         copy : {
             dist : {
                 files : [{
-                    src : "src/vendor/kami.js",
-                    dest : "build/"
+                    src : "src/vendors/kami.js",
+                    dest : "build/kami.js"
                 }]
             }
         },
@@ -169,7 +169,7 @@ module.exports = function (grunt) {
     grunt.loadTasks("tasks");
 
     // Default task.
-    grunt.registerTask("default", [ "test", "uglify" ]);
+    grunt.registerTask("default", [ "test", "copy", "uglify" ]);
     grunt.registerTask("build", [ "lint", "copy", "uglify" ]);
     grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);

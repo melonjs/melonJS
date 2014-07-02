@@ -32,11 +32,10 @@
         };
 
         api.resize = function (scaleX, scaleY) {
+            canvas = this.context.view;
             var gameWidthZoom = canvas.width * scaleX;
             var gameHeightZoom = canvas.height * scaleY;
-            canvas.width = gameWidthZoom;
-            canvas.height = gameHeightZoom;
-            gl.viewport(0, 0, canvas.width, canvas.height);
+            this.context.resize(gameWidthZoom, gameHeightZoom);
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";

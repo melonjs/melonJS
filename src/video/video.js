@@ -141,18 +141,6 @@
                 return false;
             }
 
-            // adjust CSS style for High-DPI devices
-            if (me.device.getPixelRatio() > 1) {
-                canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
-                canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
-            }
-
-            // set max the canvas max size if CSS values are defined
-            if (window.getComputedStyle) {
-                var style = window.getComputedStyle(canvas, null);
-                me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
-            }
-
             switch (rendererType) {
                 case me.video.WEBGL:
                     renderer = me.WebGLRenderer.init(canvas.width, canvas.height, canvas);
@@ -163,12 +151,37 @@
                     break;
             }
 
+            // adjust CSS style for High-DPI devices
+            var ratio = me.device.getPixelRatio();
+            if (ratio > 1) {
+                canvas.style.width = (canvas.width / ratio) + "px";
+                canvas.style.height = (canvas.height / ratio) + "px";
+            }
+
+            // set max the canvas max size if CSS values are defined
+            if (window.getComputedStyle) {
+                var style = window.getComputedStyle(canvas, null);
+                me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
+            }
+
             // trigger an initial resize();
             me.video.onresize(null);
 
             me.game.init();
 
             return true;
+        };
+
+        /**
+         * Blits the context 2d surface after drawing. Only applies to canvas renderer
+         * @name blitSurface
+         * @memberOf me.video
+         * @function
+         */
+        api.blitSurface = function () {
+            if (typeof renderer.blitSurface === "function") {
+                renderer.blitSurface();
+            }
         };
 
         /**
@@ -367,7 +380,7 @@
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);
                     }
-                    deferResizeId = renderer.updateDisplaySize.defer(this, scaleX, scaleY);
+                    deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
                     return;
                 }
             }

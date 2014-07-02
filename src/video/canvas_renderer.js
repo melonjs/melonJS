@@ -99,7 +99,7 @@
                     context.drawImage(
                         backBufferCanvas, 0, 0,
                         backBufferCanvas.width, backBufferCanvas.height, 0,
-                        0, me.video.getWidthZoom(), me.video.getHeightZoom()
+                        0, gameWidthZoom, gameHeightZoom
                     );
 
                 };
@@ -201,7 +201,7 @@
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
                 canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
             }
-            me.video.setImageSmoothing(context, me.sys.scalingInterpolation);
+            this.setImageSmoothing(context, me.sys.scalingInterpolation);
             this.blitSurface();
         };
 
