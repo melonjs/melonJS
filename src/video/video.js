@@ -154,12 +154,12 @@
             }
 
             switch (rendererType) {
-                case me.video.CANVAS:
-                    // get the 2D context
-                    renderer = new me.CanvasRenderer(canvas, double_buffering);
-                    break;
                 case me.video.WEBGL:
-                    renderer = new me.WebGLRenderer(canvas.width, canvas.height, canvas);
+                    renderer = me.WebGLRenderer.init(canvas.width, canvas.height, canvas);
+                    break;
+                default: // case me.video.CANVAS:. TODO: have default be AUTO detect
+                    // get the 2D context
+                    renderer = me.CanvasRenderer.init(canvas, double_buffering);
                     break;
             }
 
@@ -408,19 +408,6 @@
         };
 
         /**
-         * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
-         * (!) this might not be supported by all browsers <br>
-         * @name setImageSmoothing
-         * @memberOf me.video
-         * @function
-         * @param {Context2d} context
-         * @param {Boolean} [enable=false]
-         */
-        api.setImageSmoothing = function (context, enable) {
-            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
-        };
-
-        /**
          * enable/disable Alpha. Only applies to canvas renderer
          * @name setAlpha
          * @memberOf me.video
@@ -449,6 +436,14 @@
          */
         api.applyRGBFilter = function (object, effect, option) {
             return renderer.applyRGBFilter(object, effect, option);
+        };
+
+        /**
+         * Setting the private renderer variable
+         * @ignore
+         */
+        api.setRenderer = function (r) {
+            renderer = r;
         };
 
         // return our api

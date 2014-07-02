@@ -4,6 +4,8 @@ describe("me.Color", function () {
     var green_color = new me.Color().parseCSS("green");
     var blue_color = new me.Color().parseHex("#0000FF");
 
+    me.video.setRenderer(me.CanvasRenderer);
+
     describe("red_color", function () {
         it("is an instance of me.Color", function () {
             expect(red_color).toBeInstanceOf(me.Color);

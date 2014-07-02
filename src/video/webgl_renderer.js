@@ -13,6 +13,8 @@
             this.context = new WebGLContext(width, height, canvas);
             gl = this.context.gl;
             color = new me.Color();
+
+            return this;
         };
 
         api.clearSurface = function (col) {

@@ -1,8 +1,8 @@
 (function () {
 
     me.CanvasRenderer = (function () {
-        var api = {};
-        var canvas = null,
+        var api = {},
+        canvas = null,
         context = null,
         doubleBuffering = null,
         backBufferCanvas = null,
@@ -17,13 +17,15 @@
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
-                backBufferCanvas = api.createCanvas(canvas.width, canvas.height, false);
-                backBufferContext2D = api.getContext2d(backBufferCanvas);
+                backBufferCanvas = me.video.createCanvas(canvas.width, canvas.height, false);
+                backBufferContext2D = this.getContext2d(backBufferCanvas);
             }
             else {
                 backBufferCanvas = canvas;
                 backBufferContext2D = context;
             }
+
+            return this;
         };
 
         api.applyRGBFilter = function (object, effect, option) {
@@ -205,6 +207,19 @@
 
         api.setAlpha = function (enable) {
             context.globalCompositeOperation = enable ? "source-over" : "copy";
+        };
+
+        /**
+         * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
+         * (!) this might not be supported by all browsers <br>
+         * @name setImageSmoothing
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Context2d} context
+         * @param {Boolean} [enable=false]
+         */
+        api.setImageSmoothing = function (context, enable) {
+            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
         };
 
         return api;
