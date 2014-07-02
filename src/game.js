@@ -36,6 +36,9 @@
         var frameCounter = 0;
         var frameRate = 1;
 
+        // reference to the renderer object
+        var renderer = null;
+
         /*
          * PUBLIC STUFF
          */
@@ -100,14 +103,14 @@
         api.sortOn = "z";
 
         /**
-         * default layer renderer
+         * default layer tmxRenderer
          * @private
          * @ignore
          * @type {me.TMXRenderer}
-         * @name renderer
+         * @name tmxRenderer
          * @memberOf me.game
          */
-        api.renderer = null;
+        api.tmxRenderer = null;
 
         // FIX ME : put this somewhere else
         api.NO_OBJECT = 0;
@@ -181,6 +184,8 @@
 
                 // get a ref to the screen buffer
                 frameBuffer = me.video.getSystemContext();
+
+                renderer = me.video.getRenderer();
 
                 // publish init notification
                 me.event.publish(me.event.GAME_INIT);

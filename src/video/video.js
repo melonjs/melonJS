@@ -277,6 +277,16 @@
         };
 
         /**
+         * Returns the renderer object, either the CanvasRenderer or WebGLRenderer
+         * @name getRenderer
+         * @memberOf me.video
+         * @return {Renderer}
+         */
+        api.getRenderer = function () {
+            return renderer;
+        };
+
+        /**
          * return a reference to the screen canvas <br>
          * (will return buffered canvas if double buffering is enabled, or a reference to Screen Canvas) <br>
          * use this when checking for display size, event <br>

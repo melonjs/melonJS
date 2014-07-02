@@ -68,9 +68,9 @@
                 ));
             }
 
-            // initialize a default renderer
-            if ((me.game.renderer === null) || !me.game.renderer.canRender(map)) {
-                me.game.renderer = this.getNewDefaultRenderer(map);
+            // initialize a default TMX renderer
+            if ((me.game.tmxRenderer === null) || !me.game.tmxRenderer.canRender(map)) {
+                me.game.tmxRenderer = this.getNewDefaultRenderer(map);
             }
 
             // Tileset information
@@ -255,12 +255,12 @@
             // init the layer properly
             layer.initFromJSON(data);
             // set a renderer
-            if (!me.game.renderer.canRender(layer)) {
+            if (!me.game.tmxRenderer.canRender(layer)) {
                 layer.setRenderer(me.mapReader.getNewDefaultRenderer(layer));
             }
             else {
                 // use the default one
-                layer.setRenderer(me.game.renderer);
+                layer.setRenderer(me.game.tmxRenderer);
             }
             var encoding = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_ENCODING] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_ENCODING];
             // parse the layer data
