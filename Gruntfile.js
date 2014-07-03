@@ -67,10 +67,6 @@ module.exports = function (grunt) {
                 files : {
                     "<%= path.min %>" : [
                         "<%= path.main %>"
-                    ],
-
-                    "build/kami.min.js" : [
-                        "build/kami.js"
                     ]
                 }
             }
