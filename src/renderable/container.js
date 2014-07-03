@@ -735,51 +735,51 @@
         /**
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             var viewport = me.game.viewport;
             var isFloating = false;
             
             this.drawCount = 0;
 
-            context.save();
+            renderer.save();
 
             // apply the container current transform
-            context.transform(
+            renderer.transform(
                 this.transform.a, this.transform.b,
                 this.transform.c, this.transform.d,
                 this.transform.e, this.transform.f
             );
 
             // apply the group opacity
-            context.globalAlpha *= this.getOpacity();
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             // translate to the container position
-            context.translate(this.pos.x, this.pos.y);
+            renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 isFloating = obj.floating;
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
                     if (isFloating === true) {
-                        context.save();
+                        renderer.save();
                         // translate back object
-                        context.translate(
+                        renderer.translate(
                             viewport.screenX - this.pos.x,
                             viewport.screenY - this.pos.y
                         );
                     }
 
                     // draw the object
-                    obj.draw(context, rect);
+                    obj.draw(renderer, rect);
 
                     if (isFloating === true) {
-                        context.restore();
+                        renderer.restore();
                     }
                     
                     this.drawCount++;
                 }
             }
 
-            context.restore();
+            renderer.restore();
         }
     });
 

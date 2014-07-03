@@ -130,6 +130,25 @@
         };
 
         /**
+         * Draw an image using the canvas api
+         * @name drawImage
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {image} an html image element
+         * @param {Number} offsetX value, from the source image.
+         * @param {Number} offsetY value, from the source image.
+         * @param {Number} imageWidth the width of the image to be drawn
+         * @param {Number} imageHeight the height of the image to be drawn
+         * @param {Number} destX the x position to draw the image at on the screen
+         * @param {Number} destY the y position to draw the image at on the screen
+         * @param {Number} destW the width value to draw the image at on the screen
+         * @param {Number} destH the height value to draw the image at on the screen
+         */
+        api.drawImage = function (image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH) {
+            context.drawImage(image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH);
+        };
+
+        /**
          * return a reference to the screen canvas corresponding 2d Context<br>
          * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
          * @name getScreenContext
@@ -190,6 +209,27 @@
             return backBufferContext2D;
         };
 
+        /**
+         * return the current global alpha
+         * @name globalAlpha
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {Number}
+         */
+        api.globalAlpha = function () {
+            return context.globalAlpha;
+        };
+
+        /**
+         * resets the canvas transform to identity
+         * @name resetTransform
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.resetTransform = function () {
+            context.setTransform(1, 0, 0, 1, 0, 0);
+        };
+
         api.resize = function (scaleX, scaleY) {
             gameWidthZoom = backBufferCanvas.width * scaleX;
             gameHeightZoom = backBufferCanvas.height * scaleY;
@@ -205,8 +245,62 @@
             this.blitSurface();
         };
 
+        /**
+         * restores the canvas context
+         * @name restore
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.restore = function () {
+            context.restore();
+        };
+
+        /**
+         * rotates the canvas context
+         * @name rotate
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} angle in radians
+         */
+        api.rotate = function (angle) {
+            context.rotate(angle);
+        };
+
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.save = function () {
+            context.save();
+        };
+
+        /**
+         * scales the canvas context
+         * @name scale
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         */
+        api.scale = function (x, y) {
+            context.scale(x, y);
+        };
+
         api.setAlpha = function (enable) {
             context.globalCompositeOperation = enable ? "source-over" : "copy";
+        };
+
+        /**
+         * Sets the global alpha on the canvas context
+         * @name setGlobalAlpha
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} alpha value. 0.0 to 1.0 values accepted.
+         */
+        api.setGlobalAlpha = function (a) {
+            context.globalAlpha = a;
         };
 
         /**
@@ -220,6 +314,28 @@
          */
         api.setImageSmoothing = function (context, enable) {
             me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
+        };
+
+        /**
+         * transforms the context. Accepts any number of integer arguments
+         * @name transform
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.transform = function () {
+            context.transform(arguments);
+        };
+
+        /**
+         * Translates the context to the given position
+         * @name translate
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         */
+        api.translate = function (x, y) {
+            context.translate(x, y);
         };
 
         return api;

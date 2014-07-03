@@ -22,9 +22,6 @@
          * PRIVATE STUFF
          */
 
-        // ref to the "system" context
-        var frameBuffer = null;
-
         // flag to redraw the sprites
         var initialized = false;
 
@@ -182,9 +179,6 @@
                 // give it a name
                 api.world.name = "rootContainer";
 
-                // get a ref to the screen buffer
-                frameBuffer = me.video.getSystemContext();
-
                 renderer = me.video.getRenderer();
 
                 // publish init notification
@@ -236,7 +230,7 @@
             api.collisionMap = api.defaultCollisionMap;
 
             // reset the transform matrix to the normal one
-            frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
+            renderer.resetTransform();
 
             // reset the frame counter
             frameCounter = 0;
@@ -318,13 +312,13 @@
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
-                api.world.draw(frameBuffer, api.viewport);
+                api.world.draw(renderer, api.viewport);
 
                 // translate back
                 api.world.transform.translate(translateX, translateY);
 
                 // draw our camera/viewport
-                api.viewport.draw(frameBuffer);
+                api.viewport.draw(renderer);
             }
 
             isDirty = false;

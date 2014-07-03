@@ -187,9 +187,9 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function (context, color) {
+        draw : function (renderer, color) {
             // draw the parent rectangle
-            this._super(me.Rect, "draw", [context, color]);
+            this._super(me.Rect, "draw", [renderer, color]);
         }
     });
 

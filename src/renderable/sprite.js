@@ -256,9 +256,9 @@
          * @memberOf me.SpriteObject
          * @function
          * @protected
-         * @param {Context2d} context 2d Context on which draw our object
+         * @param {Renderer} a renderer object: me.CanvasRenderer or me.WebGLRenderer
          **/
-        draw : function (context) {
+        draw : function (renderer) {
             // do nothing if we are flickering
             if (this.flickering) {
                 this.flickerState = !this.flickerState;
@@ -267,9 +267,9 @@
                 }
             }
             // save context
-            context.save();
+            renderer.save();
             // sprite alpha value
-            context.globalAlpha *= this.getOpacity();
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
@@ -281,13 +281,13 @@
                 // calculate pixel pos of the anchor point
                 var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
                 // translate to the defined anchor point
-                context.translate(xpos + ax, ypos + ay);
+                renderer.translate(xpos + ax, ypos + ay);
                 // scale
                 if (this.scaleFlag) {
-                    context.scale(this.scale.x, this.scale.y);
+                    renderer.scale(this.scale.x, this.scale.y);
                 }
                 if (angle !== 0) {
-                    context.rotate(angle);
+                    renderer.rotate(angle);
                 }
 
                 if (this._sourceAngle !== 0) {
@@ -306,7 +306,7 @@
             }
 
 
-            context.drawImage(
+            renderer.drawImage(
                 this.image,
                 this.offset.x, this.offset.y,   // sx,sy
                 w, h,                           // sw,sh
@@ -315,7 +315,7 @@
             );
 
             // restore context
-            context.restore();
+            renderer.restore();
         },
 
         /**

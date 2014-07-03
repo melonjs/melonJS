@@ -493,7 +493,7 @@
          * render the camera effects
          * @ignore
          */
-        draw : function (context) {
+        draw : function () {
             // fading effect
             if (this._fadeIn.tween) {
                 me.video.clearSurface(this._fadeIn.color.toRGBA());
