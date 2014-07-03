@@ -1,3 +1,22 @@
+/* jshint -W004 */
+/* jshint -W011 */
+/* jshint -W013 */
+/* jshint -W013 */
+/* jshint -W014 */
+/* jshint -W015 */
+/* jshint -W016 */
+/* jshint -W030 */
+/* jshint -W032 */
+/* jshint -W033 */
+/* jshint -W062 */
+/* jshint -W089 */
+/* jshint -W098 */
+/* jshint -W102 */
+/* jshint -W105 */
+/* jshint -W108 */
+/* jshint -W116 */
+/* jshint -W117 */
+
 !function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.kami=e():"undefined"!=typeof global?global.kami=e():"undefined"!=typeof self&&(self.kami=e())}(function(){var define,module,exports;
 return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 /**

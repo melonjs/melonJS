@@ -19,15 +19,6 @@ module.exports = function (grunt) {
             }
         },
 
-        copy : {
-            dist : {
-                files : [{
-                    src : "src/vendors/kami.js",
-                    dest : "build/kami.js"
-                }]
-            }
-        },
-
         replace : {
             options : {
                 variables : {
@@ -163,14 +154,13 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-replace");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
     grunt.loadNpmTasks("grunt-contrib-connect");
-    grunt.loadNpmTasks("grunt-contrib-copy");
 
     // Custom Tasks
     grunt.loadTasks("tasks");
 
     // Default task.
-    grunt.registerTask("default", [ "test", "copy", "uglify" ]);
-    grunt.registerTask("build", [ "lint", "copy", "uglify" ]);
+    grunt.registerTask("default", [ "test", "uglify" ]);
+    grunt.registerTask("build", [ "lint", "uglify" ]);
     grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
