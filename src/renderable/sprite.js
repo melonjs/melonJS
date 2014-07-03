@@ -74,9 +74,12 @@
             this.isSprite = true;
 
             // call the super constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y),
+			var pos = me.pool.pull("me.Vector2d", x, y);
+            this._super(me.Renderable, "init", [pos,
                 spritewidth  || image.width,
                 spriteheight || image.height]);
+			me.pool.push(pos);
+			
             // cache image reference
             this.image = image;
 
@@ -450,7 +453,7 @@
                 // regular spritesheet
                 this.textureAtlas = [];
                 // calculate the sprite count (line, col)
-                var spritecount = new me.Vector2d(
+                var spritecount = me.pool.pull("me.Vector2d",
                     ~~((image.width - this.margin) / (this.width + this.spacing)),
                     ~~((image.height - this.margin) / (this.height + this.spacing))
                 );
@@ -475,6 +478,7 @@
                         angle: 0
                     };
                 }
+				me.pool.push(spritecount);
             }
         },
 

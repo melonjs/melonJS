@@ -205,14 +205,16 @@
             this.collisionMap = me.game.collisionMap;
 
             // call the super constructor
+			var zeroPoint = me.pool.pull("me.Vector2d");
             this._super(
                 me.Rect,
                 "init", [
-                    new me.Vector2d(),
+                    zeroPoint,
                     entity.width,
                     entity.height
                 ]
             );
+			me.pool.push(zeroPoint);
 
             // add collision shape to the object if defined
             if (typeof (settings.getShape) === "function") {

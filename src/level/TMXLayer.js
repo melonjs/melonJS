@@ -19,7 +19,9 @@
         // constructor
         init: function (name, color, z) {
             // parent constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), Infinity, Infinity]);
+            var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+            this._super(me.Renderable, "init", [zeroPoint, Infinity, Infinity]);
+            me.pool.push(zeroPoint);
 
             // apply given parameters
             this.name = name;
@@ -113,7 +115,9 @@
             // set layer width & height
             width  = (width  ? Math.min(viewport.width, width)   : viewport.width);
             height = (height ? Math.min(viewport.height, height) : viewport.height);
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
+            var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+            this._super(me.Renderable, "init", [zeroPoint, width, height]);
+            me.pool.push(zeroPoint);
 
             // displaying order
             this.z = z;
@@ -303,7 +307,9 @@
     me.CollisionTiledLayer = me.Renderable.extend({
         // constructor
         init: function (width, height) {
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
+            var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+            this._super(me.Renderable, "init", [zeroPoint, width, height]);
+            me.pool.push(zeroPoint);
 
             this.isCollisionMap = true;
         },
@@ -357,7 +363,9 @@
         /** @ignore */
         init: function (tilewidth, tileheight, orientation, tilesets, zOrder) {
             // super constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), 0, 0]);
+            var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+            this._super(me.Renderable, "init", [zeroPoint, 0, 0]);
+            me.pool.push(zeroPoint);
 
             // tile width & height
             this.tilewidth  = tilewidth;

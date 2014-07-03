@@ -41,8 +41,9 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
-            return new me.Vector2d(x / this.tilewidth,
-                                   y / this.tileheight);
+            return me.pool.pull("me.Vector2d",
+								x / this.tilewidth,
+                                y / this.tileheight);
         },
 
         /**
@@ -50,8 +51,9 @@
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(x * this.tilewidth,
-                                   y * this.tileheight);
+            return me.pool.pull("me.Vector2d",
+								x * this.tilewidth,
+                                y * this.tileheight);
         },
 
         /**
@@ -105,6 +107,9 @@
                     }
                 }
             }
+			
+			me.pool.push(start);
+			me.pool.push(end);
         }
     });
 
@@ -151,7 +156,7 @@
             var tileY = y / this.tileheight;
             var tileX = x / this.tilewidth;
 
-            return new me.Vector2d(tileY + tileX, tileY - tileX);
+            return me.pool.pull("me.Vector2d", tileY + tileX, tileY - tileX);
         },
 
         /**
@@ -159,9 +164,9 @@
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(
-                (x - y) * this.hTilewidth + this.originX,
-                (x + y) * this.hTileheight
+            return me.pool.pull("me.Vector2d",
+								(x - y) * this.hTilewidth + this.originX,
+								(x + y) * this.hTileheight
             );
         },
 
@@ -180,6 +185,7 @@
             obj.x = isoPos.x;
             obj.y = isoPos.y;
 
+			me.pool.push(isoPos);
             //return isoPos;
         },
 
@@ -249,7 +255,7 @@
             var shifted = inUpperHalf ^ inLeftHalf;
 
             // initialize the columItr vector
-            var columnItr = rowItr.clone();
+            var columnItr = rowItr.cloneFromPool();
 
             // main drawing loop
             for (var y = startPos.y; y - this.tileheight < rectEnd.y; y += this.hTileheight) {
@@ -283,6 +289,12 @@
                     shifted = false;
                 }
             }
+			
+			me.pool.push(rowItr);
+			me.pool.push(columnItr);
+			me.pool.push(TileEnd);
+			me.pool.push(rectEnd);
+			me.pool.push(startPos);
         }
     });
 })();

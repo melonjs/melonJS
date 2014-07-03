@@ -19,7 +19,7 @@
      * A global "translation context" for nested ObjectContainers
      * @ignore
      */
-    var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
+    var globalTranslation = new me.Rect(new me.Vector2d(0, 0), 0, 0);
 
     /**
      * A global "floating children" reference counter for nested ObjectContainers
@@ -70,18 +70,24 @@
              */
             this.transform = new me.Matrix2d();
             // call the _super constructor
+			var origin = me.pool.pull("me.Vector2d", x || 0, y || 0);
             this._super(me.Renderable,
                 "init",
-                [new me.Vector2d(x || 0, y || 0),
+                [origin,
                 width || Infinity,
                 height || Infinity]
             );
+			me.pool.push(origin);
+			
             // init the bounds to an empty rect
             /**
              * Container bounds
              * @ignore
              */
-            this.bounds = new me.Rect(new me.Vector2d(0, 0), 0, 0);
+			var zeroPoint = me.pool.pull("me.Vector2d", 0, 0);
+            this.bounds = new me.Rect(zeroPoint, 0, 0);
+			me.pool.push(zeroPoint);
+			
             /**
              * The array of children of this container.
              * @ignore
