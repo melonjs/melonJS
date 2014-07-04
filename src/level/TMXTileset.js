@@ -123,7 +123,7 @@
                 this.transform.d *= -1;
                 this.transform.translate(0, (this.flippedAD ? this.width : this.height));
             }
-        },
+        }
     });
 
     /**
