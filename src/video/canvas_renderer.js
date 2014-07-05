@@ -327,7 +327,7 @@
          * @function
          */
         api.transform = function () {
-            context.transform(arguments);
+            context.transform.apply(context, arguments);
         };
 
         /**
