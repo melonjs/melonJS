@@ -1,59 +1,86 @@
 'use strict';
+var path = require('path');
+var Q = require('q');
+var shell = require('shelljs');
+
 module.exports = function(grunt) {
-    var git = require('gift');
-    var path = require('path');
     grunt.registerTask('dorelease', 'MelonJS Release', function() {
-        var repo = git(path.join(__dirname, '..'));
-        var config = grunt.file.readJSON(path.join(repo.path, 'package.json'));
+        var repo = path.join(__dirname, '..'));
+        var config = grunt.file.readJSON(path.join(repo, 'package.json'));
         var buildPath = path.join(__dirname, '..', 'build');
         var version = config.version;
+        var done = this.async();
 
-        grunt.log.oklns('ACTUAL VERSION ==> ' + config.version);
-        // checkout to the master branch (latest commit)
-        repo.checkout('master', function(err) {
-            if (err){
-               grunt.log.error(err);
+        // using Q for promises. Using the grunt-release project's same idea
+        Q()
+          .then(checkout)
+          .then(add)
+          .then(commit)
+          .then(tag)
+          .then(push)
+          .catch(function(msg){
+            grunt.fail.warn(msg || 'release failed')
+          })
+          .finally(done);
+
+        function run(cmd, msg){
+            var deferred = Q.defer();
+            grunt.verbose.writeln('Running: ' + cmd);
+
+            if (nowrite) {
+                grunt.log.ok(msg || cmd);
+                deferred.resolve();
             }
-        });
+            else {
+                var success = shell.exec(cmd, {silent:true}).code === 0;
 
-        grunt.log.oklns('BUILD FILES');
-        var filenames = [
-            path.join(buildPath, 'melonjs-' + version + '.js'),
-            path.join(buildPath, 'melonjs-' + version + '-min.js')
-        ];
+                if (success){
+                    grunt.log.ok(msg || cmd);
+                    deferred.resolve();
+                }
+                else{
+                    // fail and stop execution of further tasks
+                    deferred.reject('Failed when executing: `' + cmd + '`\n');
+                }
+            }
+            return deferred.promise;
+        }
 
-        // check the build files from the actual version
-        // and add the js files to be commited
-        for (var i = 0; i < filenames.length; i++) {
-            if (grunt.file.exists(filenames[i])) {
-                grunt.log.writeln(filenames[i]);
-                repo.add(filenames[i], {'force': true}, function(err) {
-                    if (err) {
-                        grunt.log.error(err);
-                    }
-                });
+        function checkout() {
+            run('git checkout -f master');
+        }
+
+        function add() {
+            grunt.log.oklns('ACTUAL VERSION ==> ' + config.version);
+            grunt.log.oklns('BUILD FILES');
+            var filenames = [
+                path.join(buildPath, 'melonjs-' + version + '.js'),
+                path.join(buildPath, 'melonjs-' + version + '-min.js')
+            ];
+            // check the build files from the actual version
+            // and add the js files to be commited
+            for (var i = 0; i < filenames.length; i++) {
+                if (grunt.file.exists(filenames[i])) {
+                    grunt.log.writeln(filenames[i]);
+                    run('git add -f ' + filenames[i]);
+                }
             }
         }
 
         // commit the new version release
-        repo.commit('Release ' + version, function(err) {
-            if (err) {
-                grunt.log.error(err);
-            }
-        });
+        function commit() {
+            run('git commit "Release '+ version  +'"');
+        }
 
         // create new tag
-        repo.create_tag(version, function(err) {
-            if (err) {
-                grunt.log.error(err);
-            }
-        });
+        function tag() {
+            run('git tag ' + version);
+        }
 
         // push to master
-        repo.sync(function(err) {
-            if (err) {
-                grunt.log.error(err);
-            }
-        });
+        function push() {
+            run('git push origin master');
+        }
+
     });
 }
