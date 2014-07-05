@@ -18,6 +18,7 @@ module.exports = function(grunt) {
           .then(commit)
           .then(tag)
           .then(push)
+          .then(back)
           .catch(function(msg){
             grunt.fail.warn(msg || 'release failed')
           })
@@ -26,28 +27,21 @@ module.exports = function(grunt) {
         function run(cmd, msg){
             var deferred = Q.defer();
             grunt.verbose.writeln('Running: ' + cmd);
+            var success = shell.exec(cmd, {silent:true}).code === 0;
 
-            if (nowrite) {
+            if (success){
                 grunt.log.ok(msg || cmd);
                 deferred.resolve();
             }
-            else {
-                var success = shell.exec(cmd, {silent:true}).code === 0;
-
-                if (success){
-                    grunt.log.ok(msg || cmd);
-                    deferred.resolve();
-                }
-                else{
-                    // fail and stop execution of further tasks
-                    deferred.reject('Failed when executing: `' + cmd + '`\n');
-                }
+            else{
+                // fail and stop execution of further tasks
+                deferred.reject('Failed when executing: `' + cmd + '`\n');
             }
             return deferred.promise;
         }
 
         function checkout() {
-            run('git checkout -f master');
+            run('git checkout --detach');
         }
 
         function add() {
@@ -82,5 +76,8 @@ module.exports = function(grunt) {
             run('git push origin master');
         }
 
+        function back() {
+            run('git checkout master');
+        }
     });
 }
