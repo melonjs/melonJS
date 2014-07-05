@@ -3,8 +3,8 @@ game.Background = me.Renderable.extend({
     this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height]);
     this.z = 1;
   },
-  draw : function(ctx) {
-    me.video.clearSurface(ctx, '#000');
+  draw : function(renderer) {
+    me.video.clearSurface(renderer.getContext(), '#000');
   }
 });
 
@@ -34,10 +34,9 @@ game.RenderableEntity = me.Renderable.extend({
     this.z = 2;
   },
 
-  draw : function(context) {
-    context.save();
-    context.fillStyle = '#fff';
-    context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-    context.restore();
+  draw : function(renderer) {
+    renderer.save();
+    renderer.drawRectWithColor(this.pos.x, this.pos.y, this.width, this.height, '#fff')
+    renderer.restore();
   }
 });

@@ -153,6 +153,22 @@
         };
 
         /**
+         * Draw a filled rectangle at the specified coordinates with a given color
+         * @name drawRectWithColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x position
+         * @param {Number} y position
+         * @param {Number} width to draw
+         * @param {Number} height to draw
+         * @param {String} css color for the rectangle
+         */
+        api.drawRectWithColor = function (x, y, width, height, color) {
+            context.fillStyle = color;
+            context.fillRect(x, y, width, height);
+        };
+
+        /**
          * return a reference to the screen canvas corresponding 2d Context<br>
          * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
          * @name getScreenContext
@@ -161,6 +177,17 @@
          * @return {Context2d}
          */
         api.getScreenContext = function () {
+            return context;
+        };
+
+        /**
+         * Returns the 2D Context instance for the renderer
+         * @name getContext
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {Context2d}
+         */
+        api.getContext = function () {
             return context;
         };
 

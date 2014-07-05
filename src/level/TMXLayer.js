@@ -31,19 +31,15 @@
          * draw the color layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // set layer opacity
-            var _alpha = context.globalAlpha;
-            context.globalAlpha *= this.getOpacity();
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            // set layer color
-            context.fillStyle = this.color;
-
-            // clear the specified rect
-            context.fillRect(rect.left, rect.top, rect.width, rect.height);
+            renderer.drawRectWithColor(rect.left, rect.top, rect.width, rect.height, this.color);
 
             // restore context alpha value
-            context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         }
     });
 

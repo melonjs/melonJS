@@ -38,7 +38,8 @@
         },
 
          // draw function
-        draw : function (context) {
+        draw : function (renderer) {
+            var context = renderer.getContext();
             // draw the progress bar
             context.fillStyle = "black";
             context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
@@ -55,11 +56,13 @@
 
         // 100x85 Logo
         // generated using Illustrator and the Ai2Canvas plugin
-        draw : function (context) {
-            context.save();
+        draw : function (renderer) {
+            renderer.save();
 
             // translate to destination point
-            context.translate(this.pos.x, this.pos.y);
+            renderer.translate(this.pos.x, this.pos.y);
+
+            var context = renderer.getContext();
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -88,7 +91,7 @@
             context.miterLimit = 4.0;
             context.stroke();
 
-            context.restore();
+            renderer.restore();
         }
     });
 
@@ -103,8 +106,9 @@
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
         },
 
-        draw : function (context) {
+        draw : function (renderer) {
             // measure the logo size
+            var context = renderer.getContext();
             var logo1_width = this.logo1.measureText(context, "melon").width;
             var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
             var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
