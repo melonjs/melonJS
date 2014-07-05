@@ -5,7 +5,7 @@ var shell = require('shelljs');
 
 module.exports = function(grunt) {
     grunt.registerTask('dorelease', 'MelonJS Release', function() {
-        var repo = path.join(__dirname, '..'));
+        var repo = path.join(__dirname, '..');
         var config = grunt.file.readJSON(path.join(repo, 'package.json'));
         var buildPath = path.join(__dirname, '..', 'build');
         var version = config.version;
