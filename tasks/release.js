@@ -63,7 +63,7 @@ module.exports = function(grunt) {
 
         // commit the new version release
         function commit() {
-            run('git commit "Release '+ version  +'"');
+            run('git commit -m "Release '+ version  +'"');
         }
 
         // create new tag
