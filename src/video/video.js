@@ -424,10 +424,11 @@
          * @name clearSurface
          * @memberOf me.video
          * @function
+         * @param {Context2d} canvas context to clear. Optional, will default to system context.
          * @param {String} color a CSS color string, hex format. eg: #ff0000
          */
-        api.clearSurface = function (col) {
-            renderer.clearSurface(col);
+        api.clearSurface = function (context, col) {
+            renderer.clearSurface(context, col);
         };
 
         /**

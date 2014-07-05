@@ -118,15 +118,19 @@
          * @name clearSurface
          * @memberOf me.CanvasRenderer
          * @function
+         * @param {Context2d} canvas contest. Optional, will default to system context.
          * @param {String} color a CSS color string
          */
-        api.clearSurface = function (col) {
-            var _canvas = context.canvas;
-            context.save();
-            context.setTransform(1, 0, 0, 1, 0, 0);
-            context.fillStyle = col;
-            context.fillRect(0, 0, _canvas.width, _canvas.height);
-            context.restore();
+        api.clearSurface = function (ctx, col) {
+            if (ctx === null) {
+                ctx = context;
+            }
+            var _canvas = ctx.canvas;
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = col;
+            ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+            ctx.restore();
         };
 
         /**

@@ -496,7 +496,7 @@
         draw : function () {
             // fading effect
             if (this._fadeIn.tween) {
-                me.video.clearSurface(this._fadeIn.color.toRGBA());
+                me.video.clearSurface(null, this._fadeIn.color.toRGBA());
                 // remove the tween if over
                 if (this._fadeIn.color.alpha === 1.0) {
                     this._fadeIn.tween = null;
@@ -507,7 +507,7 @@
 
             // flashing effect
             if (this._fadeOut.tween) {
-                me.video.clearSurface(this._fadeOut.color.toRGBA());
+                me.video.clearSurface(null, this._fadeOut.color.toRGBA());
                 // remove the tween if over
                 if (this._fadeOut.color.alpha === 0.0) {
                     this._fadeOut.tween = null;
