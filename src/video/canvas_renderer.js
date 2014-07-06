@@ -25,6 +25,9 @@
                 backBufferContext2D = context;
             }
 
+            gameWidthZoom = canvas.width;
+            gameHeightZoom = canvas.height;
+
             return this;
         };
 
