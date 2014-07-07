@@ -530,7 +530,8 @@
          * }
          */
         collide : function (objA, multiple) {
-            return this.collideType(objA, null, multiple);
+            // TO BE REMOVED
+            return me.game.solver.collide(objA, null, multiple);
         },
 
         /**
@@ -545,57 +546,8 @@
          * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
          */
         collideType : function (objA, type, multiple) {
-            var res, mres;
-            // make sure we have a boolean
-            multiple = (multiple === true ? true : false);
-            if (multiple === true) {
-                mres = [];
-            }
-            
-            // this should be replace by a list of the 4 adjacent cell around the object requesting collision
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable) {
-                    // recursivly check through
-                    if (obj instanceof me.ObjectContainer) {
-                        res = obj.collideType(objA, type, multiple);
-                        if (multiple) {
-                            mres.concat(res);
-                        }
-                        else if (res) {
-                            // the child container returned collision information
-                            return res;
-                        }
-
-                    }
-                    else if ((obj !== objA) && (!type || (obj.type === type))) {
-                        // quick reference to both object bounding box
-                        var _boundsA = objA.getBounds();
-                        var _boundsB = obj.getBounds();
-
-                        res = _boundsB["collideWith" + _boundsA.shapeType].call(
-                            _boundsB,
-                            _boundsA
-                        );
-
-                        if (res.x !== 0 || res.y !== 0) {
-                            if (typeof obj.body.onCollision === "function") {
-                                // notify the object
-                                obj.body.onCollision.call(obj.body, res, objA);
-                            }
-                            // return the type (deprecated)
-                            res.type = obj.type;
-                            // return a reference of the colliding object
-                            res.obj = obj;
-                            // stop here if we don't look for multiple collision detection
-                            if (!multiple) {
-                                return res;
-                            }
-                            mres.push(res);
-                        }
-                    }
-                }
-            }
-            return (multiple ? mres : null);
+            // TO BE REMOVED
+            return me.game.solver.collide(objA, type, multiple);
         },
 
         /**
