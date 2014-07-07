@@ -99,13 +99,16 @@
                         // quick reference to both object bounding box
                         var _boundsA = objA.getBounds();
                         var _boundsB = obj.getBounds();
+                        
+                        // check if both bounding boxes are overlaping
+                        if (_boundsA.overlaps(_boundsB)) {
+                            // calculate the collision vector
+                            // TODO: add the collideWith* function for other shape type
+                            res = _boundsB["collideWith" + _boundsA.shapeType].call(
+                                _boundsB,
+                                _boundsA
+                            );
 
-                        res = _boundsB["collideWith" + _boundsA.shapeType].call(
-                            _boundsB,
-                            _boundsA
-                        );
-
-                        if (res.x !== 0 || res.y !== 0) {
                             if (typeof obj.body.onCollision === "function") {
                                 // notify the object
                                 obj.body.onCollision.call(obj.body, res, objA);

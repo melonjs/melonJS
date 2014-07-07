@@ -349,25 +349,23 @@
             // response vector
             var p = new me.Vector2d(0, 0);
 
-            // check if both box are overlaping
-            if (this.overlaps(rect)) {
-                // compute delta between this & rect
-                var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
-                var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
+            // compute delta between this & rect
+            var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
+            var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
 
-                // compute penetration depth for both axis
-                p.x = (rect.hWidth  + this.hWidth)  - (dx < 0 ? -dx : dx); // - Math.abs(dx);
-                p.y = (rect.hHeight + this.hHeight) - (dy < 0 ? -dy : dy); // - Math.abs(dy);
+            // compute penetration depth for both axis
+            p.x = (rect.hWidth  + this.hWidth)  - (dx < 0 ? -dx : dx); // - Math.abs(dx);
+            p.y = (rect.hHeight + this.hHeight) - (dy < 0 ? -dy : dy); // - Math.abs(dy);
 
-                // check and "normalize" axis
-                if (p.x < p.y) {
-                    p.y = 0;
-                    p.x = dx < 0 ? -p.x : p.x;
-                } else {
-                    p.x = 0;
-                    p.y = dy < 0 ? -p.y : p.y;
-                }
+            // check and "normalize" axis
+            if (p.x < p.y) {
+                p.y = 0;
+                p.x = dx < 0 ? -p.x : p.x;
+            } else {
+                p.x = 0;
+                p.y = dy < 0 ? -p.y : p.y;
             }
+            
             return p;
         },
 
