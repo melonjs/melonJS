@@ -56,30 +56,29 @@ var PlayScreen = me.ScreenObject.extend( {
     }
 });
 
-var Smilie = me.ObjectEntity.extend({
+var Smilie = me.Entity.extend({
     init : function (i) {
         this._super(
-            me.ObjectEntity,
+            me.Entity,
             "init",
             [64 + Math.random() * (1024 - 64 * 2 - 16),
             64 + Math.random() * (768 - 64 * 2 - 16),
             {
                 width : 16,
                 height : 16,
-                spritewidth : 16,
-                spriteheight : 16,
-                image : game.assets[i % 5].name
             }]
         );
+        // add the coin sprite as renderable
+		this.renderable = new me.SpriteObject (16, 16, me.loader.getImage(game.assets[i % 5].name));
         this.collidable = true;
     },
 
     update : function (dt) {
-        this.updateMovement();
+        this.body.update();
         
          me.game.world.collide(this, true);
 
-        return this._super(me.ObjectEntity, 'update', [dt]);
+        return this._super(me.Entity, 'update', [dt]);
     }
 });
     
