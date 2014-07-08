@@ -156,9 +156,6 @@
                 }
             }
 
-            // set the object entity name
-            this.name = settings.name ? settings.name.toLowerCase() : "";
-
             /**
              * flag to enable collision detection for this object<br>
              * default value : true<br>
