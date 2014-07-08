@@ -49,3 +49,25 @@ if (!Array.isArray) {
         return isArray;
     };
 }
+
+/**
+ * return a random array element
+ * @memberof! external:Array#
+ * @alias random
+ * @param {array} array to pick a element
+ * @return {object} random member of array
+ */
+Array.prototype.random = function (array) {
+    return array[Number.prototype.random(0, array.length - 1)];
+};
+
+/**
+ * return a weighted random array element, favoring the earlier entries
+ * @memberof! external:Array#
+ * @alias weightedRandom
+ * @param {array} array to pick a element
+ * @return {object} random member of array
+ */
+Array.prototype.weightedRandom = function (array) {
+    return array[Number.prototype.weightedRandom(0, array.length - 1)];
+};
