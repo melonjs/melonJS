@@ -8,7 +8,7 @@
     /**
      * Single Particle Object.
      * @class
-     * @extends me.SpriteObject
+     * @extends me.Renderable
      * @memberOf me
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
