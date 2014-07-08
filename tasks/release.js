@@ -32,8 +32,7 @@ module.exports = function(grunt) {
             if (success){
                 grunt.log.ok(msg || cmd);
                 deferred.resolve();
-            }
-            else{
+            }else{
                 // fail and stop execution of further tasks
                 deferred.reject('Failed when executing: `' + cmd + '`\n');
             }
@@ -41,7 +40,7 @@ module.exports = function(grunt) {
         }
 
         function checkout() {
-            run('git checkout --detach');
+            run('git checkout --detach', 'Detaching from current tree');
         }
 
         function add() {
@@ -53,31 +52,29 @@ module.exports = function(grunt) {
             ];
             // check the build files from the actual version
             // and add the js files to be commited
+            var stringFiles = '';
             for (var i = 0; i < filenames.length; i++) {
                 if (grunt.file.exists(filenames[i])) {
-                    grunt.log.writeln(filenames[i]);
-                    run('git add -f ' + filenames[i]);
+                    stringFiles += filenames[i] + ' ';
                 }
             }
+            run('git add -f ' + stringFiles, 'Adding build files');
         }
 
-        // commit the new version release
         function commit() {
-            run('git commit -m "Release '+ version  +'"');
+            run('git commit -am "Release '+ version  +'"', 'Commiting release');
         }
 
-        // create new tag
         function tag() {
-            run('git tag ' + version);
+            run('git tag ' + version, 'Tagging new version');
         }
 
-        // push to master
         function push() {
-            run('git push origin master');
+            run('git push origin master', 'Pushing to master branch');
         }
 
         function back() {
-            run('git checkout master');
+            run('git checkout master', 'Getting back to master branch');
         }
     });
 }
