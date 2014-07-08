@@ -188,28 +188,23 @@
             });
 
             // patch entities.js
-            me.plugin.patch(me.ObjectEntity, "draw", function (context) {
+            me.plugin.patch(me.Entity, "draw", function (context) {
                 // call the original me.game.draw function
                 this.parent(context);
 
                 // check if debug mode is enabled
-                if (me.debug.renderHitBox && this.shapes.length) {
-
-                    // translate to the object position
-                    var translateX = this.pos.x ;
-                    var translateY = this.pos.y ;
-
-                    context.translate(translateX, translateY);
-
-                    // draw the original shape
-                    this.getShape().draw(context, "red");
-                     if (this.getShape().shapeType!=="Rectangle") {
-                         // draw the corresponding bounding box
-                        this.getShape().getBounds().draw(context, "red");
+                if (me.debug.renderHitBox) {
+                    context.save();
+                    // draw the bounding rect shape
+                    this.body.getBounds().draw(context, "red");
+                    context.translate(this.pos.x, this.pos.y);
+                    if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
+                        // draw the original shape if different from the  bounding rect
+                        var shape = this.body.getShape();
+                        context.translate(shape.pos.x, shape.pos.y);
+                        shape.draw(context, "red");
                     }
-
-                    context.translate(-translateX, -translateY);
-
+                    context.restore();
                 }
 
                 if (me.debug.renderVelocity) {
@@ -222,8 +217,8 @@
                     context.beginPath();
                     context.moveTo(x, y);
                     context.lineTo(
-                        x + ~~(this.vel.x * this.hWidth),
-                        y + ~~(this.vel.y * this.hHeight)
+                        x + ~~(this.body.vel.x * this.hWidth),
+                        y + ~~(this.body.vel.y * this.hHeight)
                     );
                     context.stroke();
                 }

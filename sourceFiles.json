@@ -19,6 +19,8 @@
     "src/shapes/circle.js",
     "src/shapes/poly.js",
     "src/math/matrix.js",
+    "src/physics/body.js",
+    "src/physics/solver.js",
     "src/renderable/base.js",
     "src/renderable/sprite.js",
     "src/renderable/textureatlas.js",

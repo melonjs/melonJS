@@ -98,4 +98,4 @@ me.DroptargetEntity = (function (Entity, Event) {
             Event.unsubscribe(Event.DRAGEND, this.checkOnMe);
         }
     });
-}(me.ObjectEntity, me.event));
+}(me.Entity, me.event));

@@ -135,4 +135,4 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this.removePointerEvent("pointerup", this);
         }
     });
-}(me.ObjectEntity, me.input, me.event, me.Vector2d));
+}(me.Entity, me.input, me.event, me.Vector2d));

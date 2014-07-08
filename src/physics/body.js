@@ -7,10 +7,6 @@
 
 (function () {
 
-    /*
-     * A body object
-     */
-
     /**
      * a Generic Body Object <br>
      * @class
@@ -18,26 +14,24 @@
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
-     * @param {Object} settings object dictionary with shape definition
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
-        init : function (entity, settings) {
-
+        init : function (entity) {
+          
             // reference to the parent entity
             this.entity = entity;
 
             /**
-             * flag to enable collision detection for this object<br>
-             * default value : true<br>
-             * @public
-             * @type Boolean
-             * @name collidable
+             * Offset of the Body from the Entity position
+             * @ignore
+             * @type me.Vector2d
+             * @name offset
              * @memberOf me.Body
              */
-            this.collidable = true;
+            this.offset = new me.Vector2d();
 
             /**
              * The collision shapes of the entity <br>
@@ -56,8 +50,19 @@
              * @memberOf me.Body
              */
             this.shapeIndex = 0;
-
-
+            
+            /**
+             * onCollision callback<br>
+             * called by the game manager when the object body collide with shtg<br>
+             * @name onCollision
+             * @memberOf me.Body
+             * @function
+             * @param {me.Vector2d} res collision vector
+             * @param {me.Entity} obj the other entity object that hit this object
+             * @protected
+             */
+            this.onCollision = undefined;
+            
             /**
              * entity current velocity<br>
              * @public
@@ -142,7 +147,7 @@
              * @memberOf me.Body
              */
             this.jumping = true;
-
+          
             // some usefull slope variable
             this.slopeY = 0;
 
@@ -165,7 +170,7 @@
              * @memberOf me.Body
              */
             this.onladder = false;
-
+            
             /**
              * equal true if the entity can go down on a ladder<br>
              * @readonly
@@ -175,7 +180,7 @@
              * @memberOf me.Body
              */
             this.disableTopLadderCollision = false;
-
+            
             /**
              * Define if an entity can go through breakable tiles<br>
              * default value : false<br>
@@ -195,12 +200,6 @@
              */
             this.onTileBreak = null;
 
-            // to enable collision detection
-            this.collidable = (
-                typeof(settings.collidable) !== "undefined" ?
-                settings.collidable : true
-            );
-
             // ref to the collision map
             this.collisionMap = me.game.collisionMap;
 
@@ -208,16 +207,11 @@
             this._super(
                 me.Rect,
                 "init", [
-                    new me.Vector2d(),
+                    entity.pos,
                     entity.width,
                     entity.height
                 ]
             );
-
-            // add collision shape to the object if defined
-            if (typeof (settings.getShape) === "function") {
-                this.addShape(settings.getShape());
-            }
         },
 
         /**
@@ -260,7 +254,7 @@
             }
             throw new me.Body.Error("Shape (" + index + ") not defined");
         },
-
+        
         /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
@@ -269,32 +263,14 @@
          * @memberOf me.Body
          * @function
          */
-        updateBounds : function () {
+        updateBounds : function (rect) {
             // TODO : take in account multiple shape
-            var _bounds = this.getShape().getBounds;
+            var _bounds = rect || this.getShape().getBounds();
             // adjust the body bounding rect
-            this.pos.setV(_bounds.pos);
+            this.offset.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
-        },
-
-
-        /**
-         * onCollision Event function<br>
-         * called by the game manager when the object collide with shtg<br>
-         * by default, if the object type is Collectable, the destroy function
-         * is called
-         * @name onCollision
-         * @memberOf me.Body
-         * @function
-         * @param {me.Vector2d} res collision vector
-         * @param {me.Body} obj the other object that hit this object
-         * @protected
-         */
-        onCollision : function () {
-            // destroy the object if collectable
-            if (this.collidable && (this.type === me.game.COLLECTABLE_OBJECT)) {
-                me.game.world.removeChild(this);
-            }
+            // calculate the body absolute position
+            this.pos.setV(this.entity.pos).add(this.offset);
         },
 
         /**
@@ -480,17 +456,15 @@
          * // check player status after collision check
          * var updated = (this.vel.x!=0 || this.vel.y!=0);
          */
-        update : function () {
+        update : function (/* dt */) {
             this.computeVelocity(this.vel);
 
             // Adjust position only on collidable object
             var collision;
-            if (this.collidable) {
-                // save the collision box offset
-                var offsetX = this.pos.x;
-                var offsetY = this.pos.y;
-                //translate the body pos to real coordinates
-                this.translateV(entity.pos);
+            if (this.entity.collidable) {
+
+                // calculate the body absolute position
+                this.pos.setV(this.entity.pos).add(this.offset);
 
                 // check for collision
                 collision = this.collisionMap.checkCollision(this, this.vel);
@@ -513,7 +487,6 @@
                             (prop.isTopLadder && !this.disableTopLadderCollision)) {
 
                             // adjust position to the corresponding tile
-                            this.pos.y = ~~this.pos.y;
                             this.vel.y = (
                                 this.falling ?
                                 tile.pos.y - this.bottom : 0
@@ -542,7 +515,6 @@
                             }
                             else {
                                 // adjust position to the corresponding tile
-                                this.pos.y = ~~this.pos.y;
                                 this.vel.y = (
                                     this.falling ?
                                     tile.pos.y - this.bottom : 0
@@ -570,7 +542,7 @@
                     this.onladder = prop.isLadder || prop.isTopLadder;
 
                     if (prop.isSlope && !this.jumping) {
-                        this.checkSlope(this., tile, prop.isLeftSlope);
+                        this.checkSlope(this, tile, prop.isLeftSlope);
                         this.falling = false;
                     }
                     else {
@@ -590,10 +562,8 @@
                 }
 
                 // translate back to set the body relative to the entity
-                this.pos.set(
-                    this.entity.pos.x - offsetX,
-                    this.entity.pos.y - offsetY
-                );
+                // temporary stuff until ticket #103 is done (this function will disappear anyway)
+                this.entity.pos.setV(this.pos).sub(this.offset);
             }
 
             // update player entity position
@@ -615,7 +585,7 @@
             this.shapeIndex = 0;
         }
     });
-
+    
     /**
      * Base class for Body exception handling.
      * @name Error
