@@ -391,9 +391,9 @@
 
 					}
                     
-                    if (_yoyo) {
-                        _reversed = !_reversed;
-                    }
+					if (_yoyo) {
+						_reversed = !_reversed;
+					}
                     
 					_startTime = time + _delayTime;
 
