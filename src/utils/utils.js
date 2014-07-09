@@ -60,7 +60,7 @@
         singleton.encode = function (input) {
 
             // make sure our input string has the right format
-            input = input.replace(/\r\n/g,"\n");
+            input = input.replace(/\r\n/g, "\n");
 
             if (me.device.nativeBase64) {
                 // use native encoder
