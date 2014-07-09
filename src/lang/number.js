@@ -35,6 +35,18 @@ Number.prototype.random = function (min, max) {
 };
 
 /**
+ * return a weighted random between min, max favoring the lower numbers
+ * @memberof! external:Number#
+ * @alias weightedRandom
+ * @param {number} min minimum value.
+ * @param {number} max maximum value.
+ * @return {number} random value
+ */
+Number.prototype.weightedRandom = function (min, max) {
+    return (~~(Math.pow(Math.random(), 2) * (max - min + 1)) + min);
+};
+
+/**
  * round a value to the specified number of digit
  * @memberof! external:Number#
  * @alias round
