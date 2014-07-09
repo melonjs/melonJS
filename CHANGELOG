@@ -4,6 +4,7 @@ Version History
 * Core : Reorganized source code for all basic object definition/augmentation
 * Core : New CI and unit testing frameworks
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
+* Core : Added array random and weightedRandom functions (aaschmitz)
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
