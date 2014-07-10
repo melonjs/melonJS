@@ -9,8 +9,8 @@
 
     /**
       * An object representing the result of an intersection
-      * @ignore
       * (only a Vector Object for now)
+      * @ignore
       */
     function Response() {
         /*
