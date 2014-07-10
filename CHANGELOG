@@ -6,6 +6,7 @@ Version History
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
 * Core : Added array random and weightedRandom functions (aaschmitz)
 * Core : Added a Base64 Encode function (aaschmitz)
+* Particles : Added Texture Atlas support for use with particles (aaschmitz)
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
