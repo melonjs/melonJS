@@ -62,7 +62,7 @@
          * @default {}
          * @memberOf me.ParticleEmitterSettings
          */
-         textureRegion : {},
+        textureRegion : {},
 
         /**
          * Total number of particles in the emitter.<br>
