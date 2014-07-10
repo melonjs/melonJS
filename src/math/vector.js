@@ -327,45 +327,97 @@
         },
 
         /**
-         * return the length (magnitude) of this vector
-         * @name length
-         * @memberOf me.Vector2d
-         * @function
-         * @return {Number}
-         */
-        length : function () {
-            return Math.sqrt(this.x * this.x + this.y * this.y);
-        },
-
-        /**
          * normalize this vector (scale the vector so that its magnitude is 1)
          * @name normalize
          * @memberOf me.Vector2d
          * @function
-         * @return {Number}
+         * @return {me.Vector2d} Reference to this object for method chaining
          */
         normalize : function () {
-            var len = this.length();
-            // some limit test
-            if (len < Number.MIN_VALUE) {
-                return 0.0;
+            var d = this.length();
+            if (d > 0) {
+                this.x = this.x / d;
+                this.y = this.y / d;
             }
-            var invL = 1.0 / len;
-            this.x *= invL;
-            this.y *= invL;
-            return len;
+            return this;
+        },
+        
+        /**
+         * change this vector to be perpendicular to what it was before.<br>
+         * (Effectively rotates it 90 degrees in a clockwise direction)
+         * @name perp
+         * @memberOf me.Vector2d
+         * @function
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        perp : function () {
+            var x = this.x;
+            this.x = this.y;
+            this.y = -x;
+            return this;
         },
 
+        /**
+         * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Vector2d
+         * @function
+         * @param {number} angle The angle to rotate (in radians)
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        rotate : function (angle) {
+            var x = this.x;
+            var y = this.y;
+            this.x = x * Math.cos(angle) - y * Math.sin(angle);
+            this.y = x * Math.sin(angle) + y * Math.cos(angle);
+            return this;
+        },
+        
+         /**
+         * Reverse this vector.
+         * @name reverse
+         * @memberOf me.Vector2d
+         * @function
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        reverse : function () {
+            this.x = -this.x;
+            this.y = -this.y;
+            return this;
+        },
+        
         /**
          * return the dot product of this vector and the passed one
          * @name dotProduct
          * @memberOf me.Vector2d
          * @function
          * @param {me.Vector2d} v
-         * @return {Number}
+         * @return {Number} The dot product.
          */
-        dotProduct : function (/**me.Vector2d*/ v) {
+        dotProduct : function (v) {
             return this.x * v.x + this.y * v.y;
+        },
+
+       /**
+         * return the square length of this vector
+         * @name length2
+         * @memberOf me.Vector2d
+         * @function
+         * @return {Number} The length^2 of this vector.
+         */
+        length2 : function () {
+            return this.dotProduct(this);
+        },
+        
+        /**
+         * return the length (magnitude) of this vector
+         * @name length
+         * @memberOf me.Vector2d
+         * @function
+         * @return {Number} the length of this vector
+         */
+        length : function () {
+            return Math.sqrt(this.length2());
         },
 
         /**
@@ -391,7 +443,73 @@
         angle : function (v) {
             return Math.atan2((v.y - this.y), (v.x - this.x));
         },
+            
+        /**
+         * project this vector on to another vector.
+         * @name project
+         * @memberOf me.Vector2d
+         * @function
+         * @param {me.Vector2d} v The vector to project onto.
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        project : function (v) {
+            var amt = this.dotProduct(v) / v.length2();
+            this.x = amt * v.x;
+            this.y = amt * v.y;
+            return this;
+        },
 
+        /**
+         * Project this vector onto a vector of unit length.<br>
+         * This is slightly more efficient than `project` when dealing with unit vectors.
+         * @name projectN
+         * @memberOf me.Vector2d
+         * @function
+         * @param {me.Vector2d} v The unit vector to project onto.
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        projectN : function (v) {
+            var amt = this.dotProduct(v);
+            this.x = amt * v.x;
+            this.y = amt * v.y;
+            return this;
+        },
+        
+        /**
+         * Reflect this vector on an arbitrary axis.
+         * @name reflect          
+         * @memberOf me.Vector2d
+         * @function
+         * @param {me.Vector2d} axis The vector representing the axis.
+         * @return {me.Vector2d} Reference to this object for method chaining.
+         */
+        reflect : function (axis) {
+            var x = this.x;
+            var y = this.y;
+            this.project(axis).scale(2);
+            this.x -= x;
+            this.y -= y;
+            return this;
+        },
+ 
+        /**
+         * Reflect this vector on an arbitrary axis (represented by a unit vector) <br>
+         * This is slightly more efficient than `reflect` when dealing with unit vectors.
+         * @name reflectN
+         * @memberOf me.Vector2d
+         * @function
+         * @param {me.Vector2d} axis The vector representing the axis.
+         * @return {me.Vector2d} Reference to this object for method chaining.
+         */
+        reflectN : function (axis) {
+            var x = this.x;
+            var y = this.y;
+            this.projectN(axis).scale(2);
+            this.x -= x;
+            this.y -= y;
+            return this;
+        },
+        
         /**
          * return a clone copy of this vector
          * @name clone
