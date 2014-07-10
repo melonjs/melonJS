@@ -84,6 +84,7 @@
          * @name solver
          * @memberOf me.game
          */
+        // TODO : rename me :)
         api.solver = null;
         
         /**

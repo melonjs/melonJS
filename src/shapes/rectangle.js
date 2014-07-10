@@ -318,58 +318,6 @@
         },
 
         /**
-         * AABB vs AABB collission dectection<p>
-         * If there was a collision, the return vector will contains the following values:
-         * @example
-         * if (v.x != 0 || v.y != 0) {
-         *     if (v.x != 0) {
-         *         // x axis
-         *         if (v.x < 0) {
-         *             console.log("x axis : left side !");
-         *         }
-         *         else {
-         *             console.log("x axis : right side !");
-         *         }
-         *     }
-         *     else {
-         *         // y axis
-         *         if (v.y < 0) {
-         *             console.log("y axis : top side !");
-         *         }
-         *         else {
-         *             console.log("y axis : bottom side !");
-         *         }
-         *     }
-         * }
-         * @ignore
-         * @param {me.Rect} rect
-         * @return {me.Vector2d}
-         */
-        collideWithRectangle : function (/** {me.Rect} */ rect) {
-            // response vector
-            var p = new me.Vector2d(0, 0);
-
-            // compute delta between this & rect
-            var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
-            var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
-
-            // compute penetration depth for both axis
-            p.x = (rect.hWidth  + this.hWidth)  - (dx < 0 ? -dx : dx); // - Math.abs(dx);
-            p.y = (rect.hHeight + this.hHeight) - (dy < 0 ? -dy : dy); // - Math.abs(dy);
-
-            // check and "normalize" axis
-            if (p.x < p.y) {
-                p.y = 0;
-                p.x = dx < 0 ? -p.x : p.x;
-            } else {
-                p.x = 0;
-                p.y = dy < 0 ? -p.y : p.y;
-            }
-            
-            return p;
-        },
-
-        /**
          * debug purpose
          * @ignore
          */
