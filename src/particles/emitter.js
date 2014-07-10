@@ -53,6 +53,16 @@
          * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#canvasimagesource
          */
         image : pixel,
+        
+        /**
+         * Texture region setting for particles using Texture Atlas.<br>
+         * @public
+         * @type Object
+         * @name textureRegion
+         * @default {}
+         * @memberOf me.ParticleEmitterSettings
+         */
+         textureRegion : {},
 
         /**
          * Total number of particles in the emitter.<br>
