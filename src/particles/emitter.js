@@ -317,13 +317,25 @@
      * var emitter = new me.ParticleEmitter(100, 100);
      *
      * // Adjust the emitter properties
+     * emitter.image = me.loader.getImage("explosion");
      * emitter.totalParticles = 200;
      * emitter.minLife = 1000;
      * emitter.maxLife = 3000;
-     * emitter.z = 10;
      *
-     * // Add the emitter to the game world
-     * me.game.world.addChild(emitter);
+     * // Using a Texture Atlas as Particles images
+     * emitter.image = game.texture.getTexture();
+     * emitter.textureRegion = game.texture.getRegion("explosion.png"); 
+     * 
+     * // Alternative constructor call, passing directly the emitter properties
+     * var emitter = new me.ParticleEmitter(100, 100,{
+     *      image: me.loader.getImage("explosion"),
+     *      totalParticles: 200,
+     *      minLife: 1000,
+     *      maxLife: 3000
+     *  });
+     * 
+     * // Add the emitter to the game world, with z-order = 10
+     * me.game.world.addChild(emitter, 10);
      * me.game.world.addChild(emitter.container);
      *
      * // Launch all particles one time and stop, like a explosion
@@ -362,20 +374,17 @@
             // Emitter is emitting particles
             /** @ignore */
             this._enabled = false;
+            
             // Emitter will always update
             this.isRenderable = false;
+            
             // call the super constructor
-            this._super(
-                me.Rect,
-                "init",
-                [new me.Vector2d(x, y),
-                Infinity,
-                Infinity]
-            );
+            this._super(me.Rect, "init", [new me.Vector2d(x, y), Infinity, Infinity]);
 
             // don't sort the particles by z-index
             this.autoSort = false;
-
+            
+            // add new container
             this.container = new me.ParticleContainer(this);
 
             /**
