@@ -443,6 +443,7 @@
             this.resize(width, height);
 
             this.image = settings.image || defaults.image;
+            this.textureRegion = settings.textureRegion || defaults.textureRegion;
             this.totalParticles = (typeof settings.totalParticles === "number") ? settings.totalParticles : defaults.totalParticles;
             this.angle = (typeof settings.angle === "number") ? settings.angle : defaults.angle;
             this.angleVariation = (typeof settings.angleVariation === "number") ? settings.angleVariation : defaults.angleVariation;
