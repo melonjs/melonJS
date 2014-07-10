@@ -33,8 +33,9 @@
             this.offset = new me.Vector2d(0, 0);
             
             // Set the particle offset when using Texture Atlas
-            if (emitter.textureRegion.offset)
+            if (emitter.textureRegion.offset) {
                 this.offset.setV(emitter.textureRegion.offset);
+            }
 
             // Set the start particle Angle and Speed as defined in emitter
             var angle = emitter.angle + ((emitter.angleVariation > 0) ? (Math.random() * 2 - 1) * emitter.angleVariation : 0);
