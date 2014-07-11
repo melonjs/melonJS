@@ -45,7 +45,7 @@
   </data>
  </layer>
  <objectgroup color="#55ff00" name="player" width="50" height="17">
-  <object name="mainPlayer" x="105" y="420" width="35" height="105">
+  <object name="mainPlayer" x="105" y="438" width="35" height="88">
    <properties>
     <property name="spriteheight" value="98"/>
     <property name="spritewidth" value="72"/>
