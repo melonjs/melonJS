@@ -203,7 +203,7 @@
          * @return {Number}
          */
         api.getWidth = function () {
-            return canvas.width;
+            return renderer.getWidth();
         };
 
         /**
@@ -230,7 +230,7 @@
          * @return {Number}
          */
         api.getHeight = function () {
-            return canvas.height;
+            return renderer.getHeight();
         };
 
         /**
@@ -362,6 +362,7 @@
                 var parent = me.video.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
+                console.log([_max_width, _max_height]);
 
                 if (maintainAspectRatio) {
                     // make sure we maintain the original aspect ratio
@@ -390,7 +391,6 @@
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);
                     }
-                    console.log([scaleX, scaleY]);
                     deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
                     return;
                 }
@@ -409,7 +409,6 @@
          */
         api.updateDisplaySize = function (scaleX, scaleY) {
             // update the global scale variable
-            console.log([scaleX, scaleY]);
             me.sys.scale.set(scaleX, scaleY);
             
             me.input._offset = me.video.getPos();

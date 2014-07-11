@@ -221,6 +221,10 @@
             return _context;
         };
 
+        api.getHeight = function () {
+            return backBufferCanvas.height;
+        };
+
         /**
          * return a reference to the system canvas
          * @name getSystemCanvas
@@ -241,6 +245,10 @@
          */
         api.getSystemContext = function () {
             return backBufferContext2D;
+        };
+
+        api.getWidth = function () {
+            return backBufferCanvas.width;
         };
 
         /**
@@ -265,7 +273,6 @@
         };
 
         api.resize = function (scaleX, scaleY) {
-            console.log([scaleX, scaleY]);
             gameWidthZoom = backBufferCanvas.width * scaleX;
             gameHeightZoom = backBufferCanvas.height * scaleY;
             canvas.width = gameWidthZoom;
