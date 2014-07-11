@@ -268,94 +268,37 @@
 
                     }
                     else if ((obj !== objA) && (!type || (obj.type === type))) {
-                        // quick reference to both object bounding box
-                        var _boundsA = objA.getBounds();
-                        var _boundsB = obj.getBounds();
 
                         // check if both bounding boxes are overlaping
-                        if (_boundsA.overlaps(_boundsB)) {
+                        if (objA.getBounds().overlaps(obj.getBounds())) {
+                            
+                            // collision response
+                            res = multiple ? new Response() : T_RESPONSE;
+                            
                             // calculate the collision vector
                             // TODO: add the test[*][*] function for other shape type
-                            res = this["test" + _boundsB.shapeType + _boundsA.shapeType].call(
-                                this,
-                                _boundsB,
-                                _boundsA,
-                                /* the reusable response object*/
-                                multiple ? undefined : T_RESPONSE
-                            );
+                            if (this["test" + obj.body.getShape().shapeType + objA.body.getShape().shapeType].call(
+                                this, obj.body, objA.body, res)) {
 
-                            if (typeof obj.body.onCollision === "function") {
-                                // notify the object
-                                obj.body.onCollision.call(obj.body, res, objA);
+                                if (typeof obj.body.onCollision === "function") {
+                                    // notify the object
+                                    obj.body.onCollision.call(obj.body, res, objA);
+                                }
+                                // return the type (deprecated)
+                                res.type = obj.type;
+                                // return a reference of the colliding object
+                                res.obj = obj;
+                                // stop here if we don't look for multiple collision detection
+                                if (!multiple) {
+                                    return res;
+                                }
+                                mres.push(res);
                             }
-                            // return the type (deprecated)
-                            res.type = obj.type;
-                            // return a reference of the colliding object
-                            res.obj = obj;
-                            // stop here if we don't look for multiple collision detection
-                            if (!multiple) {
-                                return res;
-                            }
-                            mres.push(res);
                         }
                     }
                 }
             }
             return (multiple ? mres : null);
-        },
-
-        /**
-         * test for collision between two rectangles<p>
-         * If there was a collision, the return vector will contains the following values:
-         * @example
-         * if (v.x != 0 || v.y != 0) {
-         *     if (v.x != 0) {
-         *         // x axis
-         *         if (v.x < 0) {
-         *             console.log("x axis : left side !");
-         *         }
-         *         else {
-         *             console.log("x axis : right side !");
-         *         }
-         *     }
-         *     else {
-         *         // y axis
-         *         if (v.y < 0) {
-         *             console.log("y axis : top side !");
-         *         }
-         *         else {
-         *             console.log("y axis : bottom side !");
-         *         }
-         *     }
-         * }
-         * @ignore
-         * @param {me.Rect} a The first rect.
-         * @param {me.Rect} b The second rect
-         * @param {Reponse} response Response object (optional) that will be populated if both rect intersects.
-         * @return Response object
-         */
-        testRectangleRectangle : function (a, b, response) {
-            // response object
-            response = response || new Response();
-
-            // compute delta between a & b
-            var dx = a.left + a.hWidth  - b.left - b.hWidth;
-            var dy = a.top  + a.hHeight - b.top  - b.hHeight;
-
-            // compute penetration depth for both axis
-            response.x = (b.hWidth  + a.hWidth)  - (dx < 0 ? -dx : dx); // - Math.abs(dx);
-            response.y = (b.hHeight + a.hHeight) - (dy < 0 ? -dy : dy); // - Math.abs(dy);
-
-            // check and "normalize" axis
-            if (response.x < response.y) {
-                response.y = 0;
-                response.x = dx < 0 ? -response.x : response.x;
-            } else {
-                response.x = 0;
-                response.y = dy < 0 ? -response.y : response.y;
-            }
-
-            return response;
         },
            
         /**
@@ -365,23 +308,24 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
         */
-        testPolygonPolygon : function (a, b, response) {
-            var aPoints = a.points;
+        testPolyShapePolyShape : function (a, b, response) {
+            // specific point for 
+            var aPoints = a.getShape().points;
             var aLen = aPoints.length;
-            var bPoints = b.points;
+            var bPoints = b.getShape().points;
             var bLen = bPoints.length;
             var i;
             
             // If any of the edge normals of A is a separating axis, no intersection.
             for (i = 0; i < aLen; i++) {
-                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, a.normals[i], response)) {
+                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, a.getShape().normals[i], response)) {
                     return false;
                 }
             }
             
             // If any of the edge normals of B is a separating axis, no intersection.
             for (i = 0;i < bLen; i++) {
-                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, b.normals[i], response)) {
+                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, b.getShape().normals[i], response)) {
                     return false;
                 }
             }
@@ -393,6 +337,9 @@
                 response.a = a;
                 response.b = b;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
+                // backward compatiblity
+                response.x = response.overlapV.x;
+                response.y = response.overlapV.y;
             }
             return true;
         }
