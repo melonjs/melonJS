@@ -15,11 +15,6 @@ game.PlayerEntity = me.Entity.extend({
 		// walking & jumping speed
 		this.body.setVelocity(3, 15);
 		this.body.setFriction(0.4,0);
-		
-		// update the collision shape rect
-		var shape = this.body.getShape();
-		shape.pos.y = 16;
-		shape.resize(this.width, shape.height - shape.pos.y);
 
 		this.dying = false;
 		

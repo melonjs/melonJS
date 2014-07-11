@@ -327,8 +327,14 @@
                 return new me.PolyShape(new me.Vector2d(0, 0), this.points, this.isPolygon);
             }
 
-            // it's a rectangle
-            return new me.Rect(new me.Vector2d(0, 0), this.width, this.height);
+            // it's a rectangle, returns a polygone object anyway
+            return new me.PolyShape(
+                new me.Vector2d(0, 0), [
+                    new me.Vector2d(), new me.Vector2d(this.width, 0),
+                    new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
+                ],
+                true
+            );
         },
         /**
          * getObjectPropertyByName

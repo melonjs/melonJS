@@ -223,7 +223,13 @@
          * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
          */
         addShape : function (shape) {
-            this.shapes.push(shape);
+            if (shape.shapeType === "Rectangle") {
+                // ensure that rect shape are managed as polygon
+                this.shapes.push(shape.toPolygon());
+            } else {
+                // else polygon or circle
+                this.shapes.push(shape);
+            }
             this.updateBounds();
         },
 
