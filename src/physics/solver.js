@@ -23,10 +23,6 @@
         this.b = null;
         this.overlapN = new me.Vector2d();
         this.overlapV = new me.Vector2d();
-        // --- for backward compatilibity (temporary)
-        this.x = 0;
-        this.y = 0;
-        // ----
         this.clear();
     }
 
@@ -40,6 +36,10 @@
     Response.prototype.clear = function () {
         this.aInB = true;
         this.bInA = true;
+        // --- for backward compatilibity (temporary)
+        this.x = 0;
+        this.y = 0;
+        // ----
         this.overlap = Number.MAX_VALUE;
         return this;
     };
@@ -269,7 +269,7 @@
                     }
                     else if ((obj !== objA) && (!type || (obj.type === type))) {
 
-                        // check if both bounding boxes are overlaping
+                        // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(obj.getBounds())) {
                             
                             // collision response
@@ -278,7 +278,7 @@
                             // calculate the collision vector
                             // TODO: add the test[*][*] function for other shape type
                             if (this["test" + obj.body.getShape().shapeType + objA.body.getShape().shapeType].call(
-                                this, obj.body, objA.body, res)) {
+                                this, objA.body, obj.body, res)) {
 
                                 if (typeof obj.body.onCollision === "function") {
                                     // notify the object
@@ -337,7 +337,7 @@
                 response.a = a;
                 response.b = b;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
-                // backward compatiblity
+                // for backward compatiblity
                 response.x = response.overlapV.x;
                 response.y = response.overlapV.y;
             }
