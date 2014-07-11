@@ -265,6 +265,7 @@
         };
 
         api.resize = function (scaleX, scaleY) {
+            console.log([scaleX, scaleY]);
             gameWidthZoom = backBufferCanvas.width * scaleX;
             gameHeightZoom = backBufferCanvas.height * scaleY;
             canvas.width = gameWidthZoom;

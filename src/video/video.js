@@ -390,6 +390,7 @@
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);
                     }
+                    console.log([scaleX, scaleY]);
                     deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
                     return;
                 }
@@ -408,6 +409,7 @@
          */
         api.updateDisplaySize = function (scaleX, scaleY) {
             // update the global scale variable
+            console.log([scaleX, scaleY]);
             me.sys.scale.set(scaleX, scaleY);
             
             me.input._offset = me.video.getPos();
