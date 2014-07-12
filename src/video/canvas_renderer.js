@@ -126,7 +126,7 @@
          */
         api.clearSurface = function (ctx, col) {
             if (ctx === null) {
-                ctx = context;
+                ctx = backBufferContext2D;
             }
             var _canvas = ctx.canvas;
             ctx.save();
@@ -152,7 +152,7 @@
          * @param {Number} destH the height value to draw the image at on the screen
          */
         api.drawImage = function (image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH) {
-            context.drawImage(image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH);
+            backBufferContext2D.drawImage(image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH);
         };
 
         /**
@@ -167,8 +167,8 @@
          * @param {String} css color for the rectangle
          */
         api.drawRectWithColor = function (x, y, width, height, color) {
-            context.fillStyle = color;
-            context.fillRect(x, y, width, height);
+            backBufferContext2D.fillStyle = color;
+            backBufferContext2D.fillRect(x, y, width, height);
         };
 
         /**
@@ -259,7 +259,7 @@
          * @return {Number}
          */
         api.globalAlpha = function () {
-            return context.globalAlpha;
+            return backBufferContext2D.globalAlpha;
         };
 
         /**
@@ -269,7 +269,7 @@
          * @function
          */
         api.resetTransform = function () {
-            context.setTransform(1, 0, 0, 1, 0, 0);
+            backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
         };
 
         api.resize = function (scaleX, scaleY) {
@@ -292,7 +292,7 @@
          * @function
          */
         api.restore = function () {
-            context.restore();
+            backBufferContext2D.restore();
         };
 
         /**
@@ -303,7 +303,7 @@
          * @param {Number} angle in radians
          */
         api.rotate = function (angle) {
-            context.rotate(angle);
+            backBufferContext2D.rotate(angle);
         };
 
         /**
@@ -313,7 +313,7 @@
          * @function
          */
         api.save = function () {
-            context.save();
+            backBufferContext2D.save();
         };
 
         /**
@@ -325,11 +325,11 @@
          * @param {Number} y
          */
         api.scale = function (x, y) {
-            context.scale(x, y);
+            backBufferContext2D.scale(x, y);
         };
 
         api.setAlpha = function (enable) {
-            context.globalCompositeOperation = enable ? "source-over" : "copy";
+            backBufferContext2D.globalCompositeOperation = enable ? "source-over" : "copy";
         };
 
         /**
@@ -340,7 +340,7 @@
          * @param {Number} alpha value. 0.0 to 1.0 values accepted.
          */
         api.setGlobalAlpha = function (a) {
-            context.globalAlpha = a;
+            backBufferContext2D.globalAlpha = a;
         };
 
         /**
@@ -363,7 +363,7 @@
          * @function
          */
         api.transform = function () {
-            context.transform.apply(context, arguments);
+            backBufferContext2D.transform.apply(context, arguments);
         };
 
         /**
@@ -375,7 +375,7 @@
          * @param {Number} y
          */
         api.translate = function (x, y) {
-            context.translate(x, y);
+            backBufferContext2D.translate(x, y);
         };
 
         return api;
