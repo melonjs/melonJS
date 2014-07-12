@@ -273,10 +273,8 @@
         };
 
         api.resize = function (scaleX, scaleY) {
-            gameWidthZoom = backBufferCanvas.width * scaleX;
-            gameHeightZoom = backBufferCanvas.height * scaleY;
-            canvas.width = gameWidthZoom;
-            canvas.height = gameHeightZoom;
+            canvas.width = gameWidthZoom = backBufferCanvas.width * scaleX;
+            canvas.height = gameHeightZoom = backBufferCanvas.height * scaleY;
             
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
