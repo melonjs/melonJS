@@ -30,7 +30,7 @@
      * Set some values of the response back to their defaults.
      * Call this between tests if you are going to reuse a single
      * Response object for multiple intersection tests
-     * (recommented as it will avoid allcating extra memory)
+     * (recommended as it will avoid allocating extra memory)
      * @ignore
      */
     Response.prototype.clear = function () {
@@ -273,7 +273,7 @@
                         if (objA.getBounds().overlaps(obj.getBounds())) {
                             
                             // collision response
-                            res = multiple ? new Response() : T_RESPONSE;
+                            res = multiple ? new Response() : T_RESPONSE.clear();
                             
                             // calculate the collision vector
                             // TODO: add the test[*][*] function for other shape type
