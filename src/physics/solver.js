@@ -323,12 +323,16 @@
                             res = multiple ? new Response() : T_RESPONSE.clear();
 
                             // calculate the collision vector
-                            // TODO: add the test[*][*] function for other shape type
-                            // TODO : add more parameter to all the test function
-                            // object/body position and body shape to be tested
-                            // so that we can also go through all shapes defined for one object
+                            // TODO : loop through all shapes for collision
                             if (this["test" + objA.body.getShape().shapeType + obj.body.getShape().shapeType]
-                                .call(this, objA.body, obj.body, res)) {
+                                .call(
+                                    this,
+                                    objA.body, // a reference to the object A body
+                                    objA.body.getShape(),
+                                    obj.body,  // a reference to the object B body
+                                    obj.body.getShape(),
+                                    res
+                                )) {
 
                                 if (typeof obj.body.onCollision === "function") {
                                     // notify the object
@@ -353,29 +357,31 @@
 
         /**
          * Checks whether polygons collide.
-         * @param {Polygon} a The first polygon.
-         * @param {Polygon} b The second polygon.
+         * @param {me.Body} a a reference to the object A body.
+         * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
+         * @param {me.Body} b a reference to the object B body.
+         * @param {me.PolyShape} polyB a reference to the object B polyshape to be tested
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
         */
-        testPolyShapePolyShape : function (a, b, response) {
+        testPolyShapePolyShape : function (a, polyA, b, polyB, response) {
             // specific point for
-            var aPoints = a.getShape().points;
+            var aPoints = polyA.points;
             var aLen = aPoints.length;
-            var bPoints = b.getShape().points;
+            var bPoints = polyB.points;
             var bLen = bPoints.length;
             var i;
 
             // If any of the edge normals of A is a separating axis, no intersection.
             for (i = 0; i < aLen; i++) {
-                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, a.getShape().normals[i], response)) {
+                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, polyA.normals[i], response)) {
                     return false;
                 }
             }
 
             // If any of the edge normals of B is a separating axis, no intersection.
             for (i = 0;i < bLen; i++) {
-                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, b.getShape().normals[i], response)) {
+                if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, polyB.normals[i], response)) {
                     return false;
                 }
             }
@@ -384,8 +390,8 @@
             // and we've already calculated the smallest overlap (in isSeparatingAxis).  Calculate the
             // final overlap vector.
             if (response) {
-                response.a = a;
-                response.b = b;
+                response.a = a.entity;
+                response.b = b.entity;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
                 // for backward compatiblity
                 response.x = response.overlapV.x;
@@ -396,18 +402,20 @@
 
         /**
          * Check if two Ellipse collide.
-         * @param {me.Ellipse} a The first ellipse.
-         * @param {me.Ellipse} b The second ellise.
+         * @param {me.Body} a a reference to the object A body.
+         * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
+         * @param {me.Body} b a reference to the object B body.
+         * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
          * @param {Response=} response Response object (optional) that will be populated if
          *   the circles intersect.
          * @return {boolean} true if the circles intersect, false if they don't.
          */
-        testEllipseEllipse : function (a, b, response) {
+        testEllipseEllipse : function (a, ellipseA, b, ellipseB, response) {
             // Check if the distance between the centers of the two
             // circles is greater than their combined radius.
             var differenceV = T_VECTORS.pop().copy(b.pos).sub(a.pos);
-            var radiusA = a.getShape().radius;
-            var radiusB = b.getShape().radius;
+            var radiusA = ellipseA.radius;
+            var radiusB = ellipseB.radius;
             var totalRadius = radiusA + radiusB;
             var totalRadiusSq = totalRadius * totalRadius;
             var distanceSq = differenceV.length2();
@@ -419,8 +427,8 @@
             // They intersect.  If we're calculating a response, calculate the overlap.
             if (response) {
                 var dist = Math.sqrt(distanceSq);
-                response.a = a;
-                response.b = b;
+                response.a = a.entity;
+                response.b = b.entity;
                 response.overlap = totalRadius - dist;
                 response.overlapN.copy(differenceV.normalize());
                 response.overlapV.copy(differenceV).scale(response.overlap);
@@ -434,20 +442,21 @@
             return true;
         },
 
-        // Check if a polygon and a circle collide.
         /**
-        * @param {Polygon} polygon The polygon.
-        * @param {Circle} circle The circle.
-        * @param {Response=} response Response object (optional) that will be populated if
-        *   they interset.
-        * @return {boolean} true if they intersect, false if they don't.
-        */
-        testPolyShapeEllipse : function (polygon, circle, response) {
+         * Check if a polygon and a circle collide.
+         * @param {me.Body} a a reference to the object A body.
+         * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
+         * @param {me.Body} b a reference to the object B body.
+         * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they interset.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        testPolyShapeEllipse : function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
-            var circlePos = T_VECTORS.pop().copy(circle.pos).sub(polygon.pos);
-            var radius = circle.getShape().radius;
+            var circlePos = T_VECTORS.pop().copy(b.pos).sub(a.pos);
+            var radius = ellipseB.radius;
             var radius2 = radius * radius;
-            var points = polygon.getShape().points;
+            var points = polyA.points;
             var len = points.length;
             var edge = T_VECTORS.pop();
             var point = T_VECTORS.pop();
@@ -461,7 +470,7 @@
                 var overlapN = null;
 
                 // Get the edge.
-                edge.copy(polygon.getShape().edges[i]);
+                edge.copy(polyA.edges[i]);
                 // Calculate the center of the circle relative to the starting point of the edge.
                 point.copy(circlePos).sub(points[i]);
 
@@ -477,7 +486,7 @@
                 // If it's the left region:
                 if (region === LEFT_VORNOI_REGION) {
                     // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
-                    edge.copy(polygon.getShape().edges[prev]);
+                    edge.copy(polyA.edges[prev]);
                     // Calculate the center of the circle relative the starting point of the previous edge
                     var point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
                     region = vornoiRegion(edge, point2);
@@ -502,7 +511,7 @@
                     // If it's the right region:
                 } else if (region === RIGHT_VORNOI_REGION) {
                     // We need to make sure we're in the left region on the next edge
-                    edge.copy(polygon.getShape().edges[next]);
+                    edge.copy(polyA.edges[next]);
                     // Calculate the center of the circle relative to the starting point of the next edge.
                     point.copy(circlePos).sub(points[next]);
                     region = vornoiRegion(edge, point);
@@ -560,8 +569,8 @@
 
             // Calculate the final overlap vector - based on the smallest overlap.
             if (response) {
-                response.a = polygon;
-                response.b = circle;
+                response.a = a.entity;
+                response.b = b.entity;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
                 // for backward compatiblity
                 response.x = response.overlapV.x;
@@ -577,23 +586,25 @@
          * Check if a circle and a polygon collide. <br>
          * **NOTE:** This is slightly less efficient than polygonCircle as it just <br>
          * runs polygonCircle and reverses everything at the end.
-         * @param {me.Ellipse} circle The circle.
-         * @param {me.PolyShape} polygon The polygon.
+         * @param {me.Body} a a reference to the object A body.
+         * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
+         * @param {me.Body} a a reference to the object B body.
+         * @param {me.PolyShape} polyB a reference to the object B polyshape to be tested
          * @param {Response=} response Response object (optional) that will be populated if
          *   they interset.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        testEllipsePolyShape : function (circle, polygon, response) {
+        testEllipsePolyShape : function (a, ellipseA, b, polyB,  response) {
             // Test the polygon against the circle.
-            var result = this.testPolyShapeEllipse(polygon, circle, response);
+            var result = this.testPolyShapeEllipse(b, polyB, a, ellipseA, response);
             if (result && response) {
                 // Swap A and B in the response.
-                var a = response.a;
+                var resa = response.a;
                 var aInB = response.aInB;
                 response.overlapN.reverse();
                 response.overlapV.reverse();
                 response.a = response.b;
-                response.b = a;
+                response.b = resa;
                 response.aInB = response.bInA;
                 response.bInA = aInB;
                 // for backward compatiblity
