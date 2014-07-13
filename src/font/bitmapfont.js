@@ -131,14 +131,14 @@
          * @param {Number} x
          * @param {Number} y
          */
-        draw : function (context, text, x, y) {
+        draw : function (renderer, text, x, y) {
             var strings = ("" + text).split("\n");
             var lX = x;
             var height = this.sSize.y * this.lineHeight;
             
             // save the previous global alpha value
-            var _alpha = context.globalAlpha;
-            context.globalAlpha *= this.getOpacity();
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
   
             // update initial position
             this.pos.set(x, y);
@@ -182,7 +182,7 @@
                     var idx = string.charCodeAt(c) - this.firstChar;
                     if (idx >= 0) {
                         // draw it
-                        context.drawImage(this.font,
+                        renderer.drawImage(this.font,
                             this.fontSize.x * (idx % this.charCount),
                             this.fontSize.y * ~~(idx / this.charCount),
                             this.fontSize.x, this.fontSize.y,
@@ -195,7 +195,7 @@
                 y += height;
             }
             // restore the previous global alpha value
-            context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         }
     });
 })();

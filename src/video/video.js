@@ -362,7 +362,6 @@
                 var parent = me.video.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
-                console.log([_max_width, _max_height]);
 
                 if (maintainAspectRatio) {
                     // make sure we maintain the original aspect ratio

@@ -203,19 +203,19 @@
          * @param {Canvas}
          * @return {Context2d}
          */
-        api.getContext2d = function (canvas) {
+        api.getContext2d = function (c) {
             var _context;
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
-                _context = canvas.getContext("2d", {
+                _context = c.getContext("2d", {
                     "antialias" : me.sys.scalingInterpolation
                 });
             }
             else {
-                _context = canvas.getContext("2d");
+                _context = c.getContext("2d");
             }
             if (!_context.canvas) {
-                _context.canvas = canvas;
+                _context.canvas = c;
             }
             this.setImageSmoothing(_context, me.sys.scalingInterpolation);
             return _context;

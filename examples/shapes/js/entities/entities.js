@@ -54,10 +54,10 @@ game.ShapeObject = me.ObjectEntity.extend({
     /**
      * draw the square
      */
-    draw: function (context) {
-        context.globalAlpha = this.hover ? 1.0 : 0.5;
-        this._super(me.ObjectEntity, 'draw', [context]);
-        context.globalAlpha = 1.0;
+    draw: function (renderer) {
+        renderer.setGlobalAlpha(this.hover ? 1.0 : 0.5);
+        this._super(me.ObjectEntity, 'draw', [renderer]);
+        renderer.setGlobalAlpha(1.0);
     }
 });
 

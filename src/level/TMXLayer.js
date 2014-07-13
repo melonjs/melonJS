@@ -201,7 +201,7 @@
          * draw the image layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // translate default position using the anchorPoint value
             var viewport = me.game.viewport;
             var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0;
@@ -209,11 +209,11 @@
             var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
 
             if (shouldTranslate) {
-                context.translate(translateX, translateY);
+                renderer.translate(translateX, translateY);
             }
 
             // set the layer alpha value
-            context.globalAlpha *= this.getOpacity();
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             var sw, sh;
 
@@ -223,7 +223,7 @@
                 sw = Math.min(rect.width, this.imagewidth);
                 sh = Math.min(rect.height, this.imageheight);
 
-                context.drawImage(
+                renderer.drawImage(
                     this.image,
                     rect.left, rect.top,    // sx, sy
                     sw, sh,                 // sw, sh
@@ -245,7 +245,7 @@
 
                 do {
                     do {
-                        context.drawImage(
+                        renderer.drawImage(
                             this.image,
                             sx, sy, // sx, sy
                             sw, sh,
@@ -273,7 +273,7 @@
             }
 
             if (shouldTranslate) {
-                context.translate(-translateX, -translateY);
+                renderer.translate(-translateX, -translateY);
             }
         },
 
@@ -407,9 +407,10 @@
             }
 
             // if pre-rendering method is use, create the offline canvas
+            // TODO: this is really tied to the canvas api. need to abstract it.
             if (this.preRender === true) {
                 this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-                this.layerSurface = me.video.getContext2d(this.layerCanvas);
+                this.layerSurface = me.CanvasRenderer.getContext2d(this.layerCanvas);
             }
         },
 
@@ -586,18 +587,18 @@
          * draw a tileset layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // use the offscreen canvas
             if (this.preRender) {
 
                 var width = Math.min(rect.width, this.width);
                 var height = Math.min(rect.height, this.height);
 
-                this.layerSurface.globalAlpha = context.globalAlpha * this.getOpacity();
+                this.layerSurface.globalAlpha = renderer.globalAlpha() * this.getOpacity();
 
                 if (this.layerSurface.globalAlpha > 0) {
                     // draw using the cached canvas
-                    context.drawImage(
+                    renderer.drawImage(
                         this.layerCanvas,
                         rect.pos.x, rect.pos.y, // sx,sy
                         width, height,          // sw,sh
@@ -609,15 +610,15 @@
             // dynamically render the layer
             else {
                 // set the layer alpha value
-                var _alpha = context.globalAlpha;
-                context.globalAlpha *= this.getOpacity();
-                if (context.globalAlpha > 0) {
+                var _alpha = renderer.globalAlpha();
+                renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+                if (renderer.globalAlpha() > 0) {
                     // draw the layer
-                    this.renderer.drawTileLayer(context, this, rect);
+                    this.renderer.drawTileLayer(renderer, this, rect);
                 }
 
                 // restore context to initial state
-                context.globalAlpha = _alpha;
+                renderer.setGlobalAlpha(_alpha);
             }
         }
     });
