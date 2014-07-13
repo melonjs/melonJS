@@ -177,6 +177,53 @@
         return false;
     }
 
+
+    // Constants for Vornoi regions
+    /**
+     * @ignore
+     */
+    var LEFT_VORNOI_REGION = -1;
+    /**
+     * @ignore
+     */
+    var MIDDLE_VORNOI_REGION = 0;
+    /**
+     * @ignore
+     */
+    var RIGHT_VORNOI_REGION = 1;
+
+    /**
+     * Calculates which Vornoi region a point is on a line segment. <br>
+     * It is assumed that both the line and the point are relative to `(0,0)`<br>
+     * <br>
+     *             |       (0)      |<br>
+     *      (-1)  [S]--------------[E]  (1)<br>
+     *             |       (0)      |<br>
+     *
+     * @ignore
+     * @param {Vector} line The line segment.
+     * @param {Vector} point The point.
+     * @return  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
+     *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
+     *          RIGHT_VORNOI_REGION (1) if it is the right region.
+     */
+    function vornoiRegion(line, point) {
+        var len2 = line.length2();
+        var dp = point.dotProduct(line);
+        if (dp < 0) {
+            // If the point is beyond the start of the line, it is in the
+            // left vornoi region.
+            return LEFT_VORNOI_REGION;
+        } else if (dp > len2) {
+            // If the point is beyond the end of the line, it is in the
+            // right vornoi region.
+            return RIGHT_VORNOI_REGION;
+        } else {
+            // Otherwise, it's in the middle one.
+            return MIDDLE_VORNOI_REGION;
+        }
+    }
+
     // ## collision Solver class
 
     /**
@@ -271,14 +318,17 @@
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(obj.getBounds())) {
-                            
+
                             // collision response
                             res = multiple ? new Response() : T_RESPONSE.clear();
-                            
+
                             // calculate the collision vector
                             // TODO: add the test[*][*] function for other shape type
-                            if (this["test" + obj.body.getShape().shapeType + objA.body.getShape().shapeType].call(
-                                this, objA.body, obj.body, res)) {
+                            // TODO : add more parameter to all the test function
+                            // object/body position and body shape to be tested
+                            // so that we can also go through all shapes defined for one object
+                            if (this["test" + objA.body.getShape().shapeType + obj.body.getShape().shapeType]
+                                .call(this, objA.body, obj.body, res)) {
 
                                 if (typeof obj.body.onCollision === "function") {
                                     // notify the object
@@ -300,7 +350,7 @@
             }
             return (multiple ? mres : null);
         },
-           
+
         /**
          * Checks whether polygons collide.
          * @param {Polygon} a The first polygon.
@@ -309,27 +359,27 @@
          * @return {boolean} true if they intersect, false if they don't.
         */
         testPolyShapePolyShape : function (a, b, response) {
-            // specific point for 
+            // specific point for
             var aPoints = a.getShape().points;
             var aLen = aPoints.length;
             var bPoints = b.getShape().points;
             var bLen = bPoints.length;
             var i;
-            
+
             // If any of the edge normals of A is a separating axis, no intersection.
             for (i = 0; i < aLen; i++) {
                 if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, a.getShape().normals[i], response)) {
                     return false;
                 }
             }
-            
+
             // If any of the edge normals of B is a separating axis, no intersection.
             for (i = 0;i < bLen; i++) {
                 if (isSeparatingAxis(a.pos, b.pos, aPoints, bPoints, b.getShape().normals[i], response)) {
                     return false;
                 }
             }
-            
+
             // Since none of the edge normals of A or B are a separating axis, there is an intersection
             // and we've already calculated the smallest overlap (in isSeparatingAxis).  Calculate the
             // final overlap vector.
@@ -342,6 +392,215 @@
                 response.y = response.overlapV.y;
             }
             return true;
+        },
+
+        /**
+         * Check if two Ellipse collide.
+         * @param {me.Ellipse} a The first ellipse.
+         * @param {me.Ellipse} b The second ellise.
+         * @param {Response=} response Response object (optional) that will be populated if
+         *   the circles intersect.
+         * @return {boolean} true if the circles intersect, false if they don't.
+         */
+        testEllipseEllipse : function (a, b, response) {
+            // Check if the distance between the centers of the two
+            // circles is greater than their combined radius.
+            var differenceV = T_VECTORS.pop().copy(b.pos).sub(a.pos);
+            var radiusA = a.getShape().radius;
+            var radiusB = b.getShape().radius;
+            var totalRadius = radiusA + radiusB;
+            var totalRadiusSq = totalRadius * totalRadius;
+            var distanceSq = differenceV.length2();
+            // If the distance is bigger than the combined radius, they don't intersect.
+            if (distanceSq > totalRadiusSq) {
+                T_VECTORS.push(differenceV);
+                return false;
+            }
+            // They intersect.  If we're calculating a response, calculate the overlap.
+            if (response) {
+                var dist = Math.sqrt(distanceSq);
+                response.a = a;
+                response.b = b;
+                response.overlap = totalRadius - dist;
+                response.overlapN.copy(differenceV.normalize());
+                response.overlapV.copy(differenceV).scale(response.overlap);
+                response.aInB = radiusA <= radiusB && dist <= radiusB - radiusA;
+                response.bInA = radiusB <= radiusA && dist <= radiusA - radiusB;
+                // for backward compatiblity
+                response.x = response.overlapV.x;
+                response.y = response.overlapV.y;
+            }
+            T_VECTORS.push(differenceV);
+            return true;
+        },
+
+        // Check if a polygon and a circle collide.
+        /**
+        * @param {Polygon} polygon The polygon.
+        * @param {Circle} circle The circle.
+        * @param {Response=} response Response object (optional) that will be populated if
+        *   they interset.
+        * @return {boolean} true if they intersect, false if they don't.
+        */
+        testPolyShapeEllipse : function (polygon, circle, response) {
+            // Get the position of the circle relative to the polygon.
+            var circlePos = T_VECTORS.pop().copy(circle.pos).sub(polygon.pos);
+            var radius = circle.getShape().radius;
+            var radius2 = radius * radius;
+            var points = polygon.getShape().points;
+            var len = points.length;
+            var edge = T_VECTORS.pop();
+            var point = T_VECTORS.pop();
+            var dist = 0;
+
+            // For each edge in the polygon:
+            for (var i = 0; i < len; i++) {
+                var next = i === len - 1 ? 0 : i + 1;
+                var prev = i === 0 ? len - 1 : i - 1;
+                var overlap = 0;
+                var overlapN = null;
+
+                // Get the edge.
+                edge.copy(polygon.getShape().edges[i]);
+                // Calculate the center of the circle relative to the starting point of the edge.
+                point.copy(circlePos).sub(points[i]);
+
+                // If the distance between the center of the circle and the point
+                // is bigger than the radius, the polygon is definitely not fully in
+                // the circle.
+                if (response && point.length2() > radius2) {
+                    response.aInB = false;
+                }
+
+                // Calculate which Vornoi region the center of the circle is in.
+                var region = vornoiRegion(edge, point);
+                // If it's the left region:
+                if (region === LEFT_VORNOI_REGION) {
+                    // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
+                    edge.copy(polygon.getShape().edges[prev]);
+                    // Calculate the center of the circle relative the starting point of the previous edge
+                    var point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
+                    region = vornoiRegion(edge, point2);
+                    if (region === RIGHT_VORNOI_REGION) {
+                        // It's in the region we want.  Check if the circle intersects the point.
+                        dist = point.length();
+                        if (dist > radius) {
+                            // No intersection
+                            T_VECTORS.push(circlePos);
+                            T_VECTORS.push(edge);
+                            T_VECTORS.push(point);
+                            T_VECTORS.push(point2);
+                            return false;
+                        } else if (response) {
+                            // It intersects, calculate the overlap.
+                            response.bInA = false;
+                            overlapN = point.normalize();
+                            overlap = radius - dist;
+                        }
+                    }
+                    T_VECTORS.push(point2);
+                    // If it's the right region:
+                } else if (region === RIGHT_VORNOI_REGION) {
+                    // We need to make sure we're in the left region on the next edge
+                    edge.copy(polygon.getShape().edges[next]);
+                    // Calculate the center of the circle relative to the starting point of the next edge.
+                    point.copy(circlePos).sub(points[next]);
+                    region = vornoiRegion(edge, point);
+                    if (region === LEFT_VORNOI_REGION) {
+                        // It's in the region we want.  Check if the circle intersects the point.
+                        dist = point.length();
+                        if (dist > radius) {
+                            // No intersection
+                            T_VECTORS.push(circlePos);
+                            T_VECTORS.push(edge);
+                            T_VECTORS.push(point);
+                            return false;
+                        } else if (response) {
+                            // It intersects, calculate the overlap.
+                            response.bInA = false;
+                            overlapN = point.normalize();
+                            overlap = radius - dist;
+                        }
+                    }
+                // Otherwise, it's the middle region:
+                } else {
+                    // Need to check if the circle is intersecting the edge,
+                    // Change the edge into its "edge normal".
+                    var normal = edge.perp().normalize();
+                    // Find the perpendicular distance between the center of the
+                    // circle and the edge.
+                    dist = point.dotProduct(normal);
+                    var distAbs = Math.abs(dist);
+                    // If the circle is on the outside of the edge, there is no intersection.
+                    if (dist > 0 && distAbs > radius) {
+                        // No intersection
+                        T_VECTORS.push(circlePos);
+                        T_VECTORS.push(normal);
+                        T_VECTORS.push(point);
+                        return false;
+                    } else if (response) {
+                        // It intersects, calculate the overlap.
+                        overlapN = normal;
+                        overlap = radius - dist;
+                        // If the center of the circle is on the outside of the edge, or part of the
+                        // circle is on the outside, the circle is not fully inside the polygon.
+                        if (dist >= 0 || overlap < 2 * radius) {
+                            response.bInA = false;
+                        }
+                    }
+                }
+
+                // If this is the smallest overlap we've seen, keep it.
+                // (overlapN may be null if the circle was in the wrong Vornoi region).
+                if (overlapN && response && Math.abs(overlap) < Math.abs(response.overlap)) {
+                    response.overlap = overlap;
+                    response.overlapN.copy(overlapN);
+                }
+            }
+
+            // Calculate the final overlap vector - based on the smallest overlap.
+            if (response) {
+                response.a = polygon;
+                response.b = circle;
+                response.overlapV.copy(response.overlapN).scale(response.overlap);
+                // for backward compatiblity
+                response.x = response.overlapV.x;
+                response.y = response.overlapV.y;
+            }
+            T_VECTORS.push(circlePos);
+            T_VECTORS.push(edge);
+            T_VECTORS.push(point);
+            return true;
+        },
+
+        /**
+         * Check if a circle and a polygon collide. <br>
+         * **NOTE:** This is slightly less efficient than polygonCircle as it just <br>
+         * runs polygonCircle and reverses everything at the end.
+         * @param {me.Ellipse} circle The circle.
+         * @param {me.PolyShape} polygon The polygon.
+         * @param {Response=} response Response object (optional) that will be populated if
+         *   they interset.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        testEllipsePolyShape : function (circle, polygon, response) {
+            // Test the polygon against the circle.
+            var result = this.testPolyShapeEllipse(polygon, circle, response);
+            if (result && response) {
+                // Swap A and B in the response.
+                var a = response.a;
+                var aInB = response.aInB;
+                response.overlapN.reverse();
+                response.overlapV.reverse();
+                response.a = response.b;
+                response.b = a;
+                response.aInB = response.bInA;
+                response.bInA = aInB;
+                // for backward compatiblity
+                response.x = response.overlapV.x;
+                response.y = response.overlapV.y;
+            }
+            return result;
         }
     });
 })();
