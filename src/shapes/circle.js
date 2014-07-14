@@ -28,7 +28,7 @@
              * @name pos
              * @memberOf me.Ellipse
              */
-            this.pos = new me.Vector2d();
+            this.pos = v;
 
             /**
              * The bounding rectangle for this shape
@@ -50,7 +50,7 @@
 
             // the shape type
             this.shapeType = "Ellipse";
-            this.setShape(v, w, h);
+            this.radius.set(w / 2, h / 2);
         },
 
         /**
