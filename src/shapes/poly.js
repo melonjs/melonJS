@@ -226,7 +226,7 @@
          */
         draw : function (context, color) {
             context.save();
-            context.translate(-this.pos.x, -this.pos.y);
+            context.translate(this.pos.x, this.pos.y);
             context.strokeStyle = color || "red";
             context.beginPath();
             context.moveTo(this.points[0].x, this.points[0].y);

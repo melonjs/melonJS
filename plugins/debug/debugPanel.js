@@ -196,13 +196,11 @@
                 if (me.debug.renderHitBox) {
                     context.save();
                     // draw the bounding rect shape
-                    this.body.getBounds().draw(context, "red");
+                    this.body.getBounds().draw(context, "orange");
                     context.translate(this.pos.x, this.pos.y);
-                    if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
-                        // draw the original shape if different from the  bounding rect
-                        var shape = this.body.getShape();
-                        context.translate(shape.pos.x, shape.pos.y);
-                        shape.draw(context, "red");
+                    if (this.body.shapes.length) {
+                        // TODO : support multiple shapes
+                        this.body.shapes[0].draw(context, "red");
                     }
                     context.restore();
                 }
