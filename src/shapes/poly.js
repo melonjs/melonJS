@@ -128,6 +128,7 @@
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
+            this.bounds.translate(x, y);
             return this;
         },
 
@@ -141,6 +142,7 @@
          */
         translateV : function (v) {
             this.pos.add(v);
+            this.bounds.translateV(v);
             return this;
         },
 
