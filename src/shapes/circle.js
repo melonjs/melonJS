@@ -50,7 +50,7 @@
 
             // the shape type
             this.shapeType = "Ellipse";
-            this.setShape(v, w, h)
+            this.setShape(v, w, h);
         },
 
         /**
