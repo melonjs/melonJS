@@ -277,6 +277,7 @@
                 e.gameScreenY = changedTouches[t].y;
                 e.gameWorldX = e.gameScreenX + viewportOffset.x;
                 e.gameWorldY = e.gameScreenY + viewportOffset.y;
+
                 // parse all handlers
                 for (var i = handlers.length, handler; i--, (handler = handlers[i]);) {
                     /* Set gameX and gameY depending on floating. */

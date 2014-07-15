@@ -215,7 +215,7 @@
          * @return {me.Vector2d}
          */
         api.getPos = function (c) {
-            c = c || canvas;
+            c = c || this.getScreenCanvas();
             return (
                 c.getBoundingClientRect ?
                 c.getBoundingClientRect() : { left : 0, top : 0 }
@@ -298,7 +298,7 @@
          * @return {Canvas}
          */
         api.getScreenCanvas = function () {
-            return canvas;
+            return renderer.getScreenCanvas();
         };
 
         /**
@@ -409,12 +409,11 @@
         api.updateDisplaySize = function (scaleX, scaleY) {
             // update the global scale variable
             me.sys.scale.set(scaleX, scaleY);
-            
-            me.input._offset = me.video.getPos();
 
             // renderer resize logic
             renderer.resize(scaleX, scaleY);
 
+            me.input._offset = me.video.getPos();
             // clear the timeout id
             deferResizeId = -1;
         };

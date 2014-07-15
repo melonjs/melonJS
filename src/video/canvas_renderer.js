@@ -172,6 +172,17 @@
         };
 
         /**
+         * return a reference to the screen canvas
+         * @name getScreenCanvas
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {Canvas}
+         */
+        api.getScreenCanvas = function () {
+            return canvas;
+        };
+
+        /**
          * return a reference to the screen canvas corresponding 2d Context<br>
          * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
          * @name getScreenContext
