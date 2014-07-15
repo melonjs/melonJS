@@ -191,7 +191,7 @@
          * @return {Context2d}
          */
         api.getContext = function () {
-            return context;
+            return backBufferContext2D;
         };
 
         /**
