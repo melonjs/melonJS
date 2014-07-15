@@ -362,8 +362,8 @@
          * @memberOf me.CanvasRenderer
          * @function
          */
-        api.transform = function () {
-            backBufferContext2D.transform.apply(context, arguments);
+        api.transform = function (a, b, c, d, e, f) {
+            backBufferContext2D.transform(a, b, c, d, e, f);
         };
 
         /**
