@@ -357,6 +357,22 @@
         };
 
         /**
+         * Stroke a rectangle at the specified coordinates with a given color
+         * @name drawRectWithColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x position
+         * @param {Number} y position
+         * @param {Number} width to draw
+         * @param {Number} height to draw
+         * @param {String} css color for the rectangle
+         */
+        api.strokeRectWithColor = function (x, y, width, height, color) {
+            backBufferContext2D.fillStyle = color;
+            backBufferContext2D.fillRect(x, y, width, height);
+        };
+
+        /**
          * transforms the context. Accepts any number of integer arguments
          * @name transform
          * @memberOf me.CanvasRenderer

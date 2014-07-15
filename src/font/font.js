@@ -189,7 +189,10 @@
          * @param {Number} x
          * @param {Number} y
          */
-        draw : function (context, text, x, y) {
+        draw : function (renderer, text, x, y) {
+            // TODO: Likely draw the text to an off canvas and cache an image
+            // over depending on the canvas API each draw call.
+            var context = renderer.getContext();
             // update initial position
             this.pos.set(x, y);
             // draw the text

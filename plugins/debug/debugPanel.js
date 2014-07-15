@@ -176,21 +176,20 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.SpriteObject, "draw", function (context) {
+            me.plugin.patch(me.SpriteObject, "draw", function (renderer) {
                 // call the original me.SpriteObject function
-                this.parent(context);
+                this.parent(renderer);
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
-                    context.strokeStyle =  "green";
-                    context.strokeRect(this.left, this.top, this.width, this.height);
+                    renderer.strokeRectWithColor(this.left, this.top, this.width, this.height, "green");
                 }
             });
 
             // patch entities.js
-            me.plugin.patch(me.ObjectEntity, "draw", function (context) {
+            me.plugin.patch(me.ObjectEntity, "draw", function (renderer) {
                 // call the original me.game.draw function
-                this.parent(context);
+                this.parent(renderer);
 
                 // check if debug mode is enabled
                 if (me.debug.renderHitBox && this.shapes.length) {
@@ -199,16 +198,16 @@
                     var translateX = this.pos.x ;
                     var translateY = this.pos.y ;
 
-                    context.translate(translateX, translateY);
+                    renderer.translate(translateX, translateY);
 
                     // draw the original shape
-                    this.getShape().draw(context, "red");
+                    this.getShape().draw(renderer, "red");
                      if (this.getShape().shapeType!=="Rectangle") {
                          // draw the corresponding bounding box
-                        this.getShape().getBounds().draw(context, "red");
+                        this.getShape().getBounds().draw(renderer, "red");
                     }
 
-                    context.translate(-translateX, -translateY);
+                    renderer.translate(-translateX, -translateY);
 
                 }
 
@@ -216,7 +215,8 @@
                     // draw entity current velocity
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
-
+                    // TODO: This will also be tricky for WebGL.
+                    var context = renderer.getContext();
                     context.strokeStyle = "blue";
                     context.lineWidth = 1;
                     context.beginPath();
@@ -333,44 +333,43 @@
         },
 
         /** @private */
-        draw : function(context) {
-            context.save();
+        draw : function(renderer) {
+            renderer.save();
 
             // draw the panel
-            context.globalAlpha = 0.5;
-            context.fillStyle = "black";
-            context.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height);
-            context.globalAlpha = 1.0;
+            renderer.setGlobalAlpha(0.5);
+            renderer.drawRectWithColor(this.rect.left,  this.rect.top,
+                             this.rect.width, this.rect.height, "black");
+            renderer.setGlobalAlpha(1.0);
 
             // # entities / draw
-            this.font.draw(context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
 
             // debug checkboxes
-            this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
-            this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(context, "?dirtyRect  [ ]",    200 * this.mod, 5 * this.mod);
-            this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "?dirtyRect  [ ]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
-            this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
-            this.drawMemoryGraph(context, endX - this.help_str_len);
+            this.drawMemoryGraph(renderer, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(context, this.help_str, endX - this.help_str_len, 18 * this.mod);
+            this.font.draw(renderer, this.help_str, endX - this.help_str_len, 18 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
-            this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(renderer, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
-            context.restore();
+            renderer.restore();
 
         },
 
