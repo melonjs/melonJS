@@ -393,8 +393,13 @@
             this.setOpacity(visible ? parseFloat(layer[me.TMX_TAG_OPACITY]) : 0);
 
             // layer "real" size
-            this.width = this.cols * this.tilewidth;
-            this.height = this.rows * this.tileheight;
+            if (this.orientation === "isometric") {
+                this.width = (this.cols + this.rows) * (this.tilewidth / 2);
+                this.height = (this.cols + this.rows) * (this.tileheight / 2);
+            } else {
+                this.width = this.cols * this.tilewidth;
+                this.height = this.rows * this.tileheight;
+            }
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, layer);
 

@@ -166,8 +166,13 @@
             map.rows = parseInt(data[me.TMX_TAG_HEIGHT], 10);
             map.tilewidth = parseInt(data[me.TMX_TAG_TILEWIDTH], 10);
             map.tileheight = parseInt(data[me.TMX_TAG_TILEHEIGHT], 10);
-            map.width = map.cols * map.tilewidth;
-            map.height = map.rows * map.tileheight;
+            if (map.orientation === "isometric") {
+                map.width = (map.cols + map.rows) * (map.tilewidth / 2);
+                map.height = (map.cols + map.rows) * (map.tileheight / 2);
+            } else {
+                map.width = map.cols * map.tilewidth;
+                map.height = map.rows * map.tileheight;
+            }
             map.backgroundcolor = data[me.TMX_BACKGROUND_COLOR];
             map.z = zOrder++;
 
