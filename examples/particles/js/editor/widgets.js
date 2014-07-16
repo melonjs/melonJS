@@ -260,11 +260,9 @@
             this.pos.set(v.x, v.y);
             return this;
         },
-        draw : function(context) {
-            context.fillStyle = this.color;
-            context.strokeStyle = this.color;
-            context.fillRect(this.left, this.top, this.width, this.height);
-            context.strokeRect(this.left, this.top, this.width, this.height);
+        draw : function(renderer) {
+            renderer.drawRectWithColor(this.left, this.top, this.width, this.height, this.color);
+            renderer.strokeRectWithColor(this.left, this.top, this.width, this.height, this.color);
         }
     });
 
@@ -358,18 +356,11 @@
                 return false;
             }
         },
-        draw : function(context, rect) {
-            context.save();
-            // context.strokeStyle = this.color;
-            context.fillStyle = this.color;
-            context.beginPath();
-            context.translate(this.pos.x + this.hWidth, this.pos.y + this.hHeight);
-            context.arc(0, 0, this.hWidth, 0, Math.PI * 2);
-            // context.stroke();
-            // context.globalAlpha = 0.3;
-            context.fill();
-            context.closePath();
-            context.restore();
+        draw : function(renderer, rect) {
+            renderer.save();
+            var context = renderer.getContext();
+            renderer.drawArcWithColor(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2, this.color);
+            renderer.restore();
         }
     });
 
@@ -459,10 +450,11 @@
             this.resize(Math.abs(w), Math.abs(h));
             return this;
         },
-        draw : function(context) {
+        draw : function(renderer) {
             var origin = this.widget.origin;
             var vector = this.widget.vector;
-            context.save();
+            renderer.save();
+            var context = renderer.getContext();
             context.lineWidth = 5;
             context.strokeStyle = this.color;
             context.translate(origin.x, origin.y);
@@ -471,7 +463,7 @@
             context.lineTo(vector.x, vector.y);
             context.stroke();
             context.closePath();
-            context.restore();
+            renderer.restore();
         }
     });
 
@@ -597,7 +589,8 @@
             this.minRadius = (object.speed - object.speedVariation) * this.scale;
             this.maxRadius = (object.speed + object.speedVariation) * this.scale;
         },
-        draw : function(context, rect) {
+        draw : function(renderer, rect) {
+            var context = renderer.getContext();
             context.strokeStyle = this.color;
             context.fillStyle = this.color;
             context.beginPath();

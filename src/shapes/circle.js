@@ -160,9 +160,10 @@
          * debug purpose
          * @ignore
          */
-        draw : function (context, color) {
+        draw : function (renderer, color) {
             // http://tinyurl.com/opnro2r
-            context.save();
+            renderer.save();
+            var context = renderer.getContext();
             context.beginPath();
 
             context.translate(
@@ -172,7 +173,7 @@
             context.scale(this.radius.x, this.radius.y);
             context.arc(1, 1, 1, 0, 2 * Math.PI, false);
 
-            context.restore();
+            renderer.restore();
             context.strokeStyle = color || "red";
             context.stroke();
         }

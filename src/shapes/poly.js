@@ -182,9 +182,10 @@
          * debug purpose
          * @ignore
          */
-        draw : function (context, color) {
-            context.save();
-            context.translate(-this.pos.x, -this.pos.y);
+        draw : function (renderer, color) {
+            renderer.save();
+            renderer.translate(-this.pos.x, -this.pos.y);
+            var context = renderer.getContext();
             context.strokeStyle = color || "red";
             context.beginPath();
             context.moveTo(this.points[0].x, this.points[0].y);
@@ -197,7 +198,7 @@
                 context.lineTo(this.points[0].x, this.points[0].y);
             }
             context.stroke();
-            context.restore();
+            renderer.restore();
         }
     });
 })();

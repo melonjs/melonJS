@@ -137,6 +137,26 @@
         };
 
         /**
+         * Draw a filled arc at the specified coordinates with given radius, start and end points
+         * @name drawArcWithColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x position
+         * @param {Number} y position
+         * @param {Number} radius to draw
+         * @param {Number} start degrees in radians
+         * @param {Number} end degrees in radians
+         * @param {String} color to draw as
+         */
+        api.drawArcWithColor = function (x, y, radius, start, end) {
+            backBufferContext2D.beginPath();
+            backBufferContext2D.fillStyle = this.color;
+            backBufferContext2D.arc(x, y, radius, start, end);
+            backBufferContext2D.fill();
+            backBufferContext2D.closePath();
+        };
+
+        /**
          * Draw an image using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
