@@ -103,6 +103,13 @@
    </properties>
    <polygon points="0,0 35,-70 70,0"/>
   </object>
+  <object name="SlimeEntity" x="210" y="455" width="70" height="70">
+   <properties>
+    <property name="spriteheight" value="35"/>
+    <property name="spritewidth" value="35"/>
+   </properties>
+   <ellipse/>
+  </object>
  </objectgroup>
  <objectgroup color="#ffff00" name="coins" width="50" height="17">
   <object name="CoinEntity" type="enemy" x="700" y="350" width="35" height="35"/>

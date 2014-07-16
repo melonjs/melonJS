@@ -7,14 +7,13 @@
 (function () {
     /**
      * an ellipse Object
-     * (Tiled specifies top-left coordinates, and width and height of the ellipse)
      * @class
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} v top-left origin position of the Ellipse
-     * @param {Number} w width of the elipse
-     * @param {Number} h height of the elipse
+     * @param {me.Vector2d} v the center coordinates of the ellipse  
+     * @param {Number} w width (diameter) of the ellipse
+     * @param {Number} h height (diameter) of the ellipse
      */
     me.Ellipse = Object.extend(
     {
@@ -22,7 +21,7 @@
         /** @ignore */
         init : function (v, w, h) {
             /**
-             * center point of the Ellipse
+             * the center coordinates of the ellipse 
              * @public
              * @type {me.Vector2d}
              * @name pos
@@ -58,13 +57,13 @@
          * @name setShape
          * @memberOf me.Ellipse
          * @function
-         * @param {me.Vector2d} v top-left origin position of the Ellipse
-         * @param {Number} w width of the Ellipse
-         * @param {Number} h height of the Ellipse
+         * @param {me.Vector2d} v the center coordinates of the ellipse 
+         * @param {Number} w width (diameter) of the ellipse
+         * @param {Number} h height (diameter) of the ellipse
          */
         setShape : function (v, w, h) {
+            this.pos.setV(v);
             this.radius.set(w / 2, h / 2);
-            this.pos.setV(v).add(this.radius);
             return this;
         },
 
@@ -75,11 +74,12 @@
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Ellipse} this Ellipse
+         * @return {me.Ellipse} this ellipse
          */
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
+            this.bounds.translate(x, y);
             return this;
         },
 
@@ -89,10 +89,11 @@
          * @memberOf me.Ellipse
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this Ellipse
+         * @return {me.Rect} this ellipse
          */
         translateV : function (v) {
             this.pos.add(v);
+            this.bounds.translateV(v);
             return this;
         },
 
