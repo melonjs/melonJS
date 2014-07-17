@@ -20,6 +20,7 @@
     "src/shapes/poly.js",
     "src/math/matrix.js",
     "src/physics/body.js",
+    "src/physics/quadtree.js",
     "src/physics/collision.js",
     "src/renderable/base.js",
     "src/renderable/sprite.js",
