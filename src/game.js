@@ -76,16 +76,6 @@
          * @memberOf me.game
          */
         api.world = null;
-
-        /**
-         * a reference to the collision solver <br>
-         * @public
-         * @type {me.Solver}
-         * @name solver
-         * @memberOf me.game
-         */
-        // TODO : rename me :)
-        api.solver = null;
         
         /**
          * when true, all objects will be added under the root world container<br>
@@ -188,9 +178,6 @@
                 api.world = new me.ObjectContainer(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
-                
-                // instance of the collision solver
-                api.solver = new me.Solver();
 
                 // get a ref to the screen buffer
                 frameBuffer = me.video.getSystemContext();

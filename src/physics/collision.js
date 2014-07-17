@@ -9,43 +9,23 @@
 
 (function () {
 
-     /**
-     * An object representing the result of an intersection. Contains:
-     *  - The two objects participating in the intersection
-     *  - The vector representing the minimum change necessary to extract the first object
-     *    from the second one (as well as a unit vector in that direction and the magnitude
-     *    of the overlap)
-     *  - Whether the first object is entirely inside the second, and vice versa.
+    /**
+     * Constants for Vornoi regions
      * @ignore
      */
-    function Response() {
-        this.a = null;
-        this.b = null;
-        this.overlapN = new me.Vector2d();
-        this.overlapV = new me.Vector2d();
-        this.clear();
-    }
+    var LEFT_VORNOI_REGION = -1;
+    /**
+     * Constants for Vornoi regions
+     * @ignore
+     */
+    var MIDDLE_VORNOI_REGION = 0;
 
     /**
-     * Set some values of the response back to their defaults.
-     * Call this between tests if you are going to reuse a single
-     * Response object for multiple intersection tests
-     * (recommended as it will avoid allocating extra memory)
+     * Constants for Vornoi regions
      * @ignore
      */
-    Response.prototype.clear = function () {
-        this.aInB = true;
-        this.bInA = true;
-        // --- for backward compatilibity (temporary)
-        this.x = 0;
-        this.y = 0;
-        // ----
-        this.overlap = Number.MAX_VALUE;
-        return this;
-    };
+    var RIGHT_VORNOI_REGION = 1;
 
-    // ## Object Pools
-    // TODO : USE OUR POOL SYSTEM ? or do we dedicate these ones to collision solving ?
 
     /**
      * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
@@ -60,14 +40,6 @@
      */
     var T_ARRAYS = [];
     for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
-
-    /**
-     * Temporary response used for polygon hit detection
-     * @type {Response}
-     */
-    var T_RESPONSE = new Response();
-
-    // ## Helper Functions
 
 
     /**
@@ -178,20 +150,6 @@
     }
 
 
-    // Constants for Vornoi regions
-    /**
-     * @ignore
-     */
-    var LEFT_VORNOI_REGION = -1;
-    /**
-     * @ignore
-     */
-    var MIDDLE_VORNOI_REGION = 0;
-    /**
-     * @ignore
-     */
-    var RIGHT_VORNOI_REGION = 1;
-
     /**
      * Calculates which Vornoi region a point is on a line segment. <br>
      * It is assumed that both the line and the point are relative to `(0,0)`<br>
@@ -224,139 +182,159 @@
         }
     }
 
-    // ## collision Solver class
 
     /**
-     * a collision solver object <br>
-     * @class
-     * @extends Object
+     * A singleton for managing collision detection.
+     * @final
+     * @namespace me.collision
      * @memberOf me
-     * @constructor
      */
-    me.Solver = Object.extend(
-    /** @scope me.Solver.prototype */
-    {
-        /** @ignore */
-        init : function () {
 
-        },
+    me.collision = (function () {
+        // hold public stuff in our singleton
+        var api = {};
+
+        /*
+         * PUBLIC STUFF
+         */
+
+        /**
+         * configure the collision detection algorithm <br>
+         * default : true <br>
+         * when true, full Separating Axis Theorem collision detection is performed <br>
+         * when false, simple AABB detection is done (no object response will be calculated) <br>
+         * @name SAT
+         * @memberOf me.collision
+         * @public
+         * @type {Boolean}
+         */
+        api.SAT = true;
+
+        /**
+         * An object representing the result of an intersection. Contains: <br>
+         *  - `a` and `b` : The two objects participating in the intersection <br>
+         *  - `overlap` : The vector representing the minimum change necessary to extract the first object <br>
+         *    from the second one (as well as a unit vector in that direction and the magnitude of the overlap <br>
+         *  - `aInB`, `bInA` : Whether the first object is entirely inside the second, and vice versa. <br>
+         * @name ResponseObject
+         * @memberOf me.collision
+         * @public
+         * @type {Object}
+         */
+        api.ResponseObject = function () {
+            this.a = null;
+            this.b = null;
+            this.overlapN = new me.Vector2d();
+            this.overlapV = new me.Vector2d();
+            this.clear();
+        };
+
+        /**
+         * Set some values of the response back to their defaults. <br>
+         * Call this between tests if you are going to reuse a single <br>
+         * Response object for multiple intersection tests <br>
+         * (recommended as it will avoid allocating extra memory) <br>
+         * @name clear
+         * @memberOf me.collision.ResponseObject
+         * @public
+         * @function
+         */
+        api.ResponseObject.prototype.clear = function () {
+            this.aInB = true;
+            this.bInA = true;
+            this.overlap = Number.MAX_VALUE;
+            return this;
+        };
+
+        /**
+         * a global instance of a response object used for collision detection <br>
+         * this object will be reused amongst collision detection call if not user-defined response is specified
+         * @name response
+         * @memberOf me.collision
+         * @public
+         * @type {me.collision.ResponseObject}
+        */
+        api.response = new api.ResponseObject();
+
 
         /**
          * Checks if the specified child collides with others childs in this container
-         * @name collide
-         * @memberOf me.Solver
+         * @name check
+         * @memberOf me.collision
          * @public
          * @function
-         * @param {me.Renderable} obj Object to be tested for collision
+         * @param {me.Entity} obj Object to be tested for collision
+         * @param {String} [type=undefined] object type to be tested for collision
          * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
-         * @example
-         * // check for collision between this object and others
-         * res = me.game.solver.collide(this);
-         *
-         * // check if we collide with an enemy :
-         * if (res && (res.obj.type == game.constants.ENEMY_OBJECT)) {
-         *     if (res.x != 0) {
-         *         // x axis
-         *         if (res.x < 0) {
-         *             console.log("x axis : left side !");
-         *         }
-         *         else {
-         *             console.log("x axis : right side !");
-         *         }
-         *     }
-         *     else {
-         *         // y axis
-         *         if (res.y < 0) {
-         *             console.log("y axis : top side !");
-         *         }
-         *         else {
-         *             console.log("y axis : bottom side !");
-         *         }
-         *     }
-         * }
+         * @param {Function} [callback] Function to call in case of collision
+         * @param {Boolean} [response=false] populate a response object in case of collision
+         * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
+         * @return {Boolean} in case of collision, false otherwise
          */
-        collide : function (objA, multiple) {
-            return this.collideType(objA, null, multiple);
-        },
-
-        /**
-         * Checks if the specified child collides with others childs in this container
-         * @name collideType
-         * @memberOf me.Solver
-         * @public
-         * @function
-         * @param {me.Renderable} obj Object to be tested for collision
-         * @param {String} [type=undefined] child type to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
-         */
-        collideType : function (objA, type, multiple) {
-            var res, mres;
-            // make sure we have a boolean
-            multiple = (multiple === true ? true : false);
-            if (multiple === true) {
-                mres = [];
-            }
-
-            // this should be replace by a list of the 4 adjacent cell around the object requesting collision
+        api.check = function (objA, type, multiple, callback, calcResponse, responseObject) {
+            var collision = 0;
+            var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
+            var shapeTypeA =  objA.body.getShape().shapeType;
+            
+            // TODO : replace the big loop by a quadtree/spatial grid implementation
             for (var i = me.game.world.children.length, objB; i--, (objB = me.game.world.children[i]);) {
-                if ((objB.inViewport || objB.alwaysUpdate) && objB.collidable) {
-                    // recursivly check through
-                    if (objB instanceof me.ObjectContainer) {
-                        res = objB.collideType(objA, type, multiple);
-                        if (multiple) {
-                            mres.concat(res);
-                        }
-                        else if (res) {
-                            // the child container returned collision information
-                            return res;
-                        }
 
-                    }
-                    else if ((objB !== objA) && (!type || (objB.type === type))) {
+                if ((objB.inViewport || objB.alwaysUpdate) && objB.collidable) {
+                    // TODO: collision detection with other container will be back
+                    // done once quadtree will be added
+
+                    if ((objB !== objA) && (!type || (objB.type === type))) {
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
-
-                            // collision response
-                            res = multiple ? new Response() : T_RESPONSE.clear();
-
-                            // calculate the collision vector
-                            // TODO : loop through all shapes for collision
-                            if (this["test" + objA.body.getShape().shapeType + objB.body.getShape().shapeType]
-                                .call(
-                                    this,
-                                    objA, // a reference to the object A
-                                    objA.body.getShape(),
-                                    objB,  // a reference to the object B
-                                    objB.body.getShape(),
-                                    res
-                                )) {
-
-                                if (typeof objB.body.onCollision === "function") {
-                                    // notify the object
-                                    objB.body.onCollision.call(objB.body, res, objA);
+                        
+                            if (!api.SAT || api["test" + shapeTypeA + objB.body.getShape().shapeType]
+                                            .call(
+                                                this,
+                                                objA, // a reference to the object A
+                                                objA.body.getShape(),
+                                                objB,  // a reference to the object B
+                                                objB.body.getShape(),
+                                                response)
+                            ) {
+                                // we touched something !
+                                collision++;
+                                
+                                if (api.SAT) {
+                                    // add old reponse fields for backward compatilibty
+                                    if (response) {
+                                        response.x = response.overlapV.x;
+                                        response.y = response.overlapV.y;
+                                        response.type = response.b.type;
+                                        response.obj = response.b;
+                                    }
+                                    
+                                    // notify the other object
+                                    if (typeof objB.body.onCollision === "function") {
+                                        objB.body.onCollision.call(objB.body, response, objA);
+                                    }
+                                    
+                                    // execute the given callback with the full response
+                                    if (typeof (callback) === "function") {
+                                        callback(response);
+                                    }
+                                } // else no response to provide
+                                
+                                if (multiple === false) {
+                                    break;
                                 }
-                                // return the type (deprecated)
-                                res.type = objB.type;
-                                // return a reference of the colliding object
-                                res.obj = objB;
-                                // stop here if we don't look for multiple collision detection
-                                if (!multiple) {
-                                    return res;
-                                }
-                                mres.push(res);
                             }
                         }
                     }
                 }
             }
-            return (multiple ? mres : null);
-        },
+            // we could return the amount of objects we collided with ?
+            return collision > 0;
+        };
 
         /**
          * Checks whether polygons collide.
+         * @ignore
          * @param {me.Entity} a a reference to the object A.
          * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
          * @param {me.Entity} b a reference to the object B.
@@ -364,7 +342,7 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
         */
-        testPolyShapePolyShape : function (a, polyA, b, polyB, response) {
+        api.testPolyShapePolyShape = function (a, polyA, b, polyB, response) {
             // specific point for
             var aPoints = polyA.points;
             var aLen = aPoints.length;
@@ -400,17 +378,15 @@
                 response.a = a;
                 response.b = b;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
-                // for backward compatiblity
-                response.x = response.overlapV.x;
-                response.y = response.overlapV.y;
             }
             T_VECTORS.push(posA);
             T_VECTORS.push(posB);
             return true;
-        },
+        };
 
         /**
          * Check if two Ellipse collide.
+         * @ignore
          * @param {me.Entity} a a reference to the object A.
          * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
          * @param {me.Entity} b a reference to the object B.
@@ -419,7 +395,7 @@
          *   the circles intersect.
          * @return {boolean} true if the circles intersect, false if they don't.
          */
-        testEllipseEllipse : function (a, ellipseA, b, ellipseB, response) {
+        api.testEllipseEllipse = function (a, ellipseA, b, ellipseB, response) {
             // Check if the distance between the centers of the two
             // circles is greater than their combined radius.
             var differenceV = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).add(ellipseA.pos);
@@ -443,16 +419,14 @@
                 response.overlapV.copy(differenceV).scale(response.overlap);
                 response.aInB = radiusA <= radiusB && dist <= radiusB - radiusA;
                 response.bInA = radiusB <= radiusA && dist <= radiusA - radiusB;
-                // for backward compatiblity
-                response.x = response.overlapV.x;
-                response.y = response.overlapV.y;
             }
             T_VECTORS.push(differenceV);
             return true;
-        },
+        };
 
         /**
          * Check if a polygon and a circle collide.
+         * @ignore
          * @param {me.Entity} a a reference to the object A.
          * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
          * @param {me.Entity} b a reference to the object B.
@@ -460,7 +434,7 @@
          * @param {Response=} response Response object (optional) that will be populated if they interset.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        testPolyShapeEllipse : function (a, polyA, b, ellipseB, response) {
+        api.testPolyShapeEllipse = function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
             var circlePos = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).add(polyA.pos);
             var radius = ellipseB.radius;
@@ -581,20 +555,18 @@
                 response.a = a;
                 response.b = b;
                 response.overlapV.copy(response.overlapN).scale(response.overlap);
-                // for backward compatiblity
-                response.x = response.overlapV.x;
-                response.y = response.overlapV.y;
             }
             T_VECTORS.push(circlePos);
             T_VECTORS.push(edge);
             T_VECTORS.push(point);
             return true;
-        },
+        };
 
         /**
          * Check if a circle and a polygon collide. <br>
          * **NOTE:** This is slightly less efficient than polygonCircle as it just <br>
          * runs polygonCircle and reverses everything at the end.
+         * @ignore
          * @param {me.Entity} a a reference to the object A.
          * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
          * @param {me.Entity} a a reference to the object B.
@@ -603,9 +575,9 @@
          *   they interset.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        testEllipsePolyShape : function (a, ellipseA, b, polyB,  response) {
+        api.testEllipsePolyShape = function (a, ellipseA, b, polyB,  response) {
             // Test the polygon against the circle.
-            var result = this.testPolyShapeEllipse(b, polyB, a, ellipseA, response);
+            var result = api.testPolyShapeEllipse(b, polyB, a, ellipseA, response);
             if (result && response) {
                 // Swap A and B in the response.
                 var resa = response.a;
@@ -616,11 +588,12 @@
                 response.b = resa;
                 response.aInB = response.bInA;
                 response.bInA = aInB;
-                // for backward compatiblity
-                response.x = response.overlapV.x;
-                response.y = response.overlapV.y;
             }
             return result;
-        }
-    });
+        };
+
+
+        // return our object
+        return api;
+    })();
 })();

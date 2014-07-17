@@ -500,9 +500,10 @@
          * @memberOf me.ObjectContainer
          * @public
          * @function
+         * @deprecated use the new me.collision.check function for collision detection 
          * @param {me.Renderable} obj Object to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+         * @param {Boolean} [multiple=false] check for multiple collision (
+         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
          * @example
          * // check for collision between this object and others
          * res = me.game.world.collide(this);
@@ -531,7 +532,7 @@
          */
         collide : function (objA, multiple) {
             // TO BE REMOVED
-            return me.game.solver.collide(objA, null, multiple);
+            return this.collideType(objA, null, multiple);
         },
 
         /**
@@ -540,14 +541,22 @@
          * @memberOf me.ObjectContainer
          * @public
          * @function
+         * @deprecated use the new me.collision.check function for collision detection 
          * @param {me.Renderable} obj Object to be tested for collision
          * @param {String} [type=undefined] child type to be tested for collision
          * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
          */
         collideType : function (objA, type, multiple) {
-            // TO BE REMOVED
-            return me.game.solver.collide(objA, type, multiple);
+            if (multiple === true) {
+                throw "melonJS : multiple collision detection is not supported" +
+                      " anymore through the old me.game.collide function," +
+                      " please use the new new me.collision.check function";
+            }
+            if (me.collision.check(objA, type, false, null, true, me.collision.response)) {
+                return me.collision.response;
+            }
+            return null;
         },
 
         /**
