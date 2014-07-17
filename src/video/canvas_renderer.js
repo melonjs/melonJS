@@ -438,6 +438,14 @@
             backBufferContext2D.closePath();
         };
 
+        /**
+         * Strokes a me.PolyShape on the screen with a specified color
+         * @name strokePolyShape
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.PolyShape} the shape to draw
+         * @param {String} a color in css format.
+         */
         api.strokePolyShape = function (poly, color) {
             this.translate(-poly.pos.x, -poly.pos.y);
             backBufferContext2D.strokeStyle = color;
