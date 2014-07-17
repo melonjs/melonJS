@@ -36,7 +36,7 @@ game.RenderableEntity = me.Renderable.extend({
 
   draw : function(renderer) {
     renderer.save();
-    renderer.drawRectWithColor(this.pos.x, this.pos.y, this.width, this.height, '#fff')
+    renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, '#fff')
     renderer.restore();
   }
 });

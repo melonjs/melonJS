@@ -36,7 +36,7 @@
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            renderer.drawRectWithColor(rect.left, rect.top, rect.width, rect.height, this.color);
+            renderer.fillRect(rect.left, rect.top, rect.width, rect.height, this.color);
 
             // restore context alpha value
             renderer.setGlobalAlpha(_alpha);

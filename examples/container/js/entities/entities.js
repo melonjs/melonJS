@@ -9,7 +9,7 @@ game.Rect = me.Renderable.extend({
     },
     
     "draw" : function(renderer) {
-        renderer.drawRectWithColor(this.pos.x, this.pos.y, this.width, this.height, this.color);
+        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, this.color);
     }
 });
 

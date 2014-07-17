@@ -261,8 +261,8 @@
             return this;
         },
         draw : function(renderer) {
-            renderer.drawRectWithColor(this.left, this.top, this.width, this.height, this.color);
-            renderer.strokeRectWithColor(this.left, this.top, this.width, this.height, this.color);
+            renderer.fillRect(this.left, this.top, this.width, this.height, this.color);
+            renderer.strokeRect(this.left, this.top, this.width, this.height, this.color);
         }
     });
 
@@ -359,7 +359,7 @@
         draw : function(renderer, rect) {
             renderer.save();
             var context = renderer.getContext();
-            renderer.drawArcWithColor(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2, this.color);
+            renderer.fillArc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2, this.color);
             renderer.restore();
         }
     });

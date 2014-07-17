@@ -137,26 +137,6 @@
         };
 
         /**
-         * Draw a filled arc at the specified coordinates with given radius, start and end points
-         * @name drawArcWithColor
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} x position
-         * @param {Number} y position
-         * @param {Number} radius to draw
-         * @param {Number} start degrees in radians
-         * @param {Number} end degrees in radians
-         * @param {String} color to draw as
-         */
-        api.drawArcWithColor = function (x, y, radius, start, end) {
-            backBufferContext2D.beginPath();
-            backBufferContext2D.fillStyle = this.color;
-            backBufferContext2D.arc(x, y, radius, start, end);
-            backBufferContext2D.fill();
-            backBufferContext2D.closePath();
-        };
-
-        /**
          * Draw an image using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
@@ -176,8 +156,28 @@
         };
 
         /**
+         * Fill an arc at the specified coordinates with given radius, start and end points
+         * @name fillArc
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x position
+         * @param {Number} y position
+         * @param {Number} radius to draw
+         * @param {Number} start degrees in radians
+         * @param {Number} end degrees in radians
+         * @param {String} color to draw as
+         */
+        api.fillArc = function (x, y, radius, start, end, color) {
+            backBufferContext2D.beginPath();
+            backBufferContext2D.fillStyle = color;
+            backBufferContext2D.arc(x, y, radius, start, end);
+            backBufferContext2D.fill();
+            backBufferContext2D.closePath();
+        };
+
+        /**
          * Draw a filled rectangle at the specified coordinates with a given color
-         * @name drawRectWithColor
+         * @name fillRect
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Number} x position
@@ -186,7 +186,7 @@
          * @param {Number} height to draw
          * @param {String} css color for the rectangle
          */
-        api.drawRectWithColor = function (x, y, width, height, color) {
+        api.fillRect = function (x, y, width, height, color) {
             backBufferContext2D.fillStyle = color;
             backBufferContext2D.fillRect(x, y, width, height);
         };
@@ -388,8 +388,28 @@
         };
 
         /**
+         * Fill an arc at the specified coordinates with given radius, start and end points
+         * @name drawArc
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x position
+         * @param {Number} y position
+         * @param {Number} radius to draw
+         * @param {Number} start degrees in radians
+         * @param {Number} end degrees in radians
+         * @param {String} color to draw as
+         */
+        api.strokeArc = function (x, y, radius, start, end, color) {
+            backBufferContext2D.beginPath();
+            backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.arc(x, y, radius, start, end);
+            backBufferContext2D.stroke();
+            backBufferContext2D.closePath();
+        };
+
+        /**
          * Stroke a rectangle at the specified coordinates with a given color
-         * @name drawRectWithColor
+         * @name strokeRect
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Number} x position
@@ -398,9 +418,9 @@
          * @param {Number} height to draw
          * @param {String} css color for the rectangle
          */
-        api.strokeRectWithColor = function (x, y, width, height, color) {
-            backBufferContext2D.fillStyle = color;
-            backBufferContext2D.fillRect(x, y, width, height);
+        api.strokeRect = function (x, y, width, height, color) {
+            backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.strokeRect(x, y, width, height);
         };
 
         /**
