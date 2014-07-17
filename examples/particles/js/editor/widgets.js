@@ -454,15 +454,7 @@
             var origin = this.widget.origin;
             var vector = this.widget.vector;
             renderer.save();
-            var context = renderer.getContext();
-            context.lineWidth = 5;
-            context.strokeStyle = this.color;
-            context.translate(origin.x, origin.y);
-            context.beginPath();
-            context.moveTo(0, 0);
-            context.lineTo(vector.x, vector.y);
-            context.stroke();
-            context.closePath();
+            renderer.drawLine(origin.x, origin.y, vector.x, vector.y, this.color, 5);
             renderer.restore();
         }
     });
@@ -590,20 +582,13 @@
             this.maxRadius = (object.speed + object.speedVariation) * this.scale;
         },
         draw : function(renderer, rect) {
-            var context = renderer.getContext();
-            context.strokeStyle = this.color;
-            context.fillStyle = this.color;
-            context.beginPath();
             var x = this.pos.x, y = this.pos.y;
-            context.arc(x, y, this.maxRadius, this.startAngle, this.endAngle, true);
+            renderer.fillArc(x, y, this.maxRadius, this.startAngle, this.endAngle, this.color, true);
             if (this.minRadius < 0) {
-                context.arc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI);
+                renderer.fillArc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI, this.color);
             } else {
-                context.arc(x, y, this.minRadius, this.endAngle, this.startAngle);
+                renderer.fillArc(x, y, this.minRadius, this.endAngle, this.startAngle, this.color);
             }
-            context.closePath();
-            context.fill();
-            context.stroke();
         }
     });
 })();

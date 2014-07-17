@@ -137,6 +137,29 @@
         };
 
         /**
+         * Draw a line from the given point to the destination point.
+         * @name drawLine
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} start x
+         * @param {Number} start y
+         * @param {Number} end x
+         * @param {Number} end y
+         * @param {String} color to draw the line
+         * @param {Number} line width
+         */
+        api.drawLine = function (startX, startY, endX, endY, color, width) {
+            backBufferContext2D.lineWidth = width;
+            backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.beginPath();
+            backBufferContext2D.translate(startX, startY);
+            backBufferContext2D.moveTo(0, 0);
+            backBufferContext2D.lineTo(endX, endY);
+            backBufferContext2D.stroke();
+            backBufferContext2D.closePath();
+        };
+
+        /**
          * Draw an image using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
@@ -166,11 +189,15 @@
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
+         * @param {Boolean} in anti-clockwise, defaults to false
          */
-        api.fillArc = function (x, y, radius, start, end, color) {
+        api.fillArc = function (x, y, radius, start, end, color, antiClockwise) {
+            if (antiClockwise === null) {
+                antiClockwise = false;
+            }
             backBufferContext2D.beginPath();
             backBufferContext2D.fillStyle = color;
-            backBufferContext2D.arc(x, y, radius, start, end);
+            backBufferContext2D.arc(x, y, radius, start, end, antiClockwise);
             backBufferContext2D.fill();
             backBufferContext2D.closePath();
         };
@@ -398,11 +425,15 @@
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
+         * @param {Boolean} in anti-clockwise, defaults to false
          */
-        api.strokeArc = function (x, y, radius, start, end, color) {
+        api.strokeArc = function (x, y, radius, start, end, color, antiClockwise) {
+            if (antiClockwise === null) {
+                antiClockwise = false;
+            }
             backBufferContext2D.beginPath();
             backBufferContext2D.strokeStyle = color;
-            backBufferContext2D.arc(x, y, radius, start, end);
+            backBufferContext2D.arc(x, y, radius, start, end, antiClockwise);
             backBufferContext2D.stroke();
             backBufferContext2D.closePath();
         };
