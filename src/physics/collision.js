@@ -258,13 +258,13 @@
 
 
         /**
-         * Checks if the specified child collides with others childs in this container
+         * Checks if the specified entity collides with others entities 
          * @name check
          * @memberOf me.collision
          * @public
          * @function
-         * @param {me.Entity} obj Object to be tested for collision
-         * @param {String} [type=undefined] object type to be tested for collision
+         * @param {me.Entity} obj entity to be tested for collision
+         * @param {String} [type=undefined] entity type to be tested for collision (null for all)
          * @param {Boolean} [multiple=false] check for multiple collision
          * @param {Function} [callback] Function to call in case of collision
          * @param {Boolean} [response=false] populate a response object in case of collision
