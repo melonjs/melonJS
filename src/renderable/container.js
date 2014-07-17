@@ -553,7 +553,7 @@
                       " anymore through the old me.game.collide function," +
                       " please use the new new me.collision.check function";
             }
-            if (me.collision.check(objA, type, false, null, true, me.collision.response)) {
+            if (me.collision.check(objA, type, false, null, true, me.collision.response.clear())) {
                 return me.collision.response;
             }
             return null;
