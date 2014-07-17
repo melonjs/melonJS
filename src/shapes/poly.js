@@ -184,20 +184,7 @@
          */
         draw : function (renderer, color) {
             renderer.save();
-            renderer.translate(-this.pos.x, -this.pos.y);
-            var context = renderer.getContext();
-            context.strokeStyle = color || "red";
-            context.beginPath();
-            context.moveTo(this.points[0].x, this.points[0].y);
-            this.points.forEach(function (point) {
-                context.lineTo(point.x, point.y);
-                context.moveTo(point.x, point.y);
-
-            });
-            if (this.closed === true) {
-                context.lineTo(this.points[0].x, this.points[0].y);
-            }
-            context.stroke();
+            renderer.strokePolyShape(this, color);
             renderer.restore();
         }
     });

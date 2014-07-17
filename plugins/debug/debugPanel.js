@@ -182,7 +182,7 @@
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
-                    renderer.strokeRectWithColor(this.left, this.top, this.width, this.height, "green");
+                    renderer.strokeRect(this.left, this.top, this.width, this.height, "green");
                 }
             });
 
@@ -338,7 +338,7 @@
 
             // draw the panel
             renderer.setGlobalAlpha(0.5);
-            renderer.drawRectWithColor(this.rect.left,  this.rect.top,
+            renderer.fillRect(this.rect.left,  this.rect.top,
                              this.rect.width, this.rect.height, "black");
             renderer.setGlobalAlpha(1.0);
 

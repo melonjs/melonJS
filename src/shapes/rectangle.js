@@ -383,10 +383,7 @@
          */
         draw : function (renderer, color) {
             // draw the rectangle
-            // TODO: Not sure how to handle the shape stuff yet for WebGL
-            var context = renderer.getContext();
-            context.strokeStyle = color || "red";
-            context.strokeRect(this.left, this.top, this.width, this.height);
+            renderer.strokeRect(this.left, this.top, this.width, this.height, color || "red");
         }
     });
 

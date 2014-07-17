@@ -438,6 +438,21 @@
             backBufferContext2D.closePath();
         };
 
+        api.strokePolyShape = function (poly, color) {
+            this.translate(-poly.pos.x, -poly.pos.y);
+            backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.beginPath();
+            backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
+            poly.points.forEach(function (point) {
+                backBufferContext2D.lineTo(point.x, point.y);
+                backBufferContext2D.moveTo(point.x, point.y);
+            });
+            if (poly.closed === true) {
+                backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
+            }
+            backBufferContext2D.stroke();
+        };
+
         /**
          * Stroke a rectangle at the specified coordinates with a given color
          * @name strokeRect
