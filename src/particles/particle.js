@@ -21,13 +21,21 @@
          */
         init : function (emitter) {
             // Call the super constructor
-            this._super(me.Renderable, "init", [emitter.getRandomPoint(), emitter.image.width, emitter.image.height]);
+            this._super(me.Renderable, "init", [emitter.getRandomPoint(), emitter.textureRegion.width || emitter.image.width, emitter.textureRegion.height || emitter.image.height]);
 
             // Particle will always update
             this.alwaysUpdate = true;
 
             // Cache the image reference
             this.image = emitter.image;
+            
+            // Set the default particle offset
+            this.offset = new me.Vector2d(0, 0);
+            
+            // Set the particle offset when using Texture Atlas
+            if (emitter.textureRegion.offset) {
+                this.offset.setV(emitter.textureRegion.offset);
+            }
 
             // Set the start particle Angle and Speed as defined in emitter
             var angle = emitter.angle + ((emitter.angleVariation > 0) ? (Math.random() * 2 - 1) * emitter.angleVariation : 0);
@@ -142,7 +150,7 @@
             var w = this.width, h = this.height;
             context.drawImage(
                 this.image,
-                0, 0,
+                this.offset.x, this.offset.y,
                 w, h,
                 -w / 2, -h / 2,
                 w, h
