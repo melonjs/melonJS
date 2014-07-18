@@ -64,10 +64,11 @@ String.prototype.isNumeric = function () {
  * @return {boolean} true if the string is either true or false
  */
 String.prototype.isBoolean = function () {
-    return (
-        this !== null &&
-        ("true" === this.trim() || "false" === this.trim())
-    );
+    if (this !== null) {
+        return false;
+    }
+    var trimmed = this.trim();
+    return ("true" === trimmed) || ("false" === trimmed);
 };
 
 if (!String.prototype.contains) {
