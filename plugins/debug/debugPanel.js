@@ -388,7 +388,7 @@
             this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
             this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(context, "?AuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
             this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
