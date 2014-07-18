@@ -59,16 +59,10 @@
 
             var i;
             for (i = 0; i < len; i++) {
-                if (item[i].body) {
-                    // faster way to insert entities only ?
-                    this.root.insert(item[i].body);
-                }
+                this.root.insert(item[i]);
             }
         } else {
-            if (item.body) {
-                // faster way to insert entities only ?
-                this.root.insert(item.body);
-            }
+            this.root.insert(item);
         }
     };
     
@@ -84,12 +78,12 @@
     * Retrieves all items / points in the same node as the specified item / point. If the specified item
     * overlaps the bounds of a node, then all children in both nodes will be returned.
     * @method retrieve
-    * @param {Entity} item An object entity with a body property representing a 2D coordinate point (with x, y properties), or a shape
+    * @param {Entity} item An object entity with bounds property representing a 2D coordinate point (with x, y properties), or a shape
     * with dimensions (x, y, width, height) properties.
     **/
     QuadTree.prototype.retrieve = function (item) {
         //get a copy of the array of items
-        var out = this.root.retrieve(item.body).slice(0);
+        var out = this.root.retrieve(item).slice(0);
         return out;
     };
 
@@ -172,8 +166,9 @@
 
     Node.prototype._findIndex = function (item) {
         var b = this._bounds;
-        var left = (item.pos.x > b.pos.x + b.width / 2) ? false : true;
-        var top = (item.pos.y > b.pos.y + b.height / 2) ? false : true;
+        var itemBounds = item.getBounds();
+        var left = (itemBounds.pos.x > b.pos.x + b.width / 2) ? false : true;
+        var top = (itemBounds.pos.y > b.pos.y + b.height / 2) ? false : true;
 
         //top left
         var index = Node.TOP_LEFT;
@@ -278,12 +273,13 @@
         if (this.nodes.length) {
             var index = this._findIndex(item);
             var node = this.nodes[index];
+            var itemBounds = item.getBounds();
 
             //todo: make _bounds bounds
-            if (item.pos.x >= node._bounds.pos.x &&
-                    item.pos.x + item.width <= node._bounds.pos.x + node._bounds.width &&
-                    item.pos.y >= node._bounds.pos.y &&
-                    item.pos.y + item.height <= node._bounds.pos.y + node._bounds.height) {
+            if (itemBounds.pos.x >= node._bounds.pos.x &&
+                    itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
+                    itemBounds.pos.y >= node._bounds.pos.y &&
+                    itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
                 
                 this.nodes[index].insert(item);
                 
@@ -322,32 +318,33 @@
         if (this.nodes.length) {
             var index = this._findIndex(item);
             var node = this.nodes[index];
+            var itemBounds = item.getBounds();
 
-            if (item.pos.x >= node._bounds.pos.x &&
-                    item.pos.x + item.width <= node._bounds.pos.x + node._bounds.width &&
-                    item.pos.y >= node._bounds.pos.y &&
-                    item.pos.y + item.height <= node._bounds.pos.y + node._bounds.height) {
+            if (itemBounds.pos.x >= node._bounds.pos.x &&
+                    itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
+                    itemBounds.pos.y >= node._bounds.pos.y &&
+                    itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
                 
                 out.push.apply(out, this.nodes[index].retrieve(item));
             } else {
                 //Part of the item are overlapping multiple child nodes. For each of the overlapping nodes, return all containing objects.
 
-                if (item.pos.x <= this.nodes[Node.TOP_RIGHT]._bounds.pos.x) {
-                    if (item.pos.y <= this.nodes[Node.BOTTOM_LEFT]._bounds.pos.y) {
+                if (itemBounds.pos.x <= this.nodes[Node.TOP_RIGHT]._bounds.pos.x) {
+                    if (itemBounds.pos.y <= this.nodes[Node.BOTTOM_LEFT]._bounds.pos.y) {
                         out.push.apply(out, this.nodes[Node.TOP_LEFT].getAllContent());
                     }
                     
-                    if (item.pos.y + item.height > this.nodes[Node.BOTTOM_LEFT]._bounds.pos.y) {
+                    if (itemBounds.pos.y + itemBounds.height > this.nodes[Node.BOTTOM_LEFT]._bounds.pos.y) {
                         out.push.apply(out, this.nodes[Node.BOTTOM_LEFT].getAllContent());
                     }
                 }
                 
-                if (item.pos.x + item.width > this.nodes[Node.TOP_RIGHT]._bounds.pos.x) {//position+width bigger than middle x
-                    if (item.pos.y <= this.nodes[Node.BOTTOM_RIGHT]._bounds.pos.y) {
+                if (itemBounds.pos.x + itemBounds.width > this.nodes[Node.TOP_RIGHT]._bounds.pos.x) {//position+width bigger than middle x
+                    if (itemBounds.pos.y <= this.nodes[Node.BOTTOM_RIGHT]._bounds.pos.y) {
                         out.push.apply(out, this.nodes[Node.TOP_RIGHT].getAllContent());
                     }
                     
-                    if (item.pos.y + item.height > this.nodes[Node.BOTTOM_RIGHT]._bounds.pos.y) {
+                    if (itemBounds.pos.y + itemBounds.height > this.nodes[Node.BOTTOM_RIGHT]._bounds.pos.y) {
                         out.push.apply(out, this.nodes[Node.BOTTOM_RIGHT].getAllContent());
                     }
                 }

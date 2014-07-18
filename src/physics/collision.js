@@ -223,7 +223,7 @@
          * @public
          * @type Boolean
          */
-        api.maxChildren = 8; // what would be the correct value ?
+        api.maxChildren = 4;
         
        /**
          * bounds of the physic world.
@@ -323,19 +323,28 @@
             var collision = 0;
             var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
+            var candidates;
             
-            // clear and populate the quadTree (not sure when this should be done actually)
+            // only enable the quadTree when the quadtree debug mode is enabled
             if (me.debug && me.debug.renderQuadTree) {
+                // clear and populate the quadTree (not sure when this should be done actually)
                 me.collision.quadTree.clear();
                 // how to insert object in the quadTree need to be clarified
                 // as it impact the way we then retreive them out
-                me.collision.quadTree.insert(me.game.world.children);
-                //var candidates = me.collision.quadTree.retrieve(objA);
-                //console.log(candidates);
+                for (var it = me.game.world.children.length, item; it--, (item = me.game.world.children[it]);) {
+                    // only insert object with a "physic body"
+                    if (typeof (item.body) !== "undefined") {
+                        me.collision.quadTree.insert(item);
+                    }
+                }
+                candidates = me.collision.quadTree.retrieve(objA);
+                console.log(candidates.length);
+            } else {
+                // all world children
+                candidates = me.game.world.children;
             }
             
-            //for (var i = candidates.length, objB; i--, (objB = candidates[i].entity);) {
-            for (var i = me.game.world.children.length, objB; i--, (objB = me.game.world.children[i]);) {
+            for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
                 if ((objB.inViewport || objB.alwaysUpdate) && objB.collidable) {
                     // TODO: collision detection with other container will be back
