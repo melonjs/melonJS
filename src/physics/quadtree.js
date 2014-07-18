@@ -1,9 +1,8 @@
-/*jslint vars: true, nomen: true, plusplus: true, continue:true, forin:true */
-/*global Node, BoundsNode */
-/* jshint -W018 */
-
-
-/**
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ *
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Mike Chambers and released under the MIT license
  * https://github.com/mikechambers/ExamplesByMesh/tree/master/JavaScript/QuadTree
@@ -11,6 +10,9 @@
 **/
 
 (function () {
+/*jslint vars: true, nomen: true, plusplus: true, continue:true, forin:true */
+/*global Node, BoundsNode */
+/* jshint -W018 */
 
     /****************** QuadTree ****************/
 
@@ -28,13 +30,13 @@
     function QuadTree(bounds, pointQuad, maxDepth, maxChildren) {
         var node;
         if (pointQuad) {
-
             node = new Node(bounds, 0, maxDepth, maxChildren);
         } else {
             node = new BoundsNode(bounds, 0, maxDepth, maxChildren);
         }
 
         this.root = node;
+
     }
 
     /**
@@ -44,11 +46,11 @@
     **/
     QuadTree.prototype.root = null;
 
-
+   
     /**
     * Inserts an item into the QuadTree.
     * @method insert
-    * @param {Object|Array} item The item or Array of items to be inserted into the QuadTree. The item should expose x, y 
+    * @param {Entity|Array} item The item or Array of items to be inserted into the QuadTree. The item should expose x, y 
     * properties that represents its position in 2D space.
     **/
     QuadTree.prototype.insert = function (item) {
@@ -57,13 +59,19 @@
 
             var i;
             for (i = 0; i < len; i++) {
-                this.root.insert(item[i]);
+                if (item[i].body) {
+                    // faster way to insert entities only ?
+                    this.root.insert(item[i].body);
+                }
             }
         } else {
-            this.root.insert(item);
+            if (item.body) {
+                // faster way to insert entities only ?
+                this.root.insert(item.body);
+            }
         }
     };
-
+    
     /**
     * Clears all nodes and children from the QuadTree
     * @method clear
@@ -76,12 +84,12 @@
     * Retrieves all items / points in the same node as the specified item / point. If the specified item
     * overlaps the bounds of a node, then all children in both nodes will be returned.
     * @method retrieve
-    * @param {Object} item An object representing a 2D coordinate point (with x, y properties), or a shape
+    * @param {Entity} item An object entity with a body property representing a 2D coordinate point (with x, y properties), or a shape
     * with dimensions (x, y, width, height) properties.
     **/
     QuadTree.prototype.retrieve = function (item) {
         //get a copy of the array of items
-        var out = this.root.retrieve(item).slice(0);
+        var out = this.root.retrieve(item.body).slice(0);
         return out;
     };
 
@@ -204,8 +212,7 @@
 
         //top left
         this.nodes[Node.TOP_LEFT] = new this._classConstructor({
-            x: bx,
-            y: by,
+            pos: new me.Vector2d(bx, by),
             width: b_w_h,
             height: b_h_h
         },
@@ -213,8 +220,7 @@
 
         //top right
         this.nodes[Node.TOP_RIGHT] = new this._classConstructor({
-            x: bx_b_w_h,
-            y: by,
+            pos: new me.Vector2d(bx_b_w_h, by),
             width: b_w_h,
             height: b_h_h
         },
@@ -222,8 +228,7 @@
 
         //bottom left
         this.nodes[Node.BOTTOM_LEFT] = new this._classConstructor({
-            x: bx,
-            y: by_b_h_h,
+            pos: new me.Vector2d(bx, by_b_h_h),
             width: b_w_h,
             height: b_h_h
         },
@@ -232,8 +237,7 @@
 
         //bottom right
         this.nodes[Node.BOTTOM_RIGHT] = new this._classConstructor({
-            x: bx_b_w_h,
-            y: by_b_h_h,
+            pos: new me.Vector2d(bx_b_w_h, by_b_h_h),
             width: b_w_h,
             height: b_h_h
         },
