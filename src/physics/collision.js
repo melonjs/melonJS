@@ -199,6 +199,43 @@
          */
 
         /**
+         * the world quadtree used for the collision broadphase
+         * @name quadTree
+         * @memberOf me.collision
+         * @public
+         * @type {me.QuadTree}
+         */
+        api.quadTree = null;
+
+        /**
+         * The maximum number of levels that the quadtree will create. Default is 4.
+         * @name maxDepth
+         * @memberOf me.collision
+         * @public
+         * @type Number
+         */
+        api.maxDepth = 4;
+
+        /**
+         * The maximum number of children that a node can contain before it is split into sub-nodes.
+         * @name maxChildren
+         * @memberOf me.collision
+         * @public
+         * @type Boolean
+         */
+        api.maxChildren = 8; // what would be the correct value ?
+        
+       /**
+         * bounds of the physic world.
+         * @name bounds
+         * @memberOf me.collision
+         * @public
+         * @type {me.Rect}
+         */
+        api.bounds = null;
+        
+
+        /**
          * configure the collision detection algorithm <br>
          * default : true <br>
          * when true, full Separating Axis Theorem collision detection is performed <br>
@@ -206,10 +243,21 @@
          * @name SAT
          * @memberOf me.collision
          * @public
-         * @type {Boolean}
+         * @type Boolean
          */
         api.SAT = true;
 
+        /** 
+         * Initialize the collision/physic world
+         * @ignore
+         */
+        api.init = function () {
+            // default bounds
+            api.bounds = me.game.world.clone();
+            // initializa the quadtree
+            api.quadTree = new me.QuadTree(this.bounds, false, this.maxDepth, this.maxChildren);
+        };
+        
         /**
          * An object representing the result of an intersection. Contains: <br>
          *  - `a` and `b` : The two objects participating in the intersection <br>
@@ -276,7 +324,17 @@
             var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
             
-            // TODO : replace the big loop by a quadtree/spatial grid implementation
+            // clear and populate the quadTree (not sure when this should be done actually)
+            if (me.debug && me.debug.renderQuadTree) {
+                me.collision.quadTree.clear();
+                // how to insert object in the quadTree need to be clarified
+                // as it impact the way we then retreive them out
+                me.collision.quadTree.insert(me.game.world.children);
+                //var candidates = me.collision.quadTree.retrieve(objA);
+                //console.log(candidates);
+            }
+            
+            //for (var i = candidates.length, objB; i--, (objB = candidates[i].entity);) {
             for (var i = me.game.world.children.length, objB; i--, (objB = me.game.world.children[i]);) {
 
                 if ((objB.inViewport || objB.alwaysUpdate) && objB.collidable) {

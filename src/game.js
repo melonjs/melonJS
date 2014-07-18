@@ -178,6 +178,9 @@
                 api.world = new me.ObjectContainer(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
+                
+                // initialize the collision system (the quadTree mostly)
+                me.collision.init();
 
                 // get a ref to the screen buffer
                 frameBuffer = me.video.getSystemContext();
