@@ -217,6 +217,10 @@
          * @function
          */
         api.reset = function () {
+            
+            // clear the quadtree
+            me.collision.quadTree.clear();
+            
             // remove all objects
             api.world.destroy();
 
@@ -283,8 +287,20 @@
 
                 // update the timer
                 me.timer.update(time);
+                
+                // only enable the quadTree when the quadtree debug mode is enabled
+                if (me.debug && me.debug.renderQuadTree) {
+                    // clear and populate the quadTree
+                    me.collision.quadTree.clear();
+                    for (var i = api.world.children.length, item; i--, (item = api.world.children[i]);) {
+                        // only insert object with a "physic body"
+                        if (typeof (item.body) !== "undefined") {
+                            me.collision.quadTree.insert(item);
+                        }
+                    }
+                }
 
-                // update all objects (andd pass the elapsed time since last frame)
+                // update all objects (and pass the elapsed time since last frame)
                 isDirty = api.world.update(me.timer.getDelta()) || isDirty;
 
                 // update the camera/viewport

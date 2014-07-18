@@ -255,7 +255,7 @@
             // default bounds
             api.bounds = me.game.world.clone();
             // initializa the quadtree
-            api.quadTree = new me.QuadTree(this.bounds, false, this.maxDepth, this.maxChildren);
+            api.quadTree = new me.QuadTree(me.game.viewport, false, this.maxDepth, this.maxChildren);
         };
         
         /**
@@ -327,18 +327,8 @@
             
             // only enable the quadTree when the quadtree debug mode is enabled
             if (me.debug && me.debug.renderQuadTree) {
-                // clear and populate the quadTree (not sure when this should be done actually)
-                me.collision.quadTree.clear();
-                // how to insert object in the quadTree need to be clarified
-                // as it impact the way we then retreive them out
-                for (var it = me.game.world.children.length, item; it--, (item = me.game.world.children[it]);) {
-                    // only insert object with a "physic body"
-                    if (typeof (item.body) !== "undefined") {
-                        me.collision.quadTree.insert(item);
-                    }
-                }
                 candidates = me.collision.quadTree.retrieve(objA);
-                console.log(candidates.length);
+               //console.log(candidates.length);
             } else {
                 // all world children
                 candidates = me.game.world.children;

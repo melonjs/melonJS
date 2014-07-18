@@ -328,9 +328,13 @@
             // save the current globalAlpha value
             var _alpha = context.globalAlpha;
             
+            context.translate (-me.game.viewport.pos.x, -me.game.viewport.pos.y);
+            
             context.fillStyle = "red";
 	
             this.drawQuadTreeNode(context, me.collision.quadTree.root);
+            
+            context.translate (me.game.viewport.pos.x, me.game.viewport.pos.y);
             
             context.globalAlpha = _alpha;
         },
