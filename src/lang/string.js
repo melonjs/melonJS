@@ -54,7 +54,7 @@ if (!String.prototype.trimRight) {
  * @return {boolean} true if string contains only digits
  */
 String.prototype.isNumeric = function () {
-    return (this !== null && !isNaN(this) && this.trim() !== "");
+    return (!isNaN(this) && this.trim() !== "");
 };
 
 /**
@@ -64,9 +64,6 @@ String.prototype.isNumeric = function () {
  * @return {boolean} true if the string is either true or false
  */
 String.prototype.isBoolean = function () {
-    if (this !== null) {
-        return false;
-    }
     var trimmed = this.trim();
     return ("true" === trimmed) || ("false" === trimmed);
 };
