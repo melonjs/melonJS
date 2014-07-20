@@ -75,9 +75,11 @@ Number.prototype.round = function () {
  * @return {string} converted hexadecimal value
  */
 Number.prototype.toHex = function () {
-    return "0123456789ABCDEF".charAt((this - (this % 16)) >> 4) +
-        "0123456789ABCDEF".charAt(this % 16);
-};
+    var hexString = "0123456789ABCDEF";
+    return function () {
+        return hexString.charAt((this - (this % 16)) >> 4) + hexString.charAt(this % 16)
+    };
+}();
 
 /**
  * Returns a value indicating the sign of a number<br>
