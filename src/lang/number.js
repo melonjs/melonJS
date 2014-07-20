@@ -74,12 +74,12 @@ Number.prototype.round = function () {
  * @alias toHex
  * @return {string} converted hexadecimal value
  */
-Number.prototype.toHex = function () {
+Number.prototype.toHex = (function () {
     var hexString = "0123456789ABCDEF";
     return function () {
         return hexString.charAt((this - (this % 16)) >> 4) + hexString.charAt(this % 16);
     };
-}();
+})();
 
 /**
  * Returns a value indicating the sign of a number<br>
