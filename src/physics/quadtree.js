@@ -21,7 +21,7 @@
     * @class QuadTree
     * @constructor
     * @param {Object} An object representing the bounds of the top level of the QuadTree. The object 
-    * should contain the following properties : x, y, width, height
+    * should contain the following properties : {x, y}, width, height
     * @param {Boolean} pointQuad Whether the QuadTree will contain points (true), or items with bounds 
     * (width / height)(false). Default value is false.
     * @param {Number} maxDepth The maximum number of levels that the quadtree will create. Default is 4.
@@ -68,10 +68,17 @@
     
     /**
     * Clears all nodes and children from the QuadTree
+    * @param {Object} An optional object representing the bounds of the top level of the QuadTree. The object 
+    * should contain the following properties : {x, y}, width, height
     * @method clear
     **/
-    QuadTree.prototype.clear = function () {
+    QuadTree.prototype.clear = function (bounds) {
         this.root.clear();
+        if (typeof bounds !== "undefined") {
+            this.root._bounds.pos.setV(bounds.pos);
+            this.root._bounds.width = bounds.width;
+            this.root._bounds.height = bounds.height;
+        }
     };
 
     /**
