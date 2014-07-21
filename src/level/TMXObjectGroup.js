@@ -232,7 +232,7 @@
             this.isPolyline = false;
 
             // check if the object has an associated gid
-            if (this.gid) {
+            if (typeof this.gid === "number") {
                 this.setImage(this.gid, tilesets);
             }
             else {
