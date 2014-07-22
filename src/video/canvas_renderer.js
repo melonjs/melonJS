@@ -185,21 +185,25 @@
          * @function
          * @param {Number} x position
          * @param {Number} y position
-         * @param {Number} radius to draw
+         * @param {Number} radiusX to draw
+         * @param {Number} radiusY to draw
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
          */
-        api.fillArc = function (x, y, radius, start, end, color, antiClockwise) {
+        api.fillArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
+            backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.scale(radiusX, radiusY);
+            backBufferContext2D.translate(x, y);
+            backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
+            backBufferContext2D.restore();
             backBufferContext2D.fillStyle = color;
-            backBufferContext2D.arc(x, y, radius, start, end, antiClockwise);
             backBufferContext2D.fill();
-            backBufferContext2D.closePath();
         };
 
         /**
@@ -416,26 +420,30 @@
 
         /**
          * Fill an arc at the specified coordinates with given radius, start and end points
-         * @name drawArc
+         * @name strokeArc
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Number} x position
          * @param {Number} y position
-         * @param {Number} radius to draw
+         * @param {Number} radiusX to draw
+         * @param {Number} radiusY to draw
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
          */
-        api.strokeArc = function (x, y, radius, start, end, color, antiClockwise) {
+        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
+            backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.scale(radiusX, radiusY);
+            backBufferContext2D.translate(x, y);
+            backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
+            backBufferContext2D.restore();
             backBufferContext2D.strokeStyle = color;
-            backBufferContext2D.arc(x, y, radius, start, end, antiClockwise);
             backBufferContext2D.stroke();
-            backBufferContext2D.closePath();
         };
 
         /**

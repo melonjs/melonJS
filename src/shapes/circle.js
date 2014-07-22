@@ -161,15 +161,7 @@
          * @ignore
          */
         draw : function (renderer, color) {
-            // http://tinyurl.com/opnro2r
-            renderer.save();
-            renderer.translate(
-                this.pos.x - this.radius.x,
-                this.pos.y - this.radius.y
-            );
-            renderer.scale(this.radius.x, this.radius.y);
-            renderer.strokeArc(1, 1, 1, 0, 2 * Math.PI, color || "red", false);
-            renderer.restore();
+            renderer.strokeArc(this.pos.x - this.radius.x, this.pos.y - this.radius.y, this.radius.x, this.radius.y, 0, 2 * Math.PI, color || "red", false);
         }
     });
 })();
