@@ -65,7 +65,8 @@ module.exports = function (grunt) {
             run("git checkout master", "Getting back to master branch");
         }
         // using Q for promises. Using the grunt-release project"s same idea
-        Q()
+        var q = new Q();
+        q
           .then(checkout)
           .then(add)
           .then(commit)
