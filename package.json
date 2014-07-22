@@ -33,7 +33,9 @@
     "grunt-contrib-jshint": "~0.8.0",
     "grunt-contrib-uglify": "~0.2.7",
     "grunt-jsdoc": "~0.5.1",
-    "grunt-replace": "~0.7.7"
+    "grunt-replace": "~0.7.7",
+    "q": "~0.7.7",
+    "shelljs": "~0.3.0"
   },
   "scripts": {
     "install": "(bower install || true) && grunt",
