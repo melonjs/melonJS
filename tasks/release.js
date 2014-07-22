@@ -70,17 +70,14 @@ module.exports = function (grunt) {
             run("git checkout master", "Getting back to master branch");
         }
         // using Q for promises. Using the grunt-release project"s same idea
-        Q()
-          .then(checkout)
-          .then(add)
-          .then(commit)
-          .then(tag)
-          .then(push)
-          .then(rollback)
-          .catch(function (msg) {
+        Q.fcall(checkout)
+        .then(add)
+        .then(commit)
+        .then(tag)
+        .then(push)
+        .then(rollback)
+        .catch(function (msg) {
             grunt.fail.warn(msg || "release failed");
         }).finally(done);
-
-
     });
 };
