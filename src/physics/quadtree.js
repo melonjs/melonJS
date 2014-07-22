@@ -10,9 +10,7 @@
 **/
 
 (function () {
-/*jslint vars: true, nomen: true, plusplus: true, continue:true, forin:true */
-/*global Node, BoundsNode */
-/* jshint -W018 */
+
 
     /****************** QuadTree ****************/
 
@@ -147,8 +145,7 @@
         this.children.push(item);
 
         var len = this.children.length;
-        if (!(this._depth >= this._maxDepth) &&
-                len > this._maxChildren) {
+        if (len > this._maxChildren && this._depth < this._maxDepth) {
             
             this.subdivide();
 
@@ -218,7 +215,7 @@
             width: b_w_h,
             height: b_h_h
         },
-            depth, this._maxDepth, this._maxChildren);
+        depth, this._maxDepth, this._maxChildren);
 
         //top right
         this.nodes[Node.TOP_RIGHT] = new this._classConstructor({
@@ -226,7 +223,7 @@
             width: b_w_h,
             height: b_h_h
         },
-            depth, this._maxDepth, this._maxChildren);
+        depth, this._maxDepth, this._maxChildren);
 
         //bottom left
         this.nodes[Node.BOTTOM_LEFT] = new this._classConstructor({
@@ -234,7 +231,7 @@
             width: b_w_h,
             height: b_h_h
         },
-            depth, this._maxDepth, this._maxChildren);
+        depth, this._maxDepth, this._maxChildren);
 
 
         //bottom right
@@ -243,7 +240,7 @@
             width: b_w_h,
             height: b_h_h
         },
-            depth, this._maxDepth, this._maxChildren);
+        depth, this._maxDepth, this._maxChildren);
     };
 
     Node.prototype.clear = function () {
@@ -284,9 +281,9 @@
 
             //todo: make _bounds bounds
             if (itemBounds.pos.x >= node._bounds.pos.x &&
-                    itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
-                    itemBounds.pos.y >= node._bounds.pos.y &&
-                    itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
+                itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
+                itemBounds.pos.y >= node._bounds.pos.y &&
+                itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
                 
                 this.nodes[index].insert(item);
                 
@@ -301,8 +298,7 @@
 
         var len = this.children.length;
 
-        if (!(this._depth >= this._maxDepth) &&
-                len > this._maxChildren) {
+        if (len > this._maxChildren && this._depth < this._maxDepth) {
             
             this.subdivide();
 
@@ -328,9 +324,9 @@
             var itemBounds = item.getBounds();
 
             if (itemBounds.pos.x >= node._bounds.pos.x &&
-                    itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
-                    itemBounds.pos.y >= node._bounds.pos.y &&
-                    itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
+                itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
+                itemBounds.pos.y >= node._bounds.pos.y &&
+                itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
                 
                 out.push.apply(out, this.nodes[index].retrieve(item));
             } else {
