@@ -13,8 +13,13 @@ module.exports = function (grunt) {
 
         function run(cmd, msg) {
             var deferred = Q.defer();
+            var success;
             grunt.verbose.writeln("Running: " + cmd);
-            var success = shell.exec(cmd, {silent: true}).code === 0;
+            if (!grunt.option("verbose")) {
+              success = shell.exec(cmd, {silent: true}).code === 0;
+            } else {
+              success = shell.exec(cmd).code === 0;
+            }
 
             if (success) {
                 grunt.log.ok(msg || cmd);
