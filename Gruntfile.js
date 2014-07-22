@@ -82,8 +82,7 @@ module.exports = function (grunt) {
                     src : [
                         testSpecs,
                         sourceFiles,
-                        "Gruntfile.js",
-                        "tasks/release.js"
+                        "Gruntfile.js"
                     ]
                 }
             },
