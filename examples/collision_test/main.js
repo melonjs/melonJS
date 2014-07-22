@@ -20,7 +20,7 @@ var game = {
 
         // install the debug panel plugin
         me.plugin.register(debugPanel, "debug");
-        me.debug.renderCollisionGrid = true;
+        me.debug.renderQuadTree = true;
 
         // set all resources to be loaded
         me.loader.onload = this.loaded.bind(this);
@@ -71,12 +71,15 @@ var Smilie = me.Entity.extend({
         // add the coin sprite as renderable
 		this.renderable = new me.SpriteObject (16, 16, me.loader.getImage(game.assets[i % 5].name));
         this.collidable = true;
+        
+        // add a collision shape
+        this.body.addShape(new me.Rect(new me.Vector2d(), this.width, this.heigth));
     },
 
     update : function (dt) {
-        this.body.update();
+        this.body.update(dt);
         
-         me.game.world.collide(this, true);
+        me.game.world.collide(this, false);
 
         return this._super(me.Entity, 'update', [dt]);
     }

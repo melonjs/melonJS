@@ -107,7 +107,7 @@ game.Circle = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add an ellipse shape
-        this.body.addShape(new me.Ellipse(new me.Vector2d(0, 0), this.width, this.height));
+        this.body.addShape(new me.Ellipse(new me.Vector2d(this.width/2, this.height/2), this.width, this.height));
 
         // tomato
         this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);

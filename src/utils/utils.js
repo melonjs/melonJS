@@ -55,6 +55,48 @@
                 return output;
             }
         };
+        
+        // public method for encoding
+        singleton.encode = function (input) {
+
+            // make sure our input string has the right format
+            input = input.replace(/\r\n/g, "\n");
+
+            if (me.device.nativeBase64) {
+                // use native encoder
+                return window.btoa(input);
+            }
+            else {
+                // use cross-browser encoding
+                var output = [], chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
+               
+
+                while (i < input.length) {
+                    chr1 = input.charCodeAt(i++);
+                    chr2 = input.charCodeAt(i++);
+                    chr3 = input.charCodeAt(i++);
+ 
+                    enc1 = chr1 >> 2;
+                    enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                    enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                    enc4 = chr3 & 63;
+                    
+                    if (isNaN(chr2)) {
+                        enc3 = enc4 = 64;
+                    } else if (isNaN(chr3)) {
+                        enc4 = 64;
+                    }
+            
+                    output.push(_keyStr.charAt(enc1));
+                    output.push(_keyStr.charAt(enc2));
+                    output.push(_keyStr.charAt(enc3));
+                    output.push(_keyStr.charAt(enc4));
+                }
+
+                output = output.join("");
+                return output;
+            }
+        };
 
         return singleton;
 
@@ -97,6 +139,19 @@
          */
         api.decodeBase64 = function (input) {
             return Base64.decode(input);
+        };
+        
+        /**
+         * Encode binary string into a base64 string
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name encodeBase64
+         * @param {String} input Binary string
+         * @return {String} Base64 encoded data
+         */
+        api.encodeBase64 = function (input) {
+            return Base64.encode(input);
         };
 
         /**

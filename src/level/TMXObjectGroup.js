@@ -232,7 +232,7 @@
             this.isPolyline = false;
 
             // check if the object has an associated gid
-            if (this.gid) {
+            if (typeof this.gid === "number") {
                 this.setImage(this.gid, tilesets);
             }
             else {
@@ -319,7 +319,8 @@
         getShape : function () {
             // add an ellipse shape
             if (this.isEllipse === true) {
-                return new me.Ellipse(new me.Vector2d(0, 0), this.width, this.height);
+                // ellipse coordinates are the center position, so set default to the corresonding radius
+                return new me.Ellipse(new me.Vector2d(this.width / 2, this.height / 2), this.width, this.height);
             }
 
             // add a polyshape
@@ -327,8 +328,14 @@
                 return new me.PolyShape(new me.Vector2d(0, 0), this.points, this.isPolygon);
             }
 
-            // it's a rectangle
-            return new me.Rect(new me.Vector2d(0, 0), this.width, this.height);
+            // it's a rectangle, returns a polygone object anyway
+            return new me.PolyShape(
+                new me.Vector2d(0, 0), [
+                    new me.Vector2d(), new me.Vector2d(this.width, 0),
+                    new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
+                ],
+                true
+            );
         },
         /**
          * getObjectPropertyByName

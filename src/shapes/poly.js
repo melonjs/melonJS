@@ -75,9 +75,44 @@
             this.pos.setV(v);
             this.points = points;
             this.closed = (closed === true);
+            this.recalc();
             // TODO probably implement an updateBounds() function too
             //this.getBounds();
+           
+            return this;
+        },
+        
+        
+        /**
+         * Computes the calculated collision polygon. 
+         * This **must** be called if the `points` array, `angle`, or `offset` is modified manualy.
+         * @name recalc
+         * @memberOf me.PolyShape
+         * @function
+         */
+        recalc : function () {
+            var i;
+            // The edges here are the direction of the `n`th edge of the polygon, relative to
+            // the `n`th point. If you want to draw a given edge from the edge value, you must
+            // first translate to the position of the starting point.
+            var edges = this.edges = [];
+            // The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+            // to the position of the `n`th point. If you want to draw an edge normal, you must first
+            // translate to the position of the starting point.
+            var normals = this.normals = [];
+            // Copy the original points array and apply the offset/angle
+            var points = this.points;
+            var len = points.length;
 
+            // Calculate the edges/normals
+            for (i = 0; i < len; i++) {
+                var p1 = points[i];
+                var p2 = i < len - 1 ? points[i + 1] : points[0];
+                var e = new me.Vector2d().copy(p2).sub(p1);
+                var n = new me.Vector2d().copy(e).perp().normalize();
+                edges.push(e);
+                normals.push(n);
+            }
             return this;
         },
 
@@ -93,6 +128,7 @@
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
+            this.bounds.translate(x, y);
             return this;
         },
 
@@ -106,6 +142,7 @@
          */
         translateV : function (v) {
             this.pos.add(v);
+            this.bounds.translateV(v);
             return this;
         },
 
@@ -191,7 +228,7 @@
          */
         draw : function (context, color) {
             context.save();
-            context.translate(-this.pos.x, -this.pos.y);
+            context.translate(this.pos.x, this.pos.y);
             context.strokeStyle = color || "red";
             context.beginPath();
             context.moveTo(this.points[0].x, this.points[0].y);

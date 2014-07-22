@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * a simple debug panel plugin
@@ -91,7 +91,7 @@
             this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
             this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
 
-            this.area.renderDirty = new me.Rect(new me.Vector2d(270,5),15,15);
+            this.area.renderQuadTree = new me.Rect(new me.Vector2d(270,5),15,15);
             this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
 
             // some internal string/length
@@ -145,7 +145,10 @@
             me.debug.renderHitBox = me.debug.renderHitBox || false;
             me.debug.renderVelocity = me.debug.renderVelocity || false;
             me.debug.renderCollisionMap = me.debug.renderCollisionMap || false;
+            me.debug.renderQuadTree = me.debug.renderQuadTree || false;
+            
             var _this = this;
+            
             // patch timer.js
             me.plugin.patch(me.timer, "update", function (time) {
                 // call the original me.timer.update function
@@ -196,13 +199,11 @@
                 if (me.debug.renderHitBox) {
                     context.save();
                     // draw the bounding rect shape
-                    this.body.getBounds().draw(context, "red");
+                    this.body.getBounds().draw(context, "orange");
                     context.translate(this.pos.x, this.pos.y);
-                    if (this.body.shapes.length && this.body.getShape().shapeType!=="Rectangle") {
-                        // draw the original shape if different from the  bounding rect
-                        var shape = this.body.getShape();
-                        context.translate(shape.pos.x, shape.pos.y);
-                        shape.draw(context, "red");
+                    if (this.body.shapes.length) {
+                        // TODO : support multiple shapes
+                        this.body.shapes[0].draw(context, "red");
                     }
                     context.restore();
                 }
@@ -289,13 +290,53 @@
                         me.debug.renderCollisionMap = false;
                     }
                 }
-            } else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            } 
+            else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
+            } 
+            else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+                me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
             me.game.repaint();
+        },
+
+        /** @private */        
+        drawQuadTreeNode : function (context, node) {        
+            var bounds = node._bounds;
+            
+            // Opacity is based on number of objects in the cell
+            context.globalAlpha = (node.children.length / 16).clamp(0, 0.9);
+            context.fillRect(
+                Math.abs(bounds.pos.x) + 0.5,
+                Math.abs(bounds.pos.y) + 0.5,
+                bounds.width,
+                bounds.height
+            );
+
+            var len = node.nodes.length;
+
+            for(var i = 0; i < len; i++) {
+                this.drawQuadTreeNode(context, node.nodes[i]);
+            }
+        },
+        
+        /** @private */
+        drawQuadTree : function (context) {
+            // save the current globalAlpha value
+            var _alpha = context.globalAlpha;
+            
+            context.translate (-me.game.viewport.pos.x, -me.game.viewport.pos.y);
+            
+            context.fillStyle = "red";
+	
+            this.drawQuadTreeNode(context, me.collision.quadTree.root);
+            
+            context.translate (me.game.viewport.pos.x, me.game.viewport.pos.y);
+            
+            context.globalAlpha = _alpha;
         },
 
         /** @private */
@@ -330,6 +371,11 @@
         /** @private */
         draw : function(context) {
             context.save();
+            
+            // draw the QuadTree (before the panel)
+            if (me.debug.renderQuadTree === true) {
+                this.drawQuadTree(context);
+            }
 
             // draw the panel
             context.globalAlpha = 0.5;
@@ -346,7 +392,7 @@
             this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
             this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(context, "?dirtyRect  [ ]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
             this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
