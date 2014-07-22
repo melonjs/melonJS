@@ -69,7 +69,7 @@ var Smilie = me.Entity.extend({
             }]
         );
         // add the coin sprite as renderable
-		this.renderable = new me.SpriteObject (16, 16, me.loader.getImage(game.assets[i % 5].name));
+        this.renderable = new me.SpriteObject (16, 16, me.loader.getImage(game.assets[i % 5].name));
         this.collidable = true;
         
         // add a collision shape
@@ -79,7 +79,7 @@ var Smilie = me.Entity.extend({
     update : function (dt) {
         this.body.update(dt);
         
-        me.game.world.collide(this, false);
+        me.collision.check(this);
 
         return this._super(me.Entity, 'update', [dt]);
     }
