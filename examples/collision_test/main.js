@@ -79,7 +79,7 @@ var Smilie = me.Entity.extend({
     update : function (dt) {
         this.body.update(dt);
         
-        me.game.world.collide(this, false);
+        me.collision.check(this);
 
         return this._super(me.Entity, 'update', [dt]);
     }

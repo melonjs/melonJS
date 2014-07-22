@@ -95,17 +95,32 @@ game.PlayerEntity = me.Entity.extend({
 			});
 			return true;
 		}
-		
-		// check for collision with sthg
-		var res = me.game.world.collide(this);
 
-		if (res) {
-			switch (res.obj.type) {	
+		// check for collision with sthg
+        me.collision.check(this, null, true, this.collideHandler.bind(this), true);
+		
+		// check if we moved (a "stand" animation would definitely be cleaner)
+		if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
+			this._super(me.Entity, 'update', [dt]);
+			return true;
+		}
+		
+		return false;
+	},
+    
+    
+    /**
+	 * colision handler
+	 */
+    collideHandler : function (response) {
+        switch (response.b.type) {	
 				case me.game.ENEMY_OBJECT : {
-					if ((res.y>0) && this.body.falling) {
+					if ((response.overlapV.y>0) && this.body.falling) {
 						// jump
 						this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
 					} else {
+                        // makes the other entity solid by adjusting the player position
+                        this.pos.sub(response.overlapV);
 						this.hurt();
 					}
 					break;
@@ -117,19 +132,9 @@ game.PlayerEntity = me.Entity.extend({
 					this.hurt();
 					break;
 				}
-
 				default : break;
 			}
-		}
-		
-		// check if we moved (a "stand" animation would definitely be cleaner)
-		if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-			this._super(me.Entity, 'update', [dt]);
-			return true;
-		}
-		
-		return false;
-	},
+    },
 
 	
 	/**
