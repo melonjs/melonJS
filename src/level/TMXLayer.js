@@ -489,7 +489,24 @@
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
-            return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+            var tx = ~~(x / this.tilewidth);
+            var ty = ~~(y / this.tileheight);
+
+            if (this.orientation === "isometric") {
+                var tmpx = x;
+                var tmpy = y;
+                
+                tmpx -= this.rows * this.tilewidth / 2;
+                var tilex = Math.round(tmpx / this.tilewidth);
+                var tiley = Math.round(tmpy / this.tileheight);
+                tx = tiley + tilex;
+                ty = tiley - tilex;
+
+                if ((tx < 0 || tx > this.cols - 1) || (ty < 0 || ty > this.rows - 1)) {
+                    return null;
+                }
+            }
+            return this.layerData[tx][ty];
         },
 
         /**
