@@ -7,7 +7,6 @@ module.exports = function (grunt) {
     grunt.registerTask("dorelease", "MelonJS Release", function () {
         var repo = path.join(__dirname, "..");
         var config = grunt.file.readJSON(path.join(repo, "package.json"));
-        var buildPath = path.join(__dirname, "..", "build");
         var version = config.version;
         var done = this.async();
 
@@ -39,8 +38,8 @@ module.exports = function (grunt) {
             grunt.log.oklns("ACTUAL VERSION ==> " + config.version);
             grunt.log.oklns("BUILD FILES");
             var filenames = [
-                path.join(buildPath, "melonjs-" + version + ".js"),
-                path.join(buildPath, "melonjs-" + version + "-min.js")
+                grunt.config.get("path.main"),
+                grunt.config.get("path.min")
             ];
             // check the build files from the actual version
             // and add the js files to be commited
@@ -69,6 +68,7 @@ module.exports = function (grunt) {
         function rollback() {
             run("git checkout master", "Getting back to master branch");
         }
+
         // using Q for promises. Using the grunt-release project"s same idea
         Q.fcall(checkout)
         .then(add)
