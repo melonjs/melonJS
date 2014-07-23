@@ -179,8 +179,8 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.SpriteObject, "draw", function (context) {
-                // call the original me.SpriteObject function
+            me.plugin.patch(me.Sprite, "draw", function (context) {
+                // call the original me.Sprite function
                 this.parent(context);
 
                 // draw the sprite rectangle

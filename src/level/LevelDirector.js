@@ -33,7 +33,7 @@
          * @memberOf me.game
          * @private
          * @param {String} level to be loaded
-         * @param {me.ObjectContainer} target container
+         * @param {me.Container} target container
          * @ignore
          * @function
          */
@@ -84,7 +84,7 @@
                     // y: Defaults to 0 and can no longer be changed in Tiled Qt.
                     // width: The width of the object group in tiles. Meaningless.
                     // height: The height of the object group in tiles. Meaningless.
-                    targetContainer = new me.ObjectContainer();
+                    targetContainer = new me.Container();
 
                     // set additional properties
                     targetContainer.name = group.name;

@@ -18,10 +18,10 @@
      * @param {Number} [spriteheigth] sprite height
      * @example
      * // create a static Sprite Object
-     * mySprite = new me.SpriteObject (100, 100, me.loader.getImage("mySpriteImage"));
+     * mySprite = new me.Sprite (100, 100, me.loader.getImage("mySpriteImage"));
      */
-    me.SpriteObject = me.Renderable.extend(
-    /** @scope me.SpriteObject.prototype */
+    me.Sprite = me.Renderable.extend(
+    /** @scope me.Sprite.prototype */
     {
         /**
          * @ignore
@@ -49,7 +49,7 @@
              * WARNING: rotating sprites decreases performances
              * @public
              * @type Number
-             * @name me.SpriteObject#angle
+             * @name me.Sprite#angle
              */
             this.angle = 0;
 
@@ -98,7 +98,7 @@
         /**
          * specify a transparent color
          * @name setTransparency
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @deprecated Use PNG or GIF with transparency instead
          * @param {String} color color key in "#RRGGBB" format
@@ -117,7 +117,7 @@
         /**
          * return the flickering state of the object
          * @name isFlickering
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @return {Boolean}
          */
@@ -128,7 +128,7 @@
         /**
          * make the object flicker
          * @name flicker
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @param {Number} duration expressed in milliseconds
          * @param {Function} callback Function to call when flickering ends
@@ -155,7 +155,7 @@
         /**
          * Flip object on horizontal axis
          * @name flipX
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @param {Boolean} flip enable/disable flip
          */
@@ -174,7 +174,7 @@
         /**
          * Flip object on vertical axis
          * @name flipY
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @param {Boolean} flip enable/disable flip
          */
@@ -193,7 +193,7 @@
         /**
          * Resize the sprite around his center<br>
          * @name resize
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @param {Number} ratioX x scaling ratio
          * @param {Number} ratioY y scaling ratio
@@ -215,7 +215,7 @@
         /**
          * Resize the sprite around his center<br>
          * @name resizeV
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @param {me.Vector2d} vector ratio
          */
@@ -228,7 +228,7 @@
          * not to be called by the end user<br>
          * called by the game manager on each game loop
          * @name update
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @protected
          * @return false
@@ -253,7 +253,7 @@
          * not to be called by the end user<br>
          * called by the game manager on each game loop
          * @name draw
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
@@ -330,7 +330,7 @@
          * OnDestroy Notification function<br>
          * Called by engine before deleting the object
          * @name onDestroyEvent
-         * @memberOf me.SpriteObject
+         * @memberOf me.Sprite
          * @function
          */
         onDestroyEvent : function () {

@@ -7,11 +7,11 @@
 game.HUD = game.HUD || {};
 
  
-game.HUD.Container = me.ObjectContainer.extend({
+game.HUD.Container = me.Container.extend({
 
 	init: function() {
 		// call the constructor
-		this._super(me.ObjectContainer, 'init');
+		this._super(me.Container, 'init');
 		
 		// persistent across level change
 		this.isPersistent = true;

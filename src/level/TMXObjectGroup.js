@@ -12,8 +12,8 @@
     /**
      * TMX Object Group <br>
      * contains the object group definition as defined in Tiled. <br>
-     * note : object group definition is translated into the virtual `me.game.world` using `me.ObjectContainer`.
-     * @see me.ObjectContainer
+     * note : object group definition is translated into the virtual `me.game.world` using `me.Container`.
+     * @see me.Container
      * @class
      * @extends Object
      * @memberOf me

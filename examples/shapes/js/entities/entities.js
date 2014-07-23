@@ -91,7 +91,7 @@ game.Square = game.ShapeObject.extend({
         this.body.addShape(new me.Rect(new me.Vector2d(0, 0), this.width, this.height));
 
         // pienapple
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 24);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 24);
         this.renderable.offset.x = 93;
         this.renderable.offset.y = 151;
         this.renderable.resize(7.5);
@@ -110,7 +110,7 @@ game.Circle = game.ShapeObject.extend({
         this.body.addShape(new me.Ellipse(new me.Vector2d(this.width/2, this.height/2), this.width, this.height));
 
         // tomato
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 20);
         this.renderable.offset.x = 65;
         this.renderable.offset.y = 153;
         this.renderable.resize(7.5);
@@ -141,7 +141,7 @@ game.Poly = game.ShapeObject.extend({
         ], true));
 
         // star
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 24, 24);
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
         this.renderable.resize(7.5);

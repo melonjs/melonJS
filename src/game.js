@@ -71,7 +71,7 @@
          * a reference to the game world <br>
          * a world is a virtual environment containing all the game objects
          * @public
-         * @type {me.ObjectContainer}
+         * @type {me.Container}
          * @name world
          * @memberOf me.game
          */
@@ -79,7 +79,7 @@
         
         /**
          * when true, all objects will be added under the root world container<br>
-         * when false, a `me.ObjectContainer` object will be created for each
+         * when false, a `me.Container` object will be created for each
          * corresponding `TMXObjectGroup`
          * default value : true
          * @public
@@ -175,7 +175,7 @@
                 api.viewport = new me.Viewport(0, 0, width, height);
 
                 //the root object of our world is an entity container
-                api.world = new me.ObjectContainer(0, 0, width, height);
+                api.world = new me.Container(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
                 
@@ -251,7 +251,7 @@
          * @memberOf me.game
          * @function
          * @param {me.Renderable} child
-         * @return {me.ObjectContainer}
+         * @return {me.Container}
          */
         api.getParentContainer = function (child) {
             return child.ancestor;

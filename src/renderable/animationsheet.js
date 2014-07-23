@@ -9,7 +9,7 @@
     /**
      * an object to manage animation
      * @class
-     * @extends me.SpriteObject
+     * @extends me.Sprite
      * @memberOf me
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
@@ -37,7 +37,7 @@
      *   region: texture.getRegion('animationsheet')
      * });
      */
-    me.AnimationSheet = me.SpriteObject.extend(
+    me.AnimationSheet = me.Sprite.extend(
     /** @scope me.AnimationSheet.prototype */
     {
         /** @ignore */
@@ -84,7 +84,7 @@
             var image = settings.region || settings.image;
 
             // call the constructor
-            this._super(me.SpriteObject, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
+            this._super(me.Sprite, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
 
             // store the current atlas information
             this.textureAtlas = null;
@@ -324,17 +324,17 @@
                                  this.resetAnim() === false) {
                             this.current.idx = this.current.length - 1;
                             this.setAnimationFrame(this.current.idx);
-                            this._super(me.SpriteObject, "update", [dt]);
+                            this._super(me.Sprite, "update", [dt]);
                             return false;
                         }
                     }
 
                     // set next frame timestamp
                     this.current.nextFrame = this.current.animationspeed;
-                    return this._super(me.SpriteObject, "update", [dt]) || true;
+                    return this._super(me.Sprite, "update", [dt]) || true;
                 }
             }
-            return this._super(me.SpriteObject, "update", [dt]);
+            return this._super(me.Sprite, "update", [dt]);
         }
     });
 })();
