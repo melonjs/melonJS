@@ -126,6 +126,7 @@
          * @function
          * @param {me.Renderable} child
          * @param {number} [zIndex] forces the z index of the child to the specified value.
+         * @return {me.Renderable} the added child
          */
         addChild : function (child, zIndex) {
             if (typeof(child.ancestor) !== "undefined") {
@@ -155,6 +156,8 @@
             if (this.autoSort === true) {
                 this.sort();
             }
+
+            return child;
         },
         /**
          * Add a child to the container at the specified index<br>
@@ -164,8 +167,8 @@
          * @function
          * @param {me.Renderable} child
          * @param {Number} index
+         * @return {me.Renderable} the added child
          */
-
         addChildAt : function (child, index) {
             if (index >= 0 && index < this.children.length) {
                 if (typeof(child.ancestor) !== "undefined") {
@@ -182,6 +185,8 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
+
+                return child;
             }
             else {
                 throw new me.Container.Error("Index (" + index + ") Out Of Bounds for addChildAt()");

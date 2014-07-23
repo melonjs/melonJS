@@ -1,11 +1,12 @@
 Version History
 ---------------
 1.1.0
-* Core : Reorganized source code for all basic object definition/augmentation
+* Core : reorganised source code for all basic object definition/augmentation
 * Core : New CI and unit testing frameworks
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
 * Core : Added array random and weightedRandom functions (aaschmitz)
 * Core : Added a Base64 Encode function (aaschmitz)
+* Container : `addChild` and `addChildAt` now return the added child
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
