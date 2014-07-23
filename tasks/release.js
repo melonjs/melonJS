@@ -46,6 +46,7 @@ module.exports = function (grunt) {
             var stringFiles = "";
             for (var i = 0; i < filenames.length; i++) {
                 if (!grunt.file.exists(filenames[i])) {
+                    rollback();
                     grunt.fail.fatal("Missing file " + filenames[i] + " is required");
                 }
                 stringFiles += filenames[i] + " ";
@@ -77,6 +78,7 @@ module.exports = function (grunt) {
         .then(push)
         .then(rollback)
         .catch(function (msg) {
+            rollback();
             grunt.fail.warn(msg || "release failed");
         }).finally(done);
     });
