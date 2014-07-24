@@ -196,24 +196,6 @@
 
                 // check if debug mode is enabled
 
-                if (me.debug.renderHitBox && this.shapes.length) {
-
-                    // translate to the object position
-                    var translateX = this.pos.x ;
-                    var translateY = this.pos.y ;
-
-                    renderer.translate(translateX, translateY);
-
-                    // draw the original shape
-                    this.getShape().draw(renderer, "red");
-                     if (this.getShape().shapeType!=="Rectangle") {
-                         // draw the corresponding bounding box
-                        this.getShape().getBounds().draw(renderer, "red");
-                    }
-
-                    renderer.translate(-translateX, -translateY);
-                }
-
                 if (me.debug.renderHitBox) {
                     renderer.save();
                     // draw the bounding rect shape
