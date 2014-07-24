@@ -63,7 +63,7 @@
          * @return {WebGLContext}
          */
         api.getScreenContext = function () {
-            return context;
+            return gl;
         };
 
         /**
@@ -74,11 +74,11 @@
          * @return {WebGLRenderer}
          */
         api.getContext = function () {
-            return context;
+            return gl;
         };
 
         api.getHeight = function () {
-            return canvas.height;
+            return this.context.height;
         };
 
         /**
@@ -100,11 +100,11 @@
          * @return {Context2d}
          */
         api.getSystemContext = function () {
-            return backBufferContext2D;
+            return gl;
         };
 
         api.getWidth = function () {
-            return backBufferCanvas.width;
+            return this.context.width;
         };
 
         /**
