@@ -4,6 +4,7 @@ Version History
 * Core : Reorganized source code for all basic object definition/augmentation
 * Core : New CI and unit testing frameworks
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
+* Video : Refactored canvas drawing out to me.CanvasRenderer. Instead of context being passed to draw() methods, me.CanvasRenderer is instead.
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
