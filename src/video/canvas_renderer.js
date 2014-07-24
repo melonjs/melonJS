@@ -1,5 +1,11 @@
 (function () {
 
+    /**
+     * The canvas renderer object
+     * There is no constructor function for me.CanvasRenderer
+     * @namespace me.CanvasRenderer
+     * @memberOf me
+     */
     me.CanvasRenderer = (function () {
         var api = {},
         canvas = null,
