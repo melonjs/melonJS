@@ -121,16 +121,10 @@
          * @name getBounds
          * @memberOf me.Rect
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
-         * @return {me.Rect} new rectangle
+         * @return {me.Rect} this shape bounding box Rectangle object
          */
-        getBounds : function (rect) {
-            if (typeof(rect) !== "undefined") {
-                return rect.setShape(this.pos, this.width, this.height);
-            }
-            else {
-                return this.clone();
-            }
+        getBounds : function () {
+            return this;
         },
 
         /**
@@ -324,57 +318,23 @@
         },
 
         /**
-         * AABB vs AABB collission dectection<p>
-         * If there was a collision, the return vector will contains the following values:
-         * @example
-         * if (v.x != 0 || v.y != 0) {
-         *     if (v.x != 0) {
-         *         // x axis
-         *         if (v.x < 0) {
-         *             console.log("x axis : left side !");
-         *         }
-         *         else {
-         *             console.log("x axis : right side !");
-         *         }
-         *     }
-         *     else {
-         *         // y axis
-         *         if (v.y < 0) {
-         *             console.log("y axis : top side !");
-         *         }
-         *         else {
-         *             console.log("y axis : bottom side !");
-         *         }
-         *     }
-         * }
-         * @ignore
-         * @param {me.Rect} rect
-         * @return {me.Vector2d}
+         * Returns a polygon whose edges are the same as this box.
+         * @name toPolygon
+         * @memberOf me.Rect
+         * @function
+         * @return {me.PolyShape} a new Polygon that represents this rectangle.
          */
-        collideWithRectangle : function (/** {me.Rect} */ rect) {
-            // response vector
-            var p = new me.Vector2d(0, 0);
-
-            // check if both box are overlaping
-            if (this.overlaps(rect)) {
-                // compute delta between this & rect
-                var dx = this.left + this.hWidth  - rect.left - rect.hWidth;
-                var dy = this.top  + this.hHeight - rect.top  - rect.hHeight;
-
-                // compute penetration depth for both axis
-                p.x = (rect.hWidth  + this.hWidth)  - (dx < 0 ? -dx : dx); // - Math.abs(dx);
-                p.y = (rect.hHeight + this.hHeight) - (dy < 0 ? -dy : dy); // - Math.abs(dy);
-
-                // check and "normalize" axis
-                if (p.x < p.y) {
-                    p.y = 0;
-                    p.x = dx < 0 ? -p.x : p.x;
-                } else {
-                    p.x = 0;
-                    p.y = dy < 0 ? -p.y : p.y;
-                }
-            }
-            return p;
+        toPolygon: function () {
+            var pos = this.pos;
+            var w = this.width;
+            var h = this.height;
+            return new me.PolyShape(
+                new me.Vector2d(pos.x, pos.y), [
+                    new me.Vector2d(), new me.Vector2d(w, 0),
+                    new me.Vector2d(w, h), new me.Vector2d(0, h)
+                ],
+                true
+            );
         },
 
         /**

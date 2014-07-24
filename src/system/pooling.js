@@ -37,10 +37,10 @@
          */
         api.init = function () {
             // add default entity object
-            api.register("me.ObjectEntity", me.ObjectEntity);
+            api.register("me.Entity", me.Entity);
             api.register("me.CollectableEntity", me.CollectableEntity);
             api.register("me.LevelEntity", me.LevelEntity);
-            api.register("TileObject", me.SpriteObject);
+            api.register("TileObject", me.Sprite);
             api.register("me.Tween", me.Tween, true);
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);

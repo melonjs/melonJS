@@ -1,10 +1,14 @@
 Version History
 ---------------
 1.1.0
-* Core : Reorganized source code for all basic object definition/augmentation
+* Core : reorganised source code for all basic object definition/augmentation
 * Core : New CI and unit testing frameworks
 * Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
-* Video : Refactored canvas drawing out to me.CanvasRenderer. Instead of context being passed to draw() methods, me.CanvasRenderer is instead.
+* Core : Added array random and weightedRandom functions (aaschmitz)
+* Core : Added a Base64 Encode function (aaschmitz)
+* Container : `addChild` and `addChildAt` now return the added child
+* Video : Refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target
+* CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)

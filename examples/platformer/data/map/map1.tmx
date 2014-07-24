@@ -45,31 +45,31 @@
   </data>
  </layer>
  <objectgroup color="#55ff00" name="player" width="50" height="17">
-  <object name="mainPlayer" x="105" y="420" width="35" height="105">
+  <object name="mainPlayer" x="105" y="438" width="35" height="88">
    <properties>
     <property name="spriteheight" value="98"/>
     <property name="spritewidth" value="72"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="19" x="945" y="595">
+  <object name="me.Entity" gid="19" x="945" y="595">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="20" x="980" y="595">
+  <object name="me.Entity" gid="20" x="980" y="595">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="20" x="840" y="595">
+  <object name="me.Entity" gid="20" x="840" y="595">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>
    </properties>
   </object>
-  <object name="me.ObjectEntity" gid="19" x="805" y="595">
+  <object name="me.Entity" gid="19" x="805" y="595">
    <properties>
     <property name="collidable" value="true"/>
     <property name="type" value="spikeObject"/>

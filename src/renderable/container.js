@@ -16,7 +16,7 @@
     };
 
     /**
-     * A global "translation context" for nested ObjectContainers
+     * A global "translation context" for nested Containers
      * @ignore
      */
     var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
@@ -28,7 +28,7 @@
     var globalFloatingCounter = 0;
 
     /**
-     * ObjectContainer represents a collection of child objects
+     * me.Container represents a collection of child objects
      * @class
      * @extends me.Renderable
      * @memberOf me
@@ -38,8 +38,8 @@
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {number} [h=me.game.viewport.height] height of the container
      */
-    me.ObjectContainer = me.Renderable.extend(
-    /** @scope me.ObjectContainer.prototype */
+    me.Container = me.Renderable.extend(
+    /** @scope me.Container.prototype */
     {
         /**
          * constructor
@@ -57,7 +57,7 @@
              * @public
              * @type Boolean
              * @name collidable
-             * @memberOf me.ObjectContainer
+             * @memberOf me.Container
              */
             this.collidable = true;
 
@@ -66,7 +66,7 @@
              * @public
              * @type me.Matrix2d
              * @name transform
-             * @memberOf me.ObjectContainer
+             * @memberOf me.Container
              */
             this.transform = new me.Matrix2d();
             // call the _super constructor
@@ -77,11 +77,13 @@
                 height || Infinity]
             );
             // init the bounds to an empty rect
+            
             /**
              * Container bounds
              * @ignore
              */
-            this.bounds = new me.Rect(new me.Vector2d(0, 0), 0, 0);
+            this.bounds = undefined;
+            
             /**
              * The array of children of this container.
              * @ignore
@@ -94,7 +96,7 @@
              * @public
              * @type String
              * @name sortOn
-             * @memberOf me.ObjectContainer
+             * @memberOf me.Container
              */
             this.sortOn = me.game.sortOn;
             /**
@@ -102,7 +104,7 @@
              * @public
              * @type Boolean
              * @name autoSort
-             * @memberOf me.ObjectContainer
+             * @memberOf me.Container
              */
 
             this.autoSort = true;
@@ -120,10 +122,11 @@
          * Add a child to the container <br>
          * if auto-sort is disable, the object will be appended at the bottom of the list
          * @name addChild
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          * @param {number} [zIndex] forces the z index of the child to the specified value.
+         * @return {me.Renderable} the added child
          */
         addChild : function (child, zIndex) {
             if (typeof(child.ancestor) !== "undefined") {
@@ -153,17 +156,19 @@
             if (this.autoSort === true) {
                 this.sort();
             }
+
+            return child;
         },
         /**
          * Add a child to the container at the specified index<br>
          * (the list won't be sorted after insertion)
          * @name addChildAt
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          * @param {Number} index
+         * @return {me.Renderable} the added child
          */
-
         addChildAt : function (child, index) {
             if (index >= 0 && index < this.children.length) {
                 if (typeof(child.ancestor) !== "undefined") {
@@ -180,16 +185,18 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
+
+                return child;
             }
             else {
-                throw new me.ObjectContainer.Error("Index (" + index + ") Out Of Bounds for addChildAt()");
+                throw new me.Container.Error("Index (" + index + ") Out Of Bounds for addChildAt()");
             }
         },
 
         /**
          * Swaps the position (z depth) of 2 childs
          * @name swapChildren
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          * @param {me.Renderable} child
@@ -208,14 +215,14 @@
                 this.children[index2] = child;
             }
             else {
-                throw new me.ObjectContainer.Error(child + " Both the supplied childs must be a child of the caller " + this);
+                throw new me.Container.Error(child + " Both the supplied childs must be a child of the caller " + this);
             }
         },
 
         /**
          * Returns the Child at the specified index
          * @name getChildAt
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {Number} index
          */
@@ -224,14 +231,14 @@
                 return this.children[index];
             }
             else {
-                throw new me.ObjectContainer.Error("Index (" + index + ") Out Of Bounds for getChildAt()");
+                throw new me.Container.Error("Index (" + index + ") Out Of Bounds for getChildAt()");
             }
         },
 
         /**
          * Returns the index of the Child
          * @name getChildAt
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          */
@@ -242,7 +249,7 @@
         /**
          * Returns true if contains the specified Child
          * @name hasChild
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          * @return {Boolean}
@@ -256,7 +263,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object tree each time
          * @name getChildByProp
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
          * @param {String} prop Property name
@@ -286,7 +293,7 @@
 
             for (var i = this.children.length - 1; i >= 0; i--) {
                 var obj = this.children[i];
-                if (obj instanceof me.ObjectContainer) {
+                if (obj instanceof me.Container) {
                     compare(obj, prop);
                     objList = objList.concat(obj.getChildByProp(prop, value));
                 }
@@ -303,7 +310,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object list each time
          * @name getChildByName
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
          * @param {String} name entity name
@@ -319,7 +326,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object list each time
          * @name getChildByGUID
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
          * @param {String} GUID entity GUID
@@ -333,18 +340,19 @@
         /**
          * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
          * @name getBounds
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} new rectangle
          */
-        getBounds : function (rect) {
-            var _bounds = (typeof(rect) !== "undefined") ? rect : this.bounds;
-
-            // reset the rect with default values
-            _bounds.pos.set(Infinity, Infinity);
-            _bounds.resize(-Infinity, -Infinity);
-
+        getBounds : function () {
+            if (!this.bounds) {
+                this.bounds = new me.Rect(new me.Vector2d(Infinity, Infinity), -Infinity, -Infinity);
+            } else {
+                // reset the rect with default values
+                this.bounds.pos.set(Infinity, Infinity);
+                this.bounds.resize(-Infinity, -Infinity);
+            }
             var childBounds;
             for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (child.isRenderable) {
@@ -352,18 +360,18 @@
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
                     if (childBounds !== null) {
-                        _bounds.union(childBounds);
+                        this.bounds.union(childBounds);
                     }
                 }
             }
             // TODO : cache the value until any childs are modified? (next frame?)
-            return _bounds;
+            return this.bounds;
         },
 
         /**
          * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
          * @name removeChild
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
          * @param {me.Renderable} child
@@ -381,7 +389,7 @@
          * (removal is immediate and unconditional)<br>
          * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
          * @name removeChildNow
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
@@ -403,14 +411,14 @@
 
             }
             else {
-                throw new me.ObjectContainer.Error(child + " The supplied child must be a child of the caller " + this);
+                throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);
             }
         },
 
         /**
          * Automatically set the specified property of all childs to the given value
          * @name setChildsProperty
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {String} property property name
          * @param {Object} value property value
@@ -420,7 +428,7 @@
         setChildsProperty : function (prop, val, recursive) {
             for (var i = this.children.length; i >= 0; i--) {
                 var obj = this.children[i];
-                if ((recursive === true) && (obj instanceof me.ObjectContainer)) {
+                if ((recursive === true) && (obj instanceof me.Container)) {
                     obj.setChildsProperty(prop, val, recursive);
                 }
                 obj[prop] = val;
@@ -430,7 +438,7 @@
         /**
          * Move the child in the group one step forward (z depth).
          * @name moveUp
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          */
@@ -445,7 +453,7 @@
         /**
          * Move the child in the group one step backward (z depth).
          * @name moveDown
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          */
@@ -460,7 +468,7 @@
         /**
          * Move the specified child to the top(z depth).
          * @name moveToTop
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          */
@@ -477,7 +485,7 @@
         /**
          * Move the specified child the bottom (z depth).
          * @name moveToBottom
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
          */
@@ -494,12 +502,13 @@
         /**
          * Checks if the specified child collides with others childs in this container
          * @name collide
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
+         * @deprecated use the new me.collision.check function for collision detection 
          * @param {me.Renderable} obj Object to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+         * @param {Boolean} [multiple=false] check for multiple collision (
+         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
          * @example
          * // check for collision between this object and others
          * res = me.game.world.collide(this);
@@ -527,75 +536,38 @@
          * }
          */
         collide : function (objA, multiple) {
+            // TO BE REMOVED
             return this.collideType(objA, null, multiple);
         },
 
         /**
          * Checks if the specified child collides with others childs in this container
          * @name collideType
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
+         * @deprecated use the new me.collision.check function for collision detection 
          * @param {me.Renderable} obj Object to be tested for collision
          * @param {String} [type=undefined] child type to be tested for collision
          * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision){@link me.Rect#collideVsAABB}
+         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
          */
         collideType : function (objA, type, multiple) {
-            var res, mres;
-            // make sure we have a boolean
-            multiple = (multiple === true ? true : false);
             if (multiple === true) {
-                mres = [];
+                throw "melonJS : multiple collision detection is not supported" +
+                      " anymore through the old me.game.collide function," +
+                      " please use the new new me.collision.check function";
             }
-
-            // this should be replace by a list of the 4 adjacent cell around the object requesting collision
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                if ((obj.inViewport || obj.alwaysUpdate) && obj.collidable) {
-                    // recursivly check through
-                    if (obj instanceof me.ObjectContainer) {
-                        res = obj.collideType(objA, type, multiple);
-                        if (multiple) {
-                            mres.concat(res);
-                        }
-                        else if (res) {
-                            // the child container returned collision information
-                            return res;
-                        }
-
-                    }
-                    else if ((obj !== objA) && (!type || (obj.type === type))) {
-                        this._boundsA = obj.getBounds(this._boundsA).translateV(obj.pos);
-                        this._boundsB = objA.getBounds(this._boundsB).translateV(objA.pos);
-
-                        res = this._boundsA["collideWith" + this._boundsB.shapeType].call(
-                            this._boundsA,
-                            this._boundsB
-                        );
-
-                        if (res.x !== 0 || res.y !== 0) {
-                            // notify the object
-                            obj.onCollision.call(obj, res, objA);
-                            // return the type (deprecated)
-                            res.type = obj.type;
-                            // return a reference of the colliding object
-                            res.obj = obj;
-                            // stop here if we don't look for multiple collision detection
-                            if (!multiple) {
-                                return res;
-                            }
-                            mres.push(res);
-                        }
-                    }
-                }
+            if (me.collision.check(objA, type, false, null, true, me.collision.response.clear())) {
+                return me.collision.response;
             }
-            return (multiple ? mres : null);
+            return null;
         },
 
         /**
          * Manually trigger the sort of all the childs in the container</p>
          * @name sort
-         * @memberOf me.ObjectContainer
+         * @memberOf me.Container
          * @public
          * @function
          * @param {Boolean} [recursive=false] recursively sort all containers if true
@@ -607,7 +579,7 @@
                 if (recursive === true) {
                     // trigger other child container sort function (if any)
                     for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                        if (obj instanceof me.ObjectContainer) {
+                        if (obj instanceof me.Container) {
                             // note : this will generate one defered sorting function
                             // for each existing containe
                             obj.sort(recursive);
@@ -786,14 +758,14 @@
     /**
      * Base class for ObjectContainer exception handling.
      * @name Error
-     * @memberOf me.ObjectContainer
+     * @memberOf me.Container
      * @constructor
      * @param {String} msg Error message.
      */
-    me.ObjectContainer.Error = me.Renderable.Error.extend({
+    me.Container.Error = me.Renderable.Error.extend({
         init : function (msg) {
             this._super(me.Renderable.Error, "init", [ msg ]);
-            this.name = "me.ObjectContainer.Error";
+            this.name = "me.Container.Error";
         }
     });
 })();

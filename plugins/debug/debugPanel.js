@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * a simple debug panel plugin
@@ -91,7 +91,7 @@
             this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
             this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
 
-            this.area.renderDirty = new me.Rect(new me.Vector2d(270,5),15,15);
+            this.area.renderQuadTree = new me.Rect(new me.Vector2d(270,5),15,15);
             this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
 
             // some internal string/length
@@ -145,7 +145,10 @@
             me.debug.renderHitBox = me.debug.renderHitBox || false;
             me.debug.renderVelocity = me.debug.renderVelocity || false;
             me.debug.renderCollisionMap = me.debug.renderCollisionMap || false;
+            me.debug.renderQuadTree = me.debug.renderQuadTree || false;
+            
             var _this = this;
+            
             // patch timer.js
             me.plugin.patch(me.timer, "update", function (time) {
                 // call the original me.timer.update function
@@ -176,8 +179,8 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.SpriteObject, "draw", function (renderer) {
-                // call the original me.SpriteObject function
+            me.plugin.patch(me.Sprite, "draw", function (renderer) {
+                // call the original me.Sprite function
                 this.parent(renderer);
 
                 // draw the sprite rectangle
@@ -187,11 +190,12 @@
             });
 
             // patch entities.js
-            me.plugin.patch(me.ObjectEntity, "draw", function (renderer) {
+            me.plugin.patch(me.Entity, "draw", function (renderer) {
                 // call the original me.game.draw function
                 this.parent(renderer);
 
                 // check if debug mode is enabled
+
                 if (me.debug.renderHitBox && this.shapes.length) {
 
                     // translate to the object position
@@ -208,7 +212,18 @@
                     }
 
                     renderer.translate(-translateX, -translateY);
+                }
 
+                if (me.debug.renderHitBox) {
+                    renderer.save();
+                    // draw the bounding rect shape
+                    this.body.getBounds().draw(renderer, "orange");
+                    renderer.translate(this.pos.x, this.pos.y);
+                    if (this.body.shapes.length) {
+                        // TODO : support multiple shapes
+                        this.body.shapes[0].draw(renderer, "red");
+                    }
+                    renderer.restore();
                 }
 
                 if (me.debug.renderVelocity) {
@@ -222,8 +237,8 @@
                     context.beginPath();
                     context.moveTo(x, y);
                     context.lineTo(
-                        x + ~~(this.vel.x * this.hWidth),
-                        y + ~~(this.vel.y * this.hHeight)
+                        x + ~~(this.body.vel.x * this.hWidth),
+                        y + ~~(this.body.vel.y * this.hHeight)
                     );
                     context.stroke();
                 }
@@ -294,13 +309,51 @@
                         me.debug.renderCollisionMap = false;
                     }
                 }
-            } else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            } 
+            else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
+            } 
+            else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+                me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
             me.game.repaint();
+        },
+
+        /** @private */        
+        drawQuadTreeNode : function (renderer, node) {        
+            var bounds = node._bounds;
+            
+            // Opacity is based on number of objects in the cell
+            renderer.setGlobalAlpha((node.children.length / 16).clamp(0, 0.9));
+            renderer.fillRect(Math.abs(bounds.pos.x) + 0.5,
+                Math.abs(bounds.pos.y) + 0.5,
+                bounds.width,
+                bounds.height,
+                "red"
+            );
+
+            var len = node.nodes.length;
+
+            for(var i = 0; i < len; i++) {
+                this.drawQuadTreeNode(context, node.nodes[i]);
+            }
+        },
+        
+        /** @private */
+        drawQuadTree : function (renderer) {
+            // save the current globalAlpha value
+            var _alpha = renderer.globalAlpha();
+            
+            renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
+            
+            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
+            
+            renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
+            
+            renderer.setGlobalAlpha(_alpha);
         },
 
         /** @private */
@@ -335,6 +388,11 @@
         /** @private */
         draw : function(renderer) {
             renderer.save();
+            
+            // draw the QuadTree (before the panel)
+            if (me.debug.renderQuadTree === true) {
+                this.drawQuadTree(renderer);
+            }
 
             // draw the panel
             renderer.setGlobalAlpha(0.5);
@@ -350,7 +408,7 @@
             this.font.draw(renderer, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
             this.font.draw(renderer, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(renderer, "?dirtyRect  [ ]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
             this.font.draw(renderer, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration

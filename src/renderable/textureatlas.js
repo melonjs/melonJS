@@ -159,7 +159,7 @@
          * @memberOf me.TextureAtlas
          * @function
          * @param {String} name name of the sprite
-         * @return {me.SpriteObject}
+         * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
          * game.texture = new me.TextureAtlas(
@@ -177,7 +177,7 @@
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
-                var sprite = new me.SpriteObject(
+                var sprite = new me.Sprite(
                     0, 0,
                     this.getTexture(),
                     region.width, region.height

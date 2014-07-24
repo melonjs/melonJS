@@ -8,12 +8,12 @@
     /**
      * Particle Container Object.
      * @class
-     * @extends me.ObjectContainer
+     * @extends me.Container
      * @memberOf me
      * @constructor
      * @param {me.ParticleEmitter} emitter the emitter which owns this container
      */
-    me.ParticleContainer = me.ObjectContainer.extend(
+    me.ParticleContainer = me.Container.extend(
     /** @scope ParticleContainer */
     {
         /**
@@ -21,7 +21,7 @@
          */
         init: function (emitter) {
             // call the super constructor
-            this._super(me.ObjectContainer, "init");
+            this._super(me.Container, "init");
 
             // don't sort the particles by z-index
             this.autoSort = false;
@@ -84,7 +84,7 @@
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super(me.ObjectContainer, "draw", [context, rect]);
+                this._super(me.Container, "draw", [context, rect]);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {

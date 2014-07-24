@@ -16,11 +16,11 @@ game.Rect = me.Renderable.extend({
 /**
  * a basic entity
  */
-game.Entity = me.ObjectEntity.extend({
+game.Entity = me.Entity.extend({
     "init" : function (x, y, settings) {
-        this._super(me.ObjectEntity, "init", [x, y, settings]);
+        this._super(me.Entity, "init", [x, y, settings]);
         this.z = 1;
-        this.renderable = new me.ObjectContainer(0, 0, 50, 50);
+        this.renderable = new me.Container(0, 0, 50, 50);
         this.renderable.addChild(new game.Rect(
             new me.Vector2d(),
             50,
@@ -54,14 +54,14 @@ game.Entity = me.ObjectEntity.extend({
 /**
  * a floating entity
  */
-game.FloatingEntity = me.ObjectEntity.extend({
+game.FloatingEntity = me.Entity.extend({
     "init" : function (x, y, settings) {
-        this._super(me.ObjectEntity, "init", [x, y, settings]);
+        this._super(me.Entity, "init", [x, y, settings]);
         this.z = 1;
         this.floating = true;
-        this.renderable = new me.ObjectContainer(0, 0, 50, 50);
+        this.renderable = new me.Container(0, 0, 50, 50);
 
-        var container = new me.ObjectContainer(0, 0, 50, 50);
+        var container = new me.Container(0, 0, 50, 50);
         container.addChild(new game.Rect(
             new me.Vector2d(),
             50,

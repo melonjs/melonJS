@@ -12,7 +12,7 @@
      * The object simply register on the "pointerdown" <br>
      * or "touchstart" event and call the onClick function"
      * @class
-     * @extends me.SpriteObject
+     * @extends me.Sprite
      * @memberOf me
      * @constructor
      * @param {Number} x the x coordinate of the GUI Object
@@ -49,7 +49,7 @@
      * me.game.world.addChild(new myButton(10,10));
      *
      */
-    me.GUI_Object = me.SpriteObject.extend({
+    me.GUI_Object = me.Sprite.extend({
     /** @scope me.GUI_Object.prototype */
 
         /**
@@ -85,7 +85,7 @@
             this.released = true;
             
             // call the parent constructor
-            this._super(me.SpriteObject, "init", [x, y,
+            this._super(me.Sprite, "init", [x, y,
                 ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
                 settings.spritewidth,
                 settings.spriteheight]);

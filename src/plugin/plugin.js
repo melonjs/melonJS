@@ -60,7 +60,7 @@
          *   // display something in the console
          *   console.log("duh");
          *   // call the original me.game.update function
-         *   this._parent();
+         *   this.parent();
          * });
          */
         singleton.patch = function (proto, name, fn) {

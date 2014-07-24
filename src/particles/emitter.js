@@ -461,7 +461,6 @@
             this.container.destroy();
         },
 
-
         // Add count particles in the game world
         /** @ignore */
         addParticles: function (count) {
@@ -473,7 +472,6 @@
             }
         },
 
-
         /**
          * Emitter is of type stream and is launching particles <br>
          * @function
@@ -484,7 +482,6 @@
         isRunning: function () {
             return this._enabled && this._stream;
         },
-
 
         /**
          * Launch particles from emitter constantly <br>
@@ -501,7 +498,6 @@
             this._durationTimer = (typeof duration === "number") ? duration : this.duration;
         },
 
-
         /**
          * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
          * @function
@@ -511,7 +507,6 @@
         stopStream: function () {
             this._enabled = false;
         },
-
 
         /**
          * Launch all particles from emitter and stop <br>
@@ -527,8 +522,6 @@
             this.addParticles((typeof total === "number") ? total : this.totalParticles);
             this._enabled = false;
         },
-
-
 
         /**
          * @ignore
