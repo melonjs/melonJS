@@ -2,14 +2,21 @@ Version History
 ---------------
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
-* Core : New CI and unit testing frameworks
-* Core : New object inheritance mechanism: http://github.com/parasyte/jay-inheritance
-* Core : Added array random and weightedRandom functions (aaschmitz)
-* Core : Added a Base64 Encode function (aaschmitz)
+* Core : new CI and unit testing frameworks
+* Core : new object inheritance mechanism: http://github.com/parasyte/jay-inheritance
+* Core : added array random and weightedRandom functions (aaschmitz)
+* Core : added a Base64 Encode function (aaschmitz)
+* Core : new `me.Error` class to help better track down execeptions' origin
+* Core : brand new "Separate Axis Theorem " based collision algorithm (support polygon/ellipse, and providex more accurate collision response)
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : Refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
 * CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
+* Renderable : renamed `me.SpriteObject` to `me.Sprite` and `me.ObjectContainer` to `me.Container`, for a cleaner API
+* Camera : fixed viewport bounds setting when using isometric map (Juhana Paavola)
+* Entity : entity object redesign with a full polygon shape based physic body implementation
+* Entity : `me.ObjectEntity` has been renamed to `me.Entity` to avoid confusion between the old and new entity component.
+* Audio : fixed some audio load issues and error callbacks
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
