@@ -55,7 +55,7 @@
          * @memberOf me.video
          * @function
          * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
-         * @param {RendererType} me.video.CANVAS, me.video.WEBGL. State which renderer you prefer to use.
+         * @param {RendererType} me.video.CANVAS. State which renderer you prefer to use. WebGL to be implemented
          * @param {Number} width game width
          * @param {Number} height game height
          * @param {Boolean} [double_buffering] enable/disable double buffering

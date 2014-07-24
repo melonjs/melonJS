@@ -8,6 +8,7 @@ Version History
 * Core : Added a Base64 Encode function (aaschmitz)
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : Refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target
+* Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
 * CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
 
 1.0.2

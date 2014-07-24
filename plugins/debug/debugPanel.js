@@ -320,7 +320,7 @@
             var len = node.nodes.length;
 
             for(var i = 0; i < len; i++) {
-                this.drawQuadTreeNode(context, node.nodes[i]);
+                this.drawQuadTreeNode(renderer, node.nodes[i]);
             }
         },
         
