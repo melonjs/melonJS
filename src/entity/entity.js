@@ -841,7 +841,7 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function (context) {
+        draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
@@ -857,9 +857,9 @@
                 var y = ~~(bounds.pos.y + (
                     this.anchorPoint.y * (bounds.height - this.renderable.height)
                 ));
-                context.translate(x, y);
-                this.renderable.draw(context);
-                context.translate(-x, -y);
+                renderer.translate(x, y);
+                this.renderable.draw(renderer);
+                renderer.translate(-x, -y);
             }
         },
 

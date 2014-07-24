@@ -91,7 +91,7 @@
         /**
          * render the main framebuffer on screen
          * @name blitSurface
-         * @memberOf me.video
+         * @memberOf me.CanvasRenderer
          * @function
          */
         api.blitSurface = function () {
