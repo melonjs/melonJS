@@ -75,8 +75,9 @@
 
         /**
          * Base class for Audio exception handling.
-         * @name Error
-         * @memberOf me.video
+         * @name audio.Error
+         * @class
+         * @memberOf me.audio
          * @constructor
          * @param {String} msg Error message.
          */
