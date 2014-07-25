@@ -8,7 +8,6 @@ module.exports = function (grunt) {
         var repo = path.join(__dirname, "..");
         var config = grunt.file.readJSON(path.join(repo, "package.json"));
         var version = config.version;
-        var done = this.async();
 
         function run(cmd, msg) {
             var deferred = Q.defer();
@@ -70,16 +69,15 @@ module.exports = function (grunt) {
             run("git checkout master", "Getting back to master branch");
         }
 
-        // using Q for promises. Using the grunt-release project"s same idea
-        Q.fcall(checkout)
-        .then(add)
-        .then(commit)
-        .then(tag)
-        .then(push)
-        .then(rollback)
-        .catch(function (msg) {
-            rollback();
-            grunt.fail.warn(msg || "release failed");
-        }).finally(done);
+        try {
+            checkout();
+            add();
+            commit();
+            tag();
+            push();
+        } catch (err) {
+            grunt.fail.warn(err || "release failed");
+        }
+        rollback();
     });
 };
