@@ -524,8 +524,9 @@
     
     /**
      * Base class for Entity exception handling.
-     * @name Error
-     * @memberOf me.Entity
+     * @name Entity.Error
+     * @class
+     * @memberOf me
      * @constructor
      * @param {String} msg Error message.
      */
