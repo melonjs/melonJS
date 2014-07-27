@@ -74,10 +74,10 @@
             this.screenX = 0;
             this.screenY = 0;
             // viewport coordinates
-            this._super(me.Renderable, "init", [new me.Vector2d(minX, minY), maxX - minX, maxY - minY]);
+            this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
             // real worl limits
-            this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);
+            this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
             // offset for shake effect
             this.offset = new me.Vector2d();
@@ -171,7 +171,7 @@
          */
         setDeadzone : function (w, h) {
             if (this.deadzone === null) {
-                this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
+                this.deadzone = new me.Rect(0, 0, 0, 0);
             }
 
             // reusing the old code for now...

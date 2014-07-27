@@ -8,7 +8,7 @@
     var ProgressBar = me.Renderable.extend({
 
         init: function (v, w, h) {
-            this._super(me.Renderable, "init", [v, w, h]);
+            this._super(me.Renderable, "init", [v.x, v.y, w, h]);
             // flag to know if we need to refresh the display
             this.invalidate = false;
 
@@ -51,7 +51,7 @@
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
         init : function (x, y) {
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y), 100, 85]);
+            this._super(me.Renderable, "init", [x, y, 100, 85]);
         },
 
         // 100x85 Logo
@@ -99,7 +99,7 @@
     var TextLogo = me.Renderable.extend({
         // constructor
         init : function (w, h) {
-            this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
+            this._super(me.Renderable, "init", [0, 0, w, h]);
             this.logo1 = new me.Font("century gothic", 32, "white", "middle");
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();

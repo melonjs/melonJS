@@ -58,7 +58,7 @@
             // frame draw time in ms
             this.frameDrawTime = 0;
 		
-            this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
+            this.rect = new me.Rect(0, 0, me.video.getWidth(), 35);
 
             // set the object GUID value
             this.GUID = "debug-" + me.utils.createGUID();
@@ -88,11 +88,11 @@
             this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
-            this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
-            this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
+            this.area.renderHitBox = new me.Rect(160,5,15,15);
+            this.area.renderVelocity = new me.Rect(165,18,15,15);
 
-            this.area.renderQuadTree = new me.Rect(new me.Vector2d(270,5),15,15);
-            this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
+            this.area.renderQuadTree = new me.Rect(270,5,15,15);
+            this.area.renderCollisionMap = new me.Rect(270,18,15,15);
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";

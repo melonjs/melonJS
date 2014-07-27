@@ -358,7 +358,7 @@
             this._super(
                 me.Rect,
                 "init",
-                [new me.Vector2d(x, y),
+                [x, y,
                 Infinity,
                 Infinity]
             );

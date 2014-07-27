@@ -100,11 +100,11 @@
                 if (frame.hasOwnProperty("filename")) {
                     atlas[frame.filename] = {
                         frame: new me.Rect(
-                            new me.Vector2d(frame.frame.x, frame.frame.y),
+                            frame.frame.x, frame.frame.y,
                             frame.frame.w, frame.frame.h
                         ),
                         source: new me.Rect(
-                            new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
+                            frame.spriteSourceSize.x, frame.spriteSourceSize.y,
                             frame.spriteSourceSize.w, frame.spriteSourceSize.h
                         ),
                         // non trimmed size, but since we don't support trimming both value are the same

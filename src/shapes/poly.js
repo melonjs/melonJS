@@ -11,7 +11,8 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} v origin point of the PolyShape
+     * @param {Number} x origin point of the PolyShape
+     * @param {Number} y origin point of the PolyShape
      * @param {me.Vector2d[]} points array of vector defining the polyshape
      * @param {boolean} closed true if a polygone, false if a polyline
      */
@@ -19,7 +20,7 @@
     /** @scope me.PolyShape.prototype */ {
 
         /** @ignore */
-        init : function (v, points, closed) {
+        init : function (x, y, points, closed) {
             /**
              * origin point of the PolyShape
              * @public
@@ -27,7 +28,7 @@
              * @name pos
              * @memberOf me.PolyShape
              */
-            this.pos = new me.Vector2d();
+            this.pos = new me.Vector2d(x, y);
 
             /**
              * The bounding rectangle for this shape
@@ -59,7 +60,7 @@
 
             // the shape type
             this.shapeType = "PolyShape";
-            this.setShape(v, points, closed);
+            this.setShape(this.pos, points, closed);
         },
 
         /**
@@ -202,7 +203,7 @@
                     right = Math.max(right, point.x);
                     bottom = Math.max(bottom, point.y);
                 });
-                this.bounds = new me.Rect(pos, right - pos.x, bottom - pos.y);
+                this.bounds = new me.Rect(pos.x, pos.y, right - pos.x, bottom - pos.y);
             }
             return this.bounds;
         },
@@ -219,7 +220,7 @@
             this.points.forEach(function (point) {
                 copy.push(new me.Vector2d(point.x, point.y));
             });
-            return new me.PolyShape(this.pos.clone(), copy, this.closed);
+            return new me.PolyShape(this.pos.x, this.pos.y, copy, this.closed);
         },
 
         /**

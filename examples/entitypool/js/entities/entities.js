@@ -1,6 +1,6 @@
 game.Background = me.Renderable.extend({
   init : function() {
-    this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height]);
+    this._super(me.Renderable, 'init', [0, 0, me.game.viewport.width, me.game.viewport.height]);
     this.z = 1;
   },
   draw : function(renderer) {
@@ -30,7 +30,7 @@ game.MainEntity = me.Entity.extend({
 
 game.RenderableEntity = me.Renderable.extend({
   init : function(x, y) {
-    this._super(me.Renderable, 'init', [new me.Vector2d(x, y), 100, 100]);
+    this._super(me.Renderable, 'init', [x, y, 100, 100]);
     this.z = 2;
   },
 

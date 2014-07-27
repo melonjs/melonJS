@@ -73,7 +73,7 @@ var Smilie = me.Entity.extend({
         this.collidable = true;
         
         // add a collision shape
-        this.body.addShape(new me.Rect(new me.Vector2d(), this.width, this.heigth));
+        this.body.addShape(new me.Rect(0, 0, this.width, this.heigth));
     },
 
     update : function (dt) {

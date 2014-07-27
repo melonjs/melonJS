@@ -251,7 +251,7 @@
 
     pe.ShapeWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.z = Infinity;
             this.color = color;
         },
@@ -270,7 +270,7 @@
         init : function(color) {
             this.originalSize = 40;
             this.createGradients(color, this.originalSize);
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), this.originalSize, this.originalSize]);
+            this._super(me.Renderable, 'init', [0, 0, this.originalSize, this.originalSize]);
             this.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
@@ -438,7 +438,7 @@
 
     pe.VectorWidget.Helper = me.Renderable.extend({
         init : function(widget, color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.widget = widget;
             this.z = Infinity;
             this.color = color.toRGBA();
@@ -565,7 +565,7 @@
 
     pe.VelocityVariationWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.color = color.toRGBA();
             this.startAngle = 0;
             this.endAngle = 0;

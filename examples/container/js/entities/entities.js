@@ -2,8 +2,8 @@
  * a renderable for my entity
  */
 game.Rect = me.Renderable.extend({
-    "init" : function (pos, w, h, color) {
-        this._super(me.Renderable, "init", [pos, w, h]);
+    "init" : function (x, y, w, h, color) {
+        this._super(me.Renderable, "init", [x, y, w, h]);
         this.z = 0;
         this.color = color;
     },
@@ -22,7 +22,7 @@ game.Entity = me.Entity.extend({
         this.z = 1;
         this.renderable = new me.Container(0, 0, 50, 50);
         this.renderable.addChild(new game.Rect(
-            new me.Vector2d(),
+            0, 0,
             50,
             50,
             settings.color
@@ -63,7 +63,7 @@ game.FloatingEntity = me.Entity.extend({
 
         var container = new me.Container(0, 0, 50, 50);
         container.addChild(new game.Rect(
-            new me.Vector2d(),
+            0, 0,
             50,
             50,
             settings.color

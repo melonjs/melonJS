@@ -19,7 +19,7 @@
      * A global "translation context" for nested Containers
      * @ignore
      */
-    var globalTranslation = new me.Rect(new me.Vector2d(), 0, 0);
+    var globalTranslation = new me.Rect(0, 0, 0, 0);
 
     /**
      * A global "floating children" reference counter for nested ObjectContainers
@@ -72,7 +72,7 @@
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
-                [new me.Vector2d(x || 0, y || 0),
+                [x, y,
                 width || Infinity,
                 height || Infinity]
             );
@@ -347,7 +347,7 @@
          */
         getBounds : function () {
             if (!this.bounds) {
-                this.bounds = new me.Rect(new me.Vector2d(Infinity, Infinity), -Infinity, -Infinity);
+                this.bounds = new me.Rect(Infinity, Infinity, -Infinity, -Infinity);
             } else {
                 // reset the rect with default values
                 this.bounds.pos.set(Infinity, Infinity);

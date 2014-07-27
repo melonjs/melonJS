@@ -74,7 +74,7 @@
             this.isSprite = true;
 
             // call the super constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y),
+            this._super(me.Renderable, "init", [x, y,
                 spritewidth  || image.width,
                 spriteheight || image.height]);
             // cache image reference

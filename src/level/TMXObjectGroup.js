@@ -320,17 +320,17 @@
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius
-                return new me.Ellipse(new me.Vector2d(this.width / 2, this.height / 2), this.width, this.height);
+                return new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height);
             }
 
             // add a polyshape
             if ((this.isPolygon === true) || (this.isPolyline === true)) {
-                return new me.PolyShape(new me.Vector2d(0, 0), this.points, this.isPolygon);
+                return new me.PolyShape(0, 0, this.points, this.isPolygon);
             }
 
             // it's a rectangle, returns a polygone object anyway
             return new me.PolyShape(
-                new me.Vector2d(0, 0), [
+                0, 0, [
                     new me.Vector2d(), new me.Vector2d(this.width, 0),
                     new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
                 ],
