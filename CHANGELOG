@@ -13,6 +13,7 @@ Version History
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
 * CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
 * Renderable : renamed `me.SpriteObject` to `me.Sprite` and `me.ObjectContainer` to `me.Container`, for a cleaner API
+* Renderable : Constructors refactored to accept x & y numeric values, over a single vector object. Effects: me.Container, me.Rect, me.PolyShape, me.Ellipse, me.Renderable
 * Camera : fixed viewport bounds setting when using isometric map (Juhana Paavola)
 * Entity : entity object redesign with a full polygon shape based physic body implementation
 * Entity : `me.ObjectEntity` has been renamed to `me.Entity` to avoid confusion between the old and new entity component.
