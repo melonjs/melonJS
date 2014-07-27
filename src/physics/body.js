@@ -207,7 +207,8 @@
             this._super(
                 me.Rect,
                 "init", [
-                    entity.pos,
+                    entity.pos.x,
+                    entity.pos.y,
                     entity.width,
                     entity.height
                 ]
@@ -594,8 +595,9 @@
     
     /**
      * Base class for Body exception handling.
-     * @name Error
-     * @memberOf me.Body
+     * @name Body.Error
+     * @class
+     * @memberOf me
      * @constructor
      * @param {String} msg Error message.
      */

@@ -22,9 +22,6 @@
          * PRIVATE STUFF
          */
 
-        // ref to the "system" context
-        var frameBuffer = null;
-
         // flag to redraw the sprites
         var initialized = false;
 
@@ -35,6 +32,9 @@
         // reset the frame counter
         var frameCounter = 0;
         var frameRate = 1;
+
+        // reference to the renderer object
+        var renderer = null;
 
         /*
          * PUBLIC STUFF
@@ -71,7 +71,7 @@
          * a reference to the game world <br>
          * a world is a virtual environment containing all the game objects
          * @public
-         * @type {me.ObjectContainer}
+         * @type {me.Container}
          * @name world
          * @memberOf me.game
          */
@@ -79,7 +79,7 @@
         
         /**
          * when true, all objects will be added under the root world container<br>
-         * when false, a `me.ObjectContainer` object will be created for each
+         * when false, a `me.Container` object will be created for each
          * corresponding `TMXObjectGroup`
          * default value : true
          * @public
@@ -100,14 +100,14 @@
         api.sortOn = "z";
 
         /**
-         * default layer renderer
+         * default layer tmxRenderer
          * @private
          * @ignore
          * @type {me.TMXRenderer}
-         * @name renderer
+         * @name tmxRenderer
          * @memberOf me.game
          */
-        api.renderer = null;
+        api.tmxRenderer = null;
 
         // FIX ME : put this somewhere else
         api.NO_OBJECT = 0;
@@ -175,15 +175,14 @@
                 api.viewport = new me.Viewport(0, 0, width, height);
 
                 //the root object of our world is an entity container
-                api.world = new me.ObjectContainer(0, 0, width, height);
+                api.world = new me.Container(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
                 
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
-                // get a ref to the screen buffer
-                frameBuffer = me.video.getSystemContext();
+                renderer = me.video.getRenderer();
 
                 // publish init notification
                 me.event.publish(me.event.GAME_INIT);
@@ -238,7 +237,7 @@
             api.collisionMap = api.defaultCollisionMap;
 
             // reset the transform matrix to the normal one
-            frameBuffer.setTransform(1, 0, 0, 1, 0, 0);
+            renderer.resetTransform();
 
             // reset the frame counter
             frameCounter = 0;
@@ -251,7 +250,7 @@
          * @memberOf me.game
          * @function
          * @param {me.Renderable} child
-         * @return {me.ObjectContainer}
+         * @return {me.Container}
          */
         api.getParentContainer = function (child) {
             return child.ancestor;
@@ -332,13 +331,13 @@
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
-                api.world.draw(frameBuffer, api.viewport);
+                api.world.draw(renderer, api.viewport);
 
                 // translate back
                 api.world.transform.translate(translateX, translateY);
 
                 // draw our camera/viewport
-                api.viewport.draw(frameBuffer);
+                api.viewport.draw(renderer);
             }
 
             isDirty = false;

@@ -11,7 +11,8 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} v x,y position of the Rectangle
+     * @param {Number} x position of the Rectangle
+     * @param {Number} y position of the Rectangle
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
@@ -19,7 +20,7 @@
     /** @scope me.Rect.prototype */ {
 
         /** @ignore */
-        init : function (v, w, h) {
+        init : function (x, y, w, h) {
             /**
              * position of the Rectangle
              * @public
@@ -27,7 +28,7 @@
              * @name pos
              * @memberOf me.Rect
              */
-            this.pos = new me.Vector2d();
+            this.pos = new me.Vector2d(x, y);
 
             /**
              * allow expanding and contracting the rect with a vector<br>
@@ -63,7 +64,6 @@
 
             // the shape type
             this.shapeType = "Rectangle";
-            this.pos.setV(v);
 
             // Allow expanding and contracting the rect with a vector
             // while keeping its original size and shape
@@ -135,7 +135,7 @@
          * @return {me.Rect} new rectangle
          */
         clone : function () {
-            return new me.Rect(this.pos, this.width, this.height);
+            return new me.Rect(this.pos.x, this.pos.y, this.width, this.height);
         },
 
         /**
@@ -329,7 +329,7 @@
             var w = this.width;
             var h = this.height;
             return new me.PolyShape(
-                new me.Vector2d(pos.x, pos.y), [
+                pos.x, pos.y, [
                     new me.Vector2d(), new me.Vector2d(w, 0),
                     new me.Vector2d(w, h), new me.Vector2d(0, h)
                 ],
@@ -341,10 +341,9 @@
          * debug purpose
          * @ignore
          */
-        draw : function (context, color) {
+        draw : function (renderer, color) {
             // draw the rectangle
-            context.strokeStyle = color || "red";
-            context.strokeRect(this.left, this.top, this.width, this.height);
+            renderer.strokeRect(this.left, this.top, this.width, this.height, color || "red");
         }
     });
 

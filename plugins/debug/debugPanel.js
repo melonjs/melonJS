@@ -58,7 +58,7 @@
             // frame draw time in ms
             this.frameDrawTime = 0;
 		
-            this.rect = new me.Rect(new me.Vector2d(0, 0), me.video.getWidth(), 35);
+            this.rect = new me.Rect(0, 0, me.video.getWidth(), 35);
 
             // set the object GUID value
             this.GUID = "debug-" + me.utils.createGUID();
@@ -88,11 +88,11 @@
             this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
-            this.area.renderHitBox = new me.Rect(new me.Vector2d(160,5),15,15);
-            this.area.renderVelocity = new me.Rect(new me.Vector2d(165,18),15,15);
+            this.area.renderHitBox = new me.Rect(160,5,15,15);
+            this.area.renderVelocity = new me.Rect(165,18,15,15);
 
-            this.area.renderQuadTree = new me.Rect(new me.Vector2d(270,5),15,15);
-            this.area.renderCollisionMap = new me.Rect(new me.Vector2d(270,18),15,15);
+            this.area.renderQuadTree = new me.Rect(270,5,15,15);
+            this.area.renderCollisionMap = new me.Rect(270,18,15,15);
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
@@ -179,40 +179,41 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.SpriteObject, "draw", function (context) {
-                // call the original me.SpriteObject function
-                this.parent(context);
+            me.plugin.patch(me.Sprite, "draw", function (renderer) {
+                // call the original me.Sprite function
+                this.parent(renderer);
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
-                    context.strokeStyle =  "green";
-                    context.strokeRect(this.left, this.top, this.width, this.height);
+                    renderer.strokeRect(this.left, this.top, this.width, this.height, "green");
                 }
             });
 
             // patch entities.js
-            me.plugin.patch(me.Entity, "draw", function (context) {
+            me.plugin.patch(me.Entity, "draw", function (renderer) {
                 // call the original me.game.draw function
-                this.parent(context);
+                this.parent(renderer);
 
                 // check if debug mode is enabled
+
                 if (me.debug.renderHitBox) {
-                    context.save();
+                    renderer.save();
                     // draw the bounding rect shape
-                    this.body.getBounds().draw(context, "orange");
-                    context.translate(this.pos.x, this.pos.y);
+                    this.body.getBounds().draw(renderer, "orange");
+                    renderer.translate(this.pos.x, this.pos.y);
                     if (this.body.shapes.length) {
                         // TODO : support multiple shapes
-                        this.body.shapes[0].draw(context, "red");
+                        this.body.shapes[0].draw(renderer, "red");
                     }
-                    context.restore();
+                    renderer.restore();
                 }
 
                 if (me.debug.renderVelocity) {
                     // draw entity current velocity
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
-
+                    // TODO: This will also be tricky for WebGL.
+                    var context = renderer.getContext();
                     context.strokeStyle = "blue";
                     context.lineWidth = 1;
                     context.beginPath();
@@ -304,39 +305,37 @@
         },
 
         /** @private */        
-        drawQuadTreeNode : function (context, node) {        
+        drawQuadTreeNode : function (renderer, node) {        
             var bounds = node._bounds;
             
             // Opacity is based on number of objects in the cell
-            context.globalAlpha = (node.children.length / 16).clamp(0, 0.9);
-            context.fillRect(
-                Math.abs(bounds.pos.x) + 0.5,
+            renderer.setGlobalAlpha((node.children.length / 16).clamp(0, 0.9));
+            renderer.fillRect(Math.abs(bounds.pos.x) + 0.5,
                 Math.abs(bounds.pos.y) + 0.5,
                 bounds.width,
-                bounds.height
+                bounds.height,
+                "red"
             );
 
             var len = node.nodes.length;
 
             for(var i = 0; i < len; i++) {
-                this.drawQuadTreeNode(context, node.nodes[i]);
+                this.drawQuadTreeNode(renderer, node.nodes[i]);
             }
         },
         
         /** @private */
-        drawQuadTree : function (context) {
+        drawQuadTree : function (renderer) {
             // save the current globalAlpha value
-            var _alpha = context.globalAlpha;
+            var _alpha = renderer.globalAlpha();
             
-            context.translate (-me.game.viewport.pos.x, -me.game.viewport.pos.y);
+            renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
             
-            context.fillStyle = "red";
-	
-            this.drawQuadTreeNode(context, me.collision.quadTree.root);
+            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
             
-            context.translate (me.game.viewport.pos.x, me.game.viewport.pos.y);
+            renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
             
-            context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         },
 
         /** @private */
@@ -369,49 +368,48 @@
         },
 
         /** @private */
-        draw : function(context) {
-            context.save();
+        draw : function(renderer) {
+            renderer.save();
             
             // draw the QuadTree (before the panel)
             if (me.debug.renderQuadTree === true) {
-                this.drawQuadTree(context);
+                this.drawQuadTree(renderer);
             }
 
             // draw the panel
-            context.globalAlpha = 0.5;
-            context.fillStyle = "black";
-            context.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height);
-            context.globalAlpha = 1.0;
+            renderer.setGlobalAlpha(0.5);
+            renderer.fillRect(this.rect.left,  this.rect.top,
+                             this.rect.width, this.rect.height, "black");
+            renderer.setGlobalAlpha(1.0);
 
             // # entities / draw
-            this.font.draw(context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
 
             // debug checkboxes
-            this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
-            this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
-            this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
-            this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
+            this.font.draw(renderer, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
-            this.drawMemoryGraph(context, endX - this.help_str_len);
+            this.drawMemoryGraph(renderer, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(context, this.help_str, endX - this.help_str_len, 18 * this.mod);
+            this.font.draw(renderer, this.help_str, endX - this.help_str_len, 18 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
-            this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(renderer, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
-            context.restore();
+            renderer.restore();
 
         },
 

@@ -11,7 +11,8 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} v the center coordinates of the ellipse  
+     * @param {Number} x the center x coordinate of the ellipse  
+     * @param {Number} y the center y coordinate of the ellipse  
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
@@ -19,7 +20,7 @@
     {
         /** @scope me.Ellipse.prototype */
         /** @ignore */
-        init : function (v, w, h) {
+        init : function (x, y, w, h) {
             /**
              * the center coordinates of the ellipse 
              * @public
@@ -27,7 +28,7 @@
              * @name pos
              * @memberOf me.Ellipse
              */
-            this.pos = new me.Vector2d(0, 0);
+            this.pos = new me.Vector2d(x, y);
 
             /**
              * The bounding rectangle for this shape
@@ -49,7 +50,7 @@
 
             // the shape type
             this.shapeType = "Ellipse";
-            this.setShape(v, w, h);
+            this.radius.set(w / 2, h / 2);
         },
 
         /**
@@ -138,8 +139,10 @@
          */
         getBounds : function () {
             if (!this.bounds) {
+                var clonePos = this.pos.clone().sub(this.radius);
                 this.bounds = new me.Rect(
-                    this.pos.clone().sub(this.radius),
+                    clonePos.x,
+                    clonePos.y,
                     this.radius.x * 2,
                     this.radius.y * 2
                 );
@@ -155,28 +158,15 @@
          * @return {me.Ellipse} new Ellipse
          */
         clone : function () {
-            return new me.Ellipse(this.pos, this.radius.x * 2, this.radius.y * 2);
+            return new me.Ellipse(this.pos.x, this.pos.y, this.radius.x * 2, this.radius.y * 2);
         },
 
         /**
          * debug purpose
          * @ignore
          */
-        draw : function (context, color) {
-            // http://tinyurl.com/opnro2r
-            context.save();
-            context.beginPath();
-
-            context.translate(
-                this.pos.x - this.radius.x,
-                this.pos.y - this.radius.y
-            );
-            context.scale(this.radius.x, this.radius.y);
-            context.arc(1, 1, 1, 0, 2 * Math.PI, false);
-
-            context.restore();
-            context.strokeStyle = color || "red";
-            context.stroke();
+        draw : function (renderer, color) {
+            renderer.strokeArc(this.pos.x - this.radius.x, this.pos.y - this.radius.y, this.radius.x, this.radius.y, 0, 2 * Math.PI, color || "red", false);
         }
     });
 })();

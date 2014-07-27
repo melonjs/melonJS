@@ -88,7 +88,7 @@ module.exports = function (grunt) {
             },
 
             afterConcat : {
-                files : {
+                field : {
                     src : [ "<%= path.main %>" ]
                 }
             }
@@ -161,7 +161,7 @@ module.exports = function (grunt) {
     // Default task.
     grunt.registerTask("default", [ "test", "uglify" ]);
     grunt.registerTask("build", [ "lint", "uglify" ]);
-    grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat" ]);
+    grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
     grunt.registerTask("release", [ "build", "dorelease" ]);

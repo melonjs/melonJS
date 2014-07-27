@@ -72,9 +72,9 @@
          * draw the tile map
          * @ignore
          */
-        drawTile : function (context, x, y, tmxTile, tileset) {
+        drawTile : function (renderer, x, y, tmxTile, tileset) {
             // draw the tile
-            tileset.drawTile(context,
+            tileset.drawTile(renderer,
                              tileset.tileoffset.x + x * this.tilewidth,
                              tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
                              tmxTile);
@@ -84,7 +84,7 @@
          * draw the tile map
          * @ignore
          */
-        drawTileLayer : function (context, layer, rect) {
+        drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(rect.pos.x,
                                                rect.pos.y).floorSelf();
@@ -101,7 +101,7 @@
                 for (var x = start.x; x < end.x; x++) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
-                        this.drawTile(context, x, y, tmxTile, tmxTile.tileset);
+                        this.drawTile(renderer, x, y, tmxTile, tmxTile.tileset);
                     }
                 }
             }
@@ -187,10 +187,10 @@
          * draw the tile map
          * @ignore
          */
-        drawTile : function (context, x, y, tmxTile, tileset) {
+        drawTile : function (renderer, x, y, tmxTile, tileset) {
             // draw the tile
             tileset.drawTile(
-                context,
+                renderer,
                 ((this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth >> 1),
                 (-tileset.tilewidth + (x + y) * tileset.tileheight >> 2),
                 tmxTile
@@ -201,7 +201,7 @@
          * draw the tile map
          * @ignore
          */
-        drawTileLayer : function (context, layer, rect) {
+        drawTileLayer : function (renderer, layer, rect) {
 
             // cache a couple of useful references
             var tileset = layer.tileset;
@@ -263,7 +263,7 @@
                             // offset could be different per tileset
                             offset  = tileset.tileoffset;
                             // draw our tile
-                            tileset.drawTile(context, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
+                            tileset.drawTile(renderer, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
                         }
                     }
                     // Advance to the next column

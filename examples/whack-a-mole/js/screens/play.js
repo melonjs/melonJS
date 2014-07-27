@@ -8,23 +8,23 @@ game.PlayScreen = me.ScreenObject.extend({
 		
 		// add the background & foreground
 		// add the foreground
-		var background_sprite10 = new me.SpriteObject (0, 0,   me.loader.getImage("background"));
-		var grass_upper_1	    = new me.SpriteObject (0, 0,   me.loader.getImage("grass_upper"));
+		var background_sprite10 = new me.Sprite (0, 0,   me.loader.getImage("background"));
+		var grass_upper_1	    = new me.Sprite (0, 0,   me.loader.getImage("grass_upper"));
 		
-		var background_sprite11 = new me.SpriteObject (0, 127, me.loader.getImage("background"));
-		var grass_lower_1       = new me.SpriteObject (0, 127, me.loader.getImage("grass_lower"));
+		var background_sprite11 = new me.Sprite (0, 127, me.loader.getImage("background"));
+		var grass_lower_1       = new me.Sprite (0, 127, me.loader.getImage("grass_lower"));
 		
-		var background_sprite20 = new me.SpriteObject (0, 255, me.loader.getImage("background"));
-		var grass_upper_2       = new me.SpriteObject (0, 255, me.loader.getImage("grass_upper"));
+		var background_sprite20 = new me.Sprite (0, 255, me.loader.getImage("background"));
+		var grass_upper_2       = new me.Sprite (0, 255, me.loader.getImage("grass_upper"));
 		
-		var background_sprite21 = new me.SpriteObject (0, 383, me.loader.getImage("background"));
-		var grass_lower_2       = new me.SpriteObject (0, 383, me.loader.getImage("grass_lower"));
+		var background_sprite21 = new me.Sprite (0, 383, me.loader.getImage("background"));
+		var grass_lower_2       = new me.Sprite (0, 383, me.loader.getImage("grass_lower"));
 		
-		var background_sprite30 = new me.SpriteObject (0, 511, me.loader.getImage("background"));
-		var grass_upper_3       = new me.SpriteObject (0, 511, me.loader.getImage("grass_upper"));
+		var background_sprite30 = new me.Sprite (0, 511, me.loader.getImage("background"));
+		var grass_upper_3       = new me.Sprite (0, 511, me.loader.getImage("grass_upper"));
 		
-		var background_sprite31 = new me.SpriteObject (0, 639, me.loader.getImage("background"));
-		var grass_lower_3       = new me.SpriteObject (0, 639, me.loader.getImage("grass_lower"));
+		var background_sprite31 = new me.Sprite (0, 639, me.loader.getImage("background"));
+		var grass_lower_3       = new me.Sprite (0, 639, me.loader.getImage("grass_lower"));
 		
 		// instantiate teh mole Manager 
 		var moleManager = new game.MoleManager(0, 0);

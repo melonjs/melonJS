@@ -6,7 +6,6 @@
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Mike Chambers and released under the MIT license
  * https://github.com/mikechambers/ExamplesByMesh/tree/master/JavaScript/QuadTree
- * @module QuadTree
 **/
 
 (function () {
@@ -17,6 +16,7 @@
     * QuadTree data structure.
     * @class QuadTree
     * @constructor
+    * @ignore
     * @param {Object} An object representing the bounds of the top level of the QuadTree. The object 
     * should contain the following properties : {x, y}, width, height
     * @param {Number} maxDepth The maximum number of levels that the quadtree will create. Default is 4.
@@ -37,6 +37,7 @@
     /**
     * Inserts an item into the QuadTree.
     * @method insert
+    * @ignore
     * @param {Entity|Array} item The item or Array of items to be inserted into the QuadTree. The item should expose x, y 
     * properties that represents its position in 2D space.
     **/
@@ -55,6 +56,7 @@
     
     /**
     * Clears all nodes and children from the QuadTree
+    * @ignore
     * @param {Object} An optional object representing the bounds of the top level of the QuadTree. The object 
     * should contain the following properties : {x, y}, width, height
     * @method clear
@@ -71,6 +73,7 @@
     /**
     * Retrieves all items / points in the same node as the specified item / point. If the specified item
     * overlaps the bounds of a node, then all children in both nodes will be returned.
+    * @ignore
     * @method retrieve
     * @param {Entity} item An object entity with bounds property representing a 2D coordinate point (with x, y properties), or a shape
     * with dimensions (x, y, width, height) properties.

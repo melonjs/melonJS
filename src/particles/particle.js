@@ -21,7 +21,8 @@
          */
         init : function (emitter) {
             // Call the super constructor
-            this._super(me.Renderable, "init", [emitter.getRandomPoint(), emitter.image.width, emitter.image.height]);
+            var point = emitter.getRandomPoint();
+            this._super(me.Renderable, "init", [point.x, point.y, emitter.image.width, emitter.image.height]);
 
             // Particle will always update
             this.alwaysUpdate = true;
@@ -125,22 +126,22 @@
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
-        draw : function (context) {
-            context.save();
+        draw : function (renderer) {
+            renderer.save();
 
             // particle alpha value
-            context.globalAlpha *= this.alpha;
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
             var transform = this.transform;
-            context.transform(
+            renderer.transform(
                 transform.a, transform.b,
                 transform.c, transform.d,
                 ~~this.pos.x, ~~this.pos.y
             );
 
             var w = this.width, h = this.height;
-            context.drawImage(
+            renderer.drawImage(
                 this.image,
                 0, 0,
                 w, h,
@@ -148,7 +149,7 @@
                 w, h
             );
 
-            context.restore();
+            renderer.restore();
         }
     });
 

@@ -133,10 +133,8 @@
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.ObjectEntity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
-
             // call the super constructor
-            this.pos = new me.Vector2d(x, y);
-            this._super(me.Renderable, "init", [this.pos,
+            this._super(me.Renderable, "init", [x, y,
                         settings.width,
                         settings.height]);
 
@@ -165,15 +163,6 @@
              * @memberOf me.Entity
              */
             this.collidable = true;
-            
-            /**
-             * the entity body object
-             * @public
-             * @type me.Body
-             * @name body
-             * @memberOf me.Entity
-             */
-            this.body = null;
             
             /**
              * Entity name<br>
@@ -211,15 +200,14 @@
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
             
-            // call the super constructor
-            this.pos = new me.Vector2d(x, y);
-            this._super(me.Renderable, "init", [
-                this.pos,
-                settings.width,
-                settings.height
-            ]);
-            
-            // initialize a default body
+            /**
+             * the entity body object
+             * @public
+             * @type me.Body
+             * @name body
+             * @memberOf me.Entity
+             */
+            // initialize the default body
             this.body = new me.Body(this);
             
             // add collision shape to the entity body if defined
@@ -373,7 +361,7 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function (context) {
+        draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
@@ -386,9 +374,9 @@
                 var y = ~~(this.pos.y + bounds.offset.y + (
                     this.anchorPoint.y * (bounds.height - this.renderable.height)
                 ));
-                context.translate(x, y);
-                this.renderable.draw(context);
-                context.translate(-x, -y);
+                renderer.translate(x, y);
+                this.renderable.draw(renderer);
+                renderer.translate(-x, -y);
             }
         },
 
@@ -524,8 +512,9 @@
     
     /**
      * Base class for Entity exception handling.
-     * @name Error
-     * @memberOf me.Entity
+     * @name Entity.Error
+     * @class
+     * @memberOf me
      * @constructor
      * @param {String} msg Error message.
      */

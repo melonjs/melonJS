@@ -100,11 +100,11 @@
                 if (frame.hasOwnProperty("filename")) {
                     atlas[frame.filename] = {
                         frame: new me.Rect(
-                            new me.Vector2d(frame.frame.x, frame.frame.y),
+                            frame.frame.x, frame.frame.y,
                             frame.frame.w, frame.frame.h
                         ),
                         source: new me.Rect(
-                            new me.Vector2d(frame.spriteSourceSize.x, frame.spriteSourceSize.y),
+                            frame.spriteSourceSize.x, frame.spriteSourceSize.y,
                             frame.spriteSourceSize.w, frame.spriteSourceSize.h
                         ),
                         // non trimmed size, but since we don't support trimming both value are the same
@@ -159,7 +159,7 @@
          * @memberOf me.TextureAtlas
          * @function
          * @param {String} name name of the sprite
-         * @return {me.SpriteObject}
+         * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
          * game.texture = new me.TextureAtlas(
@@ -177,7 +177,7 @@
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
-                var sprite = new me.SpriteObject(
+                var sprite = new me.Sprite(
                     0, 0,
                     this.getTexture(),
                     region.width, region.height
@@ -260,8 +260,9 @@
 
     /**
      * Base class for TextureAtlas exception handling.
-     * @name Error
-     * @memberOf me.TextureAtlas
+     * @name TextureAtlas.Error
+     * @class
+     * @memberOf me
      * @constructor
      * @param {String} msg Error message.
      */

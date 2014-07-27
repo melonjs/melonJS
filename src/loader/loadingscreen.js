@@ -8,7 +8,7 @@
     var ProgressBar = me.Renderable.extend({
 
         init: function (v, w, h) {
-            this._super(me.Renderable, "init", [v, w, h]);
+            this._super(me.Renderable, "init", [v.x, v.y, w, h]);
             // flag to know if we need to refresh the display
             this.invalidate = false;
 
@@ -38,7 +38,8 @@
         },
 
          // draw function
-        draw : function (context) {
+        draw : function (renderer) {
+            var context = renderer.getContext();
             // draw the progress bar
             context.fillStyle = "black";
             context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
@@ -50,16 +51,18 @@
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
         init : function (x, y) {
-            this._super(me.Renderable, "init", [new me.Vector2d(x, y), 100, 85]);
+            this._super(me.Renderable, "init", [x, y, 100, 85]);
         },
 
         // 100x85 Logo
         // generated using Illustrator and the Ai2Canvas plugin
-        draw : function (context) {
-            context.save();
+        draw : function (renderer) {
+            renderer.save();
 
             // translate to destination point
-            context.translate(this.pos.x, this.pos.y);
+            renderer.translate(this.pos.x, this.pos.y);
+
+            var context = renderer.getContext();
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -88,7 +91,7 @@
             context.miterLimit = 4.0;
             context.stroke();
 
-            context.restore();
+            renderer.restore();
         }
     });
 
@@ -96,23 +99,24 @@
     var TextLogo = me.Renderable.extend({
         // constructor
         init : function (w, h) {
-            this._super(me.Renderable, "init", [new me.Vector2d(), w, h]);
+            this._super(me.Renderable, "init", [0, 0, w, h]);
             this.logo1 = new me.Font("century gothic", 32, "white", "middle");
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
         },
 
-        draw : function (context) {
+        draw : function (renderer) {
             // measure the logo size
+            var context = renderer.getContext();
             var logo1_width = this.logo1.measureText(context, "melon").width;
             var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
             var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
 
             // draw the melonJS string
-            this.logo1.draw(context, "melon", xpos, ypos);
+            this.logo1.draw(renderer, "melon", xpos, ypos);
             xpos += logo1_width;
-            this.logo2.draw(context, "JS", xpos, ypos);
+            this.logo2.draw(renderer, "JS", xpos, ypos);
         }
 
     });

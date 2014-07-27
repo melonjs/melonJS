@@ -846,8 +846,9 @@
 
 	/**
 	 * Base class for Tween exception handling.
-	 * @name Error
-	 * @memberOf me.Tween
+	 * @name Tween.Error
+	 * @class
+	 * @memberOf me
 	 * @constructor
 	 * @param {String} msg Error message.
 	 */

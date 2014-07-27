@@ -2,15 +2,14 @@
  * a renderable for my entity
  */
 game.Rect = me.Renderable.extend({
-    "init" : function (pos, w, h, color) {
-        this._super(me.Renderable, "init", [pos, w, h]);
+    "init" : function (x, y, w, h, color) {
+        this._super(me.Renderable, "init", [x, y, w, h]);
         this.z = 0;
         this.color = color;
     },
     
-    "draw" : function(context) {
-        context.fillStyle = this.color;
-        context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+    "draw" : function(renderer) {
+        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, this.color);
     }
 });
 
@@ -21,9 +20,9 @@ game.Entity = me.Entity.extend({
     "init" : function (x, y, settings) {
         this._super(me.Entity, "init", [x, y, settings]);
         this.z = 1;
-        this.renderable = new me.ObjectContainer(0, 0, 50, 50);
+        this.renderable = new me.Container(0, 0, 50, 50);
         this.renderable.addChild(new game.Rect(
-            new me.Vector2d(),
+            0, 0,
             50,
             50,
             settings.color
@@ -60,11 +59,11 @@ game.FloatingEntity = me.Entity.extend({
         this._super(me.Entity, "init", [x, y, settings]);
         this.z = 1;
         this.floating = true;
-        this.renderable = new me.ObjectContainer(0, 0, 50, 50);
+        this.renderable = new me.Container(0, 0, 50, 50);
 
-        var container = new me.ObjectContainer(0, 0, 50, 50);
+        var container = new me.Container(0, 0, 50, 50);
         container.addChild(new game.Rect(
-            new me.Vector2d(),
+            0, 0,
             50,
             50,
             settings.color

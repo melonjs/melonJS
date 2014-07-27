@@ -251,7 +251,7 @@
 
     pe.ShapeWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.z = Infinity;
             this.color = color;
         },
@@ -260,11 +260,9 @@
             this.pos.set(v.x, v.y);
             return this;
         },
-        draw : function(context) {
-            context.fillStyle = this.color;
-            context.strokeStyle = this.color;
-            context.fillRect(this.left, this.top, this.width, this.height);
-            context.strokeRect(this.left, this.top, this.width, this.height);
+        draw : function(renderer) {
+            renderer.fillRect(this.left, this.top, this.width, this.height, this.color);
+            renderer.strokeRect(this.left, this.top, this.width, this.height, this.color);
         }
     });
 
@@ -272,7 +270,7 @@
         init : function(color) {
             this.originalSize = 40;
             this.createGradients(color, this.originalSize);
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), this.originalSize, this.originalSize]);
+            this._super(me.Renderable, 'init', [0, 0, this.originalSize, this.originalSize]);
             this.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
@@ -358,18 +356,11 @@
                 return false;
             }
         },
-        draw : function(context, rect) {
-            context.save();
-            // context.strokeStyle = this.color;
-            context.fillStyle = this.color;
-            context.beginPath();
-            context.translate(this.pos.x + this.hWidth, this.pos.y + this.hHeight);
-            context.arc(0, 0, this.hWidth, 0, Math.PI * 2);
-            // context.stroke();
-            // context.globalAlpha = 0.3;
-            context.fill();
-            context.closePath();
-            context.restore();
+        draw : function(renderer, rect) {
+            renderer.save();
+            var context = renderer.getContext();
+            renderer.fillArc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2, this.color);
+            renderer.restore();
         }
     });
 
@@ -447,7 +438,7 @@
 
     pe.VectorWidget.Helper = me.Renderable.extend({
         init : function(widget, color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.widget = widget;
             this.z = Infinity;
             this.color = color.toRGBA();
@@ -459,19 +450,12 @@
             this.resize(Math.abs(w), Math.abs(h));
             return this;
         },
-        draw : function(context) {
+        draw : function(renderer) {
             var origin = this.widget.origin;
             var vector = this.widget.vector;
-            context.save();
-            context.lineWidth = 5;
-            context.strokeStyle = this.color;
-            context.translate(origin.x, origin.y);
-            context.beginPath();
-            context.moveTo(0, 0);
-            context.lineTo(vector.x, vector.y);
-            context.stroke();
-            context.closePath();
-            context.restore();
+            renderer.save();
+            renderer.drawLine(origin.x, origin.y, vector.x, vector.y, this.color, 5);
+            renderer.restore();
         }
     });
 
@@ -581,7 +565,7 @@
 
     pe.VelocityVariationWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.color = color.toRGBA();
             this.startAngle = 0;
             this.endAngle = 0;
@@ -597,20 +581,14 @@
             this.minRadius = (object.speed - object.speedVariation) * this.scale;
             this.maxRadius = (object.speed + object.speedVariation) * this.scale;
         },
-        draw : function(context, rect) {
-            context.strokeStyle = this.color;
-            context.fillStyle = this.color;
-            context.beginPath();
+        draw : function(renderer, rect) {
             var x = this.pos.x, y = this.pos.y;
-            context.arc(x, y, this.maxRadius, this.startAngle, this.endAngle, true);
+            renderer.fillArc(x, y, this.maxRadius, this.startAngle, this.endAngle, this.color, true);
             if (this.minRadius < 0) {
-                context.arc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI);
+                renderer.fillArc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI, this.color);
             } else {
-                context.arc(x, y, this.minRadius, this.endAngle, this.startAngle);
+                renderer.fillArc(x, y, this.minRadius, this.endAngle, this.startAngle, this.color);
             }
-            context.closePath();
-            context.fill();
-            context.stroke();
         }
     });
 })();

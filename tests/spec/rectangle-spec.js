@@ -1,12 +1,12 @@
 describe("Shape : me.Rect", function () {
 
-    var rect1 = new me.Rect(new me.Vector2d(0, 0), 100, 100);
+    var rect1 = new me.Rect(0, 0, 100, 100);
     // rect 2 overlap rect 1
-    var rect2 = new me.Rect(new me.Vector2d(50, 50), 100, 100);
+    var rect2 = new me.Rect(50, 50, 100, 100);
     // rect 3 contains rect 1 and rect 2
-    var rect3 = new me.Rect(new me.Vector2d(0, 0), 150, 150);
+    var rect3 = new me.Rect(0, 0, 150, 150);
     // rect 4 does not overlap any rectangle
-    var rect4 = new me.Rect(new me.Vector2d(500, 500), 50, 50);
+    var rect4 = new me.Rect(500, 500, 50, 50);
     // rect 5 is the merge of rect 2 and rect 4
     var rect5 = rect2.clone().union(rect4);
 

@@ -45,7 +45,7 @@
              * @ignore
              */
             this.transform = null;
-            this._super(me.Rect, "init", [new me.Vector2d(x * w, y * h), w, h]);
+            this._super(me.Rect, "init", [x * w, y * h, w, h]);
 
             // Tile col / row pos
             this.col = x;
@@ -283,7 +283,7 @@
         //return an Image Object with the specified tile
         getTileImage : function (tmxTile) {
             // create a new image object
-            var _context = me.video.getContext2d(
+            var _context = me.CanvasRenderer.getContext2d(
                     me.video.createCanvas(this.tilewidth, this.tileheight)
             );
             this.drawTile(_context, 0, 0, tmxTile);
@@ -343,13 +343,13 @@
 
 
         // draw the x,y tile
-        drawTile : function (context, dx, dy, tmxTile) {
+        drawTile : function (renderer, dx, dy, tmxTile) {
             // check if any transformation is required
             if (tmxTile.flipped) {
-                context.save();
+                renderer.save();
                 // apply the tile current transform
                 var transform = tmxTile.transform;
-                context.transform(
+                renderer.transform(
                     transform.a, transform.b,
                     transform.c, transform.d,
                     transform.e + dx, transform.f + dy
@@ -362,7 +362,7 @@
             var tileid = tmxTile.tileId - this.firstgid;
 
             // draw the tile
-            context.drawImage(
+            renderer.drawImage(
                 this.image,
                 this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
                 this.tilewidth, this.tileheight,
@@ -372,7 +372,7 @@
 
             if (tmxTile.flipped)  {
                 // restore the context to the previous state
-                context.restore();
+                renderer.restore();
             }
         }
 

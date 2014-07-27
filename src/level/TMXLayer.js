@@ -19,7 +19,7 @@
         // constructor
         init: function (name, color, z) {
             // parent constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), Infinity, Infinity]);
+            this._super(me.Renderable, "init", [0, 0, Infinity, Infinity]);
 
             // apply given parameters
             this.name = name;
@@ -31,19 +31,15 @@
          * draw the color layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // set layer opacity
-            var _alpha = context.globalAlpha;
-            context.globalAlpha *= this.getOpacity();
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            // set layer color
-            context.fillStyle = this.color;
-
-            // clear the specified rect
-            context.fillRect(rect.left, rect.top, rect.width, rect.height);
+            renderer.fillRect(rect.left, rect.top, rect.width, rect.height, this.color);
 
             // restore context alpha value
-            context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         }
     });
 
@@ -113,7 +109,7 @@
             // set layer width & height
             width  = (width  ? Math.min(viewport.width, width)   : viewport.width);
             height = (height ? Math.min(viewport.height, height) : viewport.height);
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
+            this._super(me.Renderable, "init", [0, 0, width, height]);
 
             // displaying order
             this.z = z;
@@ -205,7 +201,7 @@
          * draw the image layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // translate default position using the anchorPoint value
             var viewport = me.game.viewport;
             var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0;
@@ -213,11 +209,11 @@
             var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
 
             if (shouldTranslate) {
-                context.translate(translateX, translateY);
+                renderer.translate(translateX, translateY);
             }
 
             // set the layer alpha value
-            context.globalAlpha *= this.getOpacity();
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             var sw, sh;
 
@@ -227,7 +223,7 @@
                 sw = Math.min(rect.width, this.imagewidth);
                 sh = Math.min(rect.height, this.imageheight);
 
-                context.drawImage(
+                renderer.drawImage(
                     this.image,
                     rect.left, rect.top,    // sx, sy
                     sw, sh,                 // sw, sh
@@ -249,7 +245,7 @@
 
                 do {
                     do {
-                        context.drawImage(
+                        renderer.drawImage(
                             this.image,
                             sx, sy, // sx, sy
                             sw, sh,
@@ -277,7 +273,7 @@
             }
 
             if (shouldTranslate) {
-                context.translate(-translateX, -translateY);
+                renderer.translate(-translateX, -translateY);
             }
         },
 
@@ -303,7 +299,7 @@
     me.CollisionTiledLayer = me.Renderable.extend({
         // constructor
         init: function (width, height) {
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), width, height]);
+            this._super(me.Renderable, "init", [0, 0, width, height]);
 
             this.isCollisionMap = true;
         },
@@ -357,7 +353,7 @@
         /** @ignore */
         init: function (tilewidth, tileheight, orientation, tilesets, zOrder) {
             // super constructor
-            this._super(me.Renderable, "init", [new me.Vector2d(0, 0), 0, 0]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             // tile width & height
             this.tilewidth  = tilewidth;
@@ -416,9 +412,10 @@
             }
 
             // if pre-rendering method is use, create the offline canvas
+            // TODO: this is really tied to the canvas api. need to abstract it.
             if (this.preRender === true) {
                 this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-                this.layerSurface = me.video.getContext2d(this.layerCanvas);
+                this.layerSurface = me.CanvasRenderer.getContext2d(this.layerCanvas);
             }
         },
 
@@ -595,18 +592,18 @@
          * draw a tileset layer
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             // use the offscreen canvas
             if (this.preRender) {
 
                 var width = Math.min(rect.width, this.width);
                 var height = Math.min(rect.height, this.height);
 
-                this.layerSurface.globalAlpha = context.globalAlpha * this.getOpacity();
+                this.layerSurface.globalAlpha = renderer.globalAlpha() * this.getOpacity();
 
                 if (this.layerSurface.globalAlpha > 0) {
                     // draw using the cached canvas
-                    context.drawImage(
+                    renderer.drawImage(
                         this.layerCanvas,
                         rect.pos.x, rect.pos.y, // sx,sy
                         width, height,          // sw,sh
@@ -618,15 +615,15 @@
             // dynamically render the layer
             else {
                 // set the layer alpha value
-                var _alpha = context.globalAlpha;
-                context.globalAlpha *= this.getOpacity();
-                if (context.globalAlpha > 0) {
+                var _alpha = renderer.globalAlpha();
+                renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+                if (renderer.globalAlpha() > 0) {
                     // draw the layer
-                    this.renderer.drawTileLayer(context, this, rect);
+                    this.renderer.drawTileLayer(renderer, this, rect);
                 }
 
                 // restore context to initial state
-                context.globalAlpha = _alpha;
+                renderer.setGlobalAlpha(_alpha);
             }
         }
     });

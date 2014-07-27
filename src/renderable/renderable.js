@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -12,7 +12,8 @@
      * @extends me.Rect
      * @memberOf me
      * @constructor
-     * @param {me.Vector2d} pos position of the renderable object
+     * @param {Number} x position of the renderable object
+     * @param {Number} y position of the renderable object
      * @param {Number} width object width
      * @param {Number} height object height
      */
@@ -22,7 +23,7 @@
         /**
          * @ignore
          */
-        init : function (pos, width, height) {
+        init : function (x, y, width, height) {
             /**
              * to identify the object as a renderable object
              * @ignore
@@ -127,7 +128,7 @@
              */
             this.alpha = 1.0;
             // call the super constructor
-            this._super(me.Rect, "init", [pos, width, height]);
+            this._super(me.Rect, "init", [x, y, width, height]);
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
@@ -187,16 +188,17 @@
          * @protected
          * @param {Context2d} context 2d Context on which draw our object
          **/
-        draw : function (context, color) {
+        draw : function (renderer, color) {
             // draw the parent rectangle
-            this._super(me.Rect, "draw", [context, color]);
+            this._super(me.Rect, "draw", [renderer, color]);
         }
     });
 
     /**
      * Base class for Renderable exception handling.
-     * @name Error
-     * @memberOf me.Renderable
+     * @name Renderable.Error
+     * @class
+     * @memberOf me
      * @constructor
      * @param {String} msg Error message.
      */

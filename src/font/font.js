@@ -92,7 +92,7 @@
             this.setFont(font, size, fillStyle, textAlign);
             // super constructor
             this.pos = new me.Vector2d(0, 0);
-            this._super(me.Renderable, "init", [this.pos, 0, this.fontSize.y]);
+            this._super(me.Renderable, "init", [this.pos.x, this.pos.y, 0, this.fontSize.y]);
         },
 
         /**
@@ -189,7 +189,10 @@
          * @param {Number} x
          * @param {Number} y
          */
-        draw : function (context, text, x, y) {
+        draw : function (renderer, text, x, y) {
+            // TODO: Likely draw the text to an off canvas and cache an image
+            // over depending on the canvas API each draw call.
+            var context = renderer.getContext();
             // update initial position
             this.pos.set(x, y);
             // draw the text
@@ -219,10 +222,12 @@
          * @param {Number} x
          * @param {Number} y
          */
-        drawStroke : function (context, text, x, y) {
+        drawStroke : function (renderer, text, x, y) {
             // update initial position
             this.pos.set(x, y);
-
+            // TODO: Likely draw the text to an off canvas and cache an image
+            // over depending on the canvas API each draw call.
+            var context = renderer.getContext();
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;

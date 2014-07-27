@@ -1,10 +1,10 @@
 game.Background = me.Renderable.extend({
   init : function() {
-    this._super(me.Renderable, 'init', [new me.Vector2d(0, 0), me.game.viewport.width, me.game.viewport.height]);
+    this._super(me.Renderable, 'init', [0, 0, me.game.viewport.width, me.game.viewport.height]);
     this.z = 1;
   },
-  draw : function(ctx) {
-    me.video.clearSurface(ctx, '#000');
+  draw : function(renderer) {
+    me.video.clearSurface(renderer.getContext(), '#000');
   }
 });
 
@@ -30,14 +30,13 @@ game.MainEntity = me.Entity.extend({
 
 game.RenderableEntity = me.Renderable.extend({
   init : function(x, y) {
-    this._super(me.Renderable, 'init', [new me.Vector2d(x, y), 100, 100]);
+    this._super(me.Renderable, 'init', [x, y, 100, 100]);
     this.z = 2;
   },
 
-  draw : function(context) {
-    context.save();
-    context.fillStyle = '#fff';
-    context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-    context.restore();
+  draw : function(renderer) {
+    renderer.save();
+    renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, '#fff')
+    renderer.restore();
   }
 });

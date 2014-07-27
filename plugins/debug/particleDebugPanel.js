@@ -179,7 +179,7 @@
         /**
          * @private
          */
-        drawGraph : function (context) {
+        drawGraph : function (renderer) {
             var updateTimeSamples = this.updateTimeSamples;
             var drawTimeSamples = this.drawTimeSamples;
             var frameUpdateTimeSamples = this.frameUpdateTimeSamples;
@@ -202,8 +202,8 @@
             var maxTime = 60, scale = height / maxTime, len = updateTimeSamples.length;
             var frameTimeLimit = 1000 / me.sys.fps, where = height - frameTimeLimit * scale;
 
-            context.globalAlpha = 0.5;
-
+            renderer.setGlobalAlpha(0.5);
+            var context = renderer.getContext();
             // draw the frame time limit
             context.strokeStyle = "grey";
             context.beginPath();
@@ -237,19 +237,20 @@
             this.frameDrawTimeAvg = frameDrawTimeSum / len;
 
             // draw the graph
-            this.fillArea(context, width, height, draw, "lightblue");
-            this.fillArea(context, width, height, slowDraw, "lightcoral");
-            this.fillArea(context, width, height, update, "lightgreen");
-            this.fillArea(context, width, height, slowUpdate, "lightsalmon");
+            this.fillArea(renderer, width, height, draw, "lightblue");
+            this.fillArea(renderer, width, height, slowDraw, "lightcoral");
+            this.fillArea(renderer, width, height, update, "lightgreen");
+            this.fillArea(renderer, width, height, slowUpdate, "lightsalmon");
 
-            context.globalAlpha = 1.0;
+            renderer.setGlobalAlpha(1.0);
         },
 
         /**
          * @private
          */
-        fillArea: function(context, width, height, data, color) {
+        fillArea: function(renderer, width, height, data, color) {
             var i, x, y, len = data.length;
+            var context = renderer.getContext();
             context.fillStyle = color;
             context.beginPath();
             context.moveTo(width, height);
@@ -265,26 +266,25 @@
         },
 
         /** @private */
-        draw : function(context) {
-            context.save();
+        draw : function(renderer) {
+            renderer.save();
 
             // draw the panel
-            context.globalAlpha = 0.5;
-            context.fillStyle = "black";
-            context.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height);
-            context.globalAlpha = 1.0;
-            context.translate(this.rect.left, this.rect.top);
+            renderer.setGlobalAlpha(0.5);
+            renderer.fillRect(this.rect.left,  this.rect.top,
+                             this.rect.width, this.rect.height, "black");
+            renderer.setGlobalAlpha(1.0);
+            renderer.translate(this.rect.left, this.rect.top);
 
             // # entities / draw
-            this.font.draw(context, "emitters : " + this.emitterCount, 5, 5);
-            this.font.draw(context, "particles : " + this.particleCount, 5, 18);
+            this.font.draw(renderer, "emitters : " + this.emitterCount, 5, 5);
+            this.font.draw(renderer, "particles : " + this.particleCount, 5, 18);
 
             // draw the update duration
-            this.font.draw(context, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
+            this.font.draw(renderer, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
 
             // draw the draw duration
-            this.font.draw(context, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
+            this.font.draw(renderer, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
 
             this.updateTimeSamples.push(this.updateTime);
             this.updateTime = 0;
@@ -292,9 +292,9 @@
             this.drawTime = 0;
 
             // draw the graph
-            this.drawGraph(context);
+            this.drawGraph(renderer);
 
-            context.restore();
+            renderer.restore();
         },
     });
 

@@ -74,10 +74,10 @@
             this.screenX = 0;
             this.screenY = 0;
             // viewport coordinates
-            this._super(me.Renderable, "init", [new me.Vector2d(minX, minY), maxX - minX, maxY - minY]);
+            this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
             // real worl limits
-            this.bounds = new me.Rect(new me.Vector2d(-Infinity, -Infinity), Infinity, Infinity);
+            this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
             // offset for shake effect
             this.offset = new me.Vector2d();
@@ -171,7 +171,7 @@
          */
         setDeadzone : function (w, h) {
             if (this.deadzone === null) {
-                this.deadzone = new me.Rect(new me.Vector2d(), 0, 0);
+                this.deadzone = new me.Rect(0, 0, 0, 0);
             }
 
             // reusing the old code for now...
@@ -489,10 +489,10 @@
          * render the camera effects
          * @ignore
          */
-        draw : function (context) {
+        draw : function () {
             // fading effect
             if (this._fadeIn.tween) {
-                me.video.clearSurface(context, this._fadeIn.color.toRGBA());
+                me.video.clearSurface(null, this._fadeIn.color.toRGBA());
                 // remove the tween if over
                 if (this._fadeIn.color.alpha === 1.0) {
                     this._fadeIn.tween = null;
@@ -503,7 +503,7 @@
 
             // flashing effect
             if (this._fadeOut.tween) {
-                me.video.clearSurface(context, this._fadeOut.color.toRGBA());
+                me.video.clearSurface(null, this._fadeOut.color.toRGBA());
                 // remove the tween if over
                 if (this._fadeOut.color.alpha === 0.0) {
                     this._fadeOut.tween = null;

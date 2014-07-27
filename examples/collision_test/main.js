@@ -13,7 +13,7 @@ var game = {
     onload: function()
     {
         // init the video
-        if (!me.video.init('screen', 1024, 768, true, 'auto')) {
+        if (!me.video.init('screen', me.video.CANVAS, 1024, 768, true, 'auto')) {
             alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
             return;
         }
@@ -69,11 +69,11 @@ var Smilie = me.Entity.extend({
             }]
         );
         // add the coin sprite as renderable
-        this.renderable = new me.SpriteObject (16, 16, me.loader.getImage(game.assets[i % 5].name));
+        this.renderable = new me.Sprite(16, 16, me.loader.getImage(game.assets[i % 5].name));
         this.collidable = true;
         
         // add a collision shape
-        this.body.addShape(new me.Rect(new me.Vector2d(), this.width, this.heigth));
+        this.body.addShape(new me.Rect(0, 0, this.width, this.heigth));
     },
 
     update : function (dt) {

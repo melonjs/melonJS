@@ -72,10 +72,10 @@ game.ShapeObject = me.Entity.extend({
     /**
      * draw the square
      */
-    draw: function (context) {
-        context.globalAlpha = this.hover ? 1.0 : 0.5;
-        this._super(me.Entity, 'draw', [context]);
-        context.globalAlpha = 1.0;
+    draw: function (renderer) {
+        renderer.setGlobalAlpha(this.hover ? 1.0 : 0.5);
+        this._super(me.Entity, 'draw', [renderer]);
+        renderer.setGlobalAlpha(1.0);
     }
 });
 
@@ -88,10 +88,10 @@ game.Square = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a rectangular shape
-        this.body.addShape(new me.Rect(new me.Vector2d(0, 0), this.width, this.height));
+        this.body.addShape(new me.Rect(0, 0, this.width, this.height));
 
         // pienapple
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 24);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 24);
         this.renderable.offset.x = 93;
         this.renderable.offset.y = 151;
         this.renderable.resize(7.5);
@@ -107,10 +107,10 @@ game.Circle = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add an ellipse shape
-        this.body.addShape(new me.Ellipse(new me.Vector2d(this.width/2, this.height/2), this.width, this.height));
+        this.body.addShape(new me.Ellipse(this.width/2, this.height/2, this.width, this.height));
 
         // tomato
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 20, 20);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 20);
         this.renderable.offset.x = 65;
         this.renderable.offset.y = 153;
         this.renderable.resize(7.5);
@@ -126,7 +126,7 @@ game.Poly = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a polygone shape
-        this.body.addShape(new me.PolyShape(new me.Vector2d(0, 0), [
+        this.body.addShape(new me.PolyShape(0, 0, [
             // draw a star
             {x:0, y:0},
             {x:28, y:60},
@@ -141,7 +141,7 @@ game.Poly = game.ShapeObject.extend({
         ], true));
 
         // star
-        this.renderable = new me.SpriteObject (0, 0, me.loader.getImage("sprites"), 24, 24);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 24, 24);
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
         this.renderable.resize(7.5);
