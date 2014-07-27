@@ -1,6 +1,5 @@
 "use strict";
 var path = require("path");
-var Q = require("q");
 var shell = require("shelljs");
 
 module.exports = function (grunt) {
@@ -10,9 +9,8 @@ module.exports = function (grunt) {
         var version = config.version;
 
         function run(cmd, msg) {
-            var deferred = Q.defer();
-            var success;
             grunt.verbose.writeln("Running: " + cmd);
+            var success;
             if (!grunt.option("verbose")) {
               success = shell.exec(cmd, {silent: true}).code === 0;
             } else {
@@ -21,12 +19,10 @@ module.exports = function (grunt) {
 
             if (success) {
                 grunt.log.ok(msg || cmd);
-                deferred.resolve();
             } else {
                 // fail and stop execution of further tasks
-                deferred.reject("Failed when executing: `" + cmd + "`\n");
+                grunt.fail.fatal("Failed when executing '" + cmd  + "'");
             }
-            return deferred.promise;
         }
 
         function checkout() {

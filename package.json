@@ -34,7 +34,6 @@
     "grunt-contrib-uglify": "~0.2.7",
     "grunt-jsdoc": "~0.5.1",
     "grunt-replace": "~0.7.7",
-    "q": "~1.0.1",
     "shelljs": "~0.3.0"
   },
   "scripts": {
