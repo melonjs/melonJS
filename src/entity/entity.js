@@ -125,14 +125,11 @@
              */
             this.renderable = null;
 
-            // just to keep track of when we flip
-            this.lastflipX = false;
-            this.lastflipY = false;
-
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.ObjectEntity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
+            
             // call the super constructor
             this._super(me.Renderable, "init", [x, y,
                         settings.width,
@@ -194,11 +191,6 @@
                 typeof(settings.collidable) !== "undefined" ?
                 settings.collidable : true
             );
-                        
-            // ensure mandatory properties are defined
-            if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
-            }
             
             /**
              * the entity body object
