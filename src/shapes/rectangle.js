@@ -31,17 +31,6 @@
             this.pos = new me.Vector2d(x, y);
 
             /**
-             * allow expanding and contracting the rect with a vector<br>
-             * while keeping its original size and shape<br>
-             * @ignore
-             * @type {me.Vector2d}
-             * @name rangeV
-             * @memberOf me.Rect
-             * @see me.Rect#addV
-             */
-            this.rangeV = new me.Vector2d();
-
-            /**
              * width of the Rectangle
              * @public
              * @type {Number}
@@ -65,10 +54,6 @@
             // the shape type
             this.shapeType = "Rectangle";
 
-            // Allow expanding and contracting the rect with a vector
-            // while keeping its original size and shape
-            this.rangeV.set(0, 0);
-
             this.width = w;
             this.height = h;
 
@@ -82,14 +67,15 @@
          * @name setShape
          * @memberOf me.Rect
          * @function
-         * @param {me.Vector2d} v x,y position for the rectangle
+         * @param {Number} x position of the Rectangle
+         * @param {Number} y position of the Rectangle
          * @param {Number} w width of the rectangle
          * @param {Number} h height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        setShape : function (v, w, h) {
+        setShape : function (x, y, w, h) {
             // set the new position vector
-            this.pos.setV(v);
+            this.pos.set(x, y);
 
             // resize
             this.resize(w, h);
@@ -126,7 +112,18 @@
         getBounds : function () {
             return this;
         },
-
+        
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.Rect
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            return this;
+        },
+        
         /**
          * clone this rectangle
          * @name clone
@@ -163,19 +160,6 @@
          */
         translateV : function (v) {
             return this.translate(v.x, v.y);
-        },
-
-        /**
-         * add a vector to this rect
-         * @name addV
-         * @memberOf me.Rect
-         * @function
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle
-         */
-        addV : function (v) {
-            this.rangeV.setV(v);
-            return this;
         },
 
         /**
@@ -358,12 +342,11 @@
      */
     Object.defineProperty(me.Rect.prototype, "left", {
         get : function () {
-            var x = this.pos.x;
-            var xv = x + this.rangeV.x;
-            return x < xv ? x : xv;
+            return this.pos.x;
         },
         configurable : true
     });
+    
     /**
      * right coordinate of the Rectangle<br>
      * takes in account the adjusted size of the rectangle (if set)
@@ -374,9 +357,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
-            var x = this.pos.x + this.width;
-            var xv = x + this.rangeV.x;
-            return x > xv ? x : xv;
+            return this.pos.x + this.width;
         },
         configurable : true
     });
@@ -391,9 +372,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "top", {
         get : function () {
-            var y = this.pos.y;
-            var yv = y + this.rangeV.y;
-            return y < yv ? y : yv;
+            return this.pos.y;
         },
         configurable : true
     });
@@ -408,9 +387,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
-            var y = this.pos.y + this.height;
-            var yv = y + this.rangeV.y;
-            return y > yv ? y : yv;
+            return this.pos.y + this.height;
         },
         configurable : true
     });

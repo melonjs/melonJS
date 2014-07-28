@@ -1,3 +1,10 @@
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ *
+ */
+
 (function () {
 
     /**

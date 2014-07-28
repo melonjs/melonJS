@@ -28,7 +28,7 @@
              * @name pos
              * @memberOf me.PolyShape
              */
-            this.pos = new me.Vector2d(x, y);
+            this.pos = new me.Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -60,7 +60,7 @@
 
             // the shape type
             this.shapeType = "PolyShape";
-            this.setShape(this.pos, points, closed);
+            this.setShape(x, y, points, closed);
         },
 
         /**
@@ -68,18 +68,17 @@
          * @name setShape
          * @memberOf me.PolyShape
          * @function
-         * @param {me.Vector2d} v origin point of the PolyShape
+         * @param {Number} x position of the polyshape
+         * @param {Number} y position of the polyshape
          * @param {me.Vector2d[]} points array of vector defining the polyshape
          * @param {boolean} closed true if a polygone, false if a polyline
          */
-        setShape : function (v, points, closed) {
-            this.pos.setV(v);
+        setShape : function (x, y, points, closed) {
+            this.pos.set(x, y);
             this.points = points;
             this.closed = (closed === true);
             this.recalc();
-            // TODO probably implement an updateBounds() function too
-            //this.getBounds();
-           
+            this.updateBounds();
             return this;
         },
         
@@ -195,19 +194,34 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
-            if (!this.bounds) {
-                var pos = this.pos.clone(), right = 0, bottom = 0;
-                this.points.forEach(function (point) {
-                    pos.x = Math.min(pos.x, point.x);
-                    pos.y = Math.min(pos.y, point.y);
-                    right = Math.max(right, point.x);
-                    bottom = Math.max(bottom, point.y);
-                });
-                this.bounds = new me.Rect(pos.x, pos.y, right - pos.x, bottom - pos.y);
-            }
             return this.bounds;
         },
 
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.PolyShape
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            var x = this.pos.x, y = this.pos.y, right = 0, bottom = 0;
+            this.points.forEach(function (point) {
+                x = Math.min(x, point.x);
+                y = Math.min(y, point.y);
+                right = Math.max(right, point.x);
+                bottom = Math.max(bottom, point.y);
+            });
+       
+            if (!this.bounds) {
+                this.bounds = new me.Rect(x, y, right - x, bottom - y);
+            } else {
+                this.bounds.setShape(x, y, right - x, bottom - y);
+            }
+            
+            return this.bounds;
+        },
+        
         /**
          * clone this PolyShape
          * @name clone

@@ -28,7 +28,7 @@
              * @name pos
              * @memberOf me.Ellipse
              */
-            this.pos = new me.Vector2d(x, y);
+            this.pos = new me.Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -50,7 +50,7 @@
 
             // the shape type
             this.shapeType = "Ellipse";
-            this.radius.set(w / 2, h / 2);
+            this.setShape(x, y, w, h);
         },
 
         /**
@@ -58,13 +58,15 @@
          * @name setShape
          * @memberOf me.Ellipse
          * @function
-         * @param {me.Vector2d} v the center coordinates of the ellipse 
+         * @param {Number} x position of the ellipse
+         * @param {Number} y position of the ellipse
          * @param {Number} w width (diameter) of the ellipse
          * @param {Number} h height (diameter) of the ellipse
          */
-        setShape : function (v, w, h) {
-            this.pos.setV(v);
+        setShape : function (x, y, w, h) {
+            this.pos.set(x, y);
             this.radius.set(w / 2, h / 2);
+            this.updateBounds();
             return this;
         },
 
@@ -138,14 +140,26 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
+            return this.bounds;
+        },
+        
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.Ellipse
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            var x = this.pos.x - this.radius.x,
+                y = this.pos.y - this.radius.y,
+                w = this.radius.x * 2,
+                h = this.radius.y * 2;
+            
             if (!this.bounds) {
-                var clonePos = this.pos.clone().sub(this.radius);
-                this.bounds = new me.Rect(
-                    clonePos.x,
-                    clonePos.y,
-                    this.radius.x * 2,
-                    this.radius.y * 2
-                );
+                this.bounds = new me.Rect(x, y, w, h);
+            }  else {
+                this.bounds.setShape(x, y, w, h);
             }
             return this.bounds;
         },
