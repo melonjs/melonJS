@@ -75,7 +75,7 @@ module.exports = function (grunt) {
         }
 
         function rollback() {
-            var backBranch = currBranch ? currBranch : "master";
+            var backBranch = currBranch !== undefined ? currBranch : "master";
             run("git reset --hard", "Resetting staged changes");
             run("git checkout " + backBranch, "Getting back to " + backBranch + " branch");
         }
