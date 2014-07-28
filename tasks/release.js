@@ -7,15 +7,17 @@ module.exports = function (grunt) {
         var repo = path.join(__dirname, "..");
         var config = grunt.file.readJSON(path.join(repo, "package.json"));
         var version = config.version;
+        var currBranch;
+        var verbose = grunt.option("verbose");
+        // we could add more options here later
+        var shellOpts = {};
+        if (verbose) {
+            shellOpts['verbose'] = true;
+        }
 
         function run(cmd, msg) {
             grunt.verbose.writeln("Running: " + cmd);
-            var success;
-            if (!grunt.option("verbose")) {
-              success = shell.exec(cmd, {silent: true}).code === 0;
-            } else {
-              success = shell.exec(cmd).code === 0;
-            }
+            var success = shell.exec(cmd, options).code === 0;
 
             if (success) {
                 grunt.log.ok(msg || cmd);
@@ -26,6 +28,17 @@ module.exports = function (grunt) {
         }
 
         function checkout() {
+            var symbolicRef = shell.exec("git symbolic-ref HEAD", options).output;
+            if (symbolicRef) {
+                var splitted = symbolicRef.split('/');
+                // symbolic ref must contain 3 steps
+                // e.g ref/heads/master
+                if (splitted.length !== 3) {
+                    grunt.fail.fatal("Could not get the actual branch from symbolic ref");
+                }
+                // the branch name is the last item of the array
+                currBranch = splitted[splitted.length - 1];
+            }
             run("git checkout --detach", "Detaching from current tree");
         }
 
@@ -62,8 +75,9 @@ module.exports = function (grunt) {
         }
 
         function rollback() {
+            var backBranch = currBranch ? currBranch : "master";
             run("git reset --hard", "Resetting staged changes");
-            run("git checkout master", "Getting back to master branch");
+            run("git checkout " + backBranch, "Getting back to " + backBranch + " branch");
         }
 
         try {
