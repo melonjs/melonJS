@@ -127,7 +127,7 @@
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw new me.ObjectEntity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
+                throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
             
             // call the super constructor
