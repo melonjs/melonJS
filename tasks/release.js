@@ -17,7 +17,7 @@ module.exports = function (grunt) {
 
         function run(cmd, msg) {
             grunt.verbose.writeln("Running: " + cmd);
-            var success = shell.exec(cmd, options).code === 0;
+            var success = shell.exec(cmd, shellOpts).code === 0;
 
             if (success) {
                 grunt.log.ok(msg || cmd);
@@ -28,7 +28,7 @@ module.exports = function (grunt) {
         }
 
         function checkout() {
-            var symbolicRef = shell.exec("git symbolic-ref HEAD", options).output;
+            var symbolicRef = shell.exec("git symbolic-ref HEAD", shellOpts).output;
             if (symbolicRef) {
                 var splitted = symbolicRef.split('/');
                 // symbolic ref must contain 3 steps
