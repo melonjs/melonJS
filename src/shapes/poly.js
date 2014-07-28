@@ -196,14 +196,14 @@
          */
         getBounds : function () {
             if (!this.bounds) {
-                var pos = this.pos.clone(), right = 0, bottom = 0;
+                var x = this.pos.x, y = this.pos.y, right = 0, bottom = 0;
                 this.points.forEach(function (point) {
-                    pos.x = Math.min(pos.x, point.x);
-                    pos.y = Math.min(pos.y, point.y);
+                    x = Math.min(x, point.x);
+                    y = Math.min(y, point.y);
                     right = Math.max(right, point.x);
                     bottom = Math.max(bottom, point.y);
                 });
-                this.bounds = new me.Rect(pos.x, pos.y, right - pos.x, bottom - pos.y);
+                this.bounds = new me.Rect(x, y, right - x, bottom - y);
             }
             return this.bounds;
         },

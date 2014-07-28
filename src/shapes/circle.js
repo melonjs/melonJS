@@ -139,10 +139,9 @@
          */
         getBounds : function () {
             if (!this.bounds) {
-                var clonePos = this.pos.clone().sub(this.radius);
                 this.bounds = new me.Rect(
-                    clonePos.x,
-                    clonePos.y,
+                    this.pos.x - this.radius.x,
+                    this.pos.y - this.radius.y,
                     this.radius.x * 2,
                     this.radius.y * 2
                 );
