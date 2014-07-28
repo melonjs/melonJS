@@ -62,6 +62,7 @@ module.exports = function (grunt) {
         }
 
         function rollback() {
+            run("git reset --hard", "Resetting staged changes");
             run("git checkout master", "Getting back to master branch");
         }
 
@@ -73,7 +74,8 @@ module.exports = function (grunt) {
             push();
         } catch (err) {
             grunt.fail.warn(err || "release failed");
+        } finally {
+            rollback();
         }
-        rollback();
     });
 };
