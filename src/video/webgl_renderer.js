@@ -1,5 +1,18 @@
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ *
+ */
 (function () {
 
+    /**
+     * The WebGL renderer object
+     * There is no constructor function for me.CanvasRenderer
+     * @namespace me.WebGLRenderer
+     * @memberOf me
+     * @ignore
+     */
     me.WebGLRenderer = (function () {
         var api = {},
         canvas = null,
@@ -69,7 +82,7 @@
         /**
          * Returns the WebGLContext instance for the renderer
          * @name getContext
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.WebGLRenderer
          * @function
          * @return {WebGLRenderer}
          */
@@ -95,7 +108,7 @@
         /**
          * return a reference to the system 2d Context
          * @name getSystemContext
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.WebGLRenderer
          * @function
          * @return {Context2d}
          */
@@ -110,7 +123,7 @@
         /**
          * return the current global alpha
          * @name globalAlpha
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.WebGLRenderer
          * @function
          * @return {Number}
          */
