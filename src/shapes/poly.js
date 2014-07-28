@@ -78,9 +78,7 @@
             this.points = points;
             this.closed = (closed === true);
             this.recalc();
-            // TODO probably implement an updateBounds() function too
-            //this.getBounds();
-           
+            this.updateBounds();
             return this;
         },
         
@@ -196,19 +194,34 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
-            if (!this.bounds) {
-                var x = this.pos.x, y = this.pos.y, right = 0, bottom = 0;
-                this.points.forEach(function (point) {
-                    x = Math.min(x, point.x);
-                    y = Math.min(y, point.y);
-                    right = Math.max(right, point.x);
-                    bottom = Math.max(bottom, point.y);
-                });
-                this.bounds = new me.Rect(x, y, right - x, bottom - y);
-            }
             return this.bounds;
         },
 
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.PolyShape
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            var x = this.pos.x, y = this.pos.y, right = 0, bottom = 0;
+            this.points.forEach(function (point) {
+                x = Math.min(x, point.x);
+                y = Math.min(y, point.y);
+                right = Math.max(right, point.x);
+                bottom = Math.max(bottom, point.y);
+            });
+       
+            if (!this.bounds) {
+                this.bounds = new me.Rect(x, y, right - x, bottom - y);
+            } else {
+                this.bounds.setShape(x, y, right - x, bottom - y);
+            }
+            
+            return this.bounds;
+        },
+        
         /**
          * clone this PolyShape
          * @name clone

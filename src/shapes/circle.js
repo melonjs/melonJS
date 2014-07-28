@@ -28,7 +28,7 @@
              * @name pos
              * @memberOf me.Ellipse
              */
-            this.pos = new me.Vector2d(x, y);
+            this.pos = new me.Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -50,7 +50,7 @@
 
             // the shape type
             this.shapeType = "Ellipse";
-            this.radius.set(w / 2, h / 2);
+            this.setShape(x, y, w, h);
         },
 
         /**
@@ -66,6 +66,7 @@
         setShape : function (x, y, w, h) {
             this.pos.set(x, y);
             this.radius.set(w / 2, h / 2);
+            this.updateBounds();
             return this;
         },
 
@@ -139,13 +140,26 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
+            return this.bounds;
+        },
+        
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.Ellipse
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            var x = this.pos.x - this.radius.x,
+                y = this.pos.y - this.radius.y,
+                w = this.radius.x * 2,
+                h = this.radius.y * 2;
+            
             if (!this.bounds) {
-                this.bounds = new me.Rect(
-                    this.pos.x - this.radius.x,
-                    this.pos.y - this.radius.y,
-                    this.radius.x * 2,
-                    this.radius.y * 2
-                );
+                this.bounds = new me.Rect(x, y, w, h);
+            }  else {
+                this.bounds.setShape(x, y, w, h);
             }
             return this.bounds;
         },

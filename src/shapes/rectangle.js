@@ -112,7 +112,18 @@
         getBounds : function () {
             return this;
         },
-
+        
+        /**
+         * update the bounding box for this shape.
+         * @name updateBounds
+         * @memberOf me.Rect
+         * @function
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        updateBounds : function () {
+            return this;
+        },
+        
         /**
          * clone this rectangle
          * @name clone
