@@ -28,7 +28,7 @@
              * @name pos
              * @memberOf me.PolyShape
              */
-            this.pos = new me.Vector2d(x, y);
+            this.pos = new me.Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -60,7 +60,7 @@
 
             // the shape type
             this.shapeType = "PolyShape";
-            this.setShape(this.pos, points, closed);
+            this.setShape(x, y, points, closed);
         },
 
         /**
@@ -68,12 +68,13 @@
          * @name setShape
          * @memberOf me.PolyShape
          * @function
-         * @param {me.Vector2d} v origin point of the PolyShape
+         * @param {Number} x position of the polyshape
+         * @param {Number} y position of the polyshape
          * @param {me.Vector2d[]} points array of vector defining the polyshape
          * @param {boolean} closed true if a polygone, false if a polyline
          */
-        setShape : function (v, points, closed) {
-            this.pos.setV(v);
+        setShape : function (x, y, points, closed) {
+            this.pos.set(x, y);
             this.points = points;
             this.closed = (closed === true);
             this.recalc();

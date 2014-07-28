@@ -58,12 +58,13 @@
          * @name setShape
          * @memberOf me.Ellipse
          * @function
-         * @param {me.Vector2d} v the center coordinates of the ellipse 
+         * @param {Number} x position of the ellipse
+         * @param {Number} y position of the ellipse
          * @param {Number} w width (diameter) of the ellipse
          * @param {Number} h height (diameter) of the ellipse
          */
-        setShape : function (v, w, h) {
-            this.pos.setV(v);
+        setShape : function (x, y, w, h) {
+            this.pos.set(x, y);
             this.radius.set(w / 2, h / 2);
             return this;
         },

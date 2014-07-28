@@ -67,14 +67,15 @@
          * @name setShape
          * @memberOf me.Rect
          * @function
-         * @param {me.Vector2d} v x,y position for the rectangle
+         * @param {Number} x position of the Rectangle
+         * @param {Number} y position of the Rectangle
          * @param {Number} w width of the rectangle
          * @param {Number} h height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        setShape : function (v, w, h) {
+        setShape : function (x, y, w, h) {
             // set the new position vector
-            this.pos.setV(v);
+            this.pos.set(x, y);
 
             // resize
             this.resize(w, h);
