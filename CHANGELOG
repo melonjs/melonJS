@@ -9,7 +9,7 @@ Version History
 * Core : new `me.Error` class to help better track down execeptions' origin
 * Core : brand new "Separate Axis Theorem " based collision algorithm (support polygon/ellipse, and providex more accurate collision response)
 * Container : `addChild` and `addChildAt` now return the added child
-* Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target
+* Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target. Use me.video.renderer to call things like getWidth, getHeight, getSystemCanvas, getSystemContext, etc.
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
 * CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
 * Renderable : renamed `me.SpriteObject` to `me.Sprite` and `me.ObjectContainer` to `me.Container`, for a cleaner API
