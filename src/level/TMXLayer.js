@@ -415,7 +415,7 @@
             // TODO: this is really tied to the canvas api. need to abstract it.
             if (this.preRender === true) {
                 this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-                this.layerSurface = me.CanvasRenderer.getContext2d(this.layerCanvas);
+                this.layerSurface = me.CanvasRenderer.getContext(this.layerCanvas);
             }
         },
 

@@ -25,13 +25,13 @@
 
         api.init = function (c, db) {
             canvas = c;
-            context = this.getContext2d(canvas);
+            context = this.getContext(canvas);
             doubleBuffering = db;
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
                 backBufferCanvas = me.video.createCanvas(canvas.width, canvas.height, false);
-                backBufferContext2D = this.getContext2d(backBufferCanvas);
+                backBufferContext2D = this.getContext(backBufferCanvas);
             }
             else {
                 backBufferCanvas = canvas;
@@ -46,7 +46,7 @@
 
         api.applyRGBFilter = function (object, effect, option) {
             //create a output canvas using the given canvas or image size
-            var _context = api.getContext2d(me.video.createCanvas(object.width, object.height, false));
+            var _context = api.getContext(me.video.createCanvas(object.width, object.height, false));
             // get the pixels array of the give parameter
             var imgpix = me.utils.getPixels(object);
             // pointer to the pixels data
@@ -259,41 +259,35 @@
         };
 
         /**
-         * Returns the 2D Context instance for the renderer
+         * Returns the 2D Context object of the given Canvas
+         * `getContext` will also enable/disable antialiasing features based on global settings.
          * @name getContext
          * @memberOf me.CanvasRenderer
          * @function
+         * @param {Canvas} [canvas=canvas instance of the renderer]
          * @return {Context2d}
          */
-        api.getContext = function () {
-            return backBufferContext2D;
-        };
-
-        /**
-         * Returns the 2D Context object of the given Canvas
-         * `getContext2d` will also enable/disable antialiasing features based on global settings.
-         * @name getContext2D
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Canvas}
-         * @return {Context2d}
-         */
-        api.getContext2d = function (c) {
-            var _context;
-            if (navigator.isCocoonJS) {
-                // cocoonJS specific extension
-                _context = c.getContext("2d", {
-                    "antialias" : me.sys.scalingInterpolation
-                });
+        api.getContext = function (c) {
+            if (typeof c !== "undefined") {
+                var _context;
+                if (navigator.isCocoonJS) {
+                    // cocoonJS specific extension
+                    _context = c.getContext("2d", {
+                        "antialias" : me.sys.scalingInterpolation
+                    });
+                }
+                else {
+                    _context = c.getContext("2d");
+                }
+                if (!_context.canvas) {
+                    _context.canvas = c;
+                }
+                this.setImageSmoothing(_context, me.sys.scalingInterpolation);
+                return _context;
+            } else {
+                // returns the 2D Context instance for the renderer
+                return backBufferContext2D;
             }
-            else {
-                _context = c.getContext("2d");
-            }
-            if (!_context.canvas) {
-                _context.canvas = c;
-            }
-            this.setImageSmoothing(_context, me.sys.scalingInterpolation);
-            return _context;
         };
 
         api.getHeight = function () {

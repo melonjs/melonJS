@@ -261,7 +261,7 @@
          */
         api.getPixels = function (arg) {
             if (arg instanceof HTMLImageElement) {
-                var _context = me.CanvasRenderer.getContext2d(
+                var _context = me.CanvasRenderer.getContext(
                     me.video.createCanvas(arg.width, arg.height)
                 );
                 _context.drawImage(arg, 0, 0);
