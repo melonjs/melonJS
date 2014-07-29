@@ -1,6 +1,8 @@
 [
     "tests/spec/color-spec.js",
     "tests/spec/rectangle-spec.js",
+    "tests/spec/polyshape-spec.js",
+    "tests/spec/ellipse-spec.js",
     "tests/spec/shim-spec.js",
     "tests/spec/inheritance-spec.js",
     "tests/spec/draggable-spec.js",
