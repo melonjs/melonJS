@@ -52,7 +52,7 @@
             // visibility flag
             this.visible = true;
 
-            this.rect = new me.Rect(new me.Vector2d(0, me.video.getHeight() - 60), 200, 60);
+            this.rect = new me.Rect(new me.Vector2d(0, me.video.renderer.getHeight() - 60), 200, 60);
 
             // set the object GUID value
             this.GUID = "particledebug-" + me.utils.createGUID();

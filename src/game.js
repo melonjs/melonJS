@@ -168,8 +168,8 @@
         api.init = function (width, height) {
             if (!initialized) {
                 // if no parameter specified use the system size
-                width  = width  || me.video.getWidth();
-                height = height || me.video.getHeight();
+                width  = width  || me.video.renderer.getWidth();
+                height = height || me.video.renderer.getHeight();
 
                 // create a defaut viewport of the same size
                 api.viewport = new me.Viewport(0, 0, width, height);
@@ -182,7 +182,7 @@
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
-                renderer = me.video.getRenderer();
+                renderer = me.video.renderer;
 
                 // publish init notification
                 me.event.publish(me.event.GAME_INIT);
@@ -343,7 +343,7 @@
             isDirty = false;
 
             // blit our frame
-            me.video.blitSurface();
+            me.video.renderer.blitSurface();
         };
 
         // return our object

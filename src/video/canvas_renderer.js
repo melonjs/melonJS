@@ -25,13 +25,13 @@
 
         api.init = function (c, db) {
             canvas = c;
-            context = this.getContext(canvas);
+            context = this.getContext2d(canvas);
             doubleBuffering = db;
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
                 backBufferCanvas = me.video.createCanvas(canvas.width, canvas.height, false);
-                backBufferContext2D = this.getContext(backBufferCanvas);
+                backBufferContext2D = this.getContext2d(backBufferCanvas);
             }
             else {
                 backBufferCanvas = canvas;
@@ -261,13 +261,13 @@
         /**
          * Returns the 2D Context object of the given Canvas
          * `getContext` will also enable/disable antialiasing features based on global settings.
-         * @name getContext
+         * @name getContext2d
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Canvas} [canvas=canvas instance of the renderer]
          * @return {Context2d}
          */
-        api.getContext = function (c) {
+        api.getContext2d = function (c) {
             if (typeof c !== "undefined") {
                 var _context;
                 if (navigator.isCocoonJS) {

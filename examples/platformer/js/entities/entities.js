@@ -85,7 +85,7 @@ game.PlayerEntity = me.Entity.extend({
         this.body.update();
         
         // check if we fell into a hole
-        if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
+        if (!this.inViewport && (this.pos.y > me.video.renderer.getHeight())) {
             // if yes reset the game
             me.game.world.removeChild(this);
             me.game.viewport.fadeIn('#fff', 150, function(){

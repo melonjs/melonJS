@@ -58,7 +58,7 @@
             // frame draw time in ms
             this.frameDrawTime = 0;
 		
-            this.rect = new me.Rect(0, 0, me.video.getWidth(), 35);
+            this.rect = new me.Rect(0, 0, me.video.renderer.getWidth(), 35);
 
             // set the object GUID value
             this.GUID = "debug-" + me.utils.createGUID();
@@ -96,9 +96,9 @@
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
-            this.help_str_len = this.font.measureText(me.video.getSystemContext(), this.help_str).width;
-            this.fps_str_len = this.font.measureText(me.video.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.help_str_len = this.font.measureText(me.video.renderer.getSystemContext(), this.help_str).width;
+            this.fps_str_len = this.font.measureText(me.video.renderer.getSystemContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
