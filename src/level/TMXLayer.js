@@ -25,6 +25,7 @@
             this.name = name;
             this.color = color;
             this.z = z;
+            this.floating = true;
         },
 
         /**
@@ -35,8 +36,14 @@
             // set layer opacity
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
-            renderer.fillRect(rect.left, rect.top, rect.width, rect.height, this.color);
+            
+            var vpos = me.game.viewport.pos;
+            
+            renderer.fillRect(
+                rect.left - vpos.x, rect.top - vpos.y,
+                rect.width, rect.height,
+                this.color
+            );
 
             // restore context alpha value
             renderer.setGlobalAlpha(_alpha);
