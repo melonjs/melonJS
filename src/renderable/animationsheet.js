@@ -206,6 +206,7 @@
 
         /**
          * set the current animation
+         * this will always change the animation & set the frame to zero
          * @name setCurrentAnimation
          * @memberOf me.AnimationSheet
          * @function
@@ -215,6 +216,11 @@
          * @example
          * // set "walk" animation
          * this.setCurrentAnimation("walk");
+         *
+         * // set "walk" animation if it is not the current animation
+         * if (this.isCurrentAnimation("walk")) {
+         *   this.setCurrentAnimation("walk");
+         * }
          *
          * // set "eat" animation, and switch to "walk" when complete
          * this.setCurrentAnimation("eat", "walk");

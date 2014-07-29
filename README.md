@@ -18,6 +18,8 @@ and currently features :
 - A fresh & lightweight 2D sprite-based engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
 - Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE) and mobile devices
+- Device motion & accelerometer support
+- High DPI & auto scaling
 - Multi-channel HTML5 audio support and Web Audio on supported devices
 - a lightweight physic implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
@@ -49,7 +51,7 @@ and currently features :
 - Built-in support for cocoonJS
 - Asynchronous messaging support (minPubSub)
 - some basic GUI elements
-- a customizable loader, etc...
+- a customizable loader
 
 Using melonJS
 -------------------------------------------------------------------------------
