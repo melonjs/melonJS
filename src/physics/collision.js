@@ -355,6 +355,25 @@
         api.response = new api.ResponseObject();
 
         /**
+         * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
+         * you can redefine this function if you need any specific rules over what should collide with what.
+         * @name shouldCollide
+         * @memberOf me.collision
+         * @public
+         * @function
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Entity} b a reference to the object B.
+         * @return {Boolean} true if they should collide, false otherwise
+        */
+        api.shouldCollide = function (a, b) {
+            return (
+                a.body && b.body &&
+                (a.body.collisionMask & b.body.type) !== 0 &&
+                (a.body.type & b.body.collisionMask) !== 0
+            );
+        };
+        
+        /**
          * Checks if the specified entity collides with others entities 
          * @name check
          * @memberOf me.collision
@@ -406,11 +425,7 @@
                     // TODO: collision detection with other container will be back
                     // done once quadtree will be added
 
-                    if ((objB !== objA) &&
-                        (objB.body &&
-                        (objA.body.collisionMask & objB.body.type) !== 0 &&
-                        (objA.body.type & objB.body.collisionMask) !== 0)
-                    ) {
+                    if ((objB !== objA) && api.shouldCollide(objA, objB)) {
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
