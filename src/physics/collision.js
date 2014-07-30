@@ -354,7 +354,6 @@
         */
         api.response = new api.ResponseObject();
 
-
         /**
          * Checks if the specified entity collides with others entities 
          * @name check
@@ -367,6 +366,22 @@
          * @param {Boolean} [response=false] populate a response object in case of collision
          * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
          * @return {Boolean} in case of collision, false otherwise
+         * @example
+         * update : function (dt) {
+         *    ...
+         *    // check for collision between this object and all others
+         *    me.collision.check(this, true, this.collideHandler.bind(this), true);
+         *    ...
+         * };
+         *
+         * collideHandler : function (response) {
+         *     if (response.b.body.type === me.collision.types.ENEMY_OBJECT) {
+         *         this.pos.sub(response.overlapV);
+         *         this.hurt();
+         *     } else {
+         *         ...
+         *     }
+         * };
          */
         api.check = function (objA, multiple, callback, calcResponse, responseObject) {
             var collision = 0;
