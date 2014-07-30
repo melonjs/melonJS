@@ -53,14 +53,12 @@
   </object>
   <object name="me.Entity" gid="20" x="1050" y="455">
    <properties>
-    <property name="collidable" value="true"/>
-    <property name="type" value="spikeObject"/>
+    <property name="type" value="ENEMY_OBJECT"/>
    </properties>
   </object>
   <object name="me.Entity" gid="19" x="1015" y="455">
    <properties>
-    <property name="collidable" value="true"/>
-    <property name="type" value="spikeObject"/>
+    <property name="type" value="ENEMY_OBJECT"/>
    </properties>
   </object>
   <object name="me.LevelEntity" x="1680" y="0" width="35" height="525">
@@ -110,18 +108,18 @@
   </object>
  </objectgroup>
  <objectgroup color="#ffff00" name="coins" width="49" height="17">
-  <object name="CoinEntity" type="enemy" x="315" y="315" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="280" y="315" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1015" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1050" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1085" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1120" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1155" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1190" y="70" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1050" y="210" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1190" y="280" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1085" y="420" width="35" height="35"/>
-  <object name="CoinEntity" type="enemy" x="1540" y="490" width="35" height="35"/>
+  <object name="CoinEntity" x="315" y="315" width="35" height="35"/>
+  <object name="CoinEntity" x="280" y="315" width="35" height="35"/>
+  <object name="CoinEntity" x="1015" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1050" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1085" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1120" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1155" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1190" y="70" width="35" height="35"/>
+  <object name="CoinEntity" x="1050" y="210" width="35" height="35"/>
+  <object name="CoinEntity" x="1190" y="280" width="35" height="35"/>
+  <object name="CoinEntity" x="1085" y="420" width="35" height="35"/>
+  <object name="CoinEntity" x="1540" y="490" width="35" height="35"/>
  </objectgroup>
  <layer name="front layer" width="49" height="17">
   <data encoding="base64">

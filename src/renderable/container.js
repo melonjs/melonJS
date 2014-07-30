@@ -52,14 +52,8 @@
              */
             this.pendingSort = null;
 
-            /**
-             * Enable collision detection for this container (default true)<br>
-             * @public
-             * @type Boolean
-             * @name collidable
-             * @memberOf me.Container
-             */
-            this.collidable = true;
+            // TODO; container do not have a physic body
+            // ADD child container child one by one to the quadtree?
 
             /**
              * the container default transformation matrix

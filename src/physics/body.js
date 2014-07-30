@@ -63,6 +63,29 @@
              */
             this.onCollision = undefined;
             
+            
+            /**
+             * The body collision mask
+             * by default will collide with all entities
+             * @ignore
+             * @type Number
+             * @name collisionMask
+             * @see me.collision.types
+             * @memberOf me.Body
+             */
+            this.collisionMask = me.collision.types.ALL_OBJECT;
+            
+            /**
+             * define the type of the body for collision filtering<br>
+             * (set to 0 to disable collision for this object).
+             * @public
+             * @type Number
+             * @name type
+             * @see me.collision.types
+             * @memberOf me.Body
+             */
+            this.type = 1;
+
             /**
              * entity current velocity<br>
              * @public
@@ -260,6 +283,24 @@
                 return;
             }
             throw new me.Body.Error("Shape (" + index + ") not defined");
+        },
+        
+        /**
+         * By default all entities are able to collide with all the other entities, <br>
+         * but it's also possible to specificy 'collision filters' to provide a finer <br>
+         * control over which entities can collide with each other, using collisionMask.
+         * @name setCollisionMask
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @see me.collision.types
+         * @param {Number} bitmask the collision mask
+         * @example
+         * // filter collision detection with enemies and collectables
+         * myEntity.body.setCollisionMask(me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         */
+        setCollisionMask : function (bitmask) {
+            this.collisionMask = bitmask;
         },
         
         /**
@@ -468,7 +509,7 @@
 
             // Adjust position only on collidable object
             var collision;
-            if (this.entity.collidable) {
+            if (this.collisionMask !== 0) { // add a collision filter  ?
 
                 // calculate the body absolute position
                 this.pos.setV(this.entity.pos).add(this.offset);

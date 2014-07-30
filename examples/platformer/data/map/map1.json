@@ -29,7 +29,7 @@
          "name":"player",
          "objects":[
                 {
-                 "height":105,
+                 "height":88,
                  "name":"mainPlayer",
                  "properties":
                     {
@@ -40,7 +40,7 @@
                  "visible":true,
                  "width":35,
                  "x":105,
-                 "y":420
+                 "y":438
                 }, 
                 {
                  "gid":19,
@@ -48,8 +48,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "collidable":"true",
-                     "type":"spikeObject"
+                     "type":"ENEMY_OBJECT"
                     },
                  "type":"",
                  "visible":true,
@@ -63,8 +62,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "collidable":"true",
-                     "type":"spikeObject"
+                     "type":"ENEMY_OBJECT"
                     },
                  "type":"",
                  "visible":true,
@@ -78,8 +76,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "collidable":"true",
-                     "type":"spikeObject"
+                     "type":"ENEMY_OBJECT"
                     },
                  "type":"",
                  "visible":true,
@@ -93,8 +90,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "collidable":"true",
-                     "type":"spikeObject"
+                     "type":"ENEMY_OBJECT"
                     },
                  "type":"",
                  "visible":true,
@@ -203,7 +199,7 @@
                     {
 
                     },
-                 "type":"enemy",
+                 "type":"",
                  "visible":true,
                  "width":35,
                  "x":700,
