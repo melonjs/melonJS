@@ -248,7 +248,19 @@
         api.SAT = true;
         
         
-       // Collision types
+        /**
+         * Enum for collision type values. <br>
+         * Possible values are : <br>
+         * - NO_OBJECT<br>
+         * - ENEMY_OBJECT<br>
+         * - COLLECTABLE_OBJECT<br>
+         * - ACTION_OBJECT<br>
+         * - ALL_OBJECT
+         * @readonly
+         * @enum {number}
+         * @name types
+         * @memberOf me.collision
+         */
         api.types = {
             NO_OBJECT : 0,
 
