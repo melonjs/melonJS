@@ -157,6 +157,10 @@
                 this.sort();
             }
 
+            if (typeof child.onActivateEvent === "function") {
+                child.onActivateEvent();
+            }
+
             return child;
         },
         /**
@@ -185,6 +189,10 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
+
+                if (typeof child.onActivateEvent === "function") {
+                    child.onActivateEvent();
+                }
 
                 return child;
             }
@@ -398,6 +406,10 @@
             if  (this.hasChild(child)) {
 
                 child.ancestor = undefined;
+
+                if (typeof child.onDeactivateEvent === "function") {
+                    child.onDeactivateEvent();
+                }
 
                 if (!keepalive) {
                     if (typeof (child.destroy) === "function") {
