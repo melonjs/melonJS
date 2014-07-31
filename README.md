@@ -4,6 +4,7 @@ melonJS
 
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
+![melonJS](http://melonjs.org/media/alex4-github.png)
 
 Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod
 
