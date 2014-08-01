@@ -478,7 +478,7 @@
          *     this.vel.x += this.accel.x * me.timer.tick;
          * }
          * // update player position
-         * var res = this.updateMovement();
+         * var res = this.body.update();
          *
          * // check for collision result with the environment
          * if (res.x != 0)
