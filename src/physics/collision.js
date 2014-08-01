@@ -247,15 +247,19 @@
          */
         api.SAT = true;
         
-        
         /**
          * Enum for collision type values. <br>
          * Possible values are : <br>
-         * - NO_OBJECT<br>
-         * - ENEMY_OBJECT<br>
-         * - COLLECTABLE_OBJECT<br>
-         * - ACTION_OBJECT<br>
-         * - ALL_OBJECT
+         * - NO_OBJECT (to disable collision check) <br>
+         * - PLAYER_OBJECT <br>
+         * - NPC_OBJECT <br>
+         * - ENEMY_OBJECT <br>
+         * - COLLECTABLE_OBJECT <br>
+         * - ACTION_OBJECT <br>
+         * - PROJECTILE_OBJECT <br>
+         * - WORLD_SHAPE (for collision check with collision shapes/tiles) <br>
+         * - WORLD_BOUNDARY (for boundary check with the world boundaries) <br>
+         * - ALL_OBJECT <br>
          * @readonly
          * @enum {number}
          * @name types
@@ -263,14 +267,30 @@
          */
         api.types = {
             NO_OBJECT : 0,
+            
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name PLAYER_OBJECT
+             * @memberOf me.collision.types
+             */
+            PLAYER_OBJECT : 1,
 
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name NPC_OBJECT
+             * @memberOf me.collision.types
+             */
+            NPC_OBJECT : 2,
+            
             /**
              * Default object type constant for collision filtering
              * @constant
              * @name ENEMY_OBJECT
              * @memberOf me.collision.types
              */
-            ENEMY_OBJECT : 1,
+            ENEMY_OBJECT : 4,
 
             /**
              * Default object type constant for collision filtering
@@ -278,7 +298,7 @@
              * @name COLLECTABLE_OBJECT
              * @memberOf me.collision.types
              */
-            COLLECTABLE_OBJECT : 2,
+            COLLECTABLE_OBJECT : 8,
 
             /**
              * Default object type constant for collision filtering
@@ -286,7 +306,31 @@
              * @name ACTION_OBJECT
              * @memberOf me.collision.types
              */
-            ACTION_OBJECT : 4, // door, etc...
+            ACTION_OBJECT : 16, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name PROJECTILE_OBJECT
+             * @memberOf me.collision.types
+             */
+            PROJECTILE_OBJECT : 32, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name WORLD_SHAPE
+             * @memberOf me.collision.types
+             */
+            WORLD_SHAPE : 64, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name WORLD_BOUNDARY
+             * @memberOf me.collision.types
+             */
+            WORLD_BOUNDARY : 128, // door, etc...
             
             /**
              * Default object type constant for collision filtering
