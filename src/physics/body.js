@@ -63,6 +63,29 @@
              */
             this.onCollision = undefined;
             
+            
+            /**
+             * The body collision mask, that defines what should collide with what.<br>
+             * (by default will collide with all entities)
+             * @ignore
+             * @type Number
+             * @name collisionMask
+             * @see me.collision.types
+             * @memberOf me.Body
+             */
+            this.collisionMask = me.collision.types.ALL_OBJECT;
+            
+            /**
+             * define the collision type of the body for collision filtering<br>
+             * (set to 0 to disable collision for this object).
+             * @public
+             * @type Number
+             * @name collisionType
+             * @see me.collision.types
+             * @memberOf me.Body
+             */
+            this.collisionType = me.collision.types.ENEMY_OBJECT;
+
             /**
              * entity current velocity<br>
              * @public
@@ -263,6 +286,24 @@
         },
         
         /**
+         * By default all entities are able to collide with all the other entities, <br>
+         * but it's also possible to specificy 'collision filters' to provide a finer <br>
+         * control over which entities can collide with each other, using collisionMask.
+         * @name setCollisionMask
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @see me.collision.types
+         * @param {Number} bitmask the collision mask
+         * @example
+         * // filter collision detection with enemies and collectables
+         * myEntity.body.setCollisionMask(me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         */
+        setCollisionMask : function (bitmask) {
+            this.collisionMask = bitmask;
+        },
+        
+        /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
          * @protected
@@ -437,7 +478,7 @@
          *     this.vel.x += this.accel.x * me.timer.tick;
          * }
          * // update player position
-         * var res = this.updateMovement();
+         * var res = this.body.update();
          *
          * // check for collision result with the environment
          * if (res.x != 0)
@@ -468,7 +509,7 @@
 
             // Adjust position only on collidable object
             var collision;
-            if (this.entity.collidable) {
+            if (this.collisionMask & me.collision.types.WORLD_SHAPE) {
 
                 // calculate the body absolute position
                 this.pos.setV(this.entity.pos).add(this.offset);

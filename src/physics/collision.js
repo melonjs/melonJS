@@ -246,6 +246,100 @@
          * @type Boolean
          */
         api.SAT = true;
+        
+        /**
+         * Enum for collision type values. <br>
+         * Possible values are : <br>
+         * - NO_OBJECT (to disable collision check) <br>
+         * - PLAYER_OBJECT <br>
+         * - NPC_OBJECT <br>
+         * - ENEMY_OBJECT <br>
+         * - COLLECTABLE_OBJECT <br>
+         * - ACTION_OBJECT <br>
+         * - PROJECTILE_OBJECT <br>
+         * - WORLD_SHAPE (for collision check with collision shapes/tiles) <br>
+         * - WORLD_BOUNDARY (for boundary check with the world boundaries) <br>
+         * - ALL_OBJECT <br>
+         * @readonly
+         * @enum {number}
+         * @name types
+         * @memberOf me.collision
+         */
+        api.types = {
+            NO_OBJECT : 0,
+            
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name PLAYER_OBJECT
+             * @memberOf me.collision.types
+             */
+            PLAYER_OBJECT : 1,
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name NPC_OBJECT
+             * @memberOf me.collision.types
+             */
+            NPC_OBJECT : 2,
+            
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name ENEMY_OBJECT
+             * @memberOf me.collision.types
+             */
+            ENEMY_OBJECT : 4,
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name COLLECTABLE_OBJECT
+             * @memberOf me.collision.types
+             */
+            COLLECTABLE_OBJECT : 8,
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name ACTION_OBJECT
+             * @memberOf me.collision.types
+             */
+            ACTION_OBJECT : 16, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name PROJECTILE_OBJECT
+             * @memberOf me.collision.types
+             */
+            PROJECTILE_OBJECT : 32, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name WORLD_SHAPE
+             * @memberOf me.collision.types
+             */
+            WORLD_SHAPE : 64, // door, etc...
+
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name WORLD_BOUNDARY
+             * @memberOf me.collision.types
+             */
+            WORLD_BOUNDARY : 128, // door, etc...
+            
+            /**
+             * Default object type constant for collision filtering
+             * @constant
+             * @name ALL_OBJECT
+             * @memberOf me.collision.types
+             */
+            ALL_OBJECT : 0xFFFFFFFF // all objects
+        };
 
         /** 
          * Initialize the collision/physic world
@@ -304,7 +398,25 @@
         */
         api.response = new api.ResponseObject();
 
-
+        /**
+         * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
+         * you can redefine this function if you need any specific rules over what should collide with what.
+         * @name shouldCollide
+         * @memberOf me.collision
+         * @public
+         * @function
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Entity} b a reference to the object B.
+         * @return {Boolean} true if they should collide, false otherwise
+        */
+        api.shouldCollide = function (a, b) {
+            return (
+                a.body && b.body &&
+                (a.body.collisionMask & b.body.collisionType) !== 0 &&
+                (a.body.collisionType & b.body.collisionMask) !== 0
+            );
+        };
+        
         /**
          * Checks if the specified entity collides with others entities 
          * @name check
@@ -312,14 +424,29 @@
          * @public
          * @function
          * @param {me.Entity} obj entity to be tested for collision
-         * @param {String} [type=undefined] entity type to be tested for collision (null for all)
          * @param {Boolean} [multiple=false] check for multiple collision
          * @param {Function} [callback] Function to call in case of collision
          * @param {Boolean} [response=false] populate a response object in case of collision
          * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
          * @return {Boolean} in case of collision, false otherwise
+         * @example
+         * update : function (dt) {
+         *    ...
+         *    // check for collision between this object and all others
+         *    me.collision.check(this, true, this.collideHandler.bind(this), true);
+         *    ...
+         * };
+         *
+         * collideHandler : function (response) {
+         *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+         *         this.pos.sub(response.overlapV);
+         *         this.hurt();
+         *     } else {
+         *         ...
+         *     }
+         * };
          */
-        api.check = function (objA, type, multiple, callback, calcResponse, responseObject) {
+        api.check = function (objA, multiple, callback, calcResponse, responseObject) {
             var collision = 0;
             var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
@@ -327,6 +454,8 @@
             
             // only enable the quadTree when the quadtree debug mode is enabled
             if (me.debug && me.debug.renderQuadTree) {
+                // TODO add an argument to the retrieve function so that we only retreive entity
+                // in the corresponding region with the "same" collision mask
                 candidates = me.collision.quadTree.retrieve(objA);
                //console.log(candidates.length);
             } else {
@@ -336,11 +465,11 @@
             
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
-                if ((objB.inViewport || objB.alwaysUpdate) && objB.collidable) {
+                if (objB.inViewport || objB.alwaysUpdate) {
                     // TODO: collision detection with other container will be back
                     // done once quadtree will be added
 
-                    if ((objB !== objA) && (!type || (objB.type === type))) {
+                    if ((objB !== objA) && api.shouldCollide(objA, objB)) {
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
@@ -362,7 +491,7 @@
                                     if (response) {
                                         response.x = response.overlapV.x;
                                         response.y = response.overlapV.y;
-                                        response.type = response.b.type;
+                                        response.type = response.b.body.collisionType;
                                         response.obj = response.b;
                                     }
                                     

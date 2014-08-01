@@ -52,14 +52,8 @@
              */
             this.pendingSort = null;
 
-            /**
-             * Enable collision detection for this container (default true)<br>
-             * @public
-             * @type Boolean
-             * @name collidable
-             * @memberOf me.Container
-             */
-            this.collidable = true;
+            // TODO; container do not have a physic body
+            // ADD child container child one by one to the quadtree?
 
             /**
              * the container default transformation matrix
@@ -157,6 +151,10 @@
                 this.sort();
             }
 
+            if (typeof child.onActivateEvent === "function") {
+                child.onActivateEvent();
+            }
+
             return child;
         },
         /**
@@ -185,6 +183,10 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
+
+                if (typeof child.onActivateEvent === "function") {
+                    child.onActivateEvent();
+                }
 
                 return child;
             }
@@ -399,6 +401,10 @@
 
                 child.ancestor = undefined;
 
+                if (typeof child.onDeactivateEvent === "function") {
+                    child.onDeactivateEvent();
+                }
+
                 if (!keepalive) {
                     if (typeof (child.destroy) === "function") {
                         child.destroy();
@@ -509,31 +515,6 @@
          * @param {me.Renderable} obj Object to be tested for collision
          * @param {Boolean} [multiple=false] check for multiple collision (
          * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
-         * @example
-         * // check for collision between this object and others
-         * res = me.game.world.collide(this);
-         *
-         * // check if we collide with an enemy :
-         * if (res && (res.obj.type == game.constants.ENEMY_OBJECT)) {
-         *     if (res.x != 0) {
-         *         // x axis
-         *         if (res.x < 0) {
-         *             console.log("x axis : left side !");
-         *         }
-         *         else {
-         *             console.log("x axis : right side !");
-         *         }
-         *     }
-         *     else {
-         *         // y axis
-         *         if (res.y < 0) {
-         *             console.log("y axis : top side !");
-         *         }
-         *         else {
-         *             console.log("y axis : bottom side !");
-         *         }
-         *     }
-         * }
          */
         collide : function (objA, multiple) {
             // TO BE REMOVED
@@ -553,12 +534,12 @@
          * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
          */
         collideType : function (objA, type, multiple) {
-            if (multiple === true) {
-                throw "melonJS : multiple collision detection is not supported" +
-                      " anymore through the old me.game.collide function," +
-                      " please use the new new me.collision.check function";
+
+            if (multiple === true || typeof (type) === "string") {
+                throw "melonJS : advanced collision detection through the me.game.collide function" +
+                      " is deprecated, please use the new new me.collision.check function";
             }
-            if (me.collision.check(objA, type, false, null, true, me.collision.response.clear())) {
+            if (me.collision.check(objA, false, null, true, me.collision.response.clear())) {
                 return me.collision.response;
             }
             return null;

@@ -154,10 +154,10 @@
          * @name drawLine
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} start x
-         * @param {Number} start y
-         * @param {Number} end x
-         * @param {Number} end y
+         * @param {Number} startX start x position
+         * @param {Number} startY start y position
+         * @param {Number} endX end x position
+         * @param {Number} endY end y position
          * @param {String} color to draw the line
          * @param {Number} line width
          */
@@ -177,18 +177,18 @@
          * @name drawImage
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {image} an html image element
-         * @param {Number} offsetX value, from the source image.
-         * @param {Number} offsetY value, from the source image.
-         * @param {Number} imageWidth the width of the image to be drawn
-         * @param {Number} imageHeight the height of the image to be drawn
-         * @param {Number} destX the x position to draw the image at on the screen
-         * @param {Number} destY the y position to draw the image at on the screen
-         * @param {Number} destW the width value to draw the image at on the screen
-         * @param {Number} destH the height value to draw the image at on the screen
+         * @param {image} image html image element
+         * @param {Number} sx value, from the source image.
+         * @param {Number} sy value, from the source image.
+         * @param {Number} sw the width of the image to be drawn
+         * @param {Number} sh the height of the image to be drawn
+         * @param {Number} dx the x position to draw the image at on the screen
+         * @param {Number} dy the y position to draw the image at on the screen
+         * @param {Number} dw the width value to draw the image at on the screen
+         * @param {Number} dh the height value to draw the image at on the screen
          */
-        api.drawImage = function (image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH) {
-            backBufferContext2D.drawImage(image, offsetX, offsetY, imageWidth, imageHeight, destX, destY, destW, destH);
+        api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+            backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
         };
 
         /**
@@ -458,8 +458,8 @@
          * @name strokePolyShape
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.PolyShape} the shape to draw
-         * @param {String} a color in css format.
+         * @param {me.PolyShape} polyShape the shape to draw
+         * @param {String} color a color in css format.
          */
         api.strokePolyShape = function (poly, color) {
             this.translate(-poly.pos.x, -poly.pos.y);
@@ -495,6 +495,12 @@
         /**
          * transforms the context. Accepts any number of integer arguments
          * @name transform
+         * @param {Number} a the m1,1 (m11) value in the matrix
+         * @param {Number} b the m1,2 (m12) value in the matrix
+         * @param {Number} c the m2,1 (m21) value in the matrix
+         * @param {Number} d the m2,2 (m12) value in the matrix
+         * @param {Number} e The delta x (dx) value in the matrix
+         * @param {Number} f The delta x (dy) value in the matrix
          * @memberOf me.CanvasRenderer
          * @function
          */
