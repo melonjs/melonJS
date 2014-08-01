@@ -53,6 +53,11 @@ var navigationMaster = {
 		link    : indexUrl,
 		members : []
 	},
+  external : {
+    title   : "Externals",
+    link    : helper.getUniqueFilename( "externals.list" ),
+    members : []
+  },
 	namespace : {
 		title   : "Namespaces",
 		link    : helper.getUniqueFilename( "namespaces.list" ),
@@ -84,17 +89,11 @@ var navigationMaster = {
 		link    : helper.getUniqueFilename( "tutorials.list" ),
 		members : []
 	},
-	global   : {
-		title   : "Global",
-		link    : globalUrl,
-		members : []
-
-	},
-	external : {
-		title   : "Externals",
-		link    : helper.getUniqueFilename( "externals.list" ),
-		members : []
-	}
+  global   : {
+    title   : "Global",
+    link    : globalUrl,
+    members : []
+  }
 };
 
 function find( spec ) {

@@ -61,7 +61,7 @@ $.fn.toc = function(options) {
       var a = $('<a/>')
         .text(opts.headerText(i, heading, $h))
         .attr('href', '#' + opts.anchorName(i, heading, opts.prefix))
-        .bind('click', function(e) { 
+        .bind('click', function(e) {
           scrollTo(e);
           el.trigger('selected', $(this).attr('href'));
         });
@@ -89,7 +89,14 @@ jQuery.fn.toc.defaults = {
     return prefix+i;
   },
   headerText: function(i, heading, $heading) {
-    return $heading.text();
+    if (heading.tagName.toLowerCase() === 'h4') {
+      var temp = $heading.clone().find('.type-signature');
+      temp.text("");
+      var text = temp.parent().text();
+    } else {
+      var text = $heading.text();
+    }
+    return text;
   },
   itemClass: function(i, heading, $heading, prefix) {
     return prefix + '-' + $heading[0].tagName.toLowerCase();
