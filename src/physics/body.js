@@ -509,7 +509,7 @@
 
             // Adjust position only on collidable object
             var collision;
-            if (this.collisionMask !== 0) { // add a collision filter  ?
+            if (this.collisionMask & me.collision.types.WORLD_SHAPE) {
 
                 // calculate the body absolute position
                 this.pos.setV(this.entity.pos).add(this.offset);
