@@ -368,8 +368,8 @@
         api.shouldCollide = function (a, b) {
             return (
                 a.body && b.body &&
-                (a.body.collisionMask & b.body.type) !== 0 &&
-                (a.body.type & b.body.collisionMask) !== 0
+                (a.body.collisionMask & b.body.collisionType) !== 0 &&
+                (a.body.collisionType & b.body.collisionMask) !== 0
             );
         };
         
@@ -394,7 +394,7 @@
          * };
          *
          * collideHandler : function (response) {
-         *     if (response.b.body.type === me.collision.types.ENEMY_OBJECT) {
+         *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
          *         this.pos.sub(response.overlapV);
          *         this.hurt();
          *     } else {
@@ -447,7 +447,7 @@
                                     if (response) {
                                         response.x = response.overlapV.x;
                                         response.y = response.overlapV.y;
-                                        response.type = response.b.body.type;
+                                        response.type = response.b.body.collisionType;
                                         response.obj = response.b;
                                     }
                                     

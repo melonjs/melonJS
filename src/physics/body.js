@@ -65,8 +65,8 @@
             
             
             /**
-             * The body collision mask
-             * by default will collide with all entities
+             * The body collision mask, that defines what should collide with what.<br>
+             * (by default will collide with all entities)
              * @ignore
              * @type Number
              * @name collisionMask
@@ -76,15 +76,15 @@
             this.collisionMask = me.collision.types.ALL_OBJECT;
             
             /**
-             * define the type of the body for collision filtering<br>
+             * define the collision type of the body for collision filtering<br>
              * (set to 0 to disable collision for this object).
              * @public
              * @type Number
-             * @name type
+             * @name collisionType
              * @see me.collision.types
              * @memberOf me.Body
              */
-            this.type = 1;
+            this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
              * entity current velocity<br>

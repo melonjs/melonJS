@@ -191,12 +191,11 @@
             }
             
             // set the  collision mask if defined
-            if (typeof(settings.type) !== "undefined") {
-                if (typeof me.collision.types[settings.type] !== "undefined") {
-                    this.body.type = me.collision.types[settings.type];
+            if (typeof(settings.collisionType) !== "undefined") {
+                if (typeof me.collision.types[settings.collisionType] !== "undefined") {
+                    this.body.collisionType = me.collision.types[settings.collisionType];
                 } else {
-                    throw new me.Entity.Error("Invalid value for the type property");
-
+                    throw new me.Entity.Error("Invalid value for the collisionType property");
                 }
             }
             
@@ -410,7 +409,7 @@
         init : function (x, y, settings) {
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
-            this.body.type = me.collision.types.COLLECTABLE_OBJECT;
+            this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
         }
     });
 
@@ -454,7 +453,7 @@
             // set our collision callback function
             this.body.onCollision = this.onCollision.bind(this);
             
-            this.body.type = me.collision.types.ACTION_OBJECT;
+            this.body.collisionType = me.collision.types.ACTION_OBJECT;
         },
 
         /**

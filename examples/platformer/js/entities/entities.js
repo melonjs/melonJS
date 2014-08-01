@@ -51,6 +51,7 @@ game.PlayerEntity = me.Entity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
+
     },
     
     /* -----
@@ -113,7 +114,7 @@ game.PlayerEntity = me.Entity.extend({
      * colision handler
      */
     collideHandler : function (response) {
-        switch (response.b.body.type) {
+        switch (response.b.body.collisionType) {
                 case me.collision.types.ENEMY_OBJECT : {
                     if (!response.b.isMovingEnemy) {
                         // spike or any other fixed danger
@@ -183,7 +184,7 @@ game.CoinEntity = me.CollectableEntity.extend({
         game.data.score += 250;
         
         //avoid further collision and delete it
-        this.body.type = me.collision.types.NO_OBJECT;
+        this.body.collisionType = me.collision.types.NO_OBJECT;
         
         me.game.world.removeChild(this);
     }
@@ -224,7 +225,7 @@ game.PathEnemyEntity = me.Entity.extend({
         this.body.setVelocity(settings.velX || 1, settings.velY || 6);
         
         // set a "enemyObject" type
-        this.type = me.collision.types.ENEMY_OBJECT;
+        this.collisionType = me.collision.types.ENEMY_OBJECT;
                 
         // don't update the entities when out of the viewport
         this.alwaysUpdate = false;
@@ -272,7 +273,7 @@ game.PathEnemyEntity = me.Entity.extend({
             // make it dead
             this.alive = false;
             //avoid further collision and delete it
-            this.body.type = me.collision.types.NO_OBJECT;
+            this.body.collisionType = me.collision.types.NO_OBJECT;
             // set dead animation
             this.renderable.setCurrentAnimation("dead");
             // make it flicker and call destroy once timer finished

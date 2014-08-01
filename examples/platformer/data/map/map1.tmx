@@ -51,26 +51,10 @@
     <property name="spritewidth" value="72"/>
    </properties>
   </object>
-  <object name="me.Entity" gid="19" x="945" y="595">
-   <properties>
-    <property name="type" value="ENEMY_OBJECT"/>
-   </properties>
-  </object>
-  <object name="me.Entity" gid="20" x="980" y="595">
-   <properties>
-    <property name="type" value="ENEMY_OBJECT"/>
-   </properties>
-  </object>
-  <object name="me.Entity" gid="20" x="840" y="595">
-   <properties>
-    <property name="type" value="ENEMY_OBJECT"/>
-   </properties>
-  </object>
-  <object name="me.Entity" gid="19" x="805" y="595">
-   <properties>
-    <property name="type" value="ENEMY_OBJECT"/>
-   </properties>
-  </object>
+  <object name="me.Entity" gid="19" x="945" y="595"/>
+  <object name="me.Entity" gid="20" x="980" y="595"/>
+  <object name="me.Entity" gid="20" x="840" y="595"/>
+  <object name="me.Entity" gid="19" x="805" y="595"/>
   <object name="me.LevelEntity" x="1715" y="245" width="35" height="210">
    <properties>
     <property name="duration" value="150"/>

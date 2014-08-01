@@ -48,7 +48,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "type":"ENEMY_OBJECT"
+
                     },
                  "type":"",
                  "visible":true,
@@ -62,7 +62,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "type":"ENEMY_OBJECT"
+
                     },
                  "type":"",
                  "visible":true,
@@ -76,7 +76,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "type":"ENEMY_OBJECT"
+
                     },
                  "type":"",
                  "visible":true,
@@ -90,7 +90,7 @@
                  "name":"me.Entity",
                  "properties":
                     {
-                     "type":"ENEMY_OBJECT"
+
                     },
                  "type":"",
                  "visible":true,
