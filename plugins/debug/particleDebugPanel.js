@@ -109,19 +109,19 @@
 
             // patch me.ParticleEmitter.init
             me.plugin.patch(me.ParticleEmitter, 'init', function(x, y, image) {
-                this.parent(x, y, image);   
+                this._patched(x, y, image);   
                 _this.emitterCount++;
             });
 
             // patch me.ParticleEmitter.destroy
             me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
-                this.parent();
+                this._patched();
                 _this.emitterCount--;
             });
 
             // patch me.Particle.init
             me.plugin.patch(me.Particle, 'init', function(emitter) {
-                this.parent(emitter);   
+                this._patched(emitter);   
                 _this.particleCount++;
             });
 
@@ -133,7 +133,7 @@
             // patch me.game.update
             me.plugin.patch(me.game, 'update', function(time) {
                 var startTime = now();
-                this.parent(time);  
+                this._patched(time);  
                 // calculate the update time
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
@@ -141,7 +141,7 @@
             // patch me.game.draw
             me.plugin.patch(me.game, 'draw', function() {
                 var startTime = now();
-                this.parent();
+                this._patched();
                 // calculate the drawing time
                 _this.frameDrawTimeSamples.push(now() - startTime);
             });
@@ -149,7 +149,7 @@
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, 'update', function(time) {
                 var startTime = now();
-                var value = this.parent(time);  
+                var value = this._patched(time);  
                 // calculate the update time
                 _this.updateTime += now() - startTime;
                 return value;
@@ -158,7 +158,7 @@
             // patch me.ParticleContainer.draw
             me.plugin.patch(me.ParticleContainer, 'draw', function(context, rect) {
                 var startTime = now();
-                this.parent(context, rect);
+                this._patched(context, rect);
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });
