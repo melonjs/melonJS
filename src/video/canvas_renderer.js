@@ -46,7 +46,7 @@
 
         api.applyRGBFilter = function (object, effect, option) {
             //create a output canvas using the given canvas or image size
-            var _context = api.getContext(me.video.createCanvas(object.width, object.height, false));
+            var _context = api.getContext2d(me.video.createCanvas(object.width, object.height, false));
             // get the pixels array of the give parameter
             var imgpix = me.utils.getPixels(object);
             // pointer to the pixels data
