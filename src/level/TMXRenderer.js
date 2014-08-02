@@ -41,8 +41,26 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
-            return new me.Vector2d(x / this.tilewidth,
-                                   y / this.tileheight);
+            return new me.Vector2d(this.pixelToTileX(x),
+                                   this.pixelToTileY(y));
+        },
+
+
+        /**
+         * return the tile position corresponding for the given X coordinate
+         * @ignore
+         */
+        pixelToTileX : function (x) {
+            return ~~(x / this.tilewidth);
+        },
+
+
+        /**
+         * return the tile position corresponding for the given Y coordinates
+         * @ignore
+         */
+        pixelToTileY : function (y) {
+            return ~~(y / this.tileheight);
         },
 
         /**
@@ -146,12 +164,26 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
-            x -=  this.originX;
+            return new me.Vector2d(this.pixelToTileX(x, y),
+                                   this.pixelToTileY(y, x));
+        },
 
-            var tileY = y / this.tileheight;
-            var tileX = x / this.tilewidth;
 
-            return new me.Vector2d(tileY + tileX, tileY - tileX);
+        /**
+         * return the tile position corresponding for the given X coordinate
+         * @ignore
+         */
+        pixelToTileX : function (x, y) {
+            return (y / this.tileheight) + ((x - this.originX) / this.tilewidth);
+        },
+
+
+        /**
+         * return the tile position corresponding for the given Y coordinates
+         * @ignore
+         */
+        pixelToTileY : function (y, x) {
+            return (y / this.tileheight) - ((x - this.originX) / this.tilewidth);
         },
 
         /**

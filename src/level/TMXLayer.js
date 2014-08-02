@@ -493,7 +493,7 @@
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
-            return this.layerData[~~(x / this.tilewidth)][~~(y / this.tileheight)];
+            return this.layerData[this.renderer.pixelToTileX(x, y)][this.renderer.pixelToTileY(y, x)];
         },
 
         /**
