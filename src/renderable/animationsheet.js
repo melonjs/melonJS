@@ -85,7 +85,6 @@
 
             // call the constructor
             this._super(me.Sprite, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
-
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
@@ -118,6 +117,12 @@
                 // regular spritesheet
                 this.textureAtlas = [];
                 // calculate the sprite count (line, col)
+
+                if ((image.width - this.margin) % (this.width + this.spacing) !== 0 ||
+                    (image.height - this.margin) % (this.height + this.spacing) !== 0) {
+                    throw "Animation sheet for image: " + image.src + " is not divisible by " + (this.width + this.spacing) + "x" + (this.height + this.spacing);
+                }
+
                 var spritecount = new me.Vector2d(
                     ~~((image.width - this.margin) / (this.width + this.spacing)),
                     ~~((image.height - this.margin) / (this.height + this.spacing))
