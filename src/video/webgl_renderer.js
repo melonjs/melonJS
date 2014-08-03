@@ -16,14 +16,13 @@
     me.WebGLRenderer = (function () {
         var api = {},
         canvas = null,
-        WebGLContext = null,
         gl = null,
-        color = null;
+        color = null,
+        textures = {};
 
         api.init = function (width, height, c) {
             canvas = c;
-            WebGLContext = require("kami").WebGLContext;
-            this.context = new WebGLContext(width, height, canvas);
+            this.context = new kami.WebGLContext(width, height, canvas);
             gl = this.context.gl;
             color = new me.Color();
             this.globalAlpha = 1.0;
@@ -58,6 +57,29 @@
         };
 
         /**
+         * Draw an image to the gl context
+         * @name drawImage
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {image} image html image element
+         * @param {Number} sx value, from the source image.
+         * @param {Number} sy value, from the source image.
+         * @param {Number} sw the width of the image to be drawn
+         * @param {Number} sh the height of the image to be drawn
+         * @param {Number} dx the x position to draw the image at on the screen
+         * @param {Number} dy the y position to draw the image at on the screen
+         * @param {Number} dw the width value to draw the image at on the screen
+         * @param {Number} dh the height value to draw the image at on the screen
+         */
+        api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+            if (typeof textures[image.src] === "undefined") {
+                textures[image.src] = new kami.Texture(this.context, image.src);
+                textures[image.src].setFilter(kami.Texture.Filter.LINEAR);
+            }
+            this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+        };
+
+        /**
          * return a reference to the screen canvas
          * @name getScreenCanvas
          * @memberOf me.WebGLRenderer
@@ -79,17 +101,6 @@
             return gl;
         };
 
-        /**
-         * Returns the WebGLContext instance for the renderer
-         * @name getContext
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {WebGLRenderer}
-         */
-        api.getContext = function () {
-            return gl;
-        };
-
         api.getHeight = function () {
             return this.context.height;
         };
@@ -106,7 +117,7 @@
         };
 
         /**
-         * return a reference to the system 2d Context
+         * Returns the WebGLContext instance for the renderer
          * @name getSystemContext
          * @memberOf me.WebGLRenderer
          * @function
