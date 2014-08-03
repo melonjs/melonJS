@@ -1,10 +1,11 @@
 {
     "plugins": [],
     "templates": {
+        "systemName": "melonJS",
+        "copyright": "Copyright &copy; 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod",
         "cleverLinks": false,
         "monospaceLinks": false,
-        "default": {
-            "outputSourceFiles": false
-        }
+        "outputSourcePath": true,
+        "outputSourceFiles": false
     }
 }
