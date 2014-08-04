@@ -75,6 +75,7 @@
             if (typeof textures[image.src] === "undefined") {
                 var texture = new kami.Texture(this.context);
                 texture.setFilter(kami.Texture.Filter.LINEAR);
+                texutre.create();
                 texture.uploadImage(image);
             }
             this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
