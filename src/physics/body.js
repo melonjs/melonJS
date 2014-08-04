@@ -77,12 +77,15 @@
             
             /**
              * define the collision type of the body for collision filtering<br>
-             * (set to 0 to disable collision for this object).
+             * (set to `NO_OBJECT` to disable collision for this object).
              * @public
              * @type Number
              * @name collisionType
              * @see me.collision.types
              * @memberOf me.Body
+             * @example
+             * // set the entity body collision type
+             * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
              */
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
@@ -296,8 +299,8 @@
          * @see me.collision.types
          * @param {Number} bitmask the collision mask
          * @example
-         * // filter collision detection with enemies and collectables
-         * myEntity.body.setCollisionMask(me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         * // filter collision detection with collision shapes, enemies and collectables
+         * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
          */
         setCollisionMask : function (bitmask) {
             this.collisionMask = bitmask;
