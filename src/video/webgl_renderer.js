@@ -73,8 +73,9 @@
          */
         api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (typeof textures[image.src] === "undefined") {
-                textures[image.src] = new kami.Texture(this.context, image.src);
-                textures[image.src].setFilter(kami.Texture.Filter.LINEAR);
+                var texture = new kami.Texture(this.context);
+                texture.setFilter(kami.Texture.Filter.LINEAR);
+                texture.uploadImage(image);
             }
             this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
         };
