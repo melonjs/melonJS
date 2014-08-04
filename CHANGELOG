@@ -19,6 +19,7 @@ Version History
 * Entity : entity object redesign with a full polygon shape based physic body implementation
 * Entity : `me.ObjectEntity` has been renamed to `me.Entity` to avoid confusion between the old and new entity component.
 * Audio : fixed some audio load issues and error callbacks
+* Audio : sync'ed with last Howler 1.1.25 version (fixes numerous issues, see official changelog for more details)
 * TMX : fixed the background color drawing when the level is smaller than the display canvas
 * TMX : fixed the getTile function returning wrong tiles when using isometric maps
 
