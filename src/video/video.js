@@ -36,6 +36,7 @@
         /**
          * Base class for Video exception handling.
          * @class
+         * @ignore
          * @constructor
          * @name video.Error
          * @memberOf me

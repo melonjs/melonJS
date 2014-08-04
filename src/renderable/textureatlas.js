@@ -261,6 +261,7 @@
     /**
      * Base class for TextureAtlas exception handling.
      * @name TextureAtlas.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor

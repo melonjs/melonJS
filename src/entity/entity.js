@@ -496,6 +496,7 @@
     /**
      * Base class for Entity exception handling.
      * @name Entity.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor

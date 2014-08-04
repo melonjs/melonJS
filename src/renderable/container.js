@@ -739,6 +739,7 @@
     /**
      * Base class for ObjectContainer exception handling.
      * @name Container.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor

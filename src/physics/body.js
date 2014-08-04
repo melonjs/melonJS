@@ -636,6 +636,7 @@
     
     /**
      * Base class for Body exception handling.
+     * @ignore
      * @name Body.Error
      * @class
      * @memberOf me

@@ -197,6 +197,7 @@
     /**
      * Base class for Renderable exception handling.
      * @name Renderable.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor
