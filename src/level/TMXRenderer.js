@@ -38,6 +38,7 @@
 
         /**
          * return the tile position corresponding to the specified pixel
+         * to avoid memory leaks, be sure to me.pool.push the return value of this function when you are done with it
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
@@ -48,6 +49,7 @@
 
         /**
          * return the pixel position corresponding of the specified tile
+         * to avoid memory leaks, be sure to me.pool.push the return value of this function when you are done with it
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
@@ -148,6 +150,7 @@
 
         /**
          * return the tile position corresponding to the specified pixel
+         * to avoid memory leaks, be sure to me.pool.push the return value of this function when you are done with it
          * @ignore
          */
         pixelToTileCoords : function (x, y) {
@@ -161,6 +164,7 @@
 
         /**
          * return the pixel position corresponding of the specified tile
+         * to avoid memory leaks, be sure to me.pool.push the return value of this function when you are done with it
          * @ignore
          */
         tileToPixelCoords : function (x, y) {
@@ -297,4 +301,4 @@
 			me.pool.push(startPos);
         }
     });
-})();
+})()
