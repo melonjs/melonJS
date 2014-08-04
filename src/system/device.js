@@ -372,7 +372,7 @@
          */
         api.requestFullscreen = function (element) {
             if (this.hasFullscreenSupport) {
-                element = element || me.video.renderer.getWrapper();
+                element = element || me.video.getWrapper();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
                                             element.mozRequestFullScreen;
 
