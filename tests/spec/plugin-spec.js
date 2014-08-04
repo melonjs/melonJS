@@ -11,7 +11,7 @@ describe("me.plugin", function () {
         });
 
         me.plugin.patch(BaseObject, "setType", function (t) {
-            this.parent(t);
+            this._patched(t);
             this.name = "John Smith";
         });
 
