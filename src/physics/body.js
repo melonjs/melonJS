@@ -53,12 +53,11 @@
             
             /**
              * onCollision callback<br>
-             * called by the game manager when the object body collide with shtg<br>
+             * triggered in case of collision, when this entity body is being "touched" by another one<br>
              * @name onCollision
              * @memberOf me.Body
              * @function
-             * @param {me.Vector2d} res collision vector
-             * @param {me.Entity} obj the other entity object that hit this object
+             * @param {me.collision.ResponseObject} response the collision response object
              * @protected
              */
             this.onCollision = undefined;
