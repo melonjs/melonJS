@@ -184,7 +184,7 @@
          * @name draw
          * @memberOf me.Font
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer} reference to me.CanvasRenderer
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
@@ -194,6 +194,20 @@
             // over depending on the canvas API each draw call.
             var context = renderer.getSystemContext();
             // update initial position
+            this.drawFromContext(context, text, x, y);
+        },
+
+        /**
+         * draws the text from a canvas context.
+         * @name drawFromContext
+         * @memberOf me.Font
+         * @function
+         * @param {Context2d} context - instance of context2d for drawing.
+         * @param {String} text
+         * @param {Number} x
+         * @param {Number} y
+         */
+        drawFromContext : function (context, text, x, y) {
             this.pos.set(x, y);
             // draw the text
             context.font = this.font;

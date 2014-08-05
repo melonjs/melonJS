@@ -75,7 +75,7 @@
             if (typeof textures[image.src] === "undefined") {
                 var texture = new kami.Texture(this.context);
                 texture.setFilter(kami.Texture.Filter.LINEAR);
-                texutre.create();
+                texture.create();
                 texture.uploadImage(image);
             }
             this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
@@ -144,6 +144,22 @@
             return this.globalAlpha;
         };
 
+        /**
+         * resets the gl transform to identity
+         * @name resetTransform
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.resetTransform = function () {
+            // gl.setTransform(1, 0, 0, 1, 0, 0);
+        };
+
+        /**
+         * resizes the canvas & GL Context
+         * @name resize
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
         api.resize = function (scaleX, scaleY) {
             canvas = this.context.view;
             var gameWidthZoom = canvas.width * scaleX;
