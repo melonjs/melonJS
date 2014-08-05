@@ -177,7 +177,7 @@
                 // add leading space
                 y += fontSize.y * lineHeight;
             }
-        }
+        };
 
         /**
          * Draw a line from the given point to the destination point.

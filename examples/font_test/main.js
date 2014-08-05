@@ -174,7 +174,7 @@ var FontTest = me.Renderable.extend ({
         for (var i = 0; i < baselines.length; i++) {
             var text = baselines[i].toUpperCase();
             this.bFont.textBaseline = baselines[i];
-            this.bFont.draw(rendererg, text, x_pos, baseline);
+            this.bFont.draw(renderer, text, x_pos, baseline);
             x_pos+=this.bFont.measureText(context, text + "@@@").width + 8;
         }
         
