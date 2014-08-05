@@ -192,9 +192,8 @@
         draw : function (renderer, text, x, y) {
             // TODO: Likely draw the text to an off canvas and cache an image
             // over depending on the canvas API each draw call.
-            var context = renderer.getSystemContext();
-            // update initial position
-            this.drawFromContext(context, text, x, y);
+            this.pos.set(x, y);
+            renderer.drawFont(this.font, this.fontSize, this.fillStyle, this.textAlign, this.textBaseline, this.lineHeight, text, x, y);
         },
 
         /**
@@ -208,7 +207,6 @@
          * @param {Number} y
          */
         drawFromContext : function (context, text, x, y) {
-            this.pos.set(x, y);
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;

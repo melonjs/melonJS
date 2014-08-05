@@ -150,6 +150,36 @@
         };
 
         /**
+         * draws font to the backbuffer canvas.
+         * @name drawFont
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {String} font - the font family
+         * @param {Number} fontSize - the font size in pixels.
+         * @param {String} fillStyle - the fill style of the font.
+         * @param {String} textAlign - horizontal alignment. Possible values: "left", "right", "center"
+         * @param {String} textBaseline - the baseline to draw from based on the Y coord. Possible values: "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"
+         * @param {Number} lineHeight - the line height of the string when drawing multiline strings.
+         * @param {String} text - the string of text to draw
+         * @param {Number} x - the x position to draw at
+         * @param {Number} y - the y position to draw at
+         */
+        api.drawFont = function (font, fontSize, fillStyle, textAlign, textBaseline, lineHeight, text, x, y) {
+            backBufferContext2D.font = font;
+            backBufferContext2D.fillStyle = fillStyle;
+            backBufferContext2D.textAlign = textAlign;
+            backBufferContext2D.textBaseline = textBaseline;
+
+            var strings = ("" + text).split("\n");
+            for (var i = 0; i < strings.length; i++) {
+                // draw the string
+                backBufferContext2D.fillText(strings[i].trimRight(), ~~x, ~~y);
+                // add leading space
+                y += fontSize.y * lineHeight;
+            }
+        }
+
+        /**
          * Draw a line from the given point to the destination point.
          * @name drawLine
          * @memberOf me.CanvasRenderer
