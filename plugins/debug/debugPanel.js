@@ -59,7 +59,7 @@
 
             // frame draw time in ms
             this.frameDrawTime = 0;
-		
+
             this.rect = new me.Rect(0, 0, me.video.renderer.getWidth(), DEBUG_HEIGHT);
 
             // set the object GUID value
@@ -260,7 +260,8 @@
         show : function() {
             if (!this.visible) {
                 // register a mouse event for the checkboxes
-                me.input.registerPointerEvent('pointerdown', this.rect, this.onClick.bind(this), true);
+                // me.input.registerPointerEvent('pointerdown', this.rect, this.onClick.bind(this), true);
+                this.canvas.addEventListener('click', this.onClick.bind(this));
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible
@@ -274,7 +275,8 @@
         hide : function() {
             if (this.visible) {
                 // release the mouse event for the checkboxes
-                me.input.releasePointerEvent('pointerdown', this.rect);
+                // me.input.releasePointerEvent('pointerdown', this.rect);
+                this.canvas.removeEventListener('click', this.onClick.bind(this));
                 // remove the debug panel from the game world
                 me.game.world.removeChild(this);
                 // mark it as invisible
@@ -304,10 +306,10 @@
         /** @private */
         onClick : function(e)  {
             // check the clickable areas
-            if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
+            if (this.area.renderHitBox.containsPoint(e.clientX, e.clientY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
             }
-            else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
+            else if (this.area.renderCollisionMap.containsPoint(e.clientX, e.clientY)) {
                 var layer = me.game.currentLevel.getLayerByName("collision");
                 if (layer) {
                     if (layer.getOpacity() === 0) {
@@ -319,12 +321,12 @@
                     }
                 }
             } 
-            else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            else if (this.area.renderVelocity.containsPoint(e.clientX, e.clientY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
             } 
-            else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+            else if (this.area.renderQuadTree.containsPoint(e.clientX, e.clientY)) {
                 me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
