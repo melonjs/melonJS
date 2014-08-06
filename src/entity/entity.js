@@ -73,14 +73,15 @@
          * @memberOf me.ObjectSettings
          */
         type : 0,
-
+        
         /**
-         * Enable collision detection for this object<br>
-         * @public
-         * @property {Boolean=} collidable
-         * @memberOf me.ObjectSettings
-         */
-        collidable : true
+		 * Mask collision detection for this object<br>
+		 * OPTIONAL
+		 * @public
+		 * @type Number
+		 * @name me.ObjectSettings#collisionMask
+		 */
+		collisionMask : 0xFFFFFFFF
     };
 
     /*
@@ -106,16 +107,7 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            /**
-             * define the type of the object<br>
-             * default value : none<br>
-             * @public
-             * @type String
-             * @name type
-             * @memberOf me.Entity
-             */
-            this.type = settings ? settings.type || 0 : 0;
-
+        
             /**
              * The entity renderable object (if defined)
              * @public
@@ -150,17 +142,7 @@
                     this.renderable.setTransparency(settings.transparent_color);
                 }
             }
-
-            /**
-             * flag to enable collision detection for this object<br>
-             * default value : true<br>
-             * @public
-             * @type Boolean
-             * @name collidable
-             * @memberOf me.Entity
-             */
-            this.collidable = true;
-            
+           
             /**
              * Entity name<br>
              * as defined in the Tiled Object Properties
@@ -181,16 +163,9 @@
              */
             this.alive = true;
         
-            
             // just to keep track of when we flip
             this.lastflipX = false;
             this.lastflipY = false;
-            
-            // to enable collision detection
-            this.collidable = (
-                typeof(settings.collidable) !== "undefined" ?
-                settings.collidable : true
-            );
             
             /**
              * the entity body object
@@ -209,7 +184,21 @@
                 // else make the body bounds match the entity ones
                 this.body.updateBounds(this);
             }
-
+            
+            // set the  collision mask if defined
+            if (typeof(settings.collisionMask) !== "undefined") {
+                this.body.setCollisionMask(settings.collisionMask);
+            }
+            
+            // set the  collision mask if defined
+            if (typeof(settings.collisionType) !== "undefined") {
+                if (typeof me.collision.types[settings.collisionType] !== "undefined") {
+                    this.body.collisionType = me.collision.types[settings.collisionType];
+                } else {
+                    throw new me.Entity.Error("Invalid value for the collisionType property");
+                }
+            }
+            
         },
 
        /**
@@ -420,7 +409,7 @@
         init : function (x, y, settings) {
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
-            this.type = me.game.COLLECTABLE_OBJECT;
+            this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
         }
     });
 
@@ -463,6 +452,8 @@
             
             // set our collision callback function
             this.body.onCollision = this.onCollision.bind(this);
+            
+            this.body.collisionType = me.collision.types.ACTION_OBJECT;
         },
 
         /**
@@ -505,6 +496,7 @@
     /**
      * Base class for Entity exception handling.
      * @name Entity.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor

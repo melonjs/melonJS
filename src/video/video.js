@@ -17,7 +17,6 @@
 
         // internal variables
         var canvas = null;
-        var renderer = null;
         var wrapper = null;
 
         var deferResizeId = -1;
@@ -37,6 +36,7 @@
         /**
          * Base class for Video exception handling.
          * @class
+         * @ignore
          * @constructor
          * @name video.Error
          * @memberOf me
@@ -144,11 +144,11 @@
 
             switch (rendererType) {
                 case me.video.WEBGL:
-                    renderer = me.WebGLRenderer.init(canvas.width, canvas.height, canvas);
+                    this.renderer = me.WebGLRenderer.init(canvas.width, canvas.height, canvas);
                     break;
                 default: // case me.video.CANVAS:. TODO: have default be AUTO detect
                     // get the 2D context
-                    renderer = me.CanvasRenderer.init(canvas, double_buffering);
+                    this.renderer = me.CanvasRenderer.init(canvas, double_buffering);
                     break;
             }
 
@@ -174,40 +174,6 @@
         };
 
         /**
-         * Blits the context 2d surface after drawing. Only applies to canvas renderer
-         * @name blitSurface
-         * @memberOf me.video
-         * @function
-         */
-        api.blitSurface = function () {
-            if (typeof renderer.blitSurface === "function") {
-                renderer.blitSurface();
-            }
-        };
-
-        /**
-         * return a reference to the wrapper
-         * @name getWrapper
-         * @memberOf me.video
-         * @function
-         * @return {Document}
-         */
-        api.getWrapper = function () {
-            return wrapper;
-        };
-
-        /**
-         * return the width of the display canvas (before scaling)
-         * @name getWidth
-         * @memberOf me.video
-         * @function
-         * @return {Number}
-         */
-        api.getWidth = function () {
-            return renderer.getWidth();
-        };
-
-        /**
          * return the relative (to the page) position of the specified Canvas
          * @name getPos
          * @memberOf me.video
@@ -216,22 +182,11 @@
          * @return {me.Vector2d}
          */
         api.getPos = function (c) {
-            c = c || this.getScreenCanvas();
+            c = c || this.renderer.getScreenCanvas();
             return (
                 c.getBoundingClientRect ?
                 c.getBoundingClientRect() : { left : 0, top : 0 }
             );
-        };
-
-        /**
-         * return the height of the display canvas (before scaling)
-         * @name getHeight
-         * @memberOf me.video
-         * @function
-         * @return {Number}
-         */
-        api.getHeight = function () {
-            return renderer.getHeight();
         };
 
         /**
@@ -278,63 +233,14 @@
         };
 
         /**
-         * Returns the renderer object, either the CanvasRenderer or WebGLRenderer
-         * @name getRenderer
-         * @memberOf me.video
-         * @return {Renderer}
-         */
-        api.getRenderer = function () {
-            return renderer;
-        };
-
-        /**
-         * return a reference to the screen canvas <br>
-         * (will return buffered canvas if double buffering is enabled, or a reference to Screen Canvas) <br>
-         * use this when checking for display size, event <br>
-         * or if you need to apply any special "effect" to <br>
-         * the corresponding context (ie. imageSmoothingEnabled)
-         * @name getScreenCanvas
+         * return a reference to the wrapper
+         * @name getWrapper
          * @memberOf me.video
          * @function
-         * @return {Canvas}
+         * @return {Document}
          */
-        api.getScreenCanvas = function () {
-            return renderer.getScreenCanvas();
-        };
-
-        /**
-         * return a reference to the screen canvas corresponding 2d or WebGL Context<br>
-         * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
-         * @name getScreenContext
-         * @memberOf me.video
-         * @function
-         * @return {RendererContext}
-         */
-        api.getScreenContext = function () {
-            return renderer.getScreenContext();
-        };
-
-        /**
-         * return a reference to the system canvas for the current renderer
-         * @name getSystemCanvas
-         * @memberOf me.video
-         * @function
-         * @return {Canvas}
-         */
-        api.getSystemCanvas = function () {
-            return renderer.getSystemCanvas();
-        };
-
-        /**
-         * return a reference to the system Context for the current renderer
-         * Returns the GL context if the renderer is webgl.
-         * @name getSystemContext
-         * @memberOf me.video
-         * @function
-         * @return {RendererContext}
-         */
-        api.getSystemContext = function () {
-            return renderer.getSystemContext();
+        api.getWrapper = function () {
+            return wrapper;
         };
 
         /**
@@ -360,25 +266,25 @@
 
             if (auto_scale) {
                 // get the parent container max size
-                var parent = me.video.getScreenCanvas().parentNode;
+                var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
 
                 if (maintainAspectRatio) {
                     // make sure we maintain the original aspect ratio
-                    var designRatio = me.video.getWidth() / me.video.getHeight();
+                    var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                     var screenRatio = _max_width / _max_height;
                     if (screenRatio < designRatio) {
-                        scaleX = scaleY = _max_width / me.video.getWidth();
+                        scaleX = scaleY = _max_width / me.video.renderer.getWidth();
                     }
                     else {
-                        scaleX = scaleY = _max_height / me.video.getHeight();
+                        scaleX = scaleY = _max_height / me.video.renderer.getHeight();
                     }
                 }
                 else {
                     // scale the display canvas to fit with the parent container
-                    scaleX = _max_width / me.video.getWidth();
-                    scaleY = _max_height / me.video.getHeight();
+                    scaleX = _max_width / me.video.renderer.getWidth();
+                    scaleY = _max_height / me.video.renderer.getHeight();
                 }
 
                 // adjust scaling ratio based on the device pixel ratio
@@ -412,23 +318,11 @@
             me.sys.scale.set(scaleX, scaleY);
 
             // renderer resize logic
-            renderer.resize(scaleX, scaleY);
+            this.renderer.resize(scaleX, scaleY);
 
             me.input._offset = me.video.getPos();
             // clear the timeout id
             deferResizeId = -1;
-        };
-
-        /**
-         * Clear the specified context with the given color
-         * @name clearSurface
-         * @memberOf me.video
-         * @function
-         * @param {Context2d} canvas context to clear. Optional, will default to system context.
-         * @param {String} color a CSS color string, hex format. eg: #ff0000
-         */
-        api.clearSurface = function (context, col) {
-            renderer.clearSurface(context, col);
         };
 
         /**
@@ -439,35 +333,9 @@
          * @param {Boolean} enable
          */
         api.setAlpha = function (enable) {
-            if (typeof renderer.setAlpha === "function") {
-                renderer.setAlpha(enable);
+            if (typeof this.renderer.setAlpha === "function") {
+                this.renderer.setAlpha(enable);
             }
-        };
-
-        /**
-         * this currently only works with the Canvas Renderer
-         * apply the specified filter to the main canvas
-         * and return a new canvas object with the modified output<br>
-         * (!) Due to the internal usage of getImageData to manipulate pixels,
-         * this function will throw a Security Exception with FF if used locally
-         * @name applyRGBFilter
-         * @memberOf me.video
-         * @function
-         * @param {Object} object Canvas or Image Object on which to apply the filter
-         * @param {String} effect "b&w", "brightness", "transparent"
-         * @param {String} option For "brightness" effect : level [0...1] <br> For "transparent" effect : color to be replaced in "#RRGGBB" format
-         * @return {Context2d} context object
-         */
-        api.applyRGBFilter = function (object, effect, option) {
-            return renderer.applyRGBFilter(object, effect, option);
-        };
-
-        /**
-         * Setting the private renderer variable
-         * @ignore
-         */
-        api.setRenderer = function (r) {
-            renderer = r;
         };
 
         // return our api

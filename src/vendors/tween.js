@@ -847,6 +847,7 @@
 	/**
 	 * Base class for Tween exception handling.
 	 * @name Tween.Error
+     * @ignore
 	 * @class
 	 * @memberOf me
 	 * @constructor

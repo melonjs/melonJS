@@ -4,6 +4,7 @@ melonJS
 
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
+![melonJS](http://melonjs.org/media/alex4-github.png)
 
 Copyright (C) 2011 - 2014, Olivier Biot, Jason Oster, Aaron McLeod
 
@@ -17,10 +18,13 @@ and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE)
-- Multiple Audio Channel support
-- Basic physics & collision mechanisms (to ensure low cpu requirements)
-- Basic Vector Math
+- Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE) and mobile devices
+- Device motion & accelerometer support
+- High DPI & auto scaling
+- Multi-channel HTML5 audio support and Web Audio on supported devices
+- a lightweight physic implementation to ensure low cpu requirements
+- Polygon (SAT) based collision algorithm for accurate detection and response
+- advanced math API for Vector and Matrix
 - Tween Effects
 - Transition effects
 - A basic set of Object Entities (to be extended)
@@ -37,6 +41,7 @@ and currently features :
     - Multiple Tileset support
     - Tileset Transparency settings
     - Layers Alpha settings
+    - Rectangle, Ellipse, Polygon and Polyline objects support
     - Tiled Objects
     - Flipped & rotated Tiles
     - Dynamic Layer and Object/Group ordering
@@ -47,11 +52,11 @@ and currently features :
 - Built-in support for cocoonJS
 - Asynchronous messaging support (minPubSub)
 - some basic GUI elements
-- a customizable loader, etc...
+- a customizable loader
 
 Using melonJS
 -------------------------------------------------------------------------------
-Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
+Follow the tutorial [here](http://melonjs.github.io/tutorial-platformer/) to get started !
 
 Note that due to the 'cross-origin request' policy implemented in most browsers
 (that prevents from accessing local files), you will need to either disable this

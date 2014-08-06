@@ -53,16 +53,41 @@
             
             /**
              * onCollision callback<br>
-             * called by the game manager when the object body collide with shtg<br>
+             * triggered in case of collision, when this entity body is being "touched" by another one<br>
              * @name onCollision
              * @memberOf me.Body
              * @function
-             * @param {me.Vector2d} res collision vector
-             * @param {me.Entity} obj the other entity object that hit this object
+             * @param {me.collision.ResponseObject} response the collision response object
              * @protected
              */
             this.onCollision = undefined;
             
+            
+            /**
+             * The body collision mask, that defines what should collide with what.<br>
+             * (by default will collide with all entities)
+             * @ignore
+             * @type Number
+             * @name collisionMask
+             * @see me.collision.types
+             * @memberOf me.Body
+             */
+            this.collisionMask = me.collision.types.ALL_OBJECT;
+            
+            /**
+             * define the collision type of the body for collision filtering<br>
+             * (set to `NO_OBJECT` to disable collision for this object).
+             * @public
+             * @type Number
+             * @name collisionType
+             * @see me.collision.types
+             * @memberOf me.Body
+             * @example
+             * // set the entity body collision type
+             * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
+             */
+            this.collisionType = me.collision.types.ENEMY_OBJECT;
+
             /**
              * entity current velocity<br>
              * @public
@@ -263,6 +288,24 @@
         },
         
         /**
+         * By default all entities are able to collide with all the other entities, <br>
+         * but it's also possible to specificy 'collision filters' to provide a finer <br>
+         * control over which entities can collide with each other, using collisionMask.
+         * @name setCollisionMask
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @see me.collision.types
+         * @param {Number} bitmask the collision mask
+         * @example
+         * // filter collision detection with collision shapes, enemies and collectables
+         * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         */
+        setCollisionMask : function (bitmask) {
+            this.collisionMask = bitmask;
+        },
+        
+        /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
          * @protected
@@ -437,7 +480,7 @@
          *     this.vel.x += this.accel.x * me.timer.tick;
          * }
          * // update player position
-         * var res = this.updateMovement();
+         * var res = this.body.update();
          *
          * // check for collision result with the environment
          * if (res.x != 0)
@@ -468,7 +511,7 @@
 
             // Adjust position only on collidable object
             var collision;
-            if (this.entity.collidable) {
+            if (this.collisionMask & me.collision.types.WORLD_SHAPE) {
 
                 // calculate the body absolute position
                 this.pos.setV(this.entity.pos).add(this.offset);
@@ -595,6 +638,7 @@
     
     /**
      * Base class for Body exception handling.
+     * @ignore
      * @name Body.Error
      * @class
      * @memberOf me

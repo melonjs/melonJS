@@ -81,7 +81,7 @@
 
         beforeEach(function () {
             // get a reference to the canvas element
-            canvas = Video.getScreenCanvas();
+            canvas = Video.renderer.getScreenCanvas();
         });
 
         afterEach(function () {

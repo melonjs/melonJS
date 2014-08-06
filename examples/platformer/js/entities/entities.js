@@ -51,6 +51,7 @@ game.PlayerEntity = me.Entity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
+
     },
     
     /* -----
@@ -85,7 +86,7 @@ game.PlayerEntity = me.Entity.extend({
         this.body.update();
         
         // check if we fell into a hole
-        if (!this.inViewport && (this.pos.y > me.video.getHeight())) {
+        if (!this.inViewport && (this.pos.y > me.video.renderer.getHeight())) {
             // if yes reset the game
             me.game.world.removeChild(this);
             me.game.viewport.fadeIn('#fff', 150, function(){
@@ -97,7 +98,7 @@ game.PlayerEntity = me.Entity.extend({
         }
 
         // check for collision with sthg
-        me.collision.check(this, null, true, this.collideHandler.bind(this), true);
+        me.collision.check(this, true, this.collideHandler.bind(this), true);
         
         // check if we moved (a "stand" animation would definitely be cleaner)
         if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
@@ -113,23 +114,22 @@ game.PlayerEntity = me.Entity.extend({
      * colision handler
      */
     collideHandler : function (response) {
-        switch (response.b.type) {    
-                case me.game.ENEMY_OBJECT : {
-                    if ((response.overlapV.y>0) && this.body.falling) {
-                        // jump
+        switch (response.b.body.collisionType) {
+                case me.collision.types.ENEMY_OBJECT : {
+                    if (!response.b.isMovingEnemy) {
+                        // spike or any other fixed danger
                         this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
-                    } else {
-                        // makes the other entity solid by adjusting the player position
-                        this.pos.sub(response.overlapV);
                         this.hurt();
+                    } else {
+                        // a regular moving enemy entity
+                        if ((response.overlapV.y>0) && this.body.falling) {
+                            // jump
+                            this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
+                        } else {
+                             this.pos.sub(response.overlapV);
+                             this.hurt();
+                        }
                     }
-                    break;
-                }
-                
-                case "spikeObject" :{
-                    // jump & die
-                    this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
-                    this.hurt();
                     break;
                 }
                 default : break;
@@ -184,7 +184,8 @@ game.CoinEntity = me.CollectableEntity.extend({
         game.data.score += 250;
         
         //avoid further collision and delete it
-        this.collidable = false;
+        this.body.collisionType = me.collision.types.NO_OBJECT;
+        
         me.game.world.removeChild(this);
     }
 });
@@ -223,15 +224,17 @@ game.PathEnemyEntity = me.Entity.extend({
         // walking & jumping speed
         this.body.setVelocity(settings.velX || 1, settings.velY || 6);
         
-        // make it collidable
-        this.collidable = true;
-        this.type = me.game.ENEMY_OBJECT;
-        
+        // set a "enemyObject" type
+        this.collisionType = me.collision.types.ENEMY_OBJECT;
+                
         // don't update the entities when out of the viewport
         this.alwaysUpdate = false;
         
         // set our collision callback function
         this.body.onCollision = this.onCollision.bind(this);
+        
+        // a specific flag to recognize these enemies
+        this.isMovingEnemy = true;
     },
         
     
@@ -269,8 +272,8 @@ game.PathEnemyEntity = me.Entity.extend({
         if (this.alive && (res.y > 0) && obj.body.falling) {
             // make it dead
             this.alive = false;
-            // and not collidable anymore
-            this.collidable = false;
+            //avoid further collision and delete it
+            this.body.collisionType = me.collision.types.NO_OBJECT;
             // set dead animation
             this.renderable.setCurrentAnimation("dead");
             // make it flicker and call destroy once timer finished

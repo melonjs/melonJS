@@ -39,7 +39,7 @@
 
          // draw function
         draw : function (renderer) {
-            var context = renderer.getContext();
+            var context = renderer.getSystemContext();
             // draw the progress bar
             context.fillStyle = "black";
             context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
@@ -62,7 +62,7 @@
             // translate to destination point
             renderer.translate(this.pos.x, this.pos.y);
 
-            var context = renderer.getContext();
+            var context = renderer.getSystemContext();
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -108,7 +108,7 @@
 
         draw : function (renderer) {
             // measure the logo size
-            var context = renderer.getContext();
+            var context = renderer.getSystemContext();
             var logo1_width = this.logo1.measureText(context, "melon").width;
             var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
             var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
@@ -138,8 +138,8 @@
             // progress bar
             var progressBar = new ProgressBar(
                 new me.Vector2d(),
-                me.video.getWidth(),
-                me.video.getHeight()
+                me.video.renderer.getWidth(),
+                me.video.renderer.getHeight()
             );
             this.handle = me.event.subscribe(
                 me.event.LOADER_PROGRESS,
@@ -149,11 +149,11 @@
 
             // melonJS text & logo
             var icon = new IconLogo(
-                (me.video.getWidth() - 100) / 2,
-                (me.video.getHeight() / 2) - (progressBar.barHeight / 2) - 90
+                (me.video.renderer.getWidth() - 100) / 2,
+                (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
             );
             me.game.world.addChild(icon, 1);
-            me.game.world.addChild(new TextLogo(me.video.getWidth(), me.video.getHeight()), 1);
+            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
         },
 
         // destroy object at end of loading

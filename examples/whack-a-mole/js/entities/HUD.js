@@ -29,7 +29,7 @@ game.HUD.Container = me.Container.extend({
 		this.addChild(new game.HUD.ScoreItem("score", "left", 10, 10));
 
 		// add our child score object at position
-		this.addChild(new game.HUD.ScoreItem("hiscore", "right", (me.video.getWidth() - 10), 10));
+		this.addChild(new game.HUD.ScoreItem("hiscore", "right", (me.video.renderer.getWidth() - 10), 10));
 	}
 });
 

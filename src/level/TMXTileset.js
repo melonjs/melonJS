@@ -238,7 +238,7 @@
                 // set Color Key for transparency if needed
                 if (typeof(transparency) !== "undefined") {
                     // applyRGB Filter (return a context object)
-                    this.image = me.video.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
+                    this.image = me.video.renderer.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
                 }
             }
         },

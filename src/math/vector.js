@@ -536,6 +536,7 @@
     /**
      * Base class for Vector2d exception handling.
      * @name Vector2d.Error
+     * @ignore
      * @class
      * @memberOf me
      * @constructor

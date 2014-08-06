@@ -162,7 +162,7 @@
     function registerEventListener(eventList, callback) {
         for (var x = 2; x < eventList.length; ++x) {
             if (typeof(eventList[x]) !== "undefined") {
-                me.video.getScreenCanvas().addEventListener(eventList[x], callback, false);
+                me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
             }
         }
     }
@@ -214,14 +214,14 @@
             }
             // if time interval <= 16, disable the feature
             if (obj.throttlingInterval < 17) {
-                me.video.getScreenCanvas().addEventListener(
+                me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[POINTER_MOVE],
                     onMoveEvent,
                     false
                 );
             }
             else {
-                me.video.getScreenCanvas().addEventListener(
+                me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[POINTER_MOVE],
                     throttle(
                         obj.throttlingInterval,
@@ -350,7 +350,7 @@
      */
     function onMouseWheel(e) {
         /* jshint expr:true */
-        if (e.target === me.video.getScreenCanvas()) {
+        if (e.target === me.video.renderer.getScreenCanvas()) {
             // create a (fake) normalized event object
             var _event = {
                 deltaMode : 1,

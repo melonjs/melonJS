@@ -116,7 +116,7 @@ module.exports = function (grunt) {
                 options : {
                     configure : "jsdoc_conf.json",
                     destination : "docs",
-                    template : "tasks/jsdoc-template/melonjs"
+                    template : "tasks/jsdoc-template/template"
                 }
             }
         },

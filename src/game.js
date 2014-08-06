@@ -109,36 +109,6 @@
          */
         api.tmxRenderer = null;
 
-        // FIX ME : put this somewhere else
-        api.NO_OBJECT = 0;
-
-        /**
-         * Default object type constant.<br>
-         * See type property of the returned collision vector.
-         * @const
-         * @name ENEMY_OBJECT
-         * @memberOf me.game
-         */
-        api.ENEMY_OBJECT = 1;
-
-        /**
-         * Default object type constant.<br>
-         * See type property of the returned collision vector.
-         * @const
-         * @name COLLECTABLE_OBJECT
-         * @memberOf me.game
-         */
-        api.COLLECTABLE_OBJECT = 2;
-
-        /**
-         * Default object type constant.<br>
-         * See type property of the returned collision vector.
-         * @const
-         * @name ACTION_OBJECT
-         * @memberOf me.game
-         */
-        api.ACTION_OBJECT = 3; // door, etc...
-
         /**
          * Fired when a level is fully loaded and <br>
          * and all entities instantiated. <br>
@@ -168,8 +138,8 @@
         api.init = function (width, height) {
             if (!initialized) {
                 // if no parameter specified use the system size
-                width  = width  || me.video.getWidth();
-                height = height || me.video.getHeight();
+                width  = width  || me.video.renderer.getWidth();
+                height = height || me.video.renderer.getHeight();
 
                 // create a defaut viewport of the same size
                 api.viewport = new me.Viewport(0, 0, width, height);
@@ -182,7 +152,7 @@
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
-                renderer = me.video.getRenderer();
+                renderer = me.video.renderer;
 
                 // publish init notification
                 me.event.publish(me.event.GAME_INIT);
@@ -343,7 +313,7 @@
             isDirty = false;
 
             // blit our frame
-            me.video.blitSurface();
+            me.video.renderer.blitSurface();
         };
 
         // return our object

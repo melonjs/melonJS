@@ -49,7 +49,7 @@ var FontTest = me.Renderable.extend ({
 
     // constructor
     init: function() {
-        this._super(me.Renderable, 'init', [0, 0, me.video.getWidth(), me.video.getHeight()]);
+        this._super(me.Renderable, 'init', [0, 0, me.video.renderer.getWidth(), me.video.renderer.getHeight()]);
 
         // a default white color object
         this.color = new me.Color(255, 255, 255);
@@ -78,7 +78,7 @@ var FontTest = me.Renderable.extend ({
         // font size test
         this.font.textAlign = "left";
         this.font.lineWidth = "2";
-        var context = renderer.getContext();
+        var context = renderer.getSystemContext();
         for (var i = 8; i < 48; i += 8) {
             this.font.setFont('Arial', i, this.color.toHex());
             this.font.draw(renderer, "Arial Text " + i + "px !" , 5 , y_pos );
@@ -96,7 +96,7 @@ var FontTest = me.Renderable.extend ({
         for (var i = 1;i<5;i++) {
             this.bFont.setOpacity (0.2 * i);
             this.bFont.resize(i);
-            this.bFont.draw(renderer, "BITMAP TEST" , me.video.getWidth() , y_pos );
+            this.bFont.draw(renderer, "BITMAP TEST" , me.video.renderer.getWidth() , y_pos );
             y_pos+=this.bFont.measureText(context, "DUMMY").height;
             
         }
@@ -109,7 +109,7 @@ var FontTest = me.Renderable.extend ({
         // Draw the baseline
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
-        context.lineTo(me.video.getWidth(), baseline + 0.5);
+        context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
         context.strokeStyle = "red";
         context.stroke();
 
@@ -166,7 +166,7 @@ var FontTest = me.Renderable.extend ({
         // Draw the baseline
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
-        context.lineTo(me.video.getWidth(), baseline + 0.5);
+        context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
         context.strokeStyle = "red";
         context.stroke();
         

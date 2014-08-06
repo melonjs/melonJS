@@ -60,7 +60,7 @@
          *   // display something in the console
          *   console.log("duh");
          *   // call the original me.game.update function
-         *   this.parent();
+         *   this._patched();
          * });
          */
         singleton.patch = function (proto, name, fn) {
@@ -77,9 +77,9 @@
                     "configurable" : true,
                     "value" : (function (name, fn) {
                         return function () {
-                            this.parent = _parent;
+                            this._patched = _parent;
                             var ret = fn.apply(this, arguments);
-                            this.parent = null;
+                            this._patched = null;
                             return ret;
                         };
                     })(name, fn)

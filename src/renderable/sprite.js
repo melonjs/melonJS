@@ -107,7 +107,7 @@
             // remove the # if present
             col = (col.charAt(0) === "#") ? col.substring(1, 7) : col;
             // applyRGB Filter (return a context object)
-            this.image = me.video.applyRGBFilter(
+            this.image = me.video.renderer.applyRGBFilter(
                 this.image,
                 "transparent",
                 col.toUpperCase()
