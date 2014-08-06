@@ -83,7 +83,11 @@
             this.canvas = me.video.createCanvas(screenCanvas.width, DEBUG_HEIGHT, true);
             
             screenCanvas.parentNode.appendChild(this.canvas);
-            this.canvas.style.position = 'relative';
+            this.canvas.style.position = 'absolute';
+            this.canvas.style.opacity = '0.7';
+            this.canvas.style.top = '0px';
+            this.canvas.style.left = '0px';
+            this.canvas.parentNode.position = 'relative';
             this.context = me.CanvasRenderer.getContext2d(this.canvas);
 
             // create a default font, with fixed char width
