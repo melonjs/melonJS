@@ -79,8 +79,7 @@ module.exports = function (grunt) {
             if (verbose) {
                 grunt.log.oklns("Original Branch: " + backBranch);
             }
-            run("git reset --hard", "Resetting staged changes");
-            run("git checkout " + backBranch, "Getting back to " + backBranch + " branch");
+            run("git reset --hard && git checkout " + backBranch, "Resetting staged changes and back to initial branch");
         }
 
         try {
