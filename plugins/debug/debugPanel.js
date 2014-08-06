@@ -87,12 +87,14 @@
             this.context = me.CanvasRenderer.getContext2d(this.canvas);
 
             // create a default font, with fixed char width
-            var s = 20;
+            var s = 10;
             this.mod = 1;
             if(me.game.viewport.width < 500) {
-                s = 15;
+                s = 7;
                 this.mod = 0.7;
             }
+            s *= me.device.getPixelRatio();
+            this.mod *= me.device.getPixelRatio();
             this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
@@ -106,7 +108,7 @@
             this.help_str      = "(s)how/(h)ide";
             this.help_str_len = this.font.measureText(me.video.renderer.getSystemContext(), this.help_str).width;
             this.fps_str_len = this.font.measureText(me.video.renderer.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 610 * this.mod;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 300 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -326,7 +328,7 @@
         },
 
         /** @private */        
-        drawQuadTreeNode : function (node) {        
+        drawQuadTreeNode : function (renderer, node) {
             var bounds = node._bounds;
             
             // Opacity is based on number of objects in the cell
@@ -346,17 +348,17 @@
         },
         
         /** @private */
-        drawQuadTree : function () {
+        drawQuadTree : function (renderer) {
             // save the current globalAlpha value
-            var _alpha = this.context.globalAlpha;
+            var _alpha = renderer.globalAlpha();
             
-            this.context.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
+            renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
             
-            this.drawQuadTreeNode(me.collision.quadTree.root);
+            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
             
-            this.context.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
+            renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
             
-            this.context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         },
 
         /** @private */
@@ -394,7 +396,7 @@
             
             // draw the QuadTree (before the panel)
             if (me.debug.renderQuadTree === true) {
-                this.drawQuadTree();
+                this.drawQuadTree(renderer);
             }
 
             // draw the panel
@@ -405,26 +407,26 @@
 
             // # entities / draw
             this.font.drawFromContext(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 30 * this.mod);
+            this.font.drawFromContext(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 15 * this.mod);
 
             // debug checkboxes
-            this.font.drawFromContext(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     170 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     170 * this.mod, 30 * this.mod);
+            this.font.drawFromContext(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     85 * this.mod, 5 * this.mod);
+            this.font.drawFromContext(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     85 * this.mod, 15 * this.mod);
 
-            this.font.drawFromContext(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    350 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 350 * this.mod, 30 * this.mod);
+            this.font.drawFromContext(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    175 * this.mod, 5 * this.mod);
+            this.font.drawFromContext(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 175 * this.mod, 15 * this.mod);
 
             // draw the update duration
-            this.font.drawFromContext(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 570 * this.mod, 5 * this.mod);
+            this.font.drawFromContext(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 570 * this.mod, 30 * this.mod);
+            this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 15 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
             this.drawMemoryGraph(this.context, endX - this.help_str_len);
 
             // some help string
-            this.font.drawFromContext(this.context, this.help_str, endX - this.help_str_len, 30 * this.mod);
+            this.font.drawFromContext(this.context, this.help_str, endX - this.help_str_len, 15 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
