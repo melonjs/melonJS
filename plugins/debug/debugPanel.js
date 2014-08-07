@@ -102,11 +102,12 @@
             this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
-            this.area.renderHitBox = new me.Rect(160,5,15,15);
-            this.area.renderVelocity = new me.Rect(165,18,15,15);
+            var size = 12 * this.mod;
+            this.area.renderHitBox = new me.Rect(295,10,size,size);
+            this.area.renderVelocity = new me.Rect(295,28,size,size);
 
-            this.area.renderQuadTree = new me.Rect(270,5,15,15);
-            this.area.renderCollisionMap = new me.Rect(270,18,15,15);
+            this.area.renderQuadTree = new me.Rect(500,10,size,size);
+            this.area.renderCollisionMap = new me.Rect(500,28,size,size);
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
@@ -247,7 +248,6 @@
                 var canvas = me.video.renderer.getScreenCanvas();
                 _this.canvas.width = canvas.width;
                 _this.canvas.height = DEBUG_HEIGHT;
-                _this.canvas.style.top = (-parseInt(canvas.style.height)) + "px";
                 _this.canvas.style.width = canvas.style.width;
                 _this.canvas.style.height = DEBUG_HEIGHT * scaleY;
                 _this.rect.resize(canvas.width, DEBUG_HEIGHT * scaleY);
@@ -306,10 +306,10 @@
         /** @private */
         onClick : function(e)  {
             // check the clickable areas
-            if (this.area.renderHitBox.containsPoint(e.clientX, e.clientY)) {
+            if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
             }
-            else if (this.area.renderCollisionMap.containsPoint(e.clientX, e.clientY)) {
+            else if (this.area.renderCollisionMap.containsPoint(e.gameX, e.gameY)) {
                 var layer = me.game.currentLevel.getLayerByName("collision");
                 if (layer) {
                     if (layer.getOpacity() === 0) {
@@ -321,12 +321,12 @@
                     }
                 }
             } 
-            else if (this.area.renderVelocity.containsPoint(e.clientX, e.clientY)) {
+            else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
             } 
-            else if (this.area.renderQuadTree.containsPoint(e.clientX, e.clientY)) {
+            else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
@@ -407,8 +407,9 @@
 
             // draw the panel
             this.context.globalAlpha = 0.5;
+            this.context.fillStyle = "black";
             this.context.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height, "black");
+                             this.rect.width, this.rect.height);
             this.context.globalAlpha = 1.0;
 
             // # entities / draw
@@ -426,6 +427,19 @@
             this.font.drawFromContext(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
             this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 15 * this.mod);
+
+            this.context.strokeStyle = '#f00';
+            var rect = this.area.renderHitBox;
+            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+            
+            var rect = this.area.renderVelocity;
+            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+
+            var rect = this.area.renderQuadTree;
+            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
+
+            var rect = this.area.renderCollisionMap;
+            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
