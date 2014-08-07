@@ -23,7 +23,7 @@
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
-        api.init = function (c, db) {
+        api.init = function (c, db, game_width_zoom, game_height_zoom) {
             canvas = c;
             context = this.getContext2d(canvas);
             doubleBuffering = db;
@@ -38,8 +38,8 @@
                 backBufferContext2D = context;
             }
 
-            gameWidthZoom = canvas.width;
-            gameHeightZoom = canvas.height;
+            gameWidthZoom = game_width_zoom;
+            gameHeightZoom = game_height_zoom;
 
             return this;
         };

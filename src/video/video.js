@@ -148,7 +148,7 @@
                     break;
                 default: // case me.video.CANVAS:. TODO: have default be AUTO detect
                     // get the 2D context
-                    this.renderer = me.CanvasRenderer.init(canvas, double_buffering);
+                    this.renderer = me.CanvasRenderer.init(canvas, double_buffering, game_width_zoom, game_height_zoom);
                     break;
             }
 
