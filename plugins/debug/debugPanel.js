@@ -339,8 +339,9 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, endX) {
+        drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
+                var context = renderer.getContext2d();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
@@ -360,10 +361,10 @@
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
