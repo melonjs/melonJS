@@ -223,15 +223,7 @@
                     var y = ~~(this.pos.y + this.hHeight);
                     // TODO: This will also be tricky for WebGL.
                     var context = renderer.getSystemContext();
-                    context.strokeStyle = "blue";
-                    context.lineWidth = 1;
-                    context.beginPath();
-                    context.moveTo(x, y);
-                    context.lineTo(
-                        x + ~~(this.body.vel.x * this.hWidth),
-                        y + ~~(this.body.vel.y * this.hHeight)
-                    );
-                    context.stroke();
+                    renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight), 1, "blue");
                 }
             });
         },

@@ -483,6 +483,15 @@
             backBufferContext2D.stroke();
         };
 
+        api.strokeLine = function (startX, startY, endX, endY, lineWidth, color) {
+            context.strokeStyle = color;
+            context.lineWidth = lineWidth;
+            context.beginPath();
+            context.moveTo(startX, startY);
+            context.lineTo(endX, endY);
+            context.stroke();
+        }
+
         /**
          * Strokes a me.PolyShape on the screen with a specified color
          * @name strokePolyShape
