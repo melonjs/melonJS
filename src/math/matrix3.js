@@ -2,86 +2,95 @@
  * MelonJS Game Engine
  * Copyright (C) 2011 - 2014, melonJS Team
  * http://www.melonjs.org
- *
+ * sourced from: https://github.com/mattdesl/vecmath. To keep in line with other matrix libraries
  */
 (function () {
+    var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
+
     me.Matrix3d = Object.extend({
         /** @ignore */
-        init : function (a, b, c, d, e, f, g, h, i) {
-            /**
-             * the m1,1 value in the matrix (a)
-             * @public
-             * @type Number
-             * @name a
-             * @memberOf me.Matrix2d
-             */
-            this.a = a || 1;
-            /**
-             * the m1,2 value in the matrix (b)
-             * @public
-             * @type Number
-             * @name b
-             * @memberOf me.Matrix2d
-             */
-            this.b = b || 0;
-            /**
-             * the m1,3 value in the matrix (c)
-             * @public
-             * @type Number
-             * @name c
-             * @memberOf me.Matrix2d
-             */
-            this.c = c || 0;
+        init : function (m) {
+            this.val = new ARRAY_TYPE(9);
+            if (m) { //assume Matrix3 with val
+                this.copy(m);
+            }
+            else { //default to identity
+                this.identity();
+            }
+        },
 
-            /**
-             * the m2,1 value in the matrix (d)
-             * @public
-             * @type Number
-             * @name d
-             * @memberOf me.Matrix2d
-             */
-            this.d = d || 0;
-            /**
-             * the m2,2 value in the matrix (e)
-             * @public
-             * @type Number
-             * @name e
-             * @memberOf me.Matrix2d
-             */
-            this.e = e || 1;
-            /**
-             * the m2,3 value in the matrix (f)
-             * @public
-             * @type Number
-             * @name f
-             * @memberOf me.Matrix2d
-             */
-            this.f = f || 0;
+        /**
+         * Adjoint the matrix. Returns self
+         * @name adjoint
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {me.Matrix3d}
+         */
+        adjoint : function () {
+            var a = this.val,
+                a00 = a[0], a01 = a[1], a02 = a[2],
+                a10 = a[3], a11 = a[4], a12 = a[5],
+                a20 = a[6], a21 = a[7], a22 = a[8];
 
-            /**
-             * the m3,1 value in the matrix (g)
-             * @public
-             * @type Number
-             * @name g
-             * @memberOf me.Matrix2d
-             */
-            this.g = g || 0;
-            /**
-             * the m3,2 value in the matrix (h)
-             * @public
-             * @type Number
-             * @name h
-             * @memberOf me.Matrix2d
-             */
-            this.h = h || 0;
-            /**
-             * the m3,3 value in the matrix (i)
-             * @public
-             * @type Number
-             * @name i
-             * @memberOf me.Matrix2d
-             */
-            this.i = i || 1;
+            a[0] = (a11 * a22 - a12 * a21);
+            a[1] = (a02 * a21 - a01 * a22);
+            a[2] = (a01 * a12 - a02 * a11);
+            a[3] = (a12 * a20 - a10 * a22);
+            a[4] = (a00 * a22 - a02 * a20);
+            a[5] = (a02 * a10 - a00 * a12);
+            a[6] = (a10 * a21 - a11 * a20);
+            a[7] = (a01 * a20 - a00 * a21);
+            a[8] = (a00 * a11 - a01 * a10);
+            return this;
+        },
+
+        /**
+         * Creates a copy of the current matrix, returning that copy
+         * @name clone
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {me.Matrix3d}
+         */
+        clone : function () {
+            return new me.Matrix3d(this);
+        },
+
+        /**
+         * Copies over the values from another me.Matrix3d. Returns self
+         * @name copy
+         * @memberOf me.Matrix3d
+         * @function
+         * @param {me.Matrix3d} otherMat - the matrix object to copy from
+         * @return {me.Matrix3d}
+         */
+        copy : function (otherMat) {
+            var out = this.val, a = otherMat.val;
+            out[0] = a[0];
+            out[1] = a[1];
+            out[2] = a[2];
+            out[3] = a[3];
+            out[4] = a[4];
+            out[5] = a[5];
+            out[6] = a[6];
+            out[7] = a[7];
+            out[8] = a[8];
+            return this;
+        },
+
+        /**
+         * Returns the determinant of the matrix.
+         * @name determinant
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {Number}
+         */
+        determinant : function () {
+            var a = this.val,
+                a00 = a[0], a01 = a[1], a02 = a[2],
+                a10 = a[3], a11 = a[4], a12 = a[5],
+                a20 = a[6], a21 = a[7], a22 = a[8];
+
+            return a00 * (a22 * a11 - a12 * a21) + a01 * (-a22 * a10 + a12 * a20) + a02 * (a21 * a10 - a11 * a20);
         },
 
         /**
@@ -94,70 +103,123 @@
             this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
         },
 
+        /**
+         * Inverts the matrix, and returns self
+         * @name invert
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {me.Matrix3d}
+         */
+        invert : function () {
+            var a = this.val,
+                a00 = a[0], a01 = a[1], a02 = a[2],
+                a10 = a[3], a11 = a[4], a12 = a[5],
+                a20 = a[6], a21 = a[7], a22 = a[8],
+
+                b01 = a22 * a11 - a12 * a21,
+                b11 = -a22 * a10 + a12 * a20,
+                b21 = a21 * a10 - a11 * a20,
+
+                // Calculate the determinant
+                det = a00 * b01 + a01 * b11 + a02 * b21;
+
+            if (!det) {
+                return null;
+            }
+            det = 1.0 / det;
+
+            a[0] = b01 * det;
+            a[1] = (-a22 * a01 + a02 * a21) * det;
+            a[2] = (a12 * a01 - a02 * a11) * det;
+            a[3] = b11 * det;
+            a[4] = (a22 * a00 - a02 * a20) * det;
+            a[5] = (-a12 * a00 + a02 * a10) * det;
+            a[6] = b21 * det;
+            a[7] = (-a21 * a00 + a01 * a20) * det;
+            a[8] = (a11 * a00 - a01 * a10) * det;
+            return this;
+        },
+
 
         /**
-         * Multiplies this current matrix by a given Matrix3d object.
+         * Multiplies this current matrix by a given Matrix3d object. Returns self
          * @name multiple
          * @memberOf me.Matrix3d
          * @function
-         * @param {me.Matrix3d} mat
+         * @param {me.Matrix3d} otherMat
+         * @return {me.Matrix3d}
          */
-        multiply : function (mat) {
-            var m11 = this.a, m12 = this.b, m13 = this.c,
-            m21 = this.d, m22 = this.e, m23 = this.f,
-            m31 = this.g, m32 = this.h, m33 = this.i;
+        multiply : function (otherMat) {
+            var a = this.val,
+                b = otherMat.val,
+                a00 = a[0], a01 = a[1], a02 = a[2],
+                a10 = a[3], a11 = a[4], a12 = a[5],
+                a20 = a[6], a21 = a[7], a22 = a[8],
 
-            this.a = m11 * mat.a + m12 * mat.d + m13 * mat.g;
-            this.b = m11 * mat.b + m12 * mat.e + m13 * mat.h;
-            this.c = m11 * mat.c + m12 * mat.f + m13 * mat.i;
+                b00 = b[0], b01 = b[1], b02 = b[2],
+                b10 = b[3], b11 = b[4], b12 = b[5],
+                b20 = b[6], b21 = b[7], b22 = b[8];
 
-            this.d = m21 * mat.a + m22 * mat.d + m23 * mat.g;
-            this.e = m21 * mat.b + m22 * mat.e + m23 * mat.h;
-            this.f = m21 * mat.c + m22 * mat.f + m23 * mat.i;
+            a[0] = b00 * a00 + b01 * a10 + b02 * a20;
+            a[1] = b00 * a01 + b01 * a11 + b02 * a21;
+            a[2] = b00 * a02 + b01 * a12 + b02 * a22;
 
-            this.g = m31 * mat.a + m32 * mat.d + m33 * mat.g;
-            this.h = m31 * mat.b + m32 * mat.e + m33 * mat.h;
-            this.i = m31 * mat.c + m32 * mat.f + m33 * mat.i;
+            a[3] = b10 * a00 + b11 * a10 + b12 * a20;
+            a[4] = b10 * a01 + b11 * a11 + b12 * a21;
+            a[5] = b10 * a02 + b11 * a12 + b12 * a22;
+
+            a[6] = b20 * a00 + b21 * a10 + b22 * a20;
+            a[7] = b20 * a01 + b21 * a11 + b22 * a21;
+            a[8] = b20 * a02 + b21 * a12 + b22 * a22;
+            return this;
         },
 
         /**
-         * Rotates the matrix by the number in radians
+         * Rotates the matrix by the number in radians. Returns self
          * @name rotate
          * @memberOf me.Matrix3d
          * @function
          * @param {Number} rad - degrees to rotate in radians
+         * @return {me.Matrix3d}
          */
         rotate : function (rad) {
-            var s = Math.sin(rad),
-            c = Math.cos(rad),
-            m11 = this.a, m12 = this.b, m13 = this.c,
-            m21 = this.d, m22 = this.e, m23 = this.f;
+            var a = this.val,
+                a00 = a[0], a01 = a[1], a02 = a[2],
+                a10 = a[3], a11 = a[4], a12 = a[5],
 
-            this.a = c * m11 + s * m21;
-            this.b = c * m12 + s * m22;
-            this.c = c * m13 + s * m23;
+                s = Math.sin(rad),
+                c = Math.cos(rad);
 
-            this.d = c * m21 - s * m11;
-            this.e = c * m22 - s * m12;
-            this.f = c * m23 - s * m13;
+            a[0] = c * a00 + s * a10;
+            a[1] = c * a01 + s * a11;
+            a[2] = c * a02 + s * a12;
+
+            a[3] = c * a10 - s * a00;
+            a[4] = c * a11 - s * a01;
+            a[5] = c * a12 - s * a02;
+            return this;
         },
 
         /**
-         * Scales the matrix by x & y values
+         * Scales the matrix by x & y values. Returns self
          * @name scale
          * @memberOf me.Matrix3d
          * @function
          * @param {Number} x to scale by
          * @param {Number} y to scale by
+         * @return {me.Matrix3d}
          */
         scale : function (x, y) {
-            this.a *= x;
-            this.b *= x;
-            this.c *= x;
+            var a = this.val;
 
-            this.d *= y;
-            this.e *= y;
-            this.f *= y;
+            a[0] = x * a[0];
+            a[1] = x * a[1];
+            a[2] = x * a[2];
+
+            a[3] = y * a[3];
+            a[4] = y * a[4];
+            a[5] = y * a[5];
+            return this;
         },
 
         /**
@@ -165,26 +227,10 @@
          * @name set
          * @memberOf me.Matrix3d
          * @function
-         * @param {Number} M1,1
-         * @param {Number} M1,2
-         * @param {Number} M1,3
-         * @param {Number} M2,1
-         * @param {Number} M2,2
-         * @param {Number} M2,3
-         * @param {Number} M3,1
-         * @param {Number} M3,2
-         * @param {Number} M3,3
+         * @param {me.Matrix3d} otherMat
          */
-        set : function (a, b, c, d, e, f, g, h, i) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.e = e;
-            this.f = f;
-            this.g = g;
-            this.h = h;
-            this.i = i;
+        set : function (otherMat) {
+            return this.copy(otherMat);
         },
 
         /**
@@ -196,13 +242,31 @@
          * @param {Number} y - the y coordinate to translate by
          */
         translate : function (x, y) {
-            var m11 = this.a, m12 = this.b, m13 = this.c,
-            m21 = this.d, m22 = this.e, m23 = this.f,
-            m31 = this.g, m32 = this.h, m33 = this.i;
+            var a = this.val;
+            a[6] = x * a[0] + y * a[3] + a[6];
+            a[7] = x * a[1] + y * a[4] + a[7];
+            a[8] = x * a[2] + y * a[5] + a[8];
+        },
 
-            this.g = x * m11 + y * m21 + m31;
-            this.h = x * m12 + y * m22 + m32;
-            this.i = x * m13 + y * m23 + m33;
+        /**
+         * Transpose the matrix. Returns self
+         * @name transpose
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {me.Matrix3d}
+         */
+        transpose : function () {
+            var a = this.val,
+                a01 = a[1],
+                a02 = a[2],
+                a12 = a[5];
+            a[1] = a[3];
+            a[2] = a[6];
+            a[3] = a01;
+            a[5] = a[7];
+            a[6] = a02;
+            a[7] = a12;
+            return this;
         }
     });
 })();

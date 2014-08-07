@@ -26,7 +26,7 @@
             gl = this.context.gl;
             color = new me.Color();
             this.globalAlpha = 1.0;
-
+            this.uniformMatrix = new me.Matrix3d();
             return this;
         };
 
