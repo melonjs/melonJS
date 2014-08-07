@@ -402,19 +402,6 @@
             // draw the draw duration
             this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
 
-            this.context.strokeStyle = '#f00';
-            var rect = this.area.renderHitBox;
-            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
-            
-            var rect = this.area.renderVelocity;
-            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
-
-            var rect = this.area.renderQuadTree;
-            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
-
-            var rect = this.area.renderCollisionMap;
-            this.context.strokeRect(rect.left, rect.top, rect.width, rect.height);
-
             // draw the memory heap usage
             var endX = this.rect.width - 25;
             this.drawMemoryGraph(this.context, endX - this.help_str_len);
