@@ -23,14 +23,14 @@
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
-        api.init = function (c, db, game_width_zoom, game_height_zoom) {
+        api.init = function (c, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom) {
             canvas = c;
             context = this.getContext2d(canvas);
-            doubleBuffering = db;
+            doubleBuffering = double_buffering;
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
-                backBufferCanvas = me.video.createCanvas(canvas.width, canvas.height, false);
+                backBufferCanvas = me.video.createCanvas(game_width, game_height, false);
                 backBufferContext2D = this.getContext2d(backBufferCanvas);
             }
             else {
