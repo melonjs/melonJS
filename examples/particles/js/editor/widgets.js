@@ -285,7 +285,7 @@
             me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
         },
         createGradients : function(color, size) {
-            var context = me.video.renderer.getSystemContext();
+            var context = me.video.renderer.getContext();
             var bigGradient = this.bigGradient = context.createRadialGradient(0, 0, 0, 0, 0, size / 2);
             var smallGradient = this.smallGradient = context.createRadialGradient(0, 0, 0, 0, 0, size / 4);
 
@@ -358,7 +358,7 @@
         },
         draw : function(renderer, rect) {
             renderer.save();
-            var context = renderer.getSystemContext();
+            var context = renderer.getContext();
             renderer.fillArc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2, this.color);
             renderer.restore();
         }

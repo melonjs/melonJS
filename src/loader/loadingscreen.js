@@ -39,7 +39,7 @@
 
          // draw function
         draw : function (renderer) {
-            var context = renderer.getSystemContext();
+            var context = renderer.getContext();
             // draw the progress bar
             context.fillStyle = "black";
             context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
@@ -62,7 +62,7 @@
             // translate to destination point
             renderer.translate(this.pos.x, this.pos.y);
 
-            var context = renderer.getSystemContext();
+            var context = renderer.getContext();
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -108,7 +108,7 @@
 
         draw : function (renderer) {
             // measure the logo size
-            var context = renderer.getSystemContext();
+            var context = renderer.getContext();
             var logo1_width = this.logo1.measureText(context, "melon").width;
             var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
             var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);

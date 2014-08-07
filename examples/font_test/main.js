@@ -78,7 +78,7 @@ var FontTest = me.Renderable.extend ({
         // font size test
         this.font.textAlign = "left";
         this.font.lineWidth = "2";
-        var context = renderer.getSystemContext();
+        var context = renderer.getContext();
         for (var i = 8; i < 48; i += 8) {
             this.font.setFont('Arial', i, this.color.toHex());
             this.font.draw(renderer, "Arial Text " + i + "px !" , 5 , y_pos );

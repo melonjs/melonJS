@@ -23,6 +23,18 @@
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
+        /**
+         * initializes the canvas renderer, creating the requried contexts
+         * @name init
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Canvas} canvas - the html canvas tag to draw to on screen.
+         * @param {Number} game_width - the width of the canvas without scaling
+         * @param {Number} game_height - the height of the canvas without scaling
+         * @param {Boolean} double_buffering - whether to enable double buffering.
+         * @param {Number} game_width_zoom - The actual width of the canvas with scaling applied
+         * @param {Number} game_height_zoom - The actual height of the canvas with scaling applied
+         */
         api.init = function (c, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom) {
             canvas = c;
             context = this.getContext2d(canvas);
@@ -268,26 +280,24 @@
          * @return {Context2d}
          */
         api.getContext2d = function (c) {
-            if (typeof c !== "undefined") {
-                var _context;
-                if (navigator.isCocoonJS) {
-                    // cocoonJS specific extension
-                    _context = c.getContext("2d", {
-                        "antialias" : me.sys.scalingInterpolation
-                    });
-                }
-                else {
-                    _context = c.getContext("2d");
-                }
-                if (!_context.canvas) {
-                    _context.canvas = c;
-                }
-                this.setImageSmoothing(_context, me.sys.scalingInterpolation);
-                return _context;
-            } else {
-                // returns the 2D Context instance for the renderer
-                return backBufferContext2D;
+            if (typeof c === "undefined" || c === null) {
+                throw "You must pass a canvas element in order to create a 2d context";
             }
+            var _context;
+            if (navigator.isCocoonJS) {
+                // cocoonJS specific extension
+                _context = c.getContext("2d", {
+                    "antialias" : me.sys.scalingInterpolation
+                });
+            }
+            else {
+                _context = c.getContext("2d");
+            }
+            if (!_context.canvas) {
+                _context.canvas = c;
+            }
+            this.setImageSmoothing(_context, me.sys.scalingInterpolation);
+            return _context;
         };
 
         api.getHeight = function () {
@@ -296,23 +306,23 @@
 
         /**
          * return a reference to the system canvas
-         * @name getSystemCanvas
+         * @name getCanvas
          * @memberOf me.CanvasRenderer
          * @function
          * @return {Canvas}
          */
-        api.getSystemCanvas = function () {
+        api.getCanvas = function () {
             return backBufferCanvas;
         };
 
         /**
          * return a reference to the system 2d Context
-         * @name getSystemContext
+         * @name getContext
          * @memberOf me.CanvasRenderer
          * @function
          * @return {Context2d}
          */
-        api.getSystemContext = function () {
+        api.getContext = function () {
             return backBufferContext2D;
         };
 
