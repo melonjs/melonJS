@@ -483,6 +483,18 @@
             backBufferContext2D.stroke();
         };
 
+        /**
+         * Stroke a line of the given two points
+         * @name strokeLine
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} startX - the start x coordinate
+         * @param {Number} startY - the start y coordinate
+         * @param {Number} endX - the end x coordinate
+         * @param {Number} endY - the end y coordinate
+         * @param {Number} lineWidth - the width of line
+         * @param {String} color to draw as
+         */
         api.strokeLine = function (startX, startY, endX, endY, lineWidth, color) {
             context.strokeStyle = color;
             context.lineWidth = lineWidth;
@@ -490,7 +502,7 @@
             context.moveTo(startX, startY);
             context.lineTo(endX, endY);
             context.stroke();
-        }
+        };
 
         /**
          * Strokes a me.PolyShape on the screen with a specified color
