@@ -51,7 +51,7 @@
          * @ignore
          */
         pixelToTileX : function (x) {
-            return ~~(x / this.tilewidth);
+            return x / this.tilewidth;
         },
 
 
@@ -60,7 +60,7 @@
          * @ignore
          */
         pixelToTileY : function (y) {
-            return ~~(y / this.tileheight);
+            return y / this.tileheight;
         },
 
         /**

@@ -76,6 +76,7 @@
         /**
          * Base class for Audio exception handling.
          * @name audio.Error
+         * @ignore
          * @class
          * @memberOf me.audio
          * @constructor
@@ -221,7 +222,7 @@
                 sound.loop(loop || false);
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
                 if (typeof(onend) === "function" || typeof(oncreate) === "function") {
-                    sound.play("_default", function (soundId) {
+                    sound.play(undefined, function (soundId) {
                         if (onend) {
                             callbacks[soundId] = onend;
                         }

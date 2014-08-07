@@ -56,7 +56,7 @@ and currently features :
 
 Using melonJS
 -------------------------------------------------------------------------------
-Follow the tutorial [here](http://melonjs.github.io/tutorial/) to get started !
+Follow the tutorial [here](http://melonjs.github.io/tutorial-platformer/) to get started !
 
 Note that due to the 'cross-origin request' policy implemented in most browsers
 (that prevents from accessing local files), you will need to either disable this

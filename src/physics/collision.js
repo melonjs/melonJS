@@ -184,9 +184,10 @@
 
 
     /**
-     * A singleton for managing collision detection.
-     * @final
-     * @namespace me.collision
+     * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
+     * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
+     * @namespace
+     * @property {Singleton} collision
      * @memberOf me
      */
 
@@ -212,16 +213,19 @@
          * @name maxDepth
          * @memberOf me.collision
          * @public
-         * @type Number
+         * @type {number}
+         * @see me.collision.quadTree
+         * 
          */
         api.maxDepth = 4;
 
         /**
-         * The maximum number of children that a node can contain before it is split into sub-nodes.
+         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
          * @name maxChildren
          * @memberOf me.collision
          * @public
-         * @type Boolean
+         * @type {boolean}
+         * @see me.collision.quadTree
          */
         api.maxChildren = 4;
         
@@ -250,20 +254,27 @@
         /**
          * Enum for collision type values. <br>
          * Possible values are : <br>
-         * - NO_OBJECT (to disable collision check) <br>
-         * - PLAYER_OBJECT <br>
-         * - NPC_OBJECT <br>
-         * - ENEMY_OBJECT <br>
-         * - COLLECTABLE_OBJECT <br>
-         * - ACTION_OBJECT <br>
-         * - PROJECTILE_OBJECT <br>
-         * - WORLD_SHAPE (for collision check with collision shapes/tiles) <br>
-         * - WORLD_BOUNDARY (for boundary check with the world boundaries) <br>
-         * - ALL_OBJECT <br>
+         * - <b>`NO_OBJECT`</b> (to disable collision check) <br>
+         * - <b>`PLAYER_OBJECT`</b> <br>
+         * - <b>`NPC_OBJECT`</b> <br>
+         * - <b>`ENEMY_OBJECT`</b> <br>
+         * - <b>`COLLECTABLE_OBJECT`</b> <br>
+         * - <b>`ACTION_OBJECT`</b> <br>
+         * - <b>`PROJECTILE_OBJECT`</b> <br>
+         * - <b>`WORLD_SHAPE`</b> (for collision check with collision shapes/tiles) <br>
+         * - <b>`WORLD_BOUNDARY`</b> (for boundary check with the world boundaries) <br>
+         * - <b>`ALL_OBJECT`</b> <br>
          * @readonly
          * @enum {number}
          * @name types
          * @memberOf me.collision
+         * @see me.body.setCollisionMask
+         * @see me.body.collisionType
+         * @example
+         * // set the entity body collision type
+         * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
+         * // filter collision detection with collision shapes, enemies and collectables
+         * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
          */
         api.types = {
             NO_OBJECT : 0,
@@ -353,15 +364,18 @@
         };
         
         /**
-         * An object representing the result of an intersection. Contains: <br>
-         *  - `a` and `b` : The two objects participating in the intersection <br>
-         *  - `overlap` : The vector representing the minimum change necessary to extract the first object <br>
-         *    from the second one (as well as a unit vector in that direction and the magnitude of the overlap <br>
-         *  - `aInB`, `bInA` : Whether the first object is entirely inside the second, and vice versa. <br>
+         * An object representing the result of an intersection, contains: <br>
+         *  - <b>`a`</b> and <b>`b`</b> {me.Entity} : The two objects participating in the intersection <br>
+         *  - <b>`overlap`</b> {number} : Magnitude of the overlap on the shortest colliding axis. <br>
+         *  - <b>`overlapV`</b> {me.vector2d}: The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding <br>
+         *  - <b>`overlapN`</b> {me.vector2d}: The shortest colliding axis (unit-vector) <br>
+         *  - <b>`aInB`</b>, <b>`bInA`</b> {boolean} : Whether the first object is entirely inside the second, and vice versa. <br>
+         *  - <b>`clear()`</b> {function} :  Set some values of the response back to their defaults. Call this between tests if you are going to reuse a single Response object for multiple intersection tests <br>
          * @name ResponseObject
          * @memberOf me.collision
          * @public
-         * @type {Object}
+         * @type {external:Object}
+         * @see me.collision.check
          */
         api.ResponseObject = function () {
             this.a = null;
@@ -439,6 +453,7 @@
          *
          * collideHandler : function (response) {
          *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+         *         // makes the other entity solid, by substracting the overlap vector to the current position
          *         this.pos.sub(response.overlapV);
          *         this.hurt();
          *     } else {
