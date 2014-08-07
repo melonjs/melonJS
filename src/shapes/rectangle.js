@@ -37,7 +37,7 @@
              * @name width
              * @memberOf me.Rect
              */
-            this.width = 0;
+            this.width = w;
             /**
              * height of the Rectangle
              * @public
@@ -45,17 +45,10 @@
              * @name height
              * @memberOf me.Rect
              */
-            this.height = 0;
-
-            // half width/height
-            this.hWidth = 0;
-            this.hHeight = 0;
+            this.height = h;
 
             // the shape type
             this.shapeType = "Rectangle";
-
-            this.width = w;
-            this.height = h;
 
             // half width/height
             this.hWidth = ~~(w / 2);

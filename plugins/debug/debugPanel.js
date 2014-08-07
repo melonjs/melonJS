@@ -222,7 +222,6 @@
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
                     // TODO: This will also be tricky for WebGL.
-                    var context = renderer.getSystemContext();
                     renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight), 1, "blue");
                 }
             });
@@ -342,8 +341,9 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, endX) {
+        drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
+                var context = renderer.getContext2d();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
@@ -363,10 +363,17 @@
                     context.stroke();
                 }
                 // display the current value
+<<<<<<< HEAD
                 this.font.drawFromContext(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
                 this.font.drawFromContext(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+=======
+                this.font.draw(renderer, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
+            } else {
+                // Heap Memory information not available
+                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+>>>>>>> master
             }
         },
 

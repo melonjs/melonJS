@@ -6,8 +6,7 @@ var game = {
         { name: "scream",  type:"image", src:"data/gfx/scream.png" },
         { name: "smile",   type:"image", src:"data/gfx/smile.png" },
         { name: "smirk",   type:"image", src:"data/gfx/smirk.png" },
-        { name: "brick",   type:"image", src:"data/gfx/brick.png" },
-        { name: "level",   type:"tmx",   src:"data/map/level.tmx" }
+        { name: "brick",   type:"image", src:"data/gfx/brick.png" }
     ],
 
     onload: function()
@@ -43,12 +42,9 @@ var game = {
 
 var PlayScreen = me.ScreenObject.extend( {
     onResetEvent: function() {
-        me.levelDirector.loadLevel("level");
-        // make the collision layer also visible since we also use it for the background
-        me.game.currentLevel.getLayerByName("collision").setOpacity(1);
-        // set the corresponding flag in the debug panel
-        me.debug.renderCollisionMap = true;
-
+         // clear the background
+        me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
+        
         // Add some objects
         for (var i = 0; i < 200; i++) {
             me.game.world.addChild(new Smilie(i), 3);
@@ -68,19 +64,40 @@ var Smilie = me.Entity.extend({
                 height : 16,
             }]
         );
+        
+        // disable gravity and add a random velocity
+        this.body.gravity = 0;
+        this.body.vel.set(Number.prototype.random(-4, 4), Number.prototype.random(-4, 4));
+
+        this.alwaysUpdate = true;
+           
         // add the coin sprite as renderable
-        this.renderable = new me.Sprite(16, 16, me.loader.getImage(game.assets[i % 5].name));
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
        
         // add a collision shape
-        this.body.addShape(new me.Rect(0, 0, this.width, this.heigth));
+        this.body.addShape(new me.Rect(0, 0, 16, 16));
     },
 
     update : function (dt) {
-        this.body.update(dt);
+        this.pos.add(this.body.vel);
         
-        me.collision.check(this);
-
-        return this._super(me.Entity, 'update', [dt]);
+        // world limit check
+        if( this.pos.x > 1024 ) this.pos.x = 0;
+        if( this.pos.x < 0 ) this.pos.x = 1024;
+        if( this.pos.y > 768 ) this.pos.y = 0;
+        if( this.pos.y < 0 ) this.pos.y = 768;
+        
+        // update the body pos and bounds since
+        // we manipulated the entity pos manually
+        this.body.updateBounds();
+                
+        if (me.collision.check(this)) {
+            // me.collision.check returns true in case of collision
+            this.renderable.setOpacity(1.0);
+        } else {
+            this.renderable.setOpacity(0.5);
+        };
+        return true;
     }
 });
     
