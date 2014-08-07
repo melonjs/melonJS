@@ -197,8 +197,8 @@
          * @name translate
          * @memberOf me.Matrix2d
          * @function
-         * @param {me.Vector2d} x the x coordindates to translate the matrix by
-         * @param {me.Vector2d} y the y coordindates to translate the matrix by
+         * @param {Number} x the x coordindates to translate the matrix by
+         * @param {Number} y the y coordindates to translate the matrix by
          * @return {me.Matrix2d} this matrix
          */
         translate : function (x, y) {
