@@ -341,7 +341,7 @@
         /** @private */
         drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
-                var context = renderer.getContext2d();
+                var context = renderer.getContext();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
