@@ -19,7 +19,7 @@
     // ensure that me.debug is defined
     me.debug = me.debug || {};
 
-    var DEBUG_HEIGHT = 70;
+    var DEBUG_HEIGHT = 50;
 
     /**
      * @class
@@ -83,11 +83,7 @@
             this.canvas = me.video.createCanvas(screenCanvas.width, DEBUG_HEIGHT, true);
             
             screenCanvas.parentNode.appendChild(this.canvas);
-            this.canvas.style.position = 'absolute';
-            this.canvas.style.opacity = '0.7';
-            this.canvas.style.top = '0px';
-            this.canvas.style.left = '0px';
-            this.canvas.parentNode.position = 'relative';
+            this.canvas.style.display = 'none';
             this.context = me.CanvasRenderer.getContext2d(this.canvas);
 
             // create a default font, with fixed char width
@@ -97,17 +93,15 @@
                 s = 7;
                 this.mod = 0.7;
             }
-            s *= me.device.getPixelRatio();
-            this.mod *= me.device.getPixelRatio();
             this.font = new me.Font('courier', s, 'white');
 
             // clickable areas
             var size = 12 * this.mod;
-            this.area.renderHitBox = new me.Rect(295,10,size,size);
-            this.area.renderVelocity = new me.Rect(295,28,size,size);
+            this.area.renderHitBox = new me.Rect(163,5,size,size);
+            this.area.renderVelocity = new me.Rect(163,20,size,size);
 
-            this.area.renderQuadTree = new me.Rect(500,10,size,size);
-            this.area.renderCollisionMap = new me.Rect(500,28,size,size);
+            this.area.renderQuadTree = new me.Rect(265,5,size,size);
+            this.area.renderCollisionMap = new me.Rect(265,20,size,size);
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
@@ -228,7 +222,7 @@
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
                     // TODO: This will also be tricky for WebGL.
-                    var context = renderer.getContext();
+                    var context = renderer.getSystemContext();
                     context.strokeStyle = "blue";
                     context.lineWidth = 1;
                     context.beginPath();
@@ -240,18 +234,6 @@
                     context.stroke();
                 }
             });
-
-            // resize event to resize our canvas
-            me.plugin.patch(me.video, "updateDisplaySize", function (scaleX, scaleY) {
-                this._patched(scaleX, scaleY);
-
-                var canvas = me.video.renderer.getScreenCanvas();
-                _this.canvas.width = canvas.width;
-                _this.canvas.height = DEBUG_HEIGHT;
-                _this.canvas.style.width = canvas.style.width;
-                _this.canvas.style.height = DEBUG_HEIGHT * scaleY;
-                _this.rect.resize(canvas.width, DEBUG_HEIGHT * scaleY);
-            });
         },
 
         /**
@@ -260,8 +242,7 @@
         show : function() {
             if (!this.visible) {
                 // register a mouse event for the checkboxes
-                // me.input.registerPointerEvent('pointerdown', this.rect, this.onClick.bind(this), true);
-                this.canvas.addEventListener('click', this.onClick.bind(this));
+                me.input.registerPointerEvent('pointerdown', this.rect, this.onClick.bind(this), true);
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible
@@ -306,6 +287,7 @@
         /** @private */
         onClick : function(e)  {
             // check the clickable areas
+            console.log(e.gameX, e.gameY);
             if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
             }
@@ -414,19 +396,19 @@
 
             // # entities / draw
             this.font.drawFromContext(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 15 * this.mod);
+            this.font.drawFromContext(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 20 * this.mod);
 
             // debug checkboxes
-            this.font.drawFromContext(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     85 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     85 * this.mod, 15 * this.mod);
+            this.font.drawFromContext(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.drawFromContext(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 20 * this.mod);
 
-            this.font.drawFromContext(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    175 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 175 * this.mod, 15 * this.mod);
+            this.font.drawFromContext(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    190 * this.mod, 5 * this.mod);
+            this.font.drawFromContext(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 190 * this.mod, 20 * this.mod);
 
             // draw the update duration
             this.font.drawFromContext(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 15 * this.mod);
+            this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
 
             this.context.strokeStyle = '#f00';
             var rect = this.area.renderHitBox;
@@ -453,7 +435,13 @@
             this.font.drawFromContext(this.context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
             this.context.restore();
-
+            me.video.renderer.setGlobalAlpha(0.7);
+            me.video.renderer.drawImage(
+                this.canvas, 0, 0,
+                this.canvas.width, this.canvas.height,
+                0, 0, this.rect.width, this.rect.height
+            );
+            me.video.renderer.setGlobalAlpha(1.0);
         },
 
         /** @private */
