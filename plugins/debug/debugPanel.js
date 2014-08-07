@@ -213,7 +213,7 @@
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
                     // TODO: This will also be tricky for WebGL.
-                    var context = renderer.getContext();
+                    var context = renderer.getContext2d();
                     context.strokeStyle = "blue";
                     context.lineWidth = 1;
                     context.beginPath();
