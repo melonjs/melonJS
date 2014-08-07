@@ -105,7 +105,7 @@
         multiply : function (mat) {
             var m11 = this.a, m12 = this.b, m13 = this.c,
             m21 = this.d, m22 = this.e, m23 = this.f,
-            m31 = this.g, m32 = this.h, m33 = this.i
+            m31 = this.g, m32 = this.h, m33 = this.i;
 
             this.a = m11 * mat.a + m12 * mat.d + m13 * mat.g;
             this.b = m11 * mat.b + m12 * mat.e + m13 * mat.h;
@@ -129,7 +129,7 @@
          */
         rotate : function (rad) {
             var s = Math.sin(rad),
-            s = Math.cos(rad),
+            c = Math.cos(rad),
             m11 = this.a, m12 = this.b, m13 = this.c,
             m21 = this.d, m22 = this.e, m23 = this.f;
 
@@ -198,7 +198,7 @@
         translate : function (x, y) {
             var m11 = this.a, m12 = this.b, m13 = this.c,
             m21 = this.d, m22 = this.e, m23 = this.f,
-            m31 = this.g, m32 = this.h, m33 = this.i
+            m31 = this.g, m32 = this.h, m33 = this.i;
 
             this.g = x * m11 + y * m21 + m31;
             this.h = x * m12 + y * m22 + m32;
