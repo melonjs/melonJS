@@ -20,7 +20,9 @@
         color = null,
         textures = {},
         fragmentShader = null,
-        vertexShader = null;
+        vertexShader = null,
+        shaderProgram = null,
+        spriteBatch;
 
         api.init = function (width, height, c) {
             canvas = c;
@@ -47,8 +49,8 @@
 
                 "void main(void) {" +
                 "   gl_Position = vec4((u_matrix * vec3(" + kami.ShaderProgram.POSITION_ATTRIBUTE + ", 1)).xy, 0, 1);" +
-                " vTexCoord0 = " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
-                " vColor = " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
+                "   vTexCoord0 = " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
+                "   vColor = " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
                 "}"
             ;
 
@@ -57,6 +59,13 @@
             color = new me.Color();
             this.globalAlpha = 1.0;
             this.uniformMatrix = new me.Matrix3d();
+            shaderProgram = new kami.ShaderProgram(this.context, vertexShader, fragmentShader);
+            if (shaderProgram.log) {
+                console.warn(shaderProgram.log);
+            }
+
+            spriteBatch = new kami.SpriteBatch(this.context);
+
             return this;
         };
 

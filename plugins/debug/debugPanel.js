@@ -105,9 +105,9 @@
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
-            this.help_str_len = this.font.measureText(me.video.renderer.getSystemContext(), this.help_str).width;
-            this.fps_str_len = this.font.measureText(me.video.renderer.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 300 * this.mod;
+            this.help_str_len = this.font.measureText(me.video.renderer.getContext(), this.help_str).width;
+            this.fps_str_len = this.font.measureText(me.video.renderer.getContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 300 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -343,7 +343,7 @@
         /** @private */
         drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
-                var context = renderer.getContext2d();
+                var context = renderer.getContext();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
@@ -363,17 +363,10 @@
                     context.stroke();
                 }
                 // display the current value
-<<<<<<< HEAD
                 this.font.drawFromContext(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
                 this.font.drawFromContext(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
-=======
-                this.font.draw(renderer, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
-            } else {
-                // Heap Memory information not available
-                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
->>>>>>> master
             }
         },
 

@@ -98,7 +98,16 @@
          * @function
          */
         identity : function () {
-            this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
+            var a = this.val;
+            a[0] = 1;
+            a[1] = 0;
+            a[2] = 0;
+            a[3] = 0;
+            a[4] = 1;
+            a[5] = 0;
+            a[6] = 0;
+            a[7] = 0;
+            a[8] = 1;
         },
 
         /**
