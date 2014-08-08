@@ -357,10 +357,18 @@
          * @ignore
          */
         api.init = function () {
-            // default bounds
-            api.bounds = me.game.world.clone();
+            // default bounds to the game viewport
+            api.bounds = me.game.viewport.clone();
             // initializa the quadtree
-            api.quadTree = new me.QuadTree(me.game.viewport, false, this.maxDepth, this.maxChildren);
+            api.quadTree = new me.QuadTree(api.bounds, this.maxChildren, this.maxDepth);
+            
+            // reset the collision detection engine if a TMX level is loaded
+            me.event.subscribe(me.event.LEVEL_LOADED, function () {
+                // default bounds to game world
+                me.collision.bounds = me.game.world.clone();
+                // reset the quadtree
+                me.collision.quadTree.clear(me.collision.bounds);
+            });
         };
         
         /**
