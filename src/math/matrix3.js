@@ -5,12 +5,10 @@
  * sourced from: https://github.com/mattdesl/vecmath. To keep in line with other matrix libraries
  */
 (function () {
-    var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
-
     me.Matrix3d = Object.extend({
         /** @ignore */
         init : function (m) {
-            this.val = new ARRAY_TYPE(9);
+            this.val = new me.Float32Array(9);
             if (m) { //assume Matrix3 with val
                 this.copy(m);
             }

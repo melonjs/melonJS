@@ -18,10 +18,40 @@
         canvas = null,
         gl = null,
         color = null,
-        textures = {};
+        textures = {},
+        fragmentShader = null,
+        vertexShader = null;
 
         api.init = function (width, height, c) {
             canvas = c;
+
+            fragmentShader =
+                "precision mediump float;" +
+                "varying vec2 vTexCoord0;" +
+                "varying vec4 vColor;" +
+                "uniform sampler2D u_texture0;" +
+
+                "void main(void) {" +
+                "   gl_FragColor = texture2D(u_texture0, vTexCoord0) * vColor;" +
+                "}"
+            ;
+
+            vertexShader =
+                "attribute vec2 " + kami.ShaderProgram.POSITION_ATTRIBUTE + ";" +
+                "attribute vec4 " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
+                "attribute vec2 " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
+
+                "uniform mat3 u_matrix;" +
+                "varying vec2 vTexCoord0;" +
+                "varying vec4 vColor;" +
+
+                "void main(void) {" +
+                "   gl_Position = vec4((u_matrix * vec3(" + kami.ShaderProgram.POSITION_ATTRIBUTE + ", 1)).xy, 0, 1);" +
+                " vTexCoord0 = " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
+                " vColor = " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
+                "}"
+            ;
+
             this.context = new kami.WebGLContext(width, height, canvas);
             gl = this.context.gl;
             color = new me.Color();
