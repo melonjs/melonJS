@@ -22,8 +22,8 @@
     * @param {Number} maxDepth The maximum number of levels that the quadtree will create. Default is 4.
     * @param {Number} maxChildren The maximum number of children that a node can contain before it is split into sub-nodes.
     **/
-    function QuadTree(bounds, maxDepth, maxChildren) {
-        this.root = new BoundsNode(bounds, 0, maxDepth, maxChildren);
+    function QuadTree(bounds, maxChildren, maxDepth) {
+        this.root = new BoundsNode(bounds, 0, maxChildren, maxDepth);
     }
 
     /**
