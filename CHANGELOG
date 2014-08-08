@@ -22,6 +22,7 @@ Version History
 * Audio : sync'ed with last Howler 1.1.25 version (fixes numerous issues, see official changelog for more details)
 * TMX : fixed the background color drawing when the level is smaller than the display canvas
 * TMX : fixed the getTile function returning wrong tiles when using isometric maps
+* TMX : fixed world container size not being udpated after a new level is loaded
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)

@@ -144,6 +144,9 @@
 
             // translate the display if required
             me.game.world.transform.translateV(me.game.currentLevel.pos);
+            
+            // update the game world size to match the level size
+            me.game.world.resize(me.game.currentLevel.width, me.game.currentLevel.height);
 
             // fire the callback if defined
             if (me.game.onLevelLoaded) {
