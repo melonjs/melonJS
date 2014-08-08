@@ -256,7 +256,6 @@
                 // else polygon or circle
                 this.shapes.push(shape);
             }
-            this.updateBounds();
         },
 
         /**
@@ -282,6 +281,8 @@
         setShape : function (index) {
             if (typeof(this.shapes[index]) !== "undefined") {
                 this.shapeIndex = index;
+                // update the body bounds based on the active shape
+                this.updateBounds();
                 return;
             }
             throw new me.Body.Error("Shape (" + index + ") not defined");
