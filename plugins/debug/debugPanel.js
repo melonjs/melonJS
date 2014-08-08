@@ -96,9 +96,9 @@
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
-            this.help_str_len = this.font.measureText(me.video.renderer.getSystemContext(), this.help_str).width;
-            this.fps_str_len = this.font.measureText(me.video.renderer.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.help_str_len = this.font.measureText(me.video.renderer.getContext(), this.help_str).width;
+            this.fps_str_len = this.font.measureText(me.video.renderer.getContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
