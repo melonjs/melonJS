@@ -437,6 +437,9 @@
             backBufferContext2D.scale(x, y);
         };
 
+        /**
+         * @private
+         */
         api.setAlpha = function (enable) {
             backBufferContext2D.globalCompositeOperation = enable ? "source-over" : "copy";
         };

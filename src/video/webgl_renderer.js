@@ -69,6 +69,16 @@
             return this;
         };
 
+        /**
+         * Starts the sprite batch draw call
+         * @name begin
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.begin = function () {
+            spriteBatch.begin();
+        };
+
         api.blitSurface = function () {
             // empty function for now
         };
@@ -111,6 +121,7 @@
          * @param {Number} dh the height value to draw the image at on the screen
          */
         api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+            shaderProgram.setUniformMatrix3("u_matrix", this.uniformMatrix, false);
             if (typeof textures[image.src] === "undefined") {
                 var texture = new kami.Texture(this.context);
                 texture.setFilter(kami.Texture.Filter.LINEAR);
@@ -118,6 +129,16 @@
                 texture.uploadImage(image);
             }
             this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+        };
+
+        /**
+         * Ends the sprite batch draw call
+         * @name end
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.end = function () {
+            spriteBatch.end();
         };
 
         /**
@@ -191,7 +212,7 @@
          * @function
          */
         api.resetTransform = function () {
-            // gl.setTransform(1, 0, 0, 1, 0, 0);
+            this.uniformMatrix.identity();
         };
 
         /**
@@ -211,6 +232,79 @@
                 canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
             }
         };
+
+        api.restore = function () {
+
+        };
+
+        /**
+         * rotates the uniform matrix
+         * @name rotate
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} angle in radians
+         */
+        api.rotate = function (angle) {
+            this.uniformMatrix.rotate(angle);
+        };
+
+        api.save = function () {
+
+        };
+
+        /**
+         * scales the uniform matrix
+         * @name scale
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         */
+        api.scale = function (x, y) {
+            this.uniformMatrix.scale(x, y);
+        };
+
+        /**
+         * @private
+         */
+        api.setAlpha = function () {
+            // Kami handles the alpha blending.
+        };
+
+        api.setImageSmoothing = function () {
+            // TODO: perhaps handle GLNEAREST or other options with texture binding
+        };
+
+        /**
+         * Sets the uniform matrix to the specified values from a Matrix2d
+         * Created to support the original canvas method on the webgl renderer
+         * @name transform
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} a the m1,1 (m11) value in the matrix
+         * @param {Number} b the m1,2 (m12) value in the matrix
+         * @param {Number} d the m2,1 (m21) value in the matrix
+         * @param {Number} e the m2,2 (m12) value in the matrix
+         * @param {Number} c the m1,3
+         * @param {Number} f the m2,3
+         */
+        api.transform = function (a, b, d, e, c, f) {
+            this.uniformMatrix.transform(a, b, d, e, c, f);
+        };
+
+        /**
+         * Translates the uniform matrix by the given coordinates
+         * @name translate
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         */
+        api.translate = function (x, y) {
+            this.uniformMatrix.translate(x, y);
+        };
+
+
 
         return api;
     })();

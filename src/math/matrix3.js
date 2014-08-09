@@ -256,6 +256,29 @@
         },
 
         /**
+         * Sets the matrix to the specified values from a Matrix2d
+         * Created to support the original canvas method on the webgl renderer
+         * @name transform
+         * @memberOf me.Matrix3d
+         * @function
+         * @param {Number} a the m1,1 (m11) value in the matrix
+         * @param {Number} b the m1,2 (m12) value in the matrix
+         * @param {Number} d the m2,1 (m21) value in the matrix
+         * @param {Number} e the m2,2 (m12) value in the matrix
+         * @param {Number} c the m1,3
+         * @param {Number} f the m2,3
+         */
+        transform : function (a, b, d, e, c, f) {
+            var m = this.val;
+            m[0] = a;
+            m[1] = b;
+            m[2] = c;
+            m[3] = d;
+            m[4] = e;
+            m[5] = f;
+        },
+
+        /**
          * Transpose the matrix. Returns self
          * @name transpose
          * @memberOf me.Matrix3d
