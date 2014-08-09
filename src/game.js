@@ -257,15 +257,12 @@
                 // update the timer
                 me.timer.update(time);
                 
-                // only enable the quadTree when the quadtree debug mode is enabled
-                if (me.debug && me.debug.renderQuadTree) {
-                    // clear and populate the quadTree
-                    me.collision.quadTree.clear();
-                    for (var i = api.world.children.length, item; i--, (item = api.world.children[i]);) {
-                        // only insert object with a "physic body"
-                        if (typeof (item.body) !== "undefined") {
-                            me.collision.quadTree.insert(item);
-                        }
+                // fill the quadtree
+                me.collision.quadTree.clear();
+                for (var i = api.world.children.length, item; i--, (item = api.world.children[i]);) {
+                    // only insert object with a "physic body"
+                    if (typeof (item.body) !== "undefined") {
+                        me.collision.quadTree.insert(item);
                     }
                 }
 

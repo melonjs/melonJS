@@ -8,6 +8,7 @@ Version History
 * Core : added a Base64 Encode function (aaschmitz)
 * Core : new `me.Error` class to help better track down execeptions' origin
 * Core : brand new "Separate Axis Theorem " based collision algorithm (support polygon/ellipse, and providex more accurate collision response)
+* Core : added a spatial collision grid detection algorithm (quad tree) for super fast collision detection
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target. Use me.video.renderer to call things like getWidth, getHeight, getCanvas, getContext, etc.
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS

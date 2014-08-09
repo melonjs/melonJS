@@ -473,18 +473,9 @@
             var collision = 0;
             var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
-            var candidates;
-            
-            // only enable the quadTree when the quadtree debug mode is enabled
-            if (me.debug && me.debug.renderQuadTree) {
-                // TODO add an argument to the retrieve function so that we only retreive entity
-                // in the corresponding region with the "same" collision mask
-                candidates = me.collision.quadTree.retrieve(objA);
-               //console.log(candidates.length);
-            } else {
-                // all world children
-                candidates = me.game.world.children;
-            }
+
+            // retreive a list of potential colliding objects            
+            var candidates = me.collision.quadTree.retrieve(objA);
             
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
