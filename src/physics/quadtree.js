@@ -104,9 +104,8 @@
             } else if (bottomQuadrant) {
                 index = 2;
             }
-
-        //rect can completely fit within the right quadrants
         } else if (rect.pos.x > verticalMidpoint) {
+            //rect can completely fit within the right quadrants
             if (topQuadrant) {
                 index = 0;
             } else if (bottomQuadrant) {
@@ -126,14 +125,11 @@
      */
     Quadtree.prototype.insert = function (item) {
 
-        var i = 0,
-            index,
-            rect = item.getBounds();
+        var index = -1;
         
-
         //if we have subnodes ...
         if (typeof this.nodes[0] !== "undefined") {
-            index = this.getIndex(rect);
+            index = this.getIndex(item.getBounds());
 
             if (index !== -1) {
                 this.nodes[index].insert(item);
@@ -149,6 +145,8 @@
             if (typeof this.nodes[0] === "undefined") {
                 this.split();
             }
+
+            var i = 0;
 
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
@@ -171,13 +169,13 @@
      * @Return Array array with all detected objects
      */
     Quadtree.prototype.retrieve = function (item) {
-
-        var rect = item.getBounds(),
-            index = this.getIndex(rect),
-            returnObjects = this.objects;
+        
+        var returnObjects = this.objects;
 
         //if we have subnodes ...
         if (typeof this.nodes[0] !== "undefined") {
+
+            var index = this.getIndex(item.getBounds());
 
             //if rect fits into a subnode ..
             if (index !== -1) {
