@@ -305,23 +305,19 @@
         },
 
         /** @private */        
-        drawQuadTreeNode : function (renderer, node) {        
-            var bounds = node._bounds;
-            
-            // Opacity is based on number of objects in the cell
-            renderer.setGlobalAlpha((node.children.length / 16).clamp(0, 0.9));
-            renderer.fillRect(Math.abs(bounds.pos.x) + 0.5,
-                Math.abs(bounds.pos.y) + 0.5,
-                bounds.width,
-                bounds.height,
-                "red"
-            );
-
-            var len = node.nodes.length;
-
-            for(var i = 0; i < len; i++) {
-                this.drawQuadTreeNode(renderer, node.nodes[i]);
-            }
+        drawQuadTreeNode : function (renderer, node) {      
+            var bounds = node.bounds;
+        
+            // draw the current bounds
+            if( node.nodes.length === 0) {
+                renderer.setGlobalAlpha((node.objects.length / (me.collision.maxChildren * 2)).clamp(0, 0.4));
+                renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+            } else {
+                //has subnodes? drawQuadtree them!
+                for( var i=0;i<node.nodes.length;i=i+1 ) {
+                    this.drawQuadTreeNode( renderer, node.nodes[ i ] );
+                }
+            } 
         },
         
         /** @private */
@@ -331,7 +327,7 @@
             
             renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
             
-            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
+            this.drawQuadTreeNode(renderer, me.collision.quadTree);
             
             renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
             
