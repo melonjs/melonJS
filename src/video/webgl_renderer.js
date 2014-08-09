@@ -96,23 +96,23 @@
 
         /**
          * return a reference to the system canvas
-         * @name getSystemCanvas
+         * @name getCanvas
          * @memberOf me.WebGLRenderer
          * @function
          * @return {Canvas}
          */
-        api.getSystemCanvas = function () {
+        api.getCanvas = function () {
             return canvas;
         };
 
         /**
          * return a reference to the system 2d Context
-         * @name getSystemContext
+         * @name getContext
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {Context2d}
+         * @return {WebGLContext}
          */
-        api.getSystemContext = function () {
+        api.getContext = function () {
             return gl;
         };
 

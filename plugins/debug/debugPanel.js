@@ -96,9 +96,9 @@
 
             // some internal string/length
             this.help_str      = "(s)how/(h)ide";
-            this.help_str_len = this.font.measureText(me.video.renderer.getSystemContext(), this.help_str).width;
-            this.fps_str_len = this.font.measureText(me.video.renderer.getSystemContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getSystemContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.help_str_len = this.font.measureText(me.video.renderer.getContext(), this.help_str).width;
+            this.fps_str_len = this.font.measureText(me.video.renderer.getContext(), "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -305,23 +305,19 @@
         },
 
         /** @private */        
-        drawQuadTreeNode : function (renderer, node) {        
-            var bounds = node._bounds;
-            
-            // Opacity is based on number of objects in the cell
-            renderer.setGlobalAlpha((node.children.length / 16).clamp(0, 0.9));
-            renderer.fillRect(Math.abs(bounds.pos.x) + 0.5,
-                Math.abs(bounds.pos.y) + 0.5,
-                bounds.width,
-                bounds.height,
-                "red"
-            );
-
-            var len = node.nodes.length;
-
-            for(var i = 0; i < len; i++) {
-                this.drawQuadTreeNode(renderer, node.nodes[i]);
-            }
+        drawQuadTreeNode : function (renderer, node) {      
+            var bounds = node.bounds;
+        
+            // draw the current bounds
+            if( node.nodes.length === 0) {
+                renderer.setGlobalAlpha((node.objects.length / (me.collision.maxChildren * 2)).clamp(0, 0.4));
+                renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+            } else {
+                //has subnodes? drawQuadtree them!
+                for( var i=0;i<node.nodes.length;i=i+1 ) {
+                    this.drawQuadTreeNode( renderer, node.nodes[ i ] );
+                }
+            } 
         },
         
         /** @private */
@@ -331,7 +327,7 @@
             
             renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
             
-            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
+            this.drawQuadTreeNode(renderer, me.collision.quadTree);
             
             renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
             
@@ -339,8 +335,9 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, endX) {
+        drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
+                var context = renderer.getContext();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
@@ -360,10 +357,10 @@
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 

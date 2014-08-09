@@ -4,333 +4,220 @@
  * http://www.melonjs.org
  *
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * Based on the QuadTree Library by Mike Chambers and released under the MIT license
- * https://github.com/mikechambers/ExamplesByMesh/tree/master/JavaScript/QuadTree
+ * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
+ * https://github.com/timohausmann/quadtree-js/
 **/
 
-(function () {
+(function (window, Math) {
 
-    /****************** QuadTree ****************/
+     /*
+      * Quadtree Constructor
+      * @param {me.Rect} bounds bounds of the node
+      * @param Integer max_objects (optional) max objects a node can hold before splitting into 4 subnodes (default: 8)
+      * @param Integer max_levels (optional) total max levels inside root Quadtree (default: 4)
+      * @param Integer level (optional) deepth level, required for subnodes
+      */
+    function Quadtree(bounds, max_objects, max_levels, level) {
+        this.max_objects = max_objects || 4;
+        this.max_levels  = max_levels || 4;
 
-    /**
-    * QuadTree data structure.
-    * @class QuadTree
-    * @constructor
-    * @ignore
-    * @param {Object} An object representing the bounds of the top level of the QuadTree. The object 
-    * should contain the following properties : {x, y}, width, height
-    * @param {Number} maxDepth The maximum number of levels that the quadtree will create. Default is 4.
-    * @param {Number} maxChildren The maximum number of children that a node can contain before it is split into sub-nodes.
-    **/
-    function QuadTree(bounds, maxDepth, maxChildren) {
-        this.root = new BoundsNode(bounds, 0, maxDepth, maxChildren);
-    }
+        this.level = level || 0;
+        this.bounds = bounds;
 
-    /**
-    * The root node of the QuadTree which covers the entire area being segmented.
-    * @property root
-    * @type Node
-    **/
-    QuadTree.prototype.root = null;
-
-   
-    /**
-    * Inserts an item into the QuadTree.
-    * @method insert
-    * @ignore
-    * @param {Entity|Array} item The item or Array of items to be inserted into the QuadTree. The item should expose x, y 
-    * properties that represents its position in 2D space.
-    **/
-    QuadTree.prototype.insert = function (item) {
-        if (item instanceof Array) {
-            var len = item.length;
-
-            var i;
-            for (i = 0; i < len; i++) {
-                this.root.insert(item[i]);
-            }
-        } else {
-            this.root.insert(item);
-        }
-    };
-    
-    /**
-    * Clears all nodes and children from the QuadTree
-    * @ignore
-    * @param {Object} An optional object representing the bounds of the top level of the QuadTree. The object 
-    * should contain the following properties : {x, y}, width, height
-    * @method clear
-    **/
-    QuadTree.prototype.clear = function (bounds) {
-        this.root.clear();
-        if (typeof bounds !== "undefined") {
-            this.root._bounds.pos.setV(bounds.pos);
-            this.root._bounds.width = bounds.width;
-            this.root._bounds.height = bounds.height;
-        }
-    };
-
-    /**
-    * Retrieves all items / points in the same node as the specified item / point. If the specified item
-    * overlaps the bounds of a node, then all children in both nodes will be returned.
-    * @ignore
-    * @method retrieve
-    * @param {Entity} item An object entity with bounds property representing a 2D coordinate point (with x, y properties), or a shape
-    * with dimensions (x, y, width, height) properties.
-    **/
-    QuadTree.prototype.retrieve = function (item) {
-        //get a copy of the array of items
-        var out = this.root.retrieve(item).slice(0);
-        return out;
-    };
-
-
-    /******************** BoundsQuadTree ****************/
-
-    function BoundsNode(bounds, depth, maxChildren, maxDepth) {
-        this._bounds = bounds;
-        this.children = [];
+        this.objects = [];
         this.nodes = [];
-
-        if (maxChildren) {
-            this._maxChildren = maxChildren;
-        }
-
-        if (maxDepth) {
-            this._maxDepth = maxDepth;
-        }
-
-        if (depth) {
-            this._depth = depth;
-        }
-        this._stuckChildren = [];
     }
-    
-    //subnodes
-    BoundsNode.prototype.nodes = null;
-
-    //children contained directly in the node
-    BoundsNode.prototype.children = null;
-    BoundsNode.prototype._stuckChildren = null;
-    BoundsNode.prototype._bounds = null;
-
-    //read only
-    BoundsNode.prototype._depth = 0;
-
-    BoundsNode.prototype._maxChildren = 4;
-    BoundsNode.prototype._maxDepth = 4;
-
-    BoundsNode.TOP_LEFT = 0;
-    BoundsNode.TOP_RIGHT = 1;
-    BoundsNode.BOTTOM_LEFT = 2;
-    BoundsNode.BOTTOM_RIGHT = 3;
 
 
-    //we use this to collect and concatenate items being retrieved. This way
-    //we dont have to continuously create new Array instances.
-    //Note, when returned from QuadTree.retrieve, we then copy the array
-    BoundsNode.prototype._out = [];
+    /*
+     * Split the node into 4 subnodes
+     */
+    Quadtree.prototype.split = function () {
 
-    BoundsNode.prototype.insert = function (item) {
-        if (this.nodes.length) {
-            var index = this._findIndex(item);
-            var node = this.nodes[index];
-            var itemBounds = item.getBounds();
+        var nextLevel = this.level + 1,
+            subWidth  = Math.round(this.bounds.width / 2),
+            subHeight = Math.round(this.bounds.height / 2),
+            x = Math.round(this.bounds.pos.x),
+            y = Math.round(this.bounds.pos.y);
 
-            //todo: make _bounds bounds
-            if (itemBounds.pos.x >= node._bounds.pos.x &&
-                itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
-                itemBounds.pos.y >= node._bounds.pos.y &&
-                itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
-                
-                this.nodes[index].insert(item);
-                
-            } else {
-                this._stuckChildren.push(item);
-            }
+         //top right node
+        this.nodes[0] = new Quadtree({
+            pos : {
+                x : x + subWidth,
+                y : y
+            },
+            width : subWidth,
+            height : subHeight
+        }, this.max_objects, this.max_levels, nextLevel);
 
-            return;
-        }
+        //top left node
+        this.nodes[1] = new Quadtree({
+            pos : {
+                x : x,
+                y : y
+            },
+            width : subWidth,
+            height : subHeight
+        }, this.max_objects, this.max_levels, nextLevel);
 
-        this.children.push(item);
+        //bottom left node
+        this.nodes[2] = new Quadtree({
+            pos : {
+                x : x,
+                y : y + subHeight
+            },
+            width : subWidth,
+            height : subHeight
+        }, this.max_objects, this.max_levels, nextLevel);
 
-        var len = this.children.length;
-
-        if (len > this._maxChildren && this._depth < this._maxDepth) {
-            
-            this.subdivide();
-
-            var i;
-            for (i = 0; i < len; i++) {
-                this.insert(this.children[i]);
-            }
-
-            this.children.length = 0;
-        }
+        //bottom right node
+        this.nodes[3] = new Quadtree({
+            pos : {
+                x : x + subWidth,
+                y : y + subHeight
+            },
+            width : subWidth,
+            height : subHeight
+        }, this.max_objects, this.max_levels, nextLevel);
     };
 
-    BoundsNode.prototype.getChildren = function () {
-        return this.children.concat(this._stuckChildren);
-    };
 
-    BoundsNode.prototype.retrieve = function (item) {
-        var out = this._out;
-        out.length = 0;
-        if (this.nodes.length) {
-            var index = this._findIndex(item);
-            var node = this.nodes[index];
-            var itemBounds = item.getBounds();
+    /*
+     * Determine which node the object belongs to
+     * @param {me.Rect} rect bounds of the area to be checked
+     * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
+     */
+    Quadtree.prototype.getIndex = function (rect) {
 
-            if (itemBounds.pos.x >= node._bounds.pos.x &&
-                itemBounds.pos.x + itemBounds.width <= node._bounds.pos.x + node._bounds.width &&
-                itemBounds.pos.y >= node._bounds.pos.y &&
-                itemBounds.pos.y + itemBounds.height <= node._bounds.pos.y + node._bounds.height) {
-                
-                out.push.apply(out, this.nodes[index].retrieve(item));
-            } else {
-                //Part of the item are overlapping multiple child nodes. For each of the overlapping nodes, return all containing objects.
+        var index = -1,
+            verticalMidpoint = this.bounds.pos.x + (this.bounds.width / 2),
+            horizontalMidpoint = this.bounds.pos.y + (this.bounds.height / 2),
+            //rect can completely fit within the top quadrants
+            topQuadrant = (rect.pos.y < horizontalMidpoint && rect.pos.y + rect.height < horizontalMidpoint),
+            //rect can completely fit within the bottom quadrants
+            bottomQuadrant = (rect.pos.y > horizontalMidpoint);
 
-                if (itemBounds.pos.x <= this.nodes[BoundsNode.TOP_RIGHT]._bounds.pos.x) {
-                    if (itemBounds.pos.y <= this.nodes[BoundsNode.BOTTOM_LEFT]._bounds.pos.y) {
-                        out.push.apply(out, this.nodes[BoundsNode.TOP_LEFT].getAllContent());
-                    }
-                    
-                    if (itemBounds.pos.y + itemBounds.height > this.nodes[BoundsNode.BOTTOM_LEFT]._bounds.pos.y) {
-                        out.push.apply(out, this.nodes[BoundsNode.BOTTOM_LEFT].getAllContent());
-                    }
-                }
-                
-                if (itemBounds.pos.x + itemBounds.width > this.nodes[BoundsNode.TOP_RIGHT]._bounds.pos.x) {//position+width bigger than middle x
-                    if (itemBounds.pos.y <= this.nodes[BoundsNode.BOTTOM_RIGHT]._bounds.pos.y) {
-                        out.push.apply(out, this.nodes[BoundsNode.TOP_RIGHT].getAllContent());
-                    }
-                    
-                    if (itemBounds.pos.y + itemBounds.height > this.nodes[BoundsNode.BOTTOM_RIGHT]._bounds.pos.y) {
-                        out.push.apply(out, this.nodes[BoundsNode.BOTTOM_RIGHT].getAllContent());
-                    }
-                }
+        //rect can completely fit within the left quadrants
+        if (rect.pos.x < verticalMidpoint && rect.pos.x + rect.width < verticalMidpoint) {
+            if (topQuadrant) {
+                index = 1;
+            } else if (bottomQuadrant) {
+                index = 2;
             }
-        }
-
-        out.push.apply(out, this._stuckChildren);
-        out.push.apply(out, this.children);
-
-        return out;
-    };
-
-    //Returns all contents of node.
-    BoundsNode.prototype.getAllContent = function () {
-        var out = this._out;
-        if (this.nodes.length) {
-            
-            var i;
-            for (i = 0; i < this.nodes.length; i++) {
-                this.nodes[i].getAllContent();
-            }
-        }
-        out.push.apply(out, this._stuckChildren);
-        out.push.apply(out, this.children);
-        return out;
-    };
-    
-    BoundsNode.prototype._findIndex = function (item) {
-        var b = this._bounds;
-        var itemBounds = item.getBounds();
-        var left = (itemBounds.pos.x > b.pos.x + b.width / 2) ? false : true;
-        var top = (itemBounds.pos.y > b.pos.y + b.height / 2) ? false : true;
-
-        //top left
-        var index = BoundsNode.TOP_LEFT;
-        if (left) {
-            //left side
-            if (!top) {
-                //bottom left
-                index = BoundsNode.BOTTOM_LEFT;
-            }
-        } else {
-            //right side
-            if (top) {
-                //top right
-                index = BoundsNode.TOP_RIGHT;
-            } else {
-                //bottom right
-                index = BoundsNode.BOTTOM_RIGHT;
+        } else if (rect.pos.x > verticalMidpoint) {
+            //rect can completely fit within the right quadrants
+            if (topQuadrant) {
+                index = 0;
+            } else if (bottomQuadrant) {
+                index = 3;
             }
         }
 
         return index;
     };
 
-    
-    BoundsNode.prototype.subdivide = function () {
-        var depth = this._depth + 1;
 
-        var bx = this._bounds.pos.x;
-        var by = this._bounds.pos.y;
+    /*
+     * Insert the object into the node. If the node
+     * exceeds the capacity, it will split and add all
+     * objects to their corresponding subnodes.
+     * @param me rect bounds of the object to be added, with x, y, width, height
+     */
+    Quadtree.prototype.insert = function (item) {
 
-        //floor the values
-        var b_w_h = (this._bounds.width / 2) | 0; //todo: Math.floor?
-        var b_h_h = (this._bounds.height / 2) | 0;
-        var bx_b_w_h = bx + b_w_h;
-        var by_b_h_h = by + b_h_h;
+        var index = -1;
+        
+        //if we have subnodes ...
+        if (typeof this.nodes[0] !== "undefined") {
+            index = this.getIndex(item.getBounds());
 
-        //top left
-        this.nodes[BoundsNode.TOP_LEFT] = new BoundsNode({
-            pos: new me.Vector2d(bx, by),
-            width: b_w_h,
-            height: b_h_h
-        },
-        depth, this._maxDepth, this._maxChildren);
-
-        //top right
-        this.nodes[BoundsNode.TOP_RIGHT] = new BoundsNode({
-            pos: new me.Vector2d(bx_b_w_h, by),
-            width: b_w_h,
-            height: b_h_h
-        },
-        depth, this._maxDepth, this._maxChildren);
-
-        //bottom left
-        this.nodes[BoundsNode.BOTTOM_LEFT] = new BoundsNode({
-            pos: new me.Vector2d(bx, by_b_h_h),
-            width: b_w_h,
-            height: b_h_h
-        },
-        depth, this._maxDepth, this._maxChildren);
-
-
-        //bottom right
-        this.nodes[BoundsNode.BOTTOM_RIGHT] = new BoundsNode({
-            pos: new me.Vector2d(bx_b_w_h, by_b_h_h),
-            width: b_w_h,
-            height: b_h_h
-        },
-        depth, this._maxDepth, this._maxChildren);
-    };
-
-    BoundsNode.prototype.clear = function () {
-
-        this._stuckChildren.length = 0;
-
-        //array
-        this.children.length = 0;
-
-        var len = this.nodes.length;
-
-        if (!len) {
-            return;
+            if (index !== -1) {
+                this.nodes[index].insert(item);
+                return;
+            }
         }
 
-        var i;
-        for (i = 0; i < len; i++) {
-            this.nodes[i].clear();
-        }
+        this.objects.push(item);
 
-        //array
-        this.nodes.length = 0;
+        if (this.objects.length > this.max_objects && this.level < this.max_levels) {
+
+            //split if we don't already have subnodes
+            if (typeof this.nodes[0] === "undefined") {
+                this.split();
+            }
+
+            var i = 0;
+
+            //add all objects to there corresponding subnodes
+            while (i < this.objects.length) {
+
+                index = this.getIndex(this.objects[i].getBounds());
+
+                if (index !== -1) {
+                    this.nodes[index].insert(this.objects.splice(i, 1)[0]);
+                } else {
+                    i = i + 1;
+                }
+            }
+        }
     };
 
-    // expose QuadTree under the me namespace
-    me.QuadTree = QuadTree;
 
-}());
+    /*
+     * Return all objects that could collide with the given object
+     * @param Object rect bounds of the object to be checked, with x, y, width, height
+     * @Return Array array with all detected objects
+     */
+    Quadtree.prototype.retrieve = function (item) {
+        
+        var returnObjects = this.objects;
+
+        //if we have subnodes ...
+        if (typeof this.nodes[0] !== "undefined") {
+
+            var index = this.getIndex(item.getBounds());
+
+            //if rect fits into a subnode ..
+            if (index !== -1) {
+                returnObjects = returnObjects.concat(this.nodes[index].retrieve(item));
+            } else {
+                 //if rect does not fit into a subnode, check it against all subnodes
+                for (var i = 0; i < this.nodes.length; i = i + 1) {
+                    returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
+                }
+            }
+        }
+
+        return returnObjects;
+    };
+
+
+    /*
+     * Clear the quadtree
+     */
+    Quadtree.prototype.clear = function (bounds) {
+
+        this.objects = [];
+
+        for (var i = 0; i < this.nodes.length; i = i + 1) {
+            if (typeof this.nodes[i] !== "undefined") {
+                this.nodes[i].clear();
+                // TODO : recycle quadTree object to avoid GC
+                delete this.nodes[i];
+            }
+        }
+        
+        // resize the root bounds if required
+        if (typeof bounds !== "undefined") {
+            this.bounds.pos.x = bounds.pos.x;
+            this.bounds.pos.y = bounds.pos.y;
+            this.bounds.width = bounds.width;
+            this.bounds.height = bounds.height;
+        }
+        
+    };
+
+    //make Quadtree available in the me namespace
+    me.QuadTree = Quadtree;
+
+})(window, Math);

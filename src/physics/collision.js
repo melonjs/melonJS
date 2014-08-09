@@ -357,10 +357,18 @@
          * @ignore
          */
         api.init = function () {
-            // default bounds
-            api.bounds = me.game.world.clone();
+            // default bounds to the game viewport
+            api.bounds = me.game.viewport.clone();
             // initializa the quadtree
-            api.quadTree = new me.QuadTree(me.game.viewport, false, this.maxDepth, this.maxChildren);
+            api.quadTree = new me.QuadTree(api.bounds, this.maxChildren, this.maxDepth);
+            
+            // reset the collision detection engine if a TMX level is loaded
+            me.event.subscribe(me.event.LEVEL_LOADED, function () {
+                // default bounds to game world
+                me.collision.bounds = me.game.world.clone();
+                // reset the quadtree
+                me.collision.quadTree.clear(me.collision.bounds);
+            });
         };
         
         /**
@@ -465,18 +473,9 @@
             var collision = 0;
             var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
-            var candidates;
-            
-            // only enable the quadTree when the quadtree debug mode is enabled
-            if (me.debug && me.debug.renderQuadTree) {
-                // TODO add an argument to the retrieve function so that we only retreive entity
-                // in the corresponding region with the "same" collision mask
-                candidates = me.collision.quadTree.retrieve(objA);
-               //console.log(candidates.length);
-            } else {
-                // all world children
-                candidates = me.game.world.children;
-            }
+
+            // retreive a list of potential colliding objects            
+            var candidates = me.collision.quadTree.retrieve(objA);
             
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
