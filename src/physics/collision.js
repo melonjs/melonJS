@@ -220,14 +220,14 @@
         api.maxDepth = 4;
 
         /**
-         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
+         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes. Default is 8.
          * @name maxChildren
          * @memberOf me.collision
          * @public
          * @type {boolean}
          * @see me.collision.quadTree
          */
-        api.maxChildren = 4;
+        api.maxChildren = 8;
         
        /**
          * bounds of the physic world.
@@ -360,7 +360,7 @@
             // default bounds to the game viewport
             api.bounds = me.game.viewport.clone();
             // initializa the quadtree
-            api.quadTree = new me.QuadTree(api.bounds, this.maxChildren, this.maxDepth);
+            api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
             
             // reset the collision detection engine if a TMX level is loaded
             me.event.subscribe(me.event.LEVEL_LOADED, function () {
