@@ -46,7 +46,7 @@ var PlayScreen = me.ScreenObject.extend( {
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
         
         // Add some objects
-        for (var i = 0; i < 100; i++) {
+        for (var i = 0; i < 200; i++) {
             me.game.world.addChild(new Smilie(i), 3);
         }
     }
@@ -75,7 +75,7 @@ var Smilie = me.Entity.extend({
         this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
        
         // add a collision shape
-        this.body.addShape(new me.Ellipse(4, 4, 8, 8));
+        this.body.addShape(new me.Rect(0, 0, 16, 16));
     },
 
     update : function (dt) {
