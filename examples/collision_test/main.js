@@ -75,7 +75,7 @@ var Smilie = me.Entity.extend({
         this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
        
         // add a collision shape
-        this.body.addShape(new me.Rect(0, 0, 16, 16));
+        this.body.addShape(new me.Ellipse(4, 4, 8, 8));
     },
 
     update : function (dt) {
