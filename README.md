@@ -24,6 +24,7 @@ and currently features :
 - Multi-channel HTML5 audio support and Web Audio on supported devices
 - a lightweight physic implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
+- Fast Broad-phase collision detection using spatial partitioning
 - advanced math API for Vector and Matrix
 - Tween Effects
 - Transition effects
