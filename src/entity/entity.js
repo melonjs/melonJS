@@ -180,7 +180,6 @@
             // add collision shape to the entity body if defined
             if (typeof (settings.getShape) === "function") {
                 this.body.addShape(settings.getShape());
-                this.body.setShape(0);
             } else {
                 // else make the body bounds match the entity ones
                 this.body.updateBounds(this);

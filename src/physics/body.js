@@ -256,6 +256,10 @@
                 // else polygon or circle
                 this.shapes.push(shape);
             }
+            // make sure to enable at least the first added shape
+            if (this.shapes.length === 1) {
+                this.setShape(0);
+            }
         },
 
         /**
