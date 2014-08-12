@@ -170,7 +170,10 @@
                         y : 0
                     }
                 };
-                api.defaultCollisionMap = new me.CollisionTiledLayer(0, 0);
+                api.defaultCollisionMap = new me.CollisionTiledLayer(
+                    width,
+                    height
+                );
 
                 // set as initialized
                 initialized = true;
