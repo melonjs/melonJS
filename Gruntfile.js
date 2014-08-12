@@ -84,7 +84,7 @@ module.exports = function (grunt) {
             },
 
             afterConcat : {
-                field : {
+                files : {
                     src : [ "<%= path.main %>" ]
                 }
             }
