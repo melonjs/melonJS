@@ -182,7 +182,7 @@
                 this.body.addShape(settings.getShape());
             } else {
                 // else make the body bounds match the entity ones
-                this.body.updateBounds(this);
+                this.body.updateBounds(new me.Rect(0, 0, this.width, this.height));
             }
             
             // set the  collision mask if defined
