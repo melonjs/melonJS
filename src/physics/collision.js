@@ -480,14 +480,14 @@
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
                 if (objB.inViewport || objB.alwaysUpdate) {
-                    // TODO: collision detection with other container will be back
-                    // done once quadtree will be added
 
+                    // check if both objects "should" collide
                     if ((objB !== objA) && api.shouldCollide(objA, objB)) {
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
                         
+                            // full SAT collision check
                             if (!api.SAT || api["test" + shapeTypeA + objB.body.getShape().shapeType]
                                             .call(
                                                 this,

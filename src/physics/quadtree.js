@@ -116,6 +116,23 @@
         return index;
     };
 
+    /*
+     * Insert the given container childrens into the node.
+     * @param {me.Container] group of objects to be added
+     */
+    Quadtree.prototype.insertContainer = function (container) {
+        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+            if (child instanceof me.Container) {
+                // recursivly insert childs
+                this.insertContainer(child);
+            } else {
+                // only insert object with a "physic body"
+                if (typeof (child.body) !== "undefined") {
+                    this.insert(child);
+                }
+            }
+        }
+    };
 
     /*
      * Insert the object into the node. If the node

@@ -260,14 +260,11 @@
                 // update the timer
                 me.timer.update(time);
                 
-                // fill the quadtree
+                // clear the quadtree
                 me.collision.quadTree.clear();
-                for (var i = api.world.children.length, item; i--, (item = api.world.children[i]);) {
-                    // only insert object with a "physic body"
-                    if (typeof (item.body) !== "undefined") {
-                        me.collision.quadTree.insert(item);
-                    }
-                }
+                
+                // insert the world container (children) into the quadtree
+                me.collision.quadTree.insertContainer(api.world);
 
                 // update all objects (and pass the elapsed time since last frame)
                 isDirty = api.world.update(me.timer.getDelta()) || isDirty;
