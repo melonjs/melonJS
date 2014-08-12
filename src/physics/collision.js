@@ -471,11 +471,11 @@
          */
         api.check = function (objA, multiple, callback, calcResponse, responseObject) {
             var collision = 0;
-            var response = calcResponse ? responseObject || me.collision.response.clear() : undefined;
+            var response = calcResponse ? responseObject || api.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
 
             // retreive a list of potential colliding objects            
-            var candidates = me.collision.quadTree.retrieve(objA);
+            var candidates = api.quadTree.retrieve(objA);
             
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
