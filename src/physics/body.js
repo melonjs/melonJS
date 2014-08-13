@@ -75,8 +75,7 @@
             this.collisionMask = me.collision.types.ALL_OBJECT;
             
             /**
-             * define the collision type of the body for collision filtering<br>
-             * (set to `NO_OBJECT` to disable collision for this object).
+             * define the collision type of the body for collision filtering
              * @public
              * @type Number
              * @name collisionType
@@ -293,9 +292,9 @@
         },
         
         /**
-         * By default all entities are able to collide with all the other entities, <br>
+         * By default all entities are able to collide with all other entities, <br>
          * but it's also possible to specificy 'collision filters' to provide a finer <br>
-         * control over which entities can collide with each other, using collisionMask.
+         * control over which entities can collide with each other.
          * @name setCollisionMask
          * @memberOf me.Body
          * @public
@@ -305,6 +304,9 @@
          * @example
          * // filter collision detection with collision shapes, enemies and collectables
          * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         * ...
+         * // disable collision detection with all other objects
+         * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
          */
         setCollisionMask : function (bitmask) {
             this.collisionMask = bitmask;
