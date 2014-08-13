@@ -131,8 +131,8 @@
                 var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
                     "image" : image,
-                    "spritewidth" : ~~settings.spritewidth,
-                    "spriteheight" : ~~settings.spriteheight,
+                    "spritewidth" : ~~(settings.spritewidth || settings.width),
+                    "spriteheight" : ~~(settings.spriteheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });
