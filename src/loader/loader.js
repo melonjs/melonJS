@@ -266,7 +266,7 @@
 
         /**
          * Base class for Loader exception handling.
-         * @name loader.Error
+         * @name Error
          * @class
          * @memberOf me.loader
          * @constructor

@@ -495,10 +495,9 @@
     
     /**
      * Base class for Entity exception handling.
-     * @name Entity.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Entity
      * @constructor
      * @param {String} msg Error message.
      */

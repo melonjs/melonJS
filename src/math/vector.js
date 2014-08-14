@@ -535,10 +535,9 @@
 
     /**
      * Base class for Vector2d exception handling.
-     * @name Vector2d.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Vector2d
      * @constructor
      * @param {String} msg Error message.
      */

@@ -75,8 +75,7 @@
 
         /**
          * Base class for Audio exception handling.
-         * @name audio.Error
-         * @ignore
+         * @name Error
          * @class
          * @memberOf me.audio
          * @constructor

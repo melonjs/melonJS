@@ -645,10 +645,9 @@
     
     /**
      * Base class for Body exception handling.
-     * @ignore
-     * @name Body.Error
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Body
      * @constructor
      * @param {String} msg Error message.
      */

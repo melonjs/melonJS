@@ -741,10 +741,9 @@
 
     /**
      * Base class for ObjectContainer exception handling.
-     * @name Container.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Container
      * @constructor
      * @param {String} msg Error message.
      */
