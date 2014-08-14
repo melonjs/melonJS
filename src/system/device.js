@@ -17,6 +17,7 @@
         var accelInitialized = false;
         var deviceOrientationInitialized = false;
         var devicePixelRatio = null;
+        var deviceContext = null;
 
         /**
          * check the device capapbilities
@@ -133,6 +134,10 @@
                     }, false
                 );
             }
+
+            // setup device context for pixel ratio
+            var canvas = me.video.createCanvas(100, 100, false);
+            deviceContext = me.CanvasRenderer.getContext2d(canvas);
         };
 
         /**
@@ -401,9 +406,8 @@
         api.getPixelRatio = function () {
 
             if (devicePixelRatio === null) {
-                var _context = me.video.renderer.getScreenContext();
                 var _devicePixelRatio = window.devicePixelRatio || 1,
-                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", _context) || 1;
+                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", deviceContext) || 1;
                 devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
             }
             return devicePixelRatio;
