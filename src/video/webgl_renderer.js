@@ -15,6 +15,7 @@
      */
     me.WebGLRenderer = (function () {
         var api = {},
+        globalColor = null,
         canvas = null,
         gl = null,
         color = null,
@@ -22,7 +23,26 @@
         fragmentShader = null,
         vertexShader = null,
         shaderProgram = null,
-        spriteBatch;
+        spriteBatch,
+        fontCache = {},
+        fontContext = null;
+
+        function drawFontToContext (font, fontSize, fillStyle, textAlign, textBaseline, lineHeight, text) {
+            fontContext.font = font;
+            fontContext.fillStyle = fillStyle;
+            fontContext.textAlign = textAlign;
+            fontContext.textBaseline = textBaseline;
+
+            var x = 0, y = 0;
+
+            var strings = ("" + text).split("\n");
+            for (var i = 0; i < strings.length; i++) {
+                // draw the string
+                fontContext.fillText(strings[i].trimRight(), ~~x, ~~y);
+                // add leading space
+                y += fontSize.y * lineHeight;
+            }
+        }
 
         api.init = function (width, height, c) {
             canvas = c;
@@ -57,7 +77,6 @@
             this.context = new kami.WebGLContext(width, height, canvas);
             gl = this.context.gl;
             color = new me.Color();
-            this.globalAlpha = 1.0;
             this.uniformMatrix = new me.Matrix3d();
             shaderProgram = new kami.ShaderProgram(this.context, vertexShader, fragmentShader);
             if (shaderProgram.log) {
@@ -65,7 +84,9 @@
             }
 
             spriteBatch = new kami.SpriteBatch(this.context);
-
+            globalColor = new me.Color(255, 255, 255, 1.0);
+            var fontCanvas = me.video.createCanvas(width, height, false);
+            fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
             return this;
         };
 
@@ -106,6 +127,71 @@
         };
 
         /**
+         * draws font to the backbuffer canvas.
+         * @name drawFont
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Font} fontObject - an instance of me.Font
+         * @param {String} text - the string of text to draw
+         * @param {Number} x - the x position to draw at
+         * @param {Number} y - the y position to draw at
+         * @param {String} gid - the unique identifier of the font object. Used to cache the font canvas
+         */
+        api.drawFont = function (fontObject, text, x, y, gid) {
+            if (!fontCache[gid]) {
+                drawFontToContext(fontObject.font, fontObject.fontSize, fontObject.fillStyle, fontObject.textAlign, fontObject.textBaseline, fontObject.lineHeight, text);
+                var dimensions = fontObject.measureText(fontContext, text);
+                var image = new Image();
+                image.src = fontContext.toDataURL();
+                fontCache[gid] = {
+                    "font" : font,
+                    "fontSize" : fontSize,
+                    "fillStyle" : fillStyle,
+                    "textAlign" : textAlign,
+                    "textBaseline" : textBaseline,
+                    "lineHeight" : lineHeight,
+                    "text" : text,
+                    "image" : image,
+                    "width" : dimensions.width,
+                    "height" : dimensions.height
+                };
+                fontContext.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            else {
+                var cache = fontCache[gid];
+                if (
+                    font !== cache.font ||
+                    fontSize !== cache.fontSize ||
+                    fillStyle !== cache.fillStyle ||
+                    textAlign !== cache.textAlign ||
+                    textBaseline !== cache.textBaseline ||
+                    lineHeight !== cache.lineHeight ||
+                    text !== cache.text
+                ) {
+                    cache.font = font;
+                    cache.fontSize = fontSize;
+                    cache.fillStyle = fillStyle;
+                    cache.textAlign = textAlign;
+                    cache.textBaseline = textBaseline;
+                    cache.lineHeight = lineHeight;
+                    cache.text = text;
+                    
+                    drawFontToContext(fontObject.font, fontObject.fontSize, fontObject.fillStyle, fontObject.textAlign, fontObject.textBaseline, fontObject.lineHeight, text);
+                    var dimensions = fontObject.measureText(fontContext, text);
+                    var image = new Image();
+                    image.src = fontContext.toDataURL();
+                    cache.width = dimensions.width;
+                    cache.height = dimensions.height;
+                    cache.image = image;
+
+                    fontContext.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            this.context.drawImage(fontCache[gid].image, x, y, fontCache[gid].width, fontCache[gid].height);
+        };
+
+        /**
          * Draw an image to the gl context
          * @name drawImage
          * @memberOf me.WebGLRenderer
@@ -122,12 +208,6 @@
          */
         api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             shaderProgram.setUniformMatrix3("u_matrix", this.uniformMatrix, false);
-            if (typeof textures[image.src] === "undefined") {
-                var texture = new kami.Texture(this.context);
-                texture.setFilter(kami.Texture.Filter.LINEAR);
-                texture.create();
-                texture.uploadImage(image);
-            }
             this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
         };
 
@@ -139,32 +219,6 @@
          */
         api.end = function () {
             spriteBatch.end();
-        };
-
-        /**
-         * return a reference to the screen canvas
-         * @name getScreenCanvas
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Canvas}
-         */
-        api.getScreenCanvas = function () {
-            return canvas;
-        };
-
-        /**
-         * return a reference to the screen canvas corresponding WebGL Context<br>
-         * @name getScreenContext
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {WebGLContext}
-         */
-        api.getScreenContext = function () {
-            return gl;
-        };
-
-        api.getHeight = function () {
-            return this.context.height;
         };
 
         /**
@@ -190,6 +244,32 @@
             return gl;
         };
 
+        api.getHeight = function () {
+            return this.context.height;
+        };
+
+        /**
+         * return a reference to the screen canvas
+         * @name getScreenCanvas
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Canvas}
+         */
+        api.getScreenCanvas = function () {
+            return canvas;
+        };
+
+        /**
+         * return a reference to the screen canvas corresponding WebGL Context<br>
+         * @name getScreenContext
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {WebGLContext}
+         */
+        api.getScreenContext = function () {
+            return gl;
+        };
+
         api.getWidth = function () {
             return this.context.width;
         };
@@ -202,7 +282,7 @@
          * @return {Number}
          */
         api.globalAlpha = function () {
-            return this.globalAlpha;
+            return globalColor.alpha;
         };
 
         /**
@@ -265,6 +345,7 @@
         };
 
         /**
+         * Enables/disables alpha
          * @private
          */
         api.setAlpha = function () {
@@ -273,6 +354,18 @@
 
         api.setImageSmoothing = function () {
             // TODO: perhaps handle GLNEAREST or other options with texture binding
+        };
+
+        /**
+         * return the current global alpha
+         * @name globalAlpha
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Number}
+         */
+        api.setGlobalAlpha = function (a) {
+            globalColor.alpha = a;
+            spriteBatch.setColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, a);
         };
 
         /**

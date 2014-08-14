@@ -167,7 +167,7 @@
          * @memberOf me.CanvasRenderer
          * @function
          * @param {String} font - the font family
-         * @param {Number} fontSize - the font size in pixels.
+         * @param {me.Vector2d} fontSize - the font size in a vector object.
          * @param {String} fillStyle - the fill style of the font.
          * @param {String} textAlign - horizontal alignment. Possible values: "left", "right", "center"
          * @param {String} textBaseline - the baseline to draw from based on the Y coord. Possible values: "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"

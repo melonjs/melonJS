@@ -93,6 +93,10 @@
             // super constructor
             this.pos = new me.Vector2d(0, 0);
             this._super(me.Renderable, "init", [this.pos.x, this.pos.y, 0, this.fontSize.y]);
+
+            if (!this.gid) {
+                this.gid = me.utils.createGUID();
+            }
         },
 
         /**
@@ -193,7 +197,7 @@
             // TODO: Likely draw the text to an off canvas and cache an image
             // over depending on the canvas API each draw call.
             this.pos.set(x, y);
-            renderer.drawFont(this.font, this.fontSize, this.fillStyle, this.textAlign, this.textBaseline, this.lineHeight, text, x, y);
+            renderer.drawFont(this, text, x, y);
         },
 
         /**
