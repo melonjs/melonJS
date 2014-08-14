@@ -203,7 +203,9 @@
                     renderer.translate(this.pos.x, this.pos.y);
                     if (this.body.shapes.length) {
                         // TODO : support multiple shapes
-                        this.body.shapes[0].draw(renderer, "red");
+                        var shape = this.body.getShape(); 
+                        renderer.translate(shape.pos.x, shape.pos.y);
+                        shape.draw(renderer, "red");
                     }
                     renderer.restore();
                 }
