@@ -75,13 +75,13 @@
         type : 0,
         
         /**
-		 * Mask collision detection for this object<br>
-		 * OPTIONAL
-		 * @public
-		 * @type Number
-		 * @name me.ObjectSettings#collisionMask
-		 */
-		collisionMask : 0xFFFFFFFF
+         * Mask collision detection for this object<br>
+         * OPTIONAL
+         * @public
+         * @type Number
+         * @name me.ObjectSettings#collisionMask
+         */
+        collisionMask : 0xFFFFFFFF
     };
 
     /*
