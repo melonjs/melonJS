@@ -286,6 +286,13 @@
                     "a 2d context"
                 );
             }
+            
+            if (typeof c.getContext === "undefined") {
+                throw new me.video.Error(
+                    "Your browser does not support HTML5 canvas."
+                );
+            }
+            
             var _context;
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
