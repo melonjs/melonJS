@@ -281,7 +281,10 @@
          */
         api.getContext2d = function (c) {
             if (typeof c === "undefined" || c === null) {
-                throw "You must pass a canvas element in order to create a 2d context";
+                throw new me.video.Error(
+                    "You must pass a canvas element in order to create " +
+                    "a 2d context"
+                );
             }
             var _context;
             if (navigator.isCocoonJS) {

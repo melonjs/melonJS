@@ -536,8 +536,11 @@
         collideType : function (objA, type, multiple) {
 
             if (multiple === true || typeof (type) === "string") {
-                throw "melonJS : advanced collision detection through the me.game.collide function" +
-                      " is deprecated, please use the new new me.collision.check function";
+                throw new me.Container.Error(
+                    "Advanced collision detection through the " +
+                    "`me.game.collide` function is deprecated, " +
+                    "please use the new `me.collision.check` function"
+                );
             }
             if (me.collision.check(objA, false, null, true, me.collision.response.clear())) {
                 return me.collision.response;
