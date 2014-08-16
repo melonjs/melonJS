@@ -223,8 +223,8 @@
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.fillStyle = color;
@@ -465,8 +465,8 @@
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.strokeStyle = color;
