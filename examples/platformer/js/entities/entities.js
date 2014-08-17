@@ -50,8 +50,7 @@ game.PlayerEntity = me.Entity.extend({
         this.renderable.setCurrentAnimation("walk");
 
         // set the renderable position to bottom center
-        this.anchorPoint.set(0.5, 1.0);
-
+        this.anchorPoint.set(0.5, 1.0);        
     },
     
     /* -----
@@ -184,7 +183,7 @@ game.CoinEntity = me.CollectableEntity.extend({
         game.data.score += 250;
         
         //avoid further collision and delete it
-        this.body.collisionType = me.collision.types.NO_OBJECT;
+        this.body.setCollisionMask(me.collision.types.NO_OBJECT);
         
         me.game.world.removeChild(this);
     }
@@ -273,7 +272,7 @@ game.PathEnemyEntity = me.Entity.extend({
             // make it dead
             this.alive = false;
             //avoid further collision and delete it
-            this.body.collisionType = me.collision.types.NO_OBJECT;
+            this.body.setCollisionMask(me.collision.types.NO_OBJECT);
             // set dead animation
             this.renderable.setCurrentAnimation("dead");
             // make it flicker and call destroy once timer finished

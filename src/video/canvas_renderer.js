@@ -223,8 +223,8 @@
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.fillStyle = color;
@@ -281,8 +281,18 @@
          */
         api.getContext2d = function (c) {
             if (typeof c === "undefined" || c === null) {
-                throw "You must pass a canvas element in order to create a 2d context";
+                throw new me.video.Error(
+                    "You must pass a canvas element in order to create " +
+                    "a 2d context"
+                );
             }
+            
+            if (typeof c.getContext === "undefined") {
+                throw new me.video.Error(
+                    "Your browser does not support HTML5 canvas."
+                );
+            }
+            
             var _context;
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
@@ -455,8 +465,8 @@
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.strokeStyle = color;

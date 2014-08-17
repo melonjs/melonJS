@@ -260,10 +260,9 @@
 
     /**
      * Base class for TextureAtlas exception handling.
-     * @name TextureAtlas.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.TextureAtlas
      * @constructor
      * @param {String} msg Error message.
      */

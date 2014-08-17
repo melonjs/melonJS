@@ -75,13 +75,13 @@
         type : 0,
         
         /**
-		 * Mask collision detection for this object<br>
-		 * OPTIONAL
-		 * @public
-		 * @type Number
-		 * @name me.ObjectSettings#collisionMask
-		 */
-		collisionMask : 0xFFFFFFFF
+         * Mask collision detection for this object<br>
+         * OPTIONAL
+         * @public
+         * @type Number
+         * @name me.ObjectSettings#collisionMask
+         */
+        collisionMask : 0xFFFFFFFF
     };
 
     /*
@@ -131,8 +131,8 @@
                 var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
                     "image" : image,
-                    "spritewidth" : ~~settings.spritewidth,
-                    "spriteheight" : ~~settings.spriteheight,
+                    "spritewidth" : ~~(settings.spritewidth || settings.width),
+                    "spriteheight" : ~~(settings.spriteheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });
@@ -180,10 +180,9 @@
             // add collision shape to the entity body if defined
             if (typeof (settings.getShape) === "function") {
                 this.body.addShape(settings.getShape());
-                this.body.setShape(0);
             } else {
                 // else make the body bounds match the entity ones
-                this.body.updateBounds(this);
+                this.body.updateBounds(new me.Rect(0, 0, this.width, this.height));
             }
             
             // set the  collision mask if defined
@@ -496,10 +495,9 @@
     
     /**
      * Base class for Entity exception handling.
-     * @name Entity.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Entity
      * @constructor
      * @param {String} msg Error message.
      */

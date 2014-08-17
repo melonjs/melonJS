@@ -203,7 +203,9 @@
                     renderer.translate(this.pos.x, this.pos.y);
                     if (this.body.shapes.length) {
                         // TODO : support multiple shapes
-                        this.body.shapes[0].draw(renderer, "red");
+                        var shape = this.body.getShape(); 
+                        renderer.translate(shape.pos.x, shape.pos.y);
+                        shape.draw(renderer, "red");
                     }
                     renderer.restore();
                 }
@@ -310,8 +312,12 @@
         
             // draw the current bounds
             if( node.nodes.length === 0) {
-                renderer.setGlobalAlpha((node.objects.length / (me.collision.maxChildren * 2)).clamp(0, 0.4));
-                renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+                // cap the alpha value to 0.4 maximum
+                var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
+                if (_alpha > 0.0) {
+                    renderer.setGlobalAlpha(_alpha);
+                    renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+                }
             } else {
                 //has subnodes? drawQuadtree them!
                 for( var i=0;i<node.nodes.length;i=i+1 ) {

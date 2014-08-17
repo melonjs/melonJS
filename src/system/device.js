@@ -401,7 +401,12 @@
         api.getPixelRatio = function () {
 
             if (devicePixelRatio === null) {
-                var _context = me.video.renderer.getScreenContext();
+                var _context;
+                if (typeof me.video.renderer !== "undefined") {
+                    _context = me.video.renderer.getScreenContext();
+                } else {
+                    _context = me.CanvasRenderer.getContext2d(document.createElement("canvas"));
+                }
                 var _devicePixelRatio = window.devicePixelRatio || 1,
                     _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", _context) || 1;
                 devicePixelRatio = _devicePixelRatio / _backingStoreRatio;

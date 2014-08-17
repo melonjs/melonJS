@@ -144,7 +144,7 @@
         onClick : function () {
             return false;
         },
-		
+
         /**
          * function callback for the pointerup event
          * @ignore

@@ -8,7 +8,8 @@ Version History
 * Core : added a Base64 Encode function (aaschmitz)
 * Core : new `me.Error` class to help better track down execeptions' origin
 * Core : brand new "Separate Axis Theorem " based collision algorithm (support polygon/ellipse, and providex more accurate collision response)
-* Core : added a spatial collision grid detection algorithm (quad tree) for super fast collision detection
+* Core : added collision filtering support
+* Core : added a spatial partitioning algorithm (QuadTree) for super fast collision detection
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target. Use me.video.renderer to call things like getWidth, getHeight, getCanvas, getContext, etc.
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
@@ -23,6 +24,7 @@ Version History
 * Audio : sync'ed with last Howler 1.1.25 version (fixes numerous issues, see official changelog for more details)
 * TMX : fixed the background color drawing when the level is smaller than the display canvas
 * TMX : fixed the getTile function returning wrong tiles when using isometric maps
+* TMX : fixed collision layer rendering issue with isometric map
 * TMX : fixed world container size not being udpated after a new level is loaded
 
 1.0.2

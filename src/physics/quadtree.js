@@ -10,6 +10,37 @@
 
 (function (window, Math) {
 
+
+    /**
+     * a pool of `QuadTree` objects
+     */
+    var QT_ARRAY = [];
+    
+    /**
+     * will pop a quadtree object from the array
+     * or create a new one if the array is empty
+     */
+    var QT_ARRAY_POP = function (bounds, max_objects, max_levels, level) {
+        if (QT_ARRAY.length > 0) {
+            var _qt =  QT_ARRAY.pop();
+            _qt.bounds = bounds;
+            _qt.max_objects = max_objects || 4;
+            _qt.max_levels  = max_levels || 4;
+            _qt.level = level || 0;
+            return _qt;
+        } else {
+            return new me.QuadTree(bounds, max_objects, max_levels, level);
+        }
+    };
+    
+    /**
+     * Push back a quadtree back into the array
+     */
+    var QT_ARRAY_PUSH = function (qt) {
+        QT_ARRAY.push(qt);
+    };
+    
+
      /*
       * Quadtree Constructor
       * @param {me.Rect} bounds bounds of the node
@@ -41,7 +72,7 @@
             y = Math.round(this.bounds.pos.y);
 
          //top right node
-        this.nodes[0] = new Quadtree({
+        this.nodes[0] = QT_ARRAY_POP({
             pos : {
                 x : x + subWidth,
                 y : y
@@ -51,7 +82,7 @@
         }, this.max_objects, this.max_levels, nextLevel);
 
         //top left node
-        this.nodes[1] = new Quadtree({
+        this.nodes[1] = QT_ARRAY_POP({
             pos : {
                 x : x,
                 y : y
@@ -61,7 +92,7 @@
         }, this.max_objects, this.max_levels, nextLevel);
 
         //bottom left node
-        this.nodes[2] = new Quadtree({
+        this.nodes[2] = QT_ARRAY_POP({
             pos : {
                 x : x,
                 y : y + subHeight
@@ -71,7 +102,7 @@
         }, this.max_objects, this.max_levels, nextLevel);
 
         //bottom right node
-        this.nodes[3] = new Quadtree({
+        this.nodes[3] = QT_ARRAY_POP({
             pos : {
                 x : x + subWidth,
                 y : y + subHeight
@@ -116,6 +147,23 @@
         return index;
     };
 
+    /*
+     * Insert the given container childrens into the node.
+     * @param {me.Container] group of objects to be added
+     */
+    Quadtree.prototype.insertContainer = function (container) {
+        for (var i = container.children.length, child; i--, (child = container.children[i]);) {
+            if (child instanceof me.Container) {
+                // recursivly insert childs
+                this.insertContainer(child);
+            } else {
+                // only insert object with a "physic body"
+                if (typeof (child.body) !== "undefined") {
+                    this.insert(child);
+                }
+            }
+        }
+    };
 
     /*
      * Insert the object into the node. If the node
@@ -128,7 +176,7 @@
         var index = -1;
         
         //if we have subnodes ...
-        if (typeof this.nodes[0] !== "undefined") {
+        if (this.nodes.length > 0) {
             index = this.getIndex(item.getBounds());
 
             if (index !== -1) {
@@ -142,7 +190,7 @@
         if (this.objects.length > this.max_objects && this.level < this.max_levels) {
 
             //split if we don't already have subnodes
-            if (typeof this.nodes[0] === "undefined") {
+            if (this.nodes.length === 0) {
                 this.split();
             }
 
@@ -173,7 +221,7 @@
         var returnObjects = this.objects;
 
         //if we have subnodes ...
-        if (typeof this.nodes[0] !== "undefined") {
+        if (this.nodes.length > 0) {
 
             var index = this.getIndex(item.getBounds());
 
@@ -200,12 +248,12 @@
         this.objects = [];
 
         for (var i = 0; i < this.nodes.length; i = i + 1) {
-            if (typeof this.nodes[i] !== "undefined") {
-                this.nodes[i].clear();
-                // TODO : recycle quadTree object to avoid GC
-                delete this.nodes[i];
-            }
+            this.nodes[i].clear(bounds);
+            // recycle the quadTree object
+            QT_ARRAY_PUSH(this.nodes[i]);
         }
+        // empty the array
+        this.nodes = [];
         
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {
@@ -214,7 +262,6 @@
             this.bounds.width = bounds.width;
             this.bounds.height = bounds.height;
         }
-        
     };
 
     //make Quadtree available in the me namespace

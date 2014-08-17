@@ -196,10 +196,9 @@
 
     /**
      * Base class for Renderable exception handling.
-     * @name Renderable.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Renderable
      * @constructor
      * @param {String} msg Error message.
      */
