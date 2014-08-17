@@ -32,6 +32,9 @@ module.exports = function (grunt) {
             if (symbolicRef) {
                 var splitted = symbolicRef.split("/");
                 currBranch = splitted.slice(2).join("/");
+                if (verbose) {
+                    grunt.log.oklns("Current branch: " + currBranch);
+                }
                 if (!currBranch) {
                     grunt.fail.fatal("Could not get the actual branch from symbolic ref");
                 }
