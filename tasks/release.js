@@ -30,14 +30,11 @@ module.exports = function (grunt) {
         function checkout() {
             var symbolicRef = shell.exec("git symbolic-ref HEAD", shellOpts).output;
             if (symbolicRef) {
-                var splitted = symbolicRef.split('/');
-                // symbolic ref must contain 3 steps
-                // e.g ref/heads/master
-                if (splitted.length !== 3) {
+                var splitted = symbolicRef.split("/");
+                currBranch = splitted.slice(2).join("/");
+                if (!currBranch) {
                     grunt.fail.fatal("Could not get the actual branch from symbolic ref");
                 }
-                // the branch name is the last item of the array
-                currBranch = splitted[splitted.length - 1];
             }
             run("git checkout --detach", "Detaching from current tree");
         }
@@ -63,11 +60,11 @@ module.exports = function (grunt) {
         }
 
         function commit() {
-            run("git commit -am 'Release " + version + " '", "Commiting release");
+            run("git commit -am 'Release " + version + "'", "Commiting release");
         }
 
         function tag() {
-            run("git tag " + version, "Tagging new version");
+            run("git tag -a "+ version +" -m 'MelonJS "+ version +" version'", "Tagging new version");
         }
 
         function push() {
