@@ -116,6 +116,15 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
+            
+            /**
+             * The bounding rectangle for this entity
+             * @protected
+             * @type {me.Rect}
+             * @name bounds
+             * @memberOf me.Ellipse
+             */
+            this.bounds = undefined;
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -198,7 +207,6 @@
                     throw new me.Entity.Error("Invalid value for the collisionType property");
                 }
             }
-            
         },
 
        /**
@@ -209,7 +217,24 @@
          * @return {me.Rect} this entity bounding box Rectangle object
          */
         getBounds : function () {
-            return this.body.getBounds();
+            return this.bounds;
+        },
+        
+        /**
+         * update the entity bounding rect (private)
+         * when manually update the entity pos, you need to call this function
+         * @protected
+         * @name updateBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBounds : function () {
+            if (!this.bounds) {
+                this.bounds = new me.Rect(0, 0, 0, 0);
+            }
+            this.bounds.pos.setV(this.pos).add(this.body.pos);
+            this.bounds.resize(this.body.width, this.body.height);
+            return this.bounds;
         },
         
         /**
@@ -347,13 +372,13 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var bounds = this.body;
+                var _bounds = this.getBounds();
 
-                var x = ~~(this.pos.x + bounds.offset.x + (
-                    this.anchorPoint.x * (bounds.width - this.renderable.width)
+                var x = ~~(_bounds.pos.x + (
+                    this.anchorPoint.x * (_bounds.width - this.renderable.width)
                 ));
-                var y = ~~(this.pos.y + bounds.offset.y + (
-                    this.anchorPoint.y * (bounds.height - this.renderable.height)
+                var y = ~~(_bounds.pos.y + (
+                    this.anchorPoint.y * (_bounds.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
