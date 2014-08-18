@@ -458,8 +458,9 @@
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
+         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise) {
+        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise, lineWidth) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
@@ -470,6 +471,7 @@
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.lineWidth = lineWidth;
             backBufferContext2D.stroke();
         };
 
@@ -480,8 +482,9 @@
          * @function
          * @param {me.PolyShape} polyShape the shape to draw
          * @param {String} color a color in css format.
+         * @param {Number} width - the width of the line
          */
-        api.strokePolyShape = function (poly, color) {
+        api.strokePolyShape = function (poly, color, width) {
             this.translate(-poly.pos.x, -poly.pos.y);
             backBufferContext2D.strokeStyle = color;
             backBufferContext2D.beginPath();
@@ -493,6 +496,7 @@
             if (poly.closed === true) {
                 backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             }
+            backBufferContext2D.lineWidth = width;
             backBufferContext2D.stroke();
         };
 
@@ -506,9 +510,11 @@
          * @param {Number} width to draw
          * @param {Number} height to draw
          * @param {String} css color for the rectangle
+         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeRect = function (x, y, width, height, color) {
+        api.strokeRect = function (x, y, width, height, color, lineWidth) {
             backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.lineWidth = lineWidth;
             backBufferContext2D.strokeRect(x, y, width, height);
         };
 

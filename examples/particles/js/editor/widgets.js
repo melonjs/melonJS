@@ -262,7 +262,7 @@
         },
         draw : function(renderer) {
             renderer.fillRect(this.left, this.top, this.width, this.height, this.color);
-            renderer.strokeRect(this.left, this.top, this.width, this.height, this.color);
+            renderer.strokeRect(this.left, this.top, this.width, this.height, this.color, 1);
         }
     });
 

@@ -243,7 +243,7 @@
          */
         draw : function (renderer, color) {
             renderer.save();
-            renderer.strokePolyShape(this, color);
+            renderer.strokePolyShape(this, color, 1);
             renderer.restore();
         }
     });
