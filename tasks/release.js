@@ -67,7 +67,7 @@ module.exports = function (grunt) {
         }
 
         function tag() {
-            run("git tag -a "+ version +" -m 'MelonJS "+ version +" version'", "Tagging new version");
+            run("git tag -a "+ version +" -m 'melonJS "+ version +" version'", "Tagging new version");
         }
 
         function push() {
