@@ -89,6 +89,9 @@ module.exports = function (grunt) {
             tag();
             push();
         } catch (err) {
+            if (verbose) {
+                grunt.log.error("Exception raised: " + err);
+            }
             grunt.fail.warn(err || "release failed");
         } finally {
             rollback();
