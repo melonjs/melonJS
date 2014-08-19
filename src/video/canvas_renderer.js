@@ -485,7 +485,7 @@
          * @param {Number} width - the width of the line
          */
         api.strokePolyShape = function (poly, color, width) {
-            this.translate(-poly.pos.x, -poly.pos.y);
+            this.translate(poly.pos.x, poly.pos.y);
             backBufferContext2D.strokeStyle = color;
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);

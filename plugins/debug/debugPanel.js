@@ -199,13 +199,11 @@
                 if (me.debug.renderHitBox) {
                     renderer.save();
                     // draw the bounding rect shape
-                    this.body.getBounds().draw(renderer, "orange");
+                    this.getBounds().draw(renderer, "orange");
                     renderer.translate(this.pos.x, this.pos.y);
                     if (this.body.shapes.length) {
                         // TODO : support multiple shapes
-                        var shape = this.body.getShape(); 
-                        renderer.translate(shape.pos.x, shape.pos.y);
-                        shape.draw(renderer, "red");
+                        this.body.getShape().draw(renderer, "red");
                     }
                     renderer.restore();
                 }
