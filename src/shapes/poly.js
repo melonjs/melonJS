@@ -205,7 +205,7 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
-            var x = this.pos.x, y = this.pos.y, right = 0, bottom = 0;
+            var x = Infinity, y = Infinity, right = -Infinity, bottom = -Infinity;
             this.points.forEach(function (point) {
                 x = Math.min(x, point.x);
                 y = Math.min(y, point.y);
@@ -219,7 +219,7 @@
                 this.bounds.setShape(x, y, right - x, bottom - y);
             }
             
-            return this.bounds;
+            return this.bounds.translateV(this.pos);
         },
         
         /**
