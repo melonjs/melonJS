@@ -189,10 +189,10 @@
             // add collision shape to the entity body if defined
             if (typeof (settings.getShape) === "function") {
                 this.body.addShape(settings.getShape());
-            } else {
-                // else make the body bounds match the entity ones
-                this.body.updateBounds(new me.Rect(0, 0, this.width, this.height));
             }
+            
+            // ensure the entity bounds and pos are up-to-date
+            this.updateBounds();
             
             // set the  collision mask if defined
             if (typeof(settings.collisionMask) !== "undefined") {

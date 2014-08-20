@@ -221,9 +221,11 @@
             // call the super constructor
             this._super(
                 me.Rect,
+                // bounds the body by default 
+                // to the parent entity
                 "init", [
-                    entity.pos.x,
-                    entity.pos.y,
+                    0,
+                    0,
                     entity.width,
                     entity.height
                 ]
@@ -312,12 +314,12 @@
          * @function
          */
         updateBounds : function (rect) {
-            // reset the body position and size;
-            this.pos.set(0, 0);
-            this.resize(0, 0);
             // TODO : go through all defined shapes
-            this.union(rect || this.getShape().getBounds());
-            
+            var _bounds = rect || this.getShape().getBounds();
+            // reset the body position and size;
+            this.pos.setV(_bounds.pos);
+            this.resize(_bounds.width, _bounds.height);
+
             // update the parent entity bounds
             this.entity.updateBounds();
         },
@@ -615,7 +617,7 @@
 
             // update player entity position
             this.entity.pos.add(this.vel);
-            this.entity.updateBounds();
+            this.updateBounds();
  
             // returns the collision "vector"
             return collision;
