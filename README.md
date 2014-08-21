@@ -27,13 +27,14 @@ and currently features :
 - polygon (SAT) based collision algorithm for accurate detection and response
 - fast broad-phase collision detection using spatial partitioning
 - advanced math API for Vector and Matrix
-- tween & transition effects
 - a basic set of Entities (to be extended)
 - object pooling
 - basic particle system
 - basic animation management
+- tween effects
 - standard spritesheet and packed textures (Texture Packer, ShoeBox) support
 - a state manager (to easily manage loading, menu, options, in-game state)
+- transition effects
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
     - orthogonal tilemap with built-in collision management
