@@ -11,48 +11,52 @@ module.exports = function (grunt) {
         var currBranch;
         var verbose = grunt.option("verbose");
 
-        function run(cmd, msg) {
+        function run(cmd, msg, callback) {
             grunt.log.oklns("Running: " + msg);
-            var _stdout;
-            var _error = null;
-            exec(cmd, function(error, stdout, stderr) {
-                grunt.log.writeln("STDOUT: " + stdout);
-                if (error) {
-                    _error = true;
-                    if (verbose) {
-                        grunt.log.error("Error on run exec: " + error);
-                        grunt.log.error("STDERR: " + stderr);
-                    }
-                } else {
-                    _stdout = stdout;
-                }
-            });
-            return _error || _stdout;
+            exec(cmd, callback);
         }
 
         async.series([
             function checkout(callback) {
-                var symbolicRef = run("git symbolic-ref HEAD");
+                var symbolicRef;
                 var msg = "Detaching from current tree";
-                var ok;
-                if (symbolicRef) {
-                    var splitted = symbolicRef.split("/");
-                    currBranch = splitted.slice(2).join("/");
-                    if (verbose) {
-                        grunt.log.writeln("Current branch: " + currBranch);
+                run("git symbolic-ref HEAD", msg,
+                    function(error, stdout, stderr) {
+                        grunt.log.writeln("STDOUT: " + stdout);
+                        if (error) {
+                            if (verbose) {
+                                grunt.log.error("Error: " + error);
+                                grunt.log.error("STDERR: " + stderr);
+                            }
+                            callback(true, "Could not get the actual branch from symbolic ref");
+                        }
+                        symbolicRef = stdout;
                     }
-                    if (!currBranch) {
-                        callback(true, "Could not get the actual branch from symbolic ref");
+                );
+                var splitted = symbolicRef.split("/");
+                currBranch = splitted.slice(2).join("/");
+                if (verbose) {
+                    grunt.log.writeln("Current branch: " + currBranch);
+                }
+                if (!currBranch) {
+                    callback(true, "Could not get the actual branch from symbolic ref");
+                }
+                run("git checkout --detach", msg,
+                    function(error, stdout, stderr) {
+                        grunt.log.writeln("STDOUT: " + stdout);
+                        if (error) {
+                            if (verbose) {
+                                grunt.log.error("Error: " + error);
+                                grunt.log.error("STDERR: " + stderr);
+                            }
+                            callback(true, "Git detach error");
+                        }
                     }
-                }
-                ok = run("git checkout --detach", msg);
-                if (ok !== null) {
-                    grunt.log.ok();
-                }
-                callback(ok, msg);
+                );
+                grunt.log.ok();
+                callback(null, msg);
             },
             function add(callback) {
-                var ok;
                 var msg = "Adding build files";
                 grunt.log.oklns("ACTUAL VERSION ==> " + config.version);
                 grunt.log.oklns("BUILD FILES");
@@ -72,39 +76,66 @@ module.exports = function (grunt) {
                     }
                     stringFiles += filenames[i] + " ";
                 }
-                ok = run("git add -f " + stringFiles, msg);
-                if (ok !== null) {
-                    grunt.log.ok();
-                }
-
-                callback(ok, msg);
+                run("git add -f " + stringFiles, msg,
+                    function(error, stdout, stderr) {
+                        grunt.log.writeln("STDOUT: " + stdout);
+                        if (error) {
+                            if (verbose) {
+                                grunt.log.error("Error: " + error);
+                                grunt.log.error("STDERR: " + stderr);
+                            }
+                            callback(true, "Git add error");
+                        }
+                    }
+                );
+                grunt.log.ok();
+                callback(null, msg);
             },
             function commit(callback) {
-                var ok;
                 var msg = "Commiting release";
-                ok = run("git commit -am 'Release " + version + "'", msg);
-                if (ok !== null) {
-                    grunt.log.ok();
-                }
-                callback(ok, msg);
+                run("git commit -am 'Release " + version + "'", msg, function(error, stdout, stderr) {
+                    grunt.log.writeln("STDOUT: " + stdout);
+                    if (error) {
+                        if (verbose) {
+                            grunt.log.error("Error: " + error);
+                            grunt.log.error("STDERR: " + stderr);
+                        }
+                        callback(true, "Git release commit error");
+                    }
+
+                });
+                grunt.log.ok();
+                callback(null, msg);
             },
             function tag(callback) {
-                var ok;
                 var msg = "Tagging new version";
-                ok = run("git tag -a "+ version +" -m 'melonJS "+ version +" version'", msg);
-                if (ok !== null) {
-                    grunt.log.ok();
-                }
-                callback(ok, msg);
+                run("git tag -a "+ version +" -m 'melonJS "+ version +" version'", msg, function(error, stdout, stderr) {
+                    grunt.log.writeln("STDOUT: " + stdout);
+                    if (error) {
+                        if (verbose) {
+                            grunt.log.error("Error: " + error);
+                            grunt.log.error("STDERR: " + stderr);
+                        }
+                        callback(true, "Git tag error");
+                    }
+                });
+                grunt.log.ok();
+                callback(null, msg);
             },
             function push(callback) {
-                var ok;
                 var msg = "Pushing to new version branch";
-                ok = run("git push origin " + version, msg);
-                if (ok !== null) {
-                    grunt.log.ok();
-                }
-                callback(ok, msg);
+                run("git push origin " + version, msg, function(error, stdout, stderr) {
+                    grunt.log.writeln("STDOUT: " + stdout);
+                    if (error) {
+                        if (verbose) {
+                            grunt.log.error("Error: " + error);
+                            grunt.log.error("STDERR: " + stderr);
+                        }
+                        callback(true, "Git tag error");
+                    }
+                });
+                grunt.log.ok();
+                callback(null, msg);
             }
         ],
             function rollback(err, results) {
@@ -116,7 +147,17 @@ module.exports = function (grunt) {
                     grunt.log.ok("Original Branch: " + backBranch);
                     grunt.log.ok(results);
                 }
-                run("git reset --hard", "Reseting staged changes");
+                run("git reset --hard", "Reseting staged changes",
+                    function(error, stdout, stderr) {
+                        if (error) {
+                            grunt.log.error(error);
+                            grunt.log.error(stderr);
+                        }
+                        if (verbose) {
+                            grunt.log.ok(stdout);
+                        }
+                    }
+                );
                 run("git checkout " + backBranch, "Back to initial branch");
             }
         );
