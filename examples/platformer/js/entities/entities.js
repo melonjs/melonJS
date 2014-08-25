@@ -127,6 +127,7 @@ game.PlayerEntity = me.Entity.extend({
                         } else {
                              this.pos.sub(response.overlapV);
                              this.hurt();
+                             this.updateBounds();
                         }
                     }
                     break;
@@ -215,9 +216,12 @@ game.PathEnemyEntity = me.Entity.extend({
         this.startX = x;
         this.endX   = x + width - settings.spritewidth
         this.pos.x  = x + width - settings.spritewidth;
+        // update the entity bounds since we manually change the entity position
+        this.updateBounds();
         
         // apply gravity setting if specified
         this.body.gravity = settings.gravity || me.sys.gravity;
+
         this.walkLeft = false;
 
         // walking & jumping speed

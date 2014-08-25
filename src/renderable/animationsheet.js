@@ -31,7 +31,7 @@
      * // from a texture
      * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
      * var animationSheet = new me.AnimationSheet(0, 0, {
-     *   image: texture,
+     *   image: texture.getTexture(),
      *   spritewidth: 64,
      *   spriteheight: 64,
      *   region: texture.getRegion('animationsheet')

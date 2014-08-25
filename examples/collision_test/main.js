@@ -87,9 +87,9 @@ var Smilie = me.Entity.extend({
         if( this.pos.y > 768 ) this.pos.y = 0;
         if( this.pos.y < 0 ) this.pos.y = 768;
         
-        // update the body pos and bounds since
+        // update the entity bounds since
         // we manipulated the entity pos manually
-        this.body.updateBounds();
+        this.updateBounds();
                 
         if (me.collision.check(this, true, this.collideHandler.bind(this), true)) {
             // me.collision.check returns true in case of collision

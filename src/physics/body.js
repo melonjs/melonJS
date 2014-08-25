@@ -25,15 +25,6 @@
             this.entity = entity;
 
             /**
-             * Offset of the Body from the Entity position
-             * @ignore
-             * @type me.Vector2d
-             * @name offset
-             * @memberOf me.Body
-             */
-            this.offset = new me.Vector2d();
-
-            /**
              * The collision shapes of the entity <br>
              * (note: only shape at index 0 is used in melonJS 1.0.x)
              * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
@@ -230,9 +221,11 @@
             // call the super constructor
             this._super(
                 me.Rect,
+                // bounds the body by default 
+                // to the parent entity
                 "init", [
-                    entity.pos.x,
-                    entity.pos.y,
+                    0,
+                    0,
                     entity.width,
                     entity.height
                 ]
@@ -321,13 +314,14 @@
          * @function
          */
         updateBounds : function (rect) {
-            // TODO : take in account multiple shape
+            // TODO : go through all defined shapes
             var _bounds = rect || this.getShape().getBounds();
-            // adjust the body bounding rect
-            this.offset.setV(_bounds.pos);
+            // reset the body position and size;
+            this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
-            // calculate the body absolute position
-            this.pos.setV(this.entity.pos).add(this.offset);
+
+            // update the parent entity bounds
+            this.entity.updateBounds();
         },
 
         /**
@@ -520,11 +514,10 @@
             var collision;
             if (this.collisionMask & me.collision.types.WORLD_SHAPE) {
 
-                // calculate the body absolute position
-                this.pos.setV(this.entity.pos).add(this.offset);
-
+                var _bounds = this.entity.getBounds();
+                
                 // check for collision
-                collision = this.collisionMap.checkCollision(this, this.vel);
+                collision = this.collisionMap.checkCollision(_bounds, this.vel);
 
                 // update some flags
                 this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
@@ -540,20 +533,20 @@
 
                     if (collision.y > 0) {
                         if (prop.isSolid ||
-                            (prop.isPlatform && (this.bottom - 1 <= tile.pos.y)) ||
+                            (prop.isPlatform && (_bounds.bottom - 1 <= tile.pos.y)) ||
                             (prop.isTopLadder && !this.disableTopLadderCollision)) {
 
                             // adjust position to the corresponding tile
                             this.vel.y = (
                                 this.falling ?
-                                tile.pos.y - this.bottom : 0
+                                tile.pos.y - _bounds.bottom : 0
                             );
                             this.falling = false;
                         }
                         else if (prop.isSlope && !this.jumping) {
                             // we stop falling
                             this.checkSlope(
-                                this,
+                                _bounds,
                                 tile,
                                 prop.isLeftSlope
                             );
@@ -574,7 +567,7 @@
                                 // adjust position to the corresponding tile
                                 this.vel.y = (
                                     this.falling ?
-                                    tile.pos.y - this.bottom : 0
+                                    tile.pos.y - _bounds.bottom : 0
                                 );
                                 this.falling = false;
                             }
@@ -599,7 +592,7 @@
                     this.onladder = prop.isLadder || prop.isTopLadder;
 
                     if (prop.isSlope && !this.jumping) {
-                        this.checkSlope(this, tile, prop.isLeftSlope);
+                        this.checkSlope(_bounds, tile, prop.isLeftSlope);
                         this.falling = false;
                     }
                     else {
@@ -617,15 +610,15 @@
                         }
                     }
                 }
-
-                // translate back to set the body relative to the entity
-                // temporary stuff until ticket #103 is done (this function will disappear anyway)
-                this.entity.pos.setV(this.pos).sub(this.offset);
+                // as the checkSlope might change the _bounds.pos, we need to readjust
+                // the entity pos accordingly.... (this is ugly and will be gone in next version
+                this.entity.pos.setV(_bounds.pos).sub(this.getShape().getBounds().pos);
             }
 
             // update player entity position
             this.entity.pos.add(this.vel);
-
+            this.updateBounds();
+ 
             // returns the collision "vector"
             return collision;
 
