@@ -361,10 +361,10 @@
                     context.stroke();
                 }
                 // display the current value
-                this.font.draw(renderer, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
+                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer.getContext(), "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
@@ -383,32 +383,34 @@
                              this.rect.width, this.rect.height, "black");
             renderer.setGlobalAlpha(1.0);
 
+            var context = renderer.getContext();
+
             // # entities / draw
-            this.font.draw(renderer, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.draw(renderer, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
+            this.font.draw(context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
 
             // debug checkboxes
-            this.font.draw(renderer, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
-            this.font.draw(renderer, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
+            this.font.draw(context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 18 * this.mod);
 
-            this.font.draw(renderer, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
-            this.font.draw(renderer, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
+            this.font.draw(context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    200 * this.mod, 5 * this.mod);
+            this.font.draw(context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 200 * this.mod, 18 * this.mod);
 
             // draw the update duration
-            this.font.draw(renderer, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
+            this.font.draw(context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 310 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.draw(renderer, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
+            this.font.draw(context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 310 * this.mod, 18 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
             this.drawMemoryGraph(renderer, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(renderer, this.help_str, endX - this.help_str_len, 18 * this.mod);
+            this.font.draw(context, this.help_str, endX - this.help_str_len, 18 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
-            this.font.draw(renderer, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
             renderer.restore();
 
