@@ -198,9 +198,14 @@
          * @param {Number} dy the y position to draw the image at on the screen
          * @param {Number} dw the width value to draw the image at on the screen
          * @param {Number} dh the height value to draw the image at on the screen
+         * Can be used in three ways:
+         * me.CanvasRenderer.drawImage(image, dx, dy);
+         * me.CanvasRenderer.drawImage(image, dx, dy, dw, dh);
+         * me.CanvasRenderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+         * dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
-        api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-            backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+        api.drawImage = function () {
+            backBufferContext2D.drawImage.apply(backBufferContext2D, arguments);
         };
 
         /**
