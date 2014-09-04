@@ -1,5 +1,7 @@
 Version History
 ---------------
+1.2.0
+
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
 * Core : new CI and unit testing frameworks
