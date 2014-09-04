@@ -132,4 +132,5 @@ If you need technical support, you can contact us through the following channels
 * [gitter web chat](ttps://gitter.im/melonjs/public)
 * #melonjs on freenode.net (also available via [webchat](http://webchat.freenode.net/?channels=melonjs))
 * [melonJS wikipage] (https://github.com/melonjs/melonJS/wiki)
+
 For any other non technical related questions, feel free to also send us an [email](mailto:contact@melonjs.org).
