@@ -228,9 +228,14 @@
          * @param {Number} dy the y position to draw the image at on the screen
          * @param {Number} dw the width value to draw the image at on the screen
          * @param {Number} dh the height value to draw the image at on the screen
+         * Can be used in three ways:
+         * me.CanvasRenderer.drawImage(image, dx, dy);
+         * me.CanvasRenderer.drawImage(image, dx, dy, dw, dh);
+         * me.CanvasRenderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+         * dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
-        api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-            backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+        api.drawImage = function () {
+            backBufferContext2D.drawImage.apply(backBufferContext2D, arguments);
         };
 
         /**
@@ -253,8 +258,8 @@
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.fillStyle = color;
@@ -311,8 +316,18 @@
          */
         api.getContext2d = function (c) {
             if (typeof c === "undefined" || c === null) {
-                throw "You must pass a canvas element in order to create a 2d context";
+                throw new me.video.Error(
+                    "You must pass a canvas element in order to create " +
+                    "a 2d context"
+                );
             }
+            
+            if (typeof c.getContext === "undefined") {
+                throw new me.video.Error(
+                    "Your browser does not support HTML5 canvas."
+                );
+            }
+            
             var _context;
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
@@ -481,18 +496,20 @@
          * @param {Number} end degrees in radians
          * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
+         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise) {
+        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise, lineWidth) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
+            backBufferContext2D.translate(x - radiusX, y - radiusY);
             backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.translate(x, y);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
             backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.lineWidth = lineWidth;
             backBufferContext2D.stroke();
         };
 
@@ -524,9 +541,10 @@
          * @function
          * @param {me.PolyShape} polyShape the shape to draw
          * @param {String} color a color in css format.
+         * @param {Number} width - the width of the line
          */
-        api.strokePolyShape = function (poly, color) {
-            this.translate(-poly.pos.x, -poly.pos.y);
+        api.strokePolyShape = function (poly, color, width) {
+            this.translate(poly.pos.x, poly.pos.y);
             backBufferContext2D.strokeStyle = color;
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
@@ -537,6 +555,7 @@
             if (poly.closed === true) {
                 backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             }
+            backBufferContext2D.lineWidth = width;
             backBufferContext2D.stroke();
         };
 
@@ -550,9 +569,11 @@
          * @param {Number} width to draw
          * @param {Number} height to draw
          * @param {String} css color for the rectangle
+         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeRect = function (x, y, width, height, color) {
+        api.strokeRect = function (x, y, width, height, color, lineWidth) {
             backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.lineWidth = lineWidth;
             backBufferContext2D.strokeRect(x, y, width, height);
         };
 

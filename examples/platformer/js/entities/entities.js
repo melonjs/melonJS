@@ -50,8 +50,7 @@ game.PlayerEntity = me.Entity.extend({
         this.renderable.setCurrentAnimation("walk");
 
         // set the renderable position to bottom center
-        this.anchorPoint.set(0.5, 1.0);
-
+        this.anchorPoint.set(0.5, 1.0);        
     },
     
     /* -----
@@ -128,6 +127,7 @@ game.PlayerEntity = me.Entity.extend({
                         } else {
                              this.pos.sub(response.overlapV);
                              this.hurt();
+                             this.updateBounds();
                         }
                     }
                     break;
@@ -184,7 +184,7 @@ game.CoinEntity = me.CollectableEntity.extend({
         game.data.score += 250;
         
         //avoid further collision and delete it
-        this.body.collisionType = me.collision.types.NO_OBJECT;
+        this.body.setCollisionMask(me.collision.types.NO_OBJECT);
         
         me.game.world.removeChild(this);
     }
@@ -216,9 +216,12 @@ game.PathEnemyEntity = me.Entity.extend({
         this.startX = x;
         this.endX   = x + width - settings.spritewidth
         this.pos.x  = x + width - settings.spritewidth;
+        // update the entity bounds since we manually change the entity position
+        this.updateBounds();
         
         // apply gravity setting if specified
         this.body.gravity = settings.gravity || me.sys.gravity;
+
         this.walkLeft = false;
 
         // walking & jumping speed
@@ -273,7 +276,7 @@ game.PathEnemyEntity = me.Entity.extend({
             // make it dead
             this.alive = false;
             //avoid further collision and delete it
-            this.body.collisionType = me.collision.types.NO_OBJECT;
+            this.body.setCollisionMask(me.collision.types.NO_OBJECT);
             // set dead animation
             this.renderable.setCurrentAnimation("dead");
             // make it flicker and call destroy once timer finished

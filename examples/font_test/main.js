@@ -81,14 +81,14 @@ var FontTest = me.Renderable.extend ({
         var context = renderer.getContext();
         for (var i = 8; i < 48; i += 8) {
             this.font.setFont('Arial', i, this.color.toHex());
-            this.font.draw(renderer, "Arial Text " + i + "px !" , 5 , y_pos );
+            this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
             y_pos+=this.font.measureText(context, "DUMMY").height;
         }
         // one more with drawStroke this time
         this.font.setFont('Arial', 48, this.color.toHex());
         this.font.strokeStyle = "red";
         this.font.lineWidth = 3;
-        this.font.drawStroke(renderer, "Arial Text " + i + "px !" , 5 , y_pos );
+        this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
 
         // bFont size test        
         y_pos = 0;
@@ -123,7 +123,7 @@ var FontTest = me.Renderable.extend ({
         for (var i = 0;i<baselines.length;i++) {
             var text = baselines[i];
             this.font.textBaseline = baselines[i];
-            this.font.draw(renderer, text, x_pos, baseline);
+            this.font.draw(context, text, x_pos, baseline);
             x_pos+=this.font.measureText(context, text + "@@@").width;
         }
         
@@ -136,12 +136,12 @@ var FontTest = me.Renderable.extend ({
         var text = "this is a multiline font\n test with melonjs and it\nworks even with a\n specific lineHeight value!";
         this.font.textAlign = "center";
         this.font.lineHeight = 1.1;
-        this.font.draw(renderer, text, 90, 210);
+        this.font.draw(context, text, 90, 210);
         this.font.lineHeight = 1.1;
 
         var text = "this is another font test \nwith right alignment\nand it still works!";
         this.font.textAlign = "right";        
-        this.font.draw(renderer, text, 200, 300);
+        this.font.draw(context, text, 200, 300);
         
         // bFont  test        
         this.bFont.textAlign = "center";

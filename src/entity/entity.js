@@ -75,13 +75,13 @@
         type : 0,
         
         /**
-		 * Mask collision detection for this object<br>
-		 * OPTIONAL
-		 * @public
-		 * @type Number
-		 * @name me.ObjectSettings#collisionMask
-		 */
-		collisionMask : 0xFFFFFFFF
+         * Mask collision detection for this object<br>
+         * OPTIONAL
+         * @public
+         * @type Number
+         * @name me.ObjectSettings#collisionMask
+         */
+        collisionMask : 0xFFFFFFFF
     };
 
     /*
@@ -116,6 +116,15 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
+            
+            /**
+             * The bounding rectangle for this entity
+             * @protected
+             * @type {me.Rect}
+             * @name bounds
+             * @memberOf me.Ellipse
+             */
+            this.bounds = undefined;
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -131,8 +140,8 @@
                 var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
                     "image" : image,
-                    "spritewidth" : ~~settings.spritewidth,
-                    "spriteheight" : ~~settings.spriteheight,
+                    "spritewidth" : ~~(settings.spritewidth || settings.width),
+                    "spriteheight" : ~~(settings.spriteheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });
@@ -180,10 +189,10 @@
             // add collision shape to the entity body if defined
             if (typeof (settings.getShape) === "function") {
                 this.body.addShape(settings.getShape());
-            } else {
-                // else make the body bounds match the entity ones
-                this.body.updateBounds(this);
             }
+            
+            // ensure the entity bounds and pos are up-to-date
+            this.updateBounds();
             
             // set the  collision mask if defined
             if (typeof(settings.collisionMask) !== "undefined") {
@@ -198,7 +207,6 @@
                     throw new me.Entity.Error("Invalid value for the collisionType property");
                 }
             }
-            
         },
 
        /**
@@ -209,7 +217,24 @@
          * @return {me.Rect} this entity bounding box Rectangle object
          */
         getBounds : function () {
-            return this.body.getBounds();
+            return this.bounds;
+        },
+        
+        /**
+         * update the entity bounding rect (private)
+         * when manually update the entity pos, you need to call this function
+         * @protected
+         * @name updateBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBounds : function () {
+            if (!this.bounds) {
+                this.bounds = new me.Rect(0, 0, 0, 0);
+            }
+            this.bounds.pos.setV(this.pos).add(this.body.pos);
+            this.bounds.resize(this.body.width, this.body.height);
+            return this.bounds;
         },
         
         /**
@@ -347,13 +372,13 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var bounds = this.body;
+                var _bounds = this.getBounds();
 
-                var x = ~~(this.pos.x + bounds.offset.x + (
-                    this.anchorPoint.x * (bounds.width - this.renderable.width)
+                var x = ~~(_bounds.pos.x + (
+                    this.anchorPoint.x * (_bounds.width - this.renderable.width)
                 ));
-                var y = ~~(this.pos.y + bounds.offset.y + (
-                    this.anchorPoint.y * (bounds.height - this.renderable.height)
+                var y = ~~(_bounds.pos.y + (
+                    this.anchorPoint.y * (_bounds.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
@@ -495,10 +520,9 @@
     
     /**
      * Base class for Entity exception handling.
-     * @name Entity.Error
-     * @ignore
+     * @name Error
      * @class
-     * @memberOf me
+     * @memberOf me.Entity
      * @constructor
      * @param {String} msg Error message.
      */

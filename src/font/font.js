@@ -193,9 +193,9 @@
          * @param {Number} x
          * @param {Number} y
          */
-        draw : function (renderer, text, x, y) {
-            // TODO: Likely draw the text to an off canvas and cache an image
-            // over depending on the canvas API each draw call.
+
+        draw : function (context, text, x, y) {
+            // update initial position
             this.pos.set(x, y);
             renderer.drawFont(this, text, x, y);
         },
@@ -238,12 +238,9 @@
          * @param {Number} x
          * @param {Number} y
          */
-        drawStroke : function (renderer, text, x, y) {
+        drawStroke : function (context, text, x, y) {
             // update initial position
             this.pos.set(x, y);
-            // TODO: Likely draw the text to an off canvas and cache an image
-            // over depending on the canvas API each draw call.
-            var context = renderer.getContext();
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle;

@@ -75,7 +75,7 @@ var Smilie = me.Entity.extend({
         this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
        
         // add a collision shape
-        this.body.addShape(new me.Rect(0, 0, 16, 16));
+        this.body.addShape(new me.Ellipse(4, 4, 8, 8));
     },
 
     update : function (dt) {
@@ -87,17 +87,29 @@ var Smilie = me.Entity.extend({
         if( this.pos.y > 768 ) this.pos.y = 0;
         if( this.pos.y < 0 ) this.pos.y = 768;
         
-        // update the body pos and bounds since
+        // update the entity bounds since
         // we manipulated the entity pos manually
-        this.body.updateBounds();
+        this.updateBounds();
                 
-        if (me.collision.check(this)) {
+        if (me.collision.check(this, true, this.collideHandler.bind(this), true)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
         } else {
             this.renderable.setOpacity(0.5);
         };
         return true;
+    },
+
+    // collision handler
+    collideHandler : function (response) {
+        // make them bounce when touching eachother
+        this.pos.sub(response.overlapN);
+        if (response.overlapN.x !== 0) {
+            this.body.vel.x = -this.body.vel.x;
+        }
+        if (response.overlapN.y !== 0) {
+            this.body.vel.y = -this.body.vel.y;
+        }
     }
 });
     

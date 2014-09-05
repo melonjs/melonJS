@@ -35,11 +35,10 @@
 
         /**
          * Base class for Video exception handling.
+         * @name Error
          * @class
-         * @ignore
          * @constructor
-         * @name video.Error
-         * @memberOf me
+         * @memberOf me.video
          * @param {String} msg Error message.
          */
         api.Error = me.Error.extend({

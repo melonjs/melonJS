@@ -51,8 +51,7 @@
             
             // visibility flag
             this.visible = true;
-
-            this.rect = new me.Rect(new me.Vector2d(0, me.video.renderer.getHeight() - 60), 200, 60);
+            this.rect = new me.Rect(0, me.video.renderer.getHeight() - 60, 200, 60);
 
             // set the object GUID value
             this.GUID = "particledebug-" + me.utils.createGUID();
@@ -277,14 +276,15 @@
             renderer.translate(this.rect.left, this.rect.top);
 
             // # entities / draw
-            this.font.draw(renderer, "emitters : " + this.emitterCount, 5, 5);
-            this.font.draw(renderer, "particles : " + this.particleCount, 5, 18);
+            var context = renderer.getContext();
+            this.font.draw(context, "emitters : " + this.emitterCount, 5, 5);
+            this.font.draw(context, "particles : " + this.particleCount, 5, 18);
 
             // draw the update duration
-            this.font.draw(renderer, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
+            this.font.draw(context, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
 
             // draw the draw duration
-            this.font.draw(renderer, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
+            this.font.draw(context, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
 
             this.updateTimeSamples.push(this.updateTime);
             this.updateTime = 0;

@@ -31,7 +31,7 @@
      * // from a texture
      * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
      * var animationSheet = new me.AnimationSheet(0, 0, {
-     *   image: texture,
+     *   image: texture.getTexture(),
      *   spritewidth: 64,
      *   spriteheight: 64,
      *   region: texture.getRegion('animationsheet')
@@ -120,7 +120,11 @@
 
                 if ((image.width - this.margin) % (this.width + this.spacing) !== 0 ||
                     (image.height - this.margin) % (this.height + this.spacing) !== 0) {
-                    throw "Animation sheet for image: " + image.src + " is not divisible by " + (this.width + this.spacing) + "x" + (this.height + this.spacing);
+                    throw new me.Renderable.Error(
+                        "Animation sheet for image: " + image.src +
+                        " is not divisible by " + (this.width + this.spacing) +
+                        "x" + (this.height + this.spacing)
+                    );
                 }
 
                 var spritecount = new me.Vector2d(

@@ -1,5 +1,7 @@
 Version History
 ---------------
+1.2.0
+
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
 * Core : new CI and unit testing frameworks
@@ -8,10 +10,12 @@ Version History
 * Core : added a Base64 Encode function (aaschmitz)
 * Core : new `me.Error` class to help better track down execeptions' origin
 * Core : brand new "Separate Axis Theorem " based collision algorithm (support polygon/ellipse, and providex more accurate collision response)
+* Core : added collision filtering support
+* Core : added a spatial partitioning algorithm (QuadTree) for super fast collision detection
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target. Use me.video.renderer to call things like getWidth, getHeight, getCanvas, getContext, etc.
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
-* CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
+* CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example. me.Font still requires an instance of Context2d.
 * Renderable : renamed `me.SpriteObject` to `me.Sprite` and `me.ObjectContainer` to `me.Container`, for a cleaner API
 * Renderable : constructors refactored to accept x & y numeric values, over a single vector object. Effects: me.Container, me.Rect, me.PolyShape, me.Ellipse, me.Renderable
 * Shapes : setShape updated to accept x & y numeric values over a vector object for: me.Rect, me.PolyShape, me.Ellipse
@@ -22,6 +26,8 @@ Version History
 * Audio : sync'ed with last Howler 1.1.25 version (fixes numerous issues, see official changelog for more details)
 * TMX : fixed the background color drawing when the level is smaller than the display canvas
 * TMX : fixed the getTile function returning wrong tiles when using isometric maps
+* TMX : fixed collision layer rendering issue with isometric map
+* TMX : fixed world container size not being udpated after a new level is loaded
 
 1.0.2
 * Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)

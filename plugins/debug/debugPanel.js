@@ -107,7 +107,7 @@
             this.help_str      = "(s)how/(h)ide";
             this.help_str_len = this.font.measureText(me.video.renderer.getContext(), this.help_str).width;
             this.fps_str_len = this.font.measureText(me.video.renderer.getContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 300 * this.mod;
+            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -208,11 +208,11 @@
                 if (me.debug.renderHitBox) {
                     renderer.save();
                     // draw the bounding rect shape
-                    this.body.getBounds().draw(renderer, "orange");
+                    this.getBounds().draw(renderer, "orange");
                     renderer.translate(this.pos.x, this.pos.y);
                     if (this.body.shapes.length) {
                         // TODO : support multiple shapes
-                        this.body.shapes[0].draw(renderer, "red");
+                        this.body.getShape().draw(renderer, "red");
                     }
                     renderer.restore();
                 }
@@ -307,6 +307,7 @@
         },
 
         /** @private */        
+<<<<<<< HEAD
         drawQuadTreeNode : function (renderer, node) {
             var bounds = node._bounds;
             
@@ -324,6 +325,25 @@
             for(var i = 0; i < len; i++) {
                 this.drawQuadTreeNode(renderer, node.nodes[i]);
             }
+=======
+        drawQuadTreeNode : function (renderer, node) {      
+            var bounds = node.bounds;
+        
+            // draw the current bounds
+            if( node.nodes.length === 0) {
+                // cap the alpha value to 0.4 maximum
+                var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
+                if (_alpha > 0.0) {
+                    renderer.setGlobalAlpha(_alpha);
+                    renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+                }
+            } else {
+                //has subnodes? drawQuadtree them!
+                for( var i=0;i<node.nodes.length;i=i+1 ) {
+                    this.drawQuadTreeNode( renderer, node.nodes[ i ] );
+                }
+            } 
+>>>>>>> master
         },
         
         /** @private */
@@ -333,7 +353,7 @@
             
             renderer.translate(-me.game.viewport.pos.x, -me.game.viewport.pos.y);
             
-            this.drawQuadTreeNode(renderer, me.collision.quadTree.root);
+            this.drawQuadTreeNode(renderer, me.collision.quadTree);
             
             renderer.translate(me.game.viewport.pos.x, me.game.viewport.pos.y);
             
@@ -363,10 +383,11 @@
                     context.stroke();
                 }
                 // display the current value
-                this.font.drawFromContext(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
+
+                this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.drawFromContext(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer.getContext(), "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
@@ -386,28 +407,29 @@
                              this.rect.width, this.rect.height);
             this.context.globalAlpha = 1.0;
 
-            // # entities / draw
-            this.font.drawFromContext(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 20 * this.mod);
+            var context = renderer.getContext();
+
+            this.font.draw(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);
 
             // debug checkboxes
-            this.font.drawFromContext(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 20 * this.mod);
+            this.font.draw(this.context, "?hitbox   ["+ (me.debug.renderHitBox?"x":" ") +"]",     100 * this.mod, 5 * this.mod);
+            this.font.draw(this.context, "?velocity ["+ (me.debug.renderVelocity?"x":" ") +"]",     100 * this.mod, 20 * this.mod);
 
-            this.font.drawFromContext(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    190 * this.mod, 5 * this.mod);
-            this.font.drawFromContext(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 190 * this.mod, 20 * this.mod);
+            this.font.draw(this.context, "?QuadTree   ["+ (me.debug.renderQuadTree?"x":" ") +"]",    190 * this.mod, 5 * this.mod);
+            this.font.draw(this.context, "?col. layer ["+ (me.debug.renderCollisionMap?"x":" ") +"]", 190 * this.mod, 20 * this.mod);
 
             // draw the update duration
-            this.font.drawFromContext(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
+            this.font.draw(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.drawFromContext(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
+            this.font.draw(this.context, "Draw   : " + (this.frameDrawTime).toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
             this.drawMemoryGraph(this.context, endX - this.help_str_len);
 
             // some help string
-            this.font.drawFromContext(this.context, this.help_str, endX - this.help_str_len, 15 * this.mod);
+            this.font.draw(this.context, this.help_str, endX - this.help_str_len, 15 * this.mod);
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
