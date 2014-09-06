@@ -1,6 +1,8 @@
 Version History
 ---------------
 1.2.0
+* CanvasRenderer : All fill & stroke methods have removed the color & line width parameters. Use the new setColor and setLineWidth methods.
+* CanvasRenderer : Removed strokeLine, was duplicate with drawLine
 
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
