@@ -415,6 +415,47 @@
     });
 
     /*
+     * A collision entity
+     */
+
+    /**
+     * @class
+     * @extends me.Entity
+     * @memberOf me
+     * @constructor
+     * @param {Number} x the x coordinates of the object
+     * @param {Number} y the y coordinates of the object
+     * @param {me.ObjectSettings} settings object settings
+     */
+    me.CollisionEntity = me.Entity.extend(
+    /** @scope me.CollectableEntity.prototype */
+    {
+        /** @ignore */
+        init : function (x, y, settings) {
+            // call the super constructor
+            this._super(me.Entity, "init", [x, y, settings]);
+            this.body.collisionType = me.collision.types.WORLD_SHAPE;
+            // set our collision callback function
+            this.body.onCollision = this.onCollision.bind(this);
+        },
+
+
+        /** @ignore */
+        onCollision : function (response) {
+            response.a.pos.sub(response.overlapV);
+            if (response.overlapV.x !== 0) {
+                response.a.body.vel.x = 0;
+            }
+            if (response.overlapV.y !== 0) {
+                response.a.body.vel.y = 0;
+            }
+            response.a.updateBounds();
+        }
+
+    });
+
+
+    /*
      * A Collectable entity
      */
 
