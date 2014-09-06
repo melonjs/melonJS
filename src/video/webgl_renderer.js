@@ -122,9 +122,10 @@
          * @param {String} gid - the unique identifier of the font object. Used to cache the font canvas
          */
         api.drawFont = function (fontObject, text, x, y, gid) {
+            var fontDimensions;
             if (!fontCache[gid]) {
                 fontObject.draw(fontContext, text, x, y);
-                var fontDimensions = fontObject.measureText(fontContext, text);
+                fontDimensions = fontObject.measureText(fontContext, text);
                 imageObject.src = fontContext.toDataURL();
                 fontCache[gid] = {
                     "font" : fontObject.font,
@@ -152,7 +153,7 @@
                     cache.text = text;
                     
                     fontObject.draw(fontContext, text, x, y);
-                    var fontDimensions = fontObject.measureText(fontContext, text);
+                    fontDimensions = fontObject.measureText(fontContext, text);
                     imageObject.src = fontContext.toDataURL();
                     cache.width = fontDimensions.width;
                     cache.height = fontDimensions.height;

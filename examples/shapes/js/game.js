@@ -4,12 +4,12 @@ var game = {
     // Run on page load.
     "onload" : function () {
         // Initialize the video.
-        if (!me.video.init("screen", me.video.WEBGL, 800, 600, true, 'auto')) {
+        if (!me.video.init("screen", me.video.CANVAS, 800, 600, true, 'auto')) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
 
-        me.plugin.register.defer(this, debugPanel, "debug");
+        me.plugin.register(debugPanel, "debug");
 
         // set all ressources to be loaded
         me.loader.onload = this.loaded.bind(this);

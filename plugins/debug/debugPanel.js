@@ -194,7 +194,8 @@
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
-                    renderer.strokeRect(this.left, this.top, this.width, this.height, "green");
+                    renderer.setColor("green");
+                    renderer.strokeRect(this.left, this.top, this.width, this.height);
                 }
             });
 
@@ -221,8 +222,9 @@
                     // draw entity current velocity
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
-                    // TODO: This will also be tricky for WebGL.
-                    renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight), 1, "blue");
+                    renderer.setColor("blue");
+                    renderer.setLineWidth(1);
+                    renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight));
                 }
             });
         },
@@ -306,26 +308,7 @@
             me.game.repaint();
         },
 
-        /** @private */        
-<<<<<<< HEAD
-        drawQuadTreeNode : function (renderer, node) {
-            var bounds = node._bounds;
-            
-            // Opacity is based on number of objects in the cell
-            renderer.setGlobalAlpha((node.children.length / 16).clamp(0, 0.9));
-            renderer.fillRect(Math.abs(bounds.pos.x) + 0.5,
-                Math.abs(bounds.pos.y) + 0.5,
-                bounds.width,
-                bounds.height,
-                "red"
-            );
-
-            var len = node.nodes.length;
-
-            for(var i = 0; i < len; i++) {
-                this.drawQuadTreeNode(renderer, node.nodes[i]);
-            }
-=======
+        /** @private */
         drawQuadTreeNode : function (renderer, node) {      
             var bounds = node.bounds;
         
@@ -335,15 +318,15 @@
                 var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
                 if (_alpha > 0.0) {
                     renderer.setGlobalAlpha(_alpha);
-                    renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height, "red");
+                    renderer.setColor("red");
+                    renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
                 }
             } else {
                 //has subnodes? drawQuadtree them!
                 for( var i=0;i<node.nodes.length;i=i+1 ) {
                     this.drawQuadTreeNode( renderer, node.nodes[ i ] );
                 }
-            } 
->>>>>>> master
+            }
         },
         
         /** @private */
@@ -361,9 +344,8 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (renderer, endX) {
+        drawMemoryGraph : function (context, endX) {
             if (window.performance && window.performance.memory) {
-                var context = renderer.getContext();
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize/1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize/1048576, 2);
                 var len = endX - this.memoryPositionX;
@@ -387,7 +369,7 @@
                 this.font.draw(context, "Heap : " + usedHeap + '/' + totalHeap + ' MB', this.memoryPositionX, 5 * this.mod);
             } else {
                 // Heap Memory information not available
-                this.font.draw(renderer.getContext(), "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
@@ -406,8 +388,6 @@
             this.context.fillRect(this.rect.left,  this.rect.top,
                              this.rect.width, this.rect.height);
             this.context.globalAlpha = 1.0;
-
-            var context = renderer.getContext();
 
             this.font.draw(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
             this.font.draw(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 18 * this.mod);

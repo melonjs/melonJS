@@ -270,8 +270,9 @@
 
             // draw the panel
             renderer.setGlobalAlpha(0.5);
+            renderer.setColor("black");
             renderer.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height, "black");
+                             this.rect.width, this.rect.height);
             renderer.setGlobalAlpha(1.0);
             renderer.translate(this.rect.left, this.rect.top);
 

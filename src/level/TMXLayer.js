@@ -38,11 +38,10 @@
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
             
             var vpos = me.game.viewport.pos;
-            
+            renderer.setColor(this.color);
             renderer.fillRect(
                 rect.left - vpos.x, rect.top - vpos.y,
-                rect.width, rect.height,
-                this.color
+                rect.width, rect.height
             );
 
             // restore context alpha value
