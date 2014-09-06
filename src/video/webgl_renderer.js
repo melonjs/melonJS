@@ -19,33 +19,17 @@
         canvas = null,
         gl = null,
         color = null,
-        textures = {},
         fragmentShader = null,
         vertexShader = null,
         shaderProgram = null,
         spriteBatch,
         fontCache = {},
-        fontContext = null;
-
-        function drawFontToContext (font, fontSize, fillStyle, textAlign, textBaseline, lineHeight, text) {
-            fontContext.font = font;
-            fontContext.fillStyle = fillStyle;
-            fontContext.textAlign = textAlign;
-            fontContext.textBaseline = textBaseline;
-
-            var x = 0, y = 0;
-
-            var strings = ("" + text).split("\n");
-            for (var i = 0; i < strings.length; i++) {
-                // draw the string
-                fontContext.fillText(strings[i].trimRight(), ~~x, ~~y);
-                // add leading space
-                y += fontSize.y * lineHeight;
-            }
-        }
+        fontContext = null,
+        imageObject;
 
         api.init = function (width, height, c) {
             canvas = c;
+            imageObject = new Image();
 
             fragmentShader =
                 "precision mediump float;" +
@@ -127,7 +111,7 @@
         };
 
         /**
-         * draws font to the backbuffer canvas.
+         * draws font to an off screen context, and blits to the backbuffer canvas.
          * @name drawFont
          * @memberOf me.WebGLRenderer
          * @function
@@ -139,50 +123,40 @@
          */
         api.drawFont = function (fontObject, text, x, y, gid) {
             if (!fontCache[gid]) {
-                drawFontToContext(fontObject.font, fontObject.fontSize, fontObject.fillStyle, fontObject.textAlign, fontObject.textBaseline, fontObject.lineHeight, text);
-                var dimensions = fontObject.measureText(fontContext, text);
-                var image = new Image();
-                image.src = fontContext.toDataURL();
+                fontObject.draw(fontContext, text, x, y);
+                var fontDimensions = fontObject.measureText(fontContext, text);
+                imageObject.src = fontContext.toDataURL();
                 fontCache[gid] = {
-                    "font" : font,
-                    "fontSize" : fontSize,
-                    "fillStyle" : fillStyle,
-                    "textAlign" : textAlign,
-                    "textBaseline" : textBaseline,
-                    "lineHeight" : lineHeight,
-                    "text" : text,
-                    "image" : image,
-                    "width" : dimensions.width,
-                    "height" : dimensions.height
+                    "font" : fontObject.font,
+                    "fontSize" : fontObject.fontSize,
+                    "fillStyle" : fontObject.fillStyle,
+                    "textAlign" : fontObject.textAlign,
+                    "textBaseline" : fontObject.textBaseline,
+                    "lineHeight" : fontObject.lineHeight,
+                    "text" : fontObject.text,
+                    "image" : fontObject.image,
+                    "width" : fontDimensions.width,
+                    "height" : fontDimensions.height
                 };
                 fontContext.clearRect(0, 0, canvas.width, canvas.height);
             }
             else {
                 var cache = fontCache[gid];
-                if (
-                    font !== cache.font ||
-                    fontSize !== cache.fontSize ||
-                    fillStyle !== cache.fillStyle ||
-                    textAlign !== cache.textAlign ||
-                    textBaseline !== cache.textBaseline ||
-                    lineHeight !== cache.lineHeight ||
-                    text !== cache.text
-                ) {
-                    cache.font = font;
-                    cache.fontSize = fontSize;
-                    cache.fillStyle = fillStyle;
-                    cache.textAlign = textAlign;
-                    cache.textBaseline = textBaseline;
-                    cache.lineHeight = lineHeight;
+                if (fontObject.font !== cache.font || fontObject.fontSize !== cache.fontSize || fontObject.fillStyle !== cache.fillStyle || fontObject.textAlign !== cache.textAlign || fontObject.textBaseline !== cache.textBaseline || fontObject.lineHeight !== cache.lineHeight || text !== cache.text) {
+                    cache.font = fontObject.font;
+                    cache.fontSize = fontObject.fontSize;
+                    cache.fillStyle = fontObject.fillStyle;
+                    cache.textAlign = fontObject.textAlign;
+                    cache.textBaseline = fontObject.textBaseline;
+                    cache.lineHeight = fontObject.lineHeight;
                     cache.text = text;
                     
-                    drawFontToContext(fontObject.font, fontObject.fontSize, fontObject.fillStyle, fontObject.textAlign, fontObject.textBaseline, fontObject.lineHeight, text);
-                    var dimensions = fontObject.measureText(fontContext, text);
-                    var image = new Image();
-                    image.src = fontContext.toDataURL();
-                    cache.width = dimensions.width;
-                    cache.height = dimensions.height;
-                    cache.image = image;
+                    fontObject.draw(fontContext, text, x, y);
+                    var fontDimensions = fontObject.measureText(fontContext, text);
+                    imageObject.src = fontContext.toDataURL();
+                    cache.width = fontDimensions.width;
+                    cache.height = fontDimensions.height;
+                    cache.image = imageObject;
 
                     fontContext.clearRect(0, 0, canvas.width, canvas.height);
                 }

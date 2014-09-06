@@ -197,7 +197,19 @@
         draw : function (context, text, x, y) {
             // update initial position
             this.pos.set(x, y);
-            renderer.drawFont(this, text, x, y);
+            // draw the text
+            context.font = this.font;
+            context.fillStyle = this.fillStyle;
+            context.textAlign = this.textAlign;
+            context.textBaseline = this.textBaseline;
+
+            var strings = ("" + text).split("\n");
+            for (var i = 0; i < strings.length; i++) {
+                // draw the string
+                context.fillText(strings[i].trimRight(), ~~x, ~~y);
+                // add leading space
+                y += this.fontSize.y * this.lineHeight;
+            }
         },
 
         /**
