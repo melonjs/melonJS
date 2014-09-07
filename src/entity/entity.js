@@ -428,7 +428,7 @@
      * @param {me.ObjectSettings} settings object settings
      */
     me.CollisionEntity = me.Entity.extend(
-    /** @scope me.CollectableEntity.prototype */
+    /** @scope me.CollisionEntity.prototype */
     {
         /** @ignore */
         init : function (x, y, settings) {
