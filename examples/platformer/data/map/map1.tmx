@@ -108,12 +108,13 @@
   <object x="0" y="525" width="350" height="70"/>
   <object x="280" y="455" width="70" height="70"/>
   <object x="490" y="525" width="315" height="70"/>
-  <object x="560" y="455" width="70" height="70"/>
-  <object x="700" y="385" width="70" height="140"/>
   <object x="875" y="525" width="70" height="70"/>
   <object x="1015" y="525" width="210" height="70"/>
   <object x="1225" y="595">
    <polygon points="0,0 0,-70 70,-140 525,-140 525,0"/>
   </object>
+  <object x="700" y="385" width="70" height="35"/>
+  <object x="700" y="455" width="70" height="35"/>
+  <object x="560" y="455" width="70" height="35"/>
  </objectgroup>
 </map>
