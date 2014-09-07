@@ -448,6 +448,9 @@
             }
             if (response.overlapV.y !== 0) {
                 response.a.body.vel.y = 0;
+                // cancel the falling an jumping flaf if necessary
+                response.a.body.falling = response.overlapV.y > 0;
+                response.a.body.jumping = response.overlapV.y < 0;
             }
             response.a.updateBounds();
         }
