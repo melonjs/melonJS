@@ -44,12 +44,6 @@
             // load our map
             me.game.currentLevel = level;
 
-            // get the collision map
-            me.game.collisionMap = me.game.currentLevel.getLayerByName("collision");
-            if (!me.game.collisionMap || !me.game.collisionMap.isCollisionMap) {
-                console.error("WARNING : no collision map detected");
-            }
-
             // change the viewport bounds
             me.game.viewport.setBounds(
                 0, 0,
@@ -78,7 +72,7 @@
             for (var g = 0; g < objectGroups.length; g++) {
                 var group = objectGroups[g];
 
-                isCollisionGroup = group.name.toLowerCase().contains(me.TMXConstants.COLLISION_LAYER);
+                isCollisionGroup = group.name.toLowerCase().contains(me.TMXConstants.COLLISION_GROUP);
 
                 if (me.game.mergeGroup === false) {
                     // create a new container with Infinite size (?)

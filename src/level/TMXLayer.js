@@ -298,51 +298,6 @@
     });
 
     /**
-     * a generic collision tile based layer object
-     * @memberOf me
-     * @ignore
-     * @constructor
-     */
-    me.CollisionTiledLayer = me.Renderable.extend({
-        // constructor
-        init: function (width, height) {
-            this._super(me.Renderable, "init", [0, 0, width, height]);
-
-            this.isCollisionMap = true;
-        },
-
-        /**
-         * only test for the world limit
-         * @ignore
-         */
-        checkCollision : function (obj, pv) {
-            var x = (pv.x < 0) ? obj.left + pv.x : obj.right + pv.x;
-            var y = (pv.y < 0) ? obj.top + pv.y : obj.bottom + pv.y;
-
-            //to return tile collision detection
-            var res = {
-                x : 0, // !=0 if collision on x axis
-                y : 0, // !=0 if collision on y axis
-                xprop : {},
-                yprop : {}
-            };
-
-            // test x limits
-            if (x <= 0 || x >= this.width) {
-                res.x = pv.x;
-            }
-
-            // test y limits
-            if (y <= 0 || y >= this.height) {
-                res.y = pv.y;
-            }
-
-            // return the collide object if collision
-            return res;
-        }
-    });
-
-    /**
      * a TMX Tile Layer Object
      * Tiled QT 0.7.x format
      * @class
@@ -409,13 +364,6 @@
             // check for the correct rendering method
             if (typeof (this.preRender) === "undefined") {
                 this.preRender = me.sys.preRender;
-            }
-
-            // detect if the layer is a collision map
-            this.isCollisionMap = (this.name.toLowerCase().contains(TMXConstants.COLLISION_LAYER));
-            if (this.isCollisionMap === true) {
-                // force the layer as invisible
-                this.setOpacity(0);
             }
 
             // if pre-rendering method is use, create the offline canvas
@@ -535,64 +483,6 @@
             if (this.preRender) {
                 this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
-        },
-        /**
-         * check for collision
-         * obj - obj
-         * pv   - projection vector
-         * res : result collision object
-         * @ignore
-         */
-        checkCollision : function (obj, pv) {
-            var x = (pv.x < 0) ? ~~(obj.left + pv.x) : Math.ceil(obj.right  - 1 + pv.x);
-            var y = (pv.y < 0) ? ~~(obj.top  + pv.y) : Math.ceil(obj.bottom - 1 + pv.y);
-            //to return tile collision detection
-            var res = {
-                x : 0, // !=0 if collision on x axis
-                xtile : undefined,
-                xprop : {},
-                y : 0, // !=0 if collision on y axis
-                ytile : undefined,
-                yprop : {}
-            };
-
-            //var tile;
-            if (x <= 0 || x >= this.width) {
-                res.x = pv.x;
-            }
-            else if (pv.x !== 0) {
-                // x, bottom corner
-                res.xtile = this.getTile(x, Math.ceil(obj.bottom - 1));
-                if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-                    res.x = pv.x; // reuse pv.x to get a
-                    res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-                }
-                else {
-                    // x, top corner
-                    res.xtile = this.getTile(x, ~~obj.top);
-                    if (res.xtile && this.tileset.isTileCollidable(res.xtile.tileId)) {
-                        res.x = pv.x;
-                        res.xprop = this.tileset.getTileProperties(res.xtile.tileId);
-                    }
-                }
-            }
-
-            // check for y movement
-            // left, y corner
-            res.ytile = this.getTile((pv.x < 0) ? ~~obj.left : Math.ceil(obj.right - 1), y);
-            if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-                res.y = pv.y || 1;
-                res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-            }
-            else { // right, y corner
-                res.ytile = this.getTile((pv.x < 0) ? Math.ceil(obj.right - 1) : ~~obj.left, y);
-                if (res.ytile && this.tileset.isTileCollidable(res.ytile.tileId)) {
-                    res.y = pv.y || 1;
-                    res.yprop = this.tileset.getTileProperties(res.ytile.tileId);
-                }
-            }
-            // return the collide object
-            return res;
         },
 
         /**

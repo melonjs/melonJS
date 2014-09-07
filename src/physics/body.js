@@ -163,61 +163,7 @@
              */
             this.jumping = true;
           
-            // some usefull slope variable
-            this.slopeY = 0;
-
-            /**
-             * equal true if the entity is standing on a slope<br>
-             * @readonly
-             * @public
-             * @type Boolean
-             * @name onslope
-             * @memberOf me.Body
-             */
-            this.onslope = false;
-
-            /**
-             * equal true if the entity is on a ladder<br>
-             * @readonly
-             * @public
-             * @type Boolean
-             * @name onladder
-             * @memberOf me.Body
-             */
-            this.onladder = false;
-            
-            /**
-             * equal true if the entity can go down on a ladder<br>
-             * @readonly
-             * @public
-             * @type Boolean
-             * @name disableTopLadderCollision
-             * @memberOf me.Body
-             */
-            this.disableTopLadderCollision = false;
-            
-            /**
-             * Define if an entity can go through breakable tiles<br>
-             * default value : false<br>
-             * @public
-             * @type Boolean
-             * @name canBreakTile
-             * @memberOf me.Body
-             */
-            this.canBreakTile = false;
-
-            /**
-             * a callback when an entity break a tile<br>
-             * @public
-             * @callback
-             * @name onTileBreak
-             * @memberOf me.Body
-             */
-            this.onTileBreak = null;
-
-            // ref to the collision map
-            this.collisionMap = me.game.collisionMap;
-
+          
             // call the super constructor
             this._super(
                 me.Rect,
@@ -403,34 +349,6 @@
             }
         },
 
-       /**
-         * adjust the given rect to the given slope tile
-         * @ignore
-         */
-        checkSlope : function (rect, tile, left) {
-
-            // first make the object stick to the tile
-            rect.pos.y = tile.pos.y - rect.height;
-
-            // normally the check should be on the object center point,
-            // but since the collision check is done on corner, we must do the
-            // same thing here
-            if (left) {
-                this.slopeY = tile.height - (
-                    rect.right + this.vel.x - tile.pos.x
-                );
-            }
-            else {
-                this.slopeY = (rect.left + this.vel.x - tile.pos.x);
-            }
-
-            // cancel y vel
-            this.vel.y = 0;
-            // set player position (+ workaround when entering/exiting slopes tile)
-            rect.pos.y += this.slopeY.clamp(0, tile.height);
-
-        },
-
         /**
          * compute the new velocity value
          * @ignore
@@ -440,7 +358,7 @@
             // apply gravity (if any)
             if (this.gravity) {
                 // apply a constant gravity (if not on a ladder)
-                vel.y += !this.onladder ? (this.gravity * me.timer.tick) : 0;
+                vel.y += this.gravity * me.timer.tick;
 
                 // check if falling / jumping
                 this.falling = (vel.y > 0);
@@ -465,162 +383,24 @@
         },
 
         /**
-         * handle the player movement, "trying" to update his position<br>
+         * update the body position
          * @name update
          * @memberOf me.Body
          * @function
-         * @return {me.Vector2d} a collision vector
-         * @example
-         * // make the player move
-         * if (me.input.isKeyPressed('left'))
-         * {
-         *     this.vel.x -= this.accel.x * me.timer.tick;
-         * }
-         * else if (me.input.isKeyPressed('right'))
-         * {
-         *     this.vel.x += this.accel.x * me.timer.tick;
-         * }
-         * // update player position
-         * var res = this.body.update();
-         *
-         * // check for collision result with the environment
-         * if (res.x != 0)
-         * {
-         *   // x axis
-         *   if (res.x<0)
-         *      console.log("x axis : left side !");
-         *   else
-         *      console.log("x axis : right side !");
-         * }
-         * else if (res.y != 0)
-         * {
-         *    // y axis
-         *    if (res.y<0)
-         *       console.log("y axis : top side !");
-         *    else
-         *       console.log("y axis : bottom side !");
-         *
-         *    // display the tile type
-         *    console.log(res.yprop.type)
-         * }
-         *
-         * // check player status after collision check
-         * var updated = (this.vel.x!=0 || this.vel.y!=0);
+         * @return {boolean} true if resulting velocity is different than 0
          */
         update : function (/* dt */) {
+            // update the velocity
             this.computeVelocity(this.vel);
-
-            // Adjust position only on collidable object
-            var collision;
-            if (this.collisionMask & me.collision.types.WORLD_SHAPE) {
-
-                var _bounds = this.entity.getBounds();
-                
-                // check for collision
-                collision = this.collisionMap.checkCollision(_bounds, this.vel);
-
-                // update some flags
-                this.onslope  = collision.yprop.isSlope || collision.xprop.isSlope;
-                // clear the ladder flag
-                this.onladder = false;
-                var prop = collision.yprop;
-                var tile = collision.ytile;
-
-                // y collision
-                if (collision.y) {
-                    // going down, collision with the floor
-                    this.onladder = prop.isLadder || prop.isTopLadder;
-
-                    if (collision.y > 0) {
-                        if (prop.isSolid ||
-                            (prop.isPlatform && (_bounds.bottom - 1 <= tile.pos.y)) ||
-                            (prop.isTopLadder && !this.disableTopLadderCollision)) {
-
-                            // adjust position to the corresponding tile
-                            this.vel.y = (
-                                this.falling ?
-                                tile.pos.y - _bounds.bottom : 0
-                            );
-                            this.falling = false;
-                        }
-                        else if (prop.isSlope && !this.jumping) {
-                            // we stop falling
-                            this.checkSlope(
-                                _bounds,
-                                tile,
-                                prop.isLeftSlope
-                            );
-                            this.falling = false;
-                        }
-                        else if (prop.isBreakable) {
-                            if  (this.canBreakTile) {
-                                // remove the tile
-                                me.game.currentLevel.clearTile(
-                                    tile.col,
-                                    tile.row
-                                );
-                                if (this.onTileBreak) {
-                                    this.onTileBreak();
-                                }
-                            }
-                            else {
-                                // adjust position to the corresponding tile
-                                this.vel.y = (
-                                    this.falling ?
-                                    tile.pos.y - _bounds.bottom : 0
-                                );
-                                this.falling = false;
-                            }
-                        }
-                    }
-                    // going up, collision with ceiling
-                    else if (collision.y < 0) {
-                        if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
-                            if (this.gravity) {
-                                this.falling = true;
-                            }
-                            // cancel the y velocity
-                            this.vel.y = 0;
-                        }
-                    }
-                }
-                prop = collision.xprop;
-                tile = collision.xtile;
-
-                // x collision
-                if (collision.x) {
-                    this.onladder = prop.isLadder || prop.isTopLadder;
-
-                    if (prop.isSlope && !this.jumping) {
-                        this.checkSlope(_bounds, tile, prop.isLeftSlope);
-                        this.falling = false;
-                    }
-                    else {
-                        // can walk through the platform & ladder
-                        if (!prop.isPlatform && !prop.isLadder && !prop.isTopLadder) {
-                            if (prop.isBreakable && this.canBreakTile) {
-                                // remove the tile
-                                me.game.currentLevel.clearTile(tile.col, tile.row);
-                                if (this.onTileBreak) {
-                                    this.onTileBreak();
-                                }
-                            } else {
-                                this.vel.x = 0;
-                            }
-                        }
-                    }
-                }
-                // as the checkSlope might change the _bounds.pos, we need to readjust
-                // the entity pos accordingly.... (this is ugly and will be gone in next version
-                this.entity.pos.setV(_bounds.pos).sub(this.getShape().getBounds().pos);
-            }
 
             // update player entity position
             this.entity.pos.add(this.vel);
+
+            // update the entity and body bounds
             this.updateBounds();
- 
-            // returns the collision "vector"
-            return collision;
+
+            // returns true if vel is different from 0
+            return (this.vel.x !== 0 || this.vel.y !== 0);
 
         },
 
