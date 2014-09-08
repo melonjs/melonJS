@@ -179,7 +179,8 @@
         },
 
         /**
-         * add a collision shape to this entity
+         * add a collision shape to this entity <br>
+         * (note: me.Rect objects will be converted to me.PolyShape before being added)
          * @name addShape
          * @memberOf me.Body
          * @public
@@ -206,7 +207,7 @@
          * @memberOf me.Body
          * @public
          * @function
-         * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+         * @return {me.PolyShape|me.Ellipse} shape a shape object
          */
         getShape : function () {
             return this.shapes[this.shapeIndex];
