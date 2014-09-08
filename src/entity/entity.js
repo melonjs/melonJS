@@ -444,10 +444,10 @@
         onCollision : function (response) {
             response.a.pos.sub(response.overlapV);
             if (response.overlapV.x !== 0) {
-                response.a.body.vel.x = 0;
+                response.a.body.vel.x = Math.round(response.a.body.vel.x - response.overlapV.x) || 0;
             }
             if (response.overlapV.y !== 0) {
-                response.a.body.vel.y = 0;
+                response.a.body.vel.y = Math.round(response.a.body.vel.y - response.overlapV.y) || 0;
                 // cancel the falling an jumping flaf if necessary
                 response.a.body.falling = response.overlapV.y > 0;
                 response.a.body.jumping = response.overlapV.y < 0;
