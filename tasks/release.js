@@ -1,6 +1,7 @@
 "use strict";
 var path = require("path");
 var shell = require("shelljs");
+var Q = require("q");
 
 module.exports = function (grunt) {
     grunt.registerTask("dorelease", "MelonJS Release", function () {
@@ -9,35 +10,37 @@ module.exports = function (grunt) {
         var version = config.version;
         var currBranch;
         var verbose = grunt.option("verbose");
+        var done = this.async();
         // we could add more options here later
         var shellOpts = {};
         if (verbose) {
-            shellOpts['verbose'] = true;
+            shellOpts.verbose = true;
         }
 
         function run(cmd, msg) {
-            grunt.verbose.writeln("Running: " + cmd);
+            var deferred = Q.defer();
             var success = shell.exec(cmd, shellOpts).code === 0;
+            grunt.verbose.writeln("Running: " + cmd);
 
             if (success) {
                 grunt.log.ok(msg || cmd);
+                deferred.resolve();
             } else {
                 // fail and stop execution of further tasks
-                grunt.fail.fatal("Failed when executing '" + cmd  + "'");
+                deferred.reject("Failed when executing '" + cmd  + "' \n");
             }
+            return deferred.promise;
         }
 
         function checkout() {
             var symbolicRef = shell.exec("git symbolic-ref HEAD", shellOpts).output;
             if (symbolicRef) {
                 var splitted = symbolicRef.split('/');
-                // symbolic ref must contain 3 steps
-                // e.g ref/heads/master
-                if (splitted.length !== 3) {
+                // the branch name is the last item of the array
+                currBranch = splitted.slice(2).join("/");
+                if (!currBranch) {
                     grunt.fail.fatal("Could not get the actual branch from symbolic ref");
                 }
-                // the branch name is the last item of the array
-                currBranch = splitted[splitted.length - 1];
             }
             run("git checkout --detach", "Detaching from current tree");
         }
@@ -83,16 +86,18 @@ module.exports = function (grunt) {
             run("git checkout " + backBranch, "Resetting staged changes and back to initial branch");
         }
 
-        try {
-            checkout();
-            add();
-            commit();
-            tag();
-            push();
-        } catch (err) {
-            grunt.fail.warn(err || "release failed");
-        } finally {
-            rollback();
-        }
+        Q()
+            .then(checkout)
+            .then(add)
+            .then(commit)
+            .then(tag)
+            .then(push)
+            .catch (function(err) {
+                grunt.fail.warn(err || "release failed");
+            })
+            .finally(function() {
+                rollback();
+                done();
+            });
     });
 };
