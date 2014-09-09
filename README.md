@@ -16,42 +16,42 @@ About melonJS
 [melonJS](http://melonjs.org/) is the result of our enthusiasm & experiments with Javascript,
 and currently features :
 
-- A fresh & lightweight 2D sprite-based engine
-- Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE) and mobile devices
-- Device motion & accelerometer support
-- High DPI & auto scaling
-- Multi-channel HTML5 audio support and Web Audio on supported devices
-- a lightweight physic implementation to ensure low cpu requirements
-- Polygon (SAT) based collision algorithm for accurate detection and response
-- Fast Broad-phase collision detection using spatial partitioning
+- a fresh & lightweight 2D sprite-based engine
+- standalone library (does not rely on anything else, except a HTML5 capable browser)
+- compatible with most major browser (Chrome, Safari, Firefox, Opera, IE) and mobile devices
+- built-in support for CocoonJS
+- device motion & accelerometer support
+- high DPI & auto scaling
+- multi-channel HTML5 audio support and WebAudio on supported devices
+- a lightweight physic implementation to ensure low CPU requirements
+- polygon (SAT) based collision algorithm for accurate detection and response
+- fast broad-phase collision detection using spatial partitioning
 - advanced math API for Vector and Matrix
-- Tween Effects
-- Transition effects
-- A basic set of Object Entities (to be extended)
-- Object Pooling
-- Basic Particle System
-- Basic animation management
-- Standard spritesheet and Packed Textures (Texture Packer, ShoeBox) support
-- A state manager (to easily manage loading, menu, options, in-game state)
+- a basic set of Entities (to be extended)
+- object pooling
+- basic particle system
+- basic animation management
+- tween effects
+- standard spritesheet and packed textures (Texture Packer, ShoeBox) support
+- a state manager (to easily manage loading, menu, options, in-game state)
+- transition effects
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
-    - Orthogonal tilemap with built-in collision management
-    - Isometric, Perspective tilemap support
-    - Multiple layers (multiple background/Foreground, collision and Image layers)
-    - Multiple Tileset support
-    - Tileset Transparency settings
-    - Layers Alpha settings
-    - Rectangle, Ellipse, Polygon and Polyline objects support
-    - Tiled Objects
-    - Flipped & rotated Tiles
-    - Dynamic Layer and Object/Group ordering
-    - Dynamic Entity loading
-    - Solid, Platform, Slope and Breakable Tiles
-- System & bitmap fonts
-- Mouse and Touch device support (with mouse emulation)
-- Built-in support for cocoonJS
-- Asynchronous messaging support (minPubSub)
+    - orthogonal tilemap with built-in collision management
+    - isometric and perspective tilemap support
+    - multiple layers (multiple background / foreground, collision and image layers)
+    - multiple tileset support
+    - tileset transparency settings
+    - layers alpha settings
+    - rectangle, ellipse, polygon and polyline objects support
+    - Tiled objects
+    - flipped & rotated tiles
+    - dynamic layer and object / group ordering
+    - dynamic entity loading
+    - solid, platform, slope and breakable tiles
+- system & bitmap fonts
+- mouse and touch device support (with mouse emulation)
+- asynchronous messaging support (minPubSub)
 - some basic GUI elements
 - a customizable loader
 
