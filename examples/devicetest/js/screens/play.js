@@ -19,7 +19,8 @@ game.PlayScreen = me.ScreenObject.extend({
             update: function() {
                 return true;
             },
-            draw: function(context) {
+            draw: function(renderer) {
+                var context = renderer.getContext();
                 this.font.draw(context, "Gamma: " + me.device.gamma, 10, 0);
                 this.font.draw(context, "Beta: " + me.device.beta, 10, 30);
                 this.font.draw(context, "Alpha: " + me.device.alpha, 10, 60);

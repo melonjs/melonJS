@@ -44,12 +44,6 @@
             // load our map
             me.game.currentLevel = level;
 
-            // get the collision map
-            me.game.collisionMap = me.game.currentLevel.getLayerByName("collision");
-            if (!me.game.collisionMap || !me.game.collisionMap.isCollisionMap) {
-                console.error("WARNING : no collision map detected");
-            }
-
             // change the viewport bounds
             me.game.viewport.setBounds(
                 0, 0,
@@ -70,11 +64,15 @@
             // game world as default container
             var targetContainer = container;
 
+            var isCollisionGroup = false;
+
             // load all ObjectGroup and Object definition
             var objectGroups = level.getObjectGroups();
 
             for (var g = 0; g < objectGroups.length; g++) {
                 var group = objectGroups[g];
+
+                isCollisionGroup = group.name.toLowerCase().contains(me.TMXConstants.COLLISION_GROUP);
 
                 if (me.game.mergeGroup === false) {
                     // create a new container with Infinite size (?)
@@ -102,7 +100,7 @@
                     var settings = group.objects[o];
 
                     var obj = me.pool.pull(
-                        settings.name,
+                        isCollisionGroup ? "me.CollisionEntity" : settings.name,
                         settings.x, settings.y,
                         // 'TileObject' will instantiate a Sprite Object
                         settings.name === "TileObject" ? settings.image : settings

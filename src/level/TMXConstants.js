@@ -10,7 +10,7 @@
 (function () {
     me.TMXConstants = {
         // some custom constants
-        COLLISION_LAYER             : "collision",
+        COLLISION_GROUP             : "collision",
         // some TMX constants
         TMX_TAG_MAP                 : "map",
         TMX_TAG_NAME                : "name",

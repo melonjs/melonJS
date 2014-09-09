@@ -127,7 +127,10 @@ bucket.
 
 Questions, need help ?
 -------------------------------------------------------------------------------
-If you need help, you can try the [melonJS developer forum](http://groups.google.com/group/melonjs), 
-or in #melonjs on freenode.net (also available via [webchat](http://webchat.freenode.net/?channels=melonjs)).
+If you need technical support, you can contact us through the following channels :
+* [melonJS developer forum](http://groups.google.com/group/melonjs)
+* [gitter web chat](https://gitter.im/melonjs/public)
+* #melonjs on freenode.net (also available via [webchat](http://webchat.freenode.net/?channels=melonjs))
+* [melonJS wikipage] (https://github.com/melonjs/melonJS/wiki)
 
-For any other questions, feel free to send us an [email](mailto:contact@melonjs.org).
+For any other non technical related questions, feel free to also send us an [email](mailto:contact@melonjs.org).

@@ -44,6 +44,7 @@
             api.register("me.Tween", me.Tween, true);
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);
+            api.register("me.CollisionEntity", me.CollisionEntity, true);
         };
 
         /**

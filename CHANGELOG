@@ -1,5 +1,7 @@
 Version History
 ---------------
+1.2.0
+
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
 * Core : new CI and unit testing frameworks
@@ -13,7 +15,7 @@ Version History
 * Container : `addChild` and `addChildAt` now return the added child
 * Video : refactored canvas drawing out to me.CanvasRenderer. Video is now agnostic of rendering target. Use me.video.renderer to call things like getWidth, getHeight, getCanvas, getContext, etc.
 * Video : constructor parameters changed. 2nd parameter now expects renderer type. For now, just supports me.video.CANVAS
-* CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example.
+* CanvasRenderer : object is passed to the draw calls of each object in the world Container. Implemented various draw apis fillRect, and fillArc for example. me.Font still requires an instance of Context2d.
 * Renderable : renamed `me.SpriteObject` to `me.Sprite` and `me.ObjectContainer` to `me.Container`, for a cleaner API
 * Renderable : constructors refactored to accept x & y numeric values, over a single vector object. Effects: me.Container, me.Rect, me.PolyShape, me.Ellipse, me.Renderable
 * Shapes : setShape updated to accept x & y numeric values over a vector object for: me.Rect, me.PolyShape, me.Ellipse

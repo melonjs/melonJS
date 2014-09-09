@@ -415,6 +415,59 @@
     });
 
     /*
+     * A collision entity
+     */
+
+    /**
+     * @class
+     * @extends me.Entity
+     * @memberOf me
+     * @constructor
+     * @param {Number} x the x coordinates of the object
+     * @param {Number} y the y coordinates of the object
+     * @param {me.ObjectSettings} settings object settings
+     */
+    me.CollisionEntity = me.Entity.extend(
+    /** @scope me.CollisionEntity.prototype */
+    {
+        /** @ignore */
+        init : function (x, y, settings) {
+            // call the super constructor
+            this._super(me.Entity, "init", [x, y, settings]);
+            this.body.collisionType = me.collision.types.WORLD_SHAPE;
+            // set our collision callback function
+            this.body.onCollision = this.onCollision.bind(this);
+        },
+
+
+        /** @ignore */
+        onCollision : function (response) {
+            // the other entity
+            var other = response.a;
+            // the overlap vector
+            var overlap = response.overlapV;
+
+            // adjust the entity position
+            other.pos.sub(overlap);
+
+            // adjust velocity
+            if (overlap.x !== 0) {
+                other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
+            }
+            if (overlap.y !== 0) {
+                other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
+                // cancel the falling an jumping flags if necessary
+                other.body.falling = overlap.y > 0;
+                other.body.jumping = overlap.y < 0;
+            }
+            // update the entity bounds
+            other.updateBounds();
+        }
+
+    });
+
+
+    /*
      * A Collectable entity
      */
 

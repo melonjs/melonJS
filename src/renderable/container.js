@@ -506,49 +506,6 @@
         },
 
         /**
-         * Checks if the specified child collides with others childs in this container
-         * @name collide
-         * @memberOf me.Container
-         * @public
-         * @function
-         * @deprecated use the new me.collision.check function for collision detection 
-         * @param {me.Renderable} obj Object to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision (
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
-         */
-        collide : function (objA, multiple) {
-            // TO BE REMOVED
-            return this.collideType(objA, null, multiple);
-        },
-
-        /**
-         * Checks if the specified child collides with others childs in this container
-         * @name collideType
-         * @memberOf me.Container
-         * @public
-         * @function
-         * @deprecated use the new me.collision.check function for collision detection 
-         * @param {me.Renderable} obj Object to be tested for collision
-         * @param {String} [type=undefined] child type to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision
-         * @return {me.Vector2d} collision vector or an array of collision vector (multiple collision)
-         */
-        collideType : function (objA, type, multiple) {
-
-            if (multiple === true || typeof (type) === "string") {
-                throw new me.Container.Error(
-                    "Advanced collision detection through the " +
-                    "`me.game.collide` function is deprecated, " +
-                    "please use the new `me.collision.check` function"
-                );
-            }
-            if (me.collision.check(objA, false, null, true, me.collision.response.clear())) {
-                return me.collision.response;
-            }
-            return null;
-        },
-
-        /**
          * Manually trigger the sort of all the childs in the container</p>
          * @name sort
          * @memberOf me.Container

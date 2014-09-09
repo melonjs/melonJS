@@ -50,15 +50,6 @@
         api.viewport = null;
 
         /**
-         * a reference to the game collision Map
-         * @public
-         * @type {me.TMXLayer}
-         * @name collisionMap
-         * @memberOf me.game
-         */
-        api.collisionMap = null;
-
-        /**
          * a reference to the game current level
          * @public
          * @type {me.TMXTileMap}
@@ -170,10 +161,6 @@
                         y : 0
                     }
                 };
-                api.defaultCollisionMap = new me.CollisionTiledLayer(
-                    width,
-                    height
-                );
 
                 // set as initialized
                 initialized = true;
@@ -207,8 +194,7 @@
                     y : 0
                 }
             };
-            api.collisionMap = api.defaultCollisionMap;
-
+            
             // reset the transform matrix to the normal one
             renderer.resetTransform();
 

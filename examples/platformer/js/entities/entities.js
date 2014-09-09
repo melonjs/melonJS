@@ -177,7 +177,7 @@ game.CoinEntity = me.CollectableEntity.extend({
     /** 
      * collision handling
      */
-    onCollision : function (res, obj) {
+    onCollision : function (response) {
         // do something when collide
         me.audio.play("cling", false);
         // give some score
@@ -269,10 +269,10 @@ game.PathEnemyEntity = me.Entity.extend({
     /**
      * collision handle
      */
-    onCollision : function (res, obj) {
+    onCollision : function (response) {
         // res.y >0 means touched by something on the bottom
         // which mean at top position for this one
-        if (this.alive && (res.y > 0) && obj.body.falling) {
+        if (this.alive && (response.overlapV.y > 0) && response.a.body.falling) {
             // make it dead
             this.alive = false;
             //avoid further collision and delete it
