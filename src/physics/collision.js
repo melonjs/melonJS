@@ -393,12 +393,6 @@
             this.aInB = true;
             this.bInA = true;
             this.overlap = Number.MAX_VALUE;
-            // old response format properties
-            // for backward compatiblity, will be removed in 1.2.0
-            this.x = 0;
-            this.y = 0;
-            this.type = "";
-            this.obj = null;
         };
 
         /**
@@ -509,14 +503,7 @@
                                 collision++;
                                 
                                 if (api.SAT) {
-                                    // add old reponse fields for backward compatilibty
-                                    if (response) {
-                                        response.x = response.overlapV.x;
-                                        response.y = response.overlapV.y;
-                                        response.type = response.b.body.collisionType;
-                                        response.obj = response.b;
-                                    }
-                                    
+                                
                                     // notify the other object
                                     if (typeof objB.body.onCollision === "function") {
                                         objB.body.onCollision.call(objB.body, response, objA);
