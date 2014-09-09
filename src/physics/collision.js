@@ -390,7 +390,9 @@
             this.b = null;
             this.overlapN = new me.Vector2d();
             this.overlapV = new me.Vector2d();
-            this.clear();
+            this.aInB = true;
+            this.bInA = true;
+            this.overlap = Number.MAX_VALUE;
         };
 
         /**
