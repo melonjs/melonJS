@@ -393,6 +393,12 @@
             this.aInB = true;
             this.bInA = true;
             this.overlap = Number.MAX_VALUE;
+            // old response format properties
+            // for backward compatiblity, will be removed in 1.2.0
+            this.x = 0;
+            this.y = 0;
+            this.type = "";
+            this.obj = null;
         };
 
         /**
