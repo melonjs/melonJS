@@ -39,31 +39,20 @@
 
          // draw function
         draw : function (renderer) {
-            var context = renderer.getContext();
             // draw the progress bar
-            context.fillStyle = "black";
-            context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
-            context.fillStyle = "#55aa00";
-            context.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
+            renderer.setColor("#000000");
+            renderer.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
+            renderer.setColor("#55aa00");
+            renderer.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
         }
     });
 
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
-        init : function (x, y) {
+        init : function (context, x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
-        },
-
-        // 100x85 Logo
-        // generated using Illustrator and the Ai2Canvas plugin
-        draw : function (renderer) {
-            renderer.save();
-
-            // translate to destination point
-            renderer.translate(this.pos.x, this.pos.y);
-
-            var context = renderer.getContext();
-
+            
+            context.translate(this.pos.x, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -91,7 +80,13 @@
             context.miterLimit = 4.0;
             context.stroke();
 
-            renderer.restore();
+            var image = new Image();
+            image.src = context.toDataURL();
+            this.image = image;
+        },
+
+        draw : function (renderer) {
+            renderer.drawImage(this.image, 0, 0);
         }
     });
 
@@ -146,9 +141,12 @@
                 progressBar.onProgressUpdate.bind(progressBar)
             );
             me.game.world.addChild(progressBar, 1);
+            this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
+            var context = me.CanvasRenderer.getContext2d(this.iconCanvas);
 
             // melonJS text & logo
             var icon = new IconLogo(
+                context,
                 (me.video.renderer.getWidth() - 100) / 2,
                 (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
             );
@@ -163,6 +161,8 @@
                 me.event.unsubscribe(this.handle);
                 this.handle = null;
             }
+
+            document.body.removeChild(this.iconCanvas);
         }
     });
 })();

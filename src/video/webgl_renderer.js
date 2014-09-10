@@ -97,16 +97,7 @@
          * @param {String} color - css color string.
          */
         api.clearSurface = function (gl, col) {
-            if (col.match(/^\#/)) {
-                color.parseHex(col);
-            }
-            else if (col.match(/^rgb/)) {
-                color.parseRGB(col);
-            }
-            else {
-                color.parseCSS(col);
-            }
-
+            this.setColor(col);
             gl.clearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, 1.0);
         };
 
@@ -341,6 +332,25 @@
         api.setGlobalAlpha = function (a) {
             globalColor.alpha = a;
             spriteBatch.setColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, a);
+        };
+
+        /**
+         * Sets the color for further draw calls
+         * @name setColor
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {String} color - css color string.
+         */
+        api.setColor = function (col) {
+            if (col.match(/^\#/)) {
+                color.parseHex(col);
+            }
+            else if (col.match(/^rgb/)) {
+                color.parseRGB(col);
+            }
+            else {
+                color.parseCSS(col);
+            }
         };
 
         /**
