@@ -432,11 +432,31 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
+            /**
+             * defined the active collision angle for this shape : <br>
+             * (0,1) to only check for down to up collision
+             * (0,-1) to only check for up to down collision
+             * (-1, 0) to only check for right to left collision
+             * (1, 0) to only check for left to right collision
+             * @public
+             * @property {me.Vector2d=} collisionAngle
+             * @memberOf me.CollisionEntity
+             */
+            this.collisionAngle = new me.Vector2d(0, 0);
+
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
             this.body.collisionType = me.collision.types.WORLD_SHAPE;
             // set our collision callback function
             this.body.onCollision = this.onCollision.bind(this);
+            
+            // backward compatiblity with the previous version
+            if (settings.platform === true) {
+                // only downard collision is enabled on the y axis
+                // (bottom part of the angle circle
+                this.collisionAngle.y = -1;
+            }
+            // TODO: parse the given collisionAngle json object from Tiled ?
         },
 
 
@@ -447,6 +467,16 @@
             // the overlap vector
             var overlap = response.overlapV;
 
+            // check if the collision angle has to be checked
+            if (this.collisionAngle.x !== 0 && (overlap.x * this.collisionAngle.x) === overlap.x) {
+                // nullify it
+                overlap.x = 0;
+            }
+            if (this.collisionAngle.y !== 0 && (overlap.y * this.collisionAngle.y) === overlap.y) {
+                // nullify it
+                overlap.y = 0;
+            }
+            
             // adjust the entity position
             other.pos.sub(overlap);
 
