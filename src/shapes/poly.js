@@ -6,7 +6,11 @@
  */
 (function () {
     /**
-     * a polyshape (polygone/polyline) Object
+     * a polyshape (polygone/polyline) Object.<br>
+     * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex, and not concave.
+     * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon 
+     * (which means that all angles are less than 180 degrees), as described here below : <br>
+     * <center><img src="images/convex_polygon.png"/></center>
      * @class
      * @extends Object
      * @memberOf me
