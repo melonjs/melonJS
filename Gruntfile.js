@@ -154,7 +154,7 @@ module.exports = function (grunt) {
                 files: {
                     "src/vendors/stackgl.js": {
                         append: "/* jshint ignore:end */",
-                        prepend: "/* jshint ignore:start */",
+                        prepend: "/* jshint ignore:start */\n",
                         input: "src/vendors/stackgl-compiled.js"
                     }
                 }
@@ -177,9 +177,9 @@ module.exports = function (grunt) {
     grunt.loadTasks("tasks");
 
     // Default task.
-    grunt.registerTask("default", [ "test", "stackgl-build", "uglify" ]);
-    grunt.registerTask("build", [ "lint", "stackgl-build", "uglify" ]);
-    grunt.registerTask("stackgl-build", ["browserify", "file_append"]);
+    grunt.registerTask("default", [ "stackgl-build", "test", "uglify" ]);
+    grunt.registerTask("build", [ "stackgl-build", "lint", "uglify" ]);
+    grunt.registerTask("stackgl-build", ["browserify:dist", "file_append"]);
     grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);

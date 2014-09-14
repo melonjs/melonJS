@@ -38,7 +38,8 @@
     "grunt-browserify": "~3.0.0",
     "grunt-file-append": "~0.0.5",
     "glslify": "~1.6.0",
-    "gl-state": "~1.0.0"
+    "gl-state": "~1.0.0",
+    "gl-texture2d": "~2.0.3"
   },
   "scripts": {
     "install": "(bower install || true) && grunt",
