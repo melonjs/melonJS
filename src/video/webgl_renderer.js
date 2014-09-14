@@ -4,6 +4,7 @@
  * http://www.melonjs.org
  *
  */
+/* jshint ignore:start */
 (function () {
 
     /**
@@ -46,6 +47,7 @@
                 "attribute vec2 " + kami.ShaderProgram.POSITION_ATTRIBUTE + ";" +
                 "attribute vec4 " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
                 "attribute vec2 " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
+                "attribute int colorOnly;" + 
 
                 "uniform mat3 u_matrix;" +
                 "varying vec2 vTexCoord0;" +
@@ -60,7 +62,6 @@
 
             this.context = new kami.WebGLContext(width, height, canvas);
             gl = this.context.gl;
-            color = new me.Color();
             this.uniformMatrix = new me.Matrix3d();
             shaderProgram = new kami.ShaderProgram(this.context, vertexShader, fragmentShader);
             if (shaderProgram.log) {
@@ -71,6 +72,8 @@
             globalColor = new me.Color(255, 255, 255, 1.0);
             var fontCanvas = me.video.createCanvas(width, height, false);
             fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
+
+            this.colorOnly = shaderProgram.getAttributeLocation("colorOnly");
             return this;
         };
 
@@ -98,7 +101,7 @@
          */
         api.clearSurface = function (gl, col) {
             this.setColor(col);
-            gl.clearColor(color.r / 255.0, color.g / 255.0, color.b / 255.0, 1.0);
+            gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
         };
 
         /**
@@ -185,6 +188,10 @@
          */
         api.end = function () {
             spriteBatch.end();
+        };
+
+        api.fillRect = function (x, y, width, height) {
+
         };
 
         /**
@@ -343,13 +350,13 @@
          */
         api.setColor = function (col) {
             if (col.match(/^\#/)) {
-                color.parseHex(col);
+                globalColor.parseHex(col);
             }
             else if (col.match(/^rgb/)) {
-                color.parseRGB(col);
+                globalColor.parseRGB(col);
             }
             else {
-                color.parseCSS(col);
+                globalColor.parseCSS(col);
             }
         };
 
@@ -388,3 +395,4 @@
     })();
 
 })();
+/* jshint ignore:end */

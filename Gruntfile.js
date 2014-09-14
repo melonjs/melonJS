@@ -140,6 +140,26 @@ module.exports = function (grunt) {
                 }
             }
         },
+
+        browserify: {
+            dist: {
+                files: {
+                    "src/vendors/stackgl-compiled.js": ["src/vendors/stackgl-require.js"]
+                }
+            }
+        },
+
+        file_append: {
+            default_options: {
+                files: {
+                    "src/vendors/stackgl.js": {
+                        append: "/* jshint ignore:end */",
+                        prepend: "/* jshint ignore:start */",
+                        input: "src/vendors/stackgl-compiled.js"
+                    }
+                }
+            }
+        }
     });
 
     grunt.loadNpmTasks("grunt-contrib-uglify");
@@ -150,13 +170,16 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-replace");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
     grunt.loadNpmTasks("grunt-contrib-connect");
+    grunt.loadNpmTasks("grunt-browserify");
+    grunt.loadNpmTasks("grunt-file-append");
 
     // Custom Tasks
     grunt.loadTasks("tasks");
 
     // Default task.
-    grunt.registerTask("default", [ "test", "uglify" ]);
-    grunt.registerTask("build", [ "lint", "uglify" ]);
+    grunt.registerTask("default", [ "test", "stackgl-build", "uglify" ]);
+    grunt.registerTask("build", [ "lint", "stackgl-build", "uglify" ]);
+    grunt.registerTask("stackgl-build", ["browserify", "file_append"]);
     grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
