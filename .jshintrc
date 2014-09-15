@@ -95,7 +95,6 @@
         "webkitAudioContext" : false,
         "Howl"          : false,
         "Howler"        : false,
-        "kami"          : false,
 
         // Jasmine
         "jasmine"       : false,
