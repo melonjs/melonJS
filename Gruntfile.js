@@ -143,8 +143,13 @@ module.exports = function (grunt) {
 
         browserify: {
             dist: {
-                files: {
-                    "src/vendors/stackgl-compiled.js": ["src/vendors/stackgl-require.js"]
+                src: ["src/vendors/stackgl-require.js"],
+                dest: "src/vendors/stackgl-compiled.js",
+
+                options: {
+                    browserifyOptions: {
+                        standalone: "stackgl"
+                    }
                 }
             }
         },
@@ -153,7 +158,7 @@ module.exports = function (grunt) {
             default_options: {
                 files: {
                     "src/vendors/stackgl.js": {
-                        append: "/* jshint ignore:end */",
+                        append: "\n/* jshint ignore:end */",
                         prepend: "/* jshint ignore:start */\n",
                         input: "src/vendors/stackgl-compiled.js"
                     }
