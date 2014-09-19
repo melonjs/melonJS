@@ -296,10 +296,6 @@
                 api.viewport.screenX = translateX - api.currentLevel.pos.x;
                 api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
-                if (me.video.renderer === me.WebGLRenderer) {
-                    me.video.renderer.begin();
-                }
-
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
                 api.world.draw(renderer, api.viewport);
@@ -309,10 +305,6 @@
 
                 // draw our camera/viewport
                 api.viewport.draw(renderer);
-
-                if (me.video.renderer === me.WebGLRenderer) {
-                    me.video.renderer.end();
-                }
             }
 
             isDirty = false;

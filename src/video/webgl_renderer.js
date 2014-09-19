@@ -18,14 +18,12 @@
         canvas = null,
         fontCache = {},
         fontContext = null,
-        fragmentShader = null,
         gl = null,
         globalColor = null,
         imageObject = null,
         positionBuffer = null,
         shaderProgram = null,
         textureBuffer = null,
-        vertexShader = null,
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
@@ -49,7 +47,6 @@
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
 
-            this.bindTextures();
             this.createBuffers();
 
             return this;
@@ -90,35 +87,7 @@
          * @private
          */
         api.createShader = function () {
-            fragmentShader =
-                "precision mediump float;" +
-                "varying vec2 vTexCoord0;" +
-                "uniform vec4 uColor;" +
-                "uniform sampler2D uTexture0;" +
-
-                "void main(void) {" +
-                "   gl_FragColor = texture2D(uTexture0, vTexCoord0) * uColor;" +
-                "}"
-            ;
-
-            vertexShader =
-                "attribute vec2 aPosition;" +
-                "attribute vec2 aTexture0;" +
-                "uniform mat3 uMatrix;" +
-                "varying vec2 vTexCoord0;" +
-
-                "void main(void) {" +
-                "   gl_Position = vec4((uMatrix * vec3(aPosition, 1)).xy, 0, 1);" +
-                "   vTexCoord0 = aTexture0;" +
-                "}"
-            ;
-            var createShader = stackgl.glslify({
-                vertex: vertexShader,
-                fragment: fragmentShader,
-                inline: true
-            });
-
-            shaderProgram = createShader(gl);
+            shaderProgram = stackgl.createShader(gl);
         };
 
         /**
