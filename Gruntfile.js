@@ -148,7 +148,8 @@ module.exports = function (grunt) {
 
                 options: {
                     browserifyOptions: {
-                        standalone: "stackgl"
+                        standalone: "stackgl",
+                        transform: ["glslify"]
                     }
                 }
             }

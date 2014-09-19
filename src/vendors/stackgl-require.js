@@ -1,5 +1,7 @@
 module.exports = {
-    "GLState": require("gl-state"),
-    "GLSLify": require("glslify"),
-    "GLTexture2D": require("gl-texture2d")
+    "glstate": require("gl-state"),
+    "glslify": require("glslify"),
+    "gltexture2d": require("gl-texture2d"),
+    "drawTriangle": require("a-big-triangle"),
+    "createBuffer": require("gl-buffer")
 };

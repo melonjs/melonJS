@@ -4,7 +4,6 @@
  * http://www.melonjs.org
  *
  */
-/* jshint ignore:start */
 (function () {
 
     /**
@@ -16,75 +15,50 @@
      */
     me.WebGLRenderer = (function () {
         var api = {},
-        globalColor = null,
         canvas = null,
-        gl = null,
-        color = null,
-        fragmentShader = null,
-        vertexShader = null,
-        shaderProgram = null,
-        spriteBatch,
         fontCache = {},
         fontContext = null,
-        imageObject;
+        fragmentShader = null,
+        gl = null,
+        globalColor = null,
+        imageObject = null,
+        positionBuffer = null,
+        shaderProgram = null,
+        textureBuffer = null,
+        vertexShader = null,
+        white1PixelTexture = null;
 
         api.init = function (width, height, c) {
             canvas = c;
             imageObject = new Image();
+            gl = canvas.getContext("experimental-webgl");
 
-            fragmentShader =
-                "precision mediump float;" +
-                "varying vec2 vTexCoord0;" +
-                "varying vec4 vColor;" +
-                "uniform sampler2D u_texture0;" +
-
-                "void main(void) {" +
-                "   gl_FragColor = texture2D(u_texture0, vTexCoord0) * vColor;" +
-                "}"
-            ;
-
-            vertexShader =
-                "attribute vec2 " + kami.ShaderProgram.POSITION_ATTRIBUTE + ";" +
-                "attribute vec4 " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
-                "attribute vec2 " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
-                "attribute int colorOnly;" + 
-
-                "uniform mat3 u_matrix;" +
-                "varying vec2 vTexCoord0;" +
-                "varying vec4 vColor;" +
-
-                "void main(void) {" +
-                "   gl_Position = vec4((u_matrix * vec3(" + kami.ShaderProgram.POSITION_ATTRIBUTE + ", 1)).xy, 0, 1);" +
-                "   vTexCoord0 = " + kami.ShaderProgram.TEXCOORD_ATTRIBUTE + "0;" +
-                "   vColor = " + kami.ShaderProgram.COLOR_ATTRIBUTE + ";" +
-                "}"
-            ;
-
-            this.context = new kami.WebGLContext(width, height, canvas);
-            gl = this.context.gl;
             this.uniformMatrix = new me.Matrix3d();
-            shaderProgram = new kami.ShaderProgram(this.context, vertexShader, fragmentShader);
-            if (shaderProgram.log) {
-                console.warn(shaderProgram.log);
-            }
 
-            spriteBatch = new kami.SpriteBatch(this.context);
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
+            this.context = gl;
+            this.createShader();
+
             globalColor = new me.Color(255, 255, 255, 1.0);
             var fontCanvas = me.video.createCanvas(width, height, false);
             fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
 
-            this.colorOnly = shaderProgram.getAttributeLocation("colorOnly");
+            white1PixelTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+
+            this.bindTextures();
+            this.createBuffers();
+
             return this;
         };
 
-        /**
-         * Starts the sprite batch draw call
-         * @name begin
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.begin = function () {
-            spriteBatch.begin();
+        api.bindTexture = function (image) {
+            if (image.texture === null || typeof image.texture === "undefined") {
+                image.texture = stackgl.gltexture2d(gl, image);
+            }
         };
 
         api.blitSurface = function () {
@@ -102,6 +76,49 @@
         api.clearSurface = function (gl, col) {
             this.setColor(col);
             gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
+        };
+
+        /**
+         * @private
+         */
+        api.createBuffers = function () {
+            textureBuffer = stackgl.createBuffer(gl, [], gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+            positionBuffer = stackgl.createBuffer(gl, [], gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+        };
+
+        /**
+         * @private
+         */
+        api.createShader = function () {
+            fragmentShader =
+                "precision mediump float;" +
+                "varying vec2 vTexCoord0;" +
+                "uniform vec4 uColor;" +
+                "uniform sampler2D uTexture0;" +
+
+                "void main(void) {" +
+                "   gl_FragColor = texture2D(uTexture0, vTexCoord0) * uColor;" +
+                "}"
+            ;
+
+            vertexShader =
+                "attribute vec2 aPosition;" +
+                "attribute vec2 aTexture0;" +
+                "uniform mat3 uMatrix;" +
+                "varying vec2 vTexCoord0;" +
+
+                "void main(void) {" +
+                "   gl_Position = vec4((uMatrix * vec3(aPosition, 1)).xy, 0, 1);" +
+                "   vTexCoord0 = aTexture0;" +
+                "}"
+            ;
+            var createShader = stackgl.glslify({
+                vertex: vertexShader,
+                fragment: fragmentShader,
+                inline: true
+            });
+
+            shaderProgram = createShader(gl);
         };
 
         /**
@@ -176,22 +193,82 @@
          * @param {Number} dh the height value to draw the image at on the screen
          */
         api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-            shaderProgram.setUniformMatrix3("u_matrix", this.uniformMatrix, false);
-            this.context.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
-        };
+            if (typeof image.texture === "undefined") {
+                this.bindTexture(image);
+            }
+            sx = sx / image.width;
+            sy = 1.0 - (sy / image.height);
+            sw = sw / image.width;
+            sh = 1.0 - (sy / image.height);
 
-        /**
-         * Ends the sprite batch draw call
-         * @name end
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.end = function () {
-            spriteBatch.end();
+            var x1 = dx;
+            var y1 = dy;
+            var x2 = x1 + dw;
+            var y2 = y1 + dh;
+            positionBuffer.update([
+                x1, y1,
+                x2, y1,
+                x1, y2,
+                x1, y2,
+                x2, y1,
+                x2, y2
+            ]);
+
+            shaderProgram.bind();
+            positionBuffer.bind();
+            shaderProgram.attributes.aPosition.pointer();
+
+            textureBuffer.update([
+                sx, sy,
+                sw, sy,
+                sx, sh,
+                sx, sh,
+                sw, sy,
+                sw, sh
+            ]);
+
+            textureBuffer.bind();
+            shaderProgram.attribute.aTexture0.pointer();
+
+            shaderProgram.uniforms.uMatrix = this.uniformMatrix;
+            shaderProgram.uniforms.uTexture0 = image.texture.bind();
+
+            shaderProgram.uniforms.uColor = globalColor.toGL();
+            stackgl.drawTriangle(gl);
         };
 
         api.fillRect = function (x, y, width, height) {
+            shaderProgram.bind();
+            var x1 = x;
+            var y1 = y;
+            var x2 = x + width;
+            var y2 = y + height;
+            positionBuffer.update([
+                x1, y1,
+                x2, y1,
+                x1, y2,
+                x1, y2,
+                x2, y1,
+                x2, y2
+            ]);
 
+            positionBuffer.bind();
+            shaderProgram.attributes.aPosition.pointer();
+            textureBuffer.update([
+                0.0, 0.0,
+                1.0, 0.0,
+                0.0, 1.0,
+                0.0, 1.0,
+                1.0, 0.0,
+                1.0, 1.0
+            ]);
+            textureBuffer.bind();
+            shaderProgram.attribute.aTexture0.pointer();
+
+            shaderProgram.uniforms.uMatrix = this.uniformMatrix;
+            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+
+            shaderProgram.uniforms.uColor = globalColor.toGL();
         };
 
         /**
@@ -322,7 +399,7 @@
          * @private
          */
         api.setAlpha = function () {
-            // Kami handles the alpha blending.
+            
         };
 
         api.setImageSmoothing = function () {
@@ -338,7 +415,6 @@
          */
         api.setGlobalAlpha = function (a) {
             globalColor.alpha = a;
-            spriteBatch.setColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, a);
         };
 
         /**
@@ -395,4 +471,3 @@
     })();
 
 })();
-/* jshint ignore:end */
