@@ -213,32 +213,6 @@
         },
 
         /**
-         * draws the text from a canvas context.
-         * @name drawFromContext
-         * @memberOf me.Font
-         * @function
-         * @param {Context2d} context - instance of context2d for drawing.
-         * @param {String} text
-         * @param {Number} x
-         * @param {Number} y
-         */
-        drawFromContext : function (context, text, x, y) {
-            // draw the text
-            context.font = this.font;
-            context.fillStyle = this.fillStyle;
-            context.textAlign = this.textAlign;
-            context.textBaseline = this.textBaseline;
-
-            var strings = ("" + text).split("\n");
-            for (var i = 0; i < strings.length; i++) {
-                // draw the string
-                context.fillText(strings[i].trimRight(), ~~x, ~~y);
-                // add leading space
-                y += this.fontSize.y * this.lineHeight;
-            }
-        },
-
-        /**
          * draw a stroke text at the specified coord, as defined <br>
          * by the `lineWidth` and `fillStroke` properties. <br>
          * Note : using drawStroke is not recommended for performance reasons

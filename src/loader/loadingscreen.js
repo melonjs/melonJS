@@ -103,15 +103,13 @@
 
         draw : function (renderer) {
             // measure the logo size
-            var context = renderer.getContext();
-            var logo1_width = this.logo1.measureText(context, "melon").width;
-            var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
-            var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
+            var logo1_width = renderer.measureText(this.logo1, "melon").width;
+            var xpos = (this.width - logo1_width - renderer.measureText(this.logo2, "JS").width) / 2;
+            var ypos = (this.height / 2) + (renderer.measureText(this.logo2, "melon").height);
 
             // draw the melonJS string
-            this.logo1.draw(context, "melon", xpos, ypos);
-            xpos += logo1_width;
-            this.logo2.draw(context, "JS", xpos, ypos);
+            renderer.drawFont(this.logo1, "melon", xpos, ypos);
+            renderer.drawFont(this.logo2, "JS", xpos, ypos);
         }
 
     });

@@ -162,6 +162,21 @@
         };
 
         /**
+         * Quick helper method to draw the font on the backbuffer context. Useful for when using webgl with canvas fallback
+         * for different platforms.
+         * @name drawFont
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Font} fontObject - an instance of me.Font
+         * @param {String} text - the string of text to draw
+         * @param {Number} x - the x position to draw at
+         * @param {Number} y - the y position to draw at
+         */
+        api.drawFont = function (fontObject, text, x, y) {
+            fontObject.draw(backBufferContext2D, x, y, text);
+        };
+
+        /**
          * Draw a line from the given point to the destination point.
          * @name drawLine
          * @memberOf me.CanvasRenderer
@@ -346,6 +361,19 @@
          */
         api.globalAlpha = function () {
             return backBufferContext2D.globalAlpha;
+        };
+
+        /**
+         * returns the text size based on dimensions from the font. Uses the backbuffer context
+         * @name measureText
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Font} the instance of the font object
+         * @param {String} text
+         * @return {Object}
+         */
+        api.measureText = function (fontObject, text) {
+            return fontObject.measureText(backBufferContext2D, text);
         };
 
         /**

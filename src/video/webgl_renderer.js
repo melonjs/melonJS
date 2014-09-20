@@ -17,10 +17,10 @@
         var api = {},
         canvas = null,
         fontCache = {},
+        fontCanvas = null,
         fontContext = null,
         gl = null,
         globalColor = null,
-        imageObject = null,
         positionBuffer = null,
         shaderProgram = null,
         textureBuffer = null,
@@ -28,7 +28,6 @@
 
         api.init = function (width, height, c) {
             canvas = c;
-            imageObject = new Image();
             gl = canvas.getContext("experimental-webgl");
 
             this.uniformMatrix = new me.Matrix3d();
@@ -40,7 +39,7 @@
             this.createShader();
 
             globalColor = new me.Color(255, 255, 255, 1.0);
-            var fontCanvas = me.video.createCanvas(width, height, false);
+            fontCanvas = me.video.createCanvas(width, height, false);
             fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
 
             white1PixelTexture = gl.createTexture();
@@ -99,14 +98,13 @@
          * @param {String} text - the string of text to draw
          * @param {Number} x - the x position to draw at
          * @param {Number} y - the y position to draw at
-         * @param {String} gid - the unique identifier of the font object. Used to cache the font canvas
          */
-        api.drawFont = function (fontObject, text, x, y, gid) {
+        api.drawFont = function (fontObject, text, x, y) {
             var fontDimensions;
+            var gid = fontObject.gid;
             if (!fontCache[gid]) {
                 fontObject.draw(fontContext, text, x, y);
                 fontDimensions = fontObject.measureText(fontContext, text);
-                imageObject.src = fontContext.toDataURL();
                 fontCache[gid] = {
                     "font" : fontObject.font,
                     "fontSize" : fontObject.fontSize,
@@ -115,7 +113,7 @@
                     "textBaseline" : fontObject.textBaseline,
                     "lineHeight" : fontObject.lineHeight,
                     "text" : fontObject.text,
-                    "image" : fontObject.image,
+                    "image" : fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height),
                     "width" : fontDimensions.width,
                     "height" : fontDimensions.height
                 };
@@ -134,16 +132,15 @@
                     
                     fontObject.draw(fontContext, text, x, y);
                     fontDimensions = fontObject.measureText(fontContext, text);
-                    imageObject.src = fontContext.toDataURL();
                     cache.width = fontDimensions.width;
                     cache.height = fontDimensions.height;
-                    cache.image = imageObject;
+                    cache.image = fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height);
 
                     fontContext.clearRect(0, 0, canvas.width, canvas.height);
                 }
             }
 
-            this.context.drawImage(fontCache[gid].image, x, y, fontCache[gid].width, fontCache[gid].height);
+            this.drawImage(fontCache[gid].image, x, y, fontCache[gid].width, fontCache[gid].height);
         };
 
         /**
@@ -197,9 +194,9 @@
             ]);
 
             textureBuffer.bind();
-            shaderProgram.attribute.aTexture0.pointer();
+            shaderProgram.attributes.aTexture0.pointer();
 
-            shaderProgram.uniforms.uMatrix = this.uniformMatrix;
+            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
             shaderProgram.uniforms.uTexture0 = image.texture.bind();
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
@@ -232,9 +229,9 @@
                 1.0, 1.0
             ]);
             textureBuffer.bind();
-            shaderProgram.attribute.aTexture0.pointer();
+            shaderProgram.attributes.aTexture0.pointer();
 
-            shaderProgram.uniforms.uMatrix = this.uniformMatrix;
+            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
@@ -264,7 +261,7 @@
         };
 
         api.getHeight = function () {
-            return this.context.height;
+            return gl.canvas.height;
         };
 
         /**
@@ -290,7 +287,7 @@
         };
 
         api.getWidth = function () {
-            return this.context.width;
+            return gl.canvas.width;
         };
 
         /**
@@ -302,6 +299,20 @@
          */
         api.globalAlpha = function () {
             return globalColor.alpha;
+        };
+
+
+        /**
+         * returns the text size based on dimensions from the font. Uses the font drawing context
+         * @name measureText
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Font} the instance of the font object
+         * @param {String} text
+         * @return {Object}
+         */
+        api.measureText = function (fontObject, text) {
+            return fontObject.measureText(fontContext, text);
         };
 
         /**
@@ -321,10 +332,10 @@
          * @function
          */
         api.resize = function (scaleX, scaleY) {
-            canvas = this.context.view;
             var gameWidthZoom = canvas.width * scaleX;
             var gameHeightZoom = canvas.height * scaleY;
-            this.context.resize(gameWidthZoom, gameHeightZoom);
+            gl.viewport(0, 0, gameWidthZoom, gameHeightZoom);
+
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
