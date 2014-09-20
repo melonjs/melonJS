@@ -443,6 +443,16 @@
              * @memberOf me.CollisionEntity
              */
             this.collisionAngle = new me.Vector2d(0, 0);
+            
+            /**
+             * defined if the entity is fully solid or not <br>
+             * if not solid, collision will be checked based on the collisionAngle
+             * (TO BE MOVED TO BODY, AS A GENERIC FEATURE)
+             * @public
+             * @property {boolean=} isSolid
+             * @memberOf me.CollisionEntity
+             */
+            this.isSolid = true;
 
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
@@ -467,31 +477,36 @@
             // the overlap vector
             var overlap = response.overlapV;
 
-            // check if the collision angle has to be checked
-            if (this.collisionAngle.x !== 0 && (overlap.x * this.collisionAngle.x) === overlap.x) {
-                // nullify it
-                overlap.x = 0;
-            }
-            if (this.collisionAngle.y !== 0 && (overlap.y * this.collisionAngle.y) === overlap.y) {
-                // nullify it
-                overlap.y = 0;
+            // if this shape is solid, push back the other object
+            if (this.isSolid === true) {
+                // check if the collision angle has to be checked
+                if (this.collisionAngle.x !== 0) {
+                    overlap.x &= this.collisionAngle.x;
+                    console.log(overlap.x * this.collisionAngle.x);
+                }
+                if (this.collisionAngle.y !== 0) {
+                    // nullify it
+                    overlap.y &= this.collisionAngle.y;
+                    console.log(overlap.y * this.collisionAngle.y);
+                }
+                
+                // adjust the entity position
+                other.pos.sub(overlap);
+
+                // adjust velocity
+                if (overlap.x !== 0) {
+                    other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
+                }
+                if (overlap.y !== 0) {
+                    other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
+                    // cancel the falling an jumping flags if necessary
+                    other.body.falling = overlap.y > 0;
+                    other.body.jumping = overlap.y < 0;
+                }
+                // update the entity bounds
+                other.updateBounds();
             }
             
-            // adjust the entity position
-            other.pos.sub(overlap);
-
-            // adjust velocity
-            if (overlap.x !== 0) {
-                other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
-            }
-            if (overlap.y !== 0) {
-                other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
-                // cancel the falling an jumping flags if necessary
-                other.body.falling = overlap.y > 0;
-                other.body.jumping = overlap.y < 0;
-            }
-            // update the entity bounds
-            other.updateBounds();
         }
 
     });
