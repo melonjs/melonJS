@@ -320,10 +320,12 @@
          * @return {Number} angle in radians
          */
         angleTo: function (e) {
+            var a = this.getBounds();
+            var b = e.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var ax = (e.pos.x + e.hWidth) - (this.pos.x + this.hWidth);
-            var ay = (e.pos.y + e.hHeight) - (this.pos.y + this.hHeight);
+            var ax = (b.pos.x + b.hWidth) - (a.pos.x + a.hWidth);
+            var ay = (b.pos.y + b.hHeight) - (a.pos.y + a.hHeight);
             return Math.atan2(ay, ax);
         },
 
@@ -337,10 +339,11 @@
          * @return {Number} angle in radians
          */
         angleToPoint: function (v) {
+            var a = this.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var ax = (v.x) - (this.pos.x + this.hWidth);
-            var ay = (v.y) - (this.pos.y + this.hHeight);
+            var ax = (v.x) - (a.pos.x + a.hWidth);
+            var ay = (v.y) - (a.pos.y + a.hHeight);
             return Math.atan2(ay, ax);
         },
 
@@ -464,7 +467,7 @@
             if (settings.platform === true) {
                 // only downard collision is enabled on the y axis
                 // (bottom part of the angle circle
-                this.collisionAngle.y = -1;
+                this.collisionAngle.y = 1;
             }
             // TODO: parse the given collisionAngle json object from Tiled ?
         },
@@ -479,17 +482,22 @@
 
             // if this shape is solid, push back the other object
             if (this.isSolid === true) {
-                // check if the collision angle has to be checked
-                if (this.collisionAngle.x !== 0) {
-                    overlap.x &= this.collisionAngle.x;
-                    console.log(overlap.x * this.collisionAngle.x);
-                }
-                if (this.collisionAngle.y !== 0) {
-                    // nullify it
-                    overlap.y &= this.collisionAngle.y;
-                    console.log(overlap.y * this.collisionAngle.y);
-                }
                 
+                if (this.collisionAngle.x !== 0 || this.collisionAngle.y !== 0) {
+                    var angle = response.b.angleTo(response.a);
+                    var cos = Math.cos(angle);
+                    var sin = Math.sin(angle);
+                    
+                    // check if the collision angle has to be checked
+                    if (overlap.x.sign() === cos.sign()) {
+                        overlap.x = 0;
+                    }
+                    
+                    if (overlap.y.sign() === sin.sign()) {
+                        overlap.y = 0;
+                    }
+                }
+                               
                 // adjust the entity position
                 other.pos.sub(overlap);
 
@@ -497,6 +505,7 @@
                 if (overlap.x !== 0) {
                     other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
                 }
+                
                 if (overlap.y !== 0) {
                     other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
                     // cancel the falling an jumping flags if necessary
