@@ -3,10 +3,10 @@ var createShader = glslify({
     fragment: "precision mediump float;" +
     "varying vec2 vTexCoord0;" +
     "uniform vec4 uColor;" +
-    "uniform sampler2D uTexture0;" +
+    "uniform sampler2D texture;" +
 
     "void main(void) {" +
-    "   gl_FragColor = texture2D(uTexture0, vTexCoord0) * uColor;" +
+    "   gl_FragColor = texture2D(texture, vTexCoord0) * uColor;" +
     "}",
     vertex: "attribute vec2 aPosition;" +
     "attribute vec2 aTexture0;" +

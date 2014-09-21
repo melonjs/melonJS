@@ -22,6 +22,7 @@
         gl = null,
         globalColor = null,
         positionBuffer = null,
+        projection = null,
         shaderProgram = null,
         textureBuffer = null,
         white1PixelTexture = null;
@@ -29,8 +30,11 @@
         api.init = function (width, height, c) {
             canvas = c;
             gl = canvas.getContext("experimental-webgl");
+            gl.FALSE = false;
+            gl.TRUE = true;
 
             this.uniformMatrix = new me.Matrix3d();
+            projection = new me.Matrix3d();
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
@@ -49,6 +53,10 @@
             this.createBuffers();
 
             return this;
+        };
+
+        api.bindShader = function () {
+            shaderProgram.bind();
         };
 
         api.bindTexture = function (image) {
@@ -162,6 +170,7 @@
             if (typeof image.texture === "undefined") {
                 this.bindTexture(image);
             }
+            this.uniformMatrix.identity();
             sx = sx / image.width;
             sy = 1.0 - (sy / image.height);
             sw = sw / image.width;
@@ -180,7 +189,6 @@
                 x2, y2
             ]);
 
-            shaderProgram.bind();
             positionBuffer.bind();
             shaderProgram.attributes.aPosition.pointer();
 
@@ -196,15 +204,16 @@
             textureBuffer.bind();
             shaderProgram.attributes.aTexture0.pointer();
 
+            this.uniformMatrix.multiply(projection);
+
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-            shaderProgram.uniforms.uTexture0 = image.texture.bind();
+            shaderProgram.uniforms.texture = image.texture.bind();
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            stackgl.drawTriangle(gl);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
         };
 
         api.fillRect = function (x, y, width, height) {
-            shaderProgram.bind();
             var x1 = x;
             var y1 = y;
             var x2 = x + width;
@@ -230,11 +239,12 @@
             ]);
             textureBuffer.bind();
             shaderProgram.attributes.aTexture0.pointer();
-
+            this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
         };
 
         /**
@@ -331,11 +341,7 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.resize = function (scaleX, scaleY) {
-            var gameWidthZoom = canvas.width * scaleX;
-            var gameHeightZoom = canvas.height * scaleY;
-            gl.viewport(0, 0, gameWidthZoom, gameHeightZoom);
-
+        api.resize = function () {
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
@@ -382,6 +388,12 @@
             
         };
 
+        api.setProjection = function () {
+            projection.set(2 / canvas.width, 0, 0,
+                0, -2 / canvas.height, 0,
+                -1, 1, 1);
+        };
+
         api.setImageSmoothing = function () {
             // TODO: perhaps handle GLNEAREST or other options with texture binding
         };
@@ -414,6 +426,18 @@
             else {
                 globalColor.parseCSS(col);
             }
+        };
+
+        /**
+         * Does prep calls before rendering a frame
+         * @name startRender
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.startRender = function () {
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            me.video.renderer.setProjection();
+            me.video.renderer.bindShader();
         };
 
         /**

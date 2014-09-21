@@ -234,10 +234,27 @@
          * @name set
          * @memberOf me.Matrix3d
          * @function
-         * @param {me.Matrix3d} otherMat
+         * @param {Number} m10
+         * @param {Number} m11
+         * @param {Number} m12
+         * @param {Number} m20
+         * @param {Number} m21
+         * @param {Number} m22
+         * @param {Number} m30
+         * @param {Number} m31
+         * @param {Number} m32
          */
-        set : function (otherMat) {
-            return this.copy(otherMat);
+        set : function () {
+            var a = this.val;
+            a[0] = arguments[0];
+            a[1] = arguments[1];
+            a[2] = arguments[2];
+            a[3] = arguments[3];
+            a[4] = arguments[4];
+            a[5] = arguments[5];
+            a[6] = arguments[6];
+            a[7] = arguments[7];
+            a[8] = arguments[8];
         },
 
         /**
