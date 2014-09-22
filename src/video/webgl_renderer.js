@@ -210,7 +210,7 @@
             shaderProgram.uniforms.texture = image.texture.bind();
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
 
         api.fillRect = function (x, y, width, height) {
