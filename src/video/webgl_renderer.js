@@ -36,9 +36,6 @@
             this.uniformMatrix = new me.Matrix3d();
             projection = new me.Matrix3d();
 
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.enable(gl.DEPTH_TEST);
-            gl.enable(gl.BLEND);
             this.context = gl;
             this.createShader();
 
@@ -51,6 +48,10 @@
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
 
             this.createBuffers();
+
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND);
 
             return this;
         };
@@ -181,26 +182,26 @@
             var x2 = x1 + dw;
             var y2 = y1 + dh;
             positionBuffer.update([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x1, y2,
-                x2, y1,
-                x2, y2
+                x1, y1, 0.0,
+                x2, y1, 0.0,
+                x1, y2, 0.0,
+                x1, y2, 0.0,
+                x2, y1, 0.0,
+                x2, y2, 0.0
             ]);
 
             positionBuffer.bind();
             shaderProgram.attributes.aPosition.pointer();
 
             textureBuffer.update([
-                sx, sy,
-                sw, sy,
-                sx, sh,
-                sx, sh,
-                sw, sy,
-                sw, sh
+                sx, sy, 0.0,
+                sw, sy, 0.0,
+                sx, sh, 0.0,
+                sx, sh, 0.0,
+                sw, sy, 0.0,
+                sw, sh, 0.0
             ]);
-
+            gl.activeTexture(gl.TEXTURE0);
             textureBuffer.bind();
             shaderProgram.attributes.aTexture0.pointer();
 
