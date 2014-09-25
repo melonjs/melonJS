@@ -31,7 +31,7 @@
 
         api.init = function (width, height, c) {
             canvas = c;
-            gl = canvas.getContext("experimental-webgl");
+            gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
             gl.FALSE = false;
             gl.TRUE = true;
 
