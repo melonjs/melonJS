@@ -3,5 +3,6 @@ module.exports = {
     "createShader": require("../video/shader"),
     "gltexture2d": require("gl-texture2d"),
     "drawTriangle": require("a-big-triangle"),
-    "createBuffer": require("gl-buffer")
+    "createBuffer": require("gl-buffer"),
+    "createVAO": require("gl-vao")
 };

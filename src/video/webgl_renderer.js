@@ -22,9 +22,11 @@
         gl = null,
         globalColor = null,
         positionBuffer = null,
+        positionVAO = null,
         projection = null,
         shaderProgram = null,
         textureBuffer = null,
+        textureVAO = null,
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
@@ -87,8 +89,22 @@
          * @private
          */
         api.createBuffers = function () {
-            textureBuffer = stackgl.createBuffer(gl, [], gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-            positionBuffer = stackgl.createBuffer(gl, [], gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+            textureBuffer = stackgl.createBuffer(gl, new Array(12), gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+            textureVAO = stackgl.createVAO(gl, [
+                {
+                    "buffer": textureBuffer,
+                    "type": gl.FLOAT,
+                    "size": 2
+                }
+            ]);
+            positionBuffer = stackgl.createBuffer(gl, new Array(12), gl.ARRAY_BUFFER, gl.STATIC_DRAW);
+            positionVAO = stackgl.createVAO(gl, [
+                {
+                    "buffer": positionBuffer,
+                    "type": gl.FLOAT,
+                    "size": 2
+                }
+            ]);
         };
 
         /**
@@ -189,8 +205,15 @@
                 x2, y1, 0.0,
                 x2, y2, 0.0
             ]);
+            positionVAO.update([
+                {
+                    "buffer": positionBuffer,
+                    "type": gl.FLOAT,
+                    "size": 2
+                }
+            ]);
 
-            positionBuffer.bind();
+            positionVAO.bind();
             shaderProgram.attributes.aPosition.pointer();
 
             textureBuffer.update([
@@ -202,7 +225,7 @@
                 sw, sh, 0.0
             ]);
             gl.activeTexture(gl.TEXTURE0);
-            textureBuffer.bind();
+            textureVAO.bind();
             shaderProgram.attributes.aTexture0.pointer();
 
             this.uniformMatrix.multiply(projection);
@@ -211,7 +234,7 @@
             shaderProgram.uniforms.texture = image.texture.bind();
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            textureVAO.draw(gl.TRIANGLES, 6);
         };
 
         api.fillRect = function (x, y, width, height) {
