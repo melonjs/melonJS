@@ -1,3 +1,23 @@
+/** install a custom collision Handler for the CollisionEntity object */
+me.plugin.patch(me.CollisionEntity, "customCollisionHandler", function (response, other) {
+
+    // simulate a platform object
+    if (this.type === "platform") {
+        // disable collision on the x axis
+        response.overlapV.x = 0;
+        // if going up/jumping
+        if (other.body.vel.y < 0) {
+            // cancel collision
+            return false;
+        } else if (Math.round(other.getBounds().bottom - response.overlapV.y) > this.getBounds().top) {
+            // cancel collision
+            return false;
+        }
+    }
+    // runs the regular collision code
+    return true;
+});
+
 
 /************************************************************************************/
 /*                                                                                  */

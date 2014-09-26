@@ -67,12 +67,12 @@
         spriteheight : null,
 
         /**
-         * custom type for collision detection
+         * object type as defined in Tiled
          * @public
          * @property {String=} type
          * @memberOf me.ObjectSettings
          */
-        type : 0,
+        type : null,
         
         /**
          * Mask collision detection for this object<br>
@@ -156,12 +156,19 @@
              * Entity name<br>
              * as defined in the Tiled Object Properties
              * @public
-             * @property {String} name
+             * @property String name
              * @memberOf me.Entity
              */
             this.name = settings.name ? settings.name.toLowerCase() : "";
-
-
+            
+            /**
+             * object type (as defined in Tiled)
+             * @public
+             * @property String type
+             * @memberOf me.Entity
+             */
+            this.type = settings.type;
+            
             /**
              * dead/living state of the entity<br>
              * default value : true
@@ -436,88 +443,63 @@
         /** @ignore */
         init : function (x, y, settings) {
             /**
-             * defined the active collision angle for this shape : <br>
-             * (0,1) to only check for down to up collision
-             * (0,-1) to only check for up to down collision
-             * (-1, 0) to only check for right to left collision
-             * (1, 0) to only check for left to right collision
-             * @public
-             * @property {me.Vector2d=} collisionAngle
+             * custom collision handler, allowing to redefine the collision response for shape objects.
+             * @name customCollisionHandler
              * @memberOf me.CollisionEntity
+             * @function
+             * @param {me.collision.ResponseObject} response the collision response object
+             * @param {me.Entity} other the other entity touching this one (reference to response.a)
+             * @return false, if the collision response is to be ignored (for custom collision response)
+             * @protected
              */
-            this.collisionAngle = new me.Vector2d(0, 0);
             
-            /**
-             * defined if the entity is fully solid or not <br>
-             * if not solid, collision will be checked based on the collisionAngle
-             * (TO BE MOVED TO BODY, AS A GENERIC FEATURE)
-             * @public
-             * @property {boolean=} isSolid
-             * @memberOf me.CollisionEntity
-             */
-            this.isSolid = true;
-
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
+            
+            // set the body properties
             this.body.collisionType = me.collision.types.WORLD_SHAPE;
+            this.body.isSolid = true;
+            this.body.isHeavy = true;
+            
             // set our collision callback function
             this.body.onCollision = this.onCollision.bind(this);
-            
-            // backward compatiblity with the previous version
-            if (settings.platform === true) {
-                // only downard collision is enabled on the y axis
-                // (bottom part of the angle circle
-                this.collisionAngle.y = 1;
-            }
-            // TODO: parse the given collisionAngle json object from Tiled ?
         },
-
-
+        
         /** @ignore */
-        onCollision : function (response) {
-            // the other entity
-            var other = response.a;
-            // the overlap vector
+        customCollisionHandler : function () {
+            // empty one to be extended
+            return true;
+        },
+        
+        /** @ignore */
+        onCollision : function (response, other) {
+            
+            // execute the custom collision handler if defined
+            if (this.customCollisionHandler.call(this, response, other) === false) {
+                // stop here if collision response is to be ignored
+                return false;
+            }
             var overlap = response.overlapV;
-
-            // if this shape is solid, push back the other object
-            if (this.isSolid === true) {
-                
-                if (this.collisionAngle.x !== 0 || this.collisionAngle.y !== 0) {
-                    var angle = response.b.angleTo(response.a);
-                    var cos = Math.cos(angle);
-                    var sin = Math.sin(angle);
-                    
-                    // check if the collision angle has to be checked
-                    if (overlap.x.sign() === cos.sign()) {
-                        overlap.x = 0;
-                    }
-                    
-                    if (overlap.y.sign() === sin.sign()) {
-                        overlap.y = 0;
-                    }
-                }
-                               
-                // adjust the entity position
-                other.pos.sub(overlap);
-
-                // adjust velocity
-                if (overlap.x !== 0) {
-                    other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
-                }
-                
-                if (overlap.y !== 0) {
-                    other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
-                    // cancel the falling an jumping flags if necessary
-                    other.body.falling = overlap.y > 0;
-                    other.body.jumping = overlap.y < 0;
-                }
-                // update the entity bounds
-                other.updateBounds();
+                            
+            // Move the other entity out of this object shape
+            other.pos.sub(overlap);
+            
+            // adjust velocity
+            if (overlap.x !== 0) {
+                other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
+            }
+            if (overlap.y !== 0) {
+                other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
+                // cancel the falling an jumping flags if necessary
+                other.body.falling = overlap.y > 0;
+                other.body.jumping = overlap.y < 0;
             }
             
+            // update the other entity bounds
+            other.updateBounds();
+            
+            return false;
         }
-
     });
 
 
@@ -542,6 +524,8 @@
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
             this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
+            // collectable do not impact the other entity position when touched
+            this.body.isSolid = false;
         }
     });
 
@@ -572,7 +556,7 @@
         /** @ignore */
         init : function (x, y, settings) {
             this._super(me.Entity, "init", [x, y, settings]);
-
+            
             this.nextlevel = settings.to;
 
             this.fade = settings.fade;
@@ -586,6 +570,9 @@
             this.body.onCollision = this.onCollision.bind(this);
             
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
+            
+            // levelEntity are non visible object and therefore not solid
+            this.body.isSolid = false;
         },
 
         /**
