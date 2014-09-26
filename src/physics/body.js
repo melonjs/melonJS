@@ -49,10 +49,11 @@
              * @memberOf me.Body
              * @function
              * @param {me.collision.ResponseObject} response the collision response object
+             * @param {me.Entity} other the other entity touching this one (reference to response.a)
+             * @return false, if the collision response is to be ignored (for custom collision response)
              * @protected
              */
             this.onCollision = undefined;
-            
             
             /**
              * The body collision mask, that defines what should collide with what.<br>
@@ -77,7 +78,25 @@
              * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
              */
             this.collisionType = me.collision.types.ENEMY_OBJECT;
+            
+            /**
+             * defined if a body is fully solid or not.<br>
+             * @public
+             * @type Boolean
+             * @name falling
+             * @memberOf me.Body
+             */
+            this.isSolid = true;
 
+            /**
+             * Whether this body is "heavy" and can't be moved by other objects.
+             * @public
+             * @type Boolean
+             * @name falling
+             * @memberOf me.Body
+             */
+            this.isHeavy = true;
+            
             /**
              * entity current velocity<br>
              * @public
@@ -250,6 +269,52 @@
          */
         setCollisionMask : function (bitmask) {
             this.collisionMask = bitmask;
+        },
+ 
+        /**
+         * @protected
+         * @name respondToCollision
+         * @memberOf me.Body
+         * @function
+         */
+        respondToCollision: function (response, other) {
+            // execute the callback if defined
+            if (typeof this.onCollision === "function") {
+                if (this.onCollision.call(this, response, other) === false) {
+                    // stop here if collision response is to be ignored
+                    return;
+                }
+            }
+            
+            // some shortcut reference to a & b
+            var a = response.a;
+            var b = response.b;
+            
+            // Collisions between "ghostly" objects don't matter, and
+            // two "heavy" objects will just remain where they are.
+            if (a.body.isSolid || b.body.isSolid) {
+                // the overlap vector
+                var overlap = response.overlapV;
+                if (a.body.isHeavy && b.body.isHeavy) {
+                    // Move equally out of each other
+                    overlap.scale(0.5);
+                    a.pos.sub(overlap);
+                    b.pos.add(overlap);
+                    // update the entity bounds
+                    a.updateBounds();
+                    b.updateBounds();
+                } else if (a.body.isHeavy) {
+                    // Move the other object out of us
+                    b.pos.add(overlap);
+                    // update the entity bounds
+                    b.updateBounds();
+                } else if (b.body.isHeavy) {
+                    // Move us out of the other object
+                    a.pos.sub(overlap);
+                    // update the entity bounds
+                    a.updateBounds();
+                }
+            }
         },
         
         /**

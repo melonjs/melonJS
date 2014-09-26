@@ -505,9 +505,7 @@
                                 if (api.SAT) {
                                 
                                     // notify the other object
-                                    if (typeof objB.body.onCollision === "function") {
-                                        objB.body.onCollision.call(objB.body, response, objA);
-                                    }
+                                    objB.body.respondToCollision.call(objB.body, response, objA);
                                     
                                     // execute the given callback with the full response
                                     if (typeof (callback) === "function") {
