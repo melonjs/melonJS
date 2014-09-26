@@ -3,39 +3,6 @@
  <tileset firstgid="1" name="tileset" tilewidth="35" tileheight="35">
   <image source="../img/tileset.png" width="512" height="512"/>
  </tileset>
- <tileset firstgid="197" name="metatiles35x35" tilewidth="35" tileheight="35">
-  <image source="../img/metatiles35x35.png" width="210" height="35"/>
-  <tile id="0">
-   <properties>
-    <property name="type" value="solid"/>
-   </properties>
-  </tile>
-  <tile id="1">
-   <properties>
-    <property name="type" value="platform"/>
-   </properties>
-  </tile>
-  <tile id="2">
-   <properties>
-    <property name="type" value="lslope"/>
-   </properties>
-  </tile>
-  <tile id="3">
-   <properties>
-    <property name="type" value="rslope"/>
-   </properties>
-  </tile>
-  <tile id="4">
-   <properties>
-    <property name="type" value="ladder"/>
-   </properties>
-  </tile>
-  <tile id="5">
-   <properties>
-    <property name="type" value="breakable"/>
-   </properties>
-  </tile>
- </tileset>
  <imagelayer name="gradient_background" width="50" height="17">
   <image source="../img/background.png"/>
  </imagelayer>
@@ -113,12 +80,12 @@
   <object x="1225" y="595">
    <polygon points="0,0 0,-70 70,-140 525,-140 525,0"/>
   </object>
-  <object x="700" y="385" width="70" height="35">
+  <object type="platform" x="700" y="385" width="70" height="35">
    <properties>
     <property name="platform" value="true"/>
    </properties>
   </object>
-  <object x="560" y="455" width="70" height="35">
+  <object type="platform" x="560" y="455" width="70" height="35">
    <properties>
     <property name="platform" value="true"/>
    </properties>
