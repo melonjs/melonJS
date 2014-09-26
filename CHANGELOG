@@ -1,6 +1,7 @@
 Version History
 ---------------
 1.2.0
+* Entity : added automatic collision reponse handling, objects are now solid by default (pushing each other in case of collision) 
 
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
