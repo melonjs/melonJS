@@ -43,8 +43,7 @@
     "gl-state": "~1.0.0",
     "gl-texture2d": "~2.0.3",
     "a-big-triangle": "~1.0.0",
-    "gl-buffer": "~2.0.9",
-    "gl-vao": "~1.2.0"
+    "gl-buffer": "~2.0.9"
   },
   "scripts": {
     "install": "(bower install || true) && grunt",

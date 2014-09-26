@@ -22,16 +22,14 @@
         gl = null,
         globalColor = null,
         positionBuffer = null,
-        positionVAO = null,
         projection = null,
         shaderProgram = null,
         textureBuffer = null,
-        textureVAO = null,
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
             canvas = c;
-            gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            gl = canvas.getContext("experimental-webgl");
             gl.FALSE = false;
             gl.TRUE = true;
 
@@ -89,22 +87,8 @@
          * @private
          */
         api.createBuffers = function () {
-            textureBuffer = stackgl.createBuffer(gl, new Array(12), gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-            textureVAO = stackgl.createVAO(gl, [
-                {
-                    "buffer": textureBuffer,
-                    "type": gl.FLOAT,
-                    "size": 2
-                }
-            ]);
-            positionBuffer = stackgl.createBuffer(gl, new Array(12), gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-            positionVAO = stackgl.createVAO(gl, [
-                {
-                    "buffer": positionBuffer,
-                    "type": gl.FLOAT,
-                    "size": 2
-                }
-            ]);
+            textureBuffer = gl.createBuffer();
+            positionBuffer = gl.createBuffer();
         };
 
         /**
@@ -197,35 +181,32 @@
             var y1 = dy;
             var x2 = x1 + dw;
             var y2 = y1 + dh;
-            positionBuffer.update([
-                x1, y1, 0.0,
-                x2, y1, 0.0,
-                x1, y2, 0.0,
-                x1, y2, 0.0,
-                x2, y1, 0.0,
-                x2, y2, 0.0
+            var vertices = new Float32Array([
+                x1, y1,
+                x2, y1,
+                x2, y2,
+                x1, y2,
+                x2, y1,
+                x2, y2
             ]);
-            positionVAO.update([
-                {
-                    "buffer": positionBuffer,
-                    "type": gl.FLOAT,
-                    "size": 2
-                }
-            ]);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-            positionVAO.bind();
             shaderProgram.attributes.aPosition.pointer();
 
-            textureBuffer.update([
-                sx, sy, 0.0,
-                sw, sy, 0.0,
-                sx, sh, 0.0,
-                sx, sh, 0.0,
-                sw, sy, 0.0,
-                sw, sh, 0.0
+            var textureCoords = new Float32Array([
+                sx, sy,
+                sw, sy,
+                sx, sh,
+                sx, sh,
+                sw, sy,
+                sw, sh
             ]);
+            
             gl.activeTexture(gl.TEXTURE0);
-            textureVAO.bind();
+            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
+            
             shaderProgram.attributes.aTexture0.pointer();
 
             this.uniformMatrix.multiply(projection);
@@ -234,7 +215,7 @@
             shaderProgram.uniforms.texture = image.texture.bind();
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            textureVAO.draw(gl.TRIANGLES, 6);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
 
         api.fillRect = function (x, y, width, height) {
@@ -242,18 +223,21 @@
             var y1 = y;
             var x2 = x + width;
             var y2 = y + height;
-            positionBuffer.update([
+            var vertices = new Float32Array([
                 x1, y1,
                 x2, y1,
-                x1, y2,
+                x2, y2,
                 x1, y2,
                 x2, y1,
                 x2, y2
             ]);
 
-            positionBuffer.bind();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
             shaderProgram.attributes.aPosition.pointer();
-            textureBuffer.update([
+
+            var textureCoords = new Float32Array([
                 0.0, 0.0,
                 1.0, 0.0,
                 0.0, 1.0,
@@ -261,14 +245,17 @@
                 1.0, 0.0,
                 1.0, 1.0
             ]);
-            textureBuffer.bind();
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             shaderProgram.attributes.aTexture0.pointer();
+
             this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
 
         /**
