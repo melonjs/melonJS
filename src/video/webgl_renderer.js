@@ -22,10 +22,10 @@
         fontContext = null,
         gl = null,
         globalColor = null,
+        matrixStack = [],
         positionBuffer = null,
         projection = null,
         shaderProgram = null,
-        stack = null,
         textureBuffer = null,
         white1PixelTexture = null;
 
@@ -51,8 +51,6 @@
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
 
             this.createBuffers();
-
-            stack = stackgl.glstate(gl);
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
@@ -173,10 +171,10 @@
                 this.bindTexture(image);
             }
             this.uniformMatrix.identity();
-            sx = sx / image.width;
-            sy = 1.0 - (sy / image.height);
-            sw = sw / image.width;
-            sh = 1.0 - (sy / image.height);
+            var tx1 = sx / image.width;
+            var ty1 = 1.0 - (sy / image.height);
+            var tx2 = sw / image.width;
+            var ty2 = 1.0 - (sy / image.height);
 
             var x1 = dx;
             var y1 = dy;
@@ -196,12 +194,12 @@
             shaderProgram.attributes.aPosition.pointer();
 
             var textureCoords = new Float32Array([
-                sx, sy,
-                sw, sy,
-                sx, sh,
-                sx, sh,
-                sw, sy,
-                sw, sh
+                tx1, ty1,
+                tx2, ty1,
+                tx1, ty2,
+                tx1, ty2,
+                tx2, ty1,
+                tx2, ty2
             ]);
             
             gl.activeTexture(gl.TEXTURE0);
@@ -373,8 +371,8 @@
         };
 
         api.restore = function () {
-            stack.pop();
             globalColor.parseHex(colorStack.pop());
+            this.uniformMatrix = matrixStack.pop();
         };
 
         /**
@@ -389,8 +387,12 @@
         };
 
         api.save = function () {
-            stack.push();
             colorStack.push(this.getColor());
+
+            var copy = new me.Matrix3d();
+            this.uniformMatrix.copy(copy);
+            matrixStack.push(this.uniformMatrix);
+            this.uniformMatrix = copy;
         };
 
         /**
