@@ -43,7 +43,6 @@
                 rect.left - vpos.x, rect.top - vpos.y,
                 rect.width, rect.height
             );
-
             // restore context alpha value
             renderer.setGlobalAlpha(_alpha);
         }

@@ -338,6 +338,17 @@
         };
 
         /**
+         * returns the current color of the context
+         * @name getColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {String}
+         */
+        api.getColor = function () {
+            return backBufferContext2D.fillStyle;
+        };
+
+        /**
          * return a reference to the system 2d Context
          * @name getContext
          * @memberOf me.CanvasRenderer

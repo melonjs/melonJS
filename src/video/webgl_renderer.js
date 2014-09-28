@@ -16,6 +16,7 @@
     me.WebGLRenderer = (function () {
         var api = {},
         canvas = null,
+        colorStack = [],
         fontCache = {},
         fontCanvas = null,
         fontContext = null,
@@ -24,6 +25,7 @@
         positionBuffer = null,
         projection = null,
         shaderProgram = null,
+        stack = null,
         textureBuffer = null,
         white1PixelTexture = null;
 
@@ -38,6 +40,7 @@
 
             this.context = gl;
             this.createShader();
+            shaderProgram.bind();
 
             globalColor = new me.Color(255, 255, 255, 1.0);
             fontCanvas = me.video.createCanvas(width, height, false);
@@ -49,15 +52,13 @@
 
             this.createBuffers();
 
+            stack = stackgl.glstate(gl);
+
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.BLEND);
 
             return this;
-        };
-
-        api.bindShader = function () {
-            shaderProgram.bind();
         };
 
         api.bindTexture = function (image) {
@@ -270,6 +271,17 @@
         };
 
         /**
+         * returns the current color of the drawing context
+         * @name getColor
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {string}
+         */
+        api.getColor = function () {
+            return globalColor.toHex();
+        };
+
+        /**
          * Returns the WebGLContext instance for the renderer
          * return a reference to the system 2d Context
          * @name getContext
@@ -361,7 +373,8 @@
         };
 
         api.restore = function () {
-
+            stack.pop();
+            globalColor.parseHex(colorStack.pop());
         };
 
         /**
@@ -376,7 +389,8 @@
         };
 
         api.save = function () {
-
+            stack.push();
+            colorStack.push(this.getColor());
         };
 
         /**
@@ -448,7 +462,6 @@
         api.startRender = function () {
             gl.viewport(0, 0, canvas.width, canvas.height);
             me.video.renderer.setProjection();
-            me.video.renderer.bindShader();
         };
 
         /**
