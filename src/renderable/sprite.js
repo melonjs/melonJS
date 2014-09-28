@@ -28,8 +28,11 @@
          */
         init : function (x, y, image, spritewidth, spriteheight) {
 
-            /** @ignore */
-            this.scale = new me.Vector2d();
+            /**
+             * private/internal scale factor
+             * @ignore
+             */
+            this._scale = new me.Vector2d();
 
             // if true, image flipping/scaling is needed
             this.scaleFlag = false;
@@ -81,7 +84,7 @@
             this.image = image;
 
             // scale factor of the object
-            this.scale.set(1.0, 1.0);
+            this._scale.set(1.0, 1.0);
             this.lastflipX = this.lastflipY = false;
             this.scaleFlag = false;
 
@@ -164,10 +167,10 @@
                 this.lastflipX = flip;
 
                 // invert the scale.x value
-                this.scale.x = -this.scale.x;
+                this._scale.x = -this._scale.x;
 
                 // set the scaleFlag
-                this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+                this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
             }
         },
 
@@ -183,44 +186,44 @@
                 this.lastflipY = flip;
 
                 // invert the scale.x value
-                this.scale.y = -this.scale.y;
+                this._scale.y = -this._scale.y;
 
                 // set the scaleFlag
-                this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+                this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
             }
         },
 
         /**
-         * Resize the sprite around his center<br>
-         * @name resize
+         * scale the sprite around his center<br>
+         * @name scale
          * @memberOf me.Sprite
          * @function
          * @param {Number} ratioX x scaling ratio
          * @param {Number} ratioY y scaling ratio
          */
-        resize : function (ratioX, ratioY) {
+        scale : function (ratioX, ratioY) {
             var x = ratioX;
             var y = typeof(ratioY) === "undefined" ? ratioX : ratioY;
             if (x > 0) {
-                this.scale.x = this.scale.x < 0.0 ? -x : x;
+                this._scale.x = this._scale.x < 0.0 ? -x : x;
             }
             if (y > 0) {
-                this.scale.y = this.scale.y < 0.0 ? -y : y;
+                this._scale.y = this._scale.y < 0.0 ? -y : y;
             }
             // set the scaleFlag
-            this.scaleFlag = this.scale.x !== 1.0 || this.scale.y !== 1.0;
+            this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
 
         },
 
         /**
-         * Resize the sprite around his center<br>
-         * @name resizeV
+         * scale the sprite around his center<br>
+         * @name scaleV
          * @memberOf me.Sprite
          * @function
          * @param {me.Vector2d} vector ratio
          */
-        resizeV : function (ratio) {
-            this.resize(ratio.x, ratio.y);
+        scaleV : function (ratio) {
+            this.scale(ratio.x, ratio.y);
         },
 
         /**
@@ -284,7 +287,7 @@
                 renderer.translate(xpos + ax, ypos + ay);
                 // scale
                 if (this.scaleFlag) {
-                    renderer.scale(this.scale.x, this.scale.y);
+                    renderer.scale(this._scale.x, this._scale.y);
                 }
                 if (angle !== 0) {
                     renderer.rotate(angle);
