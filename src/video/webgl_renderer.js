@@ -178,7 +178,7 @@
             var tx1 = sx / image.width;
             var ty1 = 1.0 - (sy / image.height);
             var tx2 = sw / image.width;
-            var ty2 = 1.0 - (sy / image.height);
+            var ty2 = 1.0 - (sh / image.height);
 
             var x1 = dx;
             var y1 = dy;
@@ -187,7 +187,7 @@
             var vertices = new Float32Array([
                 x1, y1,
                 x2, y1,
-                x2, y2,
+                x1, y2,
                 x1, y2,
                 x2, y1,
                 x2, y2
@@ -225,7 +225,7 @@
             var vertices = new Float32Array([
                 x1, y1,
                 x2, y1,
-                x2, y2,
+                x1, y2,
                 x1, y2,
                 x2, y1,
                 x2, y2
