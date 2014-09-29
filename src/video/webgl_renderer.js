@@ -42,6 +42,9 @@
             this.createShader();
             shaderProgram.bind();
 
+            gl.enableVertexAttribArray(shaderProgram.attributes.aTexture.location);
+            gl.enableVertexAttribArray(shaderProgram.attributes.aPosition.location);
+
             globalColor = new me.Color(255, 255, 255, 1.0);
             fontCanvas = me.video.createCanvas(width, height, false);
             fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
@@ -55,6 +58,7 @@
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.BLEND);
+            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
             return this;
         };
@@ -191,7 +195,7 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-            shaderProgram.attributes.aPosition.pointer();
+            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
             var textureCoords = new Float32Array([
                 tx1, ty1,
@@ -201,18 +205,14 @@
                 tx2, ty1,
                 tx2, ty2
             ]);
-            
-            gl.activeTexture(gl.TEXTURE0);
+
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            shaderProgram.uniforms.texture = image.texture.bind();
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
-            
-            shaderProgram.attributes.aTexture0.pointer();
+            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
             this.uniformMatrix.multiply(projection);
-
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-            shaderProgram.uniforms.texture = image.texture.bind();
-
             shaderProgram.uniforms.uColor = globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
@@ -234,7 +234,7 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-            shaderProgram.attributes.aPosition.pointer();
+            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
             var textureCoords = new Float32Array([
                 0.0, 0.0,
@@ -247,7 +247,7 @@
             gl.activeTexture(gl.TEXTURE0);
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
-            shaderProgram.attributes.aTexture0.pointer();
+            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
             this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;

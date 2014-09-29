@@ -241,7 +241,7 @@
             this.glArray[0] = this.r / 255.0;
             this.glArray[1] = this.g / 255.0;
             this.glArray[2] = this.b / 255.0;
-            this.glArray[3] = this.a;
+            this.glArray[3] = this.alpha;
 
             return this;
         },
