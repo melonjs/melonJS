@@ -186,10 +186,6 @@ game.CoinEntity = me.CollectableEntity.extend({
         
         // set the renderable position to center
         this.anchorPoint.set(0.5, 0.5);
-        
-        // set our collision callback function
-        this.body.onCollision = this.onCollision.bind(this);
-        
     },        
     
     /** 
@@ -254,9 +250,6 @@ game.PathEnemyEntity = me.Entity.extend({
         // don't update the entities when out of the viewport
         this.alwaysUpdate = false;
         
-        // set our collision callback function
-        this.body.onCollision = this.onCollision.bind(this);
-        
         // a specific flag to recognize these enemies
         this.isMovingEnemy = true;
     },
@@ -310,6 +303,7 @@ game.PathEnemyEntity = me.Entity.extend({
             // stop here
             return false;
         }
+        return true;
     }
 
 });

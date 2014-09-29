@@ -67,19 +67,6 @@
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
-             * onCollision callback<br>
-             * triggered in case of collision, when this entity body is being "touched" by another one<br>
-             * @name onCollision
-             * @memberOf me.Body
-             * @function
-             * @param {me.collision.ResponseObject} response the collision response object
-             * @param {me.Entity} other the other entity touching this one (reference to response.a)
-             * @return false, if the collision response is to be ignored (for custom collision response)
-             * @protected
-             */
-            this.onCollision = undefined;
-            
-            /**
              * defined if a body is fully solid or not.<br>
              * @public
              * @type Boolean

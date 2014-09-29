@@ -336,7 +336,6 @@
             return Math.atan2(ay, ax);
         },
 
-
         /**
          * return the angle to the specified point
          * @name angleToPoint
@@ -419,9 +418,21 @@
          */
         onDestroyEvent : function () {
             // to be extended !
+        },
+
+        /**
+         * onCollision callback<br>
+         * triggered in case of collision, when this entity body is being "touched" by another one<br>
+         * @name onCollision
+         * @memberOf me.Entity
+         * @function
+         * @param {me.collision.ResponseObject} response the collision response object
+         * @param {me.Entity} other the other entity touching this one (reference to response.a)
+         * @return false, if the collision response is to be ignored (for custom collision response)
+         */
+        onCollision : function () {
+            return true;
         }
-
-
     });
 
     /*
@@ -491,7 +502,6 @@
             this.gotolevel = settings.to;
             
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
-            this.body.onCollision = this.onCollision.bind(this);
             
             // levelEntity are non visible object and therefore not solid
             this.body.isSolid = false;

@@ -529,7 +529,7 @@
                                 if (api.SAT) {
                                     
                                     // execute the onCollision callback
-                                    if (typeof objB.body.onCollision !== "function" || objB.body.onCollision(response, objA) !== false) {
+                                    if (objB.body.entity.onCollision(response, objA) !== false) {
                                         // check if there is come customer collision handler defined
                                         if (typeof _customCollisionHandler[objB.body.collisionType] === "function") {
                                             // execute the built-in function
