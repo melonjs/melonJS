@@ -1,16 +1,16 @@
 /** install a custom collision Handler for the CollisionEntity object */
-me.plugin.patch(me.CollisionEntity, "customCollisionHandler", function (response, other) {
-
+me.collision.addCollisionHandler(me.collision.types.WORLD_SHAPE, function (response, other) {
+    // some shortcut reference to a & b
+    var a = response.a; // the one checking for collision
+    var b = response.b; // potentially this world collision shape
     // simulate a platform object
-    if (this.type === "platform") {
+    if (b.type === "platform") {
         // disable collision on the x axis
         response.overlapV.x = 0;
         // if going up/jumping
-        if (other.body.vel.y < 0) {
+        if (a.body.vel.y < 0 || Math.round(a.getBounds().bottom - response.overlapV.y) > b.getBounds().top) {
             // cancel collision
-            return false;
-        } else if (Math.round(other.getBounds().bottom - response.overlapV.y) > this.getBounds().top) {
-            // cancel collision
+            response.clear();
             return false;
         }
     }
@@ -145,9 +145,7 @@ game.PlayerEntity = me.Entity.extend({
                             // jump
                             this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
                         } else {
-                             this.pos.sub(response.overlapV);
                              this.hurt();
-                             this.updateBounds();
                         }
                     }
                     break;
@@ -198,6 +196,7 @@ game.CoinEntity = me.CollectableEntity.extend({
      * collision handling
      */
     onCollision : function (response) {
+
         // do something when collide
         me.audio.play("cling", false);
         // give some score
@@ -207,6 +206,8 @@ game.CoinEntity = me.CollectableEntity.extend({
         this.body.setCollisionMask(me.collision.types.NO_OBJECT);
         
         me.game.world.removeChild(this);
+
+        return false;
     }
 });
 
@@ -306,6 +307,8 @@ game.PathEnemyEntity = me.Entity.extend({
             me.audio.play("enemykill", false);
             // give some score
             game.data.score += 150;
+            // stop here
+            return false;
         }
     }
 

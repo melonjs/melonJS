@@ -182,6 +182,9 @@
         }
     }
 
+    // cache for custom collision handlers
+    var _customCollisionHandler = {};
+
 
     /**
      * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -440,6 +443,27 @@
                 (a.body.collisionType & b.body.collisionMask) !== 0
             );
         };
+
+
+        /**
+         * add a custom collision handler
+         * @name shouldCollide
+         * @memberOf me.collision
+         * @public
+         * @function
+         * @param {Object} entity the entity class
+         * @param {String} the collision steps.
+         * @return {Function} the callback
+         * @example 
+         *  // trigger the given "solveCollision" function when colliding with another object
+         *  me.collision.addCollisionHandler (
+         *       me.collision.types.WORLD_SHAPE,
+         *       this.solveCollision.bind(this)
+         *  );
+        */
+        api.addCollisionHandler = function (type, func) {
+            _customCollisionHandler[type] = func;
+        };
         
         /**
          * Checks if the specified entity collides with others entities 
@@ -503,10 +527,22 @@
                                 collision++;
                                 
                                 if (api.SAT) {
-                                
-                                    // notify the other object
-                                    objB.body.respondToCollision.call(objB.body, response, objA);
                                     
+                                    // execute the onCollision callback
+                                    if (typeof objB.body.onCollision !== "function" || objB.body.onCollision(response, objA) !== false) {
+                                        // check if there is come customer collision handler defined
+                                        if (typeof _customCollisionHandler[objB.body.collisionType] === "function") {
+                                            // execute the built-in function
+                                            if (_customCollisionHandler[objB.body.collisionType].call(objB.body, response, objA) !== false) {
+                                                // execute the built-in function
+                                                objB.body.respondToCollision.call(objB.body, response, objA);
+                                            }
+                                        } else {
+                                            // execute the built-in function
+                                            objB.body.respondToCollision.call(objB.body, response, objA);
+                                        }
+                                    }
+                                        
                                     // execute the given callback with the full response
                                     if (typeof (callback) === "function") {
                                         callback(response);

@@ -72,6 +72,7 @@
             for (var g = 0; g < objectGroups.length; g++) {
                 var group = objectGroups[g];
 
+                // check if this is the collision shape group
                 isCollisionGroup = group.name.toLowerCase().contains(me.TMXConstants.COLLISION_GROUP);
 
                 if (me.game.mergeGroup === false) {
@@ -99,12 +100,24 @@
                     // TMX object settings
                     var settings = group.objects[o];
 
-                    var obj = me.pool.pull(
-                        isCollisionGroup ? "me.CollisionEntity" : settings.name,
-                        settings.x, settings.y,
-                        // 'TileObject' will instantiate a Sprite Object
-                        settings.name === "TileObject" ? settings.image : settings
-                    );
+                    var obj;
+
+                    if (isCollisionGroup === false) {
+                        obj = me.pool.pull(
+                            settings.name,
+                            settings.x, settings.y,
+                            // 'TileObject' will instantiate a Sprite Object
+                            settings.name === "TileObject" ? settings.image : settings
+                        );
+                    } else {
+                        obj = me.pool.pull(
+                            "me.Entity",
+                            settings.x, settings.y,
+                            settings
+                        );
+                        // configure the body accordingly
+                        obj.body.collisionType = me.collision.types.WORLD_SHAPE;
+                    }
 
                     // ignore if the pull function does not return a corresponding object
                     if (obj) {

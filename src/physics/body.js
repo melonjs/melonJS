@@ -41,20 +41,7 @@
              * @memberOf me.Body
              */
             this.shapeIndex = 0;
-            
-            /**
-             * onCollision callback<br>
-             * triggered in case of collision, when this entity body is being "touched" by another one<br>
-             * @name onCollision
-             * @memberOf me.Body
-             * @function
-             * @param {me.collision.ResponseObject} response the collision response object
-             * @param {me.Entity} other the other entity touching this one (reference to response.a)
-             * @return false, if the collision response is to be ignored (for custom collision response)
-             * @protected
-             */
-            this.onCollision = undefined;
-            
+                        
             /**
              * The body collision mask, that defines what should collide with what.<br>
              * (by default will collide with all entities)
@@ -78,6 +65,19 @@
              * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
              */
             this.collisionType = me.collision.types.ENEMY_OBJECT;
+
+            /**
+             * onCollision callback<br>
+             * triggered in case of collision, when this entity body is being "touched" by another one<br>
+             * @name onCollision
+             * @memberOf me.Body
+             * @function
+             * @param {me.collision.ResponseObject} response the collision response object
+             * @param {me.Entity} other the other entity touching this one (reference to response.a)
+             * @return false, if the collision response is to be ignored (for custom collision response)
+             * @protected
+             */
+            this.onCollision = undefined;
             
             /**
              * defined if a body is fully solid or not.<br>
@@ -272,48 +272,65 @@
         },
  
         /**
+         * the built-in function to solve the collision response
          * @protected
          * @name respondToCollision
          * @memberOf me.Body
          * @function
+         * @param {me.collision.ResponseObject} response the collision response object
+         * @param {me.Entity} other the other entity touching this one (reference to response.a)         
          */
         respondToCollision: function (response, other) {
-            // execute the callback if defined
-            if (typeof this.onCollision === "function") {
-                if (this.onCollision.call(this, response, other) === false) {
-                    // stop here if collision response is to be ignored
-                    return;
-                }
-            }
             
             // some shortcut reference to a & b
             var a = response.a;
             var b = response.b;
+            // the overlap vector
+            var overlap = response.overlapV;
             
-            // Collisions between "ghostly" objects don't matter, and
-            // two "heavy" objects will just remain where they are.
-            if (a.body.isSolid || b.body.isSolid) {
-                // the overlap vector
-                var overlap = response.overlapV;
-                if (a.body.isHeavy && b.body.isHeavy) {
-                    // Move equally out of each other
-                    overlap.scale(0.5);
-                    a.pos.sub(overlap);
-                    b.pos.add(overlap);
-                    // update the entity bounds
-                    a.updateBounds();
-                    b.updateBounds();
-                } else if (a.body.isHeavy) {
-                    // Move the other object out of us
-                    b.pos.add(overlap);
-                    // update the entity bounds
-                    b.updateBounds();
-                } else if (b.body.isHeavy) {
-                    // Move us out of the other object
-                    a.pos.sub(overlap);
-                    // update the entity bounds
-                    a.updateBounds();
+            if (this.collisionType !== me.collision.types.WORLD_SHAPE) {
+                // Collisions between "ghostly" objects don't matter, and
+                // two "heavy" objects will just remain where they are.
+                if (a.body.isSolid || b.body.isSolid) {
+                    if (a.body.isHeavy && b.body.isHeavy) {
+                        // Move equally out of each other
+                        overlap.scale(0.5);
+                        a.pos.sub(overlap);
+                        b.pos.add(overlap);
+                        // update the entity bounds
+                        a.updateBounds();
+                        b.updateBounds();
+                    } else if (a.body.isHeavy) {
+                        // Move the other object out of us
+                        b.pos.sub(overlap);
+                        // update the entity bounds
+                        b.updateBounds();
+                    } else if (b.body.isHeavy) {
+                        // Move us out of the other object
+                        a.pos.sub(overlap);
+                        // update the entity bounds
+                        a.updateBounds();
+                    }
                 }
+            } else {
+                // Apply this as well when colliding with entities ?
+                
+                // Move the other entity out of this object shape
+                other.pos.sub(overlap);
+                
+                // adjust velocity
+                if (overlap.x !== 0) {
+                    other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
+                }
+                if (overlap.y !== 0) {
+                    other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
+                    // cancel the falling an jumping flags if necessary
+                    other.body.falling = overlap.y > 0;
+                    other.body.jumping = overlap.y < 0;
+                }
+                
+                // update the other entity bounds
+                other.updateBounds();
             }
         },
         

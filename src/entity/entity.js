@@ -425,85 +425,6 @@
     });
 
     /*
-     * A collision entity
-     */
-
-    /**
-     * @class
-     * @extends me.Entity
-     * @memberOf me
-     * @constructor
-     * @param {Number} x the x coordinates of the object
-     * @param {Number} y the y coordinates of the object
-     * @param {me.ObjectSettings} settings object settings
-     */
-    me.CollisionEntity = me.Entity.extend(
-    /** @scope me.CollisionEntity.prototype */
-    {
-        /** @ignore */
-        init : function (x, y, settings) {
-            /**
-             * custom collision handler, allowing to redefine the collision response for shape objects.
-             * @name customCollisionHandler
-             * @memberOf me.CollisionEntity
-             * @function
-             * @param {me.collision.ResponseObject} response the collision response object
-             * @param {me.Entity} other the other entity touching this one (reference to response.a)
-             * @return false, if the collision response is to be ignored (for custom collision response)
-             * @protected
-             */
-            
-            // call the super constructor
-            this._super(me.Entity, "init", [x, y, settings]);
-            
-            // set the body properties
-            this.body.collisionType = me.collision.types.WORLD_SHAPE;
-            this.body.isSolid = true;
-            this.body.isHeavy = true;
-            
-            // set our collision callback function
-            this.body.onCollision = this.onCollision.bind(this);
-        },
-        
-        /** @ignore */
-        customCollisionHandler : function () {
-            // empty one to be extended
-            return true;
-        },
-        
-        /** @ignore */
-        onCollision : function (response, other) {
-            
-            // execute the custom collision handler if defined
-            if (this.customCollisionHandler.call(this, response, other) === false) {
-                // stop here if collision response is to be ignored
-                return false;
-            }
-            var overlap = response.overlapV;
-                            
-            // Move the other entity out of this object shape
-            other.pos.sub(overlap);
-            
-            // adjust velocity
-            if (overlap.x !== 0) {
-                other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
-            }
-            if (overlap.y !== 0) {
-                other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
-                // cancel the falling an jumping flags if necessary
-                other.body.falling = overlap.y > 0;
-                other.body.jumping = overlap.y < 0;
-            }
-            
-            // update the other entity bounds
-            other.updateBounds();
-            
-            return false;
-        }
-    });
-
-
-    /*
      * A Collectable entity
      */
 
@@ -526,6 +447,7 @@
             this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
             // collectable do not impact the other entity position when touched
             this.body.isSolid = false;
+            this.body.isHeavy = false;
         }
     });
 
@@ -563,16 +485,17 @@
             this.duration = settings.duration;
             this.fading = false;
 
+            this.name = "levelEntity";
+
             // a temp variable
             this.gotolevel = settings.to;
             
-            // set our collision callback function
-            this.body.onCollision = this.onCollision.bind(this);
-            
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
+            this.body.onCollision = this.onCollision.bind(this);
             
             // levelEntity are non visible object and therefore not solid
             this.body.isSolid = false;
+            
         },
 
         /**
@@ -608,7 +531,10 @@
 
         /** @ignore */
         onCollision : function () {
-            this.goTo();
+            if (this.name === "levelEntity") {
+                this.goTo();
+            }
+            return false;
         }
     });
     
