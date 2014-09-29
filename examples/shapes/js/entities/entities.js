@@ -23,7 +23,7 @@ game.ShapeObject = me.Entity.extend({
         this.hover = this.inViewport && 
                      // this is a globa; event, so first do 
                      // a basic rectangle detection to save some cycles
-                     this.body.getBounds().containsPoint(
+                     this.getBounds().containsPoint(
                         event.gameX, event.gameY
                      ) &&
                      // check the shape if non rectangular
@@ -37,7 +37,7 @@ game.ShapeObject = me.Entity.extend({
             this.pos.set(event.gameX, event.gameY);
             this.pos.sub(this.grabOffset);
             // update the body bounds
-            this.body.updateBounds();
+            this.updateBounds();
         }
     },
     
