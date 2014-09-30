@@ -182,10 +182,6 @@
         }
     }
 
-    // cache for custom collision handlers
-    var _customCollisionHandler = {};
-
-
     /**
      * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
      * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
@@ -240,7 +236,6 @@
          * @type {me.Rect}
          */
         api.bounds = null;
-        
 
         /**
          * configure the collision detection algorithm <br>
@@ -443,27 +438,6 @@
                 (a.body.collisionType & b.body.collisionMask) !== 0
             );
         };
-
-
-        /**
-         * add a custom collision handler
-         * @name shouldCollide
-         * @memberOf me.collision
-         * @public
-         * @function
-         * @param {Object} entity the entity class
-         * @param {String} the collision steps.
-         * @return {Function} the callback
-         * @example 
-         *  // trigger the given "solveCollision" function when colliding with another object
-         *  me.collision.addCollisionHandler (
-         *       me.collision.types.WORLD_SHAPE,
-         *       this.solveCollision.bind(this)
-         *  );
-        */
-        api.addCollisionHandler = function (type, func) {
-            _customCollisionHandler[type] = func;
-        };
         
         /**
          * Checks if the specified entity collides with others entities 
@@ -472,8 +446,6 @@
          * @public
          * @function
          * @param {me.Entity} obj entity to be tested for collision
-         * @param {Boolean} [multiple=false] check for multiple collision
-         * @param {Function} [callback] Function to call in case of collision
          * @param {Boolean} [response=false] populate a response object in case of collision
          * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
          * @return {Boolean} in case of collision, false otherwise
@@ -495,7 +467,7 @@
          *     }
          * };
          */
-        api.check = function (objA, multiple, callback, calcResponse, responseObject) {
+        api.check = function (objA, calcResponse, responseObject) {
             var collision = 0;
             var response = calcResponse ? responseObject || api.response.clear() : undefined;
             var shapeTypeA =  objA.body.getShape().shapeType;
@@ -529,29 +501,13 @@
                                 if (api.SAT) {
                                     
                                     // execute the onCollision callback
-                                    if (objB.body.entity.onCollision(response, objA) !== false) {
-                                        // check if there is come customer collision handler defined
-                                        if (typeof _customCollisionHandler[objB.body.collisionType] === "function") {
-                                            // execute the built-in function
-                                            if (_customCollisionHandler[objB.body.collisionType].call(objB.body, response, objA) !== false) {
-                                                // execute the built-in function
-                                                objB.body.respondToCollision.call(objB.body, response, objA);
-                                            }
-                                        } else {
-                                            // execute the built-in function
-                                            objB.body.respondToCollision.call(objB.body, response, objA);
-                                        }
+                                    if (objA.onCollision(response, objB)) {
+                                        objA.body.respondToCollision.call(objA.body, response);
                                     }
-                                        
-                                    // execute the given callback with the full response
-                                    if (typeof (callback) === "function") {
-                                        callback(response);
+                                    if (objB.onCollision(response, objA)) {
+                                        objB.body.respondToCollision.call(objB.body, response);
                                     }
                                 } // else no response to provide
-                                
-                                if (multiple === false) {
-                                    break;
-                                }
                             }
                         }
                     }

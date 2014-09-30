@@ -67,24 +67,6 @@
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
-             * defined if a body is fully solid or not.<br>
-             * @public
-             * @type Boolean
-             * @name falling
-             * @memberOf me.Body
-             */
-            this.isSolid = true;
-
-            /**
-             * Whether this body is "heavy" and can't be moved by other objects.
-             * @public
-             * @type Boolean
-             * @name falling
-             * @memberOf me.Body
-             */
-            this.isHeavy = true;
-            
-            /**
              * entity current velocity<br>
              * @public
              * @type me.Vector2d
@@ -265,60 +247,30 @@
          * @memberOf me.Body
          * @function
          * @param {me.collision.ResponseObject} response the collision response object
-         * @param {me.Entity} other the other entity touching this one (reference to response.a)         
          */
-        respondToCollision: function (response, other) {
-            
-            // some shortcut reference to a & b
-            var a = response.a;
-            var b = response.b;
+        respondToCollision: function (response) {
             // the overlap vector
             var overlap = response.overlapV;
+
+            // FIXME: Respond proportionally to object mass
             
-            if (this.collisionType !== me.collision.types.WORLD_SHAPE) {
-                // Collisions between "ghostly" objects don't matter, and
-                // two "heavy" objects will just remain where they are.
-                if (a.body.isSolid || b.body.isSolid) {
-                    if (a.body.isHeavy && b.body.isHeavy) {
-                        // Move equally out of each other
-                        overlap.scale(0.5);
-                        a.pos.sub(overlap);
-                        b.pos.add(overlap);
-                        // update the entity bounds
-                        a.updateBounds();
-                        b.updateBounds();
-                    } else if (a.body.isHeavy) {
-                        // Move the other object out of us
-                        b.pos.sub(overlap);
-                        // update the entity bounds
-                        b.updateBounds();
-                    } else if (b.body.isHeavy) {
-                        // Move us out of the other object
-                        a.pos.sub(overlap);
-                        // update the entity bounds
-                        a.updateBounds();
-                    }
-                }
-            } else {
-                // Apply this as well when colliding with entities ?
-                
-                // Move the other entity out of this object shape
-                other.pos.sub(overlap);
-                
-                // adjust velocity
-                if (overlap.x !== 0) {
-                    other.body.vel.x = Math.round(other.body.vel.x - overlap.x) || 0;
-                }
-                if (overlap.y !== 0) {
-                    other.body.vel.y = Math.round(other.body.vel.y - overlap.y) || 0;
-                    // cancel the falling an jumping flags if necessary
-                    other.body.falling = overlap.y > 0;
-                    other.body.jumping = overlap.y < 0;
-                }
-                
-                // update the other entity bounds
-                other.updateBounds();
+            // Move out of the other object shape
+            this.entity.pos.sub(overlap);
+
+            // adjust velocity
+            if (overlap.x !== 0) {
+                this.vel.x = Math.round(this.vel.x - overlap.x) || 0;
             }
+            if (overlap.y !== 0) {
+                this.vel.y = Math.round(this.vel.y - overlap.y) || 0;
+
+                // cancel the falling an jumping flags if necessary
+                this.falling = overlap.y >= 1;
+                this.jumping = overlap.y <= -1;
+            }
+
+            // update the other entity bounds
+            this.updateBounds();
         },
         
         /**

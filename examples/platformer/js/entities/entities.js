@@ -1,24 +1,3 @@
-/** install a custom collision Handler for the CollisionEntity object */
-me.collision.addCollisionHandler(me.collision.types.WORLD_SHAPE, function (response, other) {
-    // some shortcut reference to a & b
-    var a = response.a; // the one checking for collision
-    var b = response.b; // potentially this world collision shape
-    // simulate a platform object
-    if (b.type === "platform") {
-        // disable collision on the x axis
-        response.overlapV.x = 0;
-        // if going up/jumping
-        if (a.body.vel.y < 0 || Math.round(a.getBounds().bottom - response.overlapV.y) > b.getBounds().top) {
-            // cancel collision
-            response.clear();
-            return false;
-        }
-    }
-    // runs the regular collision code
-    return true;
-});
-
-
 /************************************************************************************/
 /*                                                                                  */
 /*        a player entity                                                           */
@@ -117,7 +96,7 @@ game.PlayerEntity = me.Entity.extend({
         }
 
         // check for collision with sthg
-        me.collision.check(this, true, this.collideHandler.bind(this), true);
+        me.collision.check(this, true);
         
         // check if we moved (a "stand" animation would definitely be cleaner)
         if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
@@ -132,26 +111,54 @@ game.PlayerEntity = me.Entity.extend({
     /**
      * colision handler
      */
-    collideHandler : function (response) {
-        switch (response.b.body.collisionType) {
-                case me.collision.types.ENEMY_OBJECT : {
-                    if (!response.b.isMovingEnemy) {
-                        // spike or any other fixed danger
-                        this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
-                        this.hurt();
-                    } else {
-                        // a regular moving enemy entity
-                        if ((response.overlapV.y>0) && this.body.falling) {
-                            // jump
-                            this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
-                        } else {
-                             this.hurt();
-                        }
+    onCollision : function (response, other) {
+        switch (other.body.collisionType) {
+            case me.collision.types.WORLD_SHAPE:
+                // Simulate a platform object
+                if (other.type === "platform") {
+                    if (this.body.falling &&
+                        // Shortest overlap would move the player upward
+                        (response.overlapV.y > 0) &&
+                        // The velocity is reasonably fast enough to have penetrated to the overlap depth
+                        (~~this.body.vel.y >= ~~response.overlapV.y)
+                    ) {
+                        // Disable collision on the x axis
+                        response.overlapV.x = 0;
+                        // Repond to the platform (it is solid)
+                        return true;
                     }
-                    break;
+                    // Do not respond to the pltform (pass through)
+                    return false;
                 }
-                default : break;
-            }
+                break;
+
+            case me.collision.types.ENEMY_OBJECT:
+                if (!other.isMovingEnemy) {
+                    // spike or any other fixed danger
+                    this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
+                    this.hurt();
+                }
+                else {
+                    // a regular moving enemy entity
+                    if ((response.overlapV.y > 0) && this.body.falling) {
+                        // jump
+                        this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
+                    }
+                    else {
+                        this.hurt();
+                    }
+                    // Not solid
+                    return false;
+                }
+                break;
+
+            default:
+                // Do not respond to other objects (e.g. coins)
+                return false;
+        }
+
+        // Make the object solid
+        return true;
     },
 
     
@@ -202,8 +209,6 @@ game.CoinEntity = me.CollectableEntity.extend({
         this.body.setCollisionMask(me.collision.types.NO_OBJECT);
         
         me.game.world.removeChild(this);
-
-        return false;
     }
 });
 
@@ -300,10 +305,7 @@ game.PathEnemyEntity = me.Entity.extend({
             me.audio.play("enemykill", false);
             // give some score
             game.data.score += 150;
-            // stop here
-            return false;
         }
-        return true;
     }
 
 });

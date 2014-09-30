@@ -428,10 +428,10 @@
          * @function
          * @param {me.collision.ResponseObject} response the collision response object
          * @param {me.Entity} other the other entity touching this one (reference to response.a)
-         * @return false, if the collision response is to be ignored (for custom collision response)
+         * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
          */
         onCollision : function () {
-            return true;
+            return false;
         }
     });
 
@@ -456,9 +456,6 @@
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);
             this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
-            // collectable do not impact the other entity position when touched
-            this.body.isSolid = false;
-            this.body.isHeavy = false;
         }
     });
 
@@ -502,10 +499,6 @@
             this.gotolevel = settings.to;
             
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
-            
-            // levelEntity are non visible object and therefore not solid
-            this.body.isSolid = false;
-            
         },
 
         /**
