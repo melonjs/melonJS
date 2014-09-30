@@ -117,6 +117,7 @@ game.PlayerEntity = me.Entity.extend({
                 // Simulate a platform object
                 if (other.type === "platform") {
                     if (this.body.falling &&
+                        !me.input.isKeyPressed('down') &&
                         // Shortest overlap would move the player upward
                         (response.overlapV.y > 0) &&
                         // The velocity is reasonably fast enough to have penetrated to the overlap depth
