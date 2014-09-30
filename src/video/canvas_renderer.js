@@ -173,7 +173,7 @@
          * @param {Number} y - the y position to draw at
          */
         api.drawFont = function (fontObject, text, x, y) {
-            fontObject.draw(backBufferContext2D, x, y, text);
+            fontObject.draw(backBufferContext2D, text, x, y);
         };
 
         /**
