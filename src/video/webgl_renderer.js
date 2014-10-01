@@ -174,6 +174,26 @@
             if (typeof image.texture === "undefined") {
                 this.bindTexture(image);
             }
+
+            if (typeof sw === "undefined") {
+                sw = dw = image.width;
+                sh = dh = image.height;
+                dx = sx;
+                dy = sy;
+                sx = 0;
+                sy = 0;
+            }
+            else if (typeof dx === "undefined") {
+                dx = sx;
+                dy = sy;
+                dw = sw;
+                dh = sh;
+                sw = image.width;
+                sh = image.height;
+                sx = 0;
+                sy = 0;
+            }
+
             this.uniformMatrix.identity();
             var tx1 = sx / image.width;
             var ty1 = 1.0 - (sy / image.height);
