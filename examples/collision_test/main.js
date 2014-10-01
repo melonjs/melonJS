@@ -91,7 +91,7 @@ var Smilie = me.Entity.extend({
         // we manipulated the entity pos manually
         this.updateBounds();
                 
-        if (me.collision.check(this, true, this.collideHandler.bind(this), true)) {
+        if (me.collision.check(this, true)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
         } else {
@@ -101,8 +101,8 @@ var Smilie = me.Entity.extend({
     },
 
     // collision handler
-    collideHandler : function (response) {
-        // make them bounce when touching eachother
+    onCollision : function (response) {
+
         this.pos.sub(response.overlapN);
         if (response.overlapN.x !== 0) {
             this.body.vel.x = -this.body.vel.x;
@@ -110,6 +110,9 @@ var Smilie = me.Entity.extend({
         if (response.overlapN.y !== 0) {
             this.body.vel.y = -this.body.vel.y;
         }
+        this.updateBounds();
+        
+        return false;
     }
 });
     
