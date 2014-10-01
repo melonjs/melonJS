@@ -96,7 +96,7 @@ game.PlayerEntity = me.Entity.extend({
         }
 
         // check for collision with sthg
-        me.collision.check(this, true);
+        me.collision.check(this);
         
         // check if we moved (a "stand" animation would definitely be cleaner)
         if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {

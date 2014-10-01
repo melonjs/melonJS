@@ -446,18 +446,17 @@
          * @public
          * @function
          * @param {me.Entity} obj entity to be tested for collision
-         * @param {Boolean} [response=false] populate a response object in case of collision
          * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
          * @return {Boolean} in case of collision, false otherwise
          * @example
          * update : function (dt) {
          *    ...
          *    // check for collision between this object and all others
-         *    me.collision.check(this, true, this.collideHandler.bind(this), true);
+         *    me.collision.check(this);
          *    ...
          * };
          *
-         * collideHandler : function (response) {
+         * onCollision : function (response) {
          *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
          *         // makes the other entity solid, by substracting the overlap vector to the current position
          *         this.pos.sub(response.overlapV);
@@ -467,10 +466,15 @@
          *     }
          * };
          */
-        api.check = function (objA, calcResponse, responseObject) {
+        api.check = function (objA, responseObject) {
             var collision = 0;
-            var response = calcResponse ? responseObject || api.response.clear() : undefined;
+            var response = api.response.clear();
             var shapeTypeA =  objA.body.getShape().shapeType;
+
+            // check if a user response object was specified
+            if (typeof responseObject !== "undefined" && typeof responseObject.clear === "function") {
+                response = responseObject.clear();
+            }
 
             // retreive a list of potential colliding objects            
             var candidates = api.quadTree.retrieve(objA);

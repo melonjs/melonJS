@@ -427,7 +427,7 @@
          * @memberOf me.Entity
          * @function
          * @param {me.collision.ResponseObject} response the collision response object
-         * @param {me.Entity} other the other entity touching this one (reference to response.a)
+         * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
          * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
          */
         onCollision : function () {

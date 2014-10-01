@@ -91,7 +91,7 @@ var Smilie = me.Entity.extend({
         // we manipulated the entity pos manually
         this.updateBounds();
                 
-        if (me.collision.check(this, true)) {
+        if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
         } else {
