@@ -210,7 +210,7 @@
              */
             this.alpha = a || 1.0;
 
-            this.glArray = new Array(4);
+            this.glArray = new Float32Array([r / 255.0, g / 255.0, b / 255.0, a]);
             return this;
         },
 

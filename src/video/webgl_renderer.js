@@ -216,7 +216,6 @@
             gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
-
             var textureCoords = new Float32Array([
                 tx1, ty1,
                 tx2, ty1,
