@@ -320,7 +320,9 @@
          */
         draw : function (renderer, color) {
             // draw the rectangle
-            renderer.strokeRect(this.left, this.top, this.width, this.height, color || "red", 1);
+            renderer.setColor(color || "red");
+            renderer.setLineWidth(1);
+            renderer.strokeRect(this.left, this.top, this.width, this.height);
         }
     });
 

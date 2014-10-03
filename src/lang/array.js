@@ -71,3 +71,9 @@ Array.prototype.random = function (entry) {
 Array.prototype.weightedRandom = function (entry) {
     return entry[Number.prototype.weightedRandom(0, entry.length - 1)];
 };
+
+/**
+ * Falls back to a regular array if Float32Array does not exist
+ * @memberOf me
+ */
+me.Float32Array = typeof Float32Array !== "undefined" ? Float32Array : Array;

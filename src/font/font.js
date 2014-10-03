@@ -93,6 +93,10 @@
             // super constructor
             this.pos = new me.Vector2d(0, 0);
             this._super(me.Renderable, "init", [this.pos.x, this.pos.y, 0, this.fontSize.y]);
+
+            if (!this.gid) {
+                this.gid = me.utils.createGUID();
+            }
         },
 
         /**
@@ -184,11 +188,12 @@
          * @name draw
          * @memberOf me.Font
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer} reference to me.CanvasRenderer
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
          */
+
         draw : function (context, text, x, y) {
             // update initial position
             this.pos.set(x, y);

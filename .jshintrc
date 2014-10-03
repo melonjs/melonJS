@@ -96,6 +96,9 @@
         "Howl"          : false,
         "Howler"        : false,
 
+        // Stackgl
+        "stackgl"       : false,
+
         // Jasmine
         "jasmine"       : false,
         "describe"      : false,

@@ -180,7 +180,9 @@
          * @ignore
          */
         draw : function (renderer, color) {
-            renderer.strokeArc(this.pos.x, this.pos.y, this.radius.x, this.radius.y, 0, 2 * Math.PI, color || "red", false, 1);
+            renderer.setColor(color || "red");
+            renderer.setLineWidth(1);
+            renderer.strokeArc(this.pos.x, this.pos.y, this.radius.x, this.radius.y, 0, 2 * Math.PI, false);
         }
     });
 })();

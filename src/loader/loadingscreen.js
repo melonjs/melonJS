@@ -39,31 +39,24 @@
 
          // draw function
         draw : function (renderer) {
-            var context = renderer.getContext();
             // draw the progress bar
-            context.fillStyle = "black";
-            context.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
-            context.fillStyle = "#55aa00";
-            context.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
+            renderer.setColor("#000000");
+            renderer.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
+            renderer.setColor("#55aa00");
+            renderer.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
         }
     });
 
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
-        init : function (x, y) {
+        init : function (iconCanvas, x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
-        },
 
-        // 100x85 Logo
-        // generated using Illustrator and the Ai2Canvas plugin
-        draw : function (renderer) {
-            renderer.save();
+            this.iconCanvas = iconCanvas;
 
-            // translate to destination point
-            renderer.translate(this.pos.x, this.pos.y);
-
-            var context = renderer.getContext();
-
+            var context = me.CanvasRenderer.getContext2d(this.iconCanvas);
+            
+            context.translate(this.pos.x, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -90,8 +83,10 @@
             context.lineJoin = "miter";
             context.miterLimit = 4.0;
             context.stroke();
+        },
 
-            renderer.restore();
+        draw : function (renderer) {
+            renderer.drawImage(this.iconCanvas, 0, 0);
         }
     });
 
@@ -108,15 +103,13 @@
 
         draw : function (renderer) {
             // measure the logo size
-            var context = renderer.getContext();
-            var logo1_width = this.logo1.measureText(context, "melon").width;
-            var xpos = (this.width - logo1_width - this.logo2.measureText(context, "JS").width) / 2;
-            var ypos = (this.height / 2) + (this.logo2.measureText(context, "melon").height);
+            var logo1_width = renderer.measureText(this.logo1, "melon").width;
+            var xpos = (this.width - logo1_width - renderer.measureText(this.logo2, "JS").width) / 2;
+            var ypos = (this.height / 2) + (renderer.measureText(this.logo2, "melon").height);
 
             // draw the melonJS string
-            this.logo1.draw(context, "melon", xpos, ypos);
-            xpos += logo1_width;
-            this.logo2.draw(context, "JS", xpos, ypos);
+            renderer.drawFont(this.logo1, "melon", xpos, ypos);
+            renderer.drawFont(this.logo2, "JS", xpos, ypos);
         }
 
     });
@@ -146,9 +139,12 @@
                 progressBar.onProgressUpdate.bind(progressBar)
             );
             me.game.world.addChild(progressBar, 1);
-
+            this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
+            this.iconCanvas.style.display = "none";
+            document.body.appendChild(this.iconCanvas);
             // melonJS text & logo
             var icon = new IconLogo(
+                this.iconCanvas,
                 (me.video.renderer.getWidth() - 100) / 2,
                 (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
             );
@@ -163,6 +159,8 @@
                 me.event.unsubscribe(this.handle);
                 this.handle = null;
             }
+
+            document.body.removeChild(this.iconCanvas);
         }
     });
 })();

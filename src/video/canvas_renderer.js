@@ -162,6 +162,21 @@
         };
 
         /**
+         * Quick helper method to draw the font on the backbuffer context. Useful for when using webgl with canvas fallback
+         * for different platforms.
+         * @name drawFont
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Font} fontObject - an instance of me.Font
+         * @param {String} text - the string of text to draw
+         * @param {Number} x - the x position to draw at
+         * @param {Number} y - the y position to draw at
+         */
+        api.drawFont = function (fontObject, text, x, y) {
+            fontObject.draw(backBufferContext2D, text, x, y);
+        };
+
+        /**
          * Draw a line from the given point to the destination point.
          * @name drawLine
          * @memberOf me.CanvasRenderer
@@ -170,12 +185,8 @@
          * @param {Number} startY start y position
          * @param {Number} endX end x position
          * @param {Number} endY end y position
-         * @param {String} color to draw the line
-         * @param {Number} line width
          */
-        api.drawLine = function (startX, startY, endX, endY, color, width) {
-            backBufferContext2D.lineWidth = width;
-            backBufferContext2D.strokeStyle = color;
+        api.drawLine = function (startX, startY, endX, endY) {
             backBufferContext2D.beginPath();
             backBufferContext2D.translate(startX, startY);
             backBufferContext2D.moveTo(0, 0);
@@ -219,10 +230,9 @@
          * @param {Number} radiusY to draw
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
-         * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
          */
-        api.fillArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise) {
+        api.fillArc = function (x, y, radiusX, radiusY, start, end, antiClockwise) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
@@ -232,12 +242,11 @@
             backBufferContext2D.scale(radiusX, radiusY);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
-            backBufferContext2D.fillStyle = color;
             backBufferContext2D.fill();
         };
 
         /**
-         * Draw a filled rectangle at the specified coordinates with a given color
+         * Draw a filled rectangle at the specified coordinates
          * @name fillRect
          * @memberOf me.CanvasRenderer
          * @function
@@ -245,10 +254,8 @@
          * @param {Number} y position
          * @param {Number} width to draw
          * @param {Number} height to draw
-         * @param {String} css color for the rectangle
          */
-        api.fillRect = function (x, y, width, height, color) {
-            backBufferContext2D.fillStyle = color;
+        api.fillRect = function (x, y, width, height) {
             backBufferContext2D.fillRect(x, y, width, height);
         };
 
@@ -331,6 +338,17 @@
         };
 
         /**
+         * returns the current color of the context
+         * @name getColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {String}
+         */
+        api.getColor = function () {
+            return backBufferContext2D.fillStyle;
+        };
+
+        /**
          * return a reference to the system 2d Context
          * @name getContext
          * @memberOf me.CanvasRenderer
@@ -354,6 +372,19 @@
          */
         api.globalAlpha = function () {
             return backBufferContext2D.globalAlpha;
+        };
+
+        /**
+         * returns the text size based on dimensions from the font. Uses the backbuffer context
+         * @name measureText
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Font} the instance of the font object
+         * @param {String} text
+         * @return {Object}
+         */
+        api.measureText = function (fontObject, text) {
+            return fontObject.measureText(backBufferContext2D, text);
         };
 
         /**
@@ -422,8 +453,23 @@
             backBufferContext2D.scale(x, y);
         };
 
+        /**
+         * @private
+         */
         api.setAlpha = function (enable) {
             backBufferContext2D.globalCompositeOperation = enable ? "source-over" : "copy";
+        };
+
+        /**
+         * Sets the fill & stroke style colors for the context.
+         * @name setColor
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {String} color - css color value
+         */
+        api.setColor = function (color) {
+            backBufferContext2D.strokeStyle = color;
+            backBufferContext2D.fillStyle = color;
         };
 
         /**
@@ -451,6 +497,17 @@
         };
 
         /**
+         * sets the line width on the context
+         * @name setLineWidth
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} the width to set;
+         */
+        api.setLineWidth = function (width) {
+            backBufferContext2D.lineWidth = width;
+        };
+
+        /**
          * Fill an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
          * @memberOf me.CanvasRenderer
@@ -461,11 +518,9 @@
          * @param {Number} radiusY to draw
          * @param {Number} start degrees in radians
          * @param {Number} end degrees in radians
-         * @param {String} color to draw as
          * @param {Boolean} in anti-clockwise, defaults to false
-         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeArc = function (x, y, radiusX, radiusY, start, end, color, antiClockwise, lineWidth) {
+        api.strokeArc = function (x, y, radiusX, radiusY, start, end, antiClockwise) {
             if (antiClockwise === null) {
                 antiClockwise = false;
             }
@@ -475,9 +530,24 @@
             backBufferContext2D.scale(radiusX, radiusY);
             backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
             backBufferContext2D.restore();
-            backBufferContext2D.strokeStyle = color;
-            backBufferContext2D.lineWidth = lineWidth;
             backBufferContext2D.stroke();
+        };
+
+        /**
+         * Stroke a line of the given two points
+         * @name strokeLine
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} startX - the start x coordinate
+         * @param {Number} startY - the start y coordinate
+         * @param {Number} endX - the end x coordinate
+         * @param {Number} endY - the end y coordinate
+         */
+        api.strokeLine = function (startX, startY, endX, endY) {
+            context.beginPath();
+            context.moveTo(startX, startY);
+            context.lineTo(endX, endY);
+            context.stroke();
         };
 
         /**
@@ -486,12 +556,9 @@
          * @memberOf me.CanvasRenderer
          * @function
          * @param {me.PolyShape} polyShape the shape to draw
-         * @param {String} color a color in css format.
-         * @param {Number} width - the width of the line
          */
-        api.strokePolyShape = function (poly, color, width) {
+        api.strokePolyShape = function (poly) {
             this.translate(poly.pos.x, poly.pos.y);
-            backBufferContext2D.strokeStyle = color;
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
             poly.points.forEach(function (point) {
@@ -501,7 +568,6 @@
             if (poly.closed === true) {
                 backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             }
-            backBufferContext2D.lineWidth = width;
             backBufferContext2D.stroke();
         };
 
@@ -514,12 +580,8 @@
          * @param {Number} y position
          * @param {Number} width to draw
          * @param {Number} height to draw
-         * @param {String} css color for the rectangle
-         * @param {Number} lineWidth - the width of the line
          */
-        api.strokeRect = function (x, y, width, height, color, lineWidth) {
-            backBufferContext2D.strokeStyle = color;
-            backBufferContext2D.lineWidth = lineWidth;
+        api.strokeRect = function (x, y, width, height) {
             backBufferContext2D.strokeRect(x, y, width, height);
         };
 

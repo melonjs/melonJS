@@ -1,7 +1,9 @@
 Version History
 ---------------
 1.2.0
-* Entity : added automatic collision reponse handling, objects are now solid by default (pushing each other in case of collision) 
+* Entity : added automatic collision reponse handling, objects are now solid by default (pushing each other in case of collision)
+* CanvasRenderer : All fill & stroke methods have removed the color & line width parameters. Use the new setColor and setLineWidth methods.
+* CanvasRenderer : Removed strokeLine, was duplicate with drawLine
 
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation

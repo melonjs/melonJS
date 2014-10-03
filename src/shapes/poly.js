@@ -247,7 +247,9 @@
          */
         draw : function (renderer, color) {
             renderer.save();
-            renderer.strokePolyShape(this, color, 1);
+            renderer.setColor(color || "red");
+            renderer.setLineWidth(1);
+            renderer.strokePolyShape(this);
             renderer.restore();
         }
     });

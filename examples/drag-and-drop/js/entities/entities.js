@@ -23,7 +23,8 @@ game.square = me.DraggableEntity.extend({
      * draw the square
      */
     draw: function (renderer) {
-        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, this.color);
+        renderer.setColor(this.color);
+        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
         this.font.draw(renderer.getContext(), this.text, this.pos.x, this.pos.y);
     },
     /**
@@ -68,7 +69,8 @@ game.droptarget = me.DroptargetEntity.extend({
      * draw the square
      */
     draw: function (renderer) {
-        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height, this.color);
+        renderer.setColor(this.color);
+        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
         this.font.draw(renderer.getContext(), this.text, this.pos.x, this.pos.y);
     },
     /**

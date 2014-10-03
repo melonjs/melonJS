@@ -25,3 +25,5 @@ docs/*
 
 melonjs.sublime-workspace
 bower_components
+src/vendors/stackgl.js
+src/vendors/stackgl-compiled.js
