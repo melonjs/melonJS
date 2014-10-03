@@ -136,16 +136,6 @@
         // constructor
         init: function (tileset) {
             // first gid
-            // tile types
-            this.type = {
-                SOLID : "solid",
-                PLATFORM : "platform",
-                L_SLOPE : "lslope",
-                R_SLOPE : "rslope",
-                LADDER : "ladder",
-                TOPLADDER : "topladder",
-                BREAKABLE : "breakable"
-            };
 
             // tile properties (collidable, etc..)
             this.TileProperties = [];
@@ -250,19 +240,6 @@
          */
 
         setTileProperty : function (gid, prop) {
-            // check what we found and adjust property
-            prop.isSolid = prop.type ? prop.type.toLowerCase() === this.type.SOLID : false;
-            prop.isPlatform = prop.type ? prop.type.toLowerCase() === this.type.PLATFORM : false;
-            prop.isLeftSlope = prop.type ? prop.type.toLowerCase() === this.type.L_SLOPE : false;
-            prop.isRightSlope = prop.type ? prop.type.toLowerCase() === this.type.R_SLOPE : false;
-            prop.isBreakable = prop.type ? prop.type.toLowerCase() === this.type.BREAKABLE : false;
-            prop.isLadder = prop.type ? prop.type.toLowerCase() === this.type.LADDER : false;
-            prop.isTopLadder = prop.type ? prop.type.toLowerCase() === this.type.TOPLADDER : false;
-            prop.isSlope = prop.isLeftSlope || prop.isRightSlope;
-
-            // ensure the collidable flag is correct
-            prop.isCollidable = !!prop.type;
-
             // set the given tile id
             this.TileProperties[gid] = prop;
         },
@@ -292,16 +269,7 @@
 
         // e.g. getTileProperty (gid)
         /**
-         * return the properties of the specified tile <br>
-         * the function will return an object with the following boolean value :<br>
-         * - isCollidable<br>
-         * - isSolid<br>
-         * - isPlatform<br>
-         * - isSlope <br>
-         * - isLeftSlope<br>
-         * - isRightSlope<br>
-         * - isLadder<br>
-         * - isBreakable<br>
+         * return the properties of the specified tile
          * @name me.TMXTileset#getTileProperties
          * @public
          * @function
@@ -312,10 +280,6 @@
             return this.TileProperties[tileId];
         },
 
-        //return collidable status of the specifiled tile
-        isTileCollidable : function (tileId) {
-            return this.TileProperties[tileId].isCollidable;
-        },
 
         /**
          * return the x offset of the specified tile in the tileset image
