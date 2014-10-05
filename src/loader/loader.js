@@ -309,7 +309,7 @@
          * @ignore
          */
         api.setNocache = function (enable) {
-            api.nocache = enable ? "?" + parseInt(Math.random() * 10000000, 10) : "";
+            api.nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
         };
 
 

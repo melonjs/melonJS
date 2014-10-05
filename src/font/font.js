@@ -141,7 +141,7 @@
                 ) ? "\"" + value + "\"" : value;
             });
 
-            this.fontSize.y = parseInt(size, 10);
+            this.fontSize.y = +size;
             this.height = this.fontSize.y;
 
             if (typeof size === "number") {

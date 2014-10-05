@@ -341,12 +341,12 @@
         initFromJSON: function (layer) {
             // additional TMX flags
             this.name = layer[TMXConstants.TMX_TAG_NAME];
-            this.cols = parseInt(layer[TMXConstants.TMX_TAG_WIDTH], 10);
-            this.rows = parseInt(layer[TMXConstants.TMX_TAG_HEIGHT], 10);
+            this.cols = +layer[TMXConstants.TMX_TAG_WIDTH];
+            this.rows = +layer[TMXConstants.TMX_TAG_HEIGHT];
 
             // layer opacity
             var visible = typeof(layer[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? layer[TMXConstants.TMX_TAG_VISIBLE] : true;
-            this.setOpacity(visible ? parseFloat(layer[TMXConstants.TMX_TAG_OPACITY]) : 0);
+            this.setOpacity(visible ? +layer[TMXConstants.TMX_TAG_OPACITY] : 0);
 
             // layer "real" size
             if (this.orientation === "isometric") {

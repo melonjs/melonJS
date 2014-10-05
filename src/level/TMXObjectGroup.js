@@ -75,7 +75,7 @@
 
             var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
 
-            this.opacity = (visible === true) ? parseFloat(tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
+            this.opacity = (visible === true) ? (+tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
@@ -158,7 +158,7 @@
              * @name x
              * @memberOf me.TMXObject
              */
-            this.x = parseInt(tmxObj[TMXConstants.TMX_TAG_X], 10);
+            this.x = +tmxObj[TMXConstants.TMX_TAG_X];
             /**
              * object y position
              * @public
@@ -166,7 +166,7 @@
              * @name y
              * @memberOf me.TMXObject
              */
-            this.y = parseInt(tmxObj[TMXConstants.TMX_TAG_Y], 10);
+            this.y = +tmxObj[TMXConstants.TMX_TAG_Y];
             /**
              * object z order
              * @public
@@ -174,7 +174,7 @@
              * @name z
              * @memberOf me.TMXObject
              */
-            this.z = parseInt(z, 10);
+            this.z = +z;
 
             /**
              * object width
@@ -183,7 +183,7 @@
              * @name width
              * @memberOf me.TMXObject
              */
-            this.width = parseInt(tmxObj[TMXConstants.TMX_TAG_WIDTH] || 0, 10);
+            this.width = +tmxObj[TMXConstants.TMX_TAG_WIDTH] || 0;
 
             /**
              * object height
@@ -192,7 +192,7 @@
              * @name height
              * @memberOf me.TMXObject
              */
-            this.height = parseInt(tmxObj[TMXConstants.TMX_TAG_HEIGHT] || 0, 10);
+            this.height = +tmxObj[TMXConstants.TMX_TAG_HEIGHT] || 0;
 
             /**
              * object gid value
@@ -202,7 +202,7 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = parseInt(tmxObj[TMXConstants.TMX_TAG_GID], 10) || null;
+            this.gid = +tmxObj[TMXConstants.TMX_TAG_GID] || null;
 
             /**
              * object type
@@ -265,7 +265,7 @@
                             // already an object (native json format)
                             var self = this;
                             points.forEach(function (point) {
-                                self.points.push(new me.Vector2d(parseInt(point.x, 10), parseInt(point.y, 10)));
+                                self.points.push(new me.Vector2d(+point.x, +point.y));
                             });
                         }
                     }
