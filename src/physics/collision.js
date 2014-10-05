@@ -238,18 +238,6 @@
         api.bounds = null;
 
         /**
-         * configure the collision detection algorithm <br>
-         * default : true <br>
-         * when true, full Separating Axis Theorem collision detection is performed <br>
-         * when false, simple AABB detection is done (no object response will be calculated) <br>
-         * @name SAT
-         * @memberOf me.collision
-         * @public
-         * @type Boolean
-         */
-        api.SAT = true;
-        
-        /**
          * Enum for collision type values. <br>
          * Possible values are : <br>
          * - <b>`NO_OBJECT`</b> (to disable collision check) <br>
@@ -488,28 +476,25 @@
                             response.clear();
 
                             // full SAT collision check
-                            if (!api.SAT || api["test" + shapeTypeA + objB.body.getShape().shapeType]
-                                            .call(
-                                                this,
-                                                objA, // a reference to the object A
-                                                objA.body.getShape(),
-                                                objB,  // a reference to the object B
-                                                objB.body.getShape(),
-                                                response)
+                            if (api["test" + shapeTypeA + objB.body.getShape().shapeType]
+                                .call(
+                                    this,
+                                    objA, // a reference to the object A
+                                    objA.body.getShape(),
+                                    objB,  // a reference to the object B
+                                    objB.body.getShape(),
+                                    response)
                             ) {
                                 // we touched something !
                                 collision++;
-                                
-                                if (api.SAT) {
-                                    
-                                    // execute the onCollision callback
-                                    if (objA.onCollision(response, objB)) {
-                                        objA.body.respondToCollision.call(objA.body, response);
-                                    }
-                                    if (objB.onCollision(response, objA)) {
-                                        objB.body.respondToCollision.call(objB.body, response);
-                                    }
-                                } // else no response to provide
+                                                    
+                                // execute the onCollision callback
+                                if (objA.onCollision(response, objB)) {
+                                    objA.body.respondToCollision.call(objA.body, response);
+                                }
+                                if (objB.onCollision(response, objA)) {
+                                    objB.body.respondToCollision.call(objB.body, response);
+                                }
                             }
                         }
                     }
