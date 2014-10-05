@@ -20,8 +20,11 @@
     {
         /** @ignore */
         init : function (entity) {
-          
-            // reference to the parent entity
+
+            /**
+             * reference to the parent entity
+             * @ignore
+             */
             this.entity = entity;
 
             /**
@@ -41,7 +44,7 @@
              * @memberOf me.Body
              */
             this.shapeIndex = 0;
-                        
+
             /**
              * The body collision mask, that defines what should collide with what.<br>
              * (by default will collide with all entities)
@@ -52,7 +55,7 @@
              * @memberOf me.Body
              */
             this.collisionMask = me.collision.types.ALL_OBJECT;
-            
+
             /**
              * define the collision type of the body for collision filtering
              * @public
@@ -113,7 +116,6 @@
             }
             this.maxVel.set(1000, 1000);
 
-            // some default contants
             /**
              * Default gravity value of the entity<br>
              * default value : 0.98 (earth gravity)<br>
@@ -126,7 +128,6 @@
              * @memberOf me.Body
              */
             this.gravity = typeof(me.sys.gravity) !== "undefined" ? me.sys.gravity : 0.98;
-
 
             /**
              * falling state of the object<br>
@@ -150,8 +151,7 @@
              * @memberOf me.Body
              */
             this.jumping = true;
-          
-          
+
             // call the super constructor
             this._super(
                 me.Rect,
@@ -218,7 +218,7 @@
             }
             throw new me.Body.Error("Shape (" + index + ") not defined");
         },
-        
+
         /**
          * By default all entities are able to collide with all other entities, <br>
          * but it's also possible to specificy 'collision filters' to provide a finer <br>
@@ -239,7 +239,7 @@
         setCollisionMask : function (bitmask) {
             this.collisionMask = bitmask;
         },
- 
+
         /**
          * the built-in function to solve the collision response
          * @protected
@@ -272,7 +272,7 @@
             // update the other entity bounds
             this.updateBounds();
         },
-        
+
         /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
@@ -303,7 +303,6 @@
          * @param {Number} y velocity on y axis
          * @protected
          */
-
         setVelocity : function (x, y) {
             this.accel.x = x !== 0 ? x : this.accel.x;
             this.accel.y = y !== 0 ? y : this.accel.y;
@@ -423,9 +422,7 @@
 
             // returns true if vel is different from 0
             return (this.vel.x !== 0 || this.vel.y !== 0);
-
         },
-
 
         /**
          * Destroy function<br>
@@ -437,7 +434,7 @@
             this.shapeIndex = 0;
         }
     });
-    
+
     /**
      * Base class for Body exception handling.
      * @name Error
