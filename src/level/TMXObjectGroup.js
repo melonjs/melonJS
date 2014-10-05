@@ -136,7 +136,7 @@
         init :  function (tmxObj, tilesets, z) {
 
             /**
-             * object point list (for polygone and polyline)
+             * object point list (for Polygon and PolyLine)
              * @public
              * @type Vector2d[]
              * @name points
@@ -215,7 +215,7 @@
 
             this.isEllipse = false;
             /**
-             * if true, the object is a polygone
+             * if true, the object is a Polygon
              * @public
              * @type Boolean
              * @name isPolygon
@@ -223,13 +223,13 @@
              */
             this.isPolygon = false;
             /**
-             * f true, the object is a polygone
+             * if true, the object is a PolyLine
              * @public
              * @type Boolean
-             * @name isPolyline
+             * @name isPolyLine
              * @memberOf me.TMXObject
              */
-            this.isPolyline = false;
+            this.isPolyLine = false;
 
             // check if the object has an associated gid
             if (typeof this.gid === "number") {
@@ -247,7 +247,7 @@
                     else {
                         points = tmxObj[TMXConstants.TMX_TAG_POLYLINE];
                         if (typeof(points) !== "undefined") {
-                            this.isPolyline = true;
+                            this.isPolyLine = true;
                         }
                     }
                     if (typeof(points) !== "undefined") {
@@ -314,7 +314,7 @@
          * @memberOf me.TMXObject
          * @public
          * @function
-         * @return {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+         * @return {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         getShape : function () {
             // add an ellipse shape
@@ -323,18 +323,22 @@
                 return new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height);
             }
 
-            // add a polyshape
-            if ((this.isPolygon === true) || (this.isPolyline === true)) {
-                return new me.PolyShape(0, 0, this.points, this.isPolygon);
+            // add a polygon
+            if (this.isPolygon === true) {
+                return new me.Polygon(0, 0, this.points);
             }
 
-            // it's a rectangle, returns a polygone object anyway
-            return new me.PolyShape(
+            // add a polyline
+            if (this.isPolyLine === true) {
+                return new me.Line(0, 0, this.points);
+            }
+
+            // it's a rectangle, returns a polygon object anyway
+            return new me.Polygon(
                 0, 0, [
                     new me.Vector2d(), new me.Vector2d(this.width, 0),
                     new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
-                ],
-                true
+                ]
             );
         },
         /**

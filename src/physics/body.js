@@ -27,7 +27,7 @@
             /**
              * The collision shapes of the entity <br>
              * (note: only shape at index 0 is used in melonJS 1.0.x)
-             * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
+             * @type {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.Body
              */
@@ -168,12 +168,12 @@
 
         /**
          * add a collision shape to this entity <br>
-         * (note: me.Rect objects will be converted to me.PolyShape before being added)
+         * (note: me.Rect objects will be converted to me.Polygon before being added)
          * @name addShape
          * @memberOf me.Body
          * @public
          * @function
-         * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         addShape : function (shape) {
             if (shape.shapeType === "Rectangle") {
@@ -195,7 +195,7 @@
          * @memberOf me.Body
          * @public
          * @function
-         * @return {me.PolyShape|me.Ellipse} shape a shape object
+         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         getShape : function () {
             return this.shapes[this.shapeIndex];

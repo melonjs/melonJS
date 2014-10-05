@@ -551,13 +551,13 @@
         };
 
         /**
-         * Strokes a me.PolyShape on the screen with a specified color
-         * @name strokePolyShape
+         * Strokes a me.Polygon on the screen with a specified color
+         * @name strokePolygon
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.PolyShape} polyShape the shape to draw
+         * @param {me.Polygon} poly the shape to draw
          */
-        api.strokePolyShape = function (poly) {
+        api.strokePolygon = function (poly) {
             this.translate(poly.pos.x, poly.pos.y);
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);

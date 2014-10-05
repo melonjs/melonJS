@@ -14,6 +14,7 @@
      * @ignore
      */
     var LEFT_VORNOI_REGION = -1;
+
     /**
      * Constants for Vornoi regions
      * @ignore
@@ -51,7 +52,7 @@
      * @param {Array.<number>} result An array.  After calling this function,
      *   result[0] will be the minimum value,
      *   result[1] will be the maximum value.
-    */
+     */
     function flattenPointsOn(points, normal, result) {
         var min = Number.MAX_VALUE;
         var max = -Number.MAX_VALUE;
@@ -189,7 +190,6 @@
      * @property {Singleton} collision
      * @memberOf me
      */
-
     me.collision = (function () {
         // hold public stuff in our singleton
         var api = {};
@@ -405,7 +405,7 @@
          * @memberOf me.collision
          * @public
          * @type {me.collision.ResponseObject}
-        */
+         */
         api.response = new api.ResponseObject();
 
         /**
@@ -418,7 +418,7 @@
          * @param {me.Entity} a a reference to the object A.
          * @param {me.Entity} b a reference to the object B.
          * @return {Boolean} true if they should collide, false otherwise
-        */
+         */
         api.shouldCollide = function (a, b) {
             return (
                 a.body && b.body &&
@@ -508,13 +508,13 @@
          * Checks whether polygons collide.
          * @ignore
          * @param {me.Entity} a a reference to the object A.
-         * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
+         * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
          * @param {me.Entity} b a reference to the object B.
-         * @param {me.PolyShape} polyB a reference to the object B polyshape to be tested
+         * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
-        */
-        api.testPolyShapePolyShape = function (a, polyA, b, polyB, response) {
+         */
+        api.testPolygonPolygon = function (a, polyA, b, polyB, response) {
             // specific point for
             var aPoints = polyA.points;
             var aLen = aPoints.length;
@@ -597,16 +597,16 @@
         };
 
         /**
-         * Check if a polygon and a circle collide.
+         * Check if a polygon and an ellipse collide.
          * @ignore
          * @param {me.Entity} a a reference to the object A.
-         * @param {me.PolyShape} polyA a reference to the object A polyshape to be tested
+         * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
          * @param {me.Entity} b a reference to the object B.
          * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they interset.
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testPolyShapeEllipse = function (a, polyA, b, ellipseB, response) {
+        api.testPolygonEllipse = function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
             var circlePos = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).add(polyA.pos);
             var radius = ellipseB.radius;
@@ -735,21 +735,21 @@
         };
 
         /**
-         * Check if a circle and a polygon collide. <br>
-         * **NOTE:** This is slightly less efficient than polygonCircle as it just <br>
-         * runs polygonCircle and reverses everything at the end.
+         * Check if an ellipse and a polygon collide. <br>
+         * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
+         * runs testPolygonEllipse and reverses the response at the end.
          * @ignore
          * @param {me.Entity} a a reference to the object A.
          * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
          * @param {me.Entity} a a reference to the object B.
-         * @param {me.PolyShape} polyB a reference to the object B polyshape to be tested
+         * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
          * @param {Response=} response Response object (optional) that will be populated if
-         *   they interset.
+         *   they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testEllipsePolyShape = function (a, ellipseA, b, polyB,  response) {
+        api.testEllipsePolygon = function (a, ellipseA, b, polyB, response) {
             // Test the polygon against the circle.
-            var result = api.testPolyShapeEllipse(b, polyB, a, ellipseA, response);
+            var result = api.testPolygonEllipse(b, polyB, a, ellipseA, response);
             if (result && response) {
                 // Swap A and B in the response.
                 var resa = response.a;
@@ -764,6 +764,79 @@
             return result;
         };
 
+        /**
+         * Checks whether line segments collide.
+         * @ignore
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Line} lineA a reference to the object A Line to be tested
+         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Line} lineB a reference to the object B Line to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        api.testLineLine = function (/*a, LineA, b, lineB, response*/) {
+            return false;
+        };
+
+        /**
+         * Check if a line segment and an ellipse collide.
+         * @ignore
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Line} lineA a reference to the object A Line to be tested
+         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        api.testLineEllipse = function (/*a, LineA, b, EllipseB, response*/) {
+            return false;
+        };
+
+        /**
+         * Check if an ellipse and a line segment collide. <br>
+         * **NOTE:** This is slightly less efficient than testLineEllipse as it just
+         * runs testLineEllipse and reverses the response at the end.
+         * @ignore
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
+         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Line} lineB a reference to the object B Line to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        api.testEllipseLine = function (/*a, ellipseA, b, lineB, response*/) {
+            return false;
+        };
+
+        /**
+         * Check if a line segment and a polygon collide.
+         * @ignore
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Line} lineA a reference to the object A Line to be tested
+         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Polygon} polygonB a reference to the object B Polygon to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        api.testLinePolygon = function (/*a, lineA, b, polygonB, response*/) {
+            return false;
+        };
+
+        /**
+         * Check if a polygon and a line segment collide. <br>
+         * **NOTE:** This is slightly less efficient than testLinePolygon as it just
+         * runs testLinePolygon and reverses the response at the end.
+         * @ignore
+         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Polygon} polygonA a reference to the object A Polygon to be tested
+         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Line} lineB a reference to the object B Line to be tested
+         * @param {Response=} response Response object (optional) that will be populated if they intersect.
+         * @return {boolean} true if they intersect, false if they don't.
+         */
+        api.testPolygonLine = function (/*a, polygonA, b, lineB, response*/) {
+            return false;
+        };
 
         // return our object
         return api;
