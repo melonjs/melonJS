@@ -383,10 +383,10 @@
                 // and keeps it in the entity defined bounds
                 var _bounds = this.getBounds();
 
-                var x = ~~(_bounds.pos.x + (
+                var x = ~~(0.5 + _bounds.pos.x + (
                     this.anchorPoint.x * (_bounds.width - this.renderable.width)
                 ));
-                var y = ~~(_bounds.pos.y + (
+                var y = ~~(0.5 + _bounds.pos.y + (
                     this.anchorPoint.y * (_bounds.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
