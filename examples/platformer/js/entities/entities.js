@@ -23,16 +23,16 @@ game.PlayerEntity = me.Entity.extend({
         me.game.viewport.follow(this, me.game.viewport.AXIS.HORIZONTAL);
                 
         // enable keyboard
-        me.input.bindKey(me.input.KEY.LEFT,     "left");
+        me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
-        me.input.bindKey(me.input.KEY.X,    "jump", true);
+        me.input.bindKey(me.input.KEY.X,     "jump", true);
         me.input.bindKey(me.input.KEY.UP,    "jump", true);
-        me.input.bindKey(me.input.KEY.DOWN,    "down");
+        me.input.bindKey(me.input.KEY.DOWN,  "down");
 
-        me.input.bindKey(me.input.KEY.A,    "left");
-        me.input.bindKey(me.input.KEY.D,    "right");
-        me.input.bindKey(me.input.KEY.W,    "up");
-        me.input.bindKey(me.input.KEY.S,    "down");
+        me.input.bindKey(me.input.KEY.A,     "left");
+        me.input.bindKey(me.input.KEY.D,     "right");
+        me.input.bindKey(me.input.KEY.W,     "jump", true);
+        me.input.bindKey(me.input.KEY.S,     "down");
 
         
         // set a renderable
@@ -143,7 +143,7 @@ game.PlayerEntity = me.Entity.extend({
                     // a regular moving enemy entity
                     if ((response.overlapV.y > 0) && this.body.falling) {
                         // jump
-                        this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
+                        this.body.vel.y -= this.body.maxVel.y * 1.5 * me.timer.tick;
                     }
                     else {
                         this.hurt();
