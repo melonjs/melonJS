@@ -259,10 +259,10 @@
 
             // adjust velocity
             if (overlap.x !== 0) {
-                this.vel.x = Math.round(this.vel.x - overlap.x) || 0;
+                this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
             }
             if (overlap.y !== 0) {
-                this.vel.y = Math.round(this.vel.y - overlap.y) || 0;
+                this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
 
                 // cancel the falling an jumping flags if necessary
                 this.falling = overlap.y >= 1;

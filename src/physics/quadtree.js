@@ -8,7 +8,7 @@
  * https://github.com/timohausmann/quadtree-js/
 **/
 
-(function (window, Math) {
+(function () {
 
 
     /**
@@ -66,10 +66,10 @@
     Quadtree.prototype.split = function () {
 
         var nextLevel = this.level + 1,
-            subWidth  = Math.round(this.bounds.width / 2),
-            subHeight = Math.round(this.bounds.height / 2),
-            x = Math.round(this.bounds.pos.x),
-            y = Math.round(this.bounds.pos.y);
+            subWidth  = ~~(0.5 + this.bounds.width / 2),
+            subHeight = ~~(0.5 + this.bounds.height / 2),
+            x = ~~(0.5 + this.bounds.pos.x),
+            y = ~~(0.5 + this.bounds.pos.y);
 
          //top right node
         this.nodes[0] = QT_ARRAY_POP({
@@ -267,4 +267,4 @@
     //make Quadtree available in the me namespace
     me.QuadTree = Quadtree;
 
-})(window, Math);
+})();
