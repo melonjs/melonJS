@@ -233,9 +233,9 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, a) {
-            this.r = Math.floor(r || 0).clamp(0, 255);
-            this.g = Math.floor(g || 0).clamp(0, 255);
-            this.b = Math.floor(b || 0).clamp(0, 255);
+            this.r = (~~r || 0).clamp(0, 255);
+            this.g = (~~g || 0).clamp(0, 255);
+            this.b = (~~b || 0).clamp(0, 255);
             this.alpha = typeof(a) === "undefined" ? 1.0 : a.clamp(0, 1);
 
             this.glArray[0] = this.r / 255.0;

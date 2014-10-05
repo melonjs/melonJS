@@ -210,7 +210,7 @@
             // set the PointerMove/touchMove/MouseMove event
             if (typeof(obj.throttlingInterval) === "undefined") {
                 // set the default value
-                obj.throttlingInterval = Math.floor(1000 / me.sys.fps);
+                obj.throttlingInterval = ~~(1000 / me.sys.fps);
             }
             // if time interval <= 16, disable the feature
             if (obj.throttlingInterval < 17) {
