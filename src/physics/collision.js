@@ -248,7 +248,6 @@
          * - <b>`ACTION_OBJECT`</b> <br>
          * - <b>`PROJECTILE_OBJECT`</b> <br>
          * - <b>`WORLD_SHAPE`</b> (for collision check with collision shapes/tiles) <br>
-         * - <b>`WORLD_BOUNDARY`</b> (for boundary check with the world boundaries) <br>
          * - <b>`ALL_OBJECT`</b> <br>
          * @readonly
          * @enum {number}
@@ -311,7 +310,7 @@
              * @name PROJECTILE_OBJECT
              * @memberOf me.collision.types
              */
-            PROJECTILE_OBJECT : 32, // door, etc...
+            PROJECTILE_OBJECT : 32, // missiles, etc...
 
             /**
              * Default object type constant for collision filtering
@@ -319,16 +318,8 @@
              * @name WORLD_SHAPE
              * @memberOf me.collision.types
              */
-            WORLD_SHAPE : 64, // door, etc...
+            WORLD_SHAPE : 64, // walls, etc...
 
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name WORLD_BOUNDARY
-             * @memberOf me.collision.types
-             */
-            WORLD_BOUNDARY : 128, // door, etc...
-            
             /**
              * Default object type constant for collision filtering
              * @constant
