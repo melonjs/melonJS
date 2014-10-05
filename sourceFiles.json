@@ -1,5 +1,4 @@
 [
-    "src/melonjs.js",
     "src/lang/window.js",
     "src/lang/object.js",
     "src/lang/error.js",
