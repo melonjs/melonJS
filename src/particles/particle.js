@@ -43,11 +43,11 @@
 
             // Set the start and end particle Scale as defined in emitter
             // clamp the values as minimum and maximum scales range
-            this.startScale = Number.prototype.random(
+            this.startScale = Number.prototype.randomFloat(
                 emitter.minStartScale,
                 emitter.maxStartScale
             ).clamp(emitter.minStartScale, emitter.maxStartScale);
-            this.endScale = Number.prototype.random(
+            this.endScale = Number.prototype.randomFloat(
                 emitter.minEndScale,
                 emitter.maxEndScale
             ).clamp(emitter.minEndScale, emitter.maxEndScale);
@@ -73,7 +73,7 @@
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {
-                this.angle = Number.prototype.random(emitter.minRotation, emitter.maxRotation);
+                this.angle = Number.prototype.randomFloat(emitter.minRotation, emitter.maxRotation);
             }
         },
 

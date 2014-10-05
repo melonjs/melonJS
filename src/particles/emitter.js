@@ -411,8 +411,8 @@
          */
         getRandomPoint: function () {
             var vector = this.pos.clone();
-            vector.x += Number.prototype.random(0, this.width);
-            vector.y += Number.prototype.random(0, this.height);
+            vector.x += Number.prototype.randomFloat(0, this.width);
+            vector.y += Number.prototype.randomFloat(0, this.height);
             return vector;
         },
 

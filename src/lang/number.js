@@ -23,7 +23,7 @@ Number.prototype.clamp = function (low, high) {
 };
 
 /**
- * return a random between min, max
+ * return a random integer between min, max
  * @memberof! external:Number#
  * @alias random
  * @param {number} min minimum value.
@@ -31,7 +31,19 @@ Number.prototype.clamp = function (low, high) {
  * @return {number} random value
  */
 Number.prototype.random = function (min, max) {
-    return (~~(Math.random() * (max - min + 1)) + min);
+    return (~~(Math.random() * (max - min)) + min);
+};
+
+/**
+ * return a random float between min, max
+ * @memberof! external:Number#
+ * @alias randomFloat
+ * @param {number} min minimum value.
+ * @param {number} max maximum value.
+ * @return {number} random value
+ */
+Number.prototype.randomFloat = function (min, max) {
+    return (Math.random() * (max - min)) + min;
 };
 
 /**
@@ -43,7 +55,7 @@ Number.prototype.random = function (min, max) {
  * @return {number} random value
  */
 Number.prototype.weightedRandom = function (min, max) {
-    return (~~(Math.pow(Math.random(), 2) * (max - min + 1)) + min);
+    return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
 };
 
 /**
