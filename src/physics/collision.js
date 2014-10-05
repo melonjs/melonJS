@@ -468,13 +468,8 @@
          */
         api.check = function (objA, responseObject) {
             var collision = 0;
-            var response = api.response.clear();
+            var response = responseObject || api.response;
             var shapeTypeA =  objA.body.getShape().shapeType;
-
-            // check if a user response object was specified
-            if (typeof responseObject !== "undefined" && typeof responseObject.clear === "function") {
-                response = responseObject.clear();
-            }
 
             // retreive a list of potential colliding objects            
             var candidates = api.quadTree.retrieve(objA);
@@ -488,7 +483,10 @@
 
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
-                        
+
+                            // Clear response object before reusing
+                            response.clear();
+
                             // full SAT collision check
                             if (!api.SAT || api["test" + shapeTypeA + objB.body.getShape().shapeType]
                                             .call(
