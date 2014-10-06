@@ -271,7 +271,6 @@
         /** @private */
         onClick : function(e)  {
             // check the clickable areas
-            console.log(e.gameX, e.gameY);
             if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
             }
