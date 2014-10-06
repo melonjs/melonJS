@@ -61,10 +61,10 @@ game.PlayerEntity = me.Entity.extend({
         
         if (me.input.isKeyPressed('left'))    {
             this.body.vel.x -= this.body.accel.x * me.timer.tick;
-            this.flipX(true);
+            this.renderable.flipX(true);
         } else if (me.input.isKeyPressed('right')) {
             this.body.vel.x += this.body.accel.x * me.timer.tick;
-            this.flipX(false);
+            this.renderable.flipX(false);
         }
         
         if (me.input.isKeyPressed('jump')) {
@@ -270,11 +270,11 @@ game.PathEnemyEntity = me.Entity.extend({
             if (this.walkLeft && this.pos.x <= this.startX) {
                 this.body.vel.x = this.body.accel.x * me.timer.tick;
                 this.walkLeft = false;
-                this.flipX(true);
+                this.renderable.flipX(true);
             } else if (!this.walkLeft && this.pos.x >= this.endX) {
                 this.body.vel.x = -this.body.accel.x * me.timer.tick;
                 this.walkLeft = true;
-                this.flipX(false);
+                this.renderable.flipX(false);
             }
         
             // check & update movement

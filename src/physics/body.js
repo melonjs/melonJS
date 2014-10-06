@@ -340,37 +340,6 @@
         },
 
         /**
-         * Flip the body on horizontal axis
-         * @name flipX
-         * @memberOf me.body
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipX : function (flip) {
-            if (flip !== this.lastflipX) {
-                if (this.shapes.length && (typeof this.getShape().flipX === "function")) {
-                    this.getShape().flipX(this.width);
-                }
-            }
-        },
-
-        /**
-         * Flip the body on vertical axis
-         * @name flipY
-         * @memberOf me.body
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipY : function (flip) {
-            if (flip !== this.lastflipY) {
-                // flip the collision box
-                if (this.shapes.length && (typeof this.getShape().flipY === "function")) {
-                    this.getShape().flipY(this.height);
-                }
-            }
-        },
-
-        /**
          * compute the new velocity value
          * @ignore
          */
