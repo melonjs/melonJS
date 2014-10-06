@@ -109,6 +109,7 @@
 
             // draw the melonJS string
             renderer.drawFont(this.logo1, "melon", xpos, ypos);
+            xpos += logo1_width;
             renderer.drawFont(this.logo2, "JS", xpos, ypos);
         }
 

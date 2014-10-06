@@ -392,7 +392,7 @@
 
             //fps counter
             var fps_str = "" + me.timer.fps + "/"    + me.sys.fps + " fps";
-            this.font.drawFromContext(this.context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(this.context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
             this.context.restore();
             me.video.renderer.setGlobalAlpha(0.7);
@@ -412,6 +412,10 @@
             me.input.unbindKey(me.input.KEY.S);
             me.input.unbindKey(me.input.KEY.H);
             me.event.unsubscribe(this.keyHandler);
+        },
+
+        update: function () {
+            this.rect.setShape(0, 0, me.video.renderer.getScreenCanvas().width, this.rect.height);
         }
 
     });
