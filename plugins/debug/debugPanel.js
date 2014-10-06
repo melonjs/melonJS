@@ -195,9 +195,9 @@
                     // draw the bounding rect shape
                     this.getBounds().draw(renderer, "orange");
                     renderer.translate(this.pos.x, this.pos.y);
-                    if (this.body.shapes.length) {
-                        // TODO : support multiple shapes
-                        this.body.getShape().draw(renderer, "red");
+                    // draw all defined shapes
+                    for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                        shape.draw(renderer, "red");
                     }
                     renderer.restore();
                 }
