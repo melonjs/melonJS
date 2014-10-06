@@ -124,7 +124,7 @@
 
             // create the main screen canvas
             canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
-            
+
             // add our canvas
             if (wrapperid) {
                 wrapper = document.getElementById(wrapperid);
@@ -165,7 +165,7 @@
             }
 
             // trigger an initial resize();
-            me.video.onresize(null);
+            me.video.onresize();
 
             me.game.init();
 

@@ -6,19 +6,19 @@
  * a simple debug panel plugin
  * usage : me.plugin.register(debugPanel, "debug");
  *
- * you can then use me.plugin.debug.show() or me.plugin.debug.hide() 
+ * you can then use me.plugin.debug.show() or me.plugin.debug.hide()
  * to show or hide the panel, or press respectively the "S" and "H" keys.
- * 
- * note : 
- * Heap Memory information is available under Chrome when using 
+ *
+ * note :
+ * Heap Memory information is available under Chrome when using
  * the "--enable-memory-info" parameter to launch Chrome
  */
 
-(function($) {
-    
+(function () {
+
     // ensure that me.debug is defined
     me.debug = me.debug || {};
-    
+
     /**
      * @class
      * @public
@@ -26,29 +26,29 @@
      * @memberOf me
      * @constructor
      */
-    particleDebugPanel = me.plugin.Base.extend(
-    /** @scope me.debug.Panel.prototype */
+    me.debug.ParticlePanel = me.plugin.Base.extend(
+    /** @scope me.debug.ParticlePanel.prototype */
     {
 
         /** @private */
-        init : function() {
+        init : function () {
             // call the super constructor
-            this._super(me.plugin.Base, 'init');
+            this._super(me.plugin.Base, "init");
 
             // minimum melonJS version expected
-            this.version = "1.1.0";
+            this.version = "1.2.0";
 
-            // to hold the debug options 
+            // to hold the debug options
             // clickable rect area
             this.area = {};
-            
+
             // panel position and size
             this.rect = null;
-            
+
             // for z ordering
             // make it ridiculously high
             this.z = Infinity;
-            
+
             // visibility flag
             this.visible = true;
             this.rect = new me.Rect(0, me.video.renderer.getHeight() - 60, 200, 60);
@@ -72,7 +72,7 @@
             this.alwaysUpdate = true;
 
             // create a default font, with fixed char width
-            this.font = new me.Font('courier', 10, 'white');
+            this.font = new me.Font("courier", 10, "white");
 
             // sample points
             this.frameUpdateTimeSamples = [];
@@ -85,7 +85,7 @@
             this.drawTimeAvg = 0;
             this.frameUpdateTimeAvg = 0;
             this.frameDrawTimeAvg = 0;
-            
+
             this.emitterCount = 0;
             this.particleCount = 0;
 
@@ -100,45 +100,46 @@
         /**
          * patch system fn to draw debug information
          */
-        patchSystemFn : function() {
+        patchSystemFn : function () {
             var _this = this;
-            var now =Date.now;
-            if (window.performance && window.performance.now)
+            var now = Date.now;
+            if (window.performance && window.performance.now) {
                 now = window.performance.now.bind(window.performance);
+            }
 
             // patch me.ParticleEmitter.init
-            me.plugin.patch(me.ParticleEmitter, 'init', function(x, y, image) {
-                this._patched(x, y, image);   
+            me.plugin.patch(me.ParticleEmitter, "init", function (x, y, image) {
+                this._patched(x, y, image);
                 _this.emitterCount++;
             });
 
             // patch me.ParticleEmitter.destroy
-            me.plugin.patch(me.ParticleEmitter, 'destroy', function() {
+            me.plugin.patch(me.ParticleEmitter, "destroy", function () {
                 this._patched();
                 _this.emitterCount--;
             });
 
             // patch me.Particle.init
-            me.plugin.patch(me.Particle, 'init', function(emitter) {
-                this._patched(emitter);   
+            me.plugin.patch(me.Particle, "init", function (emitter) {
+                this._patched(emitter);
                 _this.particleCount++;
             });
 
             // patch me.Particle.destroy
-            me.Particle.prototype.destroy = function() {
+            me.Particle.prototype.destroy = function () {
                 _this.particleCount--;
             };
 
             // patch me.game.update
-            me.plugin.patch(me.game, 'update', function(time) {
+            me.plugin.patch(me.game, "update", function (time) {
                 var startTime = now();
-                this._patched(time);  
+                this._patched(time);
                 // calculate the update time
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
 
             // patch me.game.draw
-            me.plugin.patch(me.game, 'draw', function() {
+            me.plugin.patch(me.game, "draw", function () {
                 var startTime = now();
                 this._patched();
                 // calculate the drawing time
@@ -146,16 +147,16 @@
             });
 
             // patch me.ParticleContainer.update
-            me.plugin.patch(me.ParticleContainer, 'update', function(time) {
+            me.plugin.patch(me.ParticleContainer, "update", function (time) {
                 var startTime = now();
-                var value = this._patched(time);  
+                var value = this._patched(time);
                 // calculate the update time
                 _this.updateTime += now() - startTime;
                 return value;
             });
 
             // patch me.ParticleContainer.draw
-            me.plugin.patch(me.ParticleContainer, 'draw', function(context, rect) {
+            me.plugin.patch(me.ParticleContainer, "draw", function (context, rect) {
                 var startTime = now();
                 this._patched(context, rect);
                 // calculate the drawing time
@@ -164,14 +165,14 @@
         },
 
         /** @private */
-        update : function() {
+        update : function () {
             return true;
         },
 
         /**
          * @private
          */
-        getBounds : function() {
+        getBounds : function () {
             return this.rect;
         },
 
@@ -185,16 +186,16 @@
             var frameDrawTimeSamples = this.frameDrawTimeSamples;
             var width = this.rect.width, height = this.rect.height;
 
-            while( updateTimeSamples.length > width) {
+            while (updateTimeSamples.length > width) {
                 updateTimeSamples.shift();
             }
-            while( drawTimeSamples.length > width) {
+            while (drawTimeSamples.length > width) {
                 drawTimeSamples.shift();
             }
-            while( frameUpdateTimeSamples.length > width) {
+            while (frameUpdateTimeSamples.length > width) {
                 frameUpdateTimeSamples.shift();
             }
-            while( frameDrawTimeSamples.length > width) {
+            while (frameDrawTimeSamples.length > width) {
                 frameDrawTimeSamples.shift();
             }
 
@@ -213,7 +214,7 @@
 
             var updateTimeSum = 0, drawTimeSum = 0, frameUpdateTimeSum = 0, frameDrawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
             // prepare data
-            for( var x = 0, updateTime, drawTime, slow; x < len; ++x) {
+            for (var x = 0, updateTime, drawTime, slow; x < len; ++x) {
                 updateTime = updateTimeSamples[x] || 0;
                 drawTime = drawTimeSamples[x] || 0;
                 slow = (updateTime + drawTime > frameTimeLimit);
@@ -225,8 +226,8 @@
                 updateTime *= scale;
                 update.push(slow ? 0 : updateTime);
                 slowUpdate.push(slow ? updateTime : 0);
-                
-                drawTime = updateTime + drawTime * scale
+
+                drawTime = updateTime + drawTime * scale;
                 draw.push(slow ? 0 : drawTime);
                 slowDraw.push(slow ? drawTime : 0);
             }
@@ -247,13 +248,13 @@
         /**
          * @private
          */
-        fillArea: function(renderer, width, height, data, color) {
+        fillArea : function (renderer, width, height, data, color) {
             var i, x, y, len = data.length;
             var context = renderer.getContext();
             context.fillStyle = color;
             context.beginPath();
             context.moveTo(width, height);
-            for(i = len; i--;) {
+            for (i = len; i--;) {
                 x = width - (len - i);
                 y = height - data[i];
                 context.lineTo(x, y < 0 ? 0 : y);
@@ -265,14 +266,14 @@
         },
 
         /** @private */
-        draw : function(renderer) {
+        draw : function (renderer) {
             renderer.save();
 
             // draw the panel
             renderer.setGlobalAlpha(0.5);
             renderer.setColor("black");
             renderer.fillRect(this.rect.left,  this.rect.top,
-                             this.rect.width, this.rect.height);
+                              this.rect.width, this.rect.height);
             renderer.setGlobalAlpha(1.0);
             renderer.translate(this.rect.left, this.rect.top);
 
@@ -302,4 +303,4 @@
     /*---------------------------------------------------------*/
     // END END END
     /*---------------------------------------------------------*/
-})(window);
+})();

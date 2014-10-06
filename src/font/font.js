@@ -195,6 +195,8 @@
          */
 
         draw : function (context, text, x, y) {
+            x = ~~x;
+            y = ~~y;
             // update initial position
             this.pos.set(x, y);
             // draw the text
@@ -206,7 +208,7 @@
             var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
                 // draw the string
-                context.fillText(strings[i].trimRight(), ~~x, ~~y);
+                context.fillText(strings[i].trimRight(), x, y);
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
@@ -225,6 +227,8 @@
          * @param {Number} y
          */
         drawStroke : function (context, text, x, y) {
+            x = ~~x;
+            y = ~~y;
             // update initial position
             this.pos.set(x, y);
             // draw the text
@@ -239,9 +243,9 @@
             for (var i = 0; i < strings.length; i++) {
                 var _string = strings[i].trimRight();
                 // draw the border
-                context.strokeText(_string, ~~x, ~~y);
+                context.strokeText(_string, x, y);
                 // draw the string
-                context.fillText(_string, ~~x, ~~y);
+                context.fillText(_string, x, y);
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
