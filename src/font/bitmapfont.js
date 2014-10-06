@@ -138,7 +138,7 @@
             
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
   
             // update initial position
             this.pos.set(x, y);

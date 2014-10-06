@@ -194,7 +194,6 @@
                 sy = 0;
             }
 
-            this.uniformMatrix.identity();
             var tx1 = sx / image.width;
             var ty1 = 1.0 - (sy / image.height);
             var tx2 = ((sx + sw) / image.width);

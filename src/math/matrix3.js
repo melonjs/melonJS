@@ -287,11 +287,17 @@
          */
         transform : function (a, b, d, e, c, f) {
             var m = this.val;
-            m[0] = a;
+            /* m[0] = a;
             m[1] = b;
             m[2] = c;
             m[3] = d;
             m[4] = e;
+            m[5] = f; */
+            m[0] = a;
+            m[1] = c;
+            m[2] = e;
+            m[3] = b;
+            m[4] = d;
             m[5] = f;
         },
 
