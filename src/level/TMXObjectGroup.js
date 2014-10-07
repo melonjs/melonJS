@@ -314,7 +314,7 @@
          * @memberOf me.TMXObject
          * @public
          * @function
-         * @return {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         getShape : function () {
             // add an ellipse shape
