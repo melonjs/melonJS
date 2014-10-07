@@ -448,8 +448,7 @@
         api.check = function (objA, responseObject) {
             var collision = 0;
             var response = responseObject || api.response;
-            var shapeTypeA =  objA.body.getShape().shapeType;
-
+            
             // retreive a list of potential colliding objects            
             var candidates = api.quadTree.retrieve(objA);
             
@@ -463,30 +462,45 @@
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
 
-                            // Clear response object before reusing
-                            response.clear();
+                            // go trough all defined shapes in A
+                            var indexA = 0;
+                            do {
+                                var shapeA = objA.body.getShape(indexA);
+                                // go through all defined shapes in B
+                                var indexB = 0;
+                                do {
+                                    var shapeB = objB.body.getShape(indexB);
 
-                            // full SAT collision check
-                            if (api["test" + shapeTypeA + objB.body.getShape().shapeType]
-                                .call(
-                                    this,
-                                    objA, // a reference to the object A
-                                    objA.body.getShape(),
-                                    objB,  // a reference to the object B
-                                    objB.body.getShape(),
-                                    response)
-                            ) {
-                                // we touched something !
-                                collision++;
-                                                    
-                                // execute the onCollision callback
-                                if (objA.onCollision(response, objB) !== false) {
-                                    objA.body.respondToCollision.call(objA.body, response);
-                                }
-                                if (objB.onCollision(response, objA) !== false) {
-                                    objB.body.respondToCollision.call(objB.body, response);
-                                }
-                            }
+                                    // full SAT collision check
+                                    if (api["test" + shapeA.shapeType + shapeB.shapeType]
+                                        .call(
+                                            this,
+                                            objA, // a reference to the object A
+                                            shapeA,
+                                            objB,  // a reference to the object B
+                                            shapeB,
+                                             // clear response object before reusing
+                                            response.clear())
+                                    ) {
+                                        // we touched something !
+                                        collision++;
+                                        
+                                        // set the shape index
+                                        response.indexShapeA = indexA;
+                                        response.indexShapeB = indexB;
+
+                                        // execute the onCollision callback
+                                        if (objA.onCollision(response, objB) !== false) {
+                                            objA.body.respondToCollision.call(objA.body, response);
+                                        }
+                                        if (objB.onCollision(response, objA) !== false) {
+                                            objB.body.respondToCollision.call(objB.body, response);
+                                        }
+                                    }
+                                    indexB++;
+                                } while (response.indexShapeB === -1);
+                                indexA++;
+                            } while (response.indexShapeA === -1);
                         }
                     }
                 }

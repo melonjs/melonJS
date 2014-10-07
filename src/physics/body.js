@@ -37,15 +37,6 @@
             this.shapes = [];
 
             /**
-             * The current shape index
-             * @ignore
-             * @type Number
-             * @name shapeIndex
-             * @memberOf me.Body
-             */
-            this.shapeIndex = 0;
-
-            /**
              * The body collision mask, that defines what should collide with what.<br>
              * (by default will collide with all entities)
              * @ignore
@@ -183,10 +174,12 @@
                 // else polygon or circle
                 this.shapes.push(shape);
             }
-            // make sure to enable at least the first added shape
-            if (this.shapes.length === 1) {
-                this.setShape(0);
-            }
+
+            // update the body bounds to take in account the added shape
+            this.updateBounds();
+
+            // return the index of the added shape
+            return this.shapes.length;
         },
 
         /**
@@ -195,28 +188,11 @@
          * @memberOf me.Body
          * @public
          * @function
+         * @param {Number} index the shape object at the specified index
          * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
-        getShape : function () {
-            return this.shapes[this.shapeIndex];
-        },
-
-        /**
-         * change the current collision shape for this entity
-         * @name setShape
-         * @memberOf me.Body
-         * @public
-         * @function
-         * @param {Number} index shape index
-         */
-        setShape : function (index) {
-            if (typeof(this.shapes[index]) !== "undefined") {
-                this.shapeIndex = index;
-                // update the body bounds based on the active shape
-                this.updateBounds();
-                return;
-            }
-            throw new me.Body.Error("Shape (" + index + ") not defined");
+        getShape : function (index) {
+            return this.shapes[index];
         },
 
         /**
@@ -270,7 +246,7 @@
             }
 
             // update the other entity bounds
-            this.updateBounds();
+            this.entity.updateBounds();
         },
 
         /**
@@ -281,15 +257,20 @@
          * @memberOf me.Body
          * @function
          */
-        updateBounds : function (rect) {
-            // TODO : go through all defined shapes
-            var _bounds = rect || this.getShape().getBounds();
-            // reset the body position and size;
+        updateBounds : function () {
+            // reset the rect with default values
+            var _bounds = this.shapes[0].getBounds();
             this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
+  
+            for (var i = 1 ; i < this.shapes.length; i++) {
+                this.union(this.shapes[i].getBounds());
+            }
 
             // update the parent entity bounds
             this.entity.updateBounds();
+
+            return this;
         },
 
         /**
@@ -387,7 +368,7 @@
             this.entity.pos.add(this.vel);
 
             // update the entity and body bounds
-            this.updateBounds();
+            this.entity.updateBounds();
 
             // returns true if vel is different from 0
             return (this.vel.x !== 0 || this.vel.y !== 0);
@@ -400,7 +381,6 @@
         destroy : function () {
             this.entity = null;
             this.shapes = [];
-            this.shapeIndex = 0;
         }
     });
 
