@@ -480,10 +480,10 @@
                                 collision++;
                                                     
                                 // execute the onCollision callback
-                                if (objA.onCollision(response, objB)) {
+                                if (objA.onCollision(response, objB) !== false) {
                                     objA.body.respondToCollision.call(objA.body, response);
                                 }
-                                if (objB.onCollision(response, objA)) {
+                                if (objB.onCollision(response, objA) !== false) {
                                     objB.body.respondToCollision.call(objB.body, response);
                                 }
                             }
