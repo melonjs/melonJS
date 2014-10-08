@@ -355,6 +355,8 @@
          *  - <b>`overlapV`</b> {me.vector2d}: The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding <br>
          *  - <b>`overlapN`</b> {me.vector2d}: The shortest colliding axis (unit-vector) <br>
          *  - <b>`aInB`</b>, <b>`bInA`</b> {boolean} : Whether the first object is entirely inside the second, and vice versa. <br>
+         *  - <b>`indexShapeA</b> {number} : the index of the colliding shape for the object a body. <br>
+         *  - <b>`indexShapeB</b> {number} : the index of the colliding shape for the object b body. <br>
          *  - <b>`clear()`</b> {function} :  Set some values of the response back to their defaults. Call this between tests if you are going to reuse a single Response object for multiple intersection tests <br>
          * @name ResponseObject
          * @memberOf me.collision
@@ -369,6 +371,8 @@
             this.overlapV = new me.Vector2d();
             this.aInB = true;
             this.bInA = true;
+            this.indexShapeA = -1;
+            this.indexShapeB = -1;
             this.overlap = Number.MAX_VALUE;
         };
 
@@ -386,6 +390,8 @@
             this.aInB = true;
             this.bInA = true;
             this.overlap = Number.MAX_VALUE;
+            this.indexShapeA = -1;
+            this.indexShapeB = -1;
             return this;
         };
 
@@ -448,8 +454,7 @@
         api.check = function (objA, responseObject) {
             var collision = 0;
             var response = responseObject || api.response;
-            var shapeTypeA =  objA.body.getShape().shapeType;
-
+            
             // retreive a list of potential colliding objects            
             var candidates = api.quadTree.retrieve(objA);
             
@@ -463,30 +468,45 @@
                         // fast AABB check if both bounding boxes are overlaping
                         if (objA.getBounds().overlaps(objB.getBounds())) {
 
-                            // Clear response object before reusing
-                            response.clear();
+                            // go trough all defined shapes in A
+                            var indexA = 0;
+                            do {
+                                var shapeA = objA.body.getShape(indexA);
+                                // go through all defined shapes in B
+                                var indexB = 0;
+                                do {
+                                    var shapeB = objB.body.getShape(indexB);
 
-                            // full SAT collision check
-                            if (api["test" + shapeTypeA + objB.body.getShape().shapeType]
-                                .call(
-                                    this,
-                                    objA, // a reference to the object A
-                                    objA.body.getShape(),
-                                    objB,  // a reference to the object B
-                                    objB.body.getShape(),
-                                    response)
-                            ) {
-                                // we touched something !
-                                collision++;
-                                                    
-                                // execute the onCollision callback
-                                if (objA.onCollision(response, objB) !== false) {
-                                    objA.body.respondToCollision.call(objA.body, response);
-                                }
-                                if (objB.onCollision(response, objA) !== false) {
-                                    objB.body.respondToCollision.call(objB.body, response);
-                                }
-                            }
+                                    // full SAT collision check
+                                    if (api["test" + shapeA.shapeType + shapeB.shapeType]
+                                        .call(
+                                            this,
+                                            objA, // a reference to the object A
+                                            shapeA,
+                                            objB,  // a reference to the object B
+                                            shapeB,
+                                             // clear response object before reusing
+                                            response.clear()) === true
+                                    ) {
+                                        // we touched something !
+                                        collision++;
+                                        
+                                        // set the shape index
+                                        response.indexShapeA = indexA;
+                                        response.indexShapeB = indexB;
+
+                                        // execute the onCollision callback
+                                        if (objA.onCollision(response, objB) !== false) {
+                                            objA.body.respondToCollision.call(objA.body, response);
+                                        }
+                                        if (objB.onCollision(response, objA) !== false) {
+                                            objB.body.respondToCollision.call(objB.body, response);
+                                        }
+                                    }
+                                    indexB++;
+                                } while (indexB < objB.body.shapes.length);
+                                indexA++;
+                            } while (indexA < objA.body.shapes.length);
                         }
                     }
                 }
