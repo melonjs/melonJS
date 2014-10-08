@@ -140,15 +140,26 @@
          * @ignore
          */
         api._detectDevice = function () {
-            // detect platform
-            me.device.isMobile = me.device.ua.match(/Android|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobi/i) || false;
             // iOS Device ?
             me.device.iOS = me.device.ua.match(/iPhone|iPad|iPod/i) || false;
             // Android Device ?
-            me.device.android = me.device.ua.match(/android/i) || false;
-            me.device.android2 = me.device.ua.match(/android 2/i) || false;
+            me.device.android = me.device.ua.match(/Android/i) || false;
+            me.device.android2 = me.device.ua.match(/Android 2/i) || false;
             // Windows Device ?
             me.device.wp = me.device.ua.match(/Windows Phone/i) || false;
+            // Kindle device ?
+            me.device.BlackBerry = me.device.ua.match(/BlackBerry/i) || false;
+            // Kindle device ?
+            me.device.Kindle = me.device.ua.match(/Kindle|Silk.*Mobile Safari/i) || false;
+
+             // Mobile platform
+            me.device.isMobile = me.device.ua.match(/Mobi/i) ||
+                                 me.device.iOS ||
+                                 me.device.android ||
+                                 me.device.wp ||
+                                 me.device.BlackBerry ||
+                                 me.device.Kindle ||
+                                 me.device.iOS || false;
         };
 
         /*
@@ -232,7 +243,7 @@
 
         /**
          * equals to true if a mobile device <br>
-         * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone)
+         * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
          * @type Boolean
          * @readonly
          * @name isMobile
@@ -268,13 +279,31 @@
         api.android2 = false;
 
          /**
-         * equals to true if the device is an Windows Phone platform <br>
+         * equals to true if the device is a Windows Phone platform <br>
          * @type Boolean
          * @readonly
          * @name wp
          * @memberOf me.device
          */
         api.wp = false;
+
+        /**
+         * equals to true if the device is a BlackBerry platform <br>
+         * @type Boolean
+         * @readonly
+         * @name BlackBerry
+         * @memberOf me.device
+         */
+        api.BlackBerry = false;
+
+        /**
+         * equals to true if the device is a Kindle platform <br>
+         * @type Boolean
+         * @readonly
+         * @name Kindle
+         * @memberOf me.device
+         */
+        api.Kindle = false;
 
         /**
          * The device current orientation status. <br>
