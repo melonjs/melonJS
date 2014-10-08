@@ -785,8 +785,8 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testLineLine = function (/*a, LineA, b, lineB, response*/) {
-            return false;
+        api.testLineLine = function (a, LineA, b, lineB, response) {
+            return this.testPolygonPolygon(a, LineA, b, lineB, response);
         };
 
         /**
@@ -799,8 +799,8 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testLineEllipse = function (/*a, LineA, b, EllipseB, response*/) {
-            return false;
+        api.testLineEllipse = function (a, LineA, b, EllipseB, response) {
+            return testPolygonEllipse(a, LineA, b, EllipseB, response);
         };
 
         /**
@@ -815,8 +815,8 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testEllipseLine = function (/*a, ellipseA, b, lineB, response*/) {
-            return false;
+        api.testEllipseLine = function (a, ellipseA, b, lineB, response) {
+            return this.testEllipsePolygon(a, ellipseA, b, lineB, response);
         };
 
         /**
@@ -829,8 +829,8 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testLinePolygon = function (/*a, lineA, b, polygonB, response*/) {
-            return false;
+        api.testLinePolygon = function (a, lineA, b, polygonB, response) {
+            return this.testPolygonPolygon(a, lineA, b, polygonB, response);
         };
 
         /**
@@ -845,8 +845,8 @@
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
          */
-        api.testPolygonLine = function (/*a, polygonA, b, lineB, response*/) {
-            return false;
+        api.testPolygonLine = function (a, polygonA, b, lineB, response) {
+            return this.testPolygonPolygon(a, polygonA, b, lineB, response);
         };
 
         // return our object
