@@ -50,9 +50,6 @@ game.PlayerEntity = me.Entity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
-
-        // add a bigger square to cover the head
-        this.body.addShape(new me.Rect(-10, -5, 60, 60)) 
     },
     
     /* -----
