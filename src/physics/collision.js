@@ -800,7 +800,7 @@
          * @return {boolean} true if they intersect, false if they don't.
          */
         api.testLineEllipse = function (a, LineA, b, EllipseB, response) {
-            return testPolygonEllipse(a, LineA, b, EllipseB, response);
+            return this.testPolygonEllipse(a, LineA, b, EllipseB, response);
         };
 
         /**
