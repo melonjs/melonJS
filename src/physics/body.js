@@ -29,7 +29,7 @@
 
             /**
              * The collision shapes of the entity <br>
-             * (note: only shape at index 0 is used in melonJS 1.0.x)
+             * @ignore
              * @type {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.Body
@@ -165,6 +165,7 @@
          * @public
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {Number} the shape array length
          */
         addShape : function (shape) {
             if (shape.shapeType === "Rectangle") {
@@ -178,7 +179,7 @@
             // update the body bounds to take in account the added shape
             this.updateBounds();
 
-            // return the index of the added shape
+            // return the length of the shape list
             return this.shapes.length;
         },
 
@@ -193,6 +194,38 @@
          */
         getShape : function (index) {
             return this.shapes[index];
+        },
+
+        /**
+         * remove the specified shape from the body shape list 
+         * @name removeShape
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {Number} the shape array length
+         */
+        removeShape : function (shape) {
+            this.shapes.remove(shape);
+
+            // update the body bounds to take in account the removed shape
+            this.updateBounds();
+
+            // return the length of the shape list
+            return this.shapes.length;
+        },
+
+        /**
+         * remove the shape at the given index from the body shape list 
+         * @name removeShapeAt
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @param {Number} index the shape object at the specified index
+         * @return {Number} the shape array length
+         */
+        removeShapeAt : function (index) {
+            return this.removeShape(this.getShape(index));
         },
 
         /**
