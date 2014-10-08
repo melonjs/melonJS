@@ -369,6 +369,8 @@
             this.overlapV = new me.Vector2d();
             this.aInB = true;
             this.bInA = true;
+            this.indexShapeA = -1;
+            this.indexShapeB = -1;
             this.overlap = Number.MAX_VALUE;
         };
 
@@ -386,6 +388,8 @@
             this.aInB = true;
             this.bInA = true;
             this.overlap = Number.MAX_VALUE;
+            this.indexShapeA = -1;
+            this.indexShapeB = -1;
             return this;
         };
 
@@ -480,7 +484,7 @@
                                             objB,  // a reference to the object B
                                             shapeB,
                                              // clear response object before reusing
-                                            response.clear())
+                                            response.clear()) === true
                                     ) {
                                         // we touched something !
                                         collision++;
@@ -498,9 +502,9 @@
                                         }
                                     }
                                     indexB++;
-                                } while (response.indexShapeB === -1);
+                                } while (indexB < objB.body.shapes.length);
                                 indexA++;
-                            } while (response.indexShapeA === -1);
+                            } while (indexA < objA.body.shapes.length);
                         }
                     }
                 }
