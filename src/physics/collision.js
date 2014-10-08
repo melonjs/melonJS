@@ -355,6 +355,8 @@
          *  - <b>`overlapV`</b> {me.vector2d}: The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding <br>
          *  - <b>`overlapN`</b> {me.vector2d}: The shortest colliding axis (unit-vector) <br>
          *  - <b>`aInB`</b>, <b>`bInA`</b> {boolean} : Whether the first object is entirely inside the second, and vice versa. <br>
+         *  - <b>`indexShapeA</b> {number} : the index of the colliding shape for the object a body. <br>
+         *  - <b>`indexShapeB</b> {number} : the index of the colliding shape for the object b body. <br>
          *  - <b>`clear()`</b> {function} :  Set some values of the response back to their defaults. Call this between tests if you are going to reuse a single Response object for multiple intersection tests <br>
          * @name ResponseObject
          * @memberOf me.collision
