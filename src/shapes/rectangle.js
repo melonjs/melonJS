@@ -178,30 +178,6 @@
         },
 
         /**
-         *
-         * flip on X axis
-         * usefull when used as collision box, in a non symetric way
-         * @ignore
-         * @param sw the sprite width
-         */
-        flipX : function (sw) {
-            this.pos.x = sw - this.width - this.pos.x;
-            return this;
-        },
-
-        /**
-         *
-         * flip on Y axis
-         * usefull when used as collision box, in a non symetric way
-         * @ignore
-         * @param sh the height width
-         */
-        flipY : function (sh) {
-            this.pos.y = sh - this.height - this.pos.y;
-            return this;
-        },
-
-        /**
          * return true if this rectangle is equal to the specified one
          * @name equals
          * @memberOf me.Rect
