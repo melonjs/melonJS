@@ -45,7 +45,7 @@
     "gl-buffer": "~2.0.9"
   },
   "scripts": {
-    "install": "(bower install || true) && grunt",
+    "install": "grunt",
     "release": "grunt release",
     "test": "grunt test"
   }
