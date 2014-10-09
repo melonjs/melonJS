@@ -23,16 +23,16 @@ game.PlayerEntity = me.Entity.extend({
         me.game.viewport.follow(this, me.game.viewport.AXIS.HORIZONTAL);
                 
         // enable keyboard
-        me.input.bindKey(me.input.KEY.LEFT,     "left");
+        me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
-        me.input.bindKey(me.input.KEY.X,    "jump", true);
+        me.input.bindKey(me.input.KEY.X,     "jump", true);
         me.input.bindKey(me.input.KEY.UP,    "jump", true);
-        me.input.bindKey(me.input.KEY.DOWN,    "down");
+        me.input.bindKey(me.input.KEY.DOWN,  "down");
 
-        me.input.bindKey(me.input.KEY.A,    "left");
-        me.input.bindKey(me.input.KEY.D,    "right");
-        me.input.bindKey(me.input.KEY.W,    "up");
-        me.input.bindKey(me.input.KEY.S,    "down");
+        me.input.bindKey(me.input.KEY.A,     "left");
+        me.input.bindKey(me.input.KEY.D,     "right");
+        me.input.bindKey(me.input.KEY.W,     "jump", true);
+        me.input.bindKey(me.input.KEY.S,     "down");
 
         
         // set a renderable
@@ -49,7 +49,7 @@ game.PlayerEntity = me.Entity.extend({
         this.renderable.setCurrentAnimation("walk");
 
         // set the renderable position to bottom center
-        this.anchorPoint.set(0.5, 1.0);        
+        this.anchorPoint.set(0.5, 1.0);
     },
     
     /* -----
@@ -61,10 +61,10 @@ game.PlayerEntity = me.Entity.extend({
         
         if (me.input.isKeyPressed('left'))    {
             this.body.vel.x -= this.body.accel.x * me.timer.tick;
-            this.flipX(true);
+            this.renderable.flipX(true);
         } else if (me.input.isKeyPressed('right')) {
             this.body.vel.x += this.body.accel.x * me.timer.tick;
-            this.flipX(false);
+            this.renderable.flipX(false);
         }
         
         if (me.input.isKeyPressed('jump')) {
@@ -143,7 +143,7 @@ game.PlayerEntity = me.Entity.extend({
                     // a regular moving enemy entity
                     if ((response.overlapV.y > 0) && this.body.falling) {
                         // jump
-                        this.body.vel.y -= this.body.maxVel.y * me.timer.tick;
+                        this.body.vel.y -= this.body.maxVel.y * 1.5 * me.timer.tick;
                     }
                     else {
                         this.hurt();
@@ -270,11 +270,11 @@ game.PathEnemyEntity = me.Entity.extend({
             if (this.walkLeft && this.pos.x <= this.startX) {
                 this.body.vel.x = this.body.accel.x * me.timer.tick;
                 this.walkLeft = false;
-                this.flipX(true);
+                this.renderable.flipX(true);
             } else if (!this.walkLeft && this.pos.x >= this.endX) {
                 this.body.vel.x = -this.body.accel.x * me.timer.tick;
                 this.walkLeft = true;
-                this.flipX(false);
+                this.renderable.flipX(false);
             }
         
             // check & update movement

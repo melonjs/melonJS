@@ -18,7 +18,7 @@ var game = {
         }
 
         // install the debug panel plugin
-        me.plugin.register(debugPanel, "debug");
+        me.plugin.register(me.debug.Panel, "debug");
         me.debug.renderQuadTree = true;
 
         // set all resources to be loaded

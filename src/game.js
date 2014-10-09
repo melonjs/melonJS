@@ -200,7 +200,7 @@
 
             // reset the frame counter
             frameCounter = 0;
-            frameRate = Math.round(60 / me.sys.fps);
+            frameRate = ~~(0.5 + 60 / me.sys.fps);
         };
 
         /**

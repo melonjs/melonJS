@@ -179,10 +179,6 @@
              */
             this.alive = true;
         
-            // just to keep track of when we flip
-            this.lastflipX = false;
-            this.lastflipY = false;
-            
             /**
              * the entity body object
              * @public
@@ -244,48 +240,6 @@
             return this.bounds;
         },
         
-        /**
-         * Flip object on horizontal axis
-         * @name flipX
-         * @memberOf me.Entity
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipX : function (flip) {
-            if (flip !== this.lastflipX) {
-                this.lastflipX = flip;
-                if (this.renderable && this.renderable.flipX) {
-                    // flip the animation
-                    this.renderable.flipX(flip);
-                }
-                if (this.body) {
-                    // flip the animation
-                    this.body.flipX(flip);
-                }
-            }
-        },
-
-        /**
-         * Flip object on vertical axis
-         * @name flipY
-         * @memberOf me.Entity
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipY : function (flip) {
-            if (flip !== this.lastflipY) {
-                this.lastflipY = flip;
-                if (this.renderable  && this.renderable.flipY) {
-                    // flip the animation
-                    this.renderable.flipY(flip);
-                }
-                if (this.body) {
-                    // flip the animation
-                    this.body.flipY(flip);
-                }
-            }
-        },
-
         /**
          * return the distance to the specified entity
          * @name distanceTo
@@ -383,10 +337,10 @@
                 // and keeps it in the entity defined bounds
                 var _bounds = this.getBounds();
 
-                var x = ~~(_bounds.pos.x + (
+                var x = ~~(0.5 + _bounds.pos.x + (
                     this.anchorPoint.x * (_bounds.width - this.renderable.width)
                 ));
-                var y = ~~(_bounds.pos.y + (
+                var y = ~~(0.5 + _bounds.pos.y + (
                     this.anchorPoint.y * (_bounds.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);

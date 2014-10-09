@@ -551,23 +551,22 @@
         };
 
         /**
-         * Strokes a me.PolyShape on the screen with a specified color
-         * @name strokePolyShape
+         * Strokes a me.Polygon on the screen with a specified color
+         * @name strokePolygon
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.PolyShape} polyShape the shape to draw
+         * @param {me.Polygon} poly the shape to draw
          */
-        api.strokePolyShape = function (poly) {
+        api.strokePolygon = function (poly) {
             this.translate(poly.pos.x, poly.pos.y);
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
-            poly.points.forEach(function (point) {
+            var point;
+            for (var i = 1; i < poly.points.length; i++) {
+                point = poly.points[i];
                 backBufferContext2D.lineTo(point.x, point.y);
-                backBufferContext2D.moveTo(point.x, point.y);
-            });
-            if (poly.closed === true) {
-                backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             }
+            backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             backBufferContext2D.stroke();
         };
 

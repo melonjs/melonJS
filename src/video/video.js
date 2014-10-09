@@ -80,7 +80,7 @@
             maintainAspectRatio = (typeof(aspectRatio) !== "undefined") ? aspectRatio : true;
 
             // normalize scale
-            scale = (scale !== "auto") ? parseFloat(scale || 1.0) : 1.0;
+            scale = (auto_scale) ? 1.0 : (+scale || 1.0);
             me.sys.scale = new me.Vector2d(scale, scale);
 
             // force double buffering if scaling is required
@@ -124,7 +124,7 @@
 
             // create the main screen canvas
             canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
-            
+
             // add our canvas
             if (wrapperid) {
                 wrapper = document.getElementById(wrapperid);
@@ -165,7 +165,7 @@
             }
 
             // trigger an initial resize();
-            me.video.onresize(null);
+            me.video.onresize();
 
             me.game.init();
 

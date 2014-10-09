@@ -21,7 +21,7 @@
 
         // make sure the screen is refreshed every frame
         onProgressUpdate : function (progress) {
-            this.progress = Math.floor(progress * this.width);
+            this.progress = ~~(progress * this.width);
             this.invalidate = true;
         },
 

@@ -1,18 +1,30 @@
 /**
- * MelonJS Game Engine
- * (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * @license MelonJS Game Engine
+ * @copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
+ *
+ * melonJS is licensed under the MIT License.
+ * http://www.opensource.org/licenses/mit-license.php
  */
 
 (function () {
  
-     /**
+    /**
      * The built in window Object
      * @external window
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
      */
-     
-     /*
+
+    /**
+     * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside
+     * of this namespace.
+     * <p>You generally should not add new properties to this namespace as it may be
+     * overwritten in future versions.</p>
+     * @namespace
+     */
+    window.me = window.me || {};
+
+    /*
      * DOM loading stuff
      */
     var readyBound = false, isReady = false, readyList = [];
@@ -46,6 +58,16 @@
                 readyList[fn].call(window, []);
             }
             readyList.length = 0;
+
+            /*
+             * Add support for AMD (Asynchronous Module Definition) libraries
+             * such as require.js.
+             */
+            if (typeof define === "function" && define.amd) {
+                define("me", [], function () {
+                    return me;
+                });
+            }
         }
     }
 

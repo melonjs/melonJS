@@ -34,10 +34,10 @@
             // map information
             map.version = data[TMXConstants.TMX_TAG_VERSION];
             map.orientation = data[TMXConstants.TMX_TAG_ORIENTATION];
-            map.cols = parseInt(data[TMXConstants.TMX_TAG_WIDTH], 10);
-            map.rows = parseInt(data[TMXConstants.TMX_TAG_HEIGHT], 10);
-            map.tilewidth = parseInt(data[TMXConstants.TMX_TAG_TILEWIDTH], 10);
-            map.tileheight = parseInt(data[TMXConstants.TMX_TAG_TILEHEIGHT], 10);
+            map.cols = +data[TMXConstants.TMX_TAG_WIDTH];
+            map.rows = +data[TMXConstants.TMX_TAG_HEIGHT];
+            map.tilewidth = +data[TMXConstants.TMX_TAG_TILEWIDTH];
+            map.tileheight = +data[TMXConstants.TMX_TAG_TILEHEIGHT];
             if (map.orientation === "isometric") {
                 map.width = (map.cols + map.rows) * (map.tilewidth / 2);
                 map.height = (map.cols + map.rows) * (map.tileheight / 2);
@@ -276,8 +276,8 @@
         readImageLayer: function (map, data, z) {
             // extract layer information
             var iln = data[TMXConstants.TMX_TAG_NAME];
-            var ilw = parseInt(data[TMXConstants.TMX_TAG_WIDTH], 10);
-            var ilh = parseInt(data[TMXConstants.TMX_TAG_HEIGHT], 10);
+            var ilw = +data[TMXConstants.TMX_TAG_WIDTH];
+            var ilh = +data[TMXConstants.TMX_TAG_HEIGHT];
             var ilsrc = typeof (data[TMXConstants.TMX_TAG_IMAGE]) !== "string" ? data[TMXConstants.TMX_TAG_IMAGE].source : data[TMXConstants.TMX_TAG_IMAGE];
 
             // create the layer
@@ -285,14 +285,15 @@
 
             // set some additional flags
             var visible = typeof(data[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? data[TMXConstants.TMX_TAG_VISIBLE] : true;
-            imageLayer.setOpacity((visible === true) ? parseFloat(data[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0);
+            imageLayer.setOpacity((visible === true) ? (+data[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0);
 
             // check if we have any additional properties
             me.TMXUtils.applyTMXProperties(imageLayer, data);
 
             // make sure ratio is a vector (backward compatibility)
             if (typeof(imageLayer.ratio) === "number") {
-                imageLayer.ratio = new me.Vector2d(parseFloat(imageLayer.ratio), parseFloat(imageLayer.ratio));
+                var ratio = imageLayer.ratio;
+                imageLayer.ratio = new me.Vector2d(ratio, ratio);
             }
 
             return imageLayer;

@@ -299,18 +299,17 @@
          * @name toPolygon
          * @memberOf me.Rect
          * @function
-         * @return {me.PolyShape} a new Polygon that represents this rectangle.
+         * @return {me.Polygon} a new Polygon that represents this rectangle.
          */
         toPolygon: function () {
             var pos = this.pos;
             var w = this.width;
             var h = this.height;
-            return new me.PolyShape(
+            return new me.Polygon(
                 pos.x, pos.y, [
                     new me.Vector2d(), new me.Vector2d(w, 0),
                     new me.Vector2d(w, h), new me.Vector2d(0, h)
-                ],
-                true
+                ]
             );
         },
 

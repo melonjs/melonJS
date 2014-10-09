@@ -143,7 +143,7 @@
             // a cache for offset value
             this.tileXOffset = [];
             this.tileYOffset = [];
-            this.firstgid = this.lastgid = tileset[TMXConstants.TMX_TAG_FIRSTGID];
+            this.firstgid = this.lastgid = +tileset[TMXConstants.TMX_TAG_FIRSTGID];
             var src = tileset[TMXConstants.TMX_TAG_SOURCE];
             if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
                 // load TSX
@@ -159,19 +159,19 @@
             }
 
             this.name = tileset[TMXConstants.TMX_TAG_NAME];
-            this.tilewidth = parseInt(tileset[TMXConstants.TMX_TAG_TILEWIDTH], 10);
-            this.tileheight = parseInt(tileset[TMXConstants.TMX_TAG_TILEHEIGHT], 10);
-            this.spacing = parseInt(tileset[TMXConstants.TMX_TAG_SPACING] || 0, 10);
+            this.tilewidth = +tileset[TMXConstants.TMX_TAG_TILEWIDTH];
+            this.tileheight = +tileset[TMXConstants.TMX_TAG_TILEHEIGHT];
+            this.spacing = +tileset[TMXConstants.TMX_TAG_SPACING] || 0;
 
-            this.margin = parseInt(tileset[TMXConstants.TMX_TAG_MARGIN] || 0, 10);
+            this.margin = +tileset[TMXConstants.TMX_TAG_MARGIN] || 0;
 
             // set tile offset properties (if any)
             this.tileoffset = new me.Vector2d(0, 0);
 
             var offset = tileset[TMXConstants.TMX_TAG_TILEOFFSET];
             if (offset) {
-                this.tileoffset.x = parseInt(offset[TMXConstants.TMX_TAG_X], 10);
-                this.tileoffset.y = parseInt(offset[TMXConstants.TMX_TAG_Y], 10);
+                this.tileoffset.x = +offset[TMXConstants.TMX_TAG_X];
+                this.tileoffset.y = +offset[TMXConstants.TMX_TAG_Y];
             }
 
 
@@ -182,7 +182,7 @@
                 // native JSON format
                 for (var i in tileInfo) {
                     if (tileInfo.hasOwnProperty(i)) {
-                        this.setTileProperty(parseInt(i, 10) + this.firstgid, tileInfo[i]);
+                        this.setTileProperty(i + this.firstgid, tileInfo[i]);
                     }
                 }
             }

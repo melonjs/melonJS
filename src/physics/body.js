@@ -20,28 +20,22 @@
     {
         /** @ignore */
         init : function (entity) {
-          
-            // reference to the parent entity
+
+            /**
+             * reference to the parent entity
+             * @ignore
+             */
             this.entity = entity;
 
             /**
              * The collision shapes of the entity <br>
-             * (note: only shape at index 0 is used in melonJS 1.0.x)
-             * @type {me.Rect[]|me.PolyShape[]|me.Ellipse[]}
+             * @ignore
+             * @type {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.Body
              */
             this.shapes = [];
 
-            /**
-             * The current shape index
-             * @ignore
-             * @type Number
-             * @name shapeIndex
-             * @memberOf me.Body
-             */
-            this.shapeIndex = 0;
-                        
             /**
              * The body collision mask, that defines what should collide with what.<br>
              * (by default will collide with all entities)
@@ -52,7 +46,7 @@
              * @memberOf me.Body
              */
             this.collisionMask = me.collision.types.ALL_OBJECT;
-            
+
             /**
              * define the collision type of the body for collision filtering
              * @public
@@ -113,7 +107,6 @@
             }
             this.maxVel.set(1000, 1000);
 
-            // some default contants
             /**
              * Default gravity value of the entity<br>
              * default value : 0.98 (earth gravity)<br>
@@ -126,7 +119,6 @@
              * @memberOf me.Body
              */
             this.gravity = typeof(me.sys.gravity) !== "undefined" ? me.sys.gravity : 0.98;
-
 
             /**
              * falling state of the object<br>
@@ -150,8 +142,7 @@
              * @memberOf me.Body
              */
             this.jumping = true;
-          
-          
+
             // call the super constructor
             this._super(
                 me.Rect,
@@ -168,12 +159,13 @@
 
         /**
          * add a collision shape to this entity <br>
-         * (note: me.Rect objects will be converted to me.PolyShape before being added)
+         * (note: me.Rect objects will be converted to me.Polygon before being added)
          * @name addShape
          * @memberOf me.Body
          * @public
          * @function
-         * @param {me.Rect|me.PolyShape|me.Ellipse} shape a shape object
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {Number} the shape array length
          */
         addShape : function (shape) {
             if (shape.shapeType === "Rectangle") {
@@ -183,10 +175,12 @@
                 // else polygon or circle
                 this.shapes.push(shape);
             }
-            // make sure to enable at least the first added shape
-            if (this.shapes.length === 1) {
-                this.setShape(0);
-            }
+
+            // update the body bounds to take in account the added shape
+            this.updateBounds();
+
+            // return the length of the shape list
+            return this.shapes.length;
         },
 
         /**
@@ -195,30 +189,45 @@
          * @memberOf me.Body
          * @public
          * @function
-         * @return {me.PolyShape|me.Ellipse} shape a shape object
+         * @param {Number} index the shape object at the specified index
+         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
-        getShape : function () {
-            return this.shapes[this.shapeIndex];
+        getShape : function (index) {
+            return this.shapes[index];
         },
 
         /**
-         * change the current collision shape for this entity
-         * @name setShape
+         * remove the specified shape from the body shape list 
+         * @name removeShape
          * @memberOf me.Body
          * @public
          * @function
-         * @param {Number} index shape index
+         * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {Number} the shape array length
          */
-        setShape : function (index) {
-            if (typeof(this.shapes[index]) !== "undefined") {
-                this.shapeIndex = index;
-                // update the body bounds based on the active shape
-                this.updateBounds();
-                return;
-            }
-            throw new me.Body.Error("Shape (" + index + ") not defined");
+        removeShape : function (shape) {
+            this.shapes.remove(shape);
+
+            // update the body bounds to take in account the removed shape
+            this.updateBounds();
+
+            // return the length of the shape list
+            return this.shapes.length;
         },
-        
+
+        /**
+         * remove the shape at the given index from the body shape list 
+         * @name removeShapeAt
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @param {Number} index the shape object at the specified index
+         * @return {Number} the shape array length
+         */
+        removeShapeAt : function (index) {
+            return this.removeShape(this.getShape(index));
+        },
+
         /**
          * By default all entities are able to collide with all other entities, <br>
          * but it's also possible to specificy 'collision filters' to provide a finer <br>
@@ -239,7 +248,7 @@
         setCollisionMask : function (bitmask) {
             this.collisionMask = bitmask;
         },
- 
+
         /**
          * the built-in function to solve the collision response
          * @protected
@@ -259,10 +268,10 @@
 
             // adjust velocity
             if (overlap.x !== 0) {
-                this.vel.x = Math.round(this.vel.x - overlap.x) || 0;
+                this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
             }
             if (overlap.y !== 0) {
-                this.vel.y = Math.round(this.vel.y - overlap.y) || 0;
+                this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
 
                 // cancel the falling an jumping flags if necessary
                 this.falling = overlap.y >= 1;
@@ -270,9 +279,9 @@
             }
 
             // update the other entity bounds
-            this.updateBounds();
+            this.entity.updateBounds();
         },
-        
+
         /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
@@ -281,15 +290,20 @@
          * @memberOf me.Body
          * @function
          */
-        updateBounds : function (rect) {
-            // TODO : go through all defined shapes
-            var _bounds = rect || this.getShape().getBounds();
-            // reset the body position and size;
+        updateBounds : function () {
+            // reset the rect with default values
+            var _bounds = this.shapes[0].getBounds();
             this.pos.setV(_bounds.pos);
             this.resize(_bounds.width, _bounds.height);
+  
+            for (var i = 1 ; i < this.shapes.length; i++) {
+                this.union(this.shapes[i].getBounds());
+            }
 
             // update the parent entity bounds
             this.entity.updateBounds();
+
+            return this;
         },
 
         /**
@@ -303,7 +317,6 @@
          * @param {Number} y velocity on y axis
          * @protected
          */
-
         setVelocity : function (x, y) {
             this.accel.x = x !== 0 ? x : this.accel.x;
             this.accel.y = y !== 0 ? y : this.accel.y;
@@ -338,37 +351,6 @@
         setFriction : function (x, y) {
             this.friction.x = x || 0;
             this.friction.y = y || 0;
-        },
-
-        /**
-         * Flip the body on horizontal axis
-         * @name flipX
-         * @memberOf me.body
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipX : function (flip) {
-            if (flip !== this.lastflipX) {
-                if (this.shapes.length && (typeof this.getShape().flipX === "function")) {
-                    this.getShape().flipX(this.width);
-                }
-            }
-        },
-
-        /**
-         * Flip the body on vertical axis
-         * @name flipY
-         * @memberOf me.body
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipY : function (flip) {
-            if (flip !== this.lastflipY) {
-                // flip the collision box
-                if (this.shapes.length && (typeof this.getShape().flipY === "function")) {
-                    this.getShape().flipY(this.height);
-                }
-            }
         },
 
         /**
@@ -419,13 +401,11 @@
             this.entity.pos.add(this.vel);
 
             // update the entity and body bounds
-            this.updateBounds();
+            this.entity.updateBounds();
 
             // returns true if vel is different from 0
             return (this.vel.x !== 0 || this.vel.y !== 0);
-
         },
-
 
         /**
          * Destroy function<br>
@@ -434,10 +414,9 @@
         destroy : function () {
             this.entity = null;
             this.shapes = [];
-            this.shapeIndex = 0;
         }
     });
-    
+
     /**
      * Base class for Body exception handling.
      * @name Error

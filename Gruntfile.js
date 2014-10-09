@@ -79,7 +79,12 @@ module.exports = function (grunt) {
 
             beforeConcat : {
                 files : {
-                    src : [ testSpecs, sourceFiles, "Gruntfile.js" ]
+                    src : [
+                        testSpecs,
+                        sourceFiles,
+                        "Gruntfile.js",
+                        "plugins/**/*"
+                    ]
                 }
             },
 

@@ -6,31 +6,26 @@
  */
 (function () {
     /**
-     * a polygon Object.<br>
-     * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
-     * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon 
-     * (which means that all angles are less than 180 degrees), as described here below : <br>
-     * <center><img src="images/convex_polygon.png"/></center><br>
-     * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+     * a line segment Object.<br>
      * @class
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Number} x origin point of the Polygon
-     * @param {Number} y origin point of the Polygon
-     * @param {me.Vector2d[]} points array of vector defining the Polygon
+     * @param {Number} x origin point of the Line
+     * @param {Number} y origin point of the Line
+     * @param {me.Vector2d[]} points array of vector defining the Line
      */
-    me.Polygon = Object.extend(
-    /** @scope me.Polygon.prototype */ {
+    me.Line = Object.extend(
+    /** @scope me.Line.prototype */ {
 
         /** @ignore */
         init : function (x, y, points) {
             /**
-             * origin point of the Polygon
+             * origin point of the Line
              * @public
              * @type {me.Vector2d}
              * @name pos
-             * @memberOf me.Polygon
+             * @memberOf me.Line
              */
             this.pos = new me.Vector2d();
 
@@ -39,32 +34,32 @@
              * @protected
              * @type {me.Rect}
              * @name bounds
-             * @memberOf me.Polygon
+             * @memberOf me.Line
              */
             this.bounds = undefined;
 
             /**
-             * Array of points defining the Polygon
+             * Array of points defining the Line
              * @public
              * @type {me.Vector2d[]}
              * @name points
-             * @memberOf me.Polygon
+             * @memberOf me.Line
              */
             this.points = null;
 
             // the shape type
-            this.shapeType = "Polygon";
+            this.shapeType = "Line";
             this.setShape(x, y, points);
         },
 
         /**
-         * set new value to the Polygon
+         * set new value to the Line
          * @name setShape
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
-         * @param {Number} x position of the Polygon
-         * @param {Number} y position of the Polygon
-         * @param {me.Vector2d[]} points array of vector defining the Polygon
+         * @param {Number} x position of the Line
+         * @param {Number} y position of the Line
+         * @param {me.Vector2d[]} points array of vector defining the Line
          */
         setShape : function (x, y, points) {
             this.pos.set(x, y);
@@ -79,7 +74,7 @@
          * Computes the calculated collision polygon. 
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
          */
         recalc : function () {
@@ -96,8 +91,8 @@
             var points = this.points;
             var len = points.length;
 
-            if (len < 3) {
-                throw new me.Polygon.Error("Requires at least 3 points");
+            if (len !== 2) {
+                throw new me.Line.Error("Requires exactly 2 points");
             }
 
             // Calculate the edges/normals
@@ -113,13 +108,13 @@
         },
 
         /**
-         * translate the Polygon by the specified offset
+         * translate the Line by the specified offset
          * @name translate
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
-         * @return {me.Polygon} this Polygon
+         * @return {me.Line} this Line
          */
         translate : function (x, y) {
             this.pos.x += x;
@@ -129,12 +124,12 @@
         },
 
         /**
-         * translate the Polygon by the specified vector
+         * translate the Line by the specified vector
          * @name translateV
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Polygon} this Polygon
+         * @return {me.Line} this Line
          */
         translateV : function (v) {
             this.pos.add(v);
@@ -143,49 +138,9 @@
         },
 
         /**
-         * check if this Polygon contains the specified point
-         * @name containsPointV
-         * @memberOf me.Polygon
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        containsPointV: function (v) {
-            return this.containsPoint(v.x, v.y);
-        },
-
-        /**
-         * check if this Polygon contains the specified point <br>
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-         *  bounding rect, as the function can be highly consuming with complex shapes)
-         * @name containsPoint
-         * @memberOf me.Polygon
-         * @function
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        containsPoint: function (x, y) {
-            var intersects = false;
-            var posx = this.pos.x, posy = this.pos.y;
-            var points = this.points;
-            var len = points.length;
-
-            //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-            for (var i = 0, j = len - 1; i < len; j = i++) {
-                var iy = points[i].y + posy, ix = points[i].x + posx,
-                    jy = points[j].y + posy, jx = points[j].x + posx;
-                if (((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix)) {
-                    intersects = !intersects;
-                }
-            }
-            return intersects;
-        },
-
-        /**
          * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
          * @name getBounds
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -196,7 +151,7 @@
         /**
          * update the bounding box for this shape.
          * @name updateBounds
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -219,18 +174,18 @@
         },
         
         /**
-         * clone this Polygon
+         * clone this Line
          * @name clone
-         * @memberOf me.Polygon
+         * @memberOf me.Line
          * @function
-         * @return {me.Polygon} new Polygon
+         * @return {me.Line} new Line
          */
         clone : function () {
             var copy = [];
             this.points.forEach(function (point) {
                 copy.push(new me.Vector2d(point.x, point.y));
             });
-            return new me.Polygon(this.pos.x, this.pos.y, copy);
+            return new me.Line(this.pos.x, this.pos.y, copy);
         },
 
         /**
@@ -239,25 +194,25 @@
          */
         draw : function (renderer, color) {
             renderer.save();
-            renderer.setColor(color || "red");
+            renderer.setColor(color || "purple");
             renderer.setLineWidth(1);
-            renderer.strokePolygon(this);
+            renderer.strokeLine(this);
             renderer.restore();
         }
     });
 
     /**
-     * Base class for Polygon exception handling.
+     * Base class for Line exception handling.
      * @name Error
      * @class
-     * @memberOf me.Polygon
+     * @memberOf me.Line
      * @constructor
      * @param {String} msg Error message.
      */
-    me.Polygon.Error = me.Error.extend({
+    me.Line.Error = me.Error.extend({
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Polygon.Error";
+            this.name = "me.Line.Error";
         }
     });
 })();
