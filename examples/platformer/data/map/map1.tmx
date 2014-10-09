@@ -92,5 +92,8 @@
    </properties>
    <polyline points="0,0 70,0"/>
   </object>
+  <object x="1" y="35">
+   <polyline points="0,0 0,490"/>
+  </object>
  </objectgroup>
 </map>

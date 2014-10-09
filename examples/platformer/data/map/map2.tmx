@@ -12,7 +12,7 @@
   </data>
  </layer>
  <objectgroup color="#55ff00" name="player">
-  <object name="mainPlayer" x="0" y="438" width="35" height="88">
+  <object name="mainPlayer" x="35" y="438" width="35" height="88">
    <properties>
     <property name="spriteheight" value="98"/>
     <property name="spritewidth" value="72"/>
@@ -145,6 +145,9 @@
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 700,0"/>
+  </object>
+  <object x="1" y="210">
+   <polyline points="0,0 0,315"/>
   </object>
  </objectgroup>
 </map>
