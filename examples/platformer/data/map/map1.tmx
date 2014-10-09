@@ -80,12 +80,13 @@
   <object x="1225" y="595">
    <polygon points="0,0 0,-70 70,-140 525,-140 525,0"/>
   </object>
-  <object type="platform" x="700" y="385" width="70" height="35">
+  <object type="platform" x="560" y="455">
    <properties>
     <property name="platform" value="true"/>
    </properties>
+   <polyline points="0,0 70,0"/>
   </object>
-  <object type="platform" x="560" y="455">
+  <object type="platform" x="700" y="385">
    <properties>
     <property name="platform" value="true"/>
    </properties>

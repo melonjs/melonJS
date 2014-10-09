@@ -393,20 +393,6 @@
                  "y":595
                 }, 
                 {
-                 "height":35,
-                 "name":"",
-                 "properties":
-                    {
-                     "platform":"true"
-                    },
-                 "rotation":0,
-                 "type":"platform",
-                 "visible":true,
-                 "width":70,
-                 "x":700,
-                 "y":385
-                }, 
-                {
                  "height":0,
                  "name":"",
                  "polyline":[
@@ -428,6 +414,29 @@
                  "width":0,
                  "x":560,
                  "y":455
+                }, 
+                {
+                 "height":0,
+                 "name":"",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":70,
+                         "y":0
+                        }],
+                 "properties":
+                    {
+                     "platform":"true"
+                    },
+                 "rotation":0,
+                 "type":"platform",
+                 "visible":true,
+                 "width":0,
+                 "x":700,
+                 "y":385
                 }],
          "opacity":1,
          "type":"objectgroup",
