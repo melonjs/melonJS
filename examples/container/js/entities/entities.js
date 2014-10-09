@@ -7,7 +7,7 @@ game.Rect = me.Renderable.extend({
         this.z = 0;
         this.color = color;
     },
-    
+
     "draw" : function(renderer) {
         renderer.setColor(this.color);
         renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
@@ -28,8 +28,26 @@ game.Entity = me.Entity.extend({
             50,
             settings.color
         ));
+    }
+});
+
+/**
+ * a floating entity
+ */
+game.FloatingEntity = me.Entity.extend({
+    "init" : function (x, y, settings) {
+        this._super(me.Entity, "init", [x, y, settings]);
+        this.z = 1;
+        this.floating = true;
+        this.renderable = new me.Container(0, 0, 50, 50);
+        this.renderable.addChild(new game.Rect(
+            0, 0,
+            50,
+            50,
+            settings.color
+        ));
     },
-    
+
     /**
      * action to perform on frame update
      */
@@ -47,28 +65,8 @@ game.Entity = me.Entity.extend({
         else if (me.input.isKeyPressed("down")) {
             vp.move(0, -5);
         }
+
+        this._super(me.Entity, "update");
         return true;
-    }
-    
-});
-
-/**
- * a floating entity
- */
-game.FloatingEntity = me.Entity.extend({
-    "init" : function (x, y, settings) {
-        this._super(me.Entity, "init", [x, y, settings]);
-        this.z = 1;
-        this.floating = true;
-        this.renderable = new me.Container(0, 0, 50, 50);
-
-        var container = new me.Container(0, 0, 50, 50);
-        container.addChild(new game.Rect(
-            0, 0,
-            50,
-            50,
-            settings.color
-        ));
-        this.renderable.addChild(container);
     }
 });
