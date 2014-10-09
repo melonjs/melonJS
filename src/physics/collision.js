@@ -528,9 +528,11 @@
         api.testPolygonPolygon = function (a, polyA, b, polyB, response) {
             // specific point for
             var aPoints = polyA.points;
-            var aLen = aPoints.length;
+            var aNormals = polyA.normals;
+            var aLen = aNormals.length;
             var bPoints = polyB.points;
-            var bLen = bPoints.length;
+            var bNormals = polyB.normals;
+            var bLen = bNormals.length;
             // aboslute shape position
             var posA = T_VECTORS.pop().copy(a.pos).add(polyA.pos);
             var posB = T_VECTORS.pop().copy(b.pos).add(polyB.pos);
@@ -538,7 +540,7 @@
 
             // If any of the edge normals of A is a separating axis, no intersection.
             for (i = 0; i < aLen; i++) {
-                if (isSeparatingAxis(posA, posB, aPoints, bPoints, polyA.normals[i], response)) {
+                if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
                     T_VECTORS.push(posA);
                     T_VECTORS.push(posB);
                     return false;
@@ -547,7 +549,7 @@
 
             // If any of the edge normals of B is a separating axis, no intersection.
             for (i = 0;i < bLen; i++) {
-                if (isSeparatingAxis(posA, posB, aPoints, bPoints, polyB.normals[i], response)) {
+                if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
                     T_VECTORS.push(posA);
                     T_VECTORS.push(posB);
                     return false;
@@ -623,8 +625,10 @@
             var radius = ellipseB.radius;
             var radius2 = radius * radius;
             var points = polyA.points;
-            var len = points.length;
+            var edges = polyA.edges;
+            var len = edges.length;
             var edge = T_VECTORS.pop();
+            var normal = T_VECTORS.pop();
             var point = T_VECTORS.pop();
             var dist = 0;
 
@@ -636,7 +640,7 @@
                 var overlapN = null;
 
                 // Get the edge.
-                edge.copy(polyA.edges[i]);
+                edge.copy(edges[i]);
                 // Calculate the center of the circle relative to the starting point of the edge.
                 point.copy(circlePos).sub(points[i]);
 
@@ -652,7 +656,7 @@
                 // If it's the left region:
                 if (region === LEFT_VORNOI_REGION) {
                     // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
-                    edge.copy(polyA.edges[prev]);
+                    edge.copy(edges[prev]);
                     // Calculate the center of the circle relative the starting point of the previous edge
                     var point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
                     region = vornoiRegion(edge, point2);
@@ -677,7 +681,7 @@
                     // If it's the right region:
                 } else if (region === RIGHT_VORNOI_REGION) {
                     // We need to make sure we're in the left region on the next edge
-                    edge.copy(polyA.edges[next]);
+                    edge.copy(edges[next]);
                     // Calculate the center of the circle relative to the starting point of the next edge.
                     point.copy(circlePos).sub(points[next]);
                     region = vornoiRegion(edge, point);
@@ -700,8 +704,8 @@
                 // Otherwise, it's the middle region:
                 } else {
                     // Need to check if the circle is intersecting the edge,
-                    // Change the edge into its "edge normal".
-                    var normal = edge.perp().normalize();
+                    // Get the normal.
+                    normal.copy(polyA.normals[i]);
                     // Find the perpendicular distance between the center of the
                     // circle and the edge.
                     dist = point.dotProduct(normal);
@@ -741,6 +745,7 @@
             }
             T_VECTORS.push(circlePos);
             T_VECTORS.push(edge);
+            T_VECTORS.push(normal);
             T_VECTORS.push(point);
             return true;
         };
@@ -773,80 +778,6 @@
                 response.bInA = aInB;
             }
             return result;
-        };
-
-        /**
-         * Checks whether line segments collide.
-         * @ignore
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Line} lineA a reference to the object A Line to be tested
-         * @param {me.Entity} b a reference to the object B.
-         * @param {me.Line} lineB a reference to the object B Line to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they intersect.
-         * @return {boolean} true if they intersect, false if they don't.
-         */
-        api.testLineLine = function (a, LineA, b, lineB, response) {
-            return this.testPolygonPolygon(a, LineA, b, lineB, response);
-        };
-
-        /**
-         * Check if a line segment and an ellipse collide.
-         * @ignore
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Line} lineA a reference to the object A Line to be tested
-         * @param {me.Entity} b a reference to the object B.
-         * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they intersect.
-         * @return {boolean} true if they intersect, false if they don't.
-         */
-        api.testLineEllipse = function (a, LineA, b, EllipseB, response) {
-            return this.testPolygonEllipse(a, LineA, b, EllipseB, response);
-        };
-
-        /**
-         * Check if an ellipse and a line segment collide. <br>
-         * **NOTE:** This is slightly less efficient than testLineEllipse as it just
-         * runs testLineEllipse and reverses the response at the end.
-         * @ignore
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
-         * @param {me.Entity} b a reference to the object B.
-         * @param {me.Line} lineB a reference to the object B Line to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they intersect.
-         * @return {boolean} true if they intersect, false if they don't.
-         */
-        api.testEllipseLine = function (a, ellipseA, b, lineB, response) {
-            return this.testEllipsePolygon(a, ellipseA, b, lineB, response);
-        };
-
-        /**
-         * Check if a line segment and a polygon collide.
-         * @ignore
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Line} lineA a reference to the object A Line to be tested
-         * @param {me.Entity} b a reference to the object B.
-         * @param {me.Polygon} polygonB a reference to the object B Polygon to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they intersect.
-         * @return {boolean} true if they intersect, false if they don't.
-         */
-        api.testLinePolygon = function (a, lineA, b, polygonB, response) {
-            return this.testPolygonPolygon(a, lineA, b, polygonB, response);
-        };
-
-        /**
-         * Check if a polygon and a line segment collide. <br>
-         * **NOTE:** This is slightly less efficient than testLinePolygon as it just
-         * runs testLinePolygon and reverses the response at the end.
-         * @ignore
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Polygon} polygonA a reference to the object A Polygon to be tested
-         * @param {me.Entity} b a reference to the object B.
-         * @param {me.Line} lineB a reference to the object B Line to be tested
-         * @param {Response=} response Response object (optional) that will be populated if they intersect.
-         * @return {boolean} true if they intersect, false if they don't.
-         */
-        api.testPolygonLine = function (a, polygonA, b, lineB, response) {
-            return this.testPolygonPolygon(a, polygonA, b, lineB, response);
         };
 
         // return our object

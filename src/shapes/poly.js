@@ -102,12 +102,9 @@
 
             // Calculate the edges/normals
             for (i = 0; i < len; i++) {
-                var p1 = points[i];
-                var p2 = points[(i + 1) % len];
-                var e = new me.Vector2d().copy(p2).sub(p1);
-                var n = new me.Vector2d().copy(e).perp().normalize();
+                var e = new me.Vector2d().copy(points[(i + 1) % len]).sub(points[i]);
                 edges.push(e);
-                normals.push(n);
+                normals.push(new me.Vector2d().copy(e).perp().normalize());
             }
             return this;
         },
