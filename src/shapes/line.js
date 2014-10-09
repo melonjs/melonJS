@@ -196,7 +196,7 @@
             renderer.save();
             renderer.setColor(color || "purple");
             renderer.setLineWidth(1);
-            renderer.strokeLine(this);
+            renderer.strokePolygon(this);
             renderer.restore();
         }
     });
