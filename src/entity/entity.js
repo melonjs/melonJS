@@ -187,15 +187,13 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            this.body = new me.Body(this);
-            
-            // add collision shape to the entity body if defined
-            if (typeof (settings.getShape) === "function") {
-                this.body.addShape(settings.getShape());
-            }
+            this.body = new me.Body(this, (
+                typeof (settings.getTMXShapes) === "function" ?
+                settings.getTMXShapes() : []
+            ));
             
             // ensure the entity bounds and pos are up-to-date
-            this.updateBounds();
+            this.body.updateBounds();
             
             // set the  collision mask if defined
             if (typeof(settings.collisionMask) !== "undefined") {

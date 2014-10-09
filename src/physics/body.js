@@ -14,12 +14,13 @@
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
+     * @param {me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
-        init : function (entity) {
+        init : function (entity, shapes) {
 
             /**
              * reference to the parent entity
@@ -30,11 +31,11 @@
             /**
              * The collision shapes of the entity <br>
              * @ignore
-             * @type {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}
+             * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.Body
              */
-            this.shapes = [];
+            this.shapes = shapes || [];
 
             /**
              * The body collision mask, that defines what should collide with what.<br>
