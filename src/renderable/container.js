@@ -599,6 +599,7 @@
             var isTranslated;
             var x;
             var y;
+            var bounds;
             var viewport = me.game.viewport;
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
@@ -616,10 +617,11 @@
                     // Translate global context
                     isTranslated = !isFloating;
                     if (isTranslated) {
-                        x = obj.pos.x;
-                        y = obj.pos.y;
-                        globalTranslation.translateV(obj.pos);
-                        globalTranslation.resize(obj.width, obj.height);
+                        bounds = obj.getBounds();
+                        x = bounds.pos.x;
+                        y = bounds.pos.y;
+                        globalTranslation.translateV(bounds.pos);
+                        globalTranslation.resize(bounds.width, bounds.height);
                     }
 
                     // check if object is visible
