@@ -489,6 +489,37 @@
             },
          "spacing":0,
          "tileheight":35,
+         "tiles":
+            {
+             "28":
+                {
+                 "animation":[
+                        {
+                         "duration":200,
+                         "tileid":28
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":29
+                        }, 
+                        {
+                         "duration":200,
+                         "tileid":28
+                        }]
+                },
+             "29":
+                {
+                 "animation":[
+                        {
+                         "duration":400,
+                         "tileid":29
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":28
+                        }]
+                }
+            },
          "tilewidth":35
         }],
  "tilewidth":35,
