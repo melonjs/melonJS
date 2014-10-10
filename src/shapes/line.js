@@ -19,6 +19,39 @@
     /** @scope me.Line.prototype */ {
 
         /**
+         * check if this line segment contains the specified point
+         * @name containsPointV
+         * @memberOf me.Line
+         * @function
+         * @param  {me.Vector2d} point
+         * @return {boolean} true if contains
+         */
+        containsPointV: function (v) {
+            return this.containsPoint(v.x, v.y);
+        },
+
+        /**
+         * check if this line segment contains the specified point
+         * @name containsPoint
+         * @memberOf me.Line
+         * @function
+         * @param  {Number} x x coordinate
+         * @param  {Number} y y coordinate
+         * @return {boolean} true if contains
+         */
+        containsPoint: function (x, y) {
+            // translate the given coordinates, 
+            // rather than creating temp translated vectors 
+            x -= this.pos.x; // Cx
+            y -= this.pos.y; // Cy
+            var start = this.points[0]; // Ax/Ay
+            var end = this.points[1]; // Bx/By
+            
+            //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
+            return (y - start.y) * (end.x - start.x) === (end.y - start.y) * (x - start.x);
+        },
+        
+        /**
          * Computes the calculated collision edges and normals. 
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc

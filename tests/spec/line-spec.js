@@ -30,6 +30,29 @@ describe("Shape : me.Line", function () {
         });
     });
 
+    describe("Line", function () {
+        it("contains the point (0, 0)", function () {
+            expect(line.containsPoint(0, 0)).toEqual(true);
+        });
+        
+        it("contains the point (14, 30)", function () {
+            expect(line.containsPoint(14, 30)).toEqual(true);
+        });
+
+        it("contains the point (28, 60)", function () {
+            expect(line.containsPoint(28, 60)).toEqual(true);
+        });
+
+        it("does not contains the point (15, 30)", function () {
+            expect(line.containsPoint(15, 30)).toEqual(false);
+        });
+        
+        it("does not contains the point (29, 61)", function () {
+            expect(line.containsPoint(29, 61)).toEqual(false);
+        });
+
+    });
+    
     describe("Line Bounding Rect", function () {
         it("Polygon Bounding Rect width is 28", function () {
             expect(boundingRect.width).toEqual(28);
