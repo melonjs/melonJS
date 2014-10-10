@@ -71,6 +71,20 @@
         },
 
         /**
+         * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Ellipse
+         * @function
+         * @param {number} angle The angle to rotate (in radians)
+         * @return {me.Ellipse} Reference to this object for method chaining
+         */
+        rotate : function (/*angle*/) {
+            // TODO
+            return this;
+        },
+
+
+        /**
          * translate the circle/ellipse by the specified offset
          * @name translate
          * @memberOf me.Ellipse
