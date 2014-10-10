@@ -9,7 +9,7 @@ var game = {
             return;
         }
 
-        me.plugin.register(debugPanel, "debug");
+        me.plugin.register(me.debug.Panel, "debug");
 
         // set all ressources to be loaded
         me.loader.onload = this.loaded.bind(this);

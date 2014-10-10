@@ -26,11 +26,13 @@ game.ShapeObject = me.Entity.extend({
                      this.getBounds().containsPoint(
                         event.gameX, event.gameY
                      ) &&
-                     // check the shape if non rectangular
-                     this.body.getShape().containsPoint(
+                     // check the first shape
+                     this.body.getShape(0).containsPoint(
                         // shape object position is relative to the entity
                         event.gameX - this.pos.x, event.gameY - this.pos.y
                      );
+                     
+        console.log(this.hover);
 
         if (this.canMove) {
             // follow the mouse/finger
@@ -45,7 +47,7 @@ game.ShapeObject = me.Entity.extend({
     // mouse down function
     onSelect : function (event) {
         // the pointer event system will use the object bounding rect, check then with with the exact shape
-        if (this.body.getShape().containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+        if (this.body.getShape(0).containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
             this.grabOffset.set(event.gameX, event.gameY);
             this.grabOffset.sub(this.pos);
             this.canMove = true;
@@ -126,19 +128,19 @@ game.Poly = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add a polygone shape
-        this.body.addShape(new me.PolyShape(0, 0, [
+        this.body.addShape(new me.Polygon(0, 0, [
             // draw a star
-            {x:0, y:0},
-            {x:28, y:60},
-            {x:94, y:70},
-            {x:46, y:114},
-            {x:88, y:180},
-            {x:0, y:125},
-            {x:-88, y:180},
-            {x:-46, y:114},
-            {x:-94, y:70},
-            {x:-28, y:60}
-        ], true));
+            new me.Vector2d(0, 0),
+            new me.Vector2d(28, 60),
+            new me.Vector2d(94, 70),
+            new me.Vector2d(46, 114),
+            new me.Vector2d(88, 180),
+            new me.Vector2d(0, 125),
+            new me.Vector2d(-88, 180),
+            new me.Vector2d(-46, 114),
+            new me.Vector2d(-94, 70),
+            new me.Vector2d(-28, 60)
+        ]));
 
         // star
         this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 24, 24);
