@@ -44,7 +44,8 @@
             this.bounds = undefined;
 
             /**
-             * Array of points defining the Polygon
+             * Array of points defining the Polygon <br>
+             * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
              * @public
              * @type {me.Vector2d[]}
              * @name points
@@ -74,6 +75,24 @@
             return this;
         },
         
+        /**
+         * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Polygon
+         * @function
+         * @param {number} angle The angle to rotate (in radians)
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        rotate : function (angle) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].rotate(angle);
+            }
+            this.recalc();
+            this.updateBounds();
+            return this;
+        },
         
         /**
          * Computes the calculated collision polygon. 
