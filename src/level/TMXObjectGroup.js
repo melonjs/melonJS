@@ -228,7 +228,7 @@
              * @type Boolean
              * @name isEllipse
              * @memberOf me.TMXObject
-             */           
+             */
             this.isEllipse = false;
             
             /**
