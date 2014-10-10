@@ -212,8 +212,25 @@
              * @memberOf me.TMXObject
              */
             this.type = tmxObj[TMXConstants.TMX_TAG_TYPE];
-
+            
+            /**
+             * The rotation of the object in radians clockwise (defaults to 0)
+             * @public
+             * @type Number
+             * @name rotation
+             * @memberOf me.TMXObject
+             */
+            this.rotation = (+tmxObj[TMXConstants.TMX_ROTATION]).degToRad() || 0;
+            
+             /**
+             * if true, the object is an Ellipse
+             * @public
+             * @type Boolean
+             * @name isEllipse
+             * @memberOf me.TMXObject
+             */           
             this.isEllipse = false;
+            
             /**
              * if true, the object is a Polygon
              * @public
@@ -317,6 +334,7 @@
          * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} a list of shape objects
          */
         getTMXShapes : function () {
+            
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius

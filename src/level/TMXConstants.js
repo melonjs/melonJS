@@ -56,5 +56,6 @@
         TMX_TAG_ELLIPSE             : "ellipse",
         TMX_TAG_POINTS              : "points",
         TMX_BACKGROUND_COLOR        : "backgroundcolor",
+        TMX_ROTATION                : "rotation"
     };
 })();
