@@ -220,9 +220,9 @@
              * @name rotation
              * @memberOf me.TMXObject
              */
-            this.rotation = (+tmxObj[TMXConstants.TMX_ROTATION]).degToRad() || 0;
+            this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
             
-             /**
+            /*
              * if true, the object is an Ellipse
              * @public
              * @type Boolean
