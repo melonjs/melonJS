@@ -31,8 +31,6 @@ game.ShapeObject = me.Entity.extend({
                         // shape object position is relative to the entity
                         event.gameX - this.pos.x, event.gameY - this.pos.y
                      );
-                     
-        console.log(this.hover);
 
         if (this.canMove) {
             // follow the mouse/finger
