@@ -84,13 +84,15 @@
          * @return {me.Polygon} Reference to this object for method chaining
          */
         rotate : function (angle) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                points[i].rotate(angle);
+            if (angle !== 0) {
+                var points = this.points;
+                var len = points.length;
+                for (var i = 0; i < len; i++) {
+                    points[i].rotate(angle);
+                }
+                this.recalc();
+                this.updateBounds();
             }
-            this.recalc();
-            this.updateBounds();
             return this;
         },
         
