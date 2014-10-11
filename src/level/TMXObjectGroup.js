@@ -334,7 +334,7 @@
          * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} a list of shape objects
          */
         getTMXShapes : function () {
-            
+
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius
@@ -343,7 +343,7 @@
 
             // add a polygon
             if (this.isPolygon === true) {
-                return [ new me.Polygon(0, 0, this.points) ];
+                return [ (new me.Polygon(0, 0, this.points)).rotate(this.rotation) ];
             }
 
             // add a polyline
@@ -352,18 +352,18 @@
                 var segments = p.length - 1;
                 var lines = [];
                 for (var i = 0; i < segments; i++) {
-                    lines.push(new me.Line(0, 0, [ p[i], p[i + 1] ]));
+                    lines.push((new me.Line(0, 0, [ p[i], p[i + 1] ])).rotate(this.rotation));
                 }
                 return lines;
             }
 
             // it's a rectangle, returns a polygon object anyway
-            return [ new me.Polygon(
+            return [ (new me.Polygon(
                 0, 0, [
                     new me.Vector2d(), new me.Vector2d(this.width, 0),
                     new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
                 ]
-            ) ];
+            )).rotate(this.rotation) ];
         },
         /**
          * getObjectPropertyByName
