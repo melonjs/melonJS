@@ -352,7 +352,16 @@
                 var segments = p.length - 1;
                 var lines = [];
                 for (var i = 0; i < segments; i++) {
-                    lines.push((new me.Line(0, 0, [ p[i], p[i + 1] ])).rotate(this.rotation));
+                    if (this.rotation !== 0) {
+                        p[i].rotate(this.rotation);
+                    }
+                    lines.push(new me.Line(0, 0, [ p[i], p[i + 1] ]));
+                }
+                if (this.rotation !== 0) {
+                    //apply rotation to the last point
+                    var last = lines.length - 1;
+                    lines[last].points[1].rotate(this.rotation);
+                    lines[last].recalc().updateBounds();
                 }
                 return lines;
             }
