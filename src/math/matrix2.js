@@ -13,71 +13,20 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Number} a the m1,1 (m11) value in the matrix
-     * @param {Number} b the m1,2 (m12) value in the matrix
-     * @param {Number} c the m2,1 (m21) value in the matrix
-     * @param {Number} d the m2,2 (m12) value in the matrix
-     * @param {Number} e The delta x (dx) value in the matrix
-     * @param {Number} f The delta x (dy) value in the matrix
+     * @param {me.Matrix2d} an instance of matrix2 to copy from (optional)
      */
     me.Matrix2d = Object.extend(
     /** @scope me.Matrix2d.prototype */    {
 
         /** @ignore */
-        init : function (a, b, c, d, e, f) {
-            /**
-             * the m1,1 value in the matrix (a)
-             * @public
-             * @type Number
-             * @name a
-             * @memberOf me.Matrix2d
-             */
-            this.a = a || 1;
-
-            /**
-             * the m1,2 value in the matrix (b)
-             * @public
-             * @type Number
-             * @name b
-             * @memberOf me.Matrix2d
-             */
-            this.b = b || 0;
-
-            /**
-             * the m2,1 value in the matrix (c)
-             * @public
-             * @type Number
-             * @name c
-             * @memberOf me.Matrix2d
-             */
-            this.c = c || 0;
-
-            /**
-             * the m2,2 value in the matrix (d)
-             * @public
-             * @type Number
-             * @name d
-             * @memberOf me.Matrix2d
-             */
-            this.d = d || 1;
-
-            /**
-             * The delta x value in the matrix (e)
-             * @public
-             * @type Number
-             * @name e
-             * @memberOf me.Matrix2d
-             */
-            this.e = e || 0;
-
-            /**
-             * The delta y value in the matrix (f)
-             * @public
-             * @type Number
-             * @name f
-             * @memberOf me.Matrix2d
-             */
-            this.f = f || 0;
+        init : function (m) {
+            this.val = new Float32Array(6);
+            if (m) {
+                this.copy(m);
+            }
+            else {
+                this.identity();
+            }
         },
 
         /**
@@ -90,7 +39,7 @@
          * @return {me.Matrix2d} this matrix
          */
         identity : function () {
-            this.set(1, 0, 0, 1, 0, 0);
+            this.set([1, 0, 0, 1, 0, 0]);
             return this;
         },
 
@@ -99,21 +48,17 @@
          * @name set
          * @memberOf me.Matrix2d
          * @function
-         * @param {Number} a the m1,1 (m11) value in the matrix
-         * @param {Number} b the m1,2 (m12) value in the matrix
-         * @param {Number} c the m2,1 (m21) value in the matrix
-         * @param {Number} d the m2,2 (m22) value in the matrix
-         * @param {Number} [e] The delta x (dx) value in the matrix
-         * @param {Number} [f] The delta y (dy) value in the matrix
+         * @param {Array} the array of values to set the matrix to. Does not deep copy
          * @return {me.Matrix2d} this matrix
          */
-        set : function (a, b, c, d, e, f) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.d = d;
-            this.e = typeof(e) !== "undefined" ? e : this.e;
-            this.f = typeof(f) !== "undefined" ? f : this.f;
+        set : function () {
+            var a = this.val;
+            a[0] = arguments[0];
+            a[1] = arguments[1];
+            a[2] = arguments[2];
+            a[3] = arguments[3];
+            a[4] = arguments[4];
+            a[5] = arguments[5];
             return this;
         },
 
@@ -122,26 +67,20 @@
          * @name multiply
          * @memberOf me.Matrix2d
          * @function
-         * @param {Number} a the m1,1 (m11) value in the matrix
-         * @param {Number} b the m1,2 (m12) value in the matrix
-         * @param {Number} c the m2,1 (m21) value in the matrix
-         * @param {Number} d the m2,2 (m22) value in the matrix
-         * @param {Number} [e] The delta x (dx) value in the matrix
-         * @param {Number} [f] The delta y (dy) value in the matrix
+         * @param {me.Matrix2d} otherMat
          * @return {me.Matrix2d} this matrix
          */
-        multiply : function (a, b, c, d, e, f) {
-            var a1 = this.a;
-            var b1 = this.b;
-            var c1 = this.c;
-            var d1 = this.d;
+        multiply : function (otherMat) {
+            var a = this.val, b = otherMat.val;
+            var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5],
+            b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5];
 
-            this.a = a * a1 + b * c1;
-            this.b = a * b1 + b * d1;
-            this.c = c * a1 + d * c1;
-            this.d = c * b1 + d * d1;
-            this.e = e * a1 + f * c1 + this.e;
-            this.f = e * b1 + f * d1 + this.f;
+            a[0] = a0 * b0 + a2 * b1;
+            a[1] = a1 * b0 + a3 * b1;
+            a[2] = a0 * b2 + a2 * b3;
+            a[3] = a1 * b2 + a3 * b3;
+            a[4] = a0 * b4 + a2 * b5 + a4;
+            a[5] = a1 * b4 + a3 * b5 + a5;
             return this;
         },
 
@@ -155,11 +94,11 @@
          * @return {me.Matrix2d} this matrix
          */
         scale : function (sx, sy) {
-            this.a *= sx;
-            this.d *= sy;
-
-            this.e *= sx;
-            this.f *= sy;
+            var a = this.val;
+            a[0] = a[0] * sx;
+            a[1] = a[1] * sx;
+            a[2] = a[2] * sy;
+            a[3] = a[2] * sy;
 
             return this;
         },
@@ -174,20 +113,14 @@
          */
         rotate : function (angle) {
             if (angle !== 0) {
-                var cos = Math.cos(angle);
-                var sin = Math.sin(angle);
-                var a = this.a;
-                var b = this.b;
-                var c = this.c;
-                var d = this.d;
-                var e = this.e;
-                var f = this.f;
-                this.a = a * cos - b * sin;
-                this.b = a * sin + b * cos;
-                this.c = c * cos - d * sin;
-                this.d = c * sin + d * cos;
-                this.e = e * cos - f * sin;
-                this.f = e * sin + f * cos;
+                var a = this.val;
+                var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
+                    s = Math.sin(angle),
+                    c = Math.cos(angle);
+                a[0] = a0 * c + a2 * s;
+                a[1] = a1 * c + a3 * s;
+                a[2] = a0 * -s + a2 * c;
+                a[3] = a1 * -s + a3 * c;
             }
             return this;
         },
@@ -202,8 +135,13 @@
          * @return {me.Matrix2d} this matrix
          */
         translate : function (x, y) {
-            this.e += x;
-            this.f += y;
+            var a = this.val;
+            /* var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+            a[4] = a0 * x + a2 * y + a4;
+            a[5] = a1 * x + a3 * y + a5; */
+
+            a[4] += x;
+            a[5] += y;
 
             return this;
         },
@@ -228,7 +166,8 @@
          * @return {Boolean}
          **/
         isIdentity : function () {
-            return (this.a === 1 && this.b === 0 && this.c === 0 && this.d === 1 && this.e === 0 && this.f === 0);
+            var a = this.a;
+            return (a[0] === 1 && a[1] === 0 && a[2] === 0 && a[3] === 1 && a[4] === 0 && a[5] === 0);
         },
 
         /**
@@ -239,7 +178,7 @@
          * @return {me.Matrix2d}
          */
         clone : function () {
-            return new me.Matrix2d(this.a, this.b, this.c, this.d, this.e, this.f);
+            return new me.Matrix2d(this);
         }
     });
 })();

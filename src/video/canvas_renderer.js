@@ -587,17 +587,12 @@
         /**
          * transforms the context. Accepts any number of integer arguments
          * @name transform
-         * @param {Number} a the m1,1 (m11) value in the matrix
-         * @param {Number} b the m1,2 (m12) value in the matrix
-         * @param {Number} c the m2,1 (m21) value in the matrix
-         * @param {Number} d the m2,2 (m12) value in the matrix
-         * @param {Number} e The delta x (dx) value in the matrix
-         * @param {Number} f The delta x (dy) value in the matrix
          * @memberOf me.CanvasRenderer
          * @function
+         * @param {Array} mat2d array representation to transform by
          */
-        api.transform = function (a, b, c, d, e, f) {
-            backBufferContext2D.transform(a, b, c, d, e, f);
+        api.transform = function (array) {
+            backBufferContext2D.transform(array[0], array[1], array[2], array[3], array[4], array[5]);
         };
 
         /**

@@ -657,11 +657,7 @@
             renderer.save();
 
             // apply the container current transform
-            renderer.transform(
-                this.transform.a, this.transform.b,
-                this.transform.c, this.transform.d,
-                this.transform.e, this.transform.f
-            );
+            renderer.transform(this.transform.val);
 
             // apply the group opacity
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());

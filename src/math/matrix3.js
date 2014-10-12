@@ -285,20 +285,17 @@
          * @param {Number} c the m1,3
          * @param {Number} f the m2,3
          */
-        transform : function (a, b, d, e, c, f) {
+        transform : function (a, b, c, d, e, f) {
             var m = this.val;
-            /* m[0] = a;
-            m[1] = b;
-            m[2] = c;
-            m[3] = d;
-            m[4] = e;
-            m[5] = f; */
             m[0] = a;
             m[1] = c;
             m[2] = e;
             m[3] = b;
             m[4] = d;
             m[5] = f;
+            m[6] = 0;
+            m[7] = 0;
+            m[8] = 1;
         },
 
         /**

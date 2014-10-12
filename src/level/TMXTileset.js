@@ -106,21 +106,22 @@
             }
             // reset the matrix (in case it was already defined)
             this.transform.identity();
-
+            var a = this.transform.val;
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.set(0, 1, 1, 0);
+                this.transform.set([0, 1, 1, 0, a[4], a[5]]);
                 this.transform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
-                this.transform.a *= -1;
-                this.transform.c *= -1;
+
+                a[0] *= -1;
+                a[2] *= -1;
                 this.transform.translate((this.flippedAD ? this.height : this.width), 0);
 
             }
             if (this.flippedY) {
-                this.transform.b *= -1;
-                this.transform.d *= -1;
+                a[1] *= -1;
+                a[3] *= -1;
                 this.transform.translate(0, (this.flippedAD ? this.width : this.height));
             }
         }
@@ -312,12 +313,13 @@
             if (tmxTile.flipped) {
                 renderer.save();
                 // apply the tile current transform
-                var transform = tmxTile.transform;
-                renderer.transform(
-                    transform.a, transform.b,
-                    transform.c, transform.d,
-                    transform.e + dx, transform.f + dy
-                );
+                var a = tmxTile.transform.val;
+
+                renderer.transform([
+                    a[0], [1],
+                    a[2], [3],
+                    a[4] + dx, a[5] + dy
+                ]);
                 // reset both values as managed through transform();
                 dx = dy = 0;
             }

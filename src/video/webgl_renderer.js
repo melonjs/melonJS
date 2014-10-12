@@ -270,7 +270,6 @@
             this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
-
             shaderProgram.uniforms.uColor = globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
@@ -490,15 +489,11 @@
          * @name transform
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Number} a the m1,1 (m11) value in the matrix
-         * @param {Number} b the m1,2 (m12) value in the matrix
-         * @param {Number} d the m2,1 (m21) value in the matrix
-         * @param {Number} e the m2,2 (m12) value in the matrix
-         * @param {Number} c the m1,3
-         * @param {Number} f the m2,3
+         * @param {Array} mat2d array representation to transform by
          */
-        api.transform = function (a, b, d, e, c, f) {
-            this.uniformMatrix.transform(a, b, d, e, c, f);
+        api.transform = function (array) {
+            // this.uniformMatrix.transform(a, b, c, d, e, f);
+            this.uniformMatrix.multiply(array);
         };
 
         /**
