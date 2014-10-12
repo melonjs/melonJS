@@ -51,14 +51,14 @@
          * @param {Array} the array of values to set the matrix to. Does not deep copy
          * @return {me.Matrix2d} this matrix
          */
-        set : function () {
+        set : function (array) {
             var a = this.val;
-            a[0] = arguments[0];
-            a[1] = arguments[1];
-            a[2] = arguments[2];
-            a[3] = arguments[3];
-            a[4] = arguments[4];
-            a[5] = arguments[5];
+            a[0] = array[0];
+            a[1] = array[1];
+            a[2] = array[2];
+            a[3] = array[3];
+            a[4] = array[4];
+            a[5] = array[5];
             return this;
         },
 
