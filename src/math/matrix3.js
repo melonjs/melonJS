@@ -157,15 +157,22 @@
          * @return {me.Matrix3d}
          */
         multiply : function (otherMat) {
-            var a = this.val,
-                b = otherMat.val,
-                a00 = a[0], a01 = a[1], a02 = a[2],
-                a10 = a[3], a11 = a[4], a12 = a[5],
-                a20 = a[6], a21 = a[7], a22 = a[8],
+            return this.multiplyArray(otherMat.val);
+        },
 
-                b00 = b[0], b01 = b[1], b02 = b[2],
-                b10 = b[3], b11 = b[4], b12 = b[5],
-                b20 = b[6], b21 = b[7], b22 = b[8];
+        /**
+         * @private
+         */
+        multiplyArray : function (array) {
+            var a = this.val,
+            b = array,
+            a00 = a[0], a01 = a[1], a02 = a[2],
+            a10 = a[3], a11 = a[4], a12 = a[5],
+            a20 = a[6], a21 = a[7], a22 = a[8],
+
+            b00 = b[0], b01 = b[1], b02 = b[2],
+            b10 = b[3], b11 = b[4], b12 = b[5],
+            b20 = b[6], b21 = b[7], b22 = b[8];
 
             a[0] = b00 * a00 + b01 * a10 + b02 * a20;
             a[1] = b00 * a01 + b01 * a11 + b02 * a21;

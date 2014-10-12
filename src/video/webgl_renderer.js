@@ -491,9 +491,21 @@
          * @function
          * @param {Array} mat2d array representation to transform by
          */
-        api.transform = function (array) {
-            // this.uniformMatrix.transform(a, b, c, d, e, f);
-            this.uniformMatrix.multiply(array);
+        api.transform = function (a) {
+            // TODO: Try to optimize or pool this.
+            var out = new Float32Array(9);
+            out[0] = a[0];
+            out[1] = a[1];
+            out[2] = 0;
+
+            out[3] = a[2];
+            out[4] = a[3];
+            out[5] = 0;
+
+            out[6] = a[4];
+            out[7] = a[5];
+            out[8] = 1;
+            this.uniformMatrix.multiplyArray(out);
         };
 
         /**
