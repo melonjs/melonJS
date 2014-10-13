@@ -11,8 +11,8 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Number} x the center x coordinate of the ellipse  
-     * @param {Number} y the center y coordinate of the ellipse  
+     * @param {Number} x the center x coordinate of the ellipse
+     * @param {Number} y the center y coordinate of the ellipse
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
@@ -22,7 +22,7 @@
         /** @ignore */
         init : function (x, y, w, h) {
             /**
-             * the center coordinates of the ellipse 
+             * the center coordinates of the ellipse
              * @public
              * @type {me.Vector2d}
              * @name pos
@@ -40,13 +40,40 @@
             this.bounds = undefined;
 
             /**
-             * radius (x/y) of the ellipse
+             * Maximum radius of the ellipse
              * @public
-             * @type {me.Vector2d}
+             * @type {Number}
              * @name radius
              * @memberOf me.Ellipse
              */
-            this.radius = new me.Vector2d();
+            this.radius = NaN;
+
+            /**
+             * Pre-scaled radius vector for ellipse
+             * @public
+             * @type {me.Vector2d}
+             * @name radiusV
+             * @memberOf me.Ellipse
+             */
+            this.radiusV = new me.Vector2d();
+
+            /**
+             * Radius squared, for pythagorean theorom
+             * @public
+             * @type {me.Vector2d}
+             * @name radiusSq
+             * @memberOf me.Ellipse
+             */
+            this.radiusSq = new me.Vector2d();
+
+            /**
+             * x/y scaling factors for ellipse
+             * @public
+             * @type {me.Vector2d}
+             * @name scale
+             * @memberOf me.Ellipse
+             */
+            this.scaleV = new me.Vector2d();
 
             // the shape type
             this.shapeType = "Ellipse";
@@ -64,8 +91,14 @@
          * @param {Number} h height (diameter) of the ellipse
          */
         setShape : function (x, y, w, h) {
+            var hW = w / 2;
+            var hH = h / 2;
             this.pos.set(x, y);
-            this.radius.set(w / 2, h / 2);
+            this.radius = Math.max(hW, hH);
+            this.scaleV.set(hW / this.radius, hH / this.radius);
+            this.radiusV.set(this.radius, this.radius).scaleV(this.scaleV);
+            var r = this.radius * this.radius;
+            this.radiusSq.set(r, r).scaleV(this.scaleV);
             this.updateBounds();
             return this;
         },
@@ -141,8 +174,8 @@
             y -= this.pos.y;
             // Pythagorean theorem.
             return (
-                ((x * x) / (this.radius.x * this.radius.x)) +
-                ((y * y) / (this.radius.y * this.radius.y))
+                ((x * x) / this.radiusSq.x) +
+                ((y * y) / this.radiusSq.y)
             ) <= 1.0;
         },
 
@@ -156,7 +189,7 @@
         getBounds : function () {
             return this.bounds;
         },
-        
+
         /**
          * update the bounding box for this shape.
          * @name updateBounds
@@ -165,11 +198,13 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
-            var x = this.pos.x - this.radius.x,
-                y = this.pos.y - this.radius.y,
-                w = this.radius.x * 2,
-                h = this.radius.y * 2;
-            
+            var rx = this.radiusV.x,
+                ry = this.radiusV.y,
+                x = this.pos.x - rx,
+                y = this.pos.y - ry,
+                w = rx * 2,
+                h = ry * 2;
+
             if (!this.bounds) {
                 this.bounds = new me.Rect(x, y, w, h);
             }  else {
@@ -186,7 +221,12 @@
          * @return {me.Ellipse} new Ellipse
          */
         clone : function () {
-            return new me.Ellipse(this.pos.x, this.pos.y, this.radius.x * 2, this.radius.y * 2);
+            return new me.Ellipse(
+                this.pos.x,
+                this.pos.y,
+                this.radiusV.x * 2,
+                this.radiusV.y * 2
+            );
         },
 
         /**
@@ -196,7 +236,15 @@
         draw : function (renderer, color) {
             renderer.setColor(color || "red");
             renderer.setLineWidth(1);
-            renderer.strokeArc(this.pos.x, this.pos.y, this.radius.x, this.radius.y, 0, 2 * Math.PI, false);
+            renderer.strokeArc(
+                this.pos.x,
+                this.pos.y,
+                this.radiusV.x,
+                this.radiusV.y,
+                0,
+                2 * Math.PI,
+                false
+            );
         }
     });
 })();

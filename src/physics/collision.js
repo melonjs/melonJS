@@ -214,7 +214,7 @@
          * @public
          * @type {number}
          * @see me.collision.quadTree
-         * 
+         *
          */
         api.maxDepth = 4;
 
@@ -227,7 +227,7 @@
          * @see me.collision.quadTree
          */
         api.maxChildren = 8;
-        
+
        /**
          * bounds of the physic world.
          * @name bounds
@@ -263,7 +263,7 @@
          */
         api.types = {
             NO_OBJECT : 0,
-            
+
             /**
              * Default object type constant for collision filtering
              * @constant
@@ -279,7 +279,7 @@
              * @memberOf me.collision.types
              */
             NPC_OBJECT : 2,
-            
+
             /**
              * Default object type constant for collision filtering
              * @constant
@@ -329,7 +329,7 @@
             ALL_OBJECT : 0xFFFFFFFF // all objects
         };
 
-        /** 
+        /**
          * Initialize the collision/physic world
          * @ignore
          */
@@ -338,7 +338,7 @@
             api.bounds = me.game.viewport.clone();
             // initializa the quadtree
             api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
-            
+
             // reset the collision detection engine if a TMX level is loaded
             me.event.subscribe(me.event.LEVEL_LOADED, function () {
                 // default bounds to game world
@@ -347,7 +347,7 @@
                 me.collision.quadTree.clear(me.collision.bounds);
             });
         };
-        
+
         /**
          * An object representing the result of an intersection, contains: <br>
          *  - <b>`a`</b> and <b>`b`</b> {me.Entity} : The two objects participating in the intersection <br>
@@ -423,9 +423,9 @@
                 (a.body.collisionType & b.body.collisionMask) !== 0
             );
         };
-        
+
         /**
-         * Checks if the specified entity collides with others entities 
+         * Checks if the specified entity collides with others entities
          * @name check
          * @memberOf me.collision
          * @public
@@ -454,10 +454,10 @@
         api.check = function (objA, responseObject) {
             var collision = 0;
             var response = responseObject || api.response;
-            
-            // retreive a list of potential colliding objects            
+
+            // retreive a list of potential colliding objects
             var candidates = api.quadTree.retrieve(objA);
-            
+
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
                 if (objB.inViewport || objB.alwaysUpdate) {
@@ -490,7 +490,7 @@
                                     ) {
                                         // we touched something !
                                         collision++;
-                                        
+
                                         // set the shape index
                                         response.indexShapeA = indexA;
                                         response.indexShapeB = indexB;
@@ -583,7 +583,7 @@
         api.testEllipseEllipse = function (a, ellipseA, b, ellipseB, response) {
             // Check if the distance between the centers of the two
             // circles is greater than their combined radius.
-            var differenceV = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).add(ellipseA.pos);
+            var differenceV = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).sub(ellipseA.pos);
             var radiusA = ellipseA.radius;
             var radiusB = ellipseB.radius;
             var totalRadius = radiusA + radiusB;
@@ -621,7 +621,7 @@
          */
         api.testPolygonEllipse = function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
-            var circlePos = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).add(polyA.pos);
+            var circlePos = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).sub(polyA.pos);
             var radius = ellipseB.radius;
             var radius2 = radius * radius;
             var points = polyA.points;
