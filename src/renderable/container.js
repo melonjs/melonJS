@@ -71,13 +71,13 @@
                 height || Infinity]
             );
             // init the bounds to an empty rect
-            
+
             /**
              * Container bounds
              * @ignore
              */
             this.bounds = undefined;
-            
+
             /**
              * The array of children of this container.
              * @ignore
@@ -103,7 +103,7 @@
 
             this.autoSort = true;
             this.transform.identity();
-            
+
             /**
              * Used by the debug panel plugin
              * @ignore
@@ -141,7 +141,7 @@
             }
 
             // specify a z property to infinity if not defined
-            if (typeof child.z === "undefined") {
+            if ((typeof child.z === "undefined") || (child.z !== child.z)) {
                 child.z = this.children.length;
             }
 
@@ -653,7 +653,7 @@
         draw : function (renderer, rect) {
             var viewport = me.game.viewport;
             var isFloating = false;
-            
+
             this.drawCount = 0;
 
             renderer.save();
@@ -689,7 +689,7 @@
                     if (isFloating === true) {
                         renderer.restore();
                     }
-                    
+
                     this.drawCount++;
                 }
             }
