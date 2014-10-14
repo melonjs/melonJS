@@ -67,13 +67,13 @@
             this.radiusSq = new me.Vector2d();
 
             /**
-             * x/y scaling factors for ellipse
+             * x/y scaling ratio for ellipse
              * @public
              * @type {me.Vector2d}
-             * @name scaledV
+             * @name ratio
              * @memberOf me.Ellipse
              */
-            this.scaledV = new me.Vector2d();
+            this.ratio = new me.Vector2d();
 
             // the shape type
             this.shapeType = "Ellipse";
@@ -95,10 +95,10 @@
             var hH = h / 2;
             this.pos.set(x, y);
             this.radius = Math.max(hW, hH);
-            this.scaledV.set(hW / this.radius, hH / this.radius);
-            this.radiusV.set(this.radius, this.radius).scaleV(this.scaledV);
+            this.ratio.set(hW / this.radius, hH / this.radius);
+            this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
             var r = this.radius * this.radius;
-            this.radiusSq.set(r, r).scaleV(this.scaledV);
+            this.radiusSq.set(r, r).scaleV(this.ratio);
             this.updateBounds();
             return this;
         },
