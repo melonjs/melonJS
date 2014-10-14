@@ -364,7 +364,7 @@
                 for (i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
-                    p1 = p[i].clone();
+                    p1 = p[i];
                     p2 = p[i + 1].clone();
                     if (this.rotation !== 0) {
                         p1 = p1.rotate(this.rotation);
