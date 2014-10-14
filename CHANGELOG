@@ -7,7 +7,7 @@ Version History
 * Shapes : renamed me.PolyShape to me.Polygon and simplified the constructor (no longer needs a fourth param)
 * Shapes : added a new shape: me.Line
 * Shapes : added multi shapes support for body
-* Shapes : added rotation support for `me.Polygon`/`me.Line` shapes.
+* Shapes : added rotation and scaling support for `me.Polygon`/`me.Line` shapes.
 * Entity : added automatic collision response handling (not fully done yet actually)
 * CanvasRenderer : All fill & stroke methods have removed the color & line width parameters. Use the new setColor and setLineWidth methods.
 * CanvasRenderer : Removed strokeLine, was duplicate with drawLine

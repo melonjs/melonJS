@@ -97,6 +97,41 @@
         },
         
         /**
+         * Scale this Polygon by the given scalar.
+         * @name scale
+         * @memberOf me.Polygon
+         * @function
+         * @param {Number} x
+         * @param {Number} [y=x]
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        scale : function (x, y) {
+            y = typeof (y) !== "undefined" ? y : x;
+
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].scale(x, y);
+            }
+            this.recalc();
+            this.updateBounds();
+            return this;
+        },
+        
+        /**
+         * Scale this Polygon by the given vector
+         * @name scaleV
+         * @memberOf me.Vector2d
+         * @function
+         * @param {me.Vector2d} v
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        scaleV : function (v) {
+            return this.scale(v.x, v.y);
+        },
+        
+        
+        /**
          * Computes the calculated collision polygon. 
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
