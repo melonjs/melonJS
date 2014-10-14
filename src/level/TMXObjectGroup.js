@@ -20,7 +20,7 @@
      * @constructor
      */
     me.TMXObjectGroup = Object.extend({
-        init : function (name, tmxObjGroup, tilesets, z) {
+        init : function (name, tmxObjGroup, orientation, tilesets, z) {
             /**
              * group name
              * @public
@@ -28,34 +28,34 @@
              * @name name
              * @memberOf me.TMXObjectGroup
              */
-            this.name = null;
+            this.name = name;
 
             /**
              * group width
              * @public
              * @type Number
-             * @name name
+             * @name width
              * @memberOf me.TMXObjectGroup
              */
-            this.width = 0;
+            this.width = tmxObjGroup[TMXConstants.TMX_TAG_WIDTH];
 
             /**
              * group height
              * @public
              * @type Number
-             * @name name
+             * @name height
              * @memberOf me.TMXObjectGroup
              */
-            this.height = 0;
+            this.height = tmxObjGroup[TMXConstants.TMX_TAG_HEIGHT];
 
             /**
              * group z order
              * @public
              * @type Number
-             * @name name
+             * @name z
              * @memberOf me.TMXObjectGroup
              */
-            this.z = 0;
+            this.z = z;
 
             /**
              * group objects list definition
@@ -65,12 +65,6 @@
              * @name name
              * @memberOf me.TMXObjectGroup
              */
-            this.objects = [];
-            var self = this;
-            this.name    = name;
-            this.width   = tmxObjGroup[TMXConstants.TMX_TAG_WIDTH];
-            this.height  = tmxObjGroup[TMXConstants.TMX_TAG_HEIGHT];
-            this.z       = z;
             this.objects = [];
 
             var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
@@ -83,13 +77,14 @@
             // parse all objects
             // (under `objects` for XML converted map, under `object` for native json map)
             var _objects = tmxObjGroup.objects || tmxObjGroup.object;
+            var self = this;
             if (Array.isArray(_objects) === true) {
                 // JSON native format
                 _objects.forEach(function (tmxObj) {
-                    self.objects.push(new me.TMXObject(tmxObj, tilesets, z));
+                    self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
                 });
             } else {
-                self.objects.push(new me.TMXObject(_objects, tilesets, z));
+                self.objects.push(new me.TMXObject(_objects, orientation, tilesets, z));
             }
         },
 
@@ -133,7 +128,7 @@
      * @constructor
      */
     me.TMXObject = Object.extend({
-        init :  function (tmxObj, tilesets, z) {
+        init :  function (tmxObj, orientation, tilesets, z) {
 
             /**
              * object point list (for Polygon and PolyLine)
@@ -143,6 +138,7 @@
              * @memberOf me.TMXObject
              */
             this.points = undefined;
+
             /**
              * object name
              * @public
@@ -151,6 +147,7 @@
              * @memberOf me.TMXObject
              */
             this.name = tmxObj[TMXConstants.TMX_TAG_NAME];
+
             /**
              * object x position
              * @public
@@ -159,6 +156,7 @@
              * @memberOf me.TMXObject
              */
             this.x = +tmxObj[TMXConstants.TMX_TAG_X];
+
             /**
              * object y position
              * @public
@@ -167,6 +165,7 @@
              * @memberOf me.TMXObject
              */
             this.y = +tmxObj[TMXConstants.TMX_TAG_Y];
+
             /**
              * object z order
              * @public
@@ -212,7 +211,7 @@
              * @memberOf me.TMXObject
              */
             this.type = tmxObj[TMXConstants.TMX_TAG_TYPE];
-            
+
             /**
              * The rotation of the object in radians clockwise (defaults to 0)
              * @public
@@ -221,7 +220,16 @@
              * @memberOf me.TMXObject
              */
             this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
-            
+
+            /**
+             * object orientation (orthogonal or isometric)
+             * @public
+             * @type String
+             * @name orientation
+             * @memberOf me.TMXObject
+             */
+            this.orientation = orientation;
+
             /*
              * if true, the object is an Ellipse
              * @public
@@ -230,7 +238,7 @@
              * @memberOf me.TMXObject
              */
             this.isEllipse = false;
-            
+
             /**
              * if true, the object is a Polygon
              * @public
@@ -334,45 +342,57 @@
          * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} a list of shape objects
          */
         getTMXShapes : function () {
+            var i = 0;
+            var shapes = [];
 
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius
-                return [ new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height) ];
+                shapes.push(new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height));
             }
 
             // add a polygon
-            if (this.isPolygon === true) {
-                return [ (new me.Polygon(0, 0, this.points)).rotate(this.rotation) ];
+            else if (this.isPolygon === true) {
+                shapes.push((new me.Polygon(0, 0, this.points)).rotate(this.rotation));
             }
 
             // add a polyline
-            if (this.isPolyLine === true) {
+            else if (this.isPolyLine === true) {
                 var p = this.points;
                 var p1, p2;
                 var segments = p.length - 1;
-                var lines = [];
-                for (var i = 0; i < segments; i++) {
-                    p1 = p[i];
-                    p2 = p[i + 1];
+                for (i = 0; i < segments; i++) {
+                    // clone the value before, as [i + 1]
+                    // is reused later by the next segment
+                    p1 = p[i].clone();
+                    p2 = p[i + 1].clone();
                     if (this.rotation !== 0) {
-                        // clone the value before, as [i + 1]
-                        // is reused later by the next segment
-                        p1 = p1.clone().rotate(this.rotation);
-                        p2 = p2.clone().rotate(this.rotation);
+                        p1 = p1.rotate(this.rotation);
+                        p2 = p2.rotate(this.rotation);
                     }
-                    lines.push(new me.Line(0, 0, [ p1, p2 ]));
+                    shapes.push(new me.Line(0, 0, [ p1, p2 ]));
                 }
-                return lines;
             }
 
             // it's a rectangle, returns a polygon object anyway
-            return [ (new me.Polygon(
-                0, 0, [
-                    new me.Vector2d(), new me.Vector2d(this.width, 0),
-                    new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
-                ]
-            )).rotate(this.rotation) ];
+            else {
+                shapes.push((new me.Polygon(
+                    0, 0, [
+                        new me.Vector2d(), new me.Vector2d(this.width, 0),
+                        new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)
+                    ]
+                )).rotate(this.rotation));
+            }
+
+            // Apply isometric projection
+            if (this.orientation === "isometric") {
+                for (i = 0; i < shapes.length; i++) {
+                    // What are these magic numbers for scaling?
+                    shapes[i].rotate(Math.PI / 4).scale(1.4132, 0.705);
+                }
+            }
+
+            return shapes;
         },
         /**
          * getObjectPropertyByName
