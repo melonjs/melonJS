@@ -206,13 +206,9 @@
             var tilex = obj.x / this.hTilewidth;
             var tiley = obj.y / this.tileheight;
             var isoPos = this.tileToPixelCoords(tilex, tiley);
-            isoPos.x -= obj.width / 2;
-            isoPos.y -= obj.height;
 
             obj.x = isoPos.x;
             obj.y = isoPos.y;
-
-            //return isoPos;
         },
 
         /**

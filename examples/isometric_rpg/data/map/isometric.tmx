@@ -21,9 +21,7 @@
     <property name="spritewidth" value="32"/>
    </properties>
   </object>
-  <object x="160" y="160"/>
   <object x="256" y="288"/>
-  <object x="192" y="128"/>
  </objectgroup>
  <layer name="level 3" width="20" height="20">
   <data encoding="base64">
@@ -31,35 +29,17 @@
   </data>
  </layer>
  <objectgroup color="#ff0000" name="collision">
-  <object x="160" y="192">
-   <polyline points="0,0 32,0"/>
-  </object>
-  <object x="192" y="192">
-   <polyline points="0,0 0,-32"/>
-  </object>
-  <object x="256" y="96">
-   <polyline points="0,0 32,0"/>
-  </object>
-  <object x="288" y="96">
-   <polyline points="0,0 0,-32"/>
-  </object>
   <object x="0" y="640">
    <polyline points="0,0 640,0 640,-640 0,-640 0,0"/>
   </object>
   <object x="416" y="0">
    <polyline points="0,0 0,128 32,128 32,160 192,160 192,192 224,192"/>
   </object>
-  <object x="480" y="320">
-   <polyline points="0,0 32,0 32,-32"/>
-  </object>
-  <object x="416" y="576">
-   <polyline points="0,0 32,0 32,-32"/>
-  </object>
-  <object x="288" y="384">
-   <polyline points="0,0 32,0 32,-32"/>
-  </object>
-  <object x="192" y="480">
-   <polyline points="0,0 32,0 32,-32"/>
-  </object>
+  <object x="160" y="160" width="32" height="32"/>
+  <object x="256" y="64" width="32" height="32"/>
+  <object x="480" y="288" width="32" height="32"/>
+  <object x="288" y="352" width="32" height="32"/>
+  <object x="416" y="544" width="32" height="32"/>
+  <object x="192" y="448" width="32" height="32"/>
  </objectgroup>
 </map>
