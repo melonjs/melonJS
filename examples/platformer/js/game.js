@@ -23,6 +23,9 @@ var game = {
             return;
         }
 
+        // Set some default debug flags
+        me.debug.renderHitBox = true;
+
         // add "#debug" to the URL to enable the debug Panel
         if (document.location.hash === "#debug") {
             window.onReady(function () {
