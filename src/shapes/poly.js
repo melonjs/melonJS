@@ -121,10 +121,10 @@
         /**
          * Scale this Polygon by the given vector
          * @name scaleV
-         * @memberOf me.Vector2d
+         * @memberOf me.Polygon
          * @function
          * @param {me.Vector2d} v
-         * @return {me.Vector2d} Reference to this object for method chaining
+         * @return {me.Polygon} Reference to this object for method chaining
          */
         scaleV : function (v) {
             return this.scale(v.x, v.y);
