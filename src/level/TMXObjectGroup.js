@@ -349,19 +349,19 @@
             // add a polyline
             if (this.isPolyLine === true) {
                 var p = this.points;
+                var p1, p2;
                 var segments = p.length - 1;
                 var lines = [];
                 for (var i = 0; i < segments; i++) {
+                    p1 = p[i];
+                    p2 = p[i + 1];
                     if (this.rotation !== 0) {
-                        p[i].rotate(this.rotation);
+                        // clone the value before, as [i + 1]
+                        // is reused later by the next segment
+                        p1 = p1.clone().rotate(this.rotation);
+                        p2 = p2.clone().rotate(this.rotation);
                     }
-                    lines.push(new me.Line(0, 0, [ p[i], p[i + 1] ]));
-                }
-                if (this.rotation !== 0) {
-                    //apply rotation to the last point
-                    var last = lines.length - 1;
-                    lines[last].points[1].rotate(this.rotation);
-                    lines[last].recalc().updateBounds();
+                    lines.push(new me.Line(0, 0, [ p1, p2 ]));
                 }
                 return lines;
             }
