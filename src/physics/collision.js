@@ -667,6 +667,7 @@
                             // No intersection
                             T_VECTORS.push(circlePos);
                             T_VECTORS.push(edge);
+                            T_VECTORS.push(normal);
                             T_VECTORS.push(point);
                             T_VECTORS.push(point2);
                             return false;
@@ -692,6 +693,7 @@
                             // No intersection
                             T_VECTORS.push(circlePos);
                             T_VECTORS.push(edge);
+                            T_VECTORS.push(normal);
                             T_VECTORS.push(point);
                             return false;
                         } else if (response) {
@@ -714,6 +716,7 @@
                     if (dist > 0 && distAbs > radius) {
                         // No intersection
                         T_VECTORS.push(circlePos);
+                        T_VECTORS.push(edge);
                         T_VECTORS.push(normal);
                         T_VECTORS.push(point);
                         return false;
