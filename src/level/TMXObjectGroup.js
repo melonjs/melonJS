@@ -348,7 +348,12 @@
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius
-                shapes.push(new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height));
+                shapes.push((new me.Ellipse(
+                    this.width / 2,
+                    this.height / 2,
+                    this.width,
+                    this.height
+                )).rotate(this.rotation));
             }
 
             // add a polygon

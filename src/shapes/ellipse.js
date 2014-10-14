@@ -70,10 +70,10 @@
              * x/y scaling factors for ellipse
              * @public
              * @type {me.Vector2d}
-             * @name scale
+             * @name scaledV
              * @memberOf me.Ellipse
              */
-            this.scaleV = new me.Vector2d();
+            this.scaledV = new me.Vector2d();
 
             // the shape type
             this.shapeType = "Ellipse";
@@ -95,10 +95,10 @@
             var hH = h / 2;
             this.pos.set(x, y);
             this.radius = Math.max(hW, hH);
-            this.scaleV.set(hW / this.radius, hH / this.radius);
-            this.radiusV.set(this.radius, this.radius).scaleV(this.scaleV);
+            this.scaledV.set(hW / this.radius, hH / this.radius);
+            this.radiusV.set(this.radius, this.radius).scaleV(this.scaledV);
             var r = this.radius * this.radius;
-            this.radiusSq.set(r, r).scaleV(this.scaleV);
+            this.radiusSq.set(r, r).scaleV(this.scaledV);
             this.updateBounds();
             return this;
         },
@@ -108,7 +108,7 @@
          * @name rotate
          * @memberOf me.Ellipse
          * @function
-         * @param {number} angle The angle to rotate (in radians)
+         * @param {Number} angle The angle to rotate (in radians)
          * @return {me.Ellipse} Reference to this object for method chaining
          */
         rotate : function (/*angle*/) {
@@ -116,6 +116,32 @@
             return this;
         },
 
+        /**
+         * Scale this Ellipse by the specified scalar.
+         * @name scale
+         * @memberOf me.Ellipse
+         * @function
+         * @param {Number} x
+         * @param {Number} [y=x]
+         * @return {me.Ellipse} Reference to this object for method chaining
+         */
+        scale : function (/*x, y*/) {
+            // TODO
+            return this;
+        },
+
+        /**
+         * Scale this Ellipse by the specified vector.
+         * @name scale
+         * @memberOf me.Ellipse
+         * @function
+         * @param {me.Vector2d} v
+         * @return {me.Ellipse} Reference to this object for method chaining
+         */
+        scaleV : function (/*v*/) {
+            // TODO
+            return this;
+        },
 
         /**
          * translate the circle/ellipse by the specified offset
