@@ -316,8 +316,8 @@
                 var a = tmxTile.transform.val;
 
                 renderer.transform([
-                    a[0], [1],
-                    a[2], [3],
+                    a[0], a[1],
+                    a[2], a[3],
                     a[4] + dx, a[5] + dy
                 ]);
                 // reset both values as managed through transform();
