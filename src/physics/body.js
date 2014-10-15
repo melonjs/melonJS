@@ -14,12 +14,13 @@
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
+     * @param {me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
-        init : function (entity) {
+        init : function (entity, shapes) {
 
             /**
              * reference to the parent entity
@@ -30,11 +31,11 @@
             /**
              * The collision shapes of the entity <br>
              * @ignore
-             * @type {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}
+             * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
              * @memberOf me.Body
              */
-            this.shapes = [];
+            this.shapes = shapes || [];
 
             /**
              * The body collision mask, that defines what should collide with what.<br>
@@ -146,7 +147,7 @@
             // call the super constructor
             this._super(
                 me.Rect,
-                // bounds the body by default 
+                // bounds the body by default
                 // to the parent entity
                 "init", [
                     0,
@@ -197,7 +198,7 @@
         },
 
         /**
-         * remove the specified shape from the body shape list 
+         * remove the specified shape from the body shape list
          * @name removeShape
          * @memberOf me.Body
          * @public
@@ -216,7 +217,7 @@
         },
 
         /**
-         * remove the shape at the given index from the body shape list 
+         * remove the shape at the given index from the body shape list
          * @name removeShapeAt
          * @memberOf me.Body
          * @public
@@ -262,7 +263,7 @@
             var overlap = response.overlapV;
 
             // FIXME: Respond proportionally to object mass
-            
+
             // Move out of the other object shape
             this.entity.pos.sub(overlap);
 
@@ -291,13 +292,15 @@
          * @function
          */
         updateBounds : function () {
-            // reset the rect with default values
-            var _bounds = this.shapes[0].getBounds();
-            this.pos.setV(_bounds.pos);
-            this.resize(_bounds.width, _bounds.height);
-  
-            for (var i = 1 ; i < this.shapes.length; i++) {
-                this.union(this.shapes[i].getBounds());
+            if (this.shapes.length > 0) {
+                // reset the rect with default values
+                var _bounds = this.shapes[0].getBounds();
+                this.pos.setV(_bounds.pos);
+                this.resize(_bounds.width, _bounds.height);
+
+                for (var i = 1 ; i < this.shapes.length; i++) {
+                    this.union(this.shapes[i].getBounds());
+                }
             }
 
             // update the parent entity bounds

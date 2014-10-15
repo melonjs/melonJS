@@ -71,13 +71,13 @@
                 height || Infinity]
             );
             // init the bounds to an empty rect
-            
+
             /**
              * Container bounds
              * @ignore
              */
             this.bounds = undefined;
-            
+
             /**
              * The array of children of this container.
              * @ignore
@@ -103,7 +103,7 @@
 
             this.autoSort = true;
             this.transform.identity();
-            
+
             /**
              * Used by the debug panel plugin
              * @ignore
@@ -141,7 +141,7 @@
             }
 
             // specify a z property to infinity if not defined
-            if (typeof child.z === "undefined") {
+            if ((typeof child.z === "undefined") || (child.z !== child.z)) {
                 child.z = this.children.length;
             }
 
@@ -599,6 +599,7 @@
             var isTranslated;
             var x;
             var y;
+            var bounds;
             var viewport = me.game.viewport;
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
@@ -616,10 +617,11 @@
                     // Translate global context
                     isTranslated = !isFloating;
                     if (isTranslated) {
-                        x = obj.pos.x;
-                        y = obj.pos.y;
-                        globalTranslation.translateV(obj.pos);
-                        globalTranslation.resize(obj.width, obj.height);
+                        bounds = obj.getBounds();
+                        x = bounds.pos.x;
+                        y = bounds.pos.y;
+                        globalTranslation.translateV(bounds.pos);
+                        globalTranslation.resize(bounds.width, bounds.height);
                     }
 
                     // check if object is visible
@@ -651,7 +653,7 @@
         draw : function (renderer, rect) {
             var viewport = me.game.viewport;
             var isFloating = false;
-            
+
             this.drawCount = 0;
 
             renderer.save();
@@ -683,7 +685,7 @@
                     if (isFloating === true) {
                         renderer.restore();
                     }
-                    
+
                     this.drawCount++;
                 }
             }

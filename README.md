@@ -36,8 +36,7 @@ and currently features :
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
-    - Orthogonal tilemap with built-in collision management
-    - Isometric, Perspective tilemap support
+    - Orthogonal, Isometric and Perspective tilemap support
     - Multiple layers (multiple background/Foreground, collision and Image layers)
     - Multiple Tileset support
     - Tileset Transparency settings
@@ -47,7 +46,7 @@ and currently features :
     - Flipped & rotated Tiles
     - Dynamic Layer and Object/Group ordering
     - Dynamic Entity loading
-    - Solid, Platform, Slope and Breakable Tiles
+    - Shape based Tile collision support
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
 - Built-in support for cocoonJS

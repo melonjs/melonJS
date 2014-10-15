@@ -2,6 +2,19 @@
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff">
  <tileset firstgid="1" name="tileset" tilewidth="35" tileheight="35">
   <image source="../img/tileset.png" width="512" height="512"/>
+  <tile id="28">
+   <animation>
+    <frame tileid="28" duration="200"/>
+    <frame tileid="29" duration="400"/>
+    <frame tileid="28" duration="200"/>
+   </animation>
+  </tile>
+  <tile id="29">
+   <animation>
+    <frame tileid="29" duration="400"/>
+    <frame tileid="28" duration="400"/>
+   </animation>
+  </tile>
  </tileset>
  <imagelayer name="gradient_background">
   <image source="../img/background.png"/>
@@ -80,16 +93,20 @@
   <object x="1225" y="595">
    <polygon points="0,0 0,-70 70,-140 525,-140 525,0"/>
   </object>
-  <object type="platform" x="700" y="385" width="70" height="35">
-   <properties>
-    <property name="platform" value="true"/>
-   </properties>
-  </object>
   <object type="platform" x="560" y="455">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 70,0"/>
+  </object>
+  <object type="platform" x="700" y="385">
+   <properties>
+    <property name="platform" value="true"/>
+   </properties>
+   <polyline points="0,0 70,0"/>
+  </object>
+  <object x="1" y="35">
+   <polyline points="0,0 0,490"/>
   </object>
  </objectgroup>
 </map>

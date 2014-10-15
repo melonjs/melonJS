@@ -8,7 +8,7 @@
     /**
      * a polygon Object.<br>
      * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
-     * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon 
+     * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
      * (which means that all angles are less than 180 degrees), as described here below : <br>
      * <center><img src="images/convex_polygon.png"/></center><br>
      * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
@@ -44,7 +44,8 @@
             this.bounds = undefined;
 
             /**
-             * Array of points defining the Polygon
+             * Array of points defining the Polygon <br>
+             * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
              * @public
              * @type {me.Vector2d[]}
              * @name points
@@ -73,10 +74,64 @@
             this.updateBounds();
             return this;
         },
-        
-        
+
         /**
-         * Computes the calculated collision polygon. 
+         * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Polygon
+         * @function
+         * @param {Number} angle The angle to rotate (in radians)
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        rotate : function (angle) {
+            if (angle !== 0) {
+                var points = this.points;
+                var len = points.length;
+                for (var i = 0; i < len; i++) {
+                    points[i].rotate(angle);
+                }
+                this.recalc();
+                this.updateBounds();
+            }
+            return this;
+        },
+
+        /**
+         * Scale this Polygon by the given scalar.
+         * @name scale
+         * @memberOf me.Polygon
+         * @function
+         * @param {Number} x
+         * @param {Number} [y=x]
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        scale : function (x, y) {
+            y = typeof (y) !== "undefined" ? y : x;
+
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].scale(x, y);
+            }
+            this.recalc();
+            this.updateBounds();
+            return this;
+        },
+
+        /**
+         * Scale this Polygon by the given vector
+         * @name scaleV
+         * @memberOf me.Polygon
+         * @function
+         * @param {me.Vector2d} v
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        scaleV : function (v) {
+            return this.scale(v.x, v.y);
+        },
+
+        /**
+         * Computes the calculated collision polygon.
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
          * @memberOf me.Polygon
@@ -102,12 +157,9 @@
 
             // Calculate the edges/normals
             for (i = 0; i < len; i++) {
-                var p1 = points[i];
-                var p2 = points[(i + 1) % len];
-                var e = new me.Vector2d().copy(p2).sub(p1);
-                var n = new me.Vector2d().copy(e).perp().normalize();
+                var e = new me.Vector2d().copy(points[(i + 1) % len]).sub(points[i]);
                 edges.push(e);
-                normals.push(n);
+                normals.push(new me.Vector2d().copy(e).perp().normalize());
             }
             return this;
         },
@@ -214,10 +266,10 @@
             } else {
                 this.bounds.setShape(x, y, right - x, bottom - y);
             }
-            
+
             return this.bounds.translateV(this.pos);
         },
-        
+
         /**
          * clone this Polygon
          * @name clone

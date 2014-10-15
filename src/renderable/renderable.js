@@ -95,13 +95,13 @@
 
             /**
              * Z-order for object sorting<br>
-             * default value : 0
+             * default value : NaN; will be automatically set by me.Container.addChild()
              * @private
              * @type Number
              * @name z
              * @memberOf me.Renderable
              */
-            this.z = 0;
+            this.z = NaN;
 
             /**
              * Define the object anchoring point<br>

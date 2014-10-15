@@ -304,7 +304,7 @@
         },
 
         readObjectGroup: function (map, data, z) {
-            return (new me.TMXObjectGroup(data[TMXConstants.TMX_TAG_NAME], data, map.tilesets, z));
+            return (new me.TMXObjectGroup(data[TMXConstants.TMX_TAG_NAME], data, map.orientation, map.tilesets, z));
         }
     });
 })(me.TMXConstants);

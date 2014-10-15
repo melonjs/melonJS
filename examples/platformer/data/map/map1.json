@@ -393,20 +393,6 @@
                  "y":595
                 }, 
                 {
-                 "height":35,
-                 "name":"",
-                 "properties":
-                    {
-                     "platform":"true"
-                    },
-                 "rotation":0,
-                 "type":"platform",
-                 "visible":true,
-                 "width":70,
-                 "x":700,
-                 "y":385
-                }, 
-                {
                  "height":0,
                  "name":"",
                  "polyline":[
@@ -428,6 +414,52 @@
                  "width":0,
                  "x":560,
                  "y":455
+                }, 
+                {
+                 "height":0,
+                 "name":"",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":70,
+                         "y":0
+                        }],
+                 "properties":
+                    {
+                     "platform":"true"
+                    },
+                 "rotation":0,
+                 "type":"platform",
+                 "visible":true,
+                 "width":0,
+                 "x":700,
+                 "y":385
+                }, 
+                {
+                 "height":0,
+                 "name":"",
+                 "polyline":[
+                        {
+                         "x":0,
+                         "y":0
+                        }, 
+                        {
+                         "x":0,
+                         "y":490
+                        }],
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":1,
+                 "y":35
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -457,6 +489,37 @@
             },
          "spacing":0,
          "tileheight":35,
+         "tiles":
+            {
+             "28":
+                {
+                 "animation":[
+                        {
+                         "duration":200,
+                         "tileid":28
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":29
+                        }, 
+                        {
+                         "duration":200,
+                         "tileid":28
+                        }]
+                },
+             "29":
+                {
+                 "animation":[
+                        {
+                         "duration":400,
+                         "tileid":29
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":28
+                        }]
+                }
+            },
          "tilewidth":35
         }],
  "tilewidth":35,

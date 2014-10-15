@@ -210,6 +210,8 @@ game.CoinEntity = me.CollectableEntity.extend({
         this.body.setCollisionMask(me.collision.types.NO_OBJECT);
         
         me.game.world.removeChild(this);
+
+        return false;
     }
 });
 
@@ -307,6 +309,8 @@ game.PathEnemyEntity = me.Entity.extend({
             // give some score
             game.data.score += 150;
         }
+
+        return false;
     }
 
 });

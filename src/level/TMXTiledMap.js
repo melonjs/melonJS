@@ -77,7 +77,7 @@
             // tilemap version
             this.version = "";
 
-            // map type (only orthogonal format supported)
+            // map type (orthogonal or isometric)
             this.orientation = "";
 
             // tileset(s)
@@ -88,7 +88,7 @@
 
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
         },
-        
+
         /**
          * set the default map position based on the given viewport size
          * @name me.TMXTileMap#setDefaultPosition
