@@ -1,5 +1,6 @@
 [
     "tests/spec/color-spec.js",
+    "tests/spec/mat2d-spec.js",
     "tests/spec/rectangle-spec.js",
     "tests/spec/polygon-spec.js",
     "tests/spec/line-spec.js",
