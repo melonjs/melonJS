@@ -171,7 +171,7 @@
          * @return {Boolean}
          **/
         isIdentity : function () {
-            var a = this.a;
+            var a = this.val;
             return (a[0] === 1 && a[1] === 0 && a[2] === 0 && a[3] === 1 && a[4] === 0 && a[5] === 0);
         },
 
@@ -194,7 +194,7 @@
          * @return {String}
          */
         toString : function () {
-            var a = this.a;
+            var a = this.val;
             return "mat2d(" + a[0] + ", " + a[1] + ", " + a[2] + ", " +
                 a[3] + ", " + a[4] + ", " + a[5] + ")";
         }
