@@ -344,6 +344,7 @@
                 var tileset = this.tilesets.tilesets;
                 for (var i = 0; i < tileset.length; i++) {
                     if (tileset[i].isAnimated) {
+                        tileset[i].isAnimated = false;
                         this.animatedTilesets.push(tileset[i]);
                     }
                 }
