@@ -469,6 +469,12 @@
                         if (objA.getBounds().overlaps(objB.getBounds())) {
 
                             // go trough all defined shapes in A
+                            var aLen = objA.body.shapes.length;
+                            var bLen = objB.body.shapes.length;
+                            if (alen === 0 || bLen === 0) {
+                                continue;
+                            }
+
                             var indexA = 0;
                             do {
                                 var shapeA = objA.body.getShape(indexA);
@@ -502,11 +508,15 @@
                                         if (objB.onCollision(response, objA) !== false) {
                                             objB.body.respondToCollision.call(objB.body, response);
                                         }
+
+                                        // Bail early when the body contains mutliple shapes
+                                        indexA = Infinity;
+                                        indexB = Infinity;
                                     }
                                     indexB++;
-                                } while (indexB < objB.body.shapes.length);
+                                } while (indexB < bLen);
                                 indexA++;
-                            } while (indexA < objA.body.shapes.length);
+                            } while (indexA < aLen);
                         }
                     }
                 }
