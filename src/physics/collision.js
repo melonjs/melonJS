@@ -471,7 +471,7 @@
                             // go trough all defined shapes in A
                             var aLen = objA.body.shapes.length;
                             var bLen = objB.body.shapes.length;
-                            if (alen === 0 || bLen === 0) {
+                            if (aLen === 0 || bLen === 0) {
                                 continue;
                             }
 
