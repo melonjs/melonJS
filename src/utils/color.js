@@ -236,7 +236,7 @@
             this.r = (~~r || 0).clamp(0, 255);
             this.g = (~~g || 0).clamp(0, 255);
             this.b = (~~b || 0).clamp(0, 255);
-            this.alpha = typeof(a) === "undefined" ? 1.0 : a.clamp(0, 1);
+            this.alpha = typeof(a) === "undefined" ? 1.0 : (+a).clamp(0, 1);
 
             this.glArray[0] = this.r / 255.0;
             this.glArray[1] = this.g / 255.0;
@@ -424,7 +424,7 @@
         },
 
         /**
-         * Returns the 
+         * Returns the
          */
         toGL : function () {
             return this.glArray;
