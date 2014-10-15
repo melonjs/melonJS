@@ -315,11 +315,11 @@
                 // apply the tile current transform
                 var a = tmxTile.transform.val;
 
-                renderer.transform([
+                renderer.transform(
                     a[0], a[1],
                     a[2], a[3],
                     a[4] + dx, a[5] + dy
-                ]);
+                );
                 // reset both values as managed through transform();
                 dx = dy = 0;
             }

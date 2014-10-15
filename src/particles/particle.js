@@ -134,11 +134,11 @@
 
             // translate to the defined anchor point and scale it
             var transform = transform.val;
-            renderer.transform([
+            renderer.transform(
                 transform[0], transform[1],
                 transform[2], transform[3],
                 ~~this.pos.x, ~~this.pos.y
-            ]);
+            );
 
             var w = this.width, h = this.height;
             renderer.drawImage(
