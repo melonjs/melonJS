@@ -596,10 +596,13 @@
             var isDirty = false;
             var isFloating = false;
             var isPaused = me.state.isPaused();
-            var isTranslated;
-            var x;
-            var y;
-            var bounds;
+            var isTranslated = false;
+            var isStacked = false;
+            var stack = [];
+            var x = 0;
+            var y = 0;
+            var z = 0;
+            var bounds = null;
             var viewport = me.game.viewport;
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
@@ -620,6 +623,11 @@
                         bounds = obj.getBounds();
                         x = bounds.pos.x;
                         y = bounds.pos.y;
+                        z = Math.abs(x + y + bounds.width + bounds.height);
+                        if (z !== z || z === Infinity) {
+                            isStacked = true;
+                            stack.push(globalTranslation.clone());
+                        }
                         globalTranslation.translateV(bounds.pos);
                         globalTranslation.resize(bounds.width, bounds.height);
                     }
@@ -632,7 +640,13 @@
 
                     // Undo global context translation
                     if (isTranslated) {
-                        globalTranslation.translate(-x, -y);
+                        if (isStacked) {
+                            isStacked = false;
+                            globalTranslation.copy(stack.pop());
+                        }
+                        else {
+                            globalTranslation.translate(-x, -y);
+                        }
                     }
 
                     if (globalFloatingCounter > 0) {
