@@ -109,7 +109,7 @@
             var a = this.transform.val;
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.set([0, 1, 1, 0, a[4], a[5]]);
+                this.transform.set(0, 1, 1, 0, a[4], a[5]);
                 this.transform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {

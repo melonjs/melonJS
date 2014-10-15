@@ -118,7 +118,7 @@
             var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
             // Update particle transform
-            this.transform.set([scale, 0, 0, scale, 0, 0]).rotate(angle);
+            this.transform.set(scale, 0, 0, scale, 0, 0).rotate(angle);
             this.pos.x += this.vel.x * skew;
             this.pos.y += this.vel.y * skew;
 

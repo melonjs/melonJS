@@ -39,7 +39,7 @@
          * @return {me.Matrix2d} this matrix
          */
         identity : function () {
-            this.set([1, 0, 0, 1, 0, 0]);
+            this.set(1, 0, 0, 1, 0, 0);
             return this;
         },
 
@@ -48,17 +48,22 @@
          * @name set
          * @memberOf me.Matrix2d
          * @function
-         * @param {Array} the array of values to set the matrix to. Does not deep copy
+         * @param {Number} m11
+         * @param {Number} m12
+         * @param {Number} m21
+         * @param {Number} m22
+         * @param {Number} dx
+         * @param {Number} dy
          * @return {me.Matrix2d} this matrix
          */
-        set : function (array) {
+        set : function () {
             var a = this.val;
-            a[0] = array[0];
-            a[1] = array[1];
-            a[2] = array[2];
-            a[3] = array[3];
-            a[4] = array[4];
-            a[5] = array[5];
+            a[0] = arguments[0];
+            a[1] = arguments[1];
+            a[2] = arguments[2];
+            a[3] = arguments[3];
+            a[4] = arguments[4];
+            a[5] = arguments[5];
             return this;
         },
 
