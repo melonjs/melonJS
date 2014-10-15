@@ -8,11 +8,11 @@ var game = {
       alert("Your browser does not support HTML5 canvas.");
       return;
     }
-  
+
     // add "#debug" to the URL to enable the debug Panel
     if (document.location.hash === "#debug") {
       window.onReady(function () {
-      me.plugin.register.defer(this, debugPanel, "debug");
+      me.plugin.register.defer(this, me.debug.Panel, "debug");
       });
     }
 
@@ -21,7 +21,7 @@ var game = {
 
     // Set a callback to run when loading is complete.
     me.loader.onload = this.loaded.bind(this);
-   
+
     // Load the resources.
     me.loader.preload(game.resources);
 
