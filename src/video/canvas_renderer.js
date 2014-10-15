@@ -298,13 +298,13 @@
                     "a 2d context"
                 );
             }
-            
+
             if (typeof c.getContext === "undefined") {
                 throw new me.video.Error(
                     "Your browser does not support HTML5 canvas."
                 );
             }
-            
+
             var _context;
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
@@ -400,7 +400,7 @@
         api.resize = function (scaleX, scaleY) {
             canvas.width = gameWidthZoom = backBufferCanvas.width * scaleX;
             canvas.height = gameHeightZoom = backBufferCanvas.height * scaleY;
-            
+
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
@@ -589,10 +589,22 @@
          * @name transform
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Array} mat2d array representation to transform by
+         * @param {Number} m11
+         * @param {Number} m12
+         * @param {Number} m21
+         * @param {Number} m22
+         * @param {Number} dx
+         * @param {Number} dy
          */
-        api.transform = function (array) {
-            backBufferContext2D.transform(array[0], array[1], array[2], array[3], array[4], array[5]);
+        api.transform = function () {
+            backBufferContext2D.transform(
+                arguments[0],
+                arguments[1],
+                arguments[2],
+                arguments[3],
+                arguments[4],
+                arguments[5]
+            );
         };
 
         /**

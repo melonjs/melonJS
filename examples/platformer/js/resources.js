@@ -1,30 +1,30 @@
 game.resources = [
 
-    /* Graphics. 
+    /* Graphics.
      * @example
      * {name: "example", type:"image", src: "data/img/example.png"},
      */
     {name: "tileset",        type:"image",    src: "data/img/tileset.png"},
     {name: "atascii",        type:"image",    src: "data/img/atascii_24px.png"},
-    {name: "background",    type:"image",    src: "data/img/background.png"},    
-    
-        
-    /* Maps. 
+    {name: "background",    type:"image",    src: "data/img/background.png"},
+
+
+    /* Maps.
      * @example
      * {name: "example01", type: "tmx", src: "data/map/example01.tmx"},
      * {name: "example01", type: "tmx", src: "data/map/example01.json"},
       */
-    {name: "map1",            type: "tmx",    src: "data/map/map1.tmx"},
+    {name: "map1",            type: "tmx",    src: "data/map/map1.json"},
     {name: "map2",            type: "tmx",    src: "data/map/map2.tmx"},
 
 
-    /* Background music. 
+    /* Background music.
      * @example
      * {name: "example_bgm", type: "audio", src: "data/bgm/" },
-     */    
+     */
     {name: "DST-GameForest",type: "audio",    src: "data/bgm/" },
-    
-    /* Sound effects. 
+
+    /* Sound effects.
      * @example
      * {name: "example_sfx", type: "audio", src: "data/sfx/"}
      */
@@ -33,8 +33,8 @@ game.resources = [
     {name: "enemykill", type: "audio", src: "data/sfx/"},
     {name: "jump", type: "audio", src: "data/sfx/"},
 
-    
-    /* Atlases 
+
+    /* Atlases
      * @example
      * {name: "example_tps", type: "json", src: "data/img/example_tps.json"},
      */
@@ -44,5 +44,5 @@ game.resources = [
     // ShoeBox
     //{name: "texture",        type: "json",    src: "data/gfx/shoebox.json"},
     //{name: "texture",        type:"image",    src: "data/gfx/shoebox.png"}
-     
+
 ];

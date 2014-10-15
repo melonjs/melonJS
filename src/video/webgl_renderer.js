@@ -141,7 +141,7 @@
                     cache.textBaseline = fontObject.textBaseline;
                     cache.lineHeight = fontObject.lineHeight;
                     cache.text = text;
-                    
+
                     fontObject.draw(fontContext, text, x, y);
                     fontDimensions = fontObject.measureText(fontContext, text);
                     cache.width = fontDimensions.width;
@@ -430,7 +430,7 @@
          * @private
          */
         api.setAlpha = function () {
-            
+
         };
 
         api.setProjection = function () {
@@ -492,19 +492,19 @@
          * @function
          * @param {Array} mat2d array representation to transform by
          */
-        api.transform = function (a) {
+        api.transform = function () {
             // TODO: Try to optimize or pool this.
             var out = new Float32Array(9);
-            out[0] = a[0];
-            out[1] = a[1];
+            out[0] = arguments[0];
+            out[1] = arguments[1];
             out[2] = 0;
 
-            out[3] = a[2];
-            out[4] = a[3];
+            out[3] = arguments[2];
+            out[4] = arguments[3];
             out[5] = 0;
 
-            out[6] = a[4];
-            out[7] = a[5];
+            out[6] = arguments[4];
+            out[7] = arguments[5];
             out[8] = 1;
             this.uniformMatrix.multiplyArray(out);
         };
@@ -520,8 +520,6 @@
         api.translate = function (x, y) {
             this.uniformMatrix.translate(x, y);
         };
-
-
 
         return api;
     })();
