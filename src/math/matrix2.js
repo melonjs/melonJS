@@ -184,6 +184,19 @@
          */
         clone : function () {
             return new me.Matrix2d(this);
+        },
+        
+        /**
+         * convert the object to a string representation
+         * @name toString
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {String}
+         */
+        toString : function () {
+            var a = this.a;
+            return "mat2d(" + a[0] + ", " + a[1] + ", " + a[2] + ", " +
+                a[3] + ", " + a[4] + ", " + a[5] + ")";
         }
     });
 })();
