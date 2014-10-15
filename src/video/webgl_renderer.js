@@ -231,6 +231,7 @@
 
             this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
+
             shaderProgram.uniforms.uColor = globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
