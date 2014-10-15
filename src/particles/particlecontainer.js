@@ -34,6 +34,16 @@
 
             // cache the emitter for later use
             this._emitter = emitter;
+
+            // cache a reference to the viewport to use as our bounding box
+            this.bounds = me.game.viewport;
+        },
+
+        /**
+         * @ignore
+         */
+        getBounds : function () {
+            return this.bounds;
         },
 
         /**

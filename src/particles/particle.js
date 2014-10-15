@@ -27,6 +27,11 @@
             // Particle will always update
             this.alwaysUpdate = true;
 
+            // Particle will not act as a rednerable
+            // FIXME: This is probably not needed. It's a hack that tries to
+            // workaround performance issues within container.
+            this.isRenderable = false;
+
             // Cache the image reference
             this.image = emitter.image;
 

@@ -76,7 +76,7 @@
             // viewport coordinates
             this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
-            // real worl limits
+            // real world limits
             this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
             // offset for shake effect
