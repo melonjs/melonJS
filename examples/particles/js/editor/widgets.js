@@ -262,7 +262,7 @@
         },
         draw : function(renderer) {
             renderer.setColor(this.color);
-            renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+            renderer.fillRect(this.left, this.top, this.width, this.height);
             renderer.setLineWidth(1);
             renderer.strokeRect(this.left, this.top, this.width, this.height);
         }
@@ -358,11 +358,10 @@
                 return false;
             }
         },
-        draw : function(renderer, rect) {
+        draw : function(renderer) {
             renderer.save();
-            var context = renderer.getContext();
             renderer.setColor(this.color);
-            renderer.fillArc(this.pos.x + this.hWidth, this.pos.y + this.hHeight, this.hWidth, 0, Math.PI * 2);
+            renderer.fillArc(this.pos.x, this.pos.y, this.hWidth, 0, Math.PI * 2);
             renderer.restore();
         }
     });
@@ -457,7 +456,9 @@
             var origin = this.widget.origin;
             var vector = this.widget.vector;
             renderer.save();
-            renderer.drawLine(origin.x, origin.y, vector.x, vector.y, this.color, 5);
+            renderer.setColor(this.color);
+            renderer.setLineWidth(5);
+            renderer.drawLine(origin.x, origin.y, vector.x, vector.y);
             renderer.restore();
         }
     });
@@ -584,15 +585,23 @@
             this.minRadius = (object.speed - object.speedVariation) * this.scale;
             this.maxRadius = (object.speed + object.speedVariation) * this.scale;
         },
-        draw : function(renderer, rect) {
-            var x = this.pos.x, y = this.pos.y;
-            renderer.setColor(this.color);
-            renderer.fillArc(x, y, this.maxRadius, this.startAngle, this.endAngle, true);
+        draw : function(renderer) {
+            var x = this.pos.x,
+                y = this.pos.y,
+                context = renderer.getContext();
+
+            context.strokeStyle = this.color;
+            context.fillStyle = this.color;
+            context.beginPath();
+            context.arc(x, y, this.maxRadius, this.startAngle, this.endAngle, true);
             if (this.minRadius < 0) {
-                renderer.fillArc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI);
+                context.arc(x, y, -this.minRadius, this.endAngle + Math.PI, this.startAngle + Math.PI);
             } else {
-                renderer.fillArc(x, y, this.minRadius, this.endAngle, this.startAngle);
+                context.arc(x, y, this.minRadius, this.endAngle, this.startAngle);
             }
+            context.closePath();
+            context.fill();
+            context.stroke();
         }
     });
 })();
