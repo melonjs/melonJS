@@ -16,8 +16,8 @@ var game = {
 			});
 		}
 
-		me.plugin.register.defer(this, particleDebugPanel, "particledebug");
-		
+		me.plugin.register.defer(this, me.debug.ParticlePanel, "particledebug");
+
 		// Initialize the audio.
 		me.audio.init("mp3,ogg");
 

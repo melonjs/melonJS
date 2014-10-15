@@ -133,7 +133,7 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
-            var transform = transform.val;
+            var transform = this.transform.val;
             renderer.transform(
                 transform[0], transform[1],
                 transform[2], transform[3],
