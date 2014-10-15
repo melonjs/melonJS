@@ -95,10 +95,10 @@
          */
         scale : function (sx, sy) {
             var a = this.val;
-            a[0] = a[0] * sx;
-            a[1] = a[1] * sx;
-            a[2] = a[2] * sy;
-            a[3] = a[2] * sy;
+            a[0] *= sx;
+            a[1] *= sx;
+            a[2] *= sy;
+            a[3] *= sy;
 
             return this;
         },
