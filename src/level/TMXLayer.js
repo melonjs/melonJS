@@ -36,7 +36,7 @@
             // set layer opacity
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
-            
+
             var vpos = me.game.viewport.pos;
             renderer.setColor(this.color);
             renderer.fillRect(
@@ -328,10 +328,39 @@
              * @type me.TMXTilesetGroup
              * @name me.TMXLayer#tilesets
              */
-
             this.tilesets = tilesets;
+
             // the default tileset
             this.tileset = (this.tilesets ? this.tilesets.getTilesetByIndex(0) : null);
+
+            /**
+             * All animated tilesets in this layer
+             * @public
+             * @type Array
+             * @name me.TMXLayer#animatedTilesets
+             */
+            this.animatedTilesets = [];
+            if (this.tilesets) {
+                var tileset = this.tilesets.tilesets;
+                for (var i = 0; i < tileset.length; i++) {
+                    if (tileset[i].isAnimated) {
+                        this.animatedTilesets.push(tileset[i]);
+                    }
+                }
+            }
+
+            /**
+             * Layer contains tileset animations
+             * @public
+             * @type Boolean
+             * @name me.TMXLayer#isAnimated
+             */
+            this.isAnimated = this.animatedTilesets.length > 0;
+
+            // Force pre-render off when tileset animation is used
+            if (this.isAnimated) {
+                this.preRender = false;
+            }
 
             // for displaying order
             this.z = zOrder;
@@ -388,6 +417,7 @@
             this.layerData = null;
             this.tileset = null;
             this.tilesets = null;
+            this.animatedTilesets = null;
         },
 
         /**
@@ -481,6 +511,22 @@
             if (this.preRender) {
                 this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
+        },
+
+        /**
+         * update animations in a tileset layer
+         * @ignore
+         */
+        update : function (dt) {
+            if (this.isAnimated) {
+                var result = false;
+                for (var i = 0; i < this.animatedTilesets.length; i++) {
+                    result |= this.animatedTilesets[i].update(dt);
+                }
+                return result;
+            }
+
+            return false;
         },
 
         /**

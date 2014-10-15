@@ -136,6 +136,7 @@
     me.TMXTileset = Object.extend({
         // constructor
         init: function (tileset) {
+            var i = 0;
             // first gid
 
             // tile properties (collidable, etc..)
@@ -149,7 +150,7 @@
             if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
                 // load TSX
                 src = me.utils.getBasename(src);
-                // replace tiletset with a local variable
+                // replace tileset with a local variable
                 tileset = me.loader.getTMX(src);
 
                 if (!tileset) {
@@ -163,11 +164,42 @@
             this.tilewidth = +tileset[TMXConstants.TMX_TAG_TILEWIDTH];
             this.tileheight = +tileset[TMXConstants.TMX_TAG_TILEHEIGHT];
             this.spacing = +tileset[TMXConstants.TMX_TAG_SPACING] || 0;
-
             this.margin = +tileset[TMXConstants.TMX_TAG_MARGIN] || 0;
 
             // set tile offset properties (if any)
             this.tileoffset = new me.Vector2d(0, 0);
+
+            /**
+             * Tileset contains animated tiles
+             * @public
+             * @type Boolean
+             * @name me.TMXTileset#isAnimated
+             */
+            this.isAnimated = false;
+
+            /**
+             * Tileset animations
+             * @private
+             * @type Object
+             * @name me.TMXTileset#animations
+             */
+            this.animations = {};
+
+            var tiles = tileset.tiles;
+            if (typeof(tiles) !== "undefined") {
+                // native JSON format
+                for (i in tiles) {
+                    if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
+                        this.isAnimated = true;
+                        this.animations[+i + this.firstgid] = {
+                            dt      : 0,
+                            idx     : 0,
+                            frames  : tiles[i].animation,
+                            cur     : tiles[i].animation[0]
+                        };
+                    }
+                }
+            }
 
             var offset = tileset[TMXConstants.TMX_TAG_TILEOFFSET];
             if (offset) {
@@ -175,13 +207,12 @@
                 this.tileoffset.y = +offset[TMXConstants.TMX_TAG_Y];
             }
 
-
             // set tile properties, if any
             var tileInfo = tileset.tileproperties;
 
             if (tileInfo) {
                 // native JSON format
-                for (var i in tileInfo) {
+                for (i in tileInfo) {
                     if (tileInfo.hasOwnProperty(i)) {
                         this.setTileProperty(i + this.firstgid, tileInfo[i]);
                     }
@@ -193,14 +224,25 @@
                 if (!Array.isArray(tileInfo)) {
                     tileInfo = [ tileInfo ];
                 }
-                // iterate it
 
-                for (var j = 0; j < tileInfo.length; j++) {
-                    var tileID = tileInfo[j][TMXConstants.TMX_TAG_ID] + this.firstgid;
+                // iterate it
+                for (i = 0; i < tileInfo.length; i++) {
+                    var tileID = +tileInfo[i][TMXConstants.TMX_TAG_ID] + this.firstgid;
                     var prop = {};
-                    me.TMXUtils.applyTMXProperties(prop, tileInfo[j]);
+                    me.TMXUtils.applyTMXProperties(prop, tileInfo[i]);
                     //apply tiled defined properties
                     this.setTileProperty(tileID, prop);
+
+                    // Get animations
+                    if ("animation" in tileInfo[i]) {
+                        this.isAnimated = true;
+                        this.animations[tileID] = {
+                            dt      : 0,
+                            idx     : 0,
+                            frames  : tileInfo[i].animation.frame,
+                            cur     : tileInfo[i].animation.frame[0]
+                        };
+                    }
                 }
             }
 
@@ -239,7 +281,6 @@
          * @ignore
          * @function
          */
-
         setTileProperty : function (gid, prop) {
             // set the given tile id
             this.TileProperties[gid] = prop;
@@ -253,7 +294,6 @@
          * @param {Number} gid
          * @return {Boolean}
          */
-
         contains : function (gid) {
             return gid >= this.firstgid && gid <= this.lastgid;
         },
@@ -281,7 +321,6 @@
             return this.TileProperties[tileId];
         },
 
-
         /**
          * return the x offset of the specified tile in the tileset image
          * @ignore
@@ -306,9 +345,34 @@
             return offset;
         },
 
+        // update tile animations
+        update : function (dt) {
+            var anim = null,
+                duration = 0,
+                result = false;
+
+            for (var i in this.animations) {
+                if (this.animations.hasOwnProperty(i)) {
+                    anim = this.animations[i];
+
+                    anim.dt += dt;
+                    duration = anim.cur.duration;
+                    if (anim.dt >= duration) {
+                        anim.dt -= duration;
+                        anim.idx = (anim.idx + 1) % anim.frames.length;
+                        anim.cur = anim.frames[anim.idx];
+                        result = true;
+                    }
+                }
+            }
+
+            return result;
+        },
 
         // draw the x,y tile
         drawTile : function (renderer, dx, dy, tmxTile) {
+            var tileid = tmxTile.tileId;
+
             // check if any transformation is required
             if (tmxTile.flipped) {
                 renderer.save();
@@ -324,8 +388,14 @@
                 dx = dy = 0;
             }
 
-            // get the local tileset id
-            var tileid = tmxTile.tileId - this.firstgid;
+            // apply animations
+            if (tileid in this.animations) {
+                tileid = this.animations[tileid].cur.tileid;
+            }
+            else {
+                // get the local tileset id
+                tileid -= this.firstgid;
+            }
 
             // draw the tile
             renderer.drawImage(
@@ -341,9 +411,8 @@
                 renderer.restore();
             }
         }
-
-
     });
+
     /**
      * an object containing all tileset
      * @class
