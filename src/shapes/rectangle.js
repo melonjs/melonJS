@@ -339,7 +339,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
-            return this.pos.x + this.width;
+            return (this.pos.x + this.width) || this.width;
         },
         configurable : true
     });
@@ -369,7 +369,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
-            return this.pos.y + this.height;
+            return (this.pos.y + this.height) || this.height;
         },
         configurable : true
     });
