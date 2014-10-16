@@ -27,6 +27,7 @@
         projection = null,
         shaderProgram = null,
         textureBuffer = null,
+        textureLocation = null,
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
@@ -59,6 +60,8 @@
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+            textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
 
             return this;
         };
@@ -267,13 +270,15 @@
                 1.0, 1.0
             ]);
             gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
             this.uniformMatrix.multiply(projection);
+            gl.uniform1i(textureLocation, 0);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+
             shaderProgram.uniforms.uColor = globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         };
@@ -412,8 +417,7 @@
         api.save = function () {
             colorStack.push(this.getColor());
 
-            var copy = new me.Matrix3d();
-            this.uniformMatrix.copy(copy);
+            var copy = this.uniformMatrix.clone();
             matrixStack.push(this.uniformMatrix);
             this.uniformMatrix = copy;
         };
@@ -483,6 +487,7 @@
          */
         api.startRender = function () {
             gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             me.video.renderer.setProjection();
         };
 
