@@ -332,9 +332,7 @@
          * @param {Boolean} enable
          */
         api.setAlpha = function (enable) {
-            if (typeof this.renderer.setAlpha === "function") {
-                this.renderer.setAlpha(enable);
-            }
+            this.renderer.setAlpha(enable);
         };
 
         // return our api

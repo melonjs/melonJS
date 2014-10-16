@@ -439,7 +439,7 @@
          * @private
          */
         api.setAlpha = function () {
-
+            /* Unimplemented */
         };
 
         api.setProjection = function () {
@@ -460,7 +460,12 @@
          * @return {Number}
          */
         api.setGlobalAlpha = function (a) {
-            globalColor.alpha = a;
+            globalColor.setColor(
+                globalColor.r,
+                globalColor.g,
+                globalColor.b,
+                a
+            );
         };
 
         /**
