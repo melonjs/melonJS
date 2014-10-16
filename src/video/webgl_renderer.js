@@ -400,7 +400,7 @@
             var color = colorStack.pop();
             me.pool.push("me.Color", color);
             globalColor.copy(color);
-            this.uniformMatrix = matrixStack.pop();
+            this.uniformMatrix.copy(matrixStack.pop());
         };
 
         /**
@@ -416,10 +416,7 @@
 
         api.save = function () {
             colorStack.push(this.getColor());
-
-            var copy = this.uniformMatrix.clone();
-            matrixStack.push(this.uniformMatrix);
-            this.uniformMatrix = copy;
+            matrixStack.push(this.uniformMatrix.clone());
         };
 
         /**
