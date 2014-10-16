@@ -88,7 +88,7 @@
                     break;
 
                 case "transparent":
-                    var refColor = me.pool.pull("me.Color").parseHex(option);
+                    var refColor = me.pool.pull("me.Color").parseCSS(option);
                     var pixel = me.pool.pull("me.Color");
                     for (i = 0, n = pix.length; i < n; i += 4) {
                         pixel.setColor(pix[i], pix[i + 1], pix[i + 2]);
@@ -146,17 +146,17 @@
          * @name clearSurface
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Context2d} canvas contest. Optional, will default to system context.
-         * @param {String} color a CSS color string
+         * @param {Context2d} [ctx=null] canvas context, defaults to system context.
+         * @param {me.Color|String} color CSS color.
          */
         api.clearSurface = function (ctx, col) {
-            if (ctx === null) {
+            if (!ctx) {
                 ctx = backBufferContext2D;
             }
             var _canvas = ctx.canvas;
             ctx.save();
             ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.fillStyle = col;
+            ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
             ctx.fillRect(0, 0, _canvas.width, _canvas.height);
             ctx.restore();
         };
@@ -340,10 +340,11 @@
          * @name getColor
          * @memberOf me.CanvasRenderer
          * @function
-         * @return {String}
+         * @return {me.Color}
          */
         api.getColor = function () {
-            return backBufferContext2D.fillStyle;
+            var color = me.pool.pull("me.Color");
+            return color.parseCSS(backBufferContext2D.fillStyle);
         };
 
         /**
@@ -463,9 +464,10 @@
          * @name setColor
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {String} color - css color value
+         * @param {me.Color|String} color css color value
          */
         api.setColor = function (color) {
+            color = (color instanceof me.Color) ? color.toRGBA() : color;
             backBufferContext2D.strokeStyle = color;
             backBufferContext2D.fillStyle = color;
         };
