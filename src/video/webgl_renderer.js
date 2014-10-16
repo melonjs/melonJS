@@ -81,13 +81,10 @@
          * @name clearSurface
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {WebGLContext} [ctx=null] gl context, defaults to system context.
-         * @param {me.Color|String} color css color.
+         * @param {WebGLContext} gl - the gl context.
+         * @param {String} color - css color string.
          */
-        api.clearSurface = function (ctx, col) {
-            if (!ctx) {
-                ctx = gl;
-            }
+        api.clearSurface = function (gl, col) {
             this.setColor(col);
             gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
         };
@@ -299,10 +296,10 @@
          * @name getColor
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {me.Color}
+         * @return {string}
          */
         api.getColor = function () {
-            return globalColor.clone();
+            return globalColor.toHex();
         };
 
         /**
@@ -397,9 +394,7 @@
         };
 
         api.restore = function () {
-            var color = colorStack.pop();
-            me.pool.push("me.Color", color);
-            globalColor.copy(color);
+            globalColor.parseHex(colorStack.pop());
             this.uniformMatrix = matrixStack.pop();
         };
 
@@ -468,11 +463,14 @@
          * @name setColor
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {me.Color|String} color css color string.
+         * @param {String} color - css color string.
          */
         api.setColor = function (col) {
-            if (col instanceof me.Color) {
-                globalColor.copy(col);
+            if (col.match(/^\#/)) {
+                globalColor.parseHex(col);
+            }
+            else if (col.match(/^rgb/)) {
+                globalColor.parseRGB(col);
             }
             else {
                 globalColor.parseCSS(col);
@@ -489,6 +487,7 @@
             gl.viewport(0, 0, canvas.width, canvas.height);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             me.video.renderer.setProjection();
+            this.uniformMatrix.identity();
         };
 
         /**
