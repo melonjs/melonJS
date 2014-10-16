@@ -12,9 +12,11 @@ Version History
 * CanvasRenderer : All fill & stroke methods have removed the color & line width parameters. Use the new setColor and setLineWidth methods.
 * CanvasRenderer : Removed strokeLine, was duplicate with drawLine
 * Particles : fixed randomness in the emitter for scaling and rotation of particles
+* Particles : fixed widget drawing in Particle Editor
 * TMX : added rotation support for Polygon/PolyLine objects (Tiled 0.10+)
 * TMX : added support for tileset animations (Tiled 0.10+)
 * TMX : fixed isometric projection for Polygon/PolyLine objects
+* TMX : fixed TSX external tileset loading
 
 1.1.0
 * Core : reorganised source code for all basic object definition/augmentation
