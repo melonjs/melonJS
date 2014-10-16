@@ -12,12 +12,12 @@ var game = {
 		// add "#debug" to the URL to enable the debug Panel
 		if (document.location.hash === "#debug") {
 			window.onReady(function () {
-				me.plugin.register.defer(this, debugPanel, "debug");
+				me.plugin.register.defer(this, me.debug.Panel, "debug");
 			});
 		}
 
-		me.plugin.register.defer(this, particleDebugPanel, "particledebug");
-		
+		me.plugin.register.defer(this, me.debug.ParticlePanel, "particledebug");
+
 		// Initialize the audio.
 		me.audio.init("mp3,ogg");
 

@@ -27,6 +27,11 @@
             // Particle will always update
             this.alwaysUpdate = true;
 
+            // Particle will not act as a rednerable
+            // FIXME: This is probably not needed. It's a hack that tries to
+            // workaround performance issues within container.
+            this.isRenderable = false;
+
             // Cache the image reference
             this.image = emitter.image;
 
@@ -133,7 +138,7 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
-            var transform = transform.val;
+            var transform = this.transform.val;
             renderer.transform(
                 transform[0], transform[1],
                 transform[2], transform[3],

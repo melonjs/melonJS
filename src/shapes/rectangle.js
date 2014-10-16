@@ -105,7 +105,7 @@
         getBounds : function () {
             return this;
         },
-        
+
         /**
          * update the bounding box for this shape.
          * @name updateBounds
@@ -116,7 +116,7 @@
         updateBounds : function () {
             return this;
         },
-        
+
         /**
          * clone this rectangle
          * @name clone
@@ -126,6 +126,18 @@
          */
         clone : function () {
             return new me.Rect(this.pos.x, this.pos.y, this.width, this.height);
+        },
+
+        /**
+         * copy the position and size of the given rectangle into this one
+         * @name copy
+         * @memberOf me.Rect
+         * @function
+         * @param {me.Rect} rect Source rectangle
+         * @return {me.Rect} new rectangle
+         */
+        copy : function (rect) {
+            return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
         },
 
         /**
@@ -316,7 +328,7 @@
         },
         configurable : true
     });
-    
+
     /**
      * right coordinate of the Rectangle<br>
      * takes in account the adjusted size of the rectangle (if set)

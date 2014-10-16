@@ -167,10 +167,10 @@
          * @name drawFont
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.Font} fontObject - an instance of me.Font
-         * @param {String} text - the string of text to draw
-         * @param {Number} x - the x position to draw at
-         * @param {Number} y - the y position to draw at
+         * @param {me.Font} fontObject an instance of me.Font
+         * @param {String} text the string of text to draw
+         * @param {Number} x the x position to draw at
+         * @param {Number} y the y position to draw at
          */
         api.drawFont = function (fontObject, text, x, y) {
             fontObject.draw(backBufferContext2D, text, x, y);
@@ -187,12 +187,13 @@
          * @param {Number} endY end y position
          */
         api.drawLine = function (startX, startY, endX, endY) {
-            backBufferContext2D.beginPath();
             backBufferContext2D.translate(startX, startY);
+            backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(0, 0);
             backBufferContext2D.lineTo(endX, endY);
             backBufferContext2D.stroke();
             backBufferContext2D.closePath();
+            backBufferContext2D.translate(-startX, -startY);
         };
 
         /**
@@ -201,14 +202,15 @@
          * @memberOf me.CanvasRenderer
          * @function
          * @param {image} image html image element
-         * @param {Number} sx value, from the source image.
-         * @param {Number} sy value, from the source image.
-         * @param {Number} sw the width of the image to be drawn
-         * @param {Number} sh the height of the image to be drawn
-         * @param {Number} dx the x position to draw the image at on the screen
-         * @param {Number} dy the y position to draw the image at on the screen
-         * @param {Number} dw the width value to draw the image at on the screen
-         * @param {Number} dh the height value to draw the image at on the screen
+         * @param {Number} sx sx value, from the source image.
+         * @param {Number} sy sy value, from the source image.
+         * @param {Number} sw sw the width of the image to be drawn
+         * @param {Number} sh sh the height of the image to be drawn
+         * @param {Number} dx dx the x position to draw the image at on the screen
+         * @param {Number} dy dy the y position to draw the image at on the screen
+         * @param {Number} dw dw the width value to draw the image at on the screen
+         * @param {Number} dh dh the height value to draw the image at on the screen
+         * @example
          * Can be used in three ways:
          * me.CanvasRenderer.drawImage(image, dx, dy);
          * me.CanvasRenderer.drawImage(image, dx, dy, dw, dh);
@@ -224,25 +226,21 @@
          * @name fillArc
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x position
-         * @param {Number} y position
-         * @param {Number} radiusX to draw
-         * @param {Number} radiusY to draw
-         * @param {Number} start degrees in radians
-         * @param {Number} end degrees in radians
-         * @param {Boolean} in anti-clockwise, defaults to false
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
-        api.fillArc = function (x, y, radiusX, radiusY, start, end, antiClockwise) {
-            if (antiClockwise === null) {
-                antiClockwise = false;
-            }
+        api.fillArc = function (x, y, radius, start, end, antiClockwise) {
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
-            backBufferContext2D.translate(x - radiusX, y - radiusY);
-            backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
-            backBufferContext2D.restore();
+            backBufferContext2D.translate(x + radius, y + radius);
+            backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             backBufferContext2D.fill();
+            backBufferContext2D.closePath();
+            backBufferContext2D.restore();
         };
 
         /**
@@ -250,10 +248,10 @@
          * @name fillRect
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x position
-         * @param {Number} y position
-         * @param {Number} width to draw
-         * @param {Number} height to draw
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
          */
         api.fillRect = function (x, y, width, height) {
             backBufferContext2D.fillRect(x, y, width, height);
@@ -284,7 +282,7 @@
 
         /**
          * Returns the 2D Context object of the given Canvas
-         * `getContext` will also enable/disable antialiasing features based on global settings.
+         * `getContext2d` will also enable/disable antialiasing features based on global settings.
          * @name getContext2d
          * @memberOf me.CanvasRenderer
          * @function
@@ -558,7 +556,7 @@
          * @param {me.Polygon} poly the shape to draw
          */
         api.strokePolygon = function (poly) {
-            this.translate(poly.pos.x, poly.pos.y);
+            backBufferContext2D.translate(poly.pos.x, poly.pos.y);
             backBufferContext2D.beginPath();
             backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
             var point;
@@ -568,6 +566,8 @@
             }
             backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             backBufferContext2D.stroke();
+            backBufferContext2D.closePath();
+            backBufferContext2D.translate(-poly.pos.x, -poly.pos.y);
         };
 
         /**
