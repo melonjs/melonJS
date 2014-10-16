@@ -81,10 +81,13 @@
          * @name clearSurface
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {WebGLContext} gl - the gl context.
-         * @param {String} color - css color string.
+         * @param {WebGLContext} [ctx=null] gl context, defaults to system context.
+         * @param {me.Color|String} color css color.
          */
-        api.clearSurface = function (gl, col) {
+        api.clearSurface = function (ctx, col) {
+            if (!ctx) {
+                ctx = gl;
+            }
             this.setColor(col);
             gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
         };
@@ -296,10 +299,10 @@
          * @name getColor
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {string}
+         * @return {me.Color}
          */
         api.getColor = function () {
-            return globalColor.toHex();
+            return globalColor.clone();
         };
 
         /**
@@ -394,7 +397,9 @@
         };
 
         api.restore = function () {
-            globalColor.parseHex(colorStack.pop());
+            var color = colorStack.pop();
+            me.pool.push("me.Color", color);
+            globalColor.copy(color);
             this.uniformMatrix = matrixStack.pop();
         };
 
@@ -463,14 +468,11 @@
          * @name setColor
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {String} color - css color string.
+         * @param {me.Color|String} color css color string.
          */
         api.setColor = function (col) {
-            if (col.match(/^\#/)) {
-                globalColor.parseHex(col);
-            }
-            else if (col.match(/^rgb/)) {
-                globalColor.parseRGB(col);
+            if (col instanceof me.Color) {
+                globalColor.copy(col);
             }
             else {
                 globalColor.parseCSS(col);
