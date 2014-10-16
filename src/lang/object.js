@@ -10,33 +10,6 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
  */
 
-
-/* jshint ignore:start */
-/**
- * Get the prototype of an Object.
- * @memberOf external:Object#
- * @alias getPrototypeOf
- * @param {Object} obj Target object to inspect.
- * @return {Prototype} Prototype of the target object.
- */
-Object.getPrototypeOf = Object.getPrototypeOf || function (obj) {
-    return obj.__proto__;
-};
-
-/**
- * Set the prototype of an Object.
- * @memberOf external:Object#
- * @alias setPrototypeOf
- * @param {Object} obj Target object to modify.
- * @param {Prototype} prototype New prototype for the target object.
- * @return {Object} Modified target object.
- */
-Object.setPrototypeOf = Object.setPrototypeOf || function (obj, prototype) {
-    obj.__proto__ = prototype;
-    return obj;
-};
-/* jshint ignore:end */
-
 if (!Object.defineProperty) {
     /**
      * simple defineProperty function definition (if not supported by the browser)<br>
