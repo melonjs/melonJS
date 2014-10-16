@@ -181,7 +181,7 @@
              * @type {Number}
              * @readonly
              */
-            this.r = r || 0;
+            this.r = 0;
 
             /**
              * Color Green Component
@@ -190,7 +190,7 @@
              * @type {Number}
              * @readonly
              */
-            this.g = g || 0;
+            this.g = 0;
 
             /**
              * Color Blue Component
@@ -199,19 +199,27 @@
              * @type {Number}
              * @readonly
              */
-            this.b = b || 0;
+            this.b = 0;
 
             /**
-             * Color alpha Component
+             * Color Alpha Component
              * @name alpha
              * @memberOf me.Color
              * @type {Number}
              * @readonly
              */
-            this.alpha = a || 1.0;
+            this.alpha = 1.0;
 
-            this.glArray = new Float32Array([r / 255.0, g / 255.0, b / 255.0, a]);
-            return this;
+            /**
+             * Color components in a Float32Array suitable for WebGL
+             * @name glArray
+             * @memberOf me.Color
+             * @type {Float32Array[]}
+             * @readonly
+             */
+            this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
+
+            return this.setColor(r, g, b, a);
         },
 
         /**
@@ -255,6 +263,18 @@
          */
         clone : function () {
             return me.pool.pull("me.Color", this.r, this.g, this.b, this.alpha);
+        },
+
+        /**
+         * Copy a color object into this one.
+         * @name copy
+         * @memberOf me.Color
+         * @function
+         * @param {me.Color} color
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        copy : function (color) {
+            return this.setColor(color.r, color.g, color.b, color.alpha);
         },
 
         /**
