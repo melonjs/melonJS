@@ -23,6 +23,8 @@
     <property name="to" value="map1"/>
    </properties>
   </object>
+  <object name="me.Entity" gid="19" x="1015" y="455"/>
+  <object name="me.Entity" gid="20" x="1050" y="455"/>
  </objectgroup>
  <objectgroup color="#ff0000" name="slimes">
   <object name="SlimeEntity" x="700" y="420" width="840" height="35">
