@@ -127,6 +127,7 @@
                         switch (format) {
                             case "xml":
                             case "tmx":
+                            case "tsx":
                                 // ie9 does not fully implement the responseXML
                                 if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
                                     // manually create the XML DOM
@@ -137,7 +138,10 @@
                                 }
                                 // converts to a JS object
                                 // (returns with map as a the root object, to match native json format)
-                                result = me.TMXUtils.parse(result).map;
+                                result = me.TMXUtils.parse(result);
+                                if (format === "tmx") {
+                                    result = result.map;
+                                }
                                 // force format to json
                                 format = "json";
                                 break;

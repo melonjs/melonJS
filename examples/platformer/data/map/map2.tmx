@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="49" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff">
- <tileset firstgid="1" name="tileset" tilewidth="35" tileheight="35">
-  <image source="../img/tileset.png" width="512" height="512"/>
- </tileset>
+ <tileset firstgid="1" source="tileset.tsx"/>
  <imagelayer name="gradient_background">
   <image source="../img/background.png"/>
  </imagelayer>
@@ -18,8 +16,6 @@
     <property name="spritewidth" value="72"/>
    </properties>
   </object>
-  <object name="me.Entity" gid="20" x="1050" y="455"/>
-  <object name="me.Entity" gid="19" x="1015" y="455"/>
   <object name="me.LevelEntity" x="1680" y="0" width="35" height="525">
    <properties>
     <property name="duration" value="150"/>

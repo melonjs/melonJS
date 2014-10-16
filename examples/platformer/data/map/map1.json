@@ -495,16 +495,12 @@
                 {
                  "animation":[
                         {
-                         "duration":200,
+                         "duration":400,
                          "tileid":28
                         }, 
                         {
                          "duration":400,
                          "tileid":29
-                        }, 
-                        {
-                         "duration":200,
-                         "tileid":28
                         }]
                 },
              "29":
@@ -517,6 +513,30 @@
                         {
                          "duration":400,
                          "tileid":28
+                        }]
+                },
+             "42":
+                {
+                 "animation":[
+                        {
+                         "duration":400,
+                         "tileid":42
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":43
+                        }]
+                },
+             "43":
+                {
+                 "animation":[
+                        {
+                         "duration":400,
+                         "tileid":43
+                        }, 
+                        {
+                         "duration":400,
+                         "tileid":42
                         }]
                 }
             },

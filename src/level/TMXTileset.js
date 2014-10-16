@@ -151,7 +151,7 @@
                 // load TSX
                 src = me.utils.getBasename(src);
                 // replace tileset with a local variable
-                tileset = me.loader.getTMX(src);
+                tileset = me.loader.getTMX(src).tileset;
 
                 if (!tileset) {
                     throw new me.Error(src + " TSX tileset not found");
