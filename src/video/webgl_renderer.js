@@ -36,7 +36,7 @@
             gl.TRUE = true;
 
             this.uniformMatrix = new me.Matrix3d();
-            this.projection = new me.Matrix3d({ val: new Float32Array([2 / canvas.width, 0, 0, 0, -2 / canvas.height, 0, -1, 1, 1]) });
+            this.projection = new me.Matrix3d({ val: new Float32Array([2 / width, 0, 0, 0, -2 / height, 0, -1, 1, 1]) });
 
             this.context = gl;
             this.createShader();
@@ -159,15 +159,33 @@
 
                     fontObject.draw(fontContext, text, x, y);
                     fontDimensions = fontObject.measureText(fontContext, text);
+                    cache.yOffset = 0;
+                    switch (fontCache[gid].textBaseline) {
+                        case "alphabetic":
+                        case "ideographic":
+                        case "bottom":
+                            cache.yOffset = fontDimensions.height;
+                            break;
+
+                        case "middle":
+                            cache.yOffset = fontDimensions.height / 2;
+                            break;
+                    }
                     cache.width = fontDimensions.width;
-                    cache.height = fontDimensions.height;
+                    // Roughly equivalent to the height reserved for descenders
+                    cache.height = fontDimensions.height * 1.2;
                     cache.image = fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height);
 
                     fontContext.clearRect(0, 0, canvas.width, canvas.height);
                 }
             }
 
-            this.drawImage(fontCache[gid].image, x, y, fontCache[gid].width, fontCache[gid].height);
+            y -= fontCache[gid].yOffset;
+            this.drawImage(
+                fontCache[gid].image,
+                x, y, fontCache[gid].width, fontCache[gid].height,
+                x, y, fontCache[gid].width, fontCache[gid].height
+            );
         };
 
         /**
@@ -210,9 +228,9 @@
             }
 
             var tx1 = sx / image.width;
-            var ty1 = 1.0 - (sy / image.height);
-            var tx2 = ((sx + sw) / image.width);
-            var ty2 = 1.0 - ((sy + sh) / image.height);
+            var ty1 = sy / image.height;
+            var tx2 = (sx + sw) / image.width;
+            var ty2 = (sy + sh) / image.height;
 
             var x1 = dx;
             var y1 = dy;
