@@ -682,7 +682,6 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                renderer.save();
                 isFloating = obj.floating;
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
                     if (isFloating === true) {
@@ -703,8 +702,6 @@
 
                     this.drawCount++;
                 }
-
-                renderer.restore();
             }
 
             renderer.restore();

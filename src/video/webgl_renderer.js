@@ -24,7 +24,6 @@
         globalColor = null,
         matrixStack = [],
         positionBuffer = null,
-        projection = null,
         shaderProgram = null,
         textureBuffer = null,
         textureLocation = null,
@@ -37,7 +36,7 @@
             gl.TRUE = true;
 
             this.uniformMatrix = new me.Matrix3d();
-            projection = new me.Matrix3d();
+            this.projection = new me.Matrix3d({ val: new Float32Array([2 / canvas.width, 0, 0, 0, -2 / canvas.height, 0, -1, 1, 1]) });
 
             this.context = gl;
             this.createShader();
@@ -64,6 +63,16 @@
             textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
 
             return this;
+        };
+
+        /**
+         * Binds the projection matrix to the shader
+         * @name applyProjection
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.applyProjection = function () {
+            shaderProgram.uniforms.pMatrix = this.projection.val;
         };
 
         api.bindTexture = function (image) {
@@ -235,7 +244,6 @@
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
@@ -275,7 +283,6 @@
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            this.uniformMatrix.multiply(projection);
             gl.uniform1i(textureLocation, 0);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
@@ -394,6 +401,9 @@
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
                 canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
             }
+
+            this.setProjection();
+            this.applyProjection();
         };
 
         api.restore = function () {
@@ -440,7 +450,7 @@
         };
 
         api.setProjection = function () {
-            projection.set(2 / canvas.width, 0, 0,
+            this.projection.set(2 / canvas.width, 0, 0,
                 0, -2 / canvas.height, 0,
                 -1, 1, 1);
         };
@@ -489,7 +499,6 @@
          */
         api.startRender = function () {
             gl.viewport(0, 0, canvas.width, canvas.height);
-            me.video.renderer.setProjection();
         };
 
         /**

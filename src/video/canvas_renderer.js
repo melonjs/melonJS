@@ -508,6 +508,15 @@
         };
 
         /**
+         * Empty function to match me.WebGLRenderer over type checking.
+         * @name startRender
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.startRender = function () {
+        };
+
+        /**
          * Fill an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
          * @memberOf me.CanvasRenderer

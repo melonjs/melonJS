@@ -269,9 +269,7 @@
          * @function
          */
         api.draw = function () {
-            if (me.video.renderer === me.WebGLRenderer) {
-                me.video.renderer.startRender();
-            }
+            me.video.renderer.startRender();
             if (isDirty) {
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)
