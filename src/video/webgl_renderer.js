@@ -98,7 +98,12 @@
                 ctx = gl;
             }
             this.setColor(col);
-            gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
+            gl.clearColor(
+                globalColor.glArray[0],
+                globalColor.glArray[1],
+                globalColor.glArray[2],
+                globalColor.glArray[3]
+            );
         };
 
         /**
