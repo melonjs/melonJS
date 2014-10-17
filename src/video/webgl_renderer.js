@@ -489,9 +489,7 @@
          */
         api.startRender = function () {
             gl.viewport(0, 0, canvas.width, canvas.height);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
             me.video.renderer.setProjection();
-            this.uniformMatrix.identity();
         };
 
         /**
