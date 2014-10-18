@@ -31,14 +31,19 @@
 
         api.init = function (width, height, c) {
             canvas = c;
-            gl = canvas.getContext("experimental-webgl");
+            gl = this.getContextGL(c);
             gl.FALSE = false;
             gl.TRUE = true;
 
             this.uniformMatrix = new me.Matrix3d();
-            this.projection = new me.Matrix3d({ val: new Float32Array([2 / width, 0, 0, 0, -2 / height, 0, -1, 1, 1]) });
+            this.projection = new me.Matrix3d({
+                val: new Float32Array([
+                    2 / width,  0,              0,
+                    0,          -2 / height,    0,
+                    -1,         1,              1
+                ])
+            });
 
-            this.context = gl;
             this.createShader();
             shaderProgram.bind();
 
@@ -315,6 +320,53 @@
         };
 
         /**
+         * return a reference to the screen canvas
+         * @name getScreenCanvas
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Canvas}
+         */
+        api.getScreenCanvas = function () {
+            return canvas;
+        };
+
+        /**
+         * return a reference to the screen canvas corresponding WebGL Context<br>
+         * @name getScreenContext
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {WebGLContext}
+         */
+        api.getScreenContext = function () {
+            return gl;
+        };
+
+        /**
+         * Returns the WebGL Context object of the given Canvas
+         * @name getContextGL
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Canvas} [canvas=canvas instance of the renderer]
+         * @return {WebGLContext}
+         */
+        api.getContextGL = function (c) {
+            if (typeof c === "undefined" || c === null) {
+                throw new me.video.Error(
+                    "You must pass a canvas element in order to create " +
+                    "a GL context"
+                );
+            }
+
+            if (typeof c.getContext === "undefined") {
+                throw new me.video.Error(
+                    "Your browser does not support WebGL."
+                );
+            }
+
+            return c.getContext("webgl") || c.getContext("experimental-webgl");
+        };
+
+        /**
          * return a reference to the system canvas
          * @name getCanvas
          * @memberOf me.WebGLRenderer
@@ -348,34 +400,26 @@
             return gl;
         };
 
-        api.getHeight = function () {
-            return gl.canvas.height;
-        };
-
         /**
-         * return a reference to the screen canvas
-         * @name getScreenCanvas
+         * return the width of the system GL Context
+         * @name getWidth
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {Canvas}
+         * @return {Number}
          */
-        api.getScreenCanvas = function () {
-            return canvas;
-        };
-
-        /**
-         * return a reference to the screen canvas corresponding WebGL Context<br>
-         * @name getScreenContext
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {WebGLContext}
-         */
-        api.getScreenContext = function () {
-            return gl;
-        };
-
         api.getWidth = function () {
             return gl.canvas.width;
+        };
+
+        /**
+         * return the height of the system GL Context
+         * @name getHeight
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Number}
+         */
+        api.getHeight = function () {
+            return gl.canvas.height;
         };
 
         /**
@@ -433,6 +477,23 @@
             this.applyProjection();
         };
 
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.save = function () {
+            colorStack.push(this.getColor());
+            matrixStack.push(this.uniformMatrix.clone());
+        };
+
+        /**
+         * restores the canvas context
+         * @name restore
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
         api.restore = function () {
             var color = colorStack.pop();
             me.pool.push("me.Color", color);
@@ -449,11 +510,6 @@
          */
         api.rotate = function (angle) {
             this.uniformMatrix.rotate(angle);
-        };
-
-        api.save = function () {
-            colorStack.push(this.getColor());
-            matrixStack.push(this.uniformMatrix.clone());
         };
 
         /**

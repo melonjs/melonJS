@@ -320,10 +320,6 @@
             return _context;
         };
 
-        api.getHeight = function () {
-            return backBufferCanvas.height;
-        };
-
         /**
          * return a reference to the system canvas
          * @name getCanvas
@@ -358,8 +354,26 @@
             return backBufferContext2D;
         };
 
+        /**
+         * return the width of the system 2d Context
+         * @name getWidth
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {Number}
+         */
         api.getWidth = function () {
             return backBufferCanvas.width;
+        };
+
+        /**
+         * return the height of the system 2d Context
+         * @name getHeight
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @return {Number}
+         */
+        api.getHeight = function () {
+            return backBufferCanvas.height;
         };
 
         /**
@@ -396,6 +410,12 @@
             backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
         };
 
+        /**
+         * resizes the canvas & 2d Context
+         * @name resize
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
         api.resize = function (scaleX, scaleY) {
             canvas.width = gameWidthZoom = backBufferCanvas.width * scaleX;
             canvas.height = gameHeightZoom = backBufferCanvas.height * scaleY;
@@ -407,6 +427,16 @@
             }
             this.setImageSmoothing(context, me.sys.scalingInterpolation);
             this.blitSurface();
+        };
+
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.save = function () {
+            backBufferContext2D.save();
         };
 
         /**
@@ -428,16 +458,6 @@
          */
         api.rotate = function (angle) {
             backBufferContext2D.rotate(angle);
-        };
-
-        /**
-         * save the canvas context
-         * @name save
-         * @memberOf me.CanvasRenderer
-         * @function
-         */
-        api.save = function () {
-            backBufferContext2D.save();
         };
 
         /**
