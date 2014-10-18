@@ -67,7 +67,7 @@
          * @memberOf me.game
          */
         api.world = null;
-        
+
         /**
          * when true, all objects will be added under the root world container<br>
          * when false, a `me.Container` object will be created for each
@@ -139,7 +139,7 @@
                 api.world = new me.Container(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
-                
+
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
@@ -176,10 +176,10 @@
          * @function
          */
         api.reset = function () {
-            
+
             // clear the quadtree
             me.collision.quadTree.clear();
-            
+
             // remove all objects
             api.world.destroy();
 
@@ -194,7 +194,7 @@
                     y : 0
                 }
             };
-            
+
             // reset the transform matrix to the normal one
             renderer.resetTransform();
 
@@ -245,10 +245,10 @@
 
                 // update the timer
                 me.timer.update(time);
-                
+
                 // clear the quadtree
                 me.collision.quadTree.clear();
-                
+
                 // insert the world container (children) into the quadtree
                 me.collision.quadTree.insertContainer(api.world);
 
@@ -269,7 +269,6 @@
          * @function
          */
         api.draw = function () {
-            me.video.renderer.startRender();
             if (isDirty) {
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)

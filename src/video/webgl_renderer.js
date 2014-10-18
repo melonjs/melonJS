@@ -61,6 +61,8 @@
 
             textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
 
+            this.resize();
+
             return this;
         };
 
@@ -387,7 +389,6 @@
             return globalColor.alpha;
         };
 
-
         /**
          * returns the text size based on dimensions from the font. Uses the font drawing context
          * @name measureText
@@ -418,11 +419,15 @@
          * @function
          */
         api.resize = function () {
+            var w = canvas.width;
+            var h = canvas.height;
+
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
-                canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
-                canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
+                canvas.style.width = (w / me.device.getPixelRatio()) + "px";
+                canvas.style.height = (h / me.device.getPixelRatio()) + "px";
             }
+            gl.viewport(0, 0, w, h);
 
             this.setProjection();
             this.applyProjection();
@@ -511,16 +516,6 @@
             else {
                 globalColor.parseCSS(col);
             }
-        };
-
-        /**
-         * Does prep calls before rendering a frame
-         * @name startRender
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.startRender = function () {
-            gl.viewport(0, 0, canvas.width, canvas.height);
         };
 
         /**
