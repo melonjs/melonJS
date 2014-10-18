@@ -29,41 +29,17 @@
   </data>
  </layer>
  <objectgroup color="#ff0000" name="collision">
+  <object x="0" y="640">
+   <polyline points="0,0 640,0 640,-640 0,-640 0,0"/>
+  </object>
+  <object x="416" y="0">
+   <polyline points="0,0 0,128 32,128 32,160 192,160 192,192 224,192"/>
+  </object>
   <object x="160" y="160" width="32" height="32"/>
   <object x="256" y="64" width="32" height="32"/>
   <object x="480" y="288" width="32" height="32"/>
   <object x="288" y="352" width="32" height="32"/>
   <object x="416" y="544" width="32" height="32"/>
   <object x="192" y="448" width="32" height="32"/>
-  <object x="416" y="0">
-   <polyline points="0,0 0,128"/>
-  </object>
-  <object x="416" y="128">
-   <polyline points="0,0 32,0"/>
-  </object>
-  <object x="448" y="128">
-   <polyline points="0,0 0,32"/>
-  </object>
-  <object x="448" y="160">
-   <polyline points="0,0 160,0"/>
-  </object>
-  <object x="608" y="160">
-   <polyline points="0,0 0,32"/>
-  </object>
-  <object x="608" y="192">
-   <polyline points="0,0 32,0"/>
-  </object>
-  <object x="0" y="0">
-   <polyline points="0,0 0,640"/>
-  </object>
-  <object x="0" y="640">
-   <polyline points="0,0 640,0"/>
-  </object>
-  <object x="640" y="640">
-   <polyline points="0,0 0,-640"/>
-  </object>
-  <object x="640" y="0">
-   <polyline points="0,0 -640,0"/>
-  </object>
  </objectgroup>
 </map>
