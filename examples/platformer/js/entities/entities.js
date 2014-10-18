@@ -3,7 +3,7 @@
 /*        a player entity                                                           */
 /*                                                                                  */
 /************************************************************************************/
-game.PlayerEntity = me.Entity.extend({    
+game.PlayerEntity = me.Entity.extend({
     init: function(x, y, settings) {
         // call the constructor
         this._super(me.Entity, 'init', [x, y , settings]);
@@ -16,12 +16,12 @@ game.PlayerEntity = me.Entity.extend({
         this.body.setFriction(0.4,0);
 
         this.dying = false;
-        
+
         this.mutipleJump = 1;
 
         // set the display around our position
         me.game.viewport.follow(this, me.game.viewport.AXIS.HORIZONTAL);
-                
+
         // enable keyboard
         me.input.bindKey(me.input.KEY.LEFT,  "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");
@@ -34,7 +34,7 @@ game.PlayerEntity = me.Entity.extend({
         me.input.bindKey(me.input.KEY.W,     "jump", true);
         me.input.bindKey(me.input.KEY.S,     "down");
 
-        
+
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([
             "walk0001.png", "walk0002.png", "walk0003.png",
@@ -42,7 +42,7 @@ game.PlayerEntity = me.Entity.extend({
             "walk0007.png", "walk0008.png", "walk0009.png",
             "walk0010.png", "walk0011.png"
         ]);
-        
+
         // define a basic walking animatin
         this.renderable.addAnimation ("walk",  ["walk0001.png", "walk0002.png", "walk0003.png"]);
         // set as default
@@ -51,14 +51,14 @@ game.PlayerEntity = me.Entity.extend({
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
     },
-    
+
     /* -----
 
         update the player pos
-        
+
     ------            */
     update : function (dt) {
-        
+
         if (me.input.isKeyPressed('left'))    {
             this.body.vel.x -= this.body.accel.x * me.timer.tick;
             this.renderable.flipX(true);
@@ -66,23 +66,28 @@ game.PlayerEntity = me.Entity.extend({
             this.body.vel.x += this.body.accel.x * me.timer.tick;
             this.renderable.flipX(false);
         }
-        
-        if (me.input.isKeyPressed('jump')) {
-            this.jumping = true;
 
-            // reset the dblJump flag if off the ground
-            this.mutipleJump = (this.body.vel.y === 0)?1:this.mutipleJump;
-            
-            if (this.mutipleJump<=2) {
+        if (me.input.isKeyPressed('jump')) {
+            this.body.jumping = true;
+
+            if (this.multipleJump <= 2) {
                 // easy 'math' for double jump
-                this.body.vel.y -= (this.body.maxVel.y * this.mutipleJump++) * me.timer.tick;
+                this.body.vel.y -= (this.body.maxVel.y * this.multipleJump++) * me.timer.tick;
                 me.audio.play("jump", false);
             }
         }
-            
+        else if (!this.body.falling && !this.body.jumping) {
+            // reset the multipleJump flag if on the ground
+            this.multipleJump = 1;
+        }
+        else if (this.body.falling && this.multipleJump < 2) {
+            // reset the multipleJump flag if falling
+            this.multipleJump = 2;
+        }
+
         // check for collision with environment
         this.body.update();
-        
+
         // check if we fell into a hole
         if (!this.inViewport && (this.pos.y > me.video.renderer.getHeight())) {
             // if yes reset the game
@@ -97,17 +102,17 @@ game.PlayerEntity = me.Entity.extend({
 
         // check for collision with sthg
         me.collision.check(this);
-        
+
         // check if we moved (a "stand" animation would definitely be cleaner)
         if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
             this._super(me.Entity, 'update', [dt]);
             return true;
         }
-        
+
         return false;
     },
-    
-    
+
+
     /**
      * colision handler
      */
@@ -162,7 +167,7 @@ game.PlayerEntity = me.Entity.extend({
         return true;
     },
 
-    
+
     /**
      * ouch
      */
@@ -180,23 +185,23 @@ game.PlayerEntity = me.Entity.extend({
 /**
  * a coin (collectable) entiry
  */
-game.CoinEntity = me.CollectableEntity.extend({    
-    /** 
+game.CoinEntity = me.CollectableEntity.extend({
+    /**
      * constructor
      */
     init: function (x, y, settings) {
-        
+
         // call the super constructor
         this._super(me.CollectableEntity, 'init', [x, y , settings]);
 
         // add the coin sprite as renderable
         this.renderable = game.texture.createSpriteFromName("coin.png");
-        
+
         // set the renderable position to center
         this.anchorPoint.set(0.5, 0.5);
-    },        
-    
-    /** 
+    },
+
+    /**
      * collision handling
      */
     onCollision : function (response) {
@@ -205,10 +210,10 @@ game.CoinEntity = me.CollectableEntity.extend({
         me.audio.play("cling", false);
         // give some score
         game.data.score += 250;
-        
+
         //avoid further collision and delete it
         this.body.setCollisionMask(me.collision.types.NO_OBJECT);
-        
+
         me.game.world.removeChild(this);
 
         return false;
@@ -219,7 +224,7 @@ game.CoinEntity = me.CollectableEntity.extend({
  * An enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-game.PathEnemyEntity = me.Entity.extend({    
+game.PathEnemyEntity = me.Entity.extend({
     /**
      * constructor
      */
@@ -235,7 +240,7 @@ game.PathEnemyEntity = me.Entity.extend({
 
         // call the super constructor
         this._super(me.Entity, 'init', [x, y , settings]);
-        
+
         // set start/end position based on the initial area size
         x = this.pos.x;
         this.startX = x;
@@ -243,7 +248,7 @@ game.PathEnemyEntity = me.Entity.extend({
         this.pos.x  = x + width - settings.spritewidth;
         // update the entity bounds since we manually change the entity position
         this.updateBounds();
-        
+
         // apply gravity setting if specified
         this.body.gravity = settings.gravity || me.sys.gravity;
 
@@ -251,23 +256,23 @@ game.PathEnemyEntity = me.Entity.extend({
 
         // walking & jumping speed
         this.body.setVelocity(settings.velX || 1, settings.velY || 6);
-        
+
         // set a "enemyObject" type
         this.collisionType = me.collision.types.ENEMY_OBJECT;
-                
+
         // don't update the entities when out of the viewport
         this.alwaysUpdate = false;
-        
+
         // a specific flag to recognize these enemies
         this.isMovingEnemy = true;
     },
-        
-    
+
+
     /**
      * manage the enemy movement
      */
     update : function (dt) {
-        
+
         if (this.alive)    {
             if (this.walkLeft && this.pos.x <= this.startX) {
                 this.body.vel.x = this.body.accel.x * me.timer.tick;
@@ -278,16 +283,16 @@ game.PathEnemyEntity = me.Entity.extend({
                 this.walkLeft = true;
                 this.renderable.flipX(false);
             }
-        
+
             // check & update movement
             this.body.update();
 
-        } 
+        }
 
         // return true if we moved of if flickering
         return (this._super(me.Entity, 'update', [dt]) || this.body.vel.x != 0 || this.body.vel.y != 0);
     },
-    
+
     /**
      * collision handle
      */
@@ -319,14 +324,14 @@ game.PathEnemyEntity = me.Entity.extend({
  * An Slime enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-game.SlimeEnemyEntity = game.PathEnemyEntity.extend({    
+game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
     /**
      * constructor
      */
     init: function (x, y, settings) {
         // super constructor
         this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
-    
+
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([
             "slime_normal.png", "slime_walk.png", "slime_dead.png"
@@ -334,20 +339,20 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
 
         // custom animation speed ?
         if (settings.animationspeed) {
-            this.renderable.animationspeed = settings.animationspeed; 
+            this.renderable.animationspeed = settings.animationspeed;
         }
 
         // walking animatin
         this.renderable.addAnimation ("walk", ["slime_normal.png", "slime_walk.png"]);
         // dead animatin
         this.renderable.addAnimation ("dead", ["slime_dead.png"]);
-        
+
         // set default one
         this.renderable.setCurrentAnimation("walk");
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
-        
+
     }
 });
 
@@ -355,14 +360,14 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
  * An Fly enemy entity
  * follow a horizontal path defined by the box size in Tiled
  */
-game.FlyEnemyEntity = game.PathEnemyEntity.extend({    
+game.FlyEnemyEntity = game.PathEnemyEntity.extend({
     /**
      * constructor
      */
     init: function (x, y, settings) {
         // super constructor
         this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
-    
+
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([
             "fly_normal.png", "fly_fly.png", "fly_dead.png"
@@ -370,18 +375,18 @@ game.FlyEnemyEntity = game.PathEnemyEntity.extend({
 
         // custom animation speed ?
         if (settings.animationspeed) {
-            this.renderable.animationspeed = settings.animationspeed; 
+            this.renderable.animationspeed = settings.animationspeed;
         }
 
         // walking animatin
         this.renderable.addAnimation ("walk", ["fly_normal.png", "fly_fly.png"]);
         // dead animatin
         this.renderable.addAnimation ("dead", ["fly_dead.png"]);
-        
+
         // set default one
         this.renderable.setCurrentAnimation("walk");
 
         // set the renderable position to bottom center
-        this.anchorPoint.set(0.5, 1.0);        
+        this.anchorPoint.set(0.5, 1.0);
     }
 });
