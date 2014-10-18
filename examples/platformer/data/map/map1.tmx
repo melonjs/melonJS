@@ -36,18 +36,11 @@
     <property name="spritewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="245" y="140" width="105" height="35">
+  <object name="SlimeEntity" x="140" y="140" width="210" height="35">
    <properties>
     <property name="spriteheight" value="35"/>
     <property name="spritewidth" value="55"/>
    </properties>
-  </object>
-  <object name="SlimeEntity" x="140" y="175">
-   <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
-   </properties>
-   <polygon points="0,0 35,-70 70,0"/>
   </object>
  </objectgroup>
  <objectgroup color="#ffff00" name="coins">

@@ -174,37 +174,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":105,
-                 "x":245,
-                 "y":140
-                }, 
-                {
-                 "height":0,
-                 "name":"SlimeEntity",
-                 "polygon":[
-                        {
-                         "x":0,
-                         "y":0
-                        }, 
-                        {
-                         "x":35,
-                         "y":-70
-                        }, 
-                        {
-                         "x":70,
-                         "y":0
-                        }],
-                 "properties":
-                    {
-                     "spriteheight":"35",
-                     "spritewidth":"55"
-                    },
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
+                 "width":210,
                  "x":140,
-                 "y":175
+                 "y":140
                 }],
          "opacity":1,
          "type":"objectgroup",
