@@ -685,8 +685,7 @@
                 isFloating = obj.floating;
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
                     if (isFloating === true) {
-                        renderer.save();
-                        // translate back object
+                        // translate to object
                         renderer.translate(
                             viewport.screenX - this.pos.x,
                             viewport.screenY - this.pos.y
@@ -697,7 +696,11 @@
                     obj.draw(renderer, rect);
 
                     if (isFloating === true) {
-                        renderer.restore();
+                        // translate back to viewport
+                        renderer.translate(
+                            this.pos.x - viewport.screenX,
+                            this.pos.y - viewport.screenY
+                        );
                     }
 
                     this.drawCount++;
