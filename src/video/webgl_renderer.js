@@ -17,6 +17,7 @@
         var api = {},
         canvas = null,
         colorStack = [],
+        dimensions = null,
         fontCache = {},
         fontCanvas = null,
         fontContext = null,
@@ -34,6 +35,8 @@
             gl = this.getContextGL(c);
             gl.FALSE = false;
             gl.TRUE = true;
+
+            dimensions = { width: width, height: height };
 
             this.uniformMatrix = new me.Matrix3d();
             this.projection = new me.Matrix3d({
@@ -66,7 +69,7 @@
 
             textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
 
-            this.resize();
+            this.resize(1, 1);
 
             return this;
         };
@@ -459,9 +462,10 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.resize = function () {
-            var w = canvas.width;
-            var h = canvas.height;
+        api.resize = function (scaleX, scaleY) {
+            canvas.width = dimensions.width * scaleX;
+            canvas.height = dimensions.height * scaleY;
+            var w = canvas.width, h = canvas.height;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
@@ -475,17 +479,6 @@
         };
 
         /**
-         * save the canvas context
-         * @name save
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.save = function () {
-            colorStack.push(this.getColor());
-            matrixStack.push(this.uniformMatrix.clone());
-        };
-
-        /**
          * restores the canvas context
          * @name restore
          * @memberOf me.WebGLRenderer
@@ -496,6 +489,17 @@
             me.pool.push("me.Color", color);
             globalColor.copy(color);
             this.uniformMatrix.copy(matrixStack.pop());
+        };
+
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.save = function () {
+            colorStack.push(this.getColor());
+            matrixStack.push(this.uniformMatrix.clone());
         };
 
         /**
