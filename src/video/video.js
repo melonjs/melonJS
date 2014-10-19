@@ -29,6 +29,19 @@
         var maxWidth = Infinity;
         var maxHeight = Infinity;
 
+        /**
+         * Auto-detect the best renderer to use
+         * @ignore
+         */
+        function autoDetectRenderer() {
+            try {
+                return me.WebGLRenderer.init.apply(me.WebGLRenderer, arguments);
+            }
+            catch (e) {
+                return me.CanvasRenderer.init.apply(me.CanvasRenderer, arguments);
+            }
+        }
+
         /*
          * PUBLIC STUFF
          */
@@ -49,13 +62,40 @@
         });
 
         /**
+         * Select the HTML5 Canvas renderer
+         * @public
+         * @name CANVAS
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.CANVAS = 0;
+
+        /**
+         * Select the WebGL renderer
+         * @public
+         * @name WEBGL
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.WEBGL = 1;
+
+        /**
+         * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+         * @public
+         * @name AUTO
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.AUTO = 2;
+
+        /**
          * init the "video" part<p>
          * return false if initialization failed (canvas not supported)
          * @name init
          * @memberOf me.video
          * @function
          * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
-         * @param {RendererType} me.video.CANVAS. State which renderer you prefer to use. WebGL to be implemented
+         * @param {Number} [renderer=me.video.CANVAS] State which renderer you prefer to use.
          * @param {Number} width game width
          * @param {Number} height game height
          * @param {Boolean} [double_buffering] enable/disable double buffering
@@ -64,12 +104,12 @@
          * @return {Boolean}
          * @example
          * // init the video with a 480x320 canvas
-         * if (!me.video.init('jsapp', 480, 320)) {
+         * if (!me.video.init('jsapp', me.video.CANVAS, 480, 320)) {
          *    alert("Sorry but your browser does not support html 5 canvas !");
          *    return;
          * }
          */
-        api.init = function (wrapperid, rendererType, game_width, game_height, doublebuffering, scale, aspectRatio) {
+        api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
                 throw new api.Error("me.video.init() called before engine initialization.");
@@ -141,12 +181,14 @@
                 return false;
             }
 
-            switch (rendererType) {
-                case me.video.WEBGL:
-                    this.renderer = me.WebGLRenderer.init(canvas.width, canvas.height, canvas);
+            switch (renderer) {
+                case api.WEBGL:
+                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height);
                     break;
-                default: // case me.video.CANVAS:. TODO: have default be AUTO detect
-                    // get the 2D context
+                case api.AUTO:
+                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom);
+                    break;
+                default:
                     this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom);
                     break;
             }
@@ -338,8 +380,5 @@
         // return our api
         return api;
     })();
-
-    me.video.CANVAS = 0;
-    me.video.WEBGL = 1;
 
 })();

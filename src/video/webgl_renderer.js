@@ -32,7 +32,16 @@
         verticeArray = new Float32Array(12),
         white1PixelTexture = null;
 
-        api.init = function (width, height, c) {
+        /**
+         * initializes the webgl renderer, creating the requried contexts
+         * @name init
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Canvas} canvas - the html canvas tag to draw to on screen.
+         * @param {Number} game_width - the width of the canvas without scaling
+         * @param {Number} game_height - the height of the canvas without scaling
+         */
+        api.init = function (c, width, height) {
             canvas = c;
             gl = this.getContextGL(c);
             gl.FALSE = false;
