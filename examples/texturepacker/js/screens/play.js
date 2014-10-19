@@ -3,7 +3,7 @@ game.PlayScreen = me.ScreenObject.extend({
      *  action to perform on state change
      */
     onResetEvent: function() {
-        me.game.world.addChild(new me.ColorLayer('background', '#000000', 0), 0);
+        me.game.world.addChild(new me.ColorLayer('background', '#330000', 0));
         me.game.world.addChild(game.texture.createSpriteFromName('backdrop.png'), 1);
 
         var animationSheet = new me.AnimationSheet(200, 200, {

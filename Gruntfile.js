@@ -3,6 +3,7 @@ module.exports = function (grunt) {
 
     var sourceFiles = grunt.file.readJSON("sourceFiles.json");
     var testSpecs = grunt.file.readJSON("testSpecs.json");
+    var glslSourceFiles = [ "src/video/*.glsl" ];
 
     // Project configuration.
     grunt.initConfig({
@@ -20,16 +21,15 @@ module.exports = function (grunt) {
         },
 
         replace : {
-            options : {
-                variables : {
-                    "VERSION" : "<%= pkg.version %>"
-                },
-                prefix : "@",
-                force : true
-            },
-
             dist : {
                 options : {
+                    variables : {
+                        "FRAGMENT" : "<%= grunt.file.read('build/fragment.glsl') %>",
+                        "VERTEX" : "<%= grunt.file.read('build/vertex.glsl') %>",
+                        "VERSION" : "<%= pkg.version %>"
+                    },
+                    prefix : "@",
+                    force : true,
                     patterns : [
                         {
                             match : /this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g,
@@ -48,11 +48,45 @@ module.exports = function (grunt) {
             },
 
             docs : {
+                options : {
+                    variables : {
+                        "VERSION" : "<%= pkg.version %>"
+                    },
+                    prefix : "@",
+                    force : true
+                },
                 files : [
                     {
                         expand : true,
                         src : sourceFiles.concat([ "README.md" ]),
                         dest : "build/docs/"
+                    }
+                ]
+            },
+
+            glsl : {
+                options : {
+                    patterns : [
+                        {
+                            match : /\n/g,
+                            replacement : "\\n\" + \""
+                        },
+                        {
+                            match : /\\/g,
+                            replacement : "\\\\"
+                        },
+                        {
+                            match : /"/g,
+                            replacement : "\\\""
+                        },
+                    ],
+                },
+                files : [
+                    {
+                        expand : true,
+                        flatten : true,
+                        src : glslSourceFiles,
+                        dest : "build/"
                     }
                 ]
             }
@@ -145,32 +179,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-
-        browserify: {
-            dist: {
-                src: ["src/vendors/stackgl-require.js"],
-                dest: "src/vendors/stackgl-compiled.js",
-
-                options: {
-                    browserifyOptions: {
-                        standalone: "stackgl",
-                        transform: ["glslify"]
-                    }
-                }
-            }
-        },
-
-        file_append: {
-            default_options: {
-                files: {
-                    "src/vendors/stackgl.js": {
-                        append: "\n/* jshint ignore:end */",
-                        prepend: "/* jshint ignore:start */\n",
-                        input: "src/vendors/stackgl-compiled.js"
-                    }
-                }
-            }
-        }
     });
 
     grunt.loadNpmTasks("grunt-contrib-uglify");
@@ -181,17 +189,21 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-replace");
     grunt.loadNpmTasks("grunt-contrib-jasmine");
     grunt.loadNpmTasks("grunt-contrib-connect");
-    grunt.loadNpmTasks("grunt-browserify");
-    grunt.loadNpmTasks("grunt-file-append");
 
     // Custom Tasks
     grunt.loadTasks("tasks");
 
     // Default task.
-    grunt.registerTask("default", [ "stackgl-build", "test", "uglify" ]);
-    grunt.registerTask("build", [ "stackgl-build", "lint", "uglify" ]);
-    grunt.registerTask("stackgl-build", ["browserify:dist", "file_append"]);
-    grunt.registerTask("lint", [ "jshint:beforeConcat", "concat", "replace:dist", "jshint:afterConcat"]);
+    grunt.registerTask("default", [ "test", "uglify" ]);
+    grunt.registerTask("build", [ "lint", "uglify" ]);
+    grunt.registerTask("glsl", [ "replace:glsl" ]);
+    grunt.registerTask("lint", [
+        "jshint:beforeConcat",
+        "glsl",
+        "concat",
+        "replace:dist",
+        "jshint:afterConcat"
+    ]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
 };

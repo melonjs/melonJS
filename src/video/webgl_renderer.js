@@ -17,6 +17,7 @@
         var api = {},
         canvas = null,
         colorStack = [],
+        dimensions = null,
         fontCache = {},
         fontCanvas = null,
         fontContext = null,
@@ -24,21 +25,30 @@
         globalColor = null,
         matrixStack = [],
         positionBuffer = null,
-        projection = null,
         shaderProgram = null,
         textureBuffer = null,
+        textureCoords = new Float32Array(12),
+        textureLocation = null,
+        verticeArray = new Float32Array(12),
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
             canvas = c;
-            gl = canvas.getContext("experimental-webgl");
+            gl = this.getContextGL(c);
             gl.FALSE = false;
             gl.TRUE = true;
 
-            this.uniformMatrix = new me.Matrix3d();
-            projection = new me.Matrix3d();
+            dimensions = { width: width, height: height };
 
-            this.context = gl;
+            this.uniformMatrix = new me.Matrix3d();
+            this.projection = new me.Matrix3d({
+                val: new Float32Array([
+                    2 / width,  0,              0,
+                    0,          -2 / height,    0,
+                    -1,         1,              1
+                ])
+            });
+
             this.createShader();
             shaderProgram.bind();
 
@@ -56,16 +66,29 @@
             this.createBuffers();
 
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
-            gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+            textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
+
+            this.resize(1, 1);
 
             return this;
         };
 
+        /**
+         * Binds the projection matrix to the shader
+         * @name applyProjection
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.applyProjection = function () {
+            shaderProgram.uniforms.pMatrix = this.projection.val;
+        };
+
         api.bindTexture = function (image) {
             if (image.texture === null || typeof image.texture === "undefined") {
-                image.texture = stackgl.gltexture2d(gl, image);
+                image.texture = me.video.shader.gltexture2d(gl, image);
             }
         };
 
@@ -85,8 +108,10 @@
             if (!ctx) {
                 ctx = gl;
             }
+            colorStack.push(this.getColor());
             this.setColor(col);
-            gl.clearColor(globalColor.r / 255.0, globalColor.g / 255.0, globalColor.b / 255.0, 1.0);
+            this.fillRect(0, 0, canvas.width, canvas.height);
+            this.setColor(colorStack.pop());
         };
 
         /**
@@ -101,7 +126,7 @@
          * @private
          */
         api.createShader = function () {
-            shaderProgram = stackgl.createShader(gl);
+            shaderProgram = me.video.shader.createShader(gl);
         };
 
         /**
@@ -130,8 +155,21 @@
                     "text" : fontObject.text,
                     "image" : fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height),
                     "width" : fontDimensions.width,
-                    "height" : fontDimensions.height
+                    // Roughly equivalent to the height reserved for descenders
+                    "height" : fontDimensions.height * 1.2,
+                    "yOffset" : 0,
                 };
+                switch (fontObject.textBaseline) {
+                    case "alphabetic":
+                    case "ideographic":
+                    case "bottom":
+                        fontCache[gid].yOffset = fontDimensions.height;
+                        break;
+
+                    case "middle":
+                        fontCache[gid].yOffset = fontDimensions.height / 2;
+                        break;
+                }
                 fontContext.clearRect(0, 0, canvas.width, canvas.height);
             }
             else {
@@ -147,15 +185,33 @@
 
                     fontObject.draw(fontContext, text, x, y);
                     fontDimensions = fontObject.measureText(fontContext, text);
+                    cache.yOffset = 0;
+                    switch (cache.textBaseline) {
+                        case "alphabetic":
+                        case "ideographic":
+                        case "bottom":
+                            cache.yOffset = fontDimensions.height;
+                            break;
+
+                        case "middle":
+                            cache.yOffset = fontDimensions.height / 2;
+                            break;
+                    }
                     cache.width = fontDimensions.width;
-                    cache.height = fontDimensions.height;
+                    // Roughly equivalent to the height reserved for descenders
+                    cache.height = fontDimensions.height * 1.2;
                     cache.image = fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height);
 
                     fontContext.clearRect(0, 0, canvas.width, canvas.height);
                 }
             }
 
-            this.drawImage(fontCache[gid].image, x, y, fontCache[gid].width, fontCache[gid].height);
+            y -= fontCache[gid].yOffset;
+            this.drawImage(
+                fontCache[gid].image,
+                x, y, fontCache[gid].width, fontCache[gid].height,
+                x, y, fontCache[gid].width, fontCache[gid].height
+            );
         };
 
         /**
@@ -198,41 +254,50 @@
             }
 
             var tx1 = sx / image.width;
-            var ty1 = 1.0 - (sy / image.height);
-            var tx2 = ((sx + sw) / image.width);
-            var ty2 = 1.0 - ((sy + sh) / image.height);
+            var ty1 = sy / image.height;
+            var tx2 = (sx + sw) / image.width;
+            var ty2 = (sy + sh) / image.height;
 
             var x1 = dx;
             var y1 = dy;
             var x2 = x1 + dw;
             var y2 = y1 + dh;
-            var vertices = new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x1, y2,
-                x2, y1,
-                x2, y2
-            ]);
+
+            verticeArray[0] = x1;
+            verticeArray[1] = y1;
+            verticeArray[2] = x2;
+            verticeArray[3] = y1;
+            verticeArray[4] = x1;
+            verticeArray[5] = y2;
+            verticeArray[6] = x1;
+            verticeArray[7] = y2;
+            verticeArray[8] = x2;
+            verticeArray[9] = y1;
+            verticeArray[10] = x2;
+            verticeArray[11] = y2;
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
-            var textureCoords = new Float32Array([
-                tx1, ty1,
-                tx2, ty1,
-                tx1, ty2,
-                tx1, ty2,
-                tx2, ty1,
-                tx2, ty2
-            ]);
+
+            textureCoords[0] = tx1;
+            textureCoords[1] = ty1;
+            textureCoords[2] = tx2;
+            textureCoords[3] = ty1;
+            textureCoords[4] = tx1;
+            textureCoords[5] = ty2;
+            textureCoords[6] = tx1;
+            textureCoords[7] = ty2;
+            textureCoords[8] = tx2;
+            textureCoords[9] = ty1;
+            textureCoords[10] = tx2;
+            textureCoords[11] = ty2;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
             shaderProgram.uniforms.texture = image.texture.bind();
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            this.uniformMatrix.multiply(projection);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
@@ -244,38 +309,94 @@
             var y1 = y;
             var x2 = x + width;
             var y2 = y + height;
-            var vertices = new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x1, y2,
-                x2, y1,
-                x2, y2
-            ]);
+            verticeArray[0] = x1;
+            verticeArray[1] = y1;
+            verticeArray[2] = x2;
+            verticeArray[3] = y1;
+            verticeArray[4] = x1;
+            verticeArray[5] = y2;
+            verticeArray[6] = x1;
+            verticeArray[7] = y2;
+            verticeArray[8] = x2;
+            verticeArray[9] = y1;
+            verticeArray[10] = x2;
+            verticeArray[11] = y2;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
-            var textureCoords = new Float32Array([
-                0.0, 0.0,
-                1.0, 0.0,
-                0.0, 1.0,
-                0.0, 1.0,
-                1.0, 0.0,
-                1.0, 1.0
-            ]);
+            textureCoords[0] = 0.0;
+            textureCoords[1] = 0.0;
+            textureCoords[2] = 1.0;
+            textureCoords[3] = 0.0;
+            textureCoords[4] = 0.0;
+            textureCoords[5] = 1.0;
+            textureCoords[6] = 0.0;
+            textureCoords[7] = 1.0;
+            textureCoords[8] = 1.0;
+            textureCoords[9] = 0.0;
+            textureCoords[10] = 1.0;
+            textureCoords[11] = 1.0;
             gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            this.uniformMatrix.multiply(projection);
+            gl.uniform1i(textureLocation, 0);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+
             shaderProgram.uniforms.uColor = globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
+        };
+
+        /**
+         * return a reference to the screen canvas
+         * @name getScreenCanvas
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Canvas}
+         */
+        api.getScreenCanvas = function () {
+            return canvas;
+        };
+
+        /**
+         * return a reference to the screen canvas corresponding WebGL Context<br>
+         * @name getScreenContext
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {WebGLContext}
+         */
+        api.getScreenContext = function () {
+            return gl;
+        };
+
+        /**
+         * Returns the WebGL Context object of the given Canvas
+         * @name getContextGL
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Canvas} [canvas=canvas instance of the renderer]
+         * @return {WebGLContext}
+         */
+        api.getContextGL = function (c) {
+            if (typeof c === "undefined" || c === null) {
+                throw new me.video.Error(
+                    "You must pass a canvas element in order to create " +
+                    "a GL context"
+                );
+            }
+
+            if (typeof c.getContext === "undefined") {
+                throw new me.video.Error(
+                    "Your browser does not support WebGL."
+                );
+            }
+
+            return c.getContext("webgl") || c.getContext("experimental-webgl");
         };
 
         /**
@@ -312,34 +433,26 @@
             return gl;
         };
 
-        api.getHeight = function () {
-            return gl.canvas.height;
-        };
-
         /**
-         * return a reference to the screen canvas
-         * @name getScreenCanvas
+         * return the width of the system GL Context
+         * @name getWidth
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {Canvas}
+         * @return {Number}
          */
-        api.getScreenCanvas = function () {
-            return canvas;
-        };
-
-        /**
-         * return a reference to the screen canvas corresponding WebGL Context<br>
-         * @name getScreenContext
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {WebGLContext}
-         */
-        api.getScreenContext = function () {
-            return gl;
-        };
-
         api.getWidth = function () {
             return gl.canvas.width;
+        };
+
+        /**
+         * return the height of the system GL Context
+         * @name getHeight
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @return {Number}
+         */
+        api.getHeight = function () {
+            return gl.canvas.height;
         };
 
         /**
@@ -352,7 +465,6 @@
         api.globalAlpha = function () {
             return globalColor.alpha;
         };
-
 
         /**
          * returns the text size based on dimensions from the font. Uses the font drawing context
@@ -383,19 +495,49 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.resize = function () {
+        api.resize = function (scaleX, scaleY) {
+            canvas.width = dimensions.width;
+            canvas.height = dimensions.height;
+            var w = dimensions.width * scaleX;
+            var h = dimensions.height * scaleY;
+
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
-                canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
-                canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
+                canvas.style.width = (w / me.device.getPixelRatio()) + "px";
+                canvas.style.height = (h / me.device.getPixelRatio()) + "px";
             }
+            else {
+                canvas.style.width = w + "px";
+                canvas.style.height = h + "px";
+            }
+            gl.viewport(0, 0, dimensions.width, dimensions.height);
+
+            this.setProjection();
+            this.applyProjection();
         };
 
+        /**
+         * restores the canvas context
+         * @name restore
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
         api.restore = function () {
             var color = colorStack.pop();
             me.pool.push("me.Color", color);
             globalColor.copy(color);
-            this.uniformMatrix = matrixStack.pop();
+            this.uniformMatrix.copy(matrixStack.pop());
+        };
+
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.save = function () {
+            colorStack.push(this.getColor());
+            matrixStack.push(this.uniformMatrix.clone());
         };
 
         /**
@@ -407,15 +549,6 @@
          */
         api.rotate = function (angle) {
             this.uniformMatrix.rotate(angle);
-        };
-
-        api.save = function () {
-            colorStack.push(this.getColor());
-
-            var copy = new me.Matrix3d();
-            this.uniformMatrix.copy(copy);
-            matrixStack.push(this.uniformMatrix);
-            this.uniformMatrix = copy;
         };
 
         /**
@@ -435,11 +568,11 @@
          * @private
          */
         api.setAlpha = function () {
-
+            /* Unimplemented */
         };
 
         api.setProjection = function () {
-            projection.set(2 / canvas.width, 0, 0,
+            this.projection.set(2 / canvas.width, 0, 0,
                 0, -2 / canvas.height, 0,
                 -1, 1, 1);
         };
@@ -456,7 +589,12 @@
          * @return {Number}
          */
         api.setGlobalAlpha = function (a) {
-            globalColor.alpha = a;
+            globalColor.setColor(
+                globalColor.r,
+                globalColor.g,
+                globalColor.b,
+                a
+            );
         };
 
         /**
@@ -467,23 +605,7 @@
          * @param {me.Color|String} color css color string.
          */
         api.setColor = function (col) {
-            if (col instanceof me.Color) {
-                globalColor.copy(col);
-            }
-            else {
-                globalColor.parseCSS(col);
-            }
-        };
-
-        /**
-         * Does prep calls before rendering a frame
-         * @name startRender
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.startRender = function () {
-            gl.viewport(0, 0, canvas.width, canvas.height);
-            me.video.renderer.setProjection();
+            globalColor.copy(col);
         };
 
         /**
