@@ -153,8 +153,21 @@
                     "text" : fontObject.text,
                     "image" : fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height),
                     "width" : fontDimensions.width,
-                    "height" : fontDimensions.height
+                    // Roughly equivalent to the height reserved for descenders
+                    "height" : fontDimensions.height * 1.2,
+                    "yOffset" : 0,
                 };
+                switch (fontObject.textBaseline) {
+                    case "alphabetic":
+                    case "ideographic":
+                    case "bottom":
+                        fontCache[gid].yOffset = fontDimensions.height;
+                        break;
+
+                    case "middle":
+                        fontCache[gid].yOffset = fontDimensions.height / 2;
+                        break;
+                }
                 fontContext.clearRect(0, 0, canvas.width, canvas.height);
             }
             else {
@@ -171,7 +184,7 @@
                     fontObject.draw(fontContext, text, x, y);
                     fontDimensions = fontObject.measureText(fontContext, text);
                     cache.yOffset = 0;
-                    switch (fontCache[gid].textBaseline) {
+                    switch (cache.textBaseline) {
                         case "alphabetic":
                         case "ideographic":
                         case "bottom":
