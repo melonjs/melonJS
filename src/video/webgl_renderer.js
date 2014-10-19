@@ -27,7 +27,9 @@
         positionBuffer = null,
         shaderProgram = null,
         textureBuffer = null,
+        textureCoords = new Float32Array(12),
         textureLocation = null,
+        verticeArray = new Float32Array(12),
         white1PixelTexture = null;
 
         api.init = function (width, height, c) {
@@ -260,26 +262,36 @@
             var y1 = dy;
             var x2 = x1 + dw;
             var y2 = y1 + dh;
-            var vertices = new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x1, y2,
-                x2, y1,
-                x2, y2
-            ]);
+
+            verticeArray[0] = x1;
+            verticeArray[1] = y1;
+            verticeArray[2] = x2;
+            verticeArray[3] = y1;
+            verticeArray[4] = x1;
+            verticeArray[5] = y2;
+            verticeArray[6] = x1;
+            verticeArray[7] = y2;
+            verticeArray[8] = x2;
+            verticeArray[9] = y1;
+            verticeArray[10] = x2;
+            verticeArray[11] = y2;
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
-            var textureCoords = new Float32Array([
-                tx1, ty1,
-                tx2, ty1,
-                tx1, ty2,
-                tx1, ty2,
-                tx2, ty1,
-                tx2, ty2
-            ]);
+
+            textureCoords[0] = tx1;
+            textureCoords[1] = ty1;
+            textureCoords[2] = tx2;
+            textureCoords[3] = ty1;
+            textureCoords[4] = tx1;
+            textureCoords[5] = ty2;
+            textureCoords[6] = tx1;
+            textureCoords[7] = ty2;
+            textureCoords[8] = tx2;
+            textureCoords[9] = ty1;
+            textureCoords[10] = tx2;
+            textureCoords[11] = ty2;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
             shaderProgram.uniforms.texture = image.texture.bind();
@@ -297,28 +309,36 @@
             var y1 = y;
             var x2 = x + width;
             var y2 = y + height;
-            var vertices = new Float32Array([
-                x1, y1,
-                x2, y1,
-                x1, y2,
-                x1, y2,
-                x2, y1,
-                x2, y2
-            ]);
+            verticeArray[0] = x1;
+            verticeArray[1] = y1;
+            verticeArray[2] = x2;
+            verticeArray[3] = y1;
+            verticeArray[4] = x1;
+            verticeArray[5] = y2;
+            verticeArray[6] = x1;
+            verticeArray[7] = y2;
+            verticeArray[8] = x2;
+            verticeArray[9] = y1;
+            verticeArray[10] = x2;
+            verticeArray[11] = y2;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
-            var textureCoords = new Float32Array([
-                0.0, 0.0,
-                1.0, 0.0,
-                0.0, 1.0,
-                0.0, 1.0,
-                1.0, 0.0,
-                1.0, 1.0
-            ]);
+            textureCoords[0] = 0.0;
+            textureCoords[1] = 0.0;
+            textureCoords[2] = 1.0;
+            textureCoords[3] = 0.0;
+            textureCoords[4] = 0.0;
+            textureCoords[5] = 1.0;
+            textureCoords[6] = 0.0;
+            textureCoords[7] = 1.0;
+            textureCoords[8] = 1.0;
+            textureCoords[9] = 0.0;
+            textureCoords[10] = 1.0;
+            textureCoords[11] = 1.0;
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
