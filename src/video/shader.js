@@ -176,7 +176,8 @@
          * @return {WebGLTexture} A newly created texture
          */
         api.gltexture2d = function (gl, image) {
-            var texture = gl.createTexture();
+            var texture = gl.createTexture(),
+                filter = me.sys.scalingInterpolation ? gl.LINEAR : gl.NEAREST;
 
             /**
              * A convenience method for binding this texture to the current
@@ -192,8 +193,8 @@
             texture.bind();
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
             return texture;
