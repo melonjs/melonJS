@@ -55,7 +55,7 @@
             this.iconCanvas = iconCanvas;
 
             var context = me.CanvasRenderer.getContext2d(this.iconCanvas);
-            
+
             context.translate(this.pos.x, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -141,8 +141,6 @@
             );
             me.game.world.addChild(progressBar, 1);
             this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
-            this.iconCanvas.style.display = "none";
-            document.body.appendChild(this.iconCanvas);
             // melonJS text & logo
             var icon = new IconLogo(
                 this.iconCanvas,
@@ -160,8 +158,6 @@
                 me.event.unsubscribe(this.handle);
                 this.handle = null;
             }
-
-            document.body.removeChild(this.iconCanvas);
         }
     });
 })();
