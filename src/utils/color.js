@@ -266,15 +266,19 @@
         },
 
         /**
-         * Copy a color object into this one.
+         * Copy a color object or CSS color into this one.
          * @name copy
          * @memberOf me.Color
          * @function
-         * @param {me.Color} color
+         * @param {me.Color|String} color
          * @return {me.Color} Reference to this object for method chaining
          */
         copy : function (color) {
-            return this.setColor(color.r, color.g, color.b, color.alpha);
+            return (
+                (color instanceof me.Color) ?
+                this.setColor(color.r, color.g, color.b, color.alpha) :
+                this.parseCSS(color)
+            );
         },
 
         /**

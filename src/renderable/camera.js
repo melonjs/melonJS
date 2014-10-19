@@ -370,12 +370,12 @@
          * @name fadeOut
          * @memberOf me.Viewport
          * @function
-         * @param {String} color a CSS color value
+         * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          */
         fadeOut : function (color, duration, onComplete) {
-            this._fadeOut.color = me.pool.pull("me.Color").parseHex(color);
+            this._fadeOut.color = me.pool.pull("me.Color").copy(color);
             this._fadeOut.color.alpha = 1.0;
             this._fadeOut.duration = duration || 1000; // convert to ms
             this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color)
@@ -390,12 +390,12 @@
          * @name fadeIn
          * @memberOf me.Viewport
          * @function
-         * @param {String} color a CSS color value
+         * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          */
         fadeIn : function (color, duration, onComplete) {
-            this._fadeIn.color = me.pool.pull("me.Color").parseHex(color);
+            this._fadeIn.color = me.pool.pull("me.Color").copy(color);
             this._fadeIn.color.alpha = 0.0;
             this._fadeIn.duration = duration || 1000; //convert to ms
             this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color)

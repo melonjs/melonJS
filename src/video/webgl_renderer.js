@@ -566,12 +566,7 @@
          * @param {me.Color|String} color css color string.
          */
         api.setColor = function (col) {
-            if (col instanceof me.Color) {
-                globalColor.copy(col);
-            }
-            else {
-                globalColor.parseCSS(col);
-            }
+            globalColor.copy(col);
         };
 
         /**

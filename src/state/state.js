@@ -586,7 +586,7 @@
          * @public
          * @function
          * @param {String} effect (only "fade" is supported for now)
-         * @param {String} color a CSS color value
+         * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          */
         api.transition = function (effect, color, duration) {
