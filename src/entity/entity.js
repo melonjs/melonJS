@@ -73,7 +73,7 @@
          * @memberOf me.ObjectSettings
          */
         type : null,
-        
+
         /**
          * Mask collision detection for this object<br>
          * OPTIONAL
@@ -107,7 +107,7 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-        
+
             /**
              * The entity renderable object (if defined)
              * @public
@@ -116,7 +116,7 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
-            
+
             /**
              * The bounding rectangle for this entity
              * @protected
@@ -130,7 +130,7 @@
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
-            
+
             // call the super constructor
             this._super(me.Renderable, "init", [x, y,
                         settings.width,
@@ -151,7 +151,7 @@
                     this.renderable.setTransparency(settings.transparent_color);
                 }
             }
-           
+
             /**
              * Entity name<br>
              * as defined in the Tiled Object Properties
@@ -160,7 +160,7 @@
              * @memberOf me.Entity
              */
             this.name = settings.name ? settings.name.toLowerCase() : "";
-            
+
             /**
              * object type (as defined in Tiled)
              * @public
@@ -168,7 +168,7 @@
              * @memberOf me.Entity
              */
             this.type = settings.type;
-            
+
             /**
              * dead/living state of the entity<br>
              * default value : true
@@ -178,7 +178,7 @@
              * @memberOf me.Entity
              */
             this.alive = true;
-        
+
             /**
              * the entity body object
              * @public
@@ -191,15 +191,15 @@
                 typeof (settings.getTMXShapes) === "function" ?
                 settings.getTMXShapes() : []
             ));
-            
+
             // ensure the entity bounds and pos are up-to-date
             this.body.updateBounds();
-            
+
             // set the  collision mask if defined
             if (typeof(settings.collisionMask) !== "undefined") {
                 this.body.setCollisionMask(settings.collisionMask);
             }
-            
+
             // set the  collision mask if defined
             if (typeof(settings.collisionType) !== "undefined") {
                 if (typeof me.collision.types[settings.collisionType] !== "undefined") {
@@ -220,7 +220,7 @@
         getBounds : function () {
             return this.bounds;
         },
-        
+
         /**
          * update the entity bounding rect (private)
          * when manually update the entity pos, you need to call this function
@@ -237,7 +237,7 @@
             this.bounds.resize(this.body.width, this.body.height);
             return this.bounds;
         },
-        
+
         /**
          * return the distance to the specified entity
          * @name distanceTo
@@ -310,11 +310,6 @@
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
-            //if (this.body) {
-                // Remove from here from now, as object are calling entity.body.update()
-                // to be change later
-            //    return this.body.update(dt);
-            //}
             return false;
         },
 
@@ -438,7 +433,7 @@
         /** @ignore */
         init : function (x, y, settings) {
             this._super(me.Entity, "init", [x, y, settings]);
-            
+
             this.nextlevel = settings.to;
 
             this.fade = settings.fade;
@@ -449,7 +444,7 @@
 
             // a temp variable
             this.gotolevel = settings.to;
-            
+
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
         },
 
@@ -492,7 +487,7 @@
             return false;
         }
     });
-    
+
     /**
      * Base class for Entity exception handling.
      * @name Error
