@@ -103,13 +103,10 @@
             if (!ctx) {
                 ctx = gl;
             }
+            colorStack.push(this.getColor());
             this.setColor(col);
-            gl.clearColor(
-                globalColor.glArray[0],
-                globalColor.glArray[1],
-                globalColor.glArray[2],
-                globalColor.glArray[3]
-            );
+            this.fillRect(0, 0, canvas.width, canvas.height);
+            this.setColor(colorStack.pop());
         };
 
         /**
