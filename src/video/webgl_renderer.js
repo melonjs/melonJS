@@ -83,7 +83,7 @@
 
         api.bindTexture = function (image) {
             if (image.texture === null || typeof image.texture === "undefined") {
-                image.texture = stackgl.gltexture2d(gl, image);
+                image.texture = me.video.shader.gltexture2d(gl, image);
             }
         };
 
@@ -124,7 +124,7 @@
          * @private
          */
         api.createShader = function () {
-            shaderProgram = stackgl.createShader(gl);
+            shaderProgram = me.video.shader.createShader(gl);
         };
 
         /**
