@@ -463,16 +463,21 @@
          * @function
          */
         api.resize = function (scaleX, scaleY) {
-            canvas.width = dimensions.width * scaleX;
-            canvas.height = dimensions.height * scaleY;
-            var w = canvas.width, h = canvas.height;
+            canvas.width = dimensions.width;
+            canvas.height = dimensions.height;
+            var w = dimensions.width * scaleX;
+            var h = dimensions.height * scaleY;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 canvas.style.width = (w / me.device.getPixelRatio()) + "px";
                 canvas.style.height = (h / me.device.getPixelRatio()) + "px";
             }
-            gl.viewport(0, 0, w, h);
+            else {
+                canvas.style.width = w + "px";
+                canvas.style.height = h + "px";
+            }
+            gl.viewport(0, 0, dimensions.width, dimensions.height);
 
             this.setProjection();
             this.applyProjection();
