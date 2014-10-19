@@ -186,11 +186,10 @@
          * @memberOf me.Renderable
          * @function
          * @protected
-         * @param {Context2d} context 2d Context on which draw our object
+         * @param {Renderer} a renderer object: me.CanvasRenderer or me.WebGLRenderer
          **/
-        draw : function (renderer, color) {
-            // draw the parent rectangle
-            this._super(me.Rect, "draw", [renderer, color]);
+        draw : function (/*renderer*/) {
+            // empty one !
         }
     });
 

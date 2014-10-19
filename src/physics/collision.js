@@ -508,10 +508,6 @@
                                         if (objB.onCollision(response, objA) !== false) {
                                             objB.body.respondToCollision.call(objB.body, response);
                                         }
-
-                                        // Bail early when the body contains mutliple shapes
-                                        indexA = Infinity;
-                                        indexB = Infinity;
                                     }
                                     indexB++;
                                 } while (indexB < bLen);
