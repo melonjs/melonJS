@@ -405,7 +405,13 @@
                 );
             }
 
-            return c.getContext("webgl") || c.getContext("experimental-webgl");
+            var attr = {
+                antialias : me.sys.scalingInterpolation,
+            };
+            return (
+                c.getContext("webgl", attr) ||
+                c.getContext("experimental-webgl", attr)
+            );
         };
 
         /**
