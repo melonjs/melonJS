@@ -73,7 +73,40 @@ Array.prototype.weightedRandom = function (entry) {
 };
 
 /**
- * Falls back to a regular array if Float32Array does not exist
- * @memberOf me
+ * A fake TypedArray object to be used for the TypedArray polyfills
+ * @ignore
  */
-me.Float32Array = typeof Float32Array !== "undefined" ? Float32Array : Array;
+me.TypedArray = function (a) {
+    var i = 0;
+    if (Array.isArray(a)) {
+        for (i = 0; i < a.length; i++) {
+            this.push(a[i]);
+        }
+    }
+    else if ((arguments.length === 1) && (typeof(a) === "number")) {
+        for (i = 0; i < a; i++) {
+            this.push(0);
+        }
+    }
+    else {
+        throw new me.Error(
+            "TypedArray polyfill: Unsupported constructor arguments",
+            arguments
+        );
+    }
+};
+me.TypedArray.prototype = Array.prototype;
+
+/**
+ * The built in Float32Array object.
+ * @external Float32Array
+ * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Float32Array|Float32Array}
+ */
+window.Float32Array = Float32Array || me.TypedArray;
+
+/**
+ * The built in Uint32Array object.
+ * @external Uint32Array
+ * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}
+ */
+window.Uint32Array = Uint32Array || me.TypedArray;

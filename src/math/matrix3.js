@@ -8,7 +8,7 @@
     me.Matrix3d = Object.extend({
         /** @ignore */
         init : function (m) {
-            this.val = new me.Float32Array(9);
+            this.val = new Float32Array(9);
             if (m) { //assume Matrix3 with val
                 this.copy(m);
             }
