@@ -636,7 +636,7 @@
                     obj.inViewport = isFloating || viewport.isVisible(globalTranslation);
 
                     // update our object
-                    isDirty |= (obj.inViewport || obj.alwaysUpdate) && obj.update(dt);
+                    isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
                     // Undo global context translation
                     if (isTranslated) {
@@ -655,7 +655,7 @@
                 }
                 else {
                     // just directly call update() for non renderable object
-                    isDirty |= obj.update(dt);
+                    isDirty = obj.update(dt) || isDirty;
                 }
             }
             return isDirty;

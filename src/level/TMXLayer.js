@@ -524,7 +524,7 @@
             if (this.isAnimated) {
                 var result = false;
                 for (var i = 0; i < this.animatedTilesets.length; i++) {
-                    result |= this.animatedTilesets[i].update(dt);
+                    result = this.animatedTilesets[i].update(dt) || result;
                 }
                 return result;
             }
