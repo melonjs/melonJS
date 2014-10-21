@@ -105,6 +105,13 @@ me.TypedArray.prototype = Array.prototype;
 window.Float32Array = Float32Array || me.TypedArray;
 
 /**
+ * The built in Uint16Array object.
+ * @external Uint16Array
+ * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint16Array|Uint16Array}
+ */
+window.Uint16Array = Uint16Array || me.TypedArray;
+
+/**
  * The built in Uint32Array object.
  * @external Uint32Array
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}

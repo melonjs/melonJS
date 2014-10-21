@@ -95,15 +95,87 @@
             shaderProgram.uniforms.pMatrix = this.projection.val;
         };
 
+        /**
+         * @ignore
+         */
         api.bindTexture = function (image) {
-            if (image.texture === null || typeof image.texture === "undefined") {
-                image.texture = me.video.shader.gltexture2d(gl, image);
+            // FIXME: Create a new object for this instead of modifying the image
+            var w = image.width,
+                h = image.height;
+
+            // Create a Texture from the image
+            image.texture = me.video.shader.gltexture2d(gl, image);
+
+            // Create a Vertex Buffer
+            image.vb = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
+            image.v = new Float32Array([
+                0, 0,
+                w, 0,
+                0, h,
+                w, h
+            ]);
+            gl.bufferData(gl.ARRAY_BUFFER, image.v, gl.STATIC_DRAW);
+
+            // Create a Texture Coordinate Buffer
+            image.t = {};
+            var key = "0,0," + w + "," + h;
+            this.cacheTextureCoords(image, key, 0, 0, w, h);
+
+            // Create an Index Buffer
+            image.ib = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, image.ib);
+            image.i = new Uint16Array([
+                0, 1, 2,
+                2, 1, 3
+            ]);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, image.i, gl.STATIC_DRAW);
+        };
+
+        /**
+         * @ignore
+         */
+        api.bindTextureCoords = function (image, x, y, w, h) {
+            // Texture coordinates are cached
+            // They can be looked up by indexing "x,y,w,h"
+            var key = x + "," + y + "," + w + "," + h;
+
+            if (key in image.t) {
+                // Bind the new texture coordinates buffer to the ARRAY_BUFFER
+                gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key].buffer);
+            }
+            else {
+                this.cacheTextureCoords(image, key, x, y, w, h);
             }
         };
 
-        api.blitSurface = function () {
-            // empty function for now
+        /**
+         * @ignore
+         */
+        api.cacheTextureCoords = function (image, key, x, y, w, h) {
+            w = (x + w) / image.width;
+            h = (y + h) / image.height;
+            x /= image.width;
+            y /= image.height;
+
+            image.t[key] = {
+                "buffer" : gl.createBuffer(),
+                "coords" : new Float32Array([
+                    x, y,
+                    w, y,
+                    x, h,
+                    w, h
+                ])
+            };
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key].buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, image.t[key].coords, gl.STATIC_DRAW);
         };
+
+        /**
+         * @ignore
+         */
+        api.blitSurface = function () {};
 
         /**
          * Clears the gl context. Accepts a gl context or defaults to stored gl renderer.
@@ -262,55 +334,35 @@
                 sy = 0;
             }
 
-            var tx1 = sx / image.width;
-            var ty1 = sy / image.height;
-            var tx2 = (sx + sw) / image.width;
-            var ty2 = (sy + sh) / image.height;
+            // Save
+            matrixStack.push(this.uniformMatrix.clone());
 
-            var x1 = dx;
-            var y1 = dy;
-            var x2 = x1 + dw;
-            var y2 = y1 + dh;
+            // Translate and scale the destination vertices
+            this.uniformMatrix.translate(~~dx, ~~dy);
+            this.uniformMatrix.scale(dw / image.width, dh / image.height);
 
-            verticeArray[0] = x1;
-            verticeArray[1] = y1;
-            verticeArray[2] = x2;
-            verticeArray[3] = y1;
-            verticeArray[4] = x1;
-            verticeArray[5] = y2;
-            verticeArray[6] = x1;
-            verticeArray[7] = y2;
-            verticeArray[8] = x2;
-            verticeArray[9] = y1;
-            verticeArray[10] = x2;
-            verticeArray[11] = y2;
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
-
+            // Set vertex positions
+            gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
-            textureCoords[0] = tx1;
-            textureCoords[1] = ty1;
-            textureCoords[2] = tx2;
-            textureCoords[3] = ty1;
-            textureCoords[4] = tx1;
-            textureCoords[5] = ty2;
-            textureCoords[6] = tx1;
-            textureCoords[7] = ty2;
-            textureCoords[8] = tx2;
-            textureCoords[9] = ty1;
-            textureCoords[10] = tx2;
-            textureCoords[11] = ty2;
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
-            shaderProgram.uniforms.texture = image.texture.bind();
-            gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
+            // Set texture coordinates
+            this.bindTextureCoords(image, ~~sx, ~~sy, ~~sw, ~~sh);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
+            // Bind the texture
+            shaderProgram.uniforms.texture = image.texture.bind();
+
+            // Set the transformation matrix
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
+            // Set the color
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            // MAKE IT SO
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+            // Restore
+            this.uniformMatrix.copy(matrixStack.pop());
         };
 
         api.fillRect = function (x, y, width, height) {
