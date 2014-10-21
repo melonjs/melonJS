@@ -322,7 +322,7 @@
          */
         update : function (dt) {
             // update animation if necessary
-            if (!this.animationpause) {
+            if (!this.animationpause && this.current.length > 1) {
                 this.current.nextFrame -= dt;
                 if (this.current.nextFrame <= 0) {
                     this.setAnimationFrame(++this.current.idx);
