@@ -68,7 +68,7 @@ module.exports = function (grunt) {
                 options : {
                     patterns : [
                         {
-                            match : /\r\n/g,
+                            match : /[\r\n]+/g,
                             replacement : "\\n\" + \""
                         },
                         {
