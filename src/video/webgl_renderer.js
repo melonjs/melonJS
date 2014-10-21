@@ -109,13 +109,12 @@
             // Create a Vertex Buffer
             image.vb = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
-            image.v = new Float32Array([
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
                 0, 0,
                 w, 0,
                 0, h,
                 w, h
-            ]);
-            gl.bufferData(gl.ARRAY_BUFFER, image.v, gl.STATIC_DRAW);
+            ]), gl.STATIC_DRAW);
 
             // Create a Texture Coordinate Buffer
             image.t = {};
@@ -125,11 +124,10 @@
             // Create an Index Buffer
             image.ib = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, image.ib);
-            image.i = new Uint16Array([
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
                 0, 1, 2,
                 2, 1, 3
-            ]);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, image.i, gl.STATIC_DRAW);
+            ]), gl.STATIC_DRAW);
         };
 
         /**
@@ -142,7 +140,7 @@
 
             if (key in image.t) {
                 // Bind the new texture coordinates buffer to the ARRAY_BUFFER
-                gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key].buffer);
+                gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key]);
             }
             else {
                 this.cacheTextureCoords(image, key, x, y, w, h);
@@ -158,18 +156,15 @@
             x /= image.width;
             y /= image.height;
 
-            image.t[key] = {
-                "buffer" : gl.createBuffer(),
-                "coords" : new Float32Array([
-                    x, y,
-                    w, y,
-                    x, h,
-                    w, h
-                ])
-            };
+            image.t[key] = gl.createBuffer();
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key].buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, image.t[key].coords, gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key]);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                x, y,
+                w, y,
+                x, h,
+                w, h
+            ]), gl.STATIC_DRAW);
         };
 
         /**
