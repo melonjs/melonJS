@@ -56,6 +56,9 @@
             return this;
         };
 
+        /**
+         * @private
+         */
         api.applyRGBFilter = function (object, effect, option) {
             //create a output canvas using the given canvas or image size
             var _context = api.getContext2d(me.video.createCanvas(object.width, object.height, false));
@@ -135,8 +138,7 @@
             else {
                 // "empty" function, as we directly render stuff on "context2D"
                 /** @ignore */
-                api.blitSurface = function () {
-                };
+                api.blitSurface = function () {};
             }
             api.blitSurface();
         };
@@ -497,7 +499,7 @@
          * @name setGlobalAlpha
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} alpha value. 0.0 to 1.0 values accepted.
+         * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         api.setGlobalAlpha = function (a) {
             backBufferContext2D.globalAlpha = a;
@@ -521,36 +523,32 @@
          * @name setLineWidth
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} the width to set;
+         * @param {Number} width the width to set;
          */
         api.setLineWidth = function (width) {
             backBufferContext2D.lineWidth = width;
         };
 
         /**
-         * Fill an arc at the specified coordinates with given radius, start and end points
+         * Stroke an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x position
-         * @param {Number} y position
-         * @param {Number} radiusX to draw
-         * @param {Number} radiusY to draw
-         * @param {Number} start degrees in radians
-         * @param {Number} end degrees in radians
-         * @param {Boolean} in anti-clockwise, defaults to false
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
-        api.strokeArc = function (x, y, radiusX, radiusY, start, end, antiClockwise) {
-            if (antiClockwise === null) {
-                antiClockwise = false;
-            }
+        api.strokeArc = function (x, y, radius, start, end, antiClockwise) {
             backBufferContext2D.save();
             backBufferContext2D.beginPath();
-            backBufferContext2D.translate(x - radiusX, y - radiusY);
-            backBufferContext2D.scale(radiusX, radiusY);
-            backBufferContext2D.arc(1, 1, 1, start, end, antiClockwise);
-            backBufferContext2D.restore();
+            backBufferContext2D.translate(x + radius, y + radius);
+            backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             backBufferContext2D.stroke();
+            backBufferContext2D.closePath();
+            backBufferContext2D.restore();
         };
 
         /**
@@ -558,10 +556,10 @@
          * @name strokeLine
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} startX - the start x coordinate
-         * @param {Number} startY - the start y coordinate
-         * @param {Number} endX - the end x coordinate
-         * @param {Number} endY - the end y coordinate
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
          */
         api.strokeLine = function (startX, startY, endX, endY) {
             context.beginPath();
@@ -597,10 +595,10 @@
          * @name strokeRect
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x position
-         * @param {Number} y position
-         * @param {Number} width to draw
-         * @param {Number} height to draw
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
          */
         api.strokeRect = function (x, y, width, height) {
             backBufferContext2D.strokeRect(x, y, width, height);

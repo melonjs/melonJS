@@ -191,7 +191,7 @@
         };
 
         /**
-         * @private
+         * @ignore
          */
         api.createBuffers = function () {
             textureBuffer = gl.createBuffer();
@@ -199,7 +199,7 @@
         };
 
         /**
-         * @private
+         * @ignore
          */
         api.createShader = function () {
             shaderProgram = me.video.shader.createShader(gl);
@@ -360,6 +360,16 @@
             this.uniformMatrix.copy(matrixStack.pop());
         };
 
+        /**
+         * Draw a filled rectangle at the specified coordinates
+         * @name fillRect
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         */
         api.fillRect = function (x, y, width, height) {
             var x1 = x;
             var y1 = y;
@@ -633,12 +643,18 @@
             /* Unimplemented */
         };
 
+        /**
+         * @ignore
+         */
         api.setProjection = function () {
             this.projection.set(2 / canvas.width, 0, 0,
                 0, -2 / canvas.height, 0,
                 -1, 1, 1);
         };
 
+        /**
+         * @ignore
+         */
         api.setImageSmoothing = function () {
             // TODO: perhaps handle GLNEAREST or other options with texture binding
         };
