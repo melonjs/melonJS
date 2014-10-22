@@ -161,7 +161,7 @@
         },
 
         /**
-         * @private
+         * @ignore
          */
         multiplyArray : function (array) {
             var a = this.val,

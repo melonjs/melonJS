@@ -448,7 +448,8 @@
         },
 
         /**
-         * Returns the
+         * Returns the private glArray
+         * @ignore
          */
         toGL : function () {
             return this.glArray;
