@@ -57,7 +57,7 @@
              * @memberOf me.Body
              * @example
              * // set the entity body collision type
-             * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
+             * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
              */
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
