@@ -23,6 +23,8 @@
         fontContext = null,
         gl = null,
         globalColor = null,
+        lineTextureCoords = new Float32Array(10),
+        lineVerticeArray = new Float32Array(10),
         matrixStack = [],
         positionBuffer = null,
         shaderProgram = null,
@@ -602,17 +604,6 @@
         };
 
         /**
-         * save the canvas context
-         * @name save
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        api.save = function () {
-            colorStack.push(this.getColor());
-            matrixStack.push(this.uniformMatrix.clone());
-        };
-
-        /**
          * rotates the uniform matrix
          * @name rotate
          * @memberOf me.WebGLRenderer
@@ -621,6 +612,17 @@
          */
         api.rotate = function (angle) {
             this.uniformMatrix.rotate(angle);
+        };
+
+        /**
+         * save the canvas context
+         * @name save
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        api.save = function () {
+            colorStack.push(this.getColor());
+            matrixStack.push(this.uniformMatrix.clone());
         };
 
         /**
@@ -684,6 +686,70 @@
          */
         api.setColor = function (col) {
             globalColor.copy(col);
+        };
+
+        /**
+         * sets the line width on the context
+         * @name setLineWidth
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} width the width to set;
+         */
+        api.setLineWidth = function () {
+        };
+
+        /**
+         * Draw a stroke rectangle at the specified coordinates
+         * @name strokeRect
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         */
+        api.strokeRect = function (x, y, width, height) {
+            var x1 = x;
+            var y1 = y;
+            var x2 = x + width;
+            var y2 = y + height;
+            lineVerticeArray[0] = x1;
+            lineVerticeArray[1] = y1;
+            lineVerticeArray[2] = x2;
+            lineVerticeArray[3] = y1;
+            lineVerticeArray[4] = x2;
+            lineVerticeArray[5] = y2;
+            lineVerticeArray[6] = x1;
+            lineVerticeArray[7] = y2;
+            lineVerticeArray[8] = x1;
+            lineVerticeArray[9] = y1;
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, lineVerticeArray, gl.STATIC_DRAW);
+
+            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
+
+            lineTextureCoords[0] = 0.0;
+            lineTextureCoords[1] = 0.0;
+            lineTextureCoords[2] = 1.0;
+            lineTextureCoords[3] = 0.0;
+            lineTextureCoords[4] = 0.0;
+            lineTextureCoords[5] = 1.0;
+            lineTextureCoords[6] = 0.0;
+            lineTextureCoords[7] = 1.0;
+            lineTextureCoords[8] = 1.0;
+            lineTextureCoords[9] = 0.0;
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, lineTextureCoords, gl.STATIC_DRAW);
+            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
+
+            gl.uniform1i(textureLocation, 0);
+            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
+
+            shaderProgram.uniforms.uColor = globalColor.toGL();
+            gl.drawArrays(gl.LINE_STRIP, 0, 4);
         };
 
         /**

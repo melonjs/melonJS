@@ -99,9 +99,9 @@
 
             // some internal string/length
             this.help_str        = "(s)how/(h)ide";
-            this.help_str_len    = this.font.measureText(me.video.renderer.getContext(), this.help_str).width;
-            this.fps_str_len     = this.font.measureText(me.video.renderer.getContext(), "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer.getContext(), "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.help_str_len    = this.font.measureText(this.context, this.help_str).width;
+            this.fps_str_len     = this.font.measureText(this.context, "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(this.context, "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -178,8 +178,10 @@
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
+                    renderer.save();
                     renderer.setColor("green");
                     renderer.strokeRect(this.left, this.top, this.width, this.height);
+                    renderer.restore();
                 }
             });
 
@@ -206,9 +208,11 @@
                     // draw entity current velocity
                     var x = ~~(this.pos.x + this.hWidth);
                     var y = ~~(this.pos.y + this.hHeight);
+                    renderer.save();
                     renderer.setColor("blue");
                     renderer.setLineWidth(1);
                     renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight));
+                    renderer.restore();
                 }
             });
         },
@@ -288,9 +292,11 @@
                 // cap the alpha value to 0.4 maximum
                 var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
                 if (_alpha > 0.0) {
+                    renderer.save();
                     renderer.setGlobalAlpha(_alpha);
                     renderer.setColor("red");
                     renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
+                    renderer.restore();
                 }
             }
             else {
