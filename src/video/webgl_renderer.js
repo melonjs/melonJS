@@ -697,7 +697,48 @@
          */
         api.setLineWidth = function () {
         };
-
+        
+        /**
+         * Stroke an arc at the specified coordinates with given radius, start and end points
+         * @name strokeArc
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         */
+        api.strokeArc = function (/*x, y, radius, start, end, antiClockwise*/) {
+            //todo
+        };
+        
+        /**
+         * Stroke a line of the given two points
+         * @name strokeLine
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
+         */
+        api.strokeLine = function (/*startX, startY, endX, endY*/) {
+            //todo
+        };
+        
+        /**
+         * Strokes a me.Polygon on the screen with a specified color
+         * @name strokePolygon
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Polygon} poly the shape to draw
+         */
+        api.strokePolygon = function (/*poly*/) {
+            // todo
+        };
+        
         /**
          * Draw a stroke rectangle at the specified coordinates
          * @name strokeRect
