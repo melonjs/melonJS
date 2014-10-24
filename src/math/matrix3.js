@@ -22,7 +22,7 @@
          * @name adjoint
          * @memberOf me.Matrix3d
          * @function
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         adjoint : function () {
             var a = this.val,
@@ -41,13 +41,26 @@
             a[8] = (a00 * a11 - a01 * a10);
             return this;
         },
-
+        
+        /**
+         * returns true if the matrix is an identity matrix.
+         * @name isIdentity
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {Boolean}
+         **/
+        isIdentity : function () {
+            var a = this.val;
+            return (a[0] === 1 && a[1] === 0 && a[2] === 0 &&
+                    a[3] === 0 && a[4] === 1 && a[5] === 0 &&
+                    a[6] === 0 && a[7] === 0 && a[8] === 1);
+        },
         /**
          * Creates a copy of the current matrix, returning that copy
          * @name clone
          * @memberOf me.Matrix3d
          * @function
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         clone : function () {
             return new me.Matrix3d(this);
@@ -59,7 +72,7 @@
          * @memberOf me.Matrix3d
          * @function
          * @param {me.Matrix3d} otherMat - the matrix object to copy from
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         copy : function (otherMat) {
             var out = this.val, a = otherMat.val;
@@ -96,6 +109,7 @@
          * @name identity
          * @memberOf me.Matrix3d
          * @function
+         * @return {me.Matrix3d} this matrix for chaining
          */
         identity : function () {
             var a = this.val;
@@ -108,6 +122,7 @@
             a[6] = 0;
             a[7] = 0;
             a[8] = 1;
+            return this;
         },
 
         /**
@@ -115,7 +130,7 @@
          * @name invert
          * @memberOf me.Matrix3d
          * @function
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         invert : function () {
             var a = this.val,
@@ -154,7 +169,7 @@
          * @memberOf me.Matrix3d
          * @function
          * @param {me.Matrix3d} otherMat
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         multiply : function (otherMat) {
             return this.multiplyArray(otherMat.val);
@@ -189,12 +204,12 @@
         },
 
         /**
-         * Rotates the matrix by the number in radians. Returns self
+         * Rotates the matrix by the number in radians (rotate the matrix CCW)
          * @name rotate
          * @memberOf me.Matrix3d
          * @function
          * @param {Number} rad - degrees to rotate in radians
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         rotate : function (rad) {
             var a = this.val,
@@ -221,7 +236,7 @@
          * @function
          * @param {Number} x to scale by
          * @param {Number} y to scale by
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         scale : function (x, y) {
             var a = this.val;
@@ -250,6 +265,7 @@
          * @param {Number} m30
          * @param {Number} m31
          * @param {Number} m32
+         * @return {me.Matrix3d} this matrix for chaining
          */
         set : function () {
             var a = this.val;
@@ -262,6 +278,7 @@
             a[6] = arguments[6];
             a[7] = arguments[7];
             a[8] = arguments[8];
+            return this;
         },
 
         /**
@@ -271,12 +288,26 @@
          * @function
          * @param {Number} x - the x coordinate to translate by
          * @param {Number} y - the y coordinate to translate by
+         * @return {me.Matrix3d} this matrix for chaining
          */
         translate : function (x, y) {
             var a = this.val;
             a[6] = x * a[0] + y * a[3] + a[6];
             a[7] = x * a[1] + y * a[4] + a[7];
             a[8] = x * a[2] + y * a[5] + a[8];
+            return this;
+        },
+        
+        /**
+         * translate the matrix the matrix
+         * @name translateV
+         * @memberOf me.Matrix3d
+         * @function
+         * @param {me.Vector2d} v the vector to translate the matrix by
+         * @return {me.Matrix3d} this matrix for chaining
+         */
+        translateV : function (v) {
+            return this.translate(v.x, v.y);
         },
 
         /**
@@ -291,6 +322,7 @@
          * @param {Number} e the m2,2 (m12) value in the matrix
          * @param {Number} c the m1,3
          * @param {Number} f the m2,3
+         * @return {me.Matrix3d} this matrix for chaining
          */
         transform : function (a, b, c, d, e, f) {
             var m = this.val;
@@ -303,6 +335,7 @@
             m[6] = 0;
             m[7] = 0;
             m[8] = 1;
+            return this;
         },
 
         /**
@@ -310,7 +343,7 @@
          * @name transpose
          * @memberOf me.Matrix3d
          * @function
-         * @return {me.Matrix3d}
+         * @return {me.Matrix3d} this matrix for chaining
          */
         transpose : function () {
             var a = this.val,
@@ -324,6 +357,19 @@
             a[6] = a02;
             a[7] = a12;
             return this;
+        },
+        
+        /**
+         * convert the object to a string representation
+         * @name toString
+         * @memberOf me.Matrix3d
+         * @function
+         * @return {String}
+         */
+        toString : function () {
+            var a = this.val;
+            return "mat3d(" + a[0] + ", " + a[1] + ", " + a[2] + ", " +
+                a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + ")";
         }
     });
 })();
