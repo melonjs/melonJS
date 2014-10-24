@@ -253,24 +253,6 @@
                 this.radiusV.x * 2,
                 this.radiusV.y * 2
             );
-        },
-
-        /**
-         * debug purpose
-         * @ignore
-         */
-        draw : function (renderer, color) {
-            renderer.setColor(color || "red");
-            renderer.setLineWidth(1);
-            renderer.strokeArc(
-                this.pos.x,
-                this.pos.y,
-                this.radiusV.x,
-                this.radiusV.y,
-                0,
-                2 * Math.PI,
-                false
-            );
         }
     });
 })();

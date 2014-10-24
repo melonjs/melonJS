@@ -794,6 +794,35 @@
         };
 
         /**
+         * draw the given shape
+         * @name drawShape
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         */
+        api.drawShape = function (shape) {
+            if (shape instanceof me.Rect) {
+                api.strokeRect(shape.left, shape.top, shape.width, shape.height);
+            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
+                api.save();
+                api.strokePolygon(shape);
+                api.restore();
+            } else if (shape instanceof me.Ellipse) {
+                api.save();
+                api.strokeArc(
+                    shape.pos.x,
+                    shape.pos.y,
+                    shape.radiusV.x,
+                    shape.radiusV.y,
+                    0,
+                    2 * Math.PI,
+                    false
+                );
+                api.restore();
+            }
+        };
+        
+        /**
          * Sets the uniform matrix to the specified values from a Matrix2d
          * Created to support the original canvas method on the webgl renderer
          * @name transform

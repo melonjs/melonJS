@@ -299,17 +299,6 @@
                     new me.Vector2d(w, h), new me.Vector2d(0, h)
                 ]
             );
-        },
-
-        /**
-         * debug purpose
-         * @ignore
-         */
-        draw : function (renderer, color) {
-            // draw the rectangle
-            renderer.setColor(color || "red");
-            renderer.setLineWidth(1);
-            renderer.strokeRect(this.left, this.top, this.width, this.height);
         }
     });
 

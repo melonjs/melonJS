@@ -542,13 +542,11 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         api.strokeArc = function (x, y, radius, start, end, antiClockwise) {
-            backBufferContext2D.save();
             backBufferContext2D.beginPath();
             backBufferContext2D.translate(x + radius, y + radius);
             backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             backBufferContext2D.stroke();
             backBufferContext2D.closePath();
-            backBufferContext2D.restore();
         };
 
         /**
@@ -602,6 +600,35 @@
          */
         api.strokeRect = function (x, y, width, height) {
             backBufferContext2D.strokeRect(x, y, width, height);
+        };
+
+        /**
+         * draw the given shape
+         * @name drawShape
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         */
+        api.drawShape = function (shape) {
+            if (shape instanceof me.Rect) {
+                api.strokeRect(shape.left, shape.top, shape.width, shape.height);
+            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
+                api.save();
+                api.strokePolygon(shape);
+                api.restore();
+            } else if (shape instanceof me.Ellipse) {
+                api.save();
+                api.strokeArc(
+                    shape.pos.x,
+                    shape.pos.y,
+                    shape.radiusV.x,
+                    shape.radiusV.y,
+                    0,
+                    2 * Math.PI,
+                    false
+                );
+                api.restore();
+            }
         };
 
         /**

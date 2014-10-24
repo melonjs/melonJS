@@ -283,18 +283,6 @@
                 copy.push(new me.Vector2d(point.x, point.y));
             });
             return new me.Polygon(this.pos.x, this.pos.y, copy);
-        },
-
-        /**
-         * debug purpose
-         * @ignore
-         */
-        draw : function (renderer, color) {
-            renderer.save();
-            renderer.setColor(color || "red");
-            renderer.setLineWidth(1);
-            renderer.strokePolygon(this);
-            renderer.restore();
         }
     });
 

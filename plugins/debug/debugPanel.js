@@ -194,12 +194,15 @@
 
                 if (me.debug.renderHitBox) {
                     renderer.save();
+                    renderer.setColor("orange");
+                    renderer.setLineWidth(1);
                     // draw the bounding rect shape
-                    this.getBounds().draw(renderer, "orange");
+                    renderer.drawShape(this.getBounds());
                     renderer.translate(this.pos.x, this.pos.y);
                     // draw all defined shapes
+                    renderer.setColor("red");
                     for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                        shape.draw(renderer, "red");
+                        renderer.drawShape(shape);
                     }
                     renderer.restore();
                 }
