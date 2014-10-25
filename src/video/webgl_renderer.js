@@ -23,8 +23,8 @@
         fontContext = null,
         gl = null,
         globalColor = null,
-        lineTextureCoords = new Float32Array(10),
-        lineVerticeArray = new Float32Array(10),
+        lineTextureCoords = new Float32Array(8),
+        lineVerticeArray = new Float32Array(8),
         matrixStack = [],
         positionBuffer = null,
         shaderProgram = null,
@@ -697,7 +697,7 @@
          */
         api.setLineWidth = function () {
         };
-        
+
         /**
          * Stroke an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
@@ -713,7 +713,7 @@
         api.strokeArc = function (/*x, y, radius, start, end, antiClockwise*/) {
             //todo
         };
-        
+
         /**
          * Stroke a line of the given two points
          * @name strokeLine
@@ -727,7 +727,7 @@
         api.strokeLine = function (/*startX, startY, endX, endY*/) {
             //todo
         };
-        
+
         /**
          * Strokes a me.Polygon on the screen with a specified color
          * @name strokePolygon
@@ -738,7 +738,7 @@
         api.strokePolygon = function (/*poly*/) {
             // todo
         };
-        
+
         /**
          * Draw a stroke rectangle at the specified coordinates
          * @name strokeRect
@@ -762,8 +762,6 @@
             lineVerticeArray[5] = y2;
             lineVerticeArray[6] = x1;
             lineVerticeArray[7] = y2;
-            lineVerticeArray[8] = x1;
-            lineVerticeArray[9] = y1;
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, lineVerticeArray, gl.STATIC_DRAW);
@@ -774,12 +772,10 @@
             lineTextureCoords[1] = 0.0;
             lineTextureCoords[2] = 1.0;
             lineTextureCoords[3] = 0.0;
-            lineTextureCoords[4] = 0.0;
+            lineTextureCoords[4] = 1.0;
             lineTextureCoords[5] = 1.0;
             lineTextureCoords[6] = 0.0;
             lineTextureCoords[7] = 1.0;
-            lineTextureCoords[8] = 1.0;
-            lineTextureCoords[9] = 0.0;
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
             gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
@@ -790,7 +786,7 @@
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
             shaderProgram.uniforms.uColor = globalColor.toGL();
-            gl.drawArrays(gl.LINE_STRIP, 0, 4);
+            gl.drawArrays(gl.LINE_LOOP, 0, 4);
         };
 
         /**
@@ -821,7 +817,7 @@
                 api.restore();
             }
         };
-        
+
         /**
          * Sets the uniform matrix to the specified values from a Matrix2d
          * Created to support the original canvas method on the webgl renderer
