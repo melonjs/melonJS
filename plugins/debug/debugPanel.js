@@ -77,9 +77,14 @@
 
             // always update, even when not visible
             this.alwaysUpdate = true;
+
+            // WebGL/Canvas compatibility
             var canvas = me.video.renderer.getCanvas();
             this.canvas = me.video.createCanvas(canvas.width, DEBUG_HEIGHT, true);
             this.context = me.CanvasRenderer.getContext2d(this.canvas);
+            this.overlay = new me.Color(255, 255, 255, 1.0);
+
+            // Size
             this.rect = new me.Rect(0, 0, canvas.width, DEBUG_HEIGHT);
 
             // create a default font, with fixed char width
@@ -400,11 +405,14 @@
 
             this.context.restore();
             me.video.renderer.setGlobalAlpha(0.7);
+            var color = me.video.renderer.getColor();
+            me.video.renderer.setColor(this.overlay);
             me.video.renderer.drawImage(
                 this.canvas, 0, 0,
                 this.canvas.width, this.canvas.height,
                 0, 0, this.rect.width, this.rect.height
             );
+            me.video.renderer.setColor(color);
             me.video.renderer.setGlobalAlpha(1.0);
         },
 
