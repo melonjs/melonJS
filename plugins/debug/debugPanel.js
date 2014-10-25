@@ -38,7 +38,7 @@
             this._super(me.plugin.Base, "init");
 
             // minimum melonJS version expected
-            this.version = "1.2.0";
+            this.version = "2.0.0";
 
             // to hold the debug options
             // clickable rect area
