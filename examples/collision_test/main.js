@@ -1,6 +1,6 @@
 var game = {
     // game assets
-    assets : [  
+    assets : [
         { name: "alien",   type:"image", src:"data/gfx/alien.png" },
         { name: "flushed", type:"image", src:"data/gfx/flushed.png" },
         { name: "scream",  type:"image", src:"data/gfx/scream.png" },
@@ -44,7 +44,7 @@ var PlayScreen = me.ScreenObject.extend( {
     onResetEvent: function() {
          // clear the background
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
-        
+
         // Add some objects
         for (var i = 0; i < 200; i++) {
             me.game.world.addChild(new Smilie(i), 3);
@@ -57,40 +57,42 @@ var Smilie = me.Entity.extend({
         this._super(
             me.Entity,
             "init",
-            [64 + Math.random() * (1024 - 64 * 2 - 16),
-            64 + Math.random() * (768 - 64 * 2 - 16),
-            {
-                width : 16,
-                height : 16,
-            }]
+            [
+                (-15).random(1024),
+                (-15).random(768),
+                {
+                    width : 16,
+                    height : 16,
+                }
+            ]
         );
-        
+
         // disable gravity and add a random velocity
         this.body.gravity = 0;
-        this.body.vel.set(Number.prototype.random(-4, 4), Number.prototype.random(-4, 4));
+        this.body.vel.set((-4).randomFloat(4), (-4).randomFloat(4));
 
         this.alwaysUpdate = true;
-           
+
         // add the coin sprite as renderable
         this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
-       
+
         // add a collision shape
         this.body.addShape(new me.Ellipse(4, 4, 8, 8));
     },
 
     update : function (dt) {
         this.pos.add(this.body.vel);
-        
+
         // world limit check
-        if( this.pos.x > 1024 ) this.pos.x = 0;
-        if( this.pos.x < 0 ) this.pos.x = 1024;
-        if( this.pos.y > 768 ) this.pos.y = 0;
-        if( this.pos.y < 0 ) this.pos.y = 768;
-        
+        if( this.pos.x >= 1024 ) this.pos.x = -15;
+        if( this.pos.x < -15 ) this.pos.x = 1024 - 1;
+        if( this.pos.y >= 768 ) this.pos.y = -15;
+        if( this.pos.y < -15 ) this.pos.y = 768 - 1;
+
         // update the entity bounds since
         // we manipulated the entity pos manually
         this.updateBounds();
-                
+
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
@@ -105,17 +107,17 @@ var Smilie = me.Entity.extend({
 
         this.pos.sub(response.overlapN);
         if (response.overlapN.x !== 0) {
-            this.body.vel.x = -this.body.vel.x;
+            this.body.vel.x = (-4).randomFloat(4) * -this.body.vel.x.sign();
         }
         if (response.overlapN.y !== 0) {
-            this.body.vel.y = -this.body.vel.y;
+            this.body.vel.y = (-4).randomFloat(4) * -this.body.vel.y.sign();
         }
         this.updateBounds();
-        
+
         return false;
     }
 });
-    
+
 /* Bootstrap */
 window.onReady(function onReady() {
     game.onload();

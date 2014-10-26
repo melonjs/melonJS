@@ -23,38 +23,69 @@ Number.prototype.clamp = function (low, high) {
 };
 
 /**
- * return a random integer between min, max
+ * return a random integer between min, max (exclusive)
  * @memberof! external:Number#
  * @alias random
- * @param {number} min minimum value.
+ * @param {number} [min=this] minimum value.
  * @param {number} max maximum value.
  * @return {number} random value
+ * @example
+ * // Print a random number; one of 5, 6, 7, 8, 9
+ * console.log( (5).random(10) );
+ * // Select a random array element
+ * var ar = [ "foo", "bar", "baz" ];
+ * console.log(ar[ (0).random(ar.length) ]);
  */
 Number.prototype.random = function (min, max) {
+    if (!max) {
+        max = min;
+        min = this;
+    }
     return (~~(Math.random() * (max - min)) + min);
 };
 
 /**
- * return a random float between min, max
+ * return a random float between min, max (exclusive)
  * @memberof! external:Number#
  * @alias randomFloat
- * @param {number} min minimum value.
+ * @param {number} [min=this] minimum value.
  * @param {number} max maximum value.
  * @return {number} random value
+ * @example
+ * // Print a random number; one of 5, 6, 7, 8, 9
+ * console.log( (5).random(10) );
+ * // Select a random array element
+ * var ar = [ "foo", "bar", "baz" ];
+ * console.log(ar[ (0).random(ar.length) ]);
  */
 Number.prototype.randomFloat = function (min, max) {
+    if (!max) {
+        max = min;
+        min = this;
+    }
     return (Math.random() * (max - min)) + min;
 };
 
 /**
- * return a weighted random between min, max favoring the lower numbers
+ * return a weighted random between min, max (exclusive)
+ * favoring the lower numbers
  * @memberof! external:Number#
  * @alias weightedRandom
- * @param {number} min minimum value.
+ * @param {number} [min=this] minimum value.
  * @param {number} max maximum value.
  * @return {number} random value
+ * @example
+ * // Print a random number; one of 5, 6, 7, 8, 9
+ * console.log( (5).random(10) );
+ * // Select a random array element
+ * var ar = [ "foo", "bar", "baz" ];
+ * console.log(ar[ (0).random(ar.length) ]);
  */
 Number.prototype.weightedRandom = function (min, max) {
+    if (!max) {
+        max = min;
+        min = this;
+    }
     return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
 };
 
@@ -62,7 +93,7 @@ Number.prototype.weightedRandom = function (min, max) {
  * round a value to the specified number of digit
  * @memberof! external:Number#
  * @alias round
- * @param {number} [num="Object value"] value to be rounded.
+ * @param {number} [num=this] value to be rounded.
  * @param {number} dec number of decimal digit to be rounded to.
  * @return {number} rounded value
  * @example
@@ -72,10 +103,10 @@ Number.prototype.weightedRandom = function (min, max) {
  * num = 10.3333333
  * num.round(4); // return 10.3333
  */
-Number.prototype.round = function () {
+Number.prototype.round = function (num, dec) {
     // if only one argument use the object value
-    var num = (arguments.length < 2) ? this : arguments[0];
-    var powres = Math.pow(10, arguments[1] || arguments[0] || 0);
+    num = (arguments.length < 2) ? this : num;
+    var powres = Math.pow(10, dec || num || 0);
     return (~~(0.5 + num * powres) / powres);
 };
 

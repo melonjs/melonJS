@@ -58,7 +58,7 @@ if (!Array.isArray) {
  * @return {any} random member of array
  */
 Array.prototype.random = function (entry) {
-    return entry[Number.prototype.random(0, entry.length - 1)];
+    return entry[(0).random(entry.length)];
 };
 
 /**
@@ -69,7 +69,7 @@ Array.prototype.random = function (entry) {
  * @return {any} random member of array
  */
 Array.prototype.weightedRandom = function (entry) {
-    return entry[Number.prototype.weightedRandom(0, entry.length - 1)];
+    return entry[(0).weightedRandom(entry.length)];
 };
 
 /**

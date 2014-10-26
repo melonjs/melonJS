@@ -3,38 +3,38 @@
  * note : we don't use EntityObject, since we wont' use regular collision, etc..
  */
 game.MoleEntity = me.AnimationSheet.extend(
-{    
+{
     init:function (x, y) {
         // call the constructor
         this._super(me.AnimationSheet, 'init', [x, y , { image: me.loader.getImage("mole"), spritewidth: 178, spriteheight: 140}]);
-        
+
         // idle animation
         this.addAnimation ("idle",  [0]);
         // laugh animation
         this.addAnimation ("laugh",  [1,2,3,2,3,1]);
         // touch animation
         this.addAnimation ("touch",  [4,5,6,4,5,6]);
-        
+
         // set default one
         this.setCurrentAnimation("idle");
-        
+
         // means fully hidden in the hole
         this.isVisible = false;
         this.isOut = false;
         this.timer = 0;
-        
+
         this.initialPos = this.pos.y;
-        
+
         // tween to display/hide the moles
         this.displayTween = null;
         this.hideTween = null;
-        
+
         // register on mouse event
         me.input.registerPointerEvent('pointerdown', this, this.onMouseDown.bind(this));
 
     },
-    
-    
+
+
     /**
      * callback for mouse click
      */
@@ -62,11 +62,11 @@ game.MoleEntity = me.AnimationSheet.extend(
 
             // stop propagating the event
             return false;
-            
+
         };
     },
-    
-    
+
+
     /**
      * display the mole
      * goes out of the hole
@@ -80,7 +80,7 @@ game.MoleEntity = me.AnimationSheet.extend(
         // the mole is visible
         this.isVisible = true;
     },
-    
+
     /**
      * callback when fully visible
      */
@@ -88,11 +88,11 @@ game.MoleEntity = me.AnimationSheet.extend(
         this.isOut = true;
         this.timer = 0;
     },
-    
+
     /**
      * hide the mole
      * goes into the hole
-     */    
+     */
     hide : function() {
         var finalpos = this.initialPos;
         this.displayTween = me.pool.pull("me.Tween", this.pos).to({y: finalpos }, 200);
@@ -110,7 +110,7 @@ game.MoleEntity = me.AnimationSheet.extend(
         this.setCurrentAnimation("idle");
     },
 
-    
+
     /**
      * update the mole
      */
@@ -119,7 +119,7 @@ game.MoleEntity = me.AnimationSheet.extend(
         if (this.isVisible) {
             // call the super function to manage animation
             this._super(me.AnimationSheet, 'update', [dt] );
-        
+
             // hide the mode after 1/2 sec
             if (this.isOut===true) {
                 this.timer += dt;
@@ -130,12 +130,12 @@ game.MoleEntity = me.AnimationSheet.extend(
                     this.hide();
                     // play laugh FX
                     //me.audio.play("laugh");
-                    
+
                     // decrease score by 25 pts
                     game.data.score -= 25;
                     if (game.data.score < 0) {
                         game.data.score = 0;
-                        
+
                     }
                 }
                 return true;
@@ -149,38 +149,38 @@ game.MoleEntity = me.AnimationSheet.extend(
  * a mole manager (to manage movement, etc..)
  */
 game.MoleManager = me.Entity.extend(
-{    
+{
     init: function ()
     {
         this.moles = [];
-    
+
         this.timer = 0;
         var settings = {};
         settings.width = 10;
         settings.height = 10;
         // call the super constructor
         this._super(me.Entity, 'init', [0, 0, settings]);
-        
+
         // add the first row of moles
         for ( var i = 0; i < 3; i ++) {
             this.moles[i] = new game.MoleEntity((112 + (i * 310)), 127+40)
             me.game.world.addChild (this.moles[i], 15);
         }
-        
+
         // add the 2nd row of moles
         for ( var i = 3; i < 6; i ++) {
             this.moles[i] = new game.MoleEntity((112 + ((i-3) * 310)), 383+40)
             me.game.world.addChild (this.moles[i], 35);
         }
-        
+
         // add the 3rd row of moles
         for ( var i = 6; i < 9; i ++) {
             this.moles[i] = new game.MoleEntity((112 + ((i-6) * 310)), 639+40)
             me.game.world.addChild (this.moles[i], 55);
         }
-            
+
         this.timer = 0;
-        
+
     },
 
     /*
@@ -192,16 +192,16 @@ game.MoleManager = me.Entity.extend(
         this.timer += dt;
         if ((this.timer) >= 500) {
 
-            for (var i = 0; i < 9; i+=3) {
-                var hole = Number.prototype.random(0,2) + i ;
+            for (var i = 0; i < 9; i += 3) {
+                var hole = (0).random(3) + i ;
                 if (!this.moles[hole].isOut && !this.moles[hole].isVisible) {
                     this.moles[hole].display();
                 }
-            
+
             }
             this.timer = 0;
         }
          return false;
     }
-    
+
 });
