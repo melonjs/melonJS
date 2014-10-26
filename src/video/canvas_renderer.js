@@ -619,13 +619,11 @@
             } else if (shape instanceof me.Ellipse) {
                 api.save();
                 api.strokeArc(
-                    shape.pos.x,
-                    shape.pos.y,
-                    shape.radiusV.x,
-                    shape.radiusV.y,
+                    shape.pos.x - shape.radius,
+                    shape.pos.y - shape.radius,
+                    shape.radius,
                     0,
-                    2 * Math.PI,
-                    false
+                    2 * Math.PI
                 );
                 api.restore();
             }
