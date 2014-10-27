@@ -713,7 +713,21 @@
         api.strokeArc = function (/*x, y, radius, start, end, antiClockwise*/) {
             //todo
         };
-
+        
+        /**
+         * Stroke an ellipse at the specified coordinates with given radius, start and end points
+         * @name strokeEllipse
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        api.strokeEllipse = function (/*x, y, w, h*/) {
+            //todo
+        };
+        
         /**
          * Stroke a line of the given two points
          * @name strokeLine
@@ -805,13 +819,24 @@
                 api.restore();
             } else if (shape instanceof me.Ellipse) {
                 api.save();
-                api.strokeArc(
-                    shape.pos.x - shape.radius,
-                    shape.pos.y - shape.radius,
-                    shape.radius,
-                    0,
-                    2 * Math.PI
-                );
+                if (shape.radiusV.x === shape.radiusV.y) {
+                    // it's a circle
+                    api.strokeArc(
+                        shape.pos.x - shape.radius,
+                        shape.pos.y - shape.radius,
+                        shape.radius,
+                        0,
+                        2 * Math.PI
+                    );
+                } else {
+                    // it's an ellipse
+                    api.strokeEllipse(
+                        shape.pos.x,
+                        shape.pos.y,
+                        shape.radiusV.x,
+                        shape.radiusV.y
+                    );
+                }
                 api.restore();
             }
         };

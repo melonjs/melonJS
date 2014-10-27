@@ -548,6 +548,40 @@
             backBufferContext2D.stroke();
             backBufferContext2D.closePath();
         };
+        
+        /**
+         * Stroke an ellipse at the specified coordinates with given radius, start and end points
+         * @name strokeEllipse
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        api.strokeEllipse = function (x, y, w, h) {
+            context.beginPath();
+            var hw = w,
+                hh = h,
+                lx = x - hw,
+                rx = x + hw,
+                ty = y - hh,
+                by = y + hh;
+
+            var xmagic = hw * 0.551784,
+                ymagic = hh * 0.551784,
+                xmin = x - xmagic,
+                xmax = x + xmagic,
+                ymin = y - ymagic,
+                ymax = y + ymagic;
+
+            backBufferContext2D.moveTo(x, ty);
+            backBufferContext2D.bezierCurveTo(xmax, ty, rx, ymin, rx, y);
+            backBufferContext2D.bezierCurveTo(rx, ymax, xmax, by, x, by);
+            backBufferContext2D.bezierCurveTo(xmin, by, lx, ymax, lx, y);
+            backBufferContext2D.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
+            backBufferContext2D.stroke();
+        };
 
         /**
          * Stroke a line of the given two points
@@ -618,13 +652,24 @@
                 api.restore();
             } else if (shape instanceof me.Ellipse) {
                 api.save();
-                api.strokeArc(
-                    shape.pos.x - shape.radius,
-                    shape.pos.y - shape.radius,
-                    shape.radius,
-                    0,
-                    2 * Math.PI
-                );
+                if (shape.radiusV.x === shape.radiusV.y) {
+                    // it's a circle
+                    api.strokeArc(
+                        shape.pos.x - shape.radius,
+                        shape.pos.y - shape.radius,
+                        shape.radius,
+                        0,
+                        2 * Math.PI
+                    );
+                } else {
+                    // it's an ellipse
+                    api.strokeEllipse(
+                        shape.pos.x,
+                        shape.pos.y,
+                        shape.radiusV.x,
+                        shape.radiusV.y
+                    );
+                }
                 api.restore();
             }
         };
