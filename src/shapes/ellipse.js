@@ -125,9 +125,14 @@
          * @param {Number} [y=x]
          * @return {me.Ellipse} Reference to this object for method chaining
          */
-        scale : function (/*x, y*/) {
-            // TODO
-            return this;
+        scale : function (x, y) {
+            y = typeof (y) !== "undefined" ? y : x;
+            return this.setShape(
+                this.pos.x,
+                this.pos.y,
+                this.radiusV.x * 2 * x,
+                this.radiusV.y * 2 * y
+            );
         },
 
         /**
@@ -138,9 +143,8 @@
          * @param {me.Vector2d} v
          * @return {me.Ellipse} Reference to this object for method chaining
          */
-        scaleV : function (/*v*/) {
-            // TODO
-            return this;
+        scaleV : function (v) {
+            return this.scale(v.x, v.y);
         },
 
         /**
