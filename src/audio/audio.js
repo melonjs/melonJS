@@ -164,7 +164,7 @@
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
             }
             audioTracks[sound.name] = new Howl({
-                urls : urls,
+                src : urls,
                 volume : Howler.volume(),
                 onend : function (soundId) {
                     if (callbacks[soundId]) {
@@ -412,7 +412,7 @@
             mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof(sound) !== "undefined") {
-                sound.mute(true);
+                sound.mute(mute);
             }
         };
 
@@ -425,7 +425,7 @@
          * @param {String} sound_id audio clip id
          */
         api.unmute = function (sound_id) {
-            api.mute(sound_id, false);
+            api.mute(false, sound_id);
         };
 
         /**
@@ -436,7 +436,7 @@
          * @function
          */
         api.muteAll = function () {
-            Howler.mute();
+            Howler.mute(true);
         };
 
         /**
@@ -447,7 +447,7 @@
          * @function
          */
         api.unmuteAll = function () {
-            Howler.unmute();
+            Howler.mute(false);
         };
 
         /**
