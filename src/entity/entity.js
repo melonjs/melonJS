@@ -391,9 +391,9 @@
      * @extends me.Entity
      * @memberOf me
      * @constructor
-     * @param {Number} x the x coordinates of the sprite object
-     * @param {Number} y the y coordinates of the sprite object
-     * @param {me.ObjectSettings} settings object settings
+     * @param {Number} x the x coordinates of the entity object
+     * @param {Number} y the y coordinates of the entity object
+     * @param {me.ObjectSettings} settings Object Properties as defined in Tiled<br>
      */
     me.CollectableEntity = me.Entity.extend(
     /** @scope me.CollectableEntity.prototype */
