@@ -19,19 +19,12 @@ describe("Shape : me.Rect", function () {
             expect(rect1.overlaps(rect3)).toEqual(true);
         });
 
-        it("rect 1 within rect3", function () {
-            expect(rect1.within(rect3)).toEqual(true);
-        });
-
         it("rect 1 does not overlaps rect4", function () {
             expect(rect1.overlaps(rect4)).toEqual(false);
         });
     });
 
     describe("rect2", function () {
-        it("rect 2 within rect3", function () {
-            expect(rect2.within(rect3)).toEqual(true);
-        });
 
         it("rect 2 overlaps rect3", function () {
             expect(rect1.overlaps(rect3)).toEqual(true);
@@ -39,10 +32,6 @@ describe("Shape : me.Rect", function () {
 
         it("rect 2 does not overlaps rect4", function () {
             expect(rect1.overlaps(rect4)).toEqual(false);
-        });
-
-        it("rect 2 does not equals rect4", function () {
-            expect(rect2.equals(rect4)).toEqual(false);
         });
     });
 

@@ -436,8 +436,8 @@
         focusOn : function (target) {
             var bounds = target.getBounds();
             this.moveTo(
-                target.pos.x + bounds.pos.x + bounds.hWidth,
-                target.pos.y + bounds.pos.y + bounds.hHeight
+                target.pos.x + bounds.pos.x + (bounds.width / 2),
+                target.pos.y + bounds.pos.y + (bounds.height / 2)
             );
         },
 

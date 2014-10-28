@@ -49,10 +49,6 @@
 
             // the shape type
             this.shapeType = "Rectangle";
-
-            // half width/height
-            this.hWidth = ~~(w / 2);
-            this.hHeight = ~~(h / 2);
         },
 
         /**
@@ -88,10 +84,6 @@
         resize : function (w, h) {
             this.width = w;
             this.height = h;
-
-            this.hWidth = ~~(w / 2);
-            this.hHeight = ~~(h / 2);
-
             return this;
         },
 
@@ -190,23 +182,6 @@
         },
 
         /**
-         * return true if this rectangle is equal to the specified one
-         * @name equals
-         * @memberOf me.Rect
-         * @function
-         * @param {me.Rect} rect
-         * @return {Boolean}
-         */
-        equals : function (r) {
-            return (
-                this.left   === r.left  &&
-                this.right  === r.right &&
-                this.top    === r.top   &&
-                this.bottom === r.bottom
-            );
-        },
-
-        /**
          * check if this rectangle is intersecting with the specified one
          * @name overlaps
          * @memberOf me.Rect
@@ -221,18 +196,6 @@
                 this.top < r.bottom &&
                 r.top < this.bottom
             );
-        },
-
-        /**
-         * check if this rectangle is within the specified one
-         * @name within
-         * @memberOf me.Rect
-         * @function
-         * @param  {me.Rect} rect
-         * @return {boolean} true if within
-         */
-        within: function (r) {
-            return r.contains(this);
         },
 
         /**

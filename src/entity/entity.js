@@ -249,8 +249,8 @@
         distanceTo: function (e) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + this.hWidth)  - (e.pos.x + e.hWidth);
-            var dy = (this.pos.y + this.hHeight) - (e.pos.y + e.hHeight);
+            var dx = (this.pos.x + (this.width / 2))  - (e.pos.x + (e.width / 2));
+            var dy = (this.pos.y + (this.height / 2)) - (e.pos.y + (e.height / 2));
             return Math.sqrt(dx * dx + dy * dy);
         },
 
@@ -265,8 +265,8 @@
         distanceToPoint: function (v) {
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + this.hWidth)  - (v.x);
-            var dy = (this.pos.y + this.hHeight) - (v.y);
+            var dx = (this.pos.x + (this.width / 2))  - (v.x);
+            var dy = (this.pos.y + (this.height / 2)) - (v.y);
             return Math.sqrt(dx * dx + dy * dy);
         },
 
@@ -283,8 +283,8 @@
             var b = e.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var ax = (b.pos.x + b.hWidth) - (a.pos.x + a.hWidth);
-            var ay = (b.pos.y + b.hHeight) - (a.pos.y + a.hHeight);
+            var ax = (b.pos.x + (b.width / 2)) - (a.pos.x + (a.width / 2));
+            var ay = (b.pos.y + (b.height / 2)) - (a.pos.y + (a.height / 2));
             return Math.atan2(ay, ax);
         },
 
@@ -300,8 +300,8 @@
             var a = this.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var ax = (v.x) - (a.pos.x + a.hWidth);
-            var ay = (v.y) - (a.pos.y + a.hHeight);
+            var ax = (v.x) - (a.pos.x + (a.width / 2));
+            var ay = (v.y) - (a.pos.y + (a.height / 2));
             return Math.atan2(ay, ax);
         },
 
