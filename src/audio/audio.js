@@ -29,7 +29,6 @@
 
         // current music
         var current_track_id = null;
-        var current_track_instance = null;
 
         // a retry counter
         var retry_counter = 0;
@@ -63,11 +62,6 @@
                 audioTracks[sound_id].load();
             }
         }
-
-        function setTrackInstance(id) {
-            current_track_instance = id;
-        }
-
 
         /*
          * PUBLIC STUFF
@@ -293,8 +287,7 @@
                 current_track_id,
                 true,
                 null,
-                volume,
-                navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
+                volume
             );
         };
 
@@ -314,9 +307,7 @@
          */
         api.stopTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].stop(
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
-                );
+                audioTracks[current_track_id].stop();
                 current_track_id = null;
             }
         };
@@ -333,9 +324,7 @@
          */
         api.pauseTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].pause(
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
-                );
+                audioTracks[current_track_id].pause();
             }
         };
 
@@ -356,9 +345,7 @@
          */
         api.resumeTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].play(
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
-                );
+                audioTracks[current_track_id].play();
             }
         };
 
