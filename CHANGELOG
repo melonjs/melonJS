@@ -8,6 +8,8 @@ Version History
 * Shapes : added a new shape: me.Line
 * Shapes : added multi shapes support for body
 * Shapes : added rotation and scaling support for `me.Polygon`/`me.Line` shapes.
+* Audio : the Howler library has been updated to the last 2.0 beta
+* Audio : removed the cocoonJS hack, as the pause/resume function have been fixed through Howler 2.0
 * Entity : added automatic collision response handling (not fully done yet actually)
 * Container : fixed an issue where "non-floating" containers always passed the in-viewport test
 * CanvasRenderer : All fill & stroke methods have removed the color & line width parameters. Use the new setColor and setLineWidth methods.
