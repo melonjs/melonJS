@@ -29,7 +29,6 @@
 
         // current music
         var current_track_id = null;
-        var current_track_instance = null;
 
         // a retry counter
         var retry_counter = 0;
@@ -63,11 +62,6 @@
                 audioTracks[sound_id].load();
             }
         }
-
-        function setTrackInstance(id) {
-            current_track_instance = id;
-        }
-
 
         /*
          * PUBLIC STUFF
@@ -164,7 +158,7 @@
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
             }
             audioTracks[sound.name] = new Howl({
-                urls : urls,
+                src : urls,
                 volume : Howler.volume(),
                 onend : function (soundId) {
                     if (callbacks[soundId]) {
@@ -293,8 +287,7 @@
                 current_track_id,
                 true,
                 null,
-                volume,
-                navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
+                volume
             );
         };
 
@@ -314,9 +307,7 @@
          */
         api.stopTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].stop(
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
-                );
+                audioTracks[current_track_id].stop();
                 current_track_id = null;
             }
         };
@@ -333,9 +324,7 @@
          */
         api.pauseTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].pause(
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? current_track_instance : undefined
-                );
+                audioTracks[current_track_id].pause();
             }
         };
 
@@ -356,10 +345,7 @@
          */
         api.resumeTrack = function () {
             if (current_track_id !== null) {
-                audioTracks[current_track_id].play(
-                    null,
-                    navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
-                );
+                audioTracks[current_track_id].play();
             }
         };
 
@@ -412,7 +398,7 @@
             mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof(sound) !== "undefined") {
-                sound.mute(true);
+                sound.mute(mute);
             }
         };
 
@@ -425,7 +411,7 @@
          * @param {String} sound_id audio clip id
          */
         api.unmute = function (sound_id) {
-            api.mute(sound_id, false);
+            api.mute(false, sound_id);
         };
 
         /**
@@ -436,7 +422,7 @@
          * @function
          */
         api.muteAll = function () {
-            Howler.mute();
+            Howler.mute(true);
         };
 
         /**
@@ -447,7 +433,7 @@
          * @function
          */
         api.unmuteAll = function () {
-            Howler.unmute();
+            Howler.mute(false);
         };
 
         /**
