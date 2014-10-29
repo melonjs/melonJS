@@ -357,7 +357,6 @@
         api.resumeTrack = function () {
             if (current_track_id !== null) {
                 audioTracks[current_track_id].play(
-                    null,
                     navigator.isCocoonJS && (!Howler.usingWebAudio) ? setTrackInstance : undefined
                 );
             }
