@@ -41,13 +41,20 @@
     };
     
 
-     /*
-      * Quadtree Constructor
-      * @param {me.Rect} bounds bounds of the node
-      * @param Integer max_objects (optional) max objects a node can hold before splitting into 4 subnodes (default: 8)
-      * @param Integer max_levels (optional) total max levels inside root Quadtree (default: 4)
-      * @param Integer level (optional) deepth level, required for subnodes
-      */
+    /**
+     * Quadtree Constructor <br>
+     * note: the global quadtree instance is available through `me.collision.quadTree`
+     * @class
+     * @name QuadTree
+     * @extends Object
+     * @memberOf me
+     * @constructor
+     * @see me.collision.quadTree
+     * @param {me.Rect} bounds bounds of the node
+     * @param {external:Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+     * @param {external:Number} [max_levels=4] total max levels inside root Quadtree
+     * @param {external:Number} [level] deepth level, required for subnodes
+     */
     function Quadtree(bounds, max_objects, max_levels, level) {
         this.max_objects = max_objects || 4;
         this.max_levels  = max_levels || 4;
@@ -147,9 +154,12 @@
         return index;
     };
 
-    /*
-     * Insert the given container childrens into the node.
-     * @param {me.Container] group of objects to be added
+    /**
+     * Insert the given object container into the node.
+     * @name insertContainer
+     * @memberOf me.QuadTree
+     * @function
+     * @param {me.Container} container group of objects to be added
      */
     Quadtree.prototype.insertContainer = function (container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
@@ -165,11 +175,14 @@
         }
     };
 
-    /*
-     * Insert the object into the node. If the node
+    /**
+     * Insert the given object into the node. If the node
      * exceeds the capacity, it will split and add all
      * objects to their corresponding subnodes.
-     * @param me rect bounds of the object to be added, with x, y, width, height
+     * @name insert
+     * @memberOf me.QuadTree
+     * @function
+     * @param {external:Object} item object to be added
      */
     Quadtree.prototype.insert = function (item) {
 
@@ -210,11 +223,13 @@
         }
     };
 
-
-    /*
+    /**
      * Return all objects that could collide with the given object
-     * @param Object rect bounds of the object to be checked, with x, y, width, height
-     * @Return Array array with all detected objects
+     * @name retrieve
+     * @memberOf me.QuadTree
+     * @function
+     * @param {external:Object} object object to be checked against
+     * @return {external:Object[]} array with all detected objects
      */
     Quadtree.prototype.retrieve = function (item) {
         
@@ -240,8 +255,11 @@
     };
 
 
-    /*
-     * Clear the quadtree
+    /**
+     * clear the quadtree
+     * @name clear
+     * @memberOf me.QuadTree
+     * @function
      */
     Quadtree.prototype.clear = function (bounds) {
 
