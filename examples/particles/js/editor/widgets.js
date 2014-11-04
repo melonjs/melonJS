@@ -321,7 +321,7 @@
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {
-            this.pos.set(x - this.hWidth, y - this.hHeight);
+            this.pos.set(x - (this.width / 2), y - (this.height / 2));
         },
         startDrag : function(event) {
             this.dragging = true;
@@ -352,8 +352,8 @@
         drag : function(event) {
             if (this.dragging) {
                 var pos = me.input.mouse.pos.clone().sub(this.grabOffset);
-                pos.x += this.hWidth;
-                pos.y += this.hHeight;
+                pos.x += (this.width / 2);
+                pos.y += (this.height / 2);
                 this.onDrag(pos);
                 return false;
             }
@@ -391,8 +391,8 @@
         onDrag : function(pos) {
             var object = this.object;
             if (object) {
-                pos.x -= object.pos.x + object.hWidth;
-                pos.y -= object.pos.y + object.hHeight;
+                pos.x -= object.pos.x + (object.width / 2);
+                pos.y -= object.pos.y + (object.height / 2);
                 var x = pos.x;
                 var y = pos.y;
                 if (x !== this.vector.x || y !== this.vector.y) {
@@ -427,7 +427,7 @@
             var object = this.object;
             if (object) {
                 this.dragHandler.floating = this.shape.floating = object.floating;
-                this.origin.set(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
+                this.origin.set(object.pos.x + (object.width / 2), object.pos.y + (object.height / 2));
                 this.onSync(object);
                 this.shape.setShape(this.origin, this.vector.x, this.vector.y);
             }
@@ -515,8 +515,8 @@
         onDrag : function(pos) {
             var object = this.object;
             if (object) {
-                pos.x -= object.pos.x + object.hWidth;
-                pos.y -= object.pos.y + object.hHeight;
+                pos.x -= object.pos.x + (object.width / 2);
+                pos.y -= object.pos.y + (object.height / 2);
                 var variation = object.angle - Math.atan2(-pos.y, pos.x);
                 if (variation < -Math.PI / 2) {
                     variation += 2 * Math.PI;
@@ -560,8 +560,8 @@
                 this.shape.set(object);
                 var angle = object.angle - object.angleVariation;
                 var radius = (object.speed + object.speedVariation) * this.scale;
-                var x = object.pos.x + object.hWidth + Math.cos(angle) * radius;
-                var y = object.pos.y + object.hHeight - Math.sin(angle) * radius;
+                var x = object.pos.x + (object.width / 2) + Math.cos(angle) * radius;
+                var y = object.pos.y + (object.height / 2) - Math.sin(angle) * radius;
                 this.dragHandler.setPosition(x, y);
             }
         }
@@ -579,7 +579,7 @@
             this.z = Infinity;
         },
         set : function(object) {
-            this.pos.set(object.pos.x + object.hWidth, object.pos.y + object.hHeight);
+            this.pos.set(object.pos.x + (object.width / 2), object.pos.y + (object.height / 2));
             this.startAngle = -(object.angle - object.angleVariation);
             this.endAngle = -(object.angle + object.angleVariation);
             this.minRadius = (object.speed - object.speedVariation) * this.scale;
