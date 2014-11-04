@@ -131,10 +131,10 @@
             };
 
             // patch me.game.update
-            me.plugin.patch(me.game, "update", function (time) {
+            me.plugin.patch(me.game, "update", function (dt) {
                 var startTime = now();
-                this._patched(time);
-                // calculate the update time
+                this._patched(dt);
+                // calculate the update time (can't we use [dt] here ?)
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
 
@@ -147,10 +147,10 @@
             });
 
             // patch me.ParticleContainer.update
-            me.plugin.patch(me.ParticleContainer, "update", function (time) {
+            me.plugin.patch(me.ParticleContainer, "update", function (dt) {
                 var startTime = now();
-                var value = this._patched(time);
-                // calculate the update time
+                var value = this._patched(dt);
+                // calculate the update time (can't we use [dt] here ?)
                 _this.updateTime += now() - startTime;
                 return value;
             });
@@ -203,14 +203,10 @@
             var frameTimeLimit = 1000 / me.sys.fps, where = height - frameTimeLimit * scale;
 
             renderer.setGlobalAlpha(0.5);
-            var context = renderer.getContext();
-            // draw the frame time limit
-            context.strokeStyle = "grey";
-            context.beginPath();
-            context.moveTo(0, where);
-            context.lineTo(width, where);
-            context.stroke();
-            context.closePath();
+            renderer.setColor("grey");
+            renderer.drawLine(0, where, width, where);
+            renderer.setGlobalAlpha(1.0);
+            
 
             var updateTimeSum = 0, drawTimeSum = 0, frameUpdateTimeSum = 0, frameDrawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
             // prepare data

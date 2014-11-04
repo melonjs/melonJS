@@ -291,7 +291,21 @@
                 x, y, fontCache[gid].width, fontCache[gid].height
             );
         };
-
+        
+        /**
+         * Draw a line from the given point to the destination point.
+         * @name drawLine
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} startX start x position
+         * @param {Number} startY start y position
+         * @param {Number} endX end x position
+         * @param {Number} endY end y position
+         */
+        api.drawLine = function (/*startX, startY, endX, endY*/) {
+            // todo
+        };
+        
         /**
          * Draw an image to the gl context
          * @name drawImage
