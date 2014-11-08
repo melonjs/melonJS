@@ -202,8 +202,6 @@
          * @ignore
          */
         setLayerData : function (layer, rawdata, encoding, compression) {
-            // initialize the layer data array
-            layer.initArray(layer.cols, layer.rows);
             // data
             var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
 

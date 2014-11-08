@@ -402,6 +402,9 @@
                 this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
                 this.layerSurface = me.CanvasRenderer.getContext2d(this.layerCanvas);
             }
+
+            // initialize the layer data array
+            this.initArray(this.cols, this.rows);
         },
 
         /**
