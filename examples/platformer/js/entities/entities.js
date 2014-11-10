@@ -86,7 +86,7 @@ game.PlayerEntity = me.Entity.extend({
         }
 
         // apply physics to the body (this moves the entity)
-        this.body.update();
+        this.body.update(dt);
 
         // check if we fell into a hole
         if (!this.inViewport && (this.pos.y > me.video.renderer.getHeight())) {
@@ -285,7 +285,7 @@ game.PathEnemyEntity = me.Entity.extend({
             }
 
             // check & update movement
-            this.body.update();
+            this.body.update(dt);
 
         }
 
