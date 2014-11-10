@@ -56,12 +56,14 @@ and currently features :
 
 Using melonJS
 -------------------------------------------------------------------------------
-Follow the tutorial [here](http://melonjs.github.io/tutorial-platformer/) to get started !
+For your first time using melonJS, follow the tutorial [here](http://melonjs.github.io/tutorial-platformer/).
 
-Note that due to the 'cross-origin request' policy implemented in most browsers
+When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
+
+**Note** that due to the _cross-origin request_ policy implemented in most browsers
 (that prevents from accessing local files), you will need to either disable this
 security check (see the tutorial), or better use a "personal" local web server
-like the `grunt connect` task that is used for building melonJS (see below).
+like the `grunt connect` task that is used for building melonJS (see below for building melonJS).
 
 Building melonJS
 -------------------------------------------------------------------------------
