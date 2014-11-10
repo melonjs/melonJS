@@ -239,7 +239,6 @@
                 );
             }
             // parallax / scrolling image
-            // todo ; broken with dirtyRect enabled
             else {
                 var sx = ~~this.pos.x;
                 var sy = ~~this.pos.y;

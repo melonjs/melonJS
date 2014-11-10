@@ -85,7 +85,7 @@ game.PlayerEntity = me.Entity.extend({
             this.multipleJump = 2;
         }
 
-        // check for collision with environment
+        // apply physics to the body (this moves the entity)
         this.body.update();
 
         // check if we fell into a hole
@@ -100,10 +100,10 @@ game.PlayerEntity = me.Entity.extend({
             return true;
         }
 
-        // check for collision with sthg
+        // handle collisions against other shapes
         me.collision.check(this);
 
-        // check if we moved (a "stand" animation would definitely be cleaner)
+        // check if we moved (an "idle" animation would definitely be cleaner)
         if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
             this._super(me.Entity, 'update', [dt]);
             return true;
@@ -133,7 +133,7 @@ game.PlayerEntity = me.Entity.extend({
                         // Repond to the platform (it is solid)
                         return true;
                     }
-                    // Do not respond to the pltform (pass through)
+                    // Do not respond to the platform (pass through)
                     return false;
                 }
                 break;
