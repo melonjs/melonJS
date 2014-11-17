@@ -185,16 +185,16 @@
         },
 
         /**
-         * return the current collision shape for this entity
+         * return the collision shape at the given index
          * @name getShape
          * @memberOf me.Body
          * @public
          * @function
-         * @param {Number} index the shape object at the specified index
+         * @param {Number} [index=0] the shape object at the specified index
          * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         getShape : function (index) {
-            return this.shapes[index];
+            return this.shapes[index || 0];
         },
 
         /**
