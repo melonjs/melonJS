@@ -162,8 +162,11 @@
         },
 
         /**
-         * Change the deadzone settings
+         * change the deadzone settings.
+         * the "deadzone" defines an area within the current viewport in which 
+         * the followed entity can move without scrolling the viewport.
          * @name setDeadzone
+         * @see me.Viewport.follow
          * @memberOf me.Viewport
          * @function
          * @param {Number} w deadzone width
@@ -186,7 +189,8 @@
         },
 
         /**
-         * set the viewport boundaries (world limit)
+         * set the viewport boundaries (set to the world limit by default).
+         * the viewport is bound to the given coordinates and cannot move/be scrolled outside of it.
          * @name setBounds
          * @memberOf me.Viewport
          * @function
