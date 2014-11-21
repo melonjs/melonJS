@@ -197,8 +197,7 @@
          *            [onend] Function to call when sound instance ends playing.
          * @param {Number}
          *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-         * @param {Function}
-         *            [oncreate] Callback to receive the internal sound ID when created
+         * @return {Number} the sound Id.
          * @example
          * // play the "cling" audio clip
          * me.audio.play("cling");
@@ -209,7 +208,7 @@
          * // play the "gameover_sfx" audio clip with a lower volume level
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
-        api.play = function (sound_id, loop, onend, volume, oncreate) {
+        api.play = function (sound_id, loop, onend, volume) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 if (typeof loop === "boolean") {
@@ -217,20 +216,10 @@
                     sound.loop(loop);
                 }
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
-                if (typeof(onend) === "function" || typeof(oncreate) === "function") {
-                    sound.play(undefined, function (soundId) {
-                        if (onend) {
-                            callbacks[soundId] = onend;
-                        }
-                        if (oncreate) {
-                            oncreate(soundId);
-                        }
-                    });
+                if (typeof(onend) === "function") {
+                    sound.on("end", onend);
                 }
-                else {
-                    sound.play();
-                }
-                return sound;
+                return sound.play();
             }
         };
 
