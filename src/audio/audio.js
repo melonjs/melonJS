@@ -212,7 +212,10 @@
         api.play = function (sound_id, loop, onend, volume, oncreate) {
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
-                sound.loop(loop || false);
+                if (typeof loop === "boolean") {
+                    // arg[0] can take different types in howler 2.0
+                    sound.loop(loop);
+                }
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
                 if (typeof(onend) === "function" || typeof(oncreate) === "function") {
                     sound.play(undefined, function (soundId) {
