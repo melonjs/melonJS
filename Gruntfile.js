@@ -139,7 +139,8 @@ module.exports = function (grunt) {
                 "./docs/**/*.*",
                 "./docs/scripts",
                 "./docs/styles",
-                "./docs/images"
+                "./docs/images",
+                "./docs/img"
             ]
         },
 
