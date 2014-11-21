@@ -915,7 +915,10 @@
           sound._loop = loop;
         }
       }
-
+      
+      if(id == null) {
+         self._loop = loop;
+      }
       return self;
     },
 

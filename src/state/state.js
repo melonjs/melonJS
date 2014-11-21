@@ -74,6 +74,7 @@
     // based on the requestAnimationFrame polyfill by Erik Möller
     (function () {
         var lastTime = 0;
+        var frameDuration = 1000 / 60;
         // get unprefixed rAF and cAF, if present
         var requestAnimationFrame = me.agent.prefixed("requestAnimationFrame");
         var cancelAnimationFrame = me.agent.prefixed("cancelAnimationFrame") ||
@@ -82,7 +83,7 @@
         if (!requestAnimationFrame || !cancelAnimationFrame) {
             requestAnimationFrame = function (callback) {
                 var currTime = window.performance.now();
-                var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                var timeToCall = Math.max(0, frameDuration - (currTime - lastTime));
                 var id = window.setTimeout(function () {
                     callback(currTime + timeToCall);
                 }, timeToCall);

@@ -4,6 +4,9 @@ Version History
 
 2.0.1
 * Shapes : replaced the isometric magic numbers used for scaling, by proper and more accurate math constants (ldd)
+* Audio : fixed sound looping
+* Audio : fixed onend callback not being repeatedly fired when looping a sound
+* Audio : cleaned the onend callback when stopping a sound
 
 2.0.0
 * Core : implemented a new shape based collision system for the collision layer
