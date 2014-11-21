@@ -393,7 +393,7 @@
             if (this.orientation === "isometric") {
                 for (i = 0; i < shapes.length; i++) {
                     // What are these magic numbers for scaling?
-                    shapes[i].rotate(Math.PI / 4).scale(1.4132, 0.705);
+                    shapes[i].rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
                 }
             }
 
