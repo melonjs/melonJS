@@ -24,9 +24,6 @@
         // audio channel list
         var audioTracks = {};
 
-        // unique store for callbacks
-        var callbacks = {};
-
         // current music
         var current_track_id = null;
 
@@ -160,13 +157,6 @@
             audioTracks[sound.name] = new Howl({
                 src : urls,
                 volume : Howler.volume(),
-                onend : function (soundId) {
-                    if (callbacks[soundId]) {
-                        // fire call back if it exists, then delete it
-                        callbacks[soundId]();
-                        callbacks[soundId] = null;
-                    }
-                },
                 onloaderror : function () {
                     audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
