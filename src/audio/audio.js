@@ -214,6 +214,25 @@
         };
 
         /**
+         * Fade a currently playing sound between two volumee.
+         * @name fade
+         * @memberOf me.audio
+         * @public
+         * @function  
+         * @param {String} sound_id audio clip id     
+         * @param {Number} from Volume to fade from (0.0 to 1.0).
+         * @param {Number} to  Volume to fade to (0.0 to 1.0).
+         * @param {Number} duration Time in milliseconds to fade.
+         * @param {Number} [id] The sound ID. If none is passed, all sounds in group will fade.
+         */
+        api.fade = function (sound_id, from, to, duration, instance_id) {
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if (sound && typeof sound !== "undefined") {
+                sound.fade(from, to, duration, instance_id);
+            }
+        };
+
+        /**
          * stop the specified sound on all channels
          * @name stop
          * @memberOf me.audio
