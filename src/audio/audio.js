@@ -24,9 +24,6 @@
         // audio channel list
         var audioTracks = {};
 
-        // unique store for callbacks
-        var callbacks = {};
-
         // current music
         var current_track_id = null;
 
@@ -160,13 +157,6 @@
             audioTracks[sound.name] = new Howl({
                 src : urls,
                 volume : Howler.volume(),
-                onend : function (soundId) {
-                    if (callbacks[soundId]) {
-                        // fire call back if it exists, then delete it
-                        callbacks[soundId]();
-                        callbacks[soundId] = null;
-                    }
-                },
                 onloaderror : function () {
                     audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
@@ -220,6 +210,25 @@
                     sound.on("end", onend);
                 }
                 return sound.play();
+            }
+        };
+
+        /**
+         * Fade a currently playing sound between two volumee.
+         * @name fade
+         * @memberOf me.audio
+         * @public
+         * @function  
+         * @param {String} sound_id audio clip id     
+         * @param {Number} from Volume to fade from (0.0 to 1.0).
+         * @param {Number} to  Volume to fade to (0.0 to 1.0).
+         * @param {Number} duration Time in milliseconds to fade.
+         * @param {Number} [id] The sound ID. If none is passed, all sounds in group will fade.
+         */
+        api.fade = function (sound_id, from, to, duration, instance_id) {
+            var sound = audioTracks[sound_id.toLowerCase()];
+            if (sound && typeof sound !== "undefined") {
+                sound.fade(from, to, duration, instance_id);
             }
         };
 
