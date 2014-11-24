@@ -262,6 +262,7 @@
          * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
          */
         api.types = {
+            /** to disable collision check */
             NO_OBJECT : 0,
 
             /**
@@ -436,19 +437,22 @@
          * @example
          * update : function (dt) {
          *    ...
-         *    // check for collision between this object and all others
+         *    // handle collisions against other shapes
          *    me.collision.check(this);
          *    ...
          * };
          *
+         * // colision handler
          * onCollision : function (response) {
          *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
          *         // makes the other entity solid, by substracting the overlap vector to the current position
          *         this.pos.sub(response.overlapV);
          *         this.hurt();
-         *     } else {
-         *         ...
+         *         // not solid
+         *         return false;
          *     }
+         *     // Make the object solid
+         *     return true;
          * };
          */
         api.check = function (objA, responseObject) {
