@@ -398,19 +398,24 @@
         parseRGB : function (rgbColor) {
             // TODO : Memoize this function by caching its input
 
-            var start;
-            if (rgbColor.substring(0, 4) === "rgba") {
-                start = 5;
-            }
-            else if (rgbColor.substring(0, 3) === "rgb") {
-                start = 4;
-            }
-            else {
-                return this.parseHex(rgbColor);
-            }
+            if (typeof(rgbColor) === "string") {
+                // there is something funny happening here with
+                // the argument being undefined under cocoonjs/canvas+
+                var start;
+                if (rgbColor.substring(0, 4) === "rgba") {
+                    start = 5;
+                }
+                else if (rgbColor.substring(0, 3) === "rgb") {
+                    start = 4;
+                }
+                else {
+                    return this.parseHex(rgbColor);
+                }
 
-            var color = rgbColor.slice(start, -1).split(/\s*,\s*/);
-            return this.setColor.apply(this, color);
+                var color = rgbColor.slice(start, -1).split(/\s*,\s*/);
+                return this.setColor.apply(this, color);
+            }
+            return this;
         },
 
         /**

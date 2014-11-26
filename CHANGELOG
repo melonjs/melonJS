@@ -1,6 +1,7 @@
 Version History
 ---------------
 2.0.1
+* Core : fixed loading under CocoonJS when using Canvas+
 * Shapes : replaced the isometric magic numbers used for scaling, by proper and more accurate math constants (ldd)
 * Audio : fixed sound looping
 * Audio : fixed onend callback not being repeatedly fired when looping a sound
