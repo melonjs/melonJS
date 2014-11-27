@@ -218,8 +218,8 @@
          * @name fade
          * @memberOf me.audio
          * @public
-         * @function  
-         * @param {String} sound_id audio clip id     
+         * @function
+         * @param {String} sound_id audio clip id
          * @param {Number} from Volume to fade from (0.0 to 1.0).
          * @param {Number} to  Volume to fade to (0.0 to 1.0).
          * @param {Number} duration Time in milliseconds to fade.

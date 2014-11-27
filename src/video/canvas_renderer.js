@@ -20,7 +20,7 @@
         doubleBuffering = null,
         backBufferCanvas = null,
         backBufferContext2D = null,
-		globalColor = null,
+        globalColor = null,
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
@@ -53,10 +53,10 @@
 
             gameWidthZoom = game_width_zoom;
             gameHeightZoom = game_height_zoom;
-			
-			// the default global canvas color
-			globalColor = new me.Color(255, 255, 255, 1.0);
-			api.setColor(globalColor);
+
+            // the default global canvas color
+            globalColor = new me.Color(255, 255, 255, 1.0);
+            api.setColor(globalColor);
 
             return this;
         };
@@ -493,7 +493,7 @@
          * @param {me.Color|String} color css color value
          */
         api.setColor = function (color) {
-			globalColor.copy(color);
+            globalColor.copy(color);
             backBufferContext2D.strokeStyle = backBufferContext2D.fillStyle = globalColor.toRGBA();
         };
 
@@ -505,7 +505,7 @@
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         api.setGlobalAlpha = function (a) {
-			globalColor.setColor(
+            globalColor.setColor(
                 globalColor.r,
                 globalColor.g,
                 globalColor.b,
@@ -557,7 +557,7 @@
             backBufferContext2D.stroke();
             backBufferContext2D.closePath();
         };
-        
+
         /**
          * Stroke an ellipse at the specified coordinates with given radius, start and end points
          * @name strokeEllipse
