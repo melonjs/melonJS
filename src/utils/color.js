@@ -411,12 +411,12 @@
 
                 var color = rgbColor.slice(start, -1).split(/\s*,\s*/);
                 return this.setColor.apply(this, color);
-				
+
             } else {
-				throw new me.Color.Error(
+                throw new me.Color.Error(
                     "invalid parameter (not a string)"
                 );
-			}
+            }
         },
 
         /**
@@ -430,34 +430,34 @@
          */
         parseHex : function (hexColor) {
             // TODO : Memoize this function by caching its input
-			
-			if (typeof(hexColor) === "string") {
-				// Remove the # if present
-				if (hexColor.charAt(0) === "#") {
-					hexColor = hexColor.substring(1, hexColor.length);
-				}
 
-				var r, g, b;
+            if (typeof(hexColor) === "string") {
+                // Remove the # if present
+                if (hexColor.charAt(0) === "#") {
+                    hexColor = hexColor.substring(1, hexColor.length);
+                }
 
-				if (hexColor.length < 6)  {
-					// 3 char shortcut is used, double each char
-					r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16);
-					g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16);
-					b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16);
-				}
-				else {
-					r = parseInt(hexColor.substring(0, 2), 16);
-					g = parseInt(hexColor.substring(2, 4), 16);
-					b = parseInt(hexColor.substring(4, 6), 16);
-				}
+                var r, g, b;
 
-				return this.setColor(r, g, b);
-			
-			} else {
-				throw new me.Color.Error(
+                if (hexColor.length < 6)  {
+                    // 3 char shortcut is used, double each char
+                    r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16);
+                    g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16);
+                    b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16);
+                }
+                else {
+                    r = parseInt(hexColor.substring(0, 2), 16);
+                    g = parseInt(hexColor.substring(2, 4), 16);
+                    b = parseInt(hexColor.substring(4, 6), 16);
+                }
+
+                return this.setColor(r, g, b);
+
+            } else {
+                throw new me.Color.Error(
                     "invalid parameter (not a string)"
                 );
-			}
+            }
         },
 
         /**
@@ -519,8 +519,8 @@
             ")";
         }
     });
-	
-	/**
+
+    /**
      * Base class for me.Color exception handling.
      * @name Error
      * @class
