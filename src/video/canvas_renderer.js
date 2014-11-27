@@ -20,6 +20,7 @@
         doubleBuffering = null,
         backBufferCanvas = null,
         backBufferContext2D = null,
+		globalColor = null,
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
@@ -52,6 +53,10 @@
 
             gameWidthZoom = game_width_zoom;
             gameHeightZoom = game_height_zoom;
+			
+			// the default global canvas color
+			globalColor = new me.Color(255, 255, 255, 1.0);
+			api.setColor(globalColor);
 
             return this;
         };
@@ -341,8 +346,7 @@
          * @return {me.Color}
          */
         api.getColor = function () {
-            var color = me.pool.pull("me.Color");
-            return color.parseCSS(backBufferContext2D.fillStyle);
+            return globalColor.clone();
         };
 
         /**
@@ -386,7 +390,7 @@
          * @return {Number}
          */
         api.globalAlpha = function () {
-            return backBufferContext2D.globalAlpha;
+            return globalColor.alpha;
         };
 
         /**
@@ -489,9 +493,8 @@
          * @param {me.Color|String} color css color value
          */
         api.setColor = function (color) {
-            color = (color instanceof me.Color) ? color.toRGBA() : color;
-            backBufferContext2D.strokeStyle = color;
-            backBufferContext2D.fillStyle = color;
+			globalColor.copy(color);
+            backBufferContext2D.strokeStyle = backBufferContext2D.fillStyle = globalColor.toRGBA();
         };
 
         /**
@@ -502,6 +505,12 @@
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         api.setGlobalAlpha = function (a) {
+			globalColor.setColor(
+                globalColor.r,
+                globalColor.g,
+                globalColor.b,
+                a
+            );
             backBufferContext2D.globalAlpha = a;
         };
 
