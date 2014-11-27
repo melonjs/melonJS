@@ -698,8 +698,8 @@
          * @function
          * @param {me.Color|String} color css color string.
          */
-        api.setColor = function (col) {
-            globalColor.copy(col);
+        api.setColor = function (color) {
+            globalColor.copy(color);
         };
 
         /**

@@ -397,10 +397,7 @@
          */
         parseRGB : function (rgbColor) {
             // TODO : Memoize this function by caching its input
-
             if (typeof(rgbColor) === "string") {
-                // there is something funny happening here with
-                // the argument being undefined under cocoonjs/canvas+
                 var start;
                 if (rgbColor.substring(0, 4) === "rgba") {
                     start = 5;
@@ -414,8 +411,12 @@
 
                 var color = rgbColor.slice(start, -1).split(/\s*,\s*/);
                 return this.setColor.apply(this, color);
-            }
-            return this;
+				
+            } else {
+				throw new me.Color.Error(
+                    "invalid parameter (not a string)"
+                );
+			}
         },
 
         /**
@@ -429,27 +430,34 @@
          */
         parseHex : function (hexColor) {
             // TODO : Memoize this function by caching its input
+			
+			if (typeof(hexColor) === "string") {
+				// Remove the # if present
+				if (hexColor.charAt(0) === "#") {
+					hexColor = hexColor.substring(1, hexColor.length);
+				}
 
-            // Remove the # if present
-            if (hexColor.charAt(0) === "#") {
-                hexColor = hexColor.substring(1, hexColor.length);
-            }
+				var r, g, b;
 
-            var r, g, b;
+				if (hexColor.length < 6)  {
+					// 3 char shortcut is used, double each char
+					r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16);
+					g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16);
+					b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16);
+				}
+				else {
+					r = parseInt(hexColor.substring(0, 2), 16);
+					g = parseInt(hexColor.substring(2, 4), 16);
+					b = parseInt(hexColor.substring(4, 6), 16);
+				}
 
-            if (hexColor.length < 6)  {
-                // 3 char shortcut is used, double each char
-                r = parseInt(hexColor.charAt(0) + hexColor.charAt(0), 16);
-                g = parseInt(hexColor.charAt(1) + hexColor.charAt(1), 16);
-                b = parseInt(hexColor.charAt(2) + hexColor.charAt(2), 16);
-            }
-            else {
-                r = parseInt(hexColor.substring(0, 2), 16);
-                g = parseInt(hexColor.substring(2, 4), 16);
-                b = parseInt(hexColor.substring(4, 6), 16);
-            }
-
-            return this.setColor(r, g, b);
+				return this.setColor(r, g, b);
+			
+			} else {
+				throw new me.Color.Error(
+                    "invalid parameter (not a string)"
+                );
+			}
         },
 
         /**
@@ -510,6 +518,20 @@
                 this.alpha +
             ")";
         }
-
+    });
+	
+	/**
+     * Base class for me.Color exception handling.
+     * @name Error
+     * @class
+     * @memberOf me.Vector2d
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.Color.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.Color.Error";
+        }
     });
 })();
