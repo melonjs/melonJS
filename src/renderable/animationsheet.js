@@ -17,8 +17,8 @@
      * @param {Object} settings Contains additional parameters for the animation sheet:
      * <ul>
      * <li>{Image} image to use for the animation</li>
-     * <li>{Number} spritewidth - of a single sprite within the spritesheet</li>
-     * <li>{Number} spriteheight - height of a single sprite within the spritesheet</li>
+     * <li>{Number} spritewidth - of a single frame within the spritesheet</li>
+     * <li>{Number} spriteheight - height of a single frame within the spritesheet</li>
      * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
      * </ul>
      * @example
