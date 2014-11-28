@@ -14,8 +14,8 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Image} image reference to the Sprite Image. See {@link me.loader#getImage}
-     * @param {Number} [spritewidth] sprite width
-     * @param {Number} [spriteheigth] sprite height
+     * @param {Number} [spritewidth] sprite width. The width to draw the image as. Defaults to image width.
+     * @param {Number} [spriteheigth] sprite height. The height to draw the image as. Defaults to image height.
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, me.loader.getImage("mySpriteImage"));
