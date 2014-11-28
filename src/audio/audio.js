@@ -199,6 +199,10 @@
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
         api.play = function (sound_id, loop, onend, volume) {
+            function onend_wrapper() {
+                sound.off("end", onend_wrapper);
+                onend.call(sound, arguments);
+            }
             var sound = audioTracks[sound_id.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 if (typeof loop === "boolean") {
@@ -207,7 +211,7 @@
                 }
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
                 if (typeof(onend) === "function") {
-                    sound.on("end", onend);
+                    sound.on("end", onend_wrapper);
                 }
                 return sound.play();
             }
