@@ -17,23 +17,23 @@
      * @param {Object} settings Contains additional parameters for the animation sheet:
      * <ul>
      * <li>{Image} image to use for the animation</li>
-     * <li>{Number} spritewidth - of a single frame within the spritesheet</li>
-     * <li>{Number} spriteheight - height of a single frame within the spritesheet</li>
+     * <li>{Number} framewidth - of a single frame within the spritesheet</li>
+     * <li>{Number} frameheight - height of a single frame within the spritesheet</li>
      * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
      * </ul>
      * @example
      * // standalone image
      * var animationSheet = new me.AnimationSheet(0, 0, {
      *   image: me.loader.getImage('animationsheet'),
-     *   spritewidth: 64,
-     *   spriteheight: 64
+     *   framewidth: 64,
+     *   frameheight: 64
      * });
      * // from a texture
      * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
      * var animationSheet = new me.AnimationSheet(0, 0, {
      *   image: texture.getTexture(),
-     *   spritewidth: 64,
-     *   spriteheight: 64,
+     *   framewidth: 64,
+     *   frameheight: 64,
      *   region: texture.getRegion('animationsheet')
      * });
      */
@@ -84,7 +84,7 @@
             var image = settings.region || settings.image;
 
             // call the constructor
-            this._super(me.Sprite, "init", [x, y, settings.image, settings.spritewidth, settings.spriteheight, this.spacing, this.margin]);
+            this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight, this.spacing, this.margin]);
             // store the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
