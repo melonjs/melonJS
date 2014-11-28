@@ -2,6 +2,9 @@ Version History
 ---------------
 2.1.0
 
+2.0.2
+* Audio : Automatically cleanup `onend` callbacks in `me.audio.play`
+
 2.0.1
 * Core : fixed loading under CocoonJS when using Canvas+
 * Shapes : replaced the isometric magic numbers used for scaling, by proper and more accurate math constants (ldd)

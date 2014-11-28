@@ -207,7 +207,10 @@
                 }
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
                 if (typeof(onend) === "function") {
-                    sound.on("end", onend);
+                    sound.on("end", function onend_wrapper() {
+                        sound.off("end", onend_wrapper);
+                        onend.call(sound, arguments);
+                    });
                 }
                 return sound.play();
             }
@@ -218,8 +221,8 @@
          * @name fade
          * @memberOf me.audio
          * @public
-         * @function  
-         * @param {String} sound_id audio clip id     
+         * @function
+         * @param {String} sound_id audio clip id
          * @param {Number} from Volume to fade from (0.0 to 1.0).
          * @param {Number} to  Volume to fade to (0.0 to 1.0).
          * @param {Number} duration Time in milliseconds to fade.
