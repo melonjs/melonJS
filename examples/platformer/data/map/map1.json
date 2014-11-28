@@ -34,8 +34,8 @@
                  "name":"mainPlayer",
                  "properties":
                     {
-                     "frameheight":"98",
-                     "framewidth":"72"
+                     "spriteheight":"98",
+                     "spritewidth":"72"
                     },
                  "rotation":0,
                  "type":"",
@@ -138,8 +138,8 @@
                  "name":"SlimeEntity",
                  "properties":
                     {
-                     "frameheight":"35",
-                     "framewidth":"55"
+                     "spriteheight":"35",
+                     "spritewidth":"55"
                     },
                  "rotation":0,
                  "type":"",
@@ -153,8 +153,8 @@
                  "name":"SlimeEntity",
                  "properties":
                     {
-                     "frameheight":"35",
-                     "framewidth":"55"
+                     "spriteheight":"35",
+                     "spritewidth":"55"
                     },
                  "rotation":0,
                  "type":"",
@@ -221,8 +221,8 @@
                     {
                      "animationspeed":"200",
                      "gravity":"0",
-                     "frameheight":"35",
-                     "framewidth":"70",
+                     "spriteheight":"35",
+                     "spritewidth":"70",
                      "velX":"2"
                     },
                  "rotation":0,
