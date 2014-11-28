@@ -12,8 +12,8 @@
  <objectgroup color="#55ff00" name="player">
   <object name="mainPlayer" x="105" y="438" width="35" height="88">
    <properties>
-    <property name="spriteheight" value="98"/>
-    <property name="spritewidth" value="72"/>
+    <property name="frameheight" value="98"/>
+    <property name="framewidth" value="72"/>
    </properties>
   </object>
   <object name="me.Entity" gid="19" x="910" y="595"/>
@@ -31,14 +31,14 @@
  <objectgroup color="#ff0000" name="slimes">
   <object name="SlimeEntity" x="1295" y="420" width="420" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="140" y="140" width="210" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
  </objectgroup>
@@ -55,8 +55,8 @@
    <properties>
     <property name="animationspeed" value="200"/>
     <property name="gravity" value="0"/>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="70"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="70"/>
     <property name="velX" value="2"/>
    </properties>
   </object>

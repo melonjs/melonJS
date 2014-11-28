@@ -12,8 +12,8 @@
  <objectgroup color="#55ff00" name="player">
   <object name="mainPlayer" x="35" y="438" width="35" height="88">
    <properties>
-    <property name="spriteheight" value="98"/>
-    <property name="spritewidth" value="72"/>
+    <property name="frameheight" value="98"/>
+    <property name="framewidth" value="72"/>
    </properties>
   </object>
   <object name="me.LevelEntity" x="1680" y="0" width="35" height="525">
@@ -29,38 +29,38 @@
  <objectgroup color="#ff0000" name="slimes">
   <object name="SlimeEntity" x="700" y="420" width="840" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="490" y="490" width="210" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="770" y="350" width="700" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="840" y="280" width="560" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="910" y="210" width="420" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
   <object name="SlimeEntity" x="980" y="140" width="280" height="35">
    <properties>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="55"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="55"/>
    </properties>
   </object>
  </objectgroup>
@@ -88,8 +88,8 @@
    <properties>
     <property name="animationspeed" value="200"/>
     <property name="gravity" value="0"/>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="70"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="70"/>
     <property name="velX" value="2"/>
    </properties>
   </object>
@@ -97,8 +97,8 @@
    <properties>
     <property name="animationspeed" value="200"/>
     <property name="gravity" value="0"/>
-    <property name="spriteheight" value="35"/>
-    <property name="spritewidth" value="70"/>
+    <property name="frameheight" value="35"/>
+    <property name="framewidth" value="70"/>
     <property name="velX" value="2"/>
    </properties>
   </object>
