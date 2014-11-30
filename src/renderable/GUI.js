@@ -27,8 +27,8 @@
      *    {
      *       var settings = {}
      *       settings.image = "button";
-     *       settings.spritewidth = 100;
-     *       settings.spriteheight = 50;
+     *       settings.framewidth = 100;
+     *       settings.frameheight = 50;
      *       // super constructor
      *       this._super(me.GUI_Object, "init", [x, y, settings]);
      *       // define the object z order
