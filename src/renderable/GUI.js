@@ -87,8 +87,8 @@
             // call the parent constructor
             this._super(me.Sprite, "init", [x, y,
                 ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
-                settings.spritewidth,
-                settings.spriteheight]);
+                settings.framewidth,
+                settings.frameheight]);
 
             // GUI items use screen coordinates
             this.floating = true;
