@@ -1,7 +1,8 @@
 Version History
 ---------------
 2.0.2
-* Audio : Automatically cleanup `onend` callbacks in `me.audio.play`
+* Audio : automatically cleanup `onend` callbacks in `me.audio.play`
+* Audio : updated to the latest Howler 2.0 build (various fixes and improvements)
 
 2.0.1
 * Core : fixed loading under CocoonJS when using Canvas+
