@@ -390,7 +390,7 @@
          * @return {Number}
          */
         api.globalAlpha = function () {
-            return globalColor.alpha;
+            return backBufferContext2D.globalAlpha;
         };
 
         /**
