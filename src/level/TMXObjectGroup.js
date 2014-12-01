@@ -317,8 +317,8 @@
             this.width = tileset.tilewidth;
             this.height = tileset.tileheight;
 
-            // force spritewidth size
-            this.spritewidth = this.width;
+            // force framewidth size
+            this.framewidth = this.width;
 
             // the object corresponding tile
 

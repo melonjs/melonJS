@@ -140,8 +140,8 @@
                 var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
                     "image" : image,
-                    "framewidth" : ~~(settings.spritewidth || settings.width),
-                    "frameheight" : ~~(settings.spriteheight || settings.height),
+                    "framewidth" : ~~(settings.framewidth || settings.width),
+                    "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });

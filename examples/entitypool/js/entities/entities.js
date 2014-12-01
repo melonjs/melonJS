@@ -12,8 +12,8 @@ game.MainEntity = me.Entity.extend({
   init : function(x, y) {
     var settings = {
       image : 'basicImage',
-      spritewidth : 32,
-      spriteheight : 32,
+      framewidth : 32,
+      frameheight : 32,
       width : 32,
       height : 32
     };
