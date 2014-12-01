@@ -360,7 +360,8 @@
         },
         draw : function(renderer) {
             renderer.save();
-            renderer.setColor(this.color);
+            var context = renderer.getContext();
+            context.fillStyle = context.strokeStyle = this.color;
             renderer.fillArc(this.pos.x, this.pos.y, this.hWidth, 0, Math.PI * 2);
             renderer.restore();
         }
