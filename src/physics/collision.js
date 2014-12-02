@@ -658,14 +658,22 @@
 
                 // Calculate which Vornoi region the center of the circle is in.
                 var region = vornoiRegion(edge, point);
+                var inRegion = true;
                 // If it's the left region:
                 if (region === LEFT_VORNOI_REGION) {
-                    // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
-                    edge.copy(edges[prev]);
-                    // Calculate the center of the circle relative the starting point of the previous edge
-                    var point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
-                    region = vornoiRegion(edge, point2);
-                    if (region === RIGHT_VORNOI_REGION) {
+                    var point2 = null;
+                    if (len > 1) {
+                        // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
+                        edge.copy(edges[prev]);
+                        // Calculate the center of the circle relative the starting point of the previous edge
+                        point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
+                        region = vornoiRegion(edge, point2);
+                        if (region !== RIGHT_VORNOI_REGION) {
+                            inRegion = false;
+                        }
+                    }
+
+                    if (inRegion) {
                         // It's in the region we want.  Check if the circle intersects the point.
                         dist = point.length();
                         if (dist > radius) {
@@ -674,7 +682,9 @@
                             T_VECTORS.push(edge);
                             T_VECTORS.push(normal);
                             T_VECTORS.push(point);
-                            T_VECTORS.push(point2);
+                            if (point2) {
+                                T_VECTORS.push(point2);
+                            }
                             return false;
                         } else if (response) {
                             // It intersects, calculate the overlap.
@@ -683,15 +693,24 @@
                             overlap = radius - dist;
                         }
                     }
-                    T_VECTORS.push(point2);
-                    // If it's the right region:
+
+                    if (point2) {
+                        T_VECTORS.push(point2);
+                    }
+                // If it's the right region:
                 } else if (region === RIGHT_VORNOI_REGION) {
-                    // We need to make sure we're in the left region on the next edge
-                    edge.copy(edges[next]);
-                    // Calculate the center of the circle relative to the starting point of the next edge.
-                    point.copy(circlePos).sub(points[next]);
-                    region = vornoiRegion(edge, point);
-                    if (region === LEFT_VORNOI_REGION) {
+                    if (len > 1) {
+                        // We need to make sure we're in the left region on the next edge
+                        edge.copy(edges[next]);
+                        // Calculate the center of the circle relative to the starting point of the next edge.
+                        point.copy(circlePos).sub(points[next]);
+                        region = vornoiRegion(edge, point);
+                        if (region !== LEFT_VORNOI_REGION) {
+                            inRegion = false;
+                        }
+                    }
+
+                    if (inRegion) {
                         // It's in the region we want.  Check if the circle intersects the point.
                         dist = point.length();
                         if (dist > radius) {
@@ -718,7 +737,7 @@
                     dist = point.dotProduct(normal);
                     var distAbs = Math.abs(dist);
                     // If the circle is on the outside of the edge, there is no intersection.
-                    if (dist > 0 && distAbs > radius) {
+                    if ((len === 1 || dist > 0) && distAbs > radius) {
                         // No intersection
                         T_VECTORS.push(circlePos);
                         T_VECTORS.push(edge);
