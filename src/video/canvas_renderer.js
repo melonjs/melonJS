@@ -21,6 +21,7 @@
         backBufferCanvas = null,
         backBufferContext2D = null,
         globalColor = null,
+        colorStack = [],
         gameHeightZoom = 0,
         gameWidthZoom = 0;
 
@@ -442,6 +443,7 @@
          * @function
          */
         api.save = function () {
+            colorStack.push(api.getColor());
             backBufferContext2D.save();
         };
 
@@ -452,7 +454,10 @@
          * @function
          */
         api.restore = function () {
+            var color = colorStack.pop();
+            me.pool.push("me.Color", color);
             backBufferContext2D.restore();
+            api.setColor(color);
         };
 
         /**
