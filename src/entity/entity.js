@@ -195,6 +195,11 @@
             // ensure the entity bounds and pos are up-to-date
             this.body.updateBounds();
 
+            // resize the entity if required
+            if (this.width === 0 && this.height === 0) {
+                this.resize(this.body.width, this.body.height);
+            }
+
             // set the  collision mask if defined
             if (typeof(settings.collisionMask) !== "undefined") {
                 this.body.setCollisionMask(settings.collisionMask);

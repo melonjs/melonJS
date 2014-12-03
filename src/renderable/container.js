@@ -602,7 +602,6 @@
             var x = 0;
             var y = 0;
             var z = 0;
-            var bounds = null;
             var viewport = me.game.viewport;
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
@@ -620,16 +619,15 @@
                     // Translate global context
                     isTranslated = !isFloating;
                     if (isTranslated) {
-                        bounds = obj.getBounds();
-                        x = bounds.pos.x;
-                        y = bounds.pos.y;
-                        z = Math.abs(x + y + bounds.width + bounds.height);
+                        x = obj.pos.x;
+                        y = obj.pos.y;
+                        z = Math.abs(x + y + obj.width + obj.height);
                         if (z !== z || z === Infinity) {
                             isStacked = true;
                             stack.push(globalTranslation.clone());
                         }
-                        globalTranslation.translateV(bounds.pos);
-                        globalTranslation.resize(bounds.width, bounds.height);
+                        globalTranslation.translateV(obj.pos);
+                        globalTranslation.resize(obj.width, obj.height);
                     }
 
                     // check if object is visible
