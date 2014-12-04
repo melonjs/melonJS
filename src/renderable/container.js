@@ -280,7 +280,7 @@
         getChildByProp : function (prop, value)    {
             var objList = [];
             // for string comparaisons
-            var _regExp = new RegExp(value, "i");
+            var _regExp = new RegExp("^" + value + "$", "i");
 
             function compare(obj, prop) {
                 if (typeof (obj[prop]) === "string") {
