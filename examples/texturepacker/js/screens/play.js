@@ -8,8 +8,8 @@ game.PlayScreen = me.ScreenObject.extend({
 
         var animationSheet = new me.AnimationSheet(200, 200, {
             image: game.texture.getTexture(),
-            spritewidth: 64,
-            spriteheight: 64,
+            framewidth: 64,
+            frameheight: 64,
             region: game.texture.getRegion('simplecharacter.png')
         });
         animationSheet.addAnimation('idle', [1, 5, 9, 13], 2);

@@ -231,12 +231,12 @@ game.PathEnemyEntity = me.Entity.extend({
     init: function (x, y, settings) {
 
         // save the area size defined in Tiled
-        var width = settings.width || settings.spritewidth;
-        var height = settings.height || settings.spriteheight;
+        var width = settings.width || settings.framewidth;
+        var height = settings.height || settings.frameheight;
 
         // adjust the setting size to the sprite one
-        settings.width = settings.spritewidth;
-        settings.height = settings.spriteheight;
+        settings.width = settings.framewidth;
+        settings.height = settings.frameheight;
 
         // call the super constructor
         this._super(me.Entity, 'init', [x, y , settings]);
@@ -244,8 +244,8 @@ game.PathEnemyEntity = me.Entity.extend({
         // set start/end position based on the initial area size
         x = this.pos.x;
         this.startX = x;
-        this.endX   = x + width - settings.spritewidth
-        this.pos.x  = x + width - settings.spritewidth;
+        this.endX   = x + width - settings.framewidth
+        this.pos.x  = x + width - settings.framewidth;
         // update the entity bounds since we manually change the entity position
         this.updateBounds();
 

@@ -27,8 +27,8 @@
      *    {
      *       var settings = {}
      *       settings.image = "button";
-     *       settings.spritewidth = 100;
-     *       settings.spriteheight = 50;
+     *       settings.framewidth = 100;
+     *       settings.frameheight = 50;
      *       // super constructor
      *       this._super(me.GUI_Object, "init", [x, y, settings]);
      *       // define the object z order
@@ -87,8 +87,8 @@
             // call the parent constructor
             this._super(me.Sprite, "init", [x, y,
                 ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
-                settings.spritewidth,
-                settings.spriteheight]);
+                settings.framewidth,
+                settings.frameheight]);
 
             // GUI items use screen coordinates
             this.floating = true;

@@ -17,8 +17,8 @@
   <object name="mainPlayer" type="actor1m" x="96" y="96" width="32" height="32">
    <properties>
     <property name="image" value="Blank_Sprite_Sheet_4_2_by_KnightYamato"/>
-    <property name="spriteheight" value="32"/>
-    <property name="spritewidth" value="32"/>
+    <property name="frameheight" value="32"/>
+    <property name="framewidth" value="32"/>
    </properties>
   </object>
   <object x="256" y="288"/>

@@ -48,23 +48,23 @@
         transparent_color : null,
 
         /**
-         * width of a single sprite in the spritesheet<br>
+         * width of a single frame in the spritesheet<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @property {Number=} spritewidth
+         * @property {Number=} framewidth
          * @memberOf me.ObjectSettings
          */
-        spritewidth : null,
+        framewidth : null,
 
         /**
-         * height of a single sprite in the spritesheet<br>
+         * height of a single frame in the spritesheet<br>
          * if not specified the value will be set to the corresponding image height<br>
          * (in case of TiledObject, this field is automatically set)
          * @public
-         * @property {Number=} spriteheight
+         * @property {Number=} frameheight
          * @memberOf me.ObjectSettings
          */
-        spriteheight : null,
+        frameheight : null,
 
         /**
          * object type as defined in Tiled
@@ -140,8 +140,8 @@
                 var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
                     "image" : image,
-                    "spritewidth" : ~~(settings.spritewidth || settings.width),
-                    "spriteheight" : ~~(settings.spriteheight || settings.height),
+                    "framewidth" : ~~(settings.framewidth || settings.width),
+                    "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });
