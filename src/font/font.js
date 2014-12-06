@@ -39,7 +39,7 @@
              * @type me.Color
              * @name me.Font#fillStyle
              */
-            this.fillStyle = (fillStyle instanceof me.Color) ? fillStyle : new me.Color().parseHex("#000000");
+            this.fillStyle = (fillStyle instanceof me.Color) ? fillStyle : new me.Color(0, 0, 0);
 
             /**
              * defines the color used to draw the font stroke.<br>
