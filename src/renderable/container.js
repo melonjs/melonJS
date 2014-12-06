@@ -269,38 +269,43 @@
          * @public
          * @function
          * @param {String} prop Property name
-         * @param {String} value Value of the property
+         * @param {String|RegExp|Number} value Value of the property
          * @return {me.Renderable[]} Array of childs
          * @example
          * // get the first child object called "mainPlayer" in a specific container :
-         * ent = myContainer.getChildByProp("name", "mainPlayer");
+         * var ent = myContainer.getChildByProp("name", "mainPlayer");
+         *
          * // or query the whole world :
-         * ent = me.game.world.getChildByProp("name", "mainPlayer");
+         * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+         *
+         * // partial property matches are also allowed by using a RegExp.
+         * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
+         * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+         *
+         * // searching for numbers or other data types :
+         * var zIndex10 = me.game.world.getChildByProp("z", 10);
+         * var inViewport = me.game.world.getChildByProp("inViewport", true);
          */
         getChildByProp : function (prop, value)    {
             var objList = [];
-            // for string comparaisons
-            var _regExp = new RegExp("^" + value + "$", "i");
 
             function compare(obj, prop) {
-                if (typeof (obj[prop]) === "string") {
-                    if (obj[prop].match(_regExp)) {
+                var v = obj[prop];
+                if (value instanceof RegExp && typeof(v) === "string") {
+                    if (value.test(v)) {
                         objList.push(obj);
                     }
                 }
-                else if (obj[prop] === value) {
+                else if (v === value) {
                     objList.push(obj);
                 }
             }
 
             for (var i = this.children.length - 1; i >= 0; i--) {
                 var obj = this.children[i];
+                compare(obj, prop);
                 if (obj instanceof me.Container) {
-                    compare(obj, prop);
                     objList = objList.concat(obj.getChildByProp(prop, value));
-                }
-                else {
-                    compare(obj, prop);
                 }
             }
             return objList;
@@ -315,7 +320,7 @@
          * @memberOf me.Container
          * @public
          * @function
-         * @param {String} name entity name
+         * @param {String|RegExp|Number} name entity name
          * @return {me.Renderable[]} Array of childs
          */
 
@@ -331,7 +336,7 @@
          * @memberOf me.Container
          * @public
          * @function
-         * @param {String} GUID entity GUID
+         * @param {String|RegExp|Number} GUID entity GUID
          * @return {me.Renderable} corresponding child or null
          */
         getChildByGUID : function (guid) {
