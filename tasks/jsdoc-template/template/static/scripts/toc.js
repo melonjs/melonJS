@@ -55,7 +55,7 @@ $.fn.toc = function(options) {
       headingOffsets.push($h.offset().top - opts.highlightOffset);
 
       //add anchor
-      var anchor = $('<span/>').attr('id', opts.anchorName(i, heading, opts.prefix)).insertBefore($h);
+      var anchor = $('<span/>').attr('id', opts.anchorName(i, heading, opts.prefix)).addClass("toc-anchor").insertBefore($h);
 
       //build TOC item
       var a = $('<a/>')
@@ -71,6 +71,9 @@ $.fn.toc = function(options) {
         .append(a);
 
       ul.append(li);
+
+      //remove old anchor
+      $h.removeAttr('id');
     });
     el.html(ul);
   });
