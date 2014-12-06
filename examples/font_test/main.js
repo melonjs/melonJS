@@ -5,6 +5,7 @@ var game = {
      * Initialize the application
      */
      onload: function() {
+        
         // init the video
         if (!me.video.init('screen', me.video.CANVAS, 640, 480)) {
             alert("Sorry but your browser does not support html 5 canvas. Please try with another one!");
@@ -65,14 +66,13 @@ var FontTest = me.Renderable.extend ({
             .start();
 
         // arial font 
-        this.font = new me.Font('Arial', 8, this.color.toHex());
+        this.font = new me.Font('Arial', 8, this.color);
         // bitmap font
         this.bFont = new me.BitmapFont("atascii", {x:8});
     },
  
     // draw function
-    draw : function(renderer) {
-        
+    draw : function(renderer) { 
         var y_pos = 0;
         
         // font size test
@@ -80,13 +80,13 @@ var FontTest = me.Renderable.extend ({
         this.font.lineWidth = "2";
         var context = renderer.getContext();
         for (var i = 8; i < 48; i += 8) {
-            this.font.setFont('Arial', i, this.color.toHex());
+            this.font.setFont('Arial', i, this.color);
             this.font.draw(context, "Arial Text " + i + "px !" , 5 , y_pos );
             y_pos+=this.font.measureText(context, "DUMMY").height;
         }
         // one more with drawStroke this time
-        this.font.setFont('Arial', 48, this.color.toHex());
-        this.font.strokeStyle = "red";
+        this.font.setFont('Arial', 48, this.color);
+        this.font.strokeStyle = new me.Color().parseCSS("red");
         this.font.lineWidth = 3;
         this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
 
@@ -101,16 +101,16 @@ var FontTest = me.Renderable.extend ({
             
         }
         this.bFont.setOpacity (1);
-        
+
         // font baseline test
-        this.font.setFont('Arial', 16, this.color.toHex());
+        this.font.setFont('Arial', 16, this.color);
         var baseline = 200;
 
         // Draw the baseline
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
         context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-        context.strokeStyle = "red";
+        context.strokeStyle = new me.Color().parseCSS("red");
         context.stroke();
 
         var baselines = [
@@ -167,7 +167,7 @@ var FontTest = me.Renderable.extend ({
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
         context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-        context.strokeStyle = "red";
+        context.strokeStyle = new me.Color().parseCSS("red");
         context.stroke();
         
         // font baseline test

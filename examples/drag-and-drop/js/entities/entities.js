@@ -8,7 +8,7 @@ game.square = me.DraggableEntity.extend({
         // set the color to white
         this.color = "white";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, 'black');
+        this.font = new me.Font('Verdana', 15, new me.Color('#000'));
         this.font.bold();
         // set the text
         this.text = 'Drag me';
@@ -54,7 +54,7 @@ game.droptarget = me.DroptargetEntity.extend({
         // set the color to white
         this.color = "red";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, 'black');
+        this.font = new me.Font('Verdana', 15, new me.Color('#000'));
         this.font.bold();
         // set the text
         this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: overlap';
@@ -100,7 +100,7 @@ game.droptarget2 = game.droptarget.extend({
         // set the color to white
         this.color = "red";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, 'black');
+        this.font = new me.Font('Verdana', 15, new me.Color('#000'));
         this.font.bold();
         // set the text
         this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: contains';

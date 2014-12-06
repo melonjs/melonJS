@@ -14,7 +14,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new (me.Renderable.extend({
             init: function() {
                 this._super(me.Renderable, 'init', [0, 0, 100, 200]);
-                this.font = new me.Font('arial', '24px', '#fff');
+                this.font = new me.Font('arial', '24px', new me.Color('#fff'));
             },
             update: function() {
                 return true;

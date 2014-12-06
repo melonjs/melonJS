@@ -20,7 +20,7 @@
      * @constructor
      * @param {String} font a CSS font name
      * @param {Number|String} size size, or size + suffix (px, em, pt)
-     * @param {String} fillStyle a CSS color value
+     * @param {me.Color} fillStyle a CSS color value
      * @param {String} [textAlign="left"] horizontal alignment
      */
     me.Font = me.Renderable.extend(
@@ -36,19 +36,19 @@
              * defines the color used to draw the font.<br>
              * Default value : "#000000"
              * @public
-             * @type String
+             * @type me.Color
              * @name me.Font#fillStyle
              */
-            this.fillStyle = fillStyle || "#000000";
+            this.fillStyle = (fillStyle instanceof me.Color) ? fillStyle : new me.Color().parseHex("#000000");
 
             /**
              * defines the color used to draw the font stroke.<br>
              * Default value : "#000000"
              * @public
-             * @type String
+             * @type me.Color
              * @name me.Font#strokeStyle
              */
-            this.strokeStyle = "#000000";
+            this.strokeStyle = new me.Color().parseHex("#000000");
 
             /**
              * sets the current line width, in pixels, when drawing stroke
@@ -126,7 +126,7 @@
          * @function
          * @param {String} font a CSS font name
          * @param {Number|String} size size, or size + suffix (px, em, pt)
-         * @param {String} fillStyle a CSS color value
+         * @param {me.Color} fillStyle a CSS color value
          * @param {String} [textAlign="left"] horizontal alignment
          * @example
          * font.setFont("Arial", 20, "white");
@@ -166,7 +166,7 @@
         measureText : function (context, text) {
             // draw the text
             context.font = this.font;
-            context.fillStyle = this.fillStyle;
+            context.fillStyle = this.fillStyle.toRGBA();
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
 
@@ -201,7 +201,7 @@
             this.pos.set(x, y);
             // draw the text
             context.font = this.font;
-            context.fillStyle = this.fillStyle;
+            context.fillStyle = this.fillStyle.toRGBA();
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
 
@@ -233,8 +233,8 @@
             this.pos.set(x, y);
             // draw the text
             context.font = this.font;
-            context.fillStyle = this.fillStyle;
-            context.strokeStyle = this.strokeStyle;
+            context.fillStyle = this.fillStyle.toRGBA();
+            context.strokeStyle = this.strokeStyle.toRGBA();
             context.lineWidth = this.lineWidth;
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;

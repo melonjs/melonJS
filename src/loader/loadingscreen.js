@@ -95,8 +95,8 @@
         // constructor
         init : function (w, h) {
             this._super(me.Renderable, "init", [0, 0, w, h]);
-            this.logo1 = new me.Font("century gothic", 32, "white", "middle");
-            this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
+            this.logo1 = new me.Font("century gothic", 32, new me.Color(255, 255, 255), "middle");
+            this.logo2 = new me.Font("century gothic", 32, new me.Color().parseHex("#55aa00"), "middle");
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
         },
