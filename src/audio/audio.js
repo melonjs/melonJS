@@ -34,11 +34,11 @@
          * event listener callback on load error
          * @ignore
          */
-        function soundLoadError(sound_id, onerror_cb) {
+        function soundLoadError(sound_name, onerror_cb) {
             // check the retry counter
             if (retry_counter++ > 3) {
                 // something went wrong
-                var errmsg = "melonJS: failed loading " + sound_id;
+                var errmsg = "melonJS: failed loading " + sound_name;
                 if (me.sys.stopOnAudioError === false) {
                     // disable audio
                     me.audio.disable();
@@ -56,7 +56,7 @@
             // else try loading again !
             }
             else {
-                audioTracks[sound_id].load();
+                audioTracks[sound_name].load();
             }
         }
 
@@ -142,7 +142,7 @@
          * Load an audio file.<br>
          * <br>
          * sound item must contain the following fields :<br>
-         * - name    : id of the sound<br>
+         * - name    : name of the sound<br>
          * - src     : source path<br>
          * @ignore
          */
@@ -179,15 +179,11 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String}
-         *            sound_id audio clip id
-         * @param {Boolean}
-         *            [loop=false] loop audio
-         * @param {Function}
-         *            [onend] Function to call when sound instance ends playing.
-         * @param {Number}
-         *            [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-         * @return {Number} the sound Id.
+         * @param {String} sound_name audio clip name
+         * @param {Boolean} [loop=false] loop audio
+         * @param {Function} [onend] Function to call when sound instance ends playing.
+         * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+         * @return {Number} the sound instance ID.
          * @example
          * // play the "cling" audio clip
          * me.audio.play("cling");
@@ -198,21 +194,19 @@
          * // play the "gameover_sfx" audio clip with a lower volume level
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
-        api.play = function (sound_id, loop, onend, volume) {
-            var sound = audioTracks[sound_id.toLowerCase()];
+        api.play = function (sound_name, loop, onend, volume) {
+            var sound = audioTracks[sound_name.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
+                var instance_id = sound.play();
                 if (typeof loop === "boolean") {
                     // arg[0] can take different types in howler 2.0
-                    sound.loop(loop);
+                    sound.loop(loop, instance_id);
                 }
-                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume());
+                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), instance_id);
                 if (typeof(onend) === "function") {
-                    sound.on("end", function onend_wrapper() {
-                        sound.off("end", onend_wrapper);
-                        onend.call(sound, arguments);
-                    });
+                    sound.once("end", onend, instance_id);
                 }
-                return sound.play();
+                return instance_id;
             }
         };
 
@@ -222,14 +216,14 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio clip id
+         * @param {String} sound_name audio clip name
          * @param {Number} from Volume to fade from (0.0 to 1.0).
-         * @param {Number} to  Volume to fade to (0.0 to 1.0).
+         * @param {Number} to Volume to fade to (0.0 to 1.0).
          * @param {Number} duration Time in milliseconds to fade.
-         * @param {Number} [id] The sound ID. If none is passed, all sounds in group will fade.
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
          */
-        api.fade = function (sound_id, from, to, duration, instance_id) {
-            var sound = audioTracks[sound_id.toLowerCase()];
+        api.fade = function (sound_name, from, to, duration, instance_id) {
+            var sound = audioTracks[sound_name.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.fade(from, to, duration, instance_id);
             }
@@ -241,17 +235,17 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio clip id
-         * @param {String} [id] the play instance ID.
+         * @param {String} sound_name audio clip name
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
          * @example
          * me.audio.stop("cling");
          */
-        api.stop = function (sound_id, instance_id) {
-            var sound = audioTracks[sound_id.toLowerCase()];
+        api.stop = function (sound_name, instance_id) {
+            var sound = audioTracks[sound_name.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.stop(instance_id);
                 // remove the defined onend callback (if any defined)
-                sound.off("end");
+                sound.off("end", instance_id);
             }
         };
 
@@ -262,13 +256,13 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio clip id
-         * @param {String} [id] the play instance ID.
+         * @param {String} sound_name audio clip name
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
          * @example
          * me.audio.pause("cling");
          */
-        api.pause = function (sound_id, instance_id) {
-            var sound = audioTracks[sound_id.toLowerCase()];
+        api.pause = function (sound_name, instance_id) {
+            var sound = audioTracks[sound_name.toLowerCase()];
             if (sound && typeof sound !== "undefined") {
                 sound.pause(instance_id);
             }
@@ -282,13 +276,14 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio track id
+         * @param {String} sound_name audio track name
          * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+         * @return {Number} the sound instance ID.
          * @example
          * me.audio.playTrack("awesome_music");
          */
-        api.playTrack = function (sound_id, volume) {
-            current_track_id = sound_id.toLowerCase();
+        api.playTrack = function (sound_name, volume) {
+            current_track_id = sound_name.toLowerCase();
             return me.audio.play(
                 current_track_id,
                 true,
@@ -361,7 +356,7 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @return {String} audio track id
+         * @return {String} audio track name
          */
         api.getCurrentTrack = function () {
             return current_track_id;
@@ -397,14 +392,15 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio clip id
+         * @param {String} sound_name audio clip name
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
          */
-        api.mute = function (sound_id, mute) {
+        api.mute = function (sound_name, instance_id, mute) {
             // if not defined : true
             mute = (typeof(mute) === "undefined" ? true : !!mute);
-            var sound = audioTracks[sound_id.toLowerCase()];
+            var sound = audioTracks[sound_name.toLowerCase()];
             if (sound && typeof(sound) !== "undefined") {
-                sound.mute(mute);
+                sound.mute(mute, instance_id);
             }
         };
 
@@ -414,10 +410,11 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio clip id
+         * @param {String} sound_name audio clip name
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
          */
-        api.unmute = function (sound_id) {
-            api.mute(sound_id, false);
+        api.unmute = function (sound_name, instance_id) {
+            api.mute(sound_name, instance_id, false);
         };
 
         /**
@@ -449,20 +446,20 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_id audio track id
+         * @param {String} sound_name audio track name
          * @return {Boolean} true if unloaded
          * @example
          * me.audio.unload("awesome_music");
          */
-        api.unload = function (sound_id) {
-            sound_id = sound_id.toLowerCase();
-            if (!(sound_id in audioTracks)) {
+        api.unload = function (sound_name) {
+            sound_name = sound_name.toLowerCase();
+            if (!(sound_name in audioTracks)) {
                 return false;
             }
 
             // destroy the Howl object
-            audioTracks[sound_id].unload();
-            delete audioTracks[sound_id];
+            audioTracks[sound_name].unload();
+            delete audioTracks[sound_name];
 
             return true;
         };
@@ -478,9 +475,9 @@
          * me.audio.unloadAll();
          */
         api.unloadAll = function () {
-            for (var sound_id in audioTracks) {
-                if (audioTracks.hasOwnProperty(sound_id)) {
-                    api.unload(sound_id);
+            for (var sound_name in audioTracks) {
+                if (audioTracks.hasOwnProperty(sound_name)) {
+                    api.unload(sound_name);
                 }
             }
         };
