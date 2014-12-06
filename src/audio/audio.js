@@ -417,7 +417,7 @@
          * @param {String} sound_id audio clip id
          */
         api.unmute = function (sound_id) {
-            api.mute(false, sound_id);
+            api.mute(sound_id, false);
         };
 
         /**

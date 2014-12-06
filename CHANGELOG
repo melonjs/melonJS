@@ -2,6 +2,7 @@ Version History
 ---------------
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
+* Audio : fix `me.audio.unmute()`
 * Audio : updated to the latest Howler 2.0 build (various fixes and improvements)
 * CanvasRenderer : fixed an issue/regression with the `globalAlpha` functions
 * Core : fixed collision detection between `me.Ellipse` (circle) and `me.Line` shapes
