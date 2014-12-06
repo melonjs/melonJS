@@ -5,7 +5,11 @@ Version History
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
+* Audio : `me.audio.play` now applies the `loop`, `onend`, and `volume` properties only to the expected sound instance ID
+* Audio : fix `me.audio.unmute()`
 * Audio : updated to the latest Howler 2.0 build (various fixes and improvements)
+* Audio : added `instance_id` parameter to `mute` and `unmute` methods
+* Audio : updated documentation
 * CanvasRenderer : fixed an issue/regression with the `globalAlpha` functions
 * Core : fixed collision detection between `me.Ellipse` (circle) and `me.Line` shapes
 * Core : fixed renderable positioning with nested me.Container objects
