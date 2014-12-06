@@ -39,8 +39,8 @@
              * @type me.Color
              * @name me.Font#fillStyle
              */
-            this.fillStyle = (fillStyle instanceof me.Color) ? fillStyle : new me.Color(0, 0, 0);
-
+            this.fillStyle = new me.Color().copy(fillStyle);
+            
             /**
              * defines the color used to draw the font stroke.<br>
              * Default value : "#000000"
@@ -48,7 +48,7 @@
              * @type me.Color
              * @name me.Font#strokeStyle
              */
-            this.strokeStyle = new me.Color().parseHex("#000000");
+            this.strokeStyle = new me.Color(0, 0, 0);
 
             /**
              * sets the current line width, in pixels, when drawing stroke

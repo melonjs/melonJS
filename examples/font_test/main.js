@@ -53,7 +53,7 @@ var FontTest = me.Renderable.extend ({
         this._super(me.Renderable, 'init', [0, 0, me.video.renderer.getWidth(), me.video.renderer.getHeight()]);
 
         // a default white color object
-        this.color = new me.Color(255, 255, 255);
+        this.color = me.pool.pull("me.Color", 255, 255, 255);
 
         // define a tween to cycle the font color
         this.tween = new me.Tween(this.color)
@@ -86,7 +86,7 @@ var FontTest = me.Renderable.extend ({
         }
         // one more with drawStroke this time
         this.font.setFont('Arial', 48, this.color);
-        this.font.strokeStyle = new me.Color().parseCSS("red");
+        this.font.strokeStyle = me.pool.pull("me.Color").copy("red");
         this.font.lineWidth = 3;
         this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
 
@@ -110,7 +110,7 @@ var FontTest = me.Renderable.extend ({
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
         context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-        context.strokeStyle = new me.Color().parseCSS("red");
+        context.strokeStyle = "red";
         context.stroke();
 
         var baselines = [
@@ -167,7 +167,7 @@ var FontTest = me.Renderable.extend ({
         context.beginPath();
         context.moveTo(0, baseline + 0.5);
         context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-        context.strokeStyle = new me.Color().parseCSS("red");
+        context.strokeStyle = "red";
         context.stroke();
         
         // font baseline test
@@ -183,6 +183,9 @@ var FontTest = me.Renderable.extend ({
         this.font.textBaseline = "top";
         this.bFont.textAlign = "left";
         this.bFont.textBaseline = "top";    
+    },
+
+    onDeactivateEvent: function() {
+        me.pool.push(this.color);
     }
 });
-
