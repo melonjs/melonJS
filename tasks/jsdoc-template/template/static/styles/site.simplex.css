@@ -5639,7 +5639,11 @@ i[class^="icon-"] {
   border: 1px #55aa00 solid;
   padding: 5px;
 }
-#toc .toc-active {
+#toc .toc-active,
+h1.toc-active,
+h2.toc-active,
+h3.toc-active,
+h4.toc-active {
   background-color: #55aa00;
   color: #ffffff;
   -webkit-border-radius: 3px;
@@ -5668,6 +5672,12 @@ i[class^="icon-"] {
 .toc-h4 {
   margin-left: 21px;
   margin-right: 7px;
+}
+span.toc-anchor {
+  display: block;
+  position: relative;
+  visibility: hidden;
+  top: -50px;
 }
 .copyright {
   font-size: 90%;
@@ -5759,7 +5769,7 @@ code {
   font-weight: lighter;
 }
 .type-signature a {
-  color: #999;
+  color: #666;
   text-decoration: underline;
 }
 .sunlight-menu {
