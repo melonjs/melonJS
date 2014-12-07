@@ -83,7 +83,8 @@
                 _objects.forEach(function (tmxObj) {
                     self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
                 });
-            } else {
+            }
+            else if (_objects) {
                 self.objects.push(new me.TMXObject(_objects, orientation, tilesets, z));
             }
         },

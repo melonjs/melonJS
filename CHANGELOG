@@ -13,6 +13,7 @@ Version History
 * CanvasRenderer : fixed an issue/regression with the `globalAlpha` functions
 * Core : fixed collision detection between `me.Ellipse` (circle) and `me.Line` shapes
 * Core : fixed renderable positioning with nested me.Container objects
+* TMX : fixed an uncauht exception when loading a map with an empty object layer
 
 2.0.1
 * Core : fixed loading under CocoonJS when using Canvas+
