@@ -2,6 +2,7 @@ Version History
 ---------------
 2.1.0
 * Container: `getChildByProp` and friends now accepts a RegExp for value matching
+* Font : updated me.Font to work with me.Color (xorinzor)
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`

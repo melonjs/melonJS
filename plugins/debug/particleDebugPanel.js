@@ -72,7 +72,7 @@
             this.alwaysUpdate = true;
 
             // create a default font, with fixed char width
-            this.font = new me.Font("courier", 10, new me.Color().parseCSS("white"));
+            this.font = new me.Font("courier", 10, "white");
 
             // sample points
             this.frameUpdateTimeSamples = [];

@@ -86,7 +86,7 @@ var FontTest = me.Renderable.extend ({
         }
         // one more with drawStroke this time
         this.font.setFont('Arial', 48, this.color);
-        this.font.strokeStyle = me.pool.pull("me.Color").copy("red");
+        this.font.strokeStyle.parseCSS("red");
         this.font.lineWidth = 3;
         this.font.drawStroke(context, "Arial Text " + i + "px !" , 5 , y_pos );
 

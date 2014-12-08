@@ -14,8 +14,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new (me.Renderable.extend({
             init: function() {
                 this._super(me.Renderable, 'init', [0, 0, 100, 200]);
-                this.fontColor = me.pool.pull("me.Color", 255, 255, 255);
-                this.font = new me.Font('arial', '24px', this.fontColor);
+                this.font = new me.Font('arial', '24px', "white");
             },
             update: function() {
                 return true;
@@ -29,9 +28,6 @@ game.PlayScreen = me.ScreenObject.extend({
                 this.font.draw(context, "Y: " + me.device.accelerationY, 10, 120);
                 this.font.draw(context, "Z: " + me.device.accelerationZ, 10, 150);
                 this.font.draw(context, "orientation: " + me.device.orientation + " degrees", 10, 180);
-            },
-            onDestroyEvent: function() {
-                me.pool.push(this.fontColor);
             }
         })), 1);
     },

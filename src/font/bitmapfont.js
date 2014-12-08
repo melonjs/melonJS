@@ -36,7 +36,7 @@
             // #char per row
             this.charCount = 0;
             // font name and type
-            this._super(me.Font, "init", [font, null, null]);
+            this._super(me.Font, "init", [font, size, "#000000"]);
             // first char in the ascii table
             this.firstChar = firstChar || 0x20;
 

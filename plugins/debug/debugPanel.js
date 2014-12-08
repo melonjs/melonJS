@@ -94,7 +94,7 @@
                 s = 7;
                 this.mod = 0.7;
             }
-            this.font = new me.Font("courier", s, new me.Color().parseCSS("white"));
+            this.font = new me.Font("courier", s, "white");
 
             // clickable areas
             var size = 12 * this.mod;

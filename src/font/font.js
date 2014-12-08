@@ -20,7 +20,7 @@
      * @constructor
      * @param {String} font a CSS font name
      * @param {Number|String} size size, or size + suffix (px, em, pt)
-     * @param {me.Color} fillStyle a CSS color value
+     * @param {me.Color|String} fillStyle a CSS color value
      * @param {String} [textAlign="left"] horizontal alignment
      */
     me.Font = me.Renderable.extend(
@@ -126,7 +126,7 @@
          * @function
          * @param {String} font a CSS font name
          * @param {Number|String} size size, or size + suffix (px, em, pt)
-         * @param {me.Color} fillStyle a CSS color value
+         * @param {me.Color|String} fillStyle a CSS color value
          * @param {String} [textAlign="left"] horizontal alignment
          * @example
          * font.setFont("Arial", 20, "white");
@@ -148,7 +148,9 @@
                 size += "px";
             }
             this.font = size + " " + font_names.join(",");
-            this.fillStyle = fillStyle;
+            if (typeof(fillStyle) !== "undefined") {
+                this.fillStyle.copy(fillStyle);
+            }
             if (textAlign) {
                 this.textAlign = textAlign;
             }
