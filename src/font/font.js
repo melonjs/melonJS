@@ -188,7 +188,7 @@
          * @name draw
          * @memberOf me.Font
          * @function
-         * @param {me.CanvasRenderer} reference to me.CanvasRenderer
+         * @param {Context} context 2D Context
          * @param {String} text
          * @param {Number} x
          * @param {Number} y

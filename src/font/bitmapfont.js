@@ -105,11 +105,11 @@
          * @name measureText
          * @memberOf me.BitmapFont
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
          */
-        measureText : function (context, text) {
+        measureText : function (renderer, text) {
             var strings = ("" + text).split("\n");
 
             this.height = this.width = 0;
@@ -126,7 +126,7 @@
          * @name draw
          * @memberOf me.BitmapFont
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
@@ -135,11 +135,11 @@
             var strings = ("" + text).split("\n");
             var lX = x;
             var height = this.sSize.y * this.lineHeight;
-            
+
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
-  
+
             // update initial position
             this.pos.set(x, y);
             for (var i = 0; i < strings.length; i++) {
@@ -175,7 +175,7 @@
                     default :
                         break;
                 }
-                
+
                 // draw the string
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
