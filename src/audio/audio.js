@@ -204,7 +204,12 @@
                 }
                 sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), instance_id);
                 if (typeof(onend) === "function") {
-                    sound.once("end", onend, instance_id);
+                    if (loop === true) {
+                        sound.on("end", onend, instance_id);
+                    }
+                    else {
+                        sound.once("end", onend, instance_id);
+                    }
                 }
                 return instance_id;
             }
