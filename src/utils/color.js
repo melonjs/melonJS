@@ -174,41 +174,6 @@
 
         /** @ignore */
         init : function (r, g, b, a) {
-            /**
-             * Color Red Component
-             * @name r
-             * @memberOf me.Color
-             * @type {Number}
-             * @readonly
-             */
-            this.r = 0;
-
-            /**
-             * Color Green Component
-             * @name g
-             * @memberOf me.Color
-             * @type {Number}
-             * @readonly
-             */
-            this.g = 0;
-
-            /**
-             * Color Blue Component
-             * @name b
-             * @memberOf me.Color
-             * @type {Number}
-             * @readonly
-             */
-            this.b = 0;
-
-            /**
-             * Color Alpha Component
-             * @name alpha
-             * @memberOf me.Color
-             * @type {Number}
-             * @readonly
-             */
-            this.alpha = 1.0;
 
             /**
              * Color components in a Float32Array suitable for WebGL
@@ -217,7 +182,9 @@
              * @type {Float32Array[]}
              * @readonly
              */
-            this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
+            if (typeof (this.glArray) === "undefined") {
+                this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
+            }
 
             return this.setColor(r, g, b, a);
         },
@@ -234,23 +201,35 @@
          * @name setColor
          * @memberOf me.Color
          * @function
-         * @param {Number} r red component
-         * @param {Number} g green component
-         * @param {Number} b blue component
-         * @param {Number} [a=1.0] alpha value
+         * @param {Number} r red component [0 .. 255]
+         * @param {Number} g green component [0 .. 255]
+         * @param {Number} b blue component [0 .. 255]
+         * @param {Number} [a=1.0] alpha value 
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, a) {
-            this.r = (~~r || 0).clamp(0, 255);
-            this.g = (~~g || 0).clamp(0, 255);
-            this.b = (~~b || 0).clamp(0, 255);
-            this.alpha = typeof(a) === "undefined" ? 1.0 : (+a).clamp(0, 1);
-
-            this.glArray[0] = this.r / 255.0;
-            this.glArray[1] = this.g / 255.0;
-            this.glArray[2] = this.b / 255.0;
-            this.glArray[3] = this.alpha;
-
+            return this.setGLColor([
+                (~~r || 0) / 255.0,
+                (~~g || 0) / 255.0,
+                (~~b || 0) / 255.0,
+                a
+            ]);
+        },
+        
+        /**
+         * Set this color to the specified value.
+         * @name setGLColor
+         * @memberOf me.Color
+         * @function
+         * @param {Float32Array[]} glArray WebGL color components
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        setGLColor : function (glArray) {
+            this.glArray[0] = (glArray[0] || 0).clamp(0, 1);
+            this.glArray[1] = (glArray[1] || 0).clamp(0, 1);
+            this.glArray[2] = (glArray[2] || 0).clamp(0, 1);
+            this.glArray[3] = typeof(glArray[3]) === "undefined" ? 1.0 : (+glArray[3]).clamp(0, 1);
+            
             return this;
         },
 
@@ -276,7 +255,7 @@
         copy : function (color) {
             return (
                 (color instanceof me.Color) ?
-                this.setColor(color.r, color.g, color.b, color.alpha) :
+                this.setGLColor(color.toGL()) :
                 this.parseCSS(color)
             );
         },
@@ -290,12 +269,12 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         add : function (color) {
-            return this.setColor(
-                this.r + color.r,
-                this.g + color.g,
-                this.b + color.b,
-                (this.alpha + color.alpha) / 2
-            );
+            return this.setGLColor([
+                this.glArray[0] + color.glArray[0],
+                this.glArray[1] + color.glArray[1],
+                this.glArray[2] + color.glArray[2],
+                (this.glArray[3] + color.glArray[3]) / 2
+            ]);
         },
 
         /**
@@ -308,12 +287,12 @@
          */
         darken : function (scale) {
             scale = scale.clamp(0, 1);
-            return this.setColor(
-                this.r * scale,
-                this.g * scale,
-                this.b * scale,
-                this.alpha
-            );
+            return this.setGLColor([
+                this.glArray[0] * scale,
+                this.glArray[1] * scale,
+                this.glArray[2] * scale,
+                this.glArray[3]
+            ]);
         },
 
         /**
@@ -326,12 +305,12 @@
          */
         lighten : function (scale) {
             scale = scale.clamp(0, 1);
-            return this.setColor(
-                this.r + (255 - this.r) * scale,
-                this.g + (255 - this.g) * scale,
-                this.b + (255 - this.b) * scale,
-                this.alpha
-            );
+            return this.setGLColor([
+                this.glArray[0] + (1 - this.glArray[0]) * scale,
+                this.glArray[1] + (1 - this.glArray[1]) * scale,
+                this.glArray[2] + (1 - this.glArray[2]) * scale,
+                this.glArray[3]
+            ]);
         },
 
         /**
@@ -520,6 +499,62 @@
         }
     });
 
+    /**
+     * Color Red Component
+     * @type Number
+     * @name r
+     * @readonly
+     * @memberOf me.Color
+     */
+    Object.defineProperty(me.Color.prototype, "r", {
+        get : function () { return ~~(this.glArray[0] * 255); },
+        set : function (value) { this.glArray[0] = value / 255.0; },
+        enumerable : true,
+        configurable : true
+    });
+
+    /**
+     * Color Green Component
+     * @type Number
+     * @name g
+     * @readonly
+     * @memberOf me.Color
+     */
+    Object.defineProperty(me.Color.prototype, "g", {
+        get : function () { return ~~(this.glArray[1] * 255); },
+        set : function (value) { this.glArray[1] = value / 255.0; },
+        enumerable : true,
+        configurable : true
+    });
+
+    /**
+     * Color Blue Component
+     * @type Number
+     * @name b
+     * @readonly
+     * @memberOf me.Color
+     */
+    Object.defineProperty(me.Color.prototype, "b", {
+        get : function () { return ~~(this.glArray[2] * 255); },
+        set : function (value) { this.glArray[2] = value / 255.0; },
+        enumerable : true,
+        configurable : true
+    });
+    
+    /**
+     * Color Alpha Component
+     * @type Number
+     * @name alpha
+     * @readonly
+     * @memberOf me.Color
+     */
+    Object.defineProperty(me.Color.prototype, "alpha", {
+        get : function () { return this.glArray[3]; },
+        set : function (value) { this.glArray[3] = value.clamp(0, 1); },
+        enumerable : true,
+        configurable : true
+    });
+    
     /**
      * Base class for me.Color exception handling.
      * @name Error
