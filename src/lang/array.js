@@ -79,9 +79,7 @@ Array.prototype.weightedRandom = function (entry) {
 me.TypedArray = function (a) {
     var i = 0;
     if (Array.isArray(a)) {
-        for (i = 0; i < a.length; i++) {
-            this.push(a[i]);
-        }
+        this.concat(a.slice());
     }
     else if ((arguments.length === 1) && (typeof(a) === "number")) {
         for (i = 0; i < a; i++) {
