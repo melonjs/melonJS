@@ -25,7 +25,7 @@
                 me.sys.stopOnAudioError = false;
 
                 // Initialize video
-                if (!me.video.init("screen", 1024, 768, true, "auto")) {
+                if (!me.video.init(1024, 768, {wrapper : "screen"})) {
                     throw "me.video.init failed";
                 }
 

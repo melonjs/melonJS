@@ -23,7 +23,8 @@
         globalColor = null,
         colorStack = [],
         gameHeightZoom = 0,
-        gameWidthZoom = 0;
+        gameWidthZoom = 0,
+        transparent = true;
 
         /**
          * initializes the canvas renderer, creating the requried contexts
@@ -33,18 +34,19 @@
          * @param {Canvas} canvas - the html canvas tag to draw to on screen.
          * @param {Number} game_width - the width of the canvas without scaling
          * @param {Number} game_height - the height of the canvas without scaling
-         * @param {Boolean} double_buffering - whether to enable double buffering.
-         * @param {Number} game_width_zoom - The actual width of the canvas with scaling applied
-         * @param {Number} game_height_zoom - The actual height of the canvas with scaling applied
+         * @param {Object} options The renderer parameters
+         * @param {Boolean} options.double_buffering - whether to enable double buffering.
+         * @param {Number} options.game_width_zoom - The actual width of the canvas with scaling applied
+         * @param {Number} options.game_height_zoom - The actual height of the canvas with scaling applied
          */
-        api.init = function (c, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom) {
+        api.init = function (c, width, height, options) {
             canvas = c;
             context = this.getContext2d(canvas);
-            doubleBuffering = double_buffering;
+            doubleBuffering = !!(options.double_buffering);
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
-                backBufferCanvas = me.video.createCanvas(game_width, game_height, false);
+                backBufferCanvas = me.video.createCanvas(width, height, false);
                 backBufferContext2D = this.getContext2d(backBufferCanvas);
             }
             else {
@@ -52,8 +54,10 @@
                 backBufferContext2D = context;
             }
 
-            gameWidthZoom = game_width_zoom;
-            gameHeightZoom = game_height_zoom;
+            gameWidthZoom = options.game_width_zoom;
+            gameHeightZoom = options.game_height_zoom;
+            
+            transparent = options.transparent;
 
             // the default global canvas color
             globalColor = new me.Color(255, 255, 255, 1.0);
@@ -315,11 +319,14 @@
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
-                    "antialias" : me.sys.scalingInterpolation
+                    "antialias" : me.sys.scalingInterpolation,
+                    alpha : transparent
                 });
             }
             else {
-                _context = c.getContext("2d");
+                _context = c.getContext("2d", {
+                    alpha : transparent
+                });
             }
             if (!_context.canvas) {
                 _context.canvas = c;

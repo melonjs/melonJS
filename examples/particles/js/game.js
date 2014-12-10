@@ -3,11 +3,11 @@
 var game = {
 	// Run on page load.
 	onload: function () {
-		// Initialize the video.
-		if (!me.video.init("screen", me.video.CANVAS, 800, 600, false)) {
-			alert("Your browser does not support HTML5 canvas.");
-			return;
-		}
+        // init the video
+        if (!me.video.init(800, 600, {wrapper : "screen"})) {
+            alert("Your browser does not support HTML5 canvas.");
+            return;
+        }
 
 		// add "#debug" to the URL to enable the debug Panel
 		if (document.location.hash === "#debug") {

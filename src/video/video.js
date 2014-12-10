@@ -28,7 +28,18 @@
         // max display size
         var maxWidth = Infinity;
         var maxHeight = Infinity;
-
+        
+        // default video options
+        var defaultOptions = {
+            wrapper : undefined,
+            renderer : 0, // canvas
+            double_buffering : false,
+            scale : 1.0,
+            maintainAspectRatio : true,
+            transparent : true
+        };
+        
+        
         /**
          * Auto-detect the best renderer to use
          * @ignore
@@ -94,44 +105,58 @@
          * @name init
          * @memberOf me.video
          * @function
-         * @param {String} wrapper the "div" element id to hold the canvas in the HTML file  (if null document.body will be used)
-         * @param {Number} [renderer=me.video.CANVAS] State which renderer you prefer to use.
-         * @param {Number} width game width
-         * @param {Number} height game height
-         * @param {Boolean} [double_buffering] enable/disable double buffering
-         * @param {Number} [scale] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [maintainAspectRatio] maintainAspectRatio when scaling the display
+         * @param {Number} width the width of the canvas viewport
+         * @param {Number} height the height of the canvas viewport
+         * @param {Object} [options] The optional video/renderer parameters
+         * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file 
+         * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
+         * @param {Boolean} [options.double_buffering=false] enable/disable double buffering
+         * @param {Number} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+         * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
+         * @param {Boolean} [options.transparent=true] If the render view is transparent
          * @return {Boolean}
          * @example
-         * // init the video with a 480x320 canvas
-         * if (!me.video.init('jsapp', me.video.CANVAS, 480, 320)) {
-         *    alert("Sorry but your browser does not support html 5 canvas !");
-         *    return;
-         * }
+         * // init the video with a 640x480 canvas
+         *   me.video.init(640, 480, {
+         *       wrapper: "screen", 
+         *       renderer: me.video.CANVAS,
+         *       scale: 'auto', 
+         *       maintainAspectRatio: true, 
+         *       transparent: true
+         *   });
          */
-        api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
+        //api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
+        api.init = function (game_width, game_height, options) {
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
                 throw new api.Error("me.video.init() called before engine initialization.");
             }
+            
+            // revert to default options if not defined
+            options = options || defaultOptions;
+            
             // check given parameters
-            double_buffering = doublebuffering || false;
-            auto_scale  = (scale === "auto") || false;
-            maintainAspectRatio = (typeof(aspectRatio) !== "undefined") ? aspectRatio : true;
-
+            double_buffering = !!(options.double_buffering) || defaultOptions.double_buffering;
+            auto_scale = (options.scale === "auto") || false;
+            maintainAspectRatio = !!(options.maintainAspectRatio) || defaultOptions.maintainAspectRatio;
+            // transparent is passed to the renderer constructorm, so normalize it in "options"
+            options.transparent = !!(options.transparent) || defaultOptions.transparent;
+            
             // normalize scale
-            scale = (auto_scale) ? 1.0 : (+scale || 1.0);
+            var scale = (auto_scale) ? 1.0 : (+options.scale || 1.0);
             me.sys.scale = new me.Vector2d(scale, scale);
 
             // force double buffering if scaling is required
             if (auto_scale || (scale !== 1.0)) {
-                double_buffering = true;
+                options.double_buffering = double_buffering = true;
             }
 
             // default scaled size value
             var game_width_zoom = game_width * me.sys.scale.x;
             var game_height_zoom = game_height * me.sys.scale.y;
-
+            options.game_width_zoom = game_width_zoom;
+            options.game_height_zoom = game_height_zoom;
+            
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
                 "resize",
@@ -166,8 +191,8 @@
             canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
 
             // add our canvas
-            if (wrapperid) {
-                wrapper = document.getElementById(wrapperid);
+            if (options.wrapper) {
+                wrapper = document.getElementById(options.wrapper);
             }
             // if wrapperid is not defined (null)
             if (!wrapper) {
@@ -181,15 +206,15 @@
                 return false;
             }
 
-            switch (renderer) {
+            switch (options.renderer) {
                 case api.WEBGL:
                     this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height);
                     break;
                 case api.AUTO:
-                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom);
+                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, options);
                     break;
                 default:
-                    this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, double_buffering, game_width_zoom, game_height_zoom);
+                    this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, options);
                     break;
             }
 

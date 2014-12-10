@@ -23,15 +23,14 @@ var game = {
 	 */
 	onload: function() {
 
-
 		// we don't need the default 60fps for a whack-a-mole !
 		me.sys.fps = 30;
 
-		// initialize the video
-		if (!me.video.init('screen', me.video.CANVAS, 1024, 768, true ,'auto')) {
-			alert("Sorry but your browser does not support html5 canvas. Please try with another one!");
-			return;
-		};
+        // Initialize the video.
+        if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {
+            alert("Your browser does not support HTML5 canvas.");
+            return;
+        }
 
         // add "#debug" to the URL to enable the debug Panel
 		if (document.location.hash === "#debug") {
