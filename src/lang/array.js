@@ -102,18 +102,18 @@ me.TypedArray.prototype = Array.prototype;
  * @external Float32Array
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Float32Array|Float32Array}
  */
-window.Float32Array = Float32Array || me.TypedArray;
+window.Float32Array = window.Float32Array || me.TypedArray;
 
 /**
  * The built in Uint16Array object.
  * @external Uint16Array
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint16Array|Uint16Array}
  */
-window.Uint16Array = Uint16Array || me.TypedArray;
+window.Uint16Array = window.Uint16Array || me.TypedArray;
 
 /**
  * The built in Uint32Array object.
  * @external Uint32Array
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}
  */
-window.Uint32Array = Uint32Array || me.TypedArray;
+window.Uint32Array = window.Uint32Array || me.TypedArray;
