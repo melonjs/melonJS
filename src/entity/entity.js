@@ -7,100 +7,23 @@
 
 (function () {
 
-    /**
-     * me.ObjectSettings contains the object attributes defined in Tiled<br>
-     * and is created by the engine and passed as parameter to the corresponding
-     * object when loading a level<br>
-     * the field marked Mandatory are to be defined either in Tiled, or in the
-     * before calling the parent constructor<br>
-     * <img src="images/object_properties.png"/><br>
-     * @class
-     * @protected
-     * @memberOf me
-     */
-    me.ObjectSettings = {
-        /**
-         * object entity name<br>
-         * as defined in the Tiled Object Properties
-         * @public
-         * @property {String} name
-         * @memberOf me.ObjectSettings
-         */
-        name : null,
-
-        /**
-         * image ressource name to be loaded<br>
-         * (in case of TiledObject, this field is automatically set)
-         * @public
-         * @property {String} image
-         * @memberOf me.ObjectSettings
-         */
-        image : null,
-
-        /**
-         * specify a transparent color for the image in rgb format (#rrggbb)<br>
-         * (using this option will imply processing time on the image)
-         * @public
-         * @deprecated Use PNG or GIF with transparency instead
-         * @property {String=} transparent_color
-         * @memberOf me.ObjectSettings
-         */
-        transparent_color : null,
-
-        /**
-         * width of a single sprite in the spritesheet<br>
-         * (in case of TiledObject, this field is automatically set)
-         * @public
-         * @property {Number=} spritewidth
-         * @memberOf me.ObjectSettings
-         */
-        spritewidth : null,
-
-        /**
-         * height of a single sprite in the spritesheet<br>
-         * if not specified the value will be set to the corresponding image height<br>
-         * (in case of TiledObject, this field is automatically set)
-         * @public
-         * @property {Number=} spriteheight
-         * @memberOf me.ObjectSettings
-         */
-        spriteheight : null,
-
-        /**
-         * object type as defined in Tiled
-         * @public
-         * @property {String=} type
-         * @memberOf me.ObjectSettings
-         */
-        type : null,
-
-        /**
-         * Mask collision detection for this object<br>
-         * OPTIONAL
-         * @public
-         * @type Number
-         * @name me.ObjectSettings#collisionMask
-         */
-        collisionMask : 0xFFFFFFFF
-    };
-
-    /*
-     * A generic object entity
-     */
 
     /**
      * a Generic Object Entity<br>
-     * Object Properties (settings) are to be defined in Tiled, <br>
-     * or when calling the parent constructor
-     *
      * @class
      * @extends me.Renderable
      * @memberOf me
      * @constructor
      * @param {Number} x the x coordinates of the entity object
      * @param {Number} y the y coordinates of the entity object
-     * @param {me.ObjectSettings} settings Object Properties as defined in Tiled<br>
+     * @param {Object} settings Entity properties, to be defined through Tiled or when caling the entity constructor
      * <img src="images/object_properties.png"/>
+     * @param {String} [settings.name] object entity name
+     * @param {String} [settings.image] resource name of a spritesheet to use for the entity renderable component
+     * @param {Number} [settings.spritewidth] width of a single sprite in the given spritesheet
+     * @param {Number} [settings.spriteheight] height of a single sprite in the given spritesheet
+     * @param {String} [settings.type] object type
+     * @param {Number} [settings.collisionMask] Mask collision detection for this object
      */
     me.Entity = me.Renderable.extend(
     /** @scope me.Entity.prototype */
