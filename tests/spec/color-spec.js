@@ -57,6 +57,10 @@ describe("me.Color", function () {
         it("(green_color + red_color) hex value is #FF8000", function () {
             expect(red_color.add(green_color).toHex()).toEqual("#FF8000");
         });
+        
+        it("darken (green_color + red_color) by 0.5 hex value is #7F4000", function () {
+            expect(red_color.darken(0.5).toHex()).toEqual("#7F4000");
+        });
 
     });
 
@@ -72,5 +76,11 @@ describe("me.Color", function () {
         it("blue_color rgba value is rgba(0, 0, 255, 1)", function () {
             expect(blue_color.toRGBA()).toEqual("rgba(0,0,255,1)");
         });
+        
+        it("lighten blue_color hex by 0.5 value is #7F7FFF", function () {
+            expect(blue_color.lighten(0.5).toHex()).toEqual("#7F7FFF");
+        });
+
+        
     });
 });
