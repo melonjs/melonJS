@@ -163,7 +163,7 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Float32Array[]|Number} [r=0] red component or array of color components
+     * @param {Float32Array|Number} [r=0] red component or array of color components
      * @param {Number} [g=0] green component
      * @param {Number} [b=0] blue component
      * @param {Number} [alpha=1.0] alpha value
@@ -179,7 +179,7 @@
              * Color components in a Float32Array suitable for WebGL
              * @name glArray
              * @memberOf me.Color
-             * @type {Float32Array[]}
+             * @type {Float32Array}
              * @readonly
              */
             if (typeof (this.glArray) === "undefined") {
@@ -201,7 +201,7 @@
          * @name setColor
          * @memberOf me.Color
          * @function
-         * @param {Float32Array[]|Number} r red component [0 .. 255] or array of color components
+         * @param {Float32Array|Number} r red component [0 .. 255] or array of color components
          * @param {Number} g green component [0 .. 255]
          * @param {Number} b blue component [0 .. 255]
          * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
@@ -223,7 +223,7 @@
          * @name setGLColor
          * @memberOf me.Color
          * @function
-         * @param {Float32Array[]} glArray WebGL color components
+         * @param {Float32Array} glArray WebGL color components
          * @return {me.Color} Reference to this object for method chaining
          */
         setGLColor : function (glArray) {
@@ -376,6 +376,7 @@
          */
         parseRGB : function (rgbColor) {
             // TODO : Memoize this function by caching its input
+
             if (typeof(rgbColor) === "string") {
                 var start;
                 if (rgbColor.substring(0, 4) === "rgba") {
