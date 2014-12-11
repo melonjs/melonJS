@@ -204,7 +204,7 @@
          * @param {Number} r red component [0 .. 255]
          * @param {Number} g green component [0 .. 255]
          * @param {Number} b blue component [0 .. 255]
-         * @param {Number} [a=1.0] alpha value 
+         * @param {Number} [a=1.0] alpha value [0.0 .. 1.0]
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, a) {
@@ -214,7 +214,7 @@
             this.alpha = a;
             return this;
         },
-        
+
         /**
          * Set this color to the specified value.
          * @name setGLColor
@@ -228,7 +228,7 @@
             this.glArray[1] = (glArray[1] || 0).clamp(0, 1);
             this.glArray[2] = (glArray[2] || 0).clamp(0, 1);
             this.glArray[3] = typeof(glArray[3]) === "undefined" ? 1.0 : (+glArray[3]).clamp(0, 1);
-            
+
             return this;
         },
 
@@ -539,7 +539,7 @@
         enumerable : true,
         configurable : true
     });
-    
+
     /**
      * Color Alpha Component
      * @type Number
@@ -549,11 +549,11 @@
      */
     Object.defineProperty(me.Color.prototype, "alpha", {
         get : function () { return this.glArray[3]; },
-        set : function (value) { this.glArray[3] = typeof(value === "undefined") ? 1.0 : (+value).clamp(0, 1); },
+        set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : (+value).clamp(0, 1); },
         enumerable : true,
         configurable : true
     });
-    
+
     /**
      * Base class for me.Color exception handling.
      * @name Error
