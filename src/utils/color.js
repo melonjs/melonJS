@@ -208,12 +208,11 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, a) {
-            return this.setGLColor([
-                (~~r || 0) / 255.0,
-                (~~g || 0) / 255.0,
-                (~~b || 0) / 255.0,
-                a
-            ]);
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+            return this;
         },
         
         /**
@@ -508,7 +507,7 @@
      */
     Object.defineProperty(me.Color.prototype, "r", {
         get : function () { return ~~(this.glArray[0] * 255); },
-        set : function (value) { this.glArray[0] = value / 255.0; },
+        set : function (value) { this.glArray[0] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -522,7 +521,7 @@
      */
     Object.defineProperty(me.Color.prototype, "g", {
         get : function () { return ~~(this.glArray[1] * 255); },
-        set : function (value) { this.glArray[1] = value / 255.0; },
+        set : function (value) { this.glArray[1] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -536,7 +535,7 @@
      */
     Object.defineProperty(me.Color.prototype, "b", {
         get : function () { return ~~(this.glArray[2] * 255); },
-        set : function (value) { this.glArray[2] = value / 255.0; },
+        set : function (value) { this.glArray[2] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -550,7 +549,7 @@
      */
     Object.defineProperty(me.Color.prototype, "alpha", {
         get : function () { return this.glArray[3]; },
-        set : function (value) { this.glArray[3] = value.clamp(0, 1); },
+        set : function (value) { this.glArray[3] = typeof(value === "undefined") ? 1.0 : (+value).clamp(0, 1); },
         enumerable : true,
         configurable : true
     });
