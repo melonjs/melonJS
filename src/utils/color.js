@@ -163,17 +163,17 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Number} [r=0] red component
+     * @param {Float32Array[]|Number} [r=0] red component or array of color components
      * @param {Number} [g=0] green component
      * @param {Number} [b=0] blue component
-     * @param {Number} [a=1.0] alpha value
+     * @param {Number} [alpha=1.0] alpha value
      */
     me.Color = Object.extend(
     /** @scope me.Color.prototype */
     {
 
         /** @ignore */
-        init : function (r, g, b, a) {
+        init : function (r, g, b, alpha) {
 
             /**
              * Color components in a Float32Array suitable for WebGL
@@ -186,14 +186,14 @@
                 this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
             }
 
-            return this.setColor(r, g, b, a);
+            return this.setColor(r, g, b, alpha);
         },
 
         /**
          * @ignore
          */
-        onResetEvent : function (r, g, b, a) {
-            return this.setColor(r, g, b, a);
+        onResetEvent : function (r, g, b, alpha) {
+            return this.setColor(r, g, b, alpha);
         },
 
         /**
@@ -201,17 +201,20 @@
          * @name setColor
          * @memberOf me.Color
          * @function
-         * @param {Number} r red component [0 .. 255]
+         * @param {Float32Array[]|Number} r red component [0 .. 255] or array of color components
          * @param {Number} g green component [0 .. 255]
          * @param {Number} b blue component [0 .. 255]
-         * @param {Number} [a=1.0] alpha value [0.0 .. 1.0]
+         * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
          * @return {me.Color} Reference to this object for method chaining
          */
-        setColor : function (r, g, b, a) {
+        setColor : function (r, g, b, alpha) {
+            if (r instanceof Float32Array) {
+                return this.setGLColor(r);
+            }
             this.r = r;
             this.g = g;
             this.b = b;
-            this.alpha = a;
+            this.alpha = alpha;
             return this;
         },
 
@@ -240,7 +243,7 @@
          * @return {me.Color} Reference to the newly cloned object
          */
         clone : function () {
-            return me.pool.pull("me.Color", this.r, this.g, this.b, this.alpha);
+            return me.pool.pull("me.Color", this.glArray);
         },
 
         /**
@@ -289,7 +292,7 @@
             this.glArray[0] *= scale;
             this.glArray[1] *= scale;
             this.glArray[2] *= scale;
-            
+
             return this;
         },
 
@@ -306,7 +309,7 @@
             this.glArray[0] = (this.glArray[0] + (1 - this.glArray[0]) * scale).clamp(0, 1);
             this.glArray[1] = (this.glArray[1] + (1 - this.glArray[1]) * scale).clamp(0, 1);
             this.glArray[2] = (this.glArray[2] + (1 - this.glArray[2]) * scale).clamp(0, 1);
-            
+
             return this;
         },
 
@@ -337,10 +340,10 @@
          */
         equals : function (color) {
             return (
-                (this.r === color.r) &&
-                (this.g === color.g) &&
-                (this.b === color.b) &&
-                (this.alpha === color.alpha)
+                (this.glArray[0] === color.glArray[0]) &&
+                (this.glArray[1] === color.glArray[1]) &&
+                (this.glArray[2] === color.glArray[2]) &&
+                (this.glArray[3] === color.glArray[3])
             );
         },
 
