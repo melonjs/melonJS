@@ -268,12 +268,12 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         add : function (color) {
-            return this.setGLColor([
-                this.glArray[0] + color.glArray[0],
-                this.glArray[1] + color.glArray[1],
-                this.glArray[2] + color.glArray[2],
-                (this.glArray[3] + color.glArray[3]) / 2
-            ]);
+            this.glArray[0] = (this.glArray[0] + color.glArray[0]).clamp(0, 1);
+            this.glArray[1] = (this.glArray[1] + color.glArray[1]).clamp(0, 1);
+            this.glArray[2] = (this.glArray[2] + color.glArray[2]).clamp(0, 1);
+            this.glArray[3] = (this.glArray[3] + color.glArray[3]) / 2;
+
+            return this;
         },
 
         /**
@@ -286,12 +286,11 @@
          */
         darken : function (scale) {
             scale = scale.clamp(0, 1);
-            return this.setGLColor([
-                this.glArray[0] * scale,
-                this.glArray[1] * scale,
-                this.glArray[2] * scale,
-                this.glArray[3]
-            ]);
+            this.glArray[0] *= scale;
+            this.glArray[1] *= scale;
+            this.glArray[2] *= scale;
+            
+            return this;
         },
 
         /**
@@ -304,12 +303,11 @@
          */
         lighten : function (scale) {
             scale = scale.clamp(0, 1);
-            return this.setGLColor([
-                this.glArray[0] + (1 - this.glArray[0]) * scale,
-                this.glArray[1] + (1 - this.glArray[1]) * scale,
-                this.glArray[2] + (1 - this.glArray[2]) * scale,
-                this.glArray[3]
-            ]);
+            this.glArray[0] = (this.glArray[0] + (1 - this.glArray[0]) * scale).clamp(0, 1);
+            this.glArray[1] = (this.glArray[1] + (1 - this.glArray[1]) * scale).clamp(0, 1);
+            this.glArray[2] = (this.glArray[2] + (1 - this.glArray[2]) * scale).clamp(0, 1);
+            
+            return this;
         },
 
         /**
