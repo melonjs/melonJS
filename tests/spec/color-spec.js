@@ -1,6 +1,6 @@
 describe("me.Color", function () {
 
-    var red_color = new me.Color(255, 0, 0);
+    var red_color = new me.Color(255, 0, 0, 0.5);
     var green_color = new me.Color().parseCSS("green");
     var blue_color = new me.Color().parseHex("#0000FF");
 
@@ -23,12 +23,16 @@ describe("me.Color", function () {
             expect(red_color.b).toEqual(0);
         });
 
-        it("red_color.alpha == 1", function () {
-            expect(red_color.alpha).toEqual(1);
+        it("red_color.alpha == 0.5", function () {
+            expect(red_color.alpha).toEqual(0.5);
         });
 
         it("red_color hex value is #FF0000", function () {
             expect(red_color.toHex()).toEqual("#FF0000");
+        });
+        
+        it("red_color rgba value is rgba(255,0,0,0.5)", function () {
+            expect(red_color.toRGBA()).toEqual("rgba(255,0,0,0.5)");
         });
 
     });
@@ -60,6 +64,10 @@ describe("me.Color", function () {
         
         it("darken (green_color + red_color) by 0.5 hex value is #7F4000", function () {
             expect(red_color.darken(0.5).toHex()).toEqual("#7F4000");
+        });
+        
+        it("final red_color rgba value is rgba(127,64,0,0.75)", function () {
+            expect(red_color.toRGBA()).toEqual("rgba(127,64,0,0.75)");
         });
 
     });
