@@ -199,6 +199,11 @@
         draw : function (context, text, x, y) {
             x = ~~x;
             y = ~~y;
+
+            // save the previous global alpha value
+            var _alpha = context.globalAlpha;
+            context.globalAlpha *= this.getOpacity();
+
             // update initial position
             this.pos.set(x, y);
             // draw the text
@@ -214,6 +219,9 @@
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
+
+            // restore the previous global alpha value
+            context.globalAlpha = _alpha;
         },
 
         /**
@@ -231,6 +239,11 @@
         drawStroke : function (context, text, x, y) {
             x = ~~x;
             y = ~~y;
+            
+            // save the previous global alpha value
+            var _alpha = context.globalAlpha;
+            context.globalAlpha *= this.getOpacity();
+
             // update initial position
             this.pos.set(x, y);
             // draw the text
@@ -251,6 +264,9 @@
                 // add leading space
                 y += this.fontSize.y * this.lineHeight;
             }
+
+            // restore the previous global alpha value
+            context.globalAlpha = _alpha;
         }
     });
 })();
