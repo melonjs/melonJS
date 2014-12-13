@@ -78,6 +78,7 @@ var FontTest = me.Renderable.extend ({
         // font size test
         this.font.textAlign = "left";
         this.font.lineWidth = "2";
+        this.font.setOpacity (0.5);
         var context = renderer.getContext();
         for (var i = 8; i < 48; i += 8) {
             this.font.setFont('Arial', i, this.color.toHex());
@@ -100,7 +101,9 @@ var FontTest = me.Renderable.extend ({
             y_pos+=this.bFont.measureText(context, "DUMMY").height;
             
         }
-        this.bFont.setOpacity (1);
+
+        this.font.setOpacity(1);
+        this.bFont.setOpacity(1);
         
         // font baseline test
         this.font.setFont('Arial', 16, this.color.toHex());

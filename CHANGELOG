@@ -15,6 +15,7 @@ Version History
 * Documentation : added anchor target highlighting
 * Documentation : fixes in me.Font, me.BitmapFont, and me.Entity
 * Entity : removed `me.ObjectSettings`
+* Font : fixed globalAlpha not being set when using `me.Font.setOpacity()`
 * TMX : fixed an uncaught exception when loading a map with an empty object layer (thanks @Tiagojdferreira)
 
 2.0.1
