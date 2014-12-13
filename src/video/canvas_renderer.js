@@ -24,7 +24,7 @@
         colorStack = [],
         gameHeightZoom = 0,
         gameWidthZoom = 0,
-        transparent = true;
+        transparent = false;
 
         /**
          * initializes the canvas renderer, creating the requried contexts
@@ -34,14 +34,17 @@
          * @param {Canvas} canvas - the html canvas tag to draw to on screen.
          * @param {Number} game_width - the width of the canvas without scaling
          * @param {Number} game_height - the height of the canvas without scaling
-         * @param {Object} options The renderer parameters
-         * @param {Boolean} options.double_buffering - whether to enable double buffering.
-         * @param {Number} options.game_width_zoom - The actual width of the canvas with scaling applied
-         * @param {Number} options.game_height_zoom - The actual height of the canvas with scaling applied
+         * @param {Object} [options] The renderer parameters
+         * @param {Boolean} [options.double_buffering] - whether to enable double buffering.
+         * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
+         * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
          */
         api.init = function (c, width, height, options) {
             canvas = c;
             context = this.getContext2d(canvas);
+            
+            options = options || {};
+
             doubleBuffering = !!(options.double_buffering);
 
             // create the back buffer if we use double buffering
@@ -54,10 +57,10 @@
                 backBufferContext2D = context;
             }
 
-            gameWidthZoom = options.game_width_zoom;
-            gameHeightZoom = options.game_height_zoom;
+            gameWidthZoom = options.zoomX || width;
+            gameHeightZoom = options.zoomY || height;
             
-            transparent = options.transparent;
+            transparent = !!(options.transparent);
 
             // the default global canvas color
             globalColor = new me.Color(255, 255, 255, 1.0);
@@ -320,12 +323,12 @@
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : me.sys.scalingInterpolation,
-                    alpha : transparent
+                    "alpha" : transparent
                 });
             }
             else {
                 _context = c.getContext("2d", {
-                    alpha : transparent
+                    "alpha" : transparent
                 });
             }
             if (!_context.canvas) {

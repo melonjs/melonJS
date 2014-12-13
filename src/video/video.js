@@ -36,7 +36,7 @@
             double_buffering : false,
             scale : 1.0,
             maintainAspectRatio : true,
-            transparent : true
+            transparent : false
         };
         
         
@@ -154,8 +154,8 @@
             // default scaled size value
             var game_width_zoom = game_width * me.sys.scale.x;
             var game_height_zoom = game_height * me.sys.scale.y;
-            options.game_width_zoom = game_width_zoom;
-            options.game_height_zoom = game_height_zoom;
+            options.zoomX = game_width_zoom;
+            options.zoomY = game_height_zoom;
             
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
@@ -208,7 +208,7 @@
 
             switch (options.renderer) {
                 case api.WEBGL:
-                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height);
+                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height, options);
                     break;
                 case api.AUTO:
                     this.renderer = autoDetectRenderer(canvas, game_width, game_height, options);
