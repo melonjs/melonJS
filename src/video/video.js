@@ -17,23 +17,19 @@
 
         // internal variables
         var canvas = null;
-        var wrapper = null;
 
         var deferResizeId = -1;
-
-        var double_buffering = false;
-        var auto_scale = false;
-        var maintainAspectRatio = true;
 
         // max display size
         var maxWidth = Infinity;
         var maxHeight = Infinity;
         
-        // default video options
-        var defaultOptions = {
+        // default video settings
+        var settings = {
             wrapper : undefined,
             renderer : 0, // canvas
             double_buffering : false,
+            auto_scale : false,
             scale : 1.0,
             maintainAspectRatio : true,
             transparent : false
@@ -133,29 +129,28 @@
             }
             
             // revert to default options if not defined
-            options = options || defaultOptions;
+            settings = Object.assign(settings, options || {});
             
-            // check given parameters
-            double_buffering = !!(options.double_buffering) || defaultOptions.double_buffering;
-            auto_scale = (options.scale === "auto") || false;
-            maintainAspectRatio = !!(options.maintainAspectRatio) || defaultOptions.maintainAspectRatio;
-            // transparent is passed to the renderer constructorm, so normalize it in "options"
-            options.transparent = !!(options.transparent) || defaultOptions.transparent;
+            // sanitize potential given parameters
+            settings.double_buffering = !!(settings.double_buffering);
+            settings.auto_scale = (settings.scale === "auto") || false;
+            settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
+            settings.transparent = !!(settings.transparent);
             
             // normalize scale
-            var scale = (auto_scale) ? 1.0 : (+options.scale || 1.0);
-            me.sys.scale = new me.Vector2d(scale, scale);
+            settings.scale = (settings.auto_scale) ? 1.0 : (+settings.scale || 1.0);
+            me.sys.scale = new me.Vector2d(settings.scale, settings.scale);
 
             // force double buffering if scaling is required
-            if (auto_scale || (scale !== 1.0)) {
-                options.double_buffering = double_buffering = true;
+            if (settings.auto_scale || (settings.scale !== 1.0)) {
+                settings.double_buffering = true;
             }
 
             // default scaled size value
             var game_width_zoom = game_width * me.sys.scale.x;
             var game_height_zoom = game_height * me.sys.scale.y;
-            options.zoomX = game_width_zoom;
-            options.zoomY = game_height_zoom;
+            settings.zoomX = game_width_zoom;
+            settings.zoomY = game_height_zoom;
             
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
@@ -192,29 +187,29 @@
 
             // add our canvas
             if (options.wrapper) {
-                wrapper = document.getElementById(options.wrapper);
+                settings.wrapper = document.getElementById(options.wrapper);
             }
             // if wrapperid is not defined (null)
-            if (!wrapper) {
+            if (!settings.wrapper) {
                 // add the canvas to document.body
-                wrapper = document.body;
+                settings.wrapper = document.body;
             }
-            wrapper.appendChild(canvas);
+            settings.wrapper.appendChild(canvas);
 
             // stop here if not supported
             if (!canvas.getContext) {
                 return false;
             }
 
-            switch (options.renderer) {
+            switch (settings.renderer) {
                 case api.WEBGL:
-                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height, options);
+                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height, settings);
                     break;
                 case api.AUTO:
-                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, options);
+                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
                     break;
                 default:
-                    this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, options);
+                    this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, settings);
                     break;
             }
 
@@ -306,7 +301,7 @@
          * @return {Document}
          */
         api.getWrapper = function () {
-            return wrapper;
+            return settings.wrapper;
         };
 
         /**
@@ -330,13 +325,13 @@
                 );
             }
 
-            if (auto_scale) {
+            if (settings.auto_scale) {
                 // get the parent container max size
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
 
-                if (maintainAspectRatio) {
+                if (settings.maintainAspectRatio) {
                     // make sure we maintain the original aspect ratio
                     var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                     var screenRatio = _max_width / _max_height;
