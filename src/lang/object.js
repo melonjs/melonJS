@@ -109,6 +109,60 @@ if (!Function.prototype.bind) {
     };
 }
 
+if (!Object.assign) {
+    /**
+     * The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object. 
+     * The Object.assign method only copies enumerable and own properties from a source object to a target object. 
+     * It uses [[Get]] on the source and [[Put]] on the target, so it will invoke getters and setters. 
+     * Therefore it assigns properties versus just copying or defining new properties. 
+     * This may make it unsuitable for merging new properties into a prototype if the merge sources contain getters. 
+     * For copying propertiy definitions, including their enumerability, into prototypes Object.getOwnPropertyDescriptor and Object.defineProperty should be used instead.
+     * @name assign
+     * @memberOf external:Object#
+     * @function
+     * @param {Object} target The target object.
+     * @param {Object[]} sources The source object(s).
+     * @return {Object} The target object gets returned.
+     * @example
+     * // Merging objects
+     * var o1 = { a: 1 };
+     * var o2 = { b: 2 };
+     * var o3 = { c: 3 };
+     *
+     * var obj = Object.assign(o1, o2, o3);
+     * console.log(obj);
+     * // { a: 1, b: 2, c: 3 }
+     */
+    
+    Object.defineProperty(Object, "assign", {
+        enumerable: false,
+        configurable: true,
+        writable: true,
+        value: function (target) {
+            "use strict";
+            if (target === undefined || target === null) {
+                throw new TypeError("Cannot convert first argument to object");
+            }
+            var to = Object(target);
+            for (var i = 1; i < arguments.length; i++) {
+                var nextSource = arguments[i];
+                if (nextSource === undefined || nextSource === null) {
+                    continue;
+                }
+                var keysArray = Object.keys(Object(nextSource));
+                for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
+                    var nextKey = keysArray[nextIndex];
+                    var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+                    if (desc !== undefined && desc.enumerable) {
+                        to[nextKey] = nextSource[nextKey];
+                    }
+                }
+            }
+            return to;
+        }
+    });
+}
+
 /**
  * Sourced from: https://gist.github.com/parasyte/9712366
  * Extend a class prototype with the provided mixin descriptors.
