@@ -43,19 +43,19 @@
             options = options || {};
 
             transparent = !!(options.transparent);
-            doubleBuffering = !!(options.double_buffering) || transparent;
+            doubleBuffering = !!(options.double_buffering);
             canvas = c;
             context = this.getContext2d(canvas, !transparent);
-
-            if (transparent) {
-                // Clears the front buffer for each frame blit
-                context.globalCompositeOperation = "copy";
-            }
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
                 backBufferCanvas = me.video.createCanvas(width, height, false);
                 backBufferContext2D = this.getContext2d(backBufferCanvas);
+
+                if (transparent) {
+                    // Clears the front buffer for each frame blit
+                    context.globalCompositeOperation = "copy";
+                }
             }
             else {
                 backBufferCanvas = canvas;
@@ -141,7 +141,7 @@
         api.prepareSurface = function () {
             if (transparent) {
                 api.prepareSurface = function () {
-                    api.clearSurface(null, "rgba(0,0,0,0)");
+                    api.clearSurface(null, "rgba(0,0,0,0)", true);
                 };
             }
             else {
@@ -465,7 +465,7 @@
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
                 canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
             }
-            if (transparent) {
+            if (doubleBuffering && transparent) {
                 // Clears the front buffer for each frame blit
                 context.globalCompositeOperation = "copy";
             }
