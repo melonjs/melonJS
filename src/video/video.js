@@ -23,7 +23,7 @@
         // max display size
         var maxWidth = Infinity;
         var maxHeight = Infinity;
-        
+
         // default video settings
         var settings = {
             wrapper : undefined,
@@ -34,8 +34,8 @@
             maintainAspectRatio : true,
             transparent : false
         };
-        
-        
+
+
         /**
          * Auto-detect the best renderer to use
          * @ignore
@@ -104,21 +104,21 @@
          * @param {Number} width the width of the canvas viewport
          * @param {Number} height the height of the canvas viewport
          * @param {Object} [options] The optional video/renderer parameters
-         * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file 
+         * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.double_buffering=false] enable/disable double buffering
          * @param {Number} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
-         * @param {Boolean} [options.transparent=true] If the render view is transparent
+         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @return {Boolean}
          * @example
          * // init the video with a 640x480 canvas
          *   me.video.init(640, 480, {
-         *       wrapper: "screen", 
+         *       wrapper: "screen",
          *       renderer: me.video.CANVAS,
-         *       scale: 'auto', 
-         *       maintainAspectRatio: true, 
-         *       transparent: true
+         *       scale: 'auto',
+         *       maintainAspectRatio: true,
+         *       double_buffering: true
          *   });
          */
         //api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
@@ -127,16 +127,16 @@
             if (!me.initialized) {
                 throw new api.Error("me.video.init() called before engine initialization.");
             }
-            
+
             // revert to default options if not defined
             settings = Object.assign(settings, options || {});
-            
+
             // sanitize potential given parameters
             settings.double_buffering = !!(settings.double_buffering);
             settings.auto_scale = (settings.scale === "auto") || false;
             settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
             settings.transparent = !!(settings.transparent);
-            
+
             // normalize scale
             settings.scale = (settings.auto_scale) ? 1.0 : (+settings.scale || 1.0);
             me.sys.scale = new me.Vector2d(settings.scale, settings.scale);
@@ -151,7 +151,7 @@
             var game_height_zoom = game_height * me.sys.scale.y;
             settings.zoomX = game_width_zoom;
             settings.zoomY = game_height_zoom;
-            
+
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
                 "resize",
@@ -384,17 +384,6 @@
             me.input._offset = me.video.getPos();
             // clear the timeout id
             deferResizeId = -1;
-        };
-
-        /**
-         * enable/disable Alpha. Only applies to canvas renderer
-         * @name setAlpha
-         * @memberOf me.video
-         * @function
-         * @param {Boolean} enable
-         */
-        api.setAlpha = function (enable) {
-            this.renderer.setAlpha(enable);
         };
 
         // return our api

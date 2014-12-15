@@ -42,10 +42,13 @@
          * @param {Canvas} canvas - the html canvas tag to draw to on screen.
          * @param {Number} game_width - the width of the canvas without scaling
          * @param {Number} game_height - the height of the canvas without scaling
+         * @param {Object} [options] The renderer parameters
          */
-        api.init = function (c, width, height) {
+        api.init = function (c, width, height, options) {
+            options = options || {};
+
             canvas = c;
-            gl = this.getContextGL(c);
+            gl = this.getContextGL(c, !options.transparent);
             gl.FALSE = false;
             gl.TRUE = true;
 
@@ -175,20 +178,31 @@
         api.blitSurface = function () {};
 
         /**
+         * @ignore
+         */
+        api.prepareSurface = function () {};
+
+        /**
          * Clears the gl context. Accepts a gl context or defaults to stored gl renderer.
          * @name clearSurface
          * @memberOf me.WebGLRenderer
          * @function
          * @param {WebGLContext} [ctx=null] gl context, defaults to system context.
-         * @param {me.Color|String} color css color.
+         * @param {me.Color|String} color CSS color.
+         * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        api.clearSurface = function (ctx, col) {
+        api.clearSurface = function (ctx, col, opaque) {
             if (!ctx) {
                 ctx = gl;
             }
             colorStack.push(this.getColor());
             this.setColor(col);
-            this.fillRect(0, 0, canvas.width, canvas.height);
+            if (opaque) {
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }
+            else {
+                this.fillRect(0, 0, canvas.width, canvas.height);
+            }
             this.setColor(colorStack.pop());
         };
 
@@ -291,7 +305,7 @@
                 x, y, fontCache[gid].width, fontCache[gid].height
             );
         };
-        
+
         /**
          * Draw a line from the given point to the destination point.
          * @name drawLine
@@ -305,7 +319,7 @@
         api.drawLine = function (/*startX, startY, endX, endY*/) {
             // todo
         };
-        
+
         /**
          * Draw an image to the gl context
          * @name drawImage
@@ -462,9 +476,10 @@
          * @memberOf me.WebGLRenderer
          * @function
          * @param {Canvas} [canvas=canvas instance of the renderer]
+         * @param {Boolean} [opaque=false] Use true to disable transparency
          * @return {WebGLContext}
          */
-        api.getContextGL = function (c) {
+        api.getContextGL = function (c, opaque) {
             if (typeof c === "undefined" || c === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
@@ -480,6 +495,7 @@
 
             var attr = {
                 antialias : me.sys.scalingInterpolation,
+                alpha : !opaque,
             };
             return (
                 c.getContext("webgl", attr) ||
@@ -652,14 +668,6 @@
         };
 
         /**
-         * Enables/disables alpha
-         * @private
-         */
-        api.setAlpha = function () {
-            /* Unimplemented */
-        };
-
-        /**
          * @ignore
          */
         api.setProjection = function () {
@@ -727,7 +735,7 @@
         api.strokeArc = function (/*x, y, radius, start, end, antiClockwise*/) {
             //todo
         };
-        
+
         /**
          * Stroke an ellipse at the specified coordinates with given radius, start and end points
          * @name strokeEllipse
@@ -741,7 +749,7 @@
         api.strokeEllipse = function (/*x, y, w, h*/) {
             //todo
         };
-        
+
         /**
          * Stroke a line of the given two points
          * @name strokeLine

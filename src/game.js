@@ -282,6 +282,9 @@
                 api.viewport.screenX = translateX - api.currentLevel.pos.x;
                 api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
+                // prepare renderer to draw a new frame
+                me.video.renderer.prepareSurface();
+
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
                 api.world.draw(renderer, api.viewport);

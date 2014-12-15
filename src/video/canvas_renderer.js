@@ -40,12 +40,17 @@
          * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
          */
         api.init = function (c, width, height, options) {
-            canvas = c;
-            context = this.getContext2d(canvas);
-            
             options = options || {};
 
-            doubleBuffering = !!(options.double_buffering);
+            transparent = !!(options.transparent);
+            doubleBuffering = !!(options.double_buffering) || transparent;
+            canvas = c;
+            context = this.getContext2d(canvas, !transparent);
+
+            if (transparent) {
+                // Clears the front buffer for each frame blit
+                context.globalCompositeOperation = "copy";
+            }
 
             // create the back buffer if we use double buffering
             if (doubleBuffering) {
@@ -59,8 +64,6 @@
 
             gameWidthZoom = options.zoomX || width;
             gameHeightZoom = options.zoomY || height;
-            
-            transparent = !!(options.transparent);
 
             // the default global canvas color
             globalColor = new me.Color(255, 255, 255, 1.0);
@@ -130,6 +133,24 @@
         };
 
         /**
+         * prepare the framebuffer for drawing a new frame
+         * @name prepareSurface
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        api.prepareSurface = function () {
+            if (transparent) {
+                api.prepareSurface = function () {
+                    api.clearSurface(null, "rgba(0,0,0,0)");
+                };
+            }
+            else {
+                api.prepareSurface = function () {};
+            }
+            api.prepareSurface();
+        };
+
+        /**
          * render the main framebuffer on screen
          * @name blitSurface
          * @memberOf me.CanvasRenderer
@@ -145,7 +166,6 @@
                         backBufferCanvas.width, backBufferCanvas.height, 0,
                         0, gameWidthZoom, gameHeightZoom
                     );
-
                 };
             }
             else {
@@ -163,14 +183,16 @@
          * @function
          * @param {Context2d} [ctx=null] canvas context, defaults to system context.
          * @param {me.Color|String} color CSS color.
+         * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        api.clearSurface = function (ctx, col) {
+        api.clearSurface = function (ctx, col, opaque) {
             if (!ctx) {
                 ctx = backBufferContext2D;
             }
             var _canvas = ctx.canvas;
             ctx.save();
             ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.globalCompositeOperation = opaque ? "copy" : "source-over";
             ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
             ctx.fillRect(0, 0, _canvas.width, _canvas.height);
             ctx.restore();
@@ -302,9 +324,10 @@
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Canvas} [canvas=canvas instance of the renderer]
+         * @param {Boolean} [opaque=false] Use true to disable transparency
          * @return {Context2d}
          */
-        api.getContext2d = function (c) {
+        api.getContext2d = function (c, opaque) {
             if (typeof c === "undefined" || c === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
@@ -323,12 +346,12 @@
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : me.sys.scalingInterpolation,
-                    "alpha" : transparent
+                    "alpha" : !opaque
                 });
             }
             else {
                 _context = c.getContext("2d", {
-                    "alpha" : transparent
+                    "alpha" : !opaque
                 });
             }
             if (!_context.canvas) {
@@ -442,6 +465,10 @@
                 canvas.style.width = (canvas.width / me.device.getPixelRatio()) + "px";
                 canvas.style.height = (canvas.height / me.device.getPixelRatio()) + "px";
             }
+            if (transparent) {
+                // Clears the front buffer for each frame blit
+                context.globalCompositeOperation = "copy";
+            }
             this.setImageSmoothing(context, me.sys.scalingInterpolation);
             this.blitSurface();
         };
@@ -491,13 +518,6 @@
          */
         api.scale = function (x, y) {
             backBufferContext2D.scale(x, y);
-        };
-
-        /**
-         * @private
-         */
-        api.setAlpha = function (enable) {
-            backBufferContext2D.globalCompositeOperation = enable ? "source-over" : "copy";
         };
 
         /**
