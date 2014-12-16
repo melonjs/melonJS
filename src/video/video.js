@@ -107,7 +107,7 @@
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
-         * @param {Number} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+         * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @return {Boolean}
