@@ -35,7 +35,7 @@
          * @param {Number} game_width - the width of the canvas without scaling
          * @param {Number} game_height - the height of the canvas without scaling
          * @param {Object} [options] The renderer parameters
-         * @param {Boolean} [options.double_buffering] - whether to enable double buffering.
+         * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
          * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
          * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
          */
@@ -43,7 +43,7 @@
             options = options || {};
 
             transparent = !!(options.transparent);
-            doubleBuffering = !!(options.double_buffering);
+            doubleBuffering = !!(options.doubleBuffering);
             canvas = c;
             context = this.getContext2d(canvas, !transparent);
 

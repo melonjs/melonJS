@@ -28,8 +28,8 @@
         var settings = {
             wrapper : undefined,
             renderer : 0, // canvas
-            double_buffering : false,
-            auto_scale : false,
+            doubleBuffering : false,
+            autoScale : false,
             scale : 1.0,
             maintainAspectRatio : true,
             transparent : false
@@ -106,7 +106,7 @@
          * @param {Object} [options] The optional video/renderer parameters
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
-         * @param {Boolean} [options.double_buffering=false] enable/disable double buffering
+         * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
@@ -118,7 +118,7 @@
          *       renderer: me.video.CANVAS,
          *       scale: 'auto',
          *       maintainAspectRatio: true,
-         *       double_buffering: true
+         *       doubleBuffering: true
          *   });
          */
         //api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
@@ -132,18 +132,18 @@
             settings = Object.assign(settings, options || {});
 
             // sanitize potential given parameters
-            settings.double_buffering = !!(settings.double_buffering);
-            settings.auto_scale = (settings.scale === "auto") || false;
+            settings.doubleBuffering = !!(settings.doubleBuffering);
+            settings.autoScale = (settings.scale === "auto") || false;
             settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
             settings.transparent = !!(settings.transparent);
 
             // normalize scale
-            settings.scale = (settings.auto_scale) ? 1.0 : (+settings.scale || 1.0);
+            settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
             me.sys.scale = new me.Vector2d(settings.scale, settings.scale);
 
             // force double buffering if scaling is required
-            if (settings.auto_scale || (settings.scale !== 1.0)) {
-                settings.double_buffering = true;
+            if (settings.autoScale || (settings.scale !== 1.0)) {
+                settings.doubleBuffering = true;
             }
 
             // default scaled size value
@@ -325,7 +325,7 @@
                 );
             }
 
-            if (settings.auto_scale) {
+            if (settings.autoScale) {
                 // get the parent container max size
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
