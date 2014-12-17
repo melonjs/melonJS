@@ -63,35 +63,7 @@
      * @param {Number} z           z position
      * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
      */
-
     me.ImageLayer = me.Renderable.extend({
-        /**
-         * Define if and how an Image Layer should be repeated.<br>
-         * By default, an Image Layer is repeated both vertically and horizontally.<br>
-         * Property values : <br>
-         * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
-         * * 'repeat-x' - The background image will be repeated only horizontally.<br>
-         * * 'repeat-y' - The background image will be repeated only vertically.<br>
-         * * 'no-repeat' - The background-image will not be repeated.<br>
-         * @public
-         * @type String
-         * @name me.ImageLayer#repeat
-         */
-        //repeat: 'repeat', (define through getter/setter
-
-        /**
-         * Define the image scrolling ratio<br>
-         * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
-         * Default value : (1.0, 1.0) <br>
-         * To specify a value through Tiled, use one of the following format : <br>
-         * - a number, to change the value for both axis <br>
-         * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-         * @public
-         * @type me.Vector2d
-         * @name me.ImageLayer#ratio
-         */
-        //ratio: new me.Vector2d(1.0, 1.0),
-
         /**
          * constructor
          * @ignore
@@ -121,7 +93,17 @@
             // displaying order
             this.z = z;
 
-            // default ratio for parallax
+            /**
+             * Define the image scrolling ratio<br>
+             * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
+             * Default value : (1.0, 1.0) <br>
+             * To specify a value through Tiled, use one of the following format : <br>
+             * - a number, to change the value for both axis <br>
+             * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
+             * @public
+             * @type me.Vector2d
+             * @name me.ImageLayer#ratio
+             */
             this.ratio = new me.Vector2d(1.0, 1.0);
 
             if (typeof(ratio) !== "undefined") {
@@ -145,6 +127,18 @@
             this.repeatX = true;
             this.repeatY = true;
 
+            /**
+             * Define if and how an Image Layer should be repeated.<br>
+             * By default, an Image Layer is repeated both vertically and horizontally.<br>
+             * Property values : <br>
+             * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
+             * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+             * * 'repeat-y' - The background image will be repeated only vertically.<br>
+             * * 'no-repeat' - The background-image will not be repeated.<br>
+             * @public
+             * @type String
+             * @name me.ImageLayer#repeat
+             */
             Object.defineProperty(this, "repeat", {
                 get : function get() {
                     return this._repeat;

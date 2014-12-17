@@ -231,7 +231,7 @@
              */
             this.orientation = orientation;
 
-            /*
+            /**
              * if true, the object is an Ellipse
              * @public
              * @type Boolean
@@ -248,6 +248,7 @@
              * @memberOf me.TMXObject
              */
             this.isPolygon = false;
+
             /**
              * if true, the object is a PolyLine
              * @public
