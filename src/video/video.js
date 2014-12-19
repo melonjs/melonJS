@@ -42,7 +42,7 @@
          */
         function autoDetectRenderer() {
             try {
-                return me.WebGLRenderer.init.apply(me.WebGLRenderer, arguments);
+                return new me.WebGLRenderer(arguments);
             }
             catch (e) {
                 return new me.CanvasRenderer(arguments);
@@ -203,7 +203,7 @@
 
             switch (settings.renderer) {
                 case api.WEBGL:
-                    this.renderer = me.WebGLRenderer.init(canvas, game_width, game_height, settings);
+                    this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);
                     break;
                 case api.AUTO:
                     this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
