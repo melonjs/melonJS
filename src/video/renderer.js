@@ -247,7 +247,7 @@
          * @param {Boolean} [enable=false]
          */
         setImageSmoothing : function (context, enable) {
-            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, this.context);
+            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
         }
 
     });
