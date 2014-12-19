@@ -45,7 +45,7 @@
                 return me.WebGLRenderer.init.apply(me.WebGLRenderer, arguments);
             }
             catch (e) {
-                return me.CanvasRenderer.init.apply(me.CanvasRenderer, arguments);
+                return new me.CanvasRenderer(arguments);
             }
         }
 
@@ -209,7 +209,7 @@
                     this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
                     break;
                 default:
-                    this.renderer = me.CanvasRenderer.init(canvas, game_width, game_height, settings);
+                    this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
                     break;
             }
 

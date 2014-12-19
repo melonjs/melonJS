@@ -38,7 +38,7 @@
             this._super(me.plugin.Base, "init");
 
             // minimum melonJS version expected
-            this.version = "2.0.0";
+            this.version = "2.1.0";
 
             // to hold the debug options
             // clickable rect area
@@ -81,7 +81,7 @@
             // WebGL/Canvas compatibility
             var canvas = me.video.renderer.getCanvas();
             this.canvas = me.video.createCanvas(canvas.width, DEBUG_HEIGHT, true);
-            this.context = me.CanvasRenderer.getContext2d(this.canvas);
+            this.context = me.video.renderer.getContext2d(this.canvas);
             this.overlay = new me.Color(255, 255, 255, 1.0);
 
             // Size

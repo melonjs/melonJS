@@ -173,16 +173,6 @@
         };
 
         /**
-         * @ignore
-         */
-        api.blitSurface = function () {};
-
-        /**
-         * @ignore
-         */
-        api.prepareSurface = function () {};
-
-        /**
          * Clears the gl context. Accepts a gl context or defaults to stored gl renderer.
          * @name clearSurface
          * @memberOf me.WebGLRenderer
