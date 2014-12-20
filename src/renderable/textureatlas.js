@@ -128,12 +128,12 @@
                             // Upper-left triangle
                             u1, v1,
                             u2, v1,
-                            u2, v2,
+                            u1, v2,
 
                             // Lower right triangle
+                            u1, v2,
                             u2, v1,
-                            u2, v2,
-                            u1, v2
+                            u2, v2
                         ])
                     };
                 }
