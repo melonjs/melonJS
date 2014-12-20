@@ -108,15 +108,14 @@
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
                 if (frame.hasOwnProperty("filename")) {
-                    // Destination and Source coordinates
+                    // Source coordinates
                     var s = frame.frame;
-                    var d = frame.spriteSourceSize;
 
                     // UV coordinates
-                    var u1 = size.w / d.x;
-                    var v1 = size.h / d.y;
-                    var u2 = size.w / (d.x + d.w);
-                    var v2 = size.h / (d.y + d.h);
+                    var u1 = size.w / s.x;
+                    var v1 = size.h / s.y;
+                    var u2 = size.w / (s.x + s.w);
+                    var v2 = size.h / (s.y + s.h);
 
                     atlas[frame.filename] = {
                         name    : name, // frame name
