@@ -15,7 +15,8 @@
      * A Texture atlas object<br>
      * Currently support : <br>
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
-     * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx}
+     * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
+     * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx}
      * @class
      * @extends Object
      * @memberOf me
@@ -54,7 +55,7 @@
              * the atlas dictionnary
              * @ignore
              */
-            this.atlas = atlas || null;
+            this.atlas = null;
 
             if (atlas && atlas.meta) {
                 // Texture Packer
@@ -72,20 +73,28 @@
                     }
                 }
                 // ShoeBox
-                if (atlas.meta.app.contains("ShoeBox")) {
+                else if (atlas.meta.app.contains("ShoeBox")) {
                     if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
-                        throw new me.TextureAtlas.Error("ShoeBox requires the JSON exporter : https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx");
+                        throw new me.TextureAtlas.Error(
+                            "ShoeBox requires the JSON exporter : " +
+                            "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
+                        );
                     }
                     this.format = "ShoeBox";
                     // set the texture
                     this.texture = texture;
                 }
+                // Internal texture atlas
+                else if (atlas.meta.app.contains("melonJS")) {
+                    this.format = "melonJS";
+                    this.texture = texture;
+                }
                 // initialize the atlas
-                this.atlas = this.initFromTexturePacker(atlas);
+                this.atlas = this.build(atlas);
             }
 
             // if format not recognized
-            if (this.atlas === null) {
+            if (!this.atlas) {
                 throw new me.TextureAtlas.Error("texture atlas format not supported");
             }
         },
@@ -93,24 +102,39 @@
         /**
          * @ignore
          */
-        initFromTexturePacker : function (data) {
+        build : function (data) {
+            var size = data.meta.size;
             var atlas = {};
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
                 if (frame.hasOwnProperty("filename")) {
+                    // Destination and Source coordinates
+                    var s = frame.frame;
+                    var d = frame.spriteSourceSize;
+
+                    // UV coordinates
+                    var u1 = size.w / d.x;
+                    var v1 = size.h / d.y;
+                    var u2 = size.w / (d.x + d.w);
+                    var v2 = size.h / (d.y + d.h);
+
                     atlas[frame.filename] = {
-                        frame: new me.Rect(
-                            frame.frame.x, frame.frame.y,
-                            frame.frame.w, frame.frame.h
-                        ),
-                        source: new me.Rect(
-                            frame.spriteSourceSize.x, frame.spriteSourceSize.y,
-                            frame.spriteSourceSize.w, frame.spriteSourceSize.h
-                        ),
-                        // non trimmed size, but since we don't support trimming both value are the same
-                        //sourceSize: new me.Vector2d(frame.sourceSize.w,frame.sourceSize.h),
-                        rotated : frame.rotated === true,
-                        trimmed : frame.trimmed === true
+                        name    : name, // frame name
+                        offset  : new me.Vector2d(s.x, s.y),
+                        width   : s.w,
+                        height  : s.h,
+                        angle   : (frame.rotated === true) ? nhPI : 0,
+                        uvMap   : new Float32Array([
+                            // Upper-left triangle
+                            u1, v1,
+                            u2, v1,
+                            u2, v2,
+
+                            // Lower right triangle
+                            u2, v1,
+                            u2, v2,
+                            u1, v2
+                        ])
                     };
                 }
             });
@@ -137,20 +161,7 @@
          * @return {Object}
          */
         getRegion : function (name) {
-            var region = this.atlas[name];
-            if (region) {
-                return {
-                    name: name, // frame name
-                    pos: region.source.pos.clone(), // unused for now
-                    offset: region.frame.pos.clone(),
-                    width: region.frame.width,
-                    height: region.frame.height,
-                    hWidth: region.frame.width / 2,
-                    hHeight: region.frame.height / 2,
-                    angle : (region.rotated === true) ? nhPI : 0
-                };
-            }
-            return null;
+            return this.atlas[name];
         },
 
         /**
