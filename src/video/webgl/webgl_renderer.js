@@ -7,25 +7,24 @@
 (function () {
 
     /**
-     * The WebGL renderer object
-     * There is no constructor function for me.CanvasRenderer
+     * a WebGL renderer object
      * @extends me.Renderer
      * @namespace me.WebGLRenderer
      * @memberOf me
-     * @ignore
+     * @constructor     
+     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
+     * @param {Number} game_width - the width of the canvas without scaling
+     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Object} [options] The renderer parameters
+     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
+     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
      */
     me.WebGLRenderer = me.Renderer.extend(
     /** @scope me.WebGLRenderer.prototype */
     {
         /**
-         * initializes the webgl renderer, creating the requried contexts
-         * @name init
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-         * @param {Number} game_width - the width of the canvas without scaling
-         * @param {Number} game_height - the height of the canvas without scaling
-         * @param {Object} [options] The renderer parameters
+         * @ignore
          */
         init : function (c, width, height, options) {
             this._super(me.Renderer, "init", [c, width, height, options]);

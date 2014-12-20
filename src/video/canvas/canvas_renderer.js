@@ -13,24 +13,19 @@
      * @extends me.Renderer
      * @memberOf me
      * @constructor     
-     * @namespace me.CanvasRenderer
-     * @memberOf me
+     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
+     * @param {Number} game_width - the width of the canvas without scaling
+     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Object} [options] The renderer parameters
+     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
+     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
      */
     me.CanvasRenderer = me.Renderer.extend(
     /** @scope me.CanvasRenderer.prototype */
     {
         /**
-         * Create and initialize a new canvas renderer, together with the required contexts
-         * @name init
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-         * @param {Number} game_width - the width of the canvas without scaling
-         * @param {Number} game_height - the height of the canvas without scaling
-         * @param {Object} [options] The renderer parameters
-         * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
-         * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
-         * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
+         * @ignore
          */
         init : function (c, width, height, options) {
             // parent constructor
