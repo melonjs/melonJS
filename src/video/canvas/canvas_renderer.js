@@ -264,17 +264,6 @@
         },
 
         /**
-         * return the current global alpha
-         * @name globalAlpha
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @return {Number}
-         */
-        globalAlpha : function () {
-            return this.globalColor.alpha;
-        },
-
-        /**
          * returns the text size based on dimensions from the font. Uses the backbuffer context
          * @name measureText
          * @memberOf me.CanvasRenderer

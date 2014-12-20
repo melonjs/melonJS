@@ -28,7 +28,6 @@
          * @param {Object} [options] The renderer parameters
          */
         init : function (c, width, height, options) {
-            options = options || {};
             this._super(me.Renderer, "init", [c, width, height, options]);
 
             /**
@@ -38,10 +37,7 @@
              */
             this.gl = this.getContextGL(c, !this.transparent);
 
-            this._dimensions = { width: width, height: height };
-            this._colorStack = [];
             this._fontCache = {};
-            this.globalColor = null;
             this._lineTextureCoords = new Float32Array(8);
             this._lineVerticeArray = new Float32Array(8);
             this._matrixStack = [];
@@ -77,7 +73,6 @@
             gl.enableVertexAttribArray(shaderProgram.attributes.aTexture.location);
             gl.enableVertexAttribArray(shaderProgram.attributes.aPosition.location);
 
-            this.globalColor = new me.Color(255, 255, 255, 1.0);
             this._fontCanvas = me.video.createCanvas(width, height, false);
             this._fontContext = this.getContext2d(this._fontCanvas, !this.transparent);
 
@@ -195,7 +190,7 @@
             if (!ctx) {
                 ctx = this.gl;
             }
-            this._colorStack.push(this.getColor());
+            this.colorStack.push(this.getColor());
             this.setColor(col);
             if (opaque) {
                 this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -203,7 +198,7 @@
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            this.setColor(this._colorStack.pop());
+            this.setColor(this.colorStack.pop());
         },
 
         /**
@@ -510,16 +505,6 @@
             return this.canvas;
         },
 
-        /**
-         * returns the current color of the drawing context
-         * @name getColor
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {me.Color}
-         */
-        getColor : function () {
-            return this.globalColor.clone();
-        },
 
         /**
          * Returns the WebGLContext instance for the renderer
@@ -533,38 +518,6 @@
             return this.gl;
         },
 
-        /**
-         * return the width of the system GL Context
-         * @name getWidth
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        getWidth : function () {
-            return this.canvas.width;
-        },
-
-        /**
-         * return the height of the system GL Context
-         * @name getHeight
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        getHeight : function () {
-            return this.canvas.height;
-        },
-
-        /**
-         * return the current global alpha
-         * @name globalAlpha
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        globalAlpha : function () {
-            return this.globalColor.alpha;
-        },
 
         /**
          * returns the text size based on dimensions from the font. Uses the font drawing context
@@ -596,10 +549,10 @@
          * @function
          */
         resize : function (scaleX, scaleY) {
-            this.canvas.width = this._dimensions.width;
-            this.canvas.height = this._dimensions.height;
-            var w = this._dimensions.width * scaleX;
-            var h = this._dimensions.height * scaleY;
+            this.canvas.width = this.dimensions.width;
+            this.canvas.height = this.dimensions.height;
+            var w = this.dimensions.width * scaleX;
+            var h = this.dimensions.height * scaleY;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
@@ -610,7 +563,7 @@
                 this.canvas.style.width = w + "px";
                 this.canvas.style.height = h + "px";
             }
-            this.gl.viewport(0, 0, this._dimensions.width, this._dimensions.height);
+            this.gl.viewport(0, 0, this.dimensions.width, this.dimensions.height);
 
             this.setProjection();
             this.applyProjection();
@@ -623,7 +576,7 @@
          * @function
          */
         restore : function () {
-            var color = this._colorStack.pop();
+            var color = this.colorStack.pop();
             me.pool.push("me.Color", color);
             this.globalColor.copy(color);
             this.uniformMatrix.copy(this._matrixStack.pop());
@@ -647,7 +600,7 @@
          * @function
          */
         save : function () {
-            this._colorStack.push(this.getColor());
+            this.colorStack.push(this.getColor());
             this._matrixStack.push(this.uniformMatrix.clone());
         },
 

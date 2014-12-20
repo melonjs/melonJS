@@ -42,8 +42,7 @@
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
             
-            this.width = width;
-            this.height = height;
+            this.dimensions = { width: width, height: height };
                
             // canvas object and context
             this.canvas = c;
@@ -212,7 +211,7 @@
          * @return {Number}
          */
         getWidth : function () {
-            return this.width;
+            return this.dimensions.width;
         },
 
         /**
@@ -223,7 +222,7 @@
          * @return {Number}
          */
         getHeight : function () {
-            return this.height;
+            return this.dimensions.height;
         },
 
         /**
