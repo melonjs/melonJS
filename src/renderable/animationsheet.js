@@ -65,6 +65,7 @@
              * @name me.AnimationSheet#animationspeed
              */
             this.animationspeed = 100;
+
             // hold all defined animation
             this.anim = {};
 
@@ -73,6 +74,13 @@
 
             // default animation sequence
             this.current = null;
+
+            // current frame texture offset
+            this.offset = null;
+
+            // current frame rotation angle
+            this._sourceAngle = 0;
+
             // default animation speed (ms)
             this.animationspeed = 100;
 
@@ -147,8 +155,6 @@
                         ),
                         width: this.width,
                         height: this.height,
-                        hWidth: this.width / 2,
-                        hHeight: this.height / 2,
                         angle: 0
                     };
                 }
@@ -295,8 +301,6 @@
             this.offset = frame.offset;
             this.width = frame.width;
             this.height = frame.height;
-            this.hWidth = frame.hWidth;
-            this.hHeight = frame.hHeight;
             this._sourceAngle = frame.angle;
         },
 
