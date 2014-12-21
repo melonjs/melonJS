@@ -66,17 +66,6 @@
             if (this.transparent) {
                 this.clearSurface(null, "rgba(0,0,0,0)", true);
             }
-        /*
-            if (this.transparent) {
-                this.prepareSurface = function () {
-                    this.clearSurface(null, "rgba(0,0,0,0)", true);
-                };
-            }
-            else {
-                this.prepareSurface = function () {};
-            }
-            this.prepareSurface();
-            */
         },
 
         /**
@@ -95,27 +84,6 @@
                     this.gameWidthZoom, this.gameHeightZoom
                 );
             }
-             
-            /*
-            if (this.doubleBuffering) {
-                /* @ignore 
-                this.blitSurface = function () {
-                    FPS.update();
-                    this.context.drawImage(
-                        this.backBufferCanvas, 0, 0,
-                        this.backBufferCanvas.width, this.backBufferCanvas.height,
-                        0, 0,
-                        this.gameWidthZoom, this.gameHeightZoom
-                    );
-                };
-            }
-            else {
-                / "empty" function, as we directly render stuff on "context2D"
-                /** @ignore 
-                this.blitSurface = function () {};
-            }
-            this.blitSurface();
-            */
         },
 
         /**
