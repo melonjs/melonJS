@@ -19,7 +19,7 @@
      * <li>{Image} image to use for the animation</li>
      * <li>{Number} framewidth - of a single frame within the spritesheet</li>
      * <li>{Number} frameheight - height of a single frame within the spritesheet</li>
-     * <li>{Object} region an instance of: me.TextureAtlas#getRegion. The region for when the animation sheet is part of a me.TextureAtlas</li>
+     * <li>{Object} region an instance of: me.video.renderer.Texture#getRegion. The region for when the animation sheet is part of a me.video.renderer.Texture</li>
      * </ul>
      * @example
      * // standalone image
@@ -29,7 +29,7 @@
      *   frameheight: 64
      * });
      * // from a texture
-     * var texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
+     * var texture = new me.video.renderer.Texture(me.loader.getJSON('texture'), me.loader.getImage('texture'));
      * var animationSheet = new me.AnimationSheet(0, 0, {
      *   image: texture.getTexture(),
      *   framewidth: 64,
@@ -210,7 +210,9 @@
                     this.anim[name].frame[i] = this.textureAtlas[index[i]];
                 } else { // string
                     if (this.atlasIndices === null) {
-                        throw new me.Renderable.Error("string parameters for addAnimation are only allowed for TextureAtlas");
+                        throw new me.Renderable.Error(
+                            "string parameters for addAnimation are only allowed for me.video.renderer.Texture"
+                        );
                     } else {
                         this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
                     }

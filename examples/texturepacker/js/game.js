@@ -33,7 +33,10 @@ var game = {
 
   // Run on game resources loaded.
   loaded : function () {
-    this.texture = new me.TextureAtlas(me.loader.getJSON('texture'), me.loader.getImage('texture'));
+    this.texture = new me.video.renderer.Texture(
+      me.loader.getJSON('texture'),
+      me.loader.getImage('texture')
+    );
     me.state.set(me.state.PLAY, new game.PlayScreen());
 
     // Start the game.

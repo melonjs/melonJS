@@ -11,7 +11,7 @@
      * @extends me.Renderer
      * @namespace me.WebGLRenderer
      * @memberOf me
-     * @constructor     
+     * @constructor
      * @param {Canvas} canvas - the html canvas tag to draw to on screen.
      * @param {Number} game_width - the width of the canvas without scaling
      * @param {Number} game_height - the height of the canvas without scaling
@@ -54,7 +54,7 @@
              * @memberOf me.WebGLRenderer
              */
             this.uniformMatrix = new me.Matrix3d();
-            
+
             this._projection = new me.Matrix3d({
                 val: new Float32Array([
                     2 / width,  0,              0,
@@ -113,7 +113,6 @@
             // Create a Texture from the image
             image.texture = me.video.shader.gltexture2d(gl, image);
 
-            
             // Create a Vertex Buffer
             image.vb = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
@@ -371,6 +370,9 @@
             // Set texture coordinates
             this.bindTextureCoords(image, ~~sx, ~~sy, ~~sw, ~~sh);
             gl.vertexAttribPointer(this._shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
+
+            // Set index buffer
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, image.ib);
 
             // Bind the texture
             this._shaderProgram.uniforms.texture = image.texture.bind();

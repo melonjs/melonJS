@@ -19,21 +19,22 @@
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx}
      * @class
      * @extends Object
-     * @memberOf me
+     * @memberOf me.video.renderer
+     * @name Texture
      * @constructor
      * @param {Object} atlas atlas information. See {@link me.loader#getJSON}
      * @param {Image} [texture=atlas.meta.image] texture name
      * @example
      * // create a texture atlas
-     * texture = new me.TextureAtlas (
+     * texture = new me.video.renderer.Texture(
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
      *
      * // or if you wish to specify the atlas
      */
-    me.TextureAtlas = Object.extend(
-    /** @scope me.TextureAtlas.prototype */
+    me.CanvasRenderer.prototype.Texture = Object.extend(
+    /** @scope me.video.renderer.Texture.prototype */
     {
         /**
          * @ignore
@@ -66,7 +67,7 @@
                         var name = me.utils.getBasename(atlas.meta.image);
                         this.texture = me.loader.getImage(name);
                         if (this.texture === null) {
-                            throw new me.TextureAtlas.Error("Atlas texture '" + name + "' not found");
+                            throw new me.video.renderer.Texture.Error("Atlas texture '" + name + "' not found");
                         }
                     } else {
                         this.texture = texture;
@@ -75,7 +76,7 @@
                 // ShoeBox
                 else if (atlas.meta.app.contains("ShoeBox")) {
                     if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
-                        throw new me.TextureAtlas.Error(
+                        throw new me.video.renderer.Texture.Error(
                             "ShoeBox requires the JSON exporter : " +
                             "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                         );
@@ -95,7 +96,7 @@
 
             // if format not recognized
             if (!this.atlas) {
-                throw new me.TextureAtlas.Error("texture atlas format not supported");
+                throw new me.video.renderer.Texture.Error("texture atlas format not supported");
             }
         },
 
@@ -103,7 +104,6 @@
          * @ignore
          */
         build : function (data) {
-            var size = data.meta.size;
             var atlas = {};
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
@@ -111,29 +111,12 @@
                     // Source coordinates
                     var s = frame.frame;
 
-                    // UV coordinates
-                    var u1 = size.w / s.x;
-                    var v1 = size.h / s.y;
-                    var u2 = size.w / (s.x + s.w);
-                    var v2 = size.h / (s.y + s.h);
-
                     atlas[frame.filename] = {
                         name    : name, // frame name
                         offset  : new me.Vector2d(s.x, s.y),
                         width   : s.w,
                         height  : s.h,
-                        angle   : (frame.rotated === true) ? nhPI : 0,
-                        uvMap   : new Float32Array([
-                            // Upper-left triangle
-                            u1, v1,
-                            u2, v1,
-                            u1, v2,
-
-                            // Lower right triangle
-                            u1, v2,
-                            u2, v1,
-                            u2, v2
-                        ])
+                        angle   : (frame.rotated === true) ? nhPI : 0
                     };
                 }
             });
@@ -143,7 +126,7 @@
         /**
          * return the Atlas texture
          * @name getTexture
-         * @memberOf me.TextureAtlas
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @return {Image}
          */
@@ -154,7 +137,7 @@
         /**
          * return a normalized region/frame information for the specified sprite name
          * @name getRegion
-         * @memberOf me.TextureAtlas
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {Object}
@@ -166,13 +149,13 @@
         /**
          * Create a sprite object using the first region found using the specified name
          * @name createSpriteFromName
-         * @memberOf me.TextureAtlas
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
-         * game.texture = new me.TextureAtlas(
+         * game.texture = new me.video.renderer.Texture(
          *    me.loader.getJSON("texture"),
          *    me.loader.getImage("texture")
          * );
@@ -197,30 +180,23 @@
                 // set angle if defined
                 sprite._sourceAngle = region.angle;
 
-                /* -> when using anchor positioning, this is not required
-                   -> and makes final position wrong...
-                if (tex.trimmed===true) {
-                    // adjust default position
-                    sprite.pos.add(tex.source.pos);
-                }
-                */
                 // return our object
                 return sprite;
             }
             // throw an error
-            throw new me.TextureAtlas.Error("TextureAtlas - region for " + name + " not found");
+            throw new me.video.renderer.Texture.Error("Texture - region for " + name + " not found");
         },
 
         /**
          * Create an animation object using the first region found using all specified names
          * @name createAnimationFromName
-         * @memberOf me.TextureAtlas
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String[]} names list of names for each sprite
          * @return {me.AnimationSheet}
          * @example
          * // create a new texture atlas object under the `game` namespace
-         * game.texture = new me.TextureAtlas(
+         * game.texture = new me.video.renderer.Texture(
          *    me.loader.getJSON("texture"),
          *    me.loader.getImage("texture")
          * );
@@ -252,7 +228,7 @@
                 indices[names[i]] = i;
                 if (tpAtlas[i] == null) {
                     // throw an error
-                    throw new me.TextureAtlas.Error("TextureAtlas - region for " + names[i] + " not found");
+                    throw new me.video.renderer.Texture.Error("Texture - region for " + names[i] + " not found");
                 }
             }
             // instantiate a new animation sheet object
@@ -269,17 +245,17 @@
     });
 
     /**
-     * Base class for TextureAtlas exception handling.
+     * Base class for Texture exception handling.
      * @name Error
      * @class
-     * @memberOf me.TextureAtlas
+     * @memberOf me.video.renderer.Texture
      * @constructor
      * @param {String} msg Error message.
      */
-    me.TextureAtlas.Error = me.Error.extend({
+    me.CanvasRenderer.prototype.Texture.Error = me.Error.extend({
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
-            this.name = "me.TextureAtlas.Error";
+            this.name = "me.CanvasRenderer.Texture.Error";
         }
     });
 })();

@@ -66,7 +66,10 @@ var game = {
 
         // load the texture atlas file
         // this will be used by object entities later
-        game.texture = new me.TextureAtlas(me.loader.getJSON("texture"), me.loader.getImage("texture"));
+        game.texture = new me.video.renderer.Texture(
+            me.loader.getJSON("texture"),
+            me.loader.getImage("texture")
+        );
 
         // add some keyboard shortcuts
         me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
