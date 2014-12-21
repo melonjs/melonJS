@@ -8,7 +8,7 @@
     // generate a default image for the particles
     var pixel = (function () {
         var canvas = me.video.createCanvas(1, 1);
-        var context = me.CanvasRenderer.getContext2d(canvas);
+        var context = canvas.getContext("2d");
         context.fillStyle = "#fff";
         context.fillRect(0, 0, 1, 1);
         return canvas;

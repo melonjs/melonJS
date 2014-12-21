@@ -301,7 +301,7 @@
         //return an Image Object with the specified tile
         getTileImage : function (tmxTile) {
             // create a new image object
-            var _context = me.CanvasRenderer.getContext2d(
+            var _context = me.video.renderer.getContext2d(
                     me.video.createCanvas(this.tilewidth, this.tileheight)
             );
             this.drawTile(_context, 0, 0, tmxTile);

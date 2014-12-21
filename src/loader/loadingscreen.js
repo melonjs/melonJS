@@ -54,7 +54,7 @@
 
             this.iconCanvas = iconCanvas;
 
-            var context = me.CanvasRenderer.getContext2d(this.iconCanvas);
+            var context = me.video.renderer.getContext2d(this.iconCanvas);
 
             context.translate(this.pos.x, this.pos.y);
             context.beginPath();

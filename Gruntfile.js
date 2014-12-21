@@ -3,7 +3,7 @@ module.exports = function (grunt) {
 
     var sourceFiles = grunt.file.readJSON("sourceFiles.json");
     var testSpecs = grunt.file.readJSON("testSpecs.json");
-    var glslSourceFiles = [ "src/video/*.glsl" ];
+    var glslSourceFiles = [ "src/video/webgl/*.glsl" ];
 
     // Project configuration.
     grunt.initConfig({

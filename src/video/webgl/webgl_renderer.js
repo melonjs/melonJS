@@ -7,55 +7,55 @@
 (function () {
 
     /**
-     * The WebGL renderer object
-     * There is no constructor function for me.CanvasRenderer
+     * a WebGL renderer object
+     * @extends me.Renderer
      * @namespace me.WebGLRenderer
      * @memberOf me
-     * @ignore
+     * @constructor     
+     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
+     * @param {Number} game_width - the width of the canvas without scaling
+     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Object} [options] The renderer parameters
+     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
+     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
      */
-    me.WebGLRenderer = (function () {
-        var api = {},
-        canvas = null,
-        colorStack = [],
-        dimensions = null,
-        fontCache = {},
-        fontCanvas = null,
-        fontContext = null,
-        gl = null,
-        globalColor = null,
-        lineTextureCoords = new Float32Array(8),
-        lineVerticeArray = new Float32Array(8),
-        matrixStack = [],
-        positionBuffer = null,
-        shaderProgram = null,
-        textureBuffer = null,
-        textureCoords = new Float32Array(12),
-        textureLocation = null,
-        verticeArray = new Float32Array(12),
-        white1PixelTexture = null;
-
+    me.WebGLRenderer = me.Renderer.extend(
+    /** @scope me.WebGLRenderer.prototype */
+    {
         /**
-         * initializes the webgl renderer, creating the requried contexts
-         * @name init
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-         * @param {Number} game_width - the width of the canvas without scaling
-         * @param {Number} game_height - the height of the canvas without scaling
-         * @param {Object} [options] The renderer parameters
+         * @ignore
          */
-        api.init = function (c, width, height, options) {
-            options = options || {};
+        init : function (c, width, height, options) {
+            this._super(me.Renderer, "init", [c, width, height, options]);
 
-            canvas = c;
-            gl = this.getContextGL(c, !options.transparent);
-            gl.FALSE = false;
-            gl.TRUE = true;
+            /**
+             * The WebGL context
+             * @name gl
+             * @memberOf me.WebGLRenderer
+             */
+            this.gl = this.getContextGL(c, !this.transparent);
 
-            dimensions = { width: width, height: height };
+            this._fontCache = {};
+            this._lineTextureCoords = new Float32Array(8);
+            this._lineVerticeArray = new Float32Array(8);
+            this._matrixStack = [];
+            this._positionBuffer = null;
+            this._textureBuffer = null;
+            this._textureCoords = new Float32Array(12);
+            this._textureLocation = null;
+            this._verticeArray = new Float32Array(12);
+            this._white1PixelTexture = null;
 
+            /**
+             * The uniform matrix. Used for transformations on the overall scene
+             * @name uniformMatrix
+             * @type me.Matrix3d
+             * @memberOf me.WebGLRenderer
+             */
             this.uniformMatrix = new me.Matrix3d();
-            this.projection = new me.Matrix3d({
+            
+            this._projection = new me.Matrix3d({
                 val: new Float32Array([
                     2 / width,  0,              0,
                     0,          -2 / height,    0,
@@ -64,17 +64,19 @@
             });
 
             this.createShader();
-            shaderProgram.bind();
+            this._shaderProgram.bind();
+
+            var shaderProgram = this._shaderProgram;
+            var gl = this.gl;
 
             gl.enableVertexAttribArray(shaderProgram.attributes.aTexture.location);
             gl.enableVertexAttribArray(shaderProgram.attributes.aPosition.location);
 
-            globalColor = new me.Color(255, 255, 255, 1.0);
-            fontCanvas = me.video.createCanvas(width, height, false);
-            fontContext = me.CanvasRenderer.getContext2d(fontCanvas);
+            this._fontCanvas = me.video.createCanvas(width, height, false);
+            this._fontContext = this.getContext2d(this._fontCanvas, !this.transparent);
 
-            white1PixelTexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
+            this._white1PixelTexture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
 
             this.createBuffers();
@@ -83,12 +85,12 @@
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-            textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
+            this._textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
 
             this.resize(1, 1);
 
             return this;
-        };
+        },
 
         /**
          * Binds the projection matrix to the shader
@@ -96,21 +98,22 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.applyProjection = function () {
-            shaderProgram.uniforms.pMatrix = this.projection.val;
-        };
+        applyProjection : function () {
+            this._shaderProgram.uniforms.pMatrix = this._projection.val;
+        },
 
         /**
          * @ignore
          */
-        api.bindTexture = function (image) {
+        bindTexture : function (image) {
             // FIXME: Create a new object for this instead of modifying the image
             var w = image.width,
-                h = image.height;
-
+                h = image.height,
+                gl = this.gl;
             // Create a Texture from the image
             image.texture = me.video.shader.gltexture2d(gl, image);
 
+            
             // Create a Vertex Buffer
             image.vb = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
@@ -133,33 +136,34 @@
                 0, 1, 2,
                 2, 1, 3
             ]), gl.STATIC_DRAW);
-        };
+        },
 
         /**
          * @ignore
          */
-        api.bindTextureCoords = function (image, x, y, w, h) {
+        bindTextureCoords : function (image, x, y, w, h) {
             // Texture coordinates are cached
             // They can be looked up by indexing "x,y,w,h"
             var key = x + "," + y + "," + w + "," + h;
 
             if (key in image.t) {
                 // Bind the new texture coordinates buffer to the ARRAY_BUFFER
-                gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key]);
+                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, image.t[key]);
             }
             else {
                 this.cacheTextureCoords(image, key, x, y, w, h);
             }
-        };
+        },
 
         /**
          * @ignore
          */
-        api.cacheTextureCoords = function (image, key, x, y, w, h) {
+        cacheTextureCoords : function (image, key, x, y, w, h) {
             w = (x + w) / image.width;
             h = (y + h) / image.height;
             x /= image.width;
             y /= image.height;
+            var gl = this.gl;
 
             image.t[key] = gl.createBuffer();
 
@@ -170,17 +174,7 @@
                 x, h,
                 w, h
             ]), gl.STATIC_DRAW);
-        };
-
-        /**
-         * @ignore
-         */
-        api.blitSurface = function () {};
-
-        /**
-         * @ignore
-         */
-        api.prepareSurface = function () {};
+        },
 
         /**
          * Clears the gl context. Accepts a gl context or defaults to stored gl renderer.
@@ -191,35 +185,35 @@
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        api.clearSurface = function (ctx, col, opaque) {
+        clearSurface : function (ctx, col, opaque) {
             if (!ctx) {
-                ctx = gl;
+                ctx = this.gl;
             }
-            colorStack.push(this.getColor());
+            this.colorStack.push(this.getColor());
             this.setColor(col);
             if (opaque) {
-                gl.clear(gl.COLOR_BUFFER_BIT);
+                this.gl.clear(this.gl.COLOR_BUFFER_BIT);
             }
             else {
-                this.fillRect(0, 0, canvas.width, canvas.height);
+                this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            this.setColor(colorStack.pop());
-        };
+            this.setColor(this.colorStack.pop());
+        },
 
         /**
          * @ignore
          */
-        api.createBuffers = function () {
-            textureBuffer = gl.createBuffer();
-            positionBuffer = gl.createBuffer();
-        };
+        createBuffers : function () {
+            this._textureBuffer = this.gl.createBuffer();
+            this._positionBuffer = this.gl.createBuffer();
+        },
 
         /**
          * @ignore
          */
-        api.createShader = function () {
-            shaderProgram = me.video.shader.createShader(gl);
-        };
+        createShader : function () {
+            this._shaderProgram = me.video.shader.createShader(this.gl);
+        },
 
         /**
          * draws font to an off screen context, and blits to the backbuffer canvas.
@@ -231,9 +225,12 @@
          * @param {Number} x - the x position to draw at
          * @param {Number} y - the y position to draw at
          */
-        api.drawFont = function (fontObject, text, x, y) {
+        drawFont : function (fontObject, text, x, y) {
             var fontDimensions;
             var gid = fontObject.gid;
+            var fontCache = this._fontCache;
+            var fontCanvas = this._fontCanvas;
+            var fontContext = this._fontContext;
             if (!fontCache[gid]) {
                 fontObject.draw(fontContext, text, x, y);
                 fontDimensions = fontObject.measureText(fontContext, text);
@@ -262,7 +259,7 @@
                         fontCache[gid].yOffset = fontDimensions.height / 2;
                         break;
                 }
-                fontContext.clearRect(0, 0, canvas.width, canvas.height);
+                fontContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
             else {
                 var cache = fontCache[gid];
@@ -294,7 +291,7 @@
                     cache.height = fontDimensions.height * 1.2;
                     cache.image = fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height);
 
-                    fontContext.clearRect(0, 0, canvas.width, canvas.height);
+                    fontContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 }
             }
 
@@ -304,7 +301,7 @@
                 x, y, fontCache[gid].width, fontCache[gid].height,
                 x, y, fontCache[gid].width, fontCache[gid].height
             );
-        };
+        },
 
         /**
          * Draw a line from the given point to the destination point.
@@ -316,9 +313,9 @@
          * @param {Number} endX end x position
          * @param {Number} endY end y position
          */
-        api.drawLine = function (/*startX, startY, endX, endY*/) {
+        drawLine : function (/*startX, startY, endX, endY*/) {
             // todo
-        };
+        },
 
         /**
          * Draw an image to the gl context
@@ -335,7 +332,7 @@
          * @param {Number} dw the width value to draw the image at on the screen
          * @param {Number} dh the height value to draw the image at on the screen
          */
-        api.drawImage = function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+        drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (typeof image.texture === "undefined") {
                 this.bindTexture(image);
             }
@@ -359,8 +356,9 @@
                 sy = 0;
             }
 
+            var gl = this.gl;
             // Save
-            matrixStack.push(this.uniformMatrix.clone());
+            this._matrixStack.push(this.uniformMatrix.clone());
 
             // Translate and scale the destination vertices
             this.uniformMatrix.translate(~~dx, ~~dy);
@@ -368,27 +366,27 @@
 
             // Set vertex positions
             gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
-            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(this._shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
             // Set texture coordinates
             this.bindTextureCoords(image, ~~sx, ~~sy, ~~sw, ~~sh);
-            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(this._shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
             // Bind the texture
-            shaderProgram.uniforms.texture = image.texture.bind();
+            this._shaderProgram.uniforms.texture = image.texture.bind();
 
             // Set the transformation matrix
-            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
+            this._shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
             // Set the color
-            shaderProgram.uniforms.uColor = globalColor.toGL();
+            this._shaderProgram.uniforms.uColor = this.globalColor.toGL();
 
             // MAKE IT SO
             gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 
             // Restore
-            this.uniformMatrix.copy(matrixStack.pop());
-        };
+            this.uniformMatrix.copy(this._matrixStack.pop());
+        },
 
         /**
          * Draw a filled rectangle at the specified coordinates
@@ -400,11 +398,13 @@
          * @param {Number} width
          * @param {Number} height
          */
-        api.fillRect = function (x, y, width, height) {
+        fillRect : function (x, y, width, height) {
             var x1 = x;
             var y1 = y;
             var x2 = x + width;
             var y2 = y + height;
+            var gl = this.gl;
+            var verticeArray = this._verticeArray;
             verticeArray[0] = x1;
             verticeArray[1] = y1;
             verticeArray[2] = x2;
@@ -418,11 +418,12 @@
             verticeArray[10] = x2;
             verticeArray[11] = y2;
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
 
-            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(this._shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
+            var textureCoords = this._textureCoords;
             textureCoords[0] = 0.0;
             textureCoords[1] = 0.0;
             textureCoords[2] = 1.0;
@@ -436,28 +437,17 @@
             textureCoords[10] = 1.0;
             textureCoords[11] = 1.0;
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
-            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(this._shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            gl.uniform1i(textureLocation, 0);
-            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
+            gl.uniform1i(this._textureLocation, 0);
+            this._shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
-            shaderProgram.uniforms.uColor = globalColor.toGL();
+            this._shaderProgram.uniforms.uColor = this.globalColor.toGL();
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-        };
-
-        /**
-         * return a reference to the screen canvas
-         * @name getScreenCanvas
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Canvas}
-         */
-        api.getScreenCanvas = function () {
-            return canvas;
-        };
+        },
 
         /**
          * return a reference to the screen canvas corresponding WebGL Context<br>
@@ -466,9 +456,9 @@
          * @function
          * @return {WebGLContext}
          */
-        api.getScreenContext = function () {
-            return gl;
-        };
+        getScreenContext : function () {
+            return this.gl;
+        },
 
         /**
          * Returns the WebGL Context object of the given Canvas
@@ -479,7 +469,7 @@
          * @param {Boolean} [opaque=false] Use true to disable transparency
          * @return {WebGLContext}
          */
-        api.getContextGL = function (c, opaque) {
+        getContextGL : function (c, opaque) {
             if (typeof c === "undefined" || c === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
@@ -501,7 +491,7 @@
                 c.getContext("webgl", attr) ||
                 c.getContext("experimental-webgl", attr)
             );
-        };
+        },
 
         /**
          * return a reference to the system canvas
@@ -510,20 +500,10 @@
          * @function
          * @return {Canvas}
          */
-        api.getCanvas = function () {
-            return canvas;
-        };
+        getCanvas : function () {
+            return this.canvas;
+        },
 
-        /**
-         * returns the current color of the drawing context
-         * @name getColor
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {me.Color}
-         */
-        api.getColor = function () {
-            return globalColor.clone();
-        };
 
         /**
          * Returns the WebGLContext instance for the renderer
@@ -533,42 +513,10 @@
          * @function
          * @return {WebGLContext}
          */
-        api.getContext = function () {
-            return gl;
-        };
+        getContext : function () {
+            return this.gl;
+        },
 
-        /**
-         * return the width of the system GL Context
-         * @name getWidth
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        api.getWidth = function () {
-            return gl.canvas.width;
-        };
-
-        /**
-         * return the height of the system GL Context
-         * @name getHeight
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        api.getHeight = function () {
-            return gl.canvas.height;
-        };
-
-        /**
-         * return the current global alpha
-         * @name globalAlpha
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Number}
-         */
-        api.globalAlpha = function () {
-            return globalColor.alpha;
-        };
 
         /**
          * returns the text size based on dimensions from the font. Uses the font drawing context
@@ -579,9 +527,9 @@
          * @param {String} text
          * @return {Object}
          */
-        api.measureText = function (fontObject, text) {
-            return fontObject.measureText(fontContext, text);
-        };
+        measureText : function (fontObject, text) {
+            return fontObject.measureText(this._fontContext, text);
+        },
 
         /**
          * resets the gl transform to identity
@@ -589,9 +537,9 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.resetTransform = function () {
+        resetTransform : function () {
             this.uniformMatrix.identity();
-        };
+        },
 
         /**
          * resizes the canvas & GL Context
@@ -599,26 +547,26 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.resize = function (scaleX, scaleY) {
-            canvas.width = dimensions.width;
-            canvas.height = dimensions.height;
-            var w = dimensions.width * scaleX;
-            var h = dimensions.height * scaleY;
+        resize : function (scaleX, scaleY) {
+            this.canvas.width = this.dimensions.width;
+            this.canvas.height = this.dimensions.height;
+            var w = this.dimensions.width * scaleX;
+            var h = this.dimensions.height * scaleY;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
-                canvas.style.width = (w / me.device.getPixelRatio()) + "px";
-                canvas.style.height = (h / me.device.getPixelRatio()) + "px";
+                this.canvas.style.width = (w / me.device.getPixelRatio()) + "px";
+                this.canvas.style.height = (h / me.device.getPixelRatio()) + "px";
             }
             else {
-                canvas.style.width = w + "px";
-                canvas.style.height = h + "px";
+                this.canvas.style.width = w + "px";
+                this.canvas.style.height = h + "px";
             }
-            gl.viewport(0, 0, dimensions.width, dimensions.height);
+            this.gl.viewport(0, 0, this.dimensions.width, this.dimensions.height);
 
             this.setProjection();
             this.applyProjection();
-        };
+        },
 
         /**
          * restores the canvas context
@@ -626,12 +574,12 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.restore = function () {
-            var color = colorStack.pop();
+        restore : function () {
+            var color = this.colorStack.pop();
             me.pool.push("me.Color", color);
-            globalColor.copy(color);
-            this.uniformMatrix.copy(matrixStack.pop());
-        };
+            this.globalColor.copy(color);
+            this.uniformMatrix.copy(this._matrixStack.pop());
+        },
 
         /**
          * rotates the uniform matrix
@@ -640,9 +588,9 @@
          * @function
          * @param {Number} angle in radians
          */
-        api.rotate = function (angle) {
+        rotate : function (angle) {
             this.uniformMatrix.rotate(angle);
-        };
+        },
 
         /**
          * save the canvas context
@@ -650,10 +598,10 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        api.save = function () {
-            colorStack.push(this.getColor());
-            matrixStack.push(this.uniformMatrix.clone());
-        };
+        save : function () {
+            this.colorStack.push(this.getColor());
+            this._matrixStack.push(this.uniformMatrix.clone());
+        },
 
         /**
          * scales the uniform matrix
@@ -663,25 +611,25 @@
          * @param {Number} x
          * @param {Number} y
          */
-        api.scale = function (x, y) {
+        scale : function (x, y) {
             this.uniformMatrix.scale(x, y);
-        };
+        },
 
         /**
          * @ignore
          */
-        api.setProjection = function () {
-            this.projection.set(2 / canvas.width, 0, 0,
-                0, -2 / canvas.height, 0,
+        setProjection : function () {
+            this._projection.set(2 / this.canvas.width, 0, 0,
+                0, -2 / this.canvas.height, 0,
                 -1, 1, 1);
-        };
+        },
 
         /**
          * @ignore
          */
-        api.setImageSmoothing = function () {
+        setImageSmoothing : function () {
             // TODO: perhaps handle GLNEAREST or other options with texture binding
-        };
+        },
 
         /**
          * return the current global alpha
@@ -690,14 +638,14 @@
          * @function
          * @return {Number}
          */
-        api.setGlobalAlpha = function (a) {
-            globalColor.setColor(
-                globalColor.r,
-                globalColor.g,
-                globalColor.b,
+        setGlobalAlpha : function (a) {
+            this.globalColor.setColor(
+                this.globalColor.r,
+                this.globalColor.g,
+                this.globalColor.b,
                 a
             );
-        };
+        },
 
         /**
          * Sets the color for further draw calls
@@ -706,9 +654,9 @@
          * @function
          * @param {me.Color|String} color css color string.
          */
-        api.setColor = function (color) {
-            globalColor.copy(color);
-        };
+        setColor : function (color) {
+            this.globalColor.copy(color);
+        },
 
         /**
          * sets the line width on the context
@@ -717,8 +665,8 @@
          * @function
          * @param {Number} width the width to set;
          */
-        api.setLineWidth = function () {
-        };
+        setLineWidth : function () {
+        },
 
         /**
          * Stroke an arc at the specified coordinates with given radius, start and end points
@@ -732,9 +680,9 @@
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
-        api.strokeArc = function (/*x, y, radius, start, end, antiClockwise*/) {
+        strokeArc : function (/*x, y, radius, start, end, antiClockwise*/) {
             //todo
-        };
+        },
 
         /**
          * Stroke an ellipse at the specified coordinates with given radius, start and end points
@@ -746,9 +694,9 @@
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */
-        api.strokeEllipse = function (/*x, y, w, h*/) {
+        strokeEllipse : function (/*x, y, w, h*/) {
             //todo
-        };
+        },
 
         /**
          * Stroke a line of the given two points
@@ -760,9 +708,9 @@
          * @param {Number} endX the end x coordinate
          * @param {Number} endY the end y coordinate
          */
-        api.strokeLine = function (/*startX, startY, endX, endY*/) {
+        strokeLine : function (/*startX, startY, endX, endY*/) {
             //todo
-        };
+        },
 
         /**
          * Strokes a me.Polygon on the screen with a specified color
@@ -771,9 +719,9 @@
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
-        api.strokePolygon = function (/*poly*/) {
+        strokePolygon : function (/*poly*/) {
             // todo
-        };
+        },
 
         /**
          * Draw a stroke rectangle at the specified coordinates
@@ -785,11 +733,12 @@
          * @param {Number} width
          * @param {Number} height
          */
-        api.strokeRect = function (x, y, width, height) {
+        strokeRect : function (x, y, width, height) {
             var x1 = x;
             var y1 = y;
             var x2 = x + width;
             var y2 = y + height;
+            var lineVerticeArray = this._lineVerticeArray;
             lineVerticeArray[0] = x1;
             lineVerticeArray[1] = y1;
             lineVerticeArray[2] = x2;
@@ -799,11 +748,15 @@
             lineVerticeArray[6] = x1;
             lineVerticeArray[7] = y2;
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            var gl = this.gl;
+            var shaderProgram = this._shaderProgram;
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, lineVerticeArray, gl.STATIC_DRAW);
 
             gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
 
+            var lineTextureCoords = this._lineTextureCoords;
             lineTextureCoords[0] = 0.0;
             lineTextureCoords[1] = 0.0;
             lineTextureCoords[2] = 1.0;
@@ -813,17 +766,17 @@
             lineTextureCoords[6] = 0.0;
             lineTextureCoords[7] = 1.0;
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, white1PixelTexture);
-            gl.bindBuffer(gl.ARRAY_BUFFER, textureBuffer);
+            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, lineTextureCoords, gl.STATIC_DRAW);
             gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
 
-            gl.uniform1i(textureLocation, 0);
+            gl.uniform1i(this._textureLocation, 0);
             shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
 
-            shaderProgram.uniforms.uColor = globalColor.toGL();
+            shaderProgram.uniforms.uColor = this.globalColor.toGL();
             gl.drawArrays(gl.LINE_LOOP, 0, 4);
-        };
+        },
 
         /**
          * draw the given shape
@@ -832,18 +785,18 @@
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
-        api.drawShape = function (shape) {
+        drawShape : function (shape) {
             if (shape instanceof me.Rect) {
-                api.strokeRect(shape.left, shape.top, shape.width, shape.height);
+                this.strokeRect(shape.left, shape.top, shape.width, shape.height);
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                api.save();
-                api.strokePolygon(shape);
-                api.restore();
+                this.save();
+                this.strokePolygon(shape);
+                this.restore();
             } else if (shape instanceof me.Ellipse) {
-                api.save();
+                this.save();
                 if (shape.radiusV.x === shape.radiusV.y) {
                     // it's a circle
-                    api.strokeArc(
+                    this.strokeArc(
                         shape.pos.x - shape.radius,
                         shape.pos.y - shape.radius,
                         shape.radius,
@@ -852,16 +805,16 @@
                     );
                 } else {
                     // it's an ellipse
-                    api.strokeEllipse(
+                    this.strokeEllipse(
                         shape.pos.x,
                         shape.pos.y,
                         shape.radiusV.x,
                         shape.radiusV.y
                     );
                 }
-                api.restore();
+                this.restore();
             }
-        };
+        },
 
         /**
          * Sets the uniform matrix to the specified values from a Matrix2d
@@ -871,7 +824,7 @@
          * @function
          * @param {Array} mat2d array representation to transform by
          */
-        api.transform = function () {
+        transform : function () {
             // TODO: Try to optimize or pool this.
             var out = new Float32Array(9);
             out[0] = arguments[0];
@@ -886,7 +839,7 @@
             out[7] = arguments[5];
             out[8] = 1;
             this.uniformMatrix.multiplyArray(out);
-        };
+        },
 
         /**
          * Translates the uniform matrix by the given coordinates
@@ -896,11 +849,9 @@
          * @param {Number} x
          * @param {Number} y
          */
-        api.translate = function (x, y) {
+        translate : function (x, y) {
             this.uniformMatrix.translate(x, y);
-        };
-
-        return api;
-    })();
+        }
+    });
 
 })();
