@@ -42,11 +42,6 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
-            // Spacing and margin
-            /** @ignore */
-            this.spacing = 0;
-            /** @ignore */
-            this.margin = 0;
 
             /**
              * pause and resume animation<br>
@@ -75,31 +70,18 @@
             // default animation sequence
             this.current = null;
 
-            // current frame texture offset
-            this.offset = null;
-
-            // current frame rotation angle
-            this._sourceAngle = 0;
-
             // default animation speed (ms)
             this.animationspeed = 100;
 
-            // Spacing and margin
-
-            this.spacing = settings.spacing || 0;
-            this.margin = settings.margin || 0;
-
-            var image = settings.region || settings.image;
-
             // call the constructor
-            this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight, this.spacing, this.margin]);
-            // store the current atlas information
+            this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight]);
+            
+            // store/reset the current atlas information
             this.textureAtlas = null;
             this.atlasIndices = null;
 
-            // build the local textureAtlas
-
-            this.buildLocalAtlas(settings.atlas, settings.atlasIndices, image);
+            // build the local textureAtlas (
+            this.buildLocalAtlas(settings);
 
             // create a default animation sequence with all sprites
             this.addAnimation("default", null);
@@ -112,7 +94,14 @@
          * @ignore
          */
 
-        buildLocalAtlas : function (atlas, indices, image) {
+        buildLocalAtlas : function (settings) {
+            
+            var atlas = settings.atlas;
+            var indices = settings.atlasIndices;
+            var image = settings.region || settings.image;
+            var spacing = settings.spacing || 0;
+            var margin = settings.margin || 0;
+            
             // reinitialze the atlas
             if (image === null || typeof image === "undefined") {
                 image = this.image;
@@ -126,18 +115,18 @@
                 this.textureAtlas = [];
                 // calculate the sprite count (line, col)
 
-                if ((image.width - this.margin) % (this.width + this.spacing) !== 0 ||
-                    (image.height - this.margin) % (this.height + this.spacing) !== 0) {
+                if ((image.width - margin) % (this.width + spacing) !== 0 ||
+                    (image.height - margin) % (this.height + spacing) !== 0) {
                     throw new me.Renderable.Error(
                         "Animation sheet for image: " + image.src +
-                        " is not divisible by " + (this.width + this.spacing) +
-                        "x" + (this.height + this.spacing)
+                        " is not divisible by " + (this.width + spacing) +
+                        "x" + (this.height + spacing)
                     );
                 }
 
                 var spritecount = new me.Vector2d(
-                    ~~((image.width - this.margin) / (this.width + this.spacing)),
-                    ~~((image.height - this.margin) / (this.height + this.spacing))
+                    ~~((image.width - margin) / (this.width + spacing)),
+                    ~~((image.height - margin) / (this.height + spacing))
                 );
                 var offsetX = 0;
                 var offsetY = 0;
@@ -150,8 +139,8 @@
                     this.textureAtlas[frame] = {
                         name: "" + frame,
                         offset: new me.Vector2d(
-                            this.margin + (this.spacing + this.width) * (frame % spritecount.x) + offsetX,
-                            this.margin + (this.spacing + this.height) * ~~(frame / spritecount.x) + offsetY
+                            margin + (spacing + this.width) * (frame % spritecount.x) + offsetX,
+                            margin + (spacing + this.height) * ~~(frame / spritecount.x) + offsetY
                         ),
                         width: this.width,
                         height: this.height,

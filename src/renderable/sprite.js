@@ -41,10 +41,7 @@
             this.lastflipX = false;
             this.lastflipY = false;
 
-            // z position (for ordering display)
-            this.z = 0;
-
-            // image offset
+            // current frame texture offset
             this.offset = new me.Vector2d();
 
             /**
