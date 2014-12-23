@@ -58,42 +58,53 @@
              */
             this.atlas = null;
 
-            if (atlas && atlas.meta) {
-                // Texture Packer
-                if (atlas.meta.app.contains("texturepacker")) {
-                    this.format = "texturepacker";
-                    // set the texture
-                    if (typeof(texture) === "undefined") {
-                        var name = me.utils.getBasename(atlas.meta.image);
-                        this.texture = me.loader.getImage(name);
-                        if (this.texture === null) {
-                            throw new me.video.renderer.Texture.Error("Atlas texture '" + name + "' not found");
+            if (typeof (atlas) !== "undefined") {
+
+                if (typeof(atlas.meta) !== "undefined") {
+                    // Texture Packer
+                    if (atlas.meta.app.contains("texturepacker")) {
+                        this.format = "texturepacker";
+                        // set the texture
+                        if (typeof(texture) === "undefined") {
+                            var name = me.utils.getBasename(atlas.meta.image);
+                            this.texture = me.loader.getImage(name);
+                            if (this.texture === null) {
+                                throw new me.video.renderer.Texture.Error("Atlas texture '" + name + "' not found");
+                            }
+                        } else {
+                            this.texture = texture;
                         }
-                    } else {
+                    }
+                    // ShoeBox
+                    else if (atlas.meta.app.contains("ShoeBox")) {
+                        if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
+                            throw new me.video.renderer.Texture.Error(
+                                "ShoeBox requires the JSON exporter : " +
+                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
+                            );
+                        }
+                        this.format = "ShoeBox";
+                        // set the texture
                         this.texture = texture;
                     }
-                }
-                // ShoeBox
-                else if (atlas.meta.app.contains("ShoeBox")) {
-                    if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
-                        throw new me.video.renderer.Texture.Error(
-                            "ShoeBox requires the JSON exporter : " +
-                            "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
-                        );
+                    // Internal texture atlas
+                    else if (atlas.meta.app.contains("melonJS")) {
+                        this.format = "melonJS";
+                        this.texture = texture;
                     }
-                    this.format = "ShoeBox";
-                    // set the texture
-                    this.texture = texture;
+                    // initialize the atlas
+                    this.atlas = this.build(atlas);
+                
+                } else {
+                    // a regular spritesheet ?
+                    if (typeof(atlas.image) !== "undefined" &&
+                        typeof(atlas.framewidth) !== "undefined" &&
+                        typeof(atlas.frameheight) !== "undefined") {
+                        // initialize the atlas
+                        this.atlas = this.buildFromSpriteSheet(atlas);
+                    }
                 }
-                // Internal texture atlas
-                else if (atlas.meta.app.contains("melonJS")) {
-                    this.format = "melonJS";
-                    this.texture = texture;
-                }
-                // initialize the atlas
-                this.atlas = this.build(atlas);
             }
-
             // if format not recognized
             if (!this.atlas) {
                 throw new me.video.renderer.Texture.Error("texture atlas format not supported");
@@ -121,6 +132,52 @@
                 }
             });
             return atlas;
+        },
+
+        /**
+         * @ignore
+         * build an atlas from the given spritesheet
+         */
+        buildFromSpriteSheet : function (data) {
+            var atlas = [];
+            var image = data.region || data.image;
+            var spacing = data.spacing || 0;
+            var margin = data.margin || 0;
+            
+            // calculate the sprite count (line, col)
+            if ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
+                (image.height - margin) % (data.frameheight + spacing) !== 0) {
+                throw new me.Renderable.Error(
+                    "Animation sheet for image: " + image.src +
+                    " is not divisible by " + (data.framewidth + spacing) +
+                    "x" + (data.frameheight + spacing)
+                );
+            }
+            var spritecount = new me.Vector2d(
+                ~~((image.width - margin) / (data.framewidth + spacing)),
+                ~~((image.height - margin) / (data.frameheight + spacing))
+            );
+            var offsetX = 0;
+            var offsetY = 0;
+            if (image.offset) {
+                offsetX = image.offset.x;
+                offsetY = image.offset.y;
+            }
+            // build the local atlas
+            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+                atlas[frame] = {
+                    name: "" + frame,
+                    offset: new me.Vector2d(
+                        margin + (spacing + data.framewidth) * (frame % spritecount.x) + offsetX,
+                        margin + (spacing + data.frameheight) * ~~(frame / spritecount.x) + offsetY
+                    ),
+                    width: data.framewidth,
+                    height: data.frameheight,
+                    angle: 0
+                };
+            }
+            return atlas;
+            
         },
 
         /**

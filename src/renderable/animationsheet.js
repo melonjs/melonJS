@@ -77,77 +77,20 @@
             this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight]);
             
             // store/reset the current atlas information
-            this.textureAtlas = null;
-            this.atlasIndices = null;
-
-            // build the local textureAtlas (
-            this.buildLocalAtlas(settings);
+            if (typeof(settings.atlas) !== "undefined") {
+                this.textureAtlas = settings.atlas;
+                this.atlasIndices = settings.atlasIndices;
+            } else {
+                // "regular" spritesheet
+                this.textureAtlas = me.video.renderer.Texture.prototype.buildFromSpriteSheet(settings);
+                this.atlasIndices = null;
+            }
 
             // create a default animation sequence with all sprites
             this.addAnimation("default", null);
 
             // set as default
             this.setCurrentAnimation("default");
-        },
-        /**
-         * build the local (private) atlas
-         * @ignore
-         */
-
-        buildLocalAtlas : function (settings) {
-            
-            var atlas = settings.atlas;
-            var indices = settings.atlasIndices;
-            var image = settings.region || settings.image;
-            var spacing = settings.spacing || 0;
-            var margin = settings.margin || 0;
-            
-            // reinitialze the atlas
-            if (image === null || typeof image === "undefined") {
-                image = this.image;
-            }
-            if (typeof(atlas) !== "undefined") {
-                this.textureAtlas = atlas;
-                this.atlasIndices = indices;
-            }
-            else {
-                // regular spritesheet
-                this.textureAtlas = [];
-                // calculate the sprite count (line, col)
-
-                if ((image.width - margin) % (this.width + spacing) !== 0 ||
-                    (image.height - margin) % (this.height + spacing) !== 0) {
-                    throw new me.Renderable.Error(
-                        "Animation sheet for image: " + image.src +
-                        " is not divisible by " + (this.width + spacing) +
-                        "x" + (this.height + spacing)
-                    );
-                }
-
-                var spritecount = new me.Vector2d(
-                    ~~((image.width - margin) / (this.width + spacing)),
-                    ~~((image.height - margin) / (this.height + spacing))
-                );
-                var offsetX = 0;
-                var offsetY = 0;
-                if (image.offset) {
-                    offsetX = image.offset.x;
-                    offsetY = image.offset.y;
-                }
-                // build the local atlas
-                for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
-                    this.textureAtlas[frame] = {
-                        name: "" + frame,
-                        offset: new me.Vector2d(
-                            margin + (spacing + this.width) * (frame % spritecount.x) + offsetX,
-                            margin + (spacing + this.height) * ~~(frame / spritecount.x) + offsetY
-                        ),
-                        width: this.width,
-                        height: this.height,
-                        angle: 0
-                    };
-                }
-            }
         },
 
         /**
