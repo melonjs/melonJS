@@ -124,6 +124,51 @@
         },
 
         /**
+         * @ignore
+         */
+        buildFromSpriteSheet : function (data) {
+            var atlas = [];
+            var image = data.region || data.image;
+            var spacing = data.spacing || 0;
+            var margin = data.margin || 0;
+            
+            // calculate the sprite count (line, col)
+            if ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
+                (image.height - margin) % (data.frameheight + spacing) !== 0) {
+                throw new me.Renderable.Error(
+                    "Animation sheet for image: " + image.src +
+                    " is not divisible by " + (data.framewidth + spacing) +
+                    "x" + (data.frameheight + spacing)
+                );
+            }
+            var spritecount = new me.Vector2d(
+                ~~((image.width - margin) / (data.framewidth + spacing)),
+                ~~((image.height - margin) / (data.frameheight + spacing))
+            );
+            var offsetX = 0;
+            var offsetY = 0;
+            if (image.offset) {
+                offsetX = image.offset.x;
+                offsetY = image.offset.y;
+            }
+            // build the local atlas
+            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+                atlas[frame] = {
+                    name: "" + frame,
+                    offset: new me.Vector2d(
+                        margin + (spacing + data.framewidth) * (frame % spritecount.x) + offsetX,
+                        margin + (spacing + data.frameheight) * ~~(frame / spritecount.x) + offsetY
+                    ),
+                    width: data.framewidth,
+                    height: data.frameheight,
+                    angle: 0
+                };
+            }
+            return atlas;
+            
+        },
+
+        /**
          * return the Atlas texture
          * @name getTexture
          * @memberOf me.CanvasRenderer.Texture
