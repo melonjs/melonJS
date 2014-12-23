@@ -79,10 +79,10 @@
             // store/reset the current atlas information
             if (typeof(settings.atlas) !== "undefined") {
                 this.textureAtlas = settings.atlas;
-                this.atlasIndices = settings.indices;
+                this.atlasIndices = settings.atlasIndices;
             } else {
-                // regular spritesheet
-                this.textureAtlas = me.CanvasRenderer.prototype.Texture.prototype.buildFromSpriteSheet(settings);
+                // "regular" spritesheet
+                this.textureAtlas = me.video.renderer.Texture.prototype.buildFromSpriteSheet(settings);
                 this.atlasIndices = null;
             }
 
