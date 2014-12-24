@@ -8,6 +8,7 @@ Version History
 * Color : added high-precision color transformation for me.Color
 * Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
 * Texture : added support for the WebGL Renderer
+* Texture : texture atlas can now be created using a “standard” sprite sheet
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
