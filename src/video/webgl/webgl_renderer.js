@@ -486,7 +486,7 @@
             }
 
             var attr = {
-                antialias : me.sys.scalingInterpolation,
+                antialias : this.antiAlias,
                 alpha : !opaque,
             };
             return (

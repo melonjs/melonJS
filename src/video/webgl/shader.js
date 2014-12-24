@@ -177,7 +177,7 @@
          */
         api.gltexture2d = function (gl, image) {
             var texture = gl.createTexture(),
-                filter = me.sys.scalingInterpolation ? gl.LINEAR : gl.NEAREST;
+                filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST;
 
             /**
              * A convenience method for binding this texture to the current

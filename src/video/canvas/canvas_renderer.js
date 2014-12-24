@@ -268,7 +268,7 @@
                 // Clears the front buffer for each frame blit
                 this.context.globalCompositeOperation = "copy";
             }
-            this.setImageSmoothing(this.context, me.sys.scalingInterpolation);
+            this.setImageSmoothing(this.context, this.antiAlias);
             this.blitSurface();
         },
 
