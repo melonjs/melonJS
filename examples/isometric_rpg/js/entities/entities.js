@@ -26,7 +26,7 @@ game.PlayerEntity = me.Entity.extend({
         me.input.bindKey(me.input.KEY.DOWN,  "down");
         
         // the main player spritesheet 
-        var texture =  new me.video.renderer.Texture({framewidth:32, frameheight:32}, me.loader.getImage("Blank_Sprite_Sheet_4_2_by_KnightYamato"))
+        var texture =  new me.video.renderer.Texture({framewidth:32, frameheight:32}, me.loader.getImage("Blank_Sprite_Sheet_4_2_by_KnightYamato"));
         
         // create a new animationSheet object 
         this.renderable = texture.createAnimationFromName([0, 1, 2, 3, 4, 5, 6, 7, 8]);
