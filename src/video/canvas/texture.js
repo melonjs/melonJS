@@ -16,7 +16,8 @@
      * Currently support : <br>
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
-     * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx}
+     * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+     * - Standard (fixed cell size) spritesheet : throuhg a {framewidth:xx, frameheight:xx} object
      * @class
      * @extends Object
      * @memberOf me.video.renderer
@@ -25,13 +26,17 @@
      * @param {Object} atlas atlas information. See {@link me.loader#getJSON}
      * @param {Image} [texture=atlas.meta.image] texture name
      * @example
-     * // create a texture atlas
+     * // create a texture atlas from a JSON Object
      * texture = new me.video.renderer.Texture(
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
      *
-     * // or if you wish to specify the atlas
+     * // create a texture atlas for a spritesheet
+     * texture = new me.video.renderer.Texture(
+     *    {framewidth:32, frameheight:32},
+     *    me.loader.getImage("spritesheet")
+     * );
      */
     me.CanvasRenderer.prototype.Texture = Object.extend(
     /** @scope me.video.renderer.Texture.prototype */
@@ -97,9 +102,13 @@
                 
                 } else {
                     // a regular spritesheet ?
-                    if (typeof(atlas.image) !== "undefined" &&
-                        typeof(atlas.framewidth) !== "undefined" &&
+                    if (typeof(atlas.framewidth) !== "undefined" &&
                         typeof(atlas.frameheight) !== "undefined") {
+                        this.format = "Spritesheet (fixed cell size)";
+                        if (typeof(texture) !== undefined) {
+                            // overwrite if specified
+                            atlas.image = texture;
+                        }
                         // initialize the atlas
                         this.atlas = this.buildFromSpriteSheet(atlas);
                     }
@@ -139,7 +148,7 @@
          * build an atlas from the given spritesheet
          */
         buildFromSpriteSheet : function (data) {
-            var atlas = [];
+            var atlas = []; // changing to {} breaks everything !
             var image = data.region || data.image;
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
@@ -267,7 +276,7 @@
          *   "walk0010.png", "walk0011.png"
          * ]);
          *
-         * // define an additional basic walking animatin
+         * // define an additional basic walking animation
          * this.renderable.addAnimation ("simple_walk", [0,2,1]);
          * // you can also use frame name to define your animation
          * this.renderable.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
