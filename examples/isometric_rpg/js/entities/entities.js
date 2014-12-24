@@ -32,8 +32,6 @@ game.PlayerEntity = me.Entity.extend({
         this.renderable = texture.createAnimationFromName([0, 1, 2, 3, 4, 5, 6, 7, 8]);
         // define an additional basic walking animation
         this.renderable.addAnimation ("simple_walk", [0,1,2]);
-        // set the default animation
-        this.renderable.setCurrentAnimation("simple_walk");
     },
 
     /* -----
@@ -62,14 +60,25 @@ game.PlayerEntity = me.Entity.extend({
             this.body.vel.y = 0;
         }
 
-        // check for collision with environment
+        // apply physics to the body (this moves the entity)
         this.body.update(dt);
+        
+        // handle collisions against other shapes
         me.collision.check(this);
-
-        return true;
+    
+        // check if we moved (an "idle" animation would definitely be cleaner)
+        if (this.body.vel.x!=0 || this.body.vel.y!=0) {
+            this._super(me.Entity, 'update', [dt]);
+            return true;
+        }
     },
 
-    onCollision : function () {
+   /**
+     * colision handler
+     * (called when colliding with other objects)
+     */
+    onCollision : function (response, other) {
+        // Make all other objects solid
         return true;
     }
 });
