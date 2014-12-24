@@ -24,6 +24,16 @@ game.PlayerEntity = me.Entity.extend({
         me.input.bindKey(me.input.KEY.RIGHT, "right");
         me.input.bindKey(me.input.KEY.UP,    "up");
         me.input.bindKey(me.input.KEY.DOWN,  "down");
+        
+        // the main player spritesheet 
+        var texture =  new me.video.renderer.Texture({framewidth:32, frameheight:32}, me.loader.getImage("Blank_Sprite_Sheet_4_2_by_KnightYamato"))
+        
+        // create a new animationSheet object 
+        this.renderable = texture.createAnimationFromName([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+        // define an additional basic walking animation
+        this.renderable.addAnimation ("simple_walk", [0,1,2]);
+        // set the default animation
+        this.renderable.setCurrentAnimation("simple_walk");
     },
 
     /* -----
