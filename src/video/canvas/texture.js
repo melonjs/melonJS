@@ -192,7 +192,7 @@
         /**
          * return the Atlas texture
          * @name getTexture
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.video.renderer.Texture
          * @function
          * @return {Image}
          */
@@ -203,7 +203,7 @@
         /**
          * return a normalized region/frame information for the specified sprite name
          * @name getRegion
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.video.renderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {Object}
@@ -215,7 +215,7 @@
         /**
          * Create a sprite object using the first region found using the specified name
          * @name createSpriteFromName
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.video.renderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {me.Sprite}
@@ -256,7 +256,7 @@
         /**
          * Create an animation object using the first region found using all specified names
          * @name createAnimationFromName
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.video.renderer.Texture
          * @function
          * @param {String[]||Number[]} names list of names for each sprite 
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)

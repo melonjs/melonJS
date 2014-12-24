@@ -97,7 +97,7 @@
         api.AUTO = 2;
 
         /**
-         * init the "video" part<p>
+         * init the "video" part<br>
          * return false if initialization failed (canvas not supported)
          * @name init
          * @memberOf me.video
