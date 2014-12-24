@@ -17,7 +17,7 @@
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
-     * - Standard (fixed cell size) spritesheet : throuhg a {framewidth:xx, frameheight:xx} object
+     * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx} object
      * @class
      * @extends Object
      * @memberOf me.video.renderer
@@ -258,7 +258,8 @@
          * @name createAnimationFromName
          * @memberOf me.CanvasRenderer.Texture
          * @function
-         * @param {String[]} names list of names for each sprite
+         * @param {String[]||Number[]} names list of names for each sprite 
+         * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
          * @return {me.AnimationSheet}
          * @example
          * // create a new texture atlas object under the `game` namespace
