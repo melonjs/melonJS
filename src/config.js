@@ -44,13 +44,6 @@
         scale : null, //initialized by me.video.init
 
         /**
-         * enable/disable video scaling interpolation (default disable)<br>
-         * @type {boolean}
-         * @memberOf me.sys
-         */
-        scalingInterpolation : false,
-
-        /**
          * Global gravity settings <br>
          * will override entities init value if defined<br>
          * default value : undefined

@@ -32,7 +32,8 @@
             autoScale : false,
             scale : 1.0,
             maintainAspectRatio : true,
-            transparent : false
+            transparent : false,
+            antiAlias : false,
         };
 
 
@@ -110,6 +111,7 @@
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
+         * @param {Boolean} [options.antiAlias=false] wheter to enable or not video scaling interpolation
          * @return {Boolean}
          * @example
          * // init the video with a 640x480 canvas

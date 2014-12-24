@@ -33,6 +33,7 @@
             // rendering options
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
+            this.antiAlias = !!(options.antiAlias);
             
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
@@ -171,7 +172,7 @@
             if (navigator.isCocoonJS) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
-                    "antialias" : me.sys.scalingInterpolation,
+                    "antialias" : this.antiAlias,
                     "alpha" : !opaque
                 });
             }
@@ -183,7 +184,7 @@
             if (!_context.canvas) {
                 _context.canvas = c;
             }
-            this.setImageSmoothing(_context, me.sys.scalingInterpolation);
+            this.setImageSmoothing(_context, this.antiAlias);
             return _context;
         },
 
