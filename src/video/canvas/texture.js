@@ -156,8 +156,8 @@
             // calculate the sprite count (line, col)
             if ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
                 (image.height - margin) % (data.frameheight + spacing) !== 0) {
-                throw new me.Renderable.Error(
-                    "Animation sheet for image: " + image.src +
+                throw new me.video.renderer.Texture.Error(
+                    "Spritesheet Texture for image: " + image.src +
                     " is not divisible by " + (data.framewidth + spacing) +
                     "x" + (data.frameheight + spacing)
                 );

@@ -143,7 +143,7 @@
                 } else { // string
                     if (this.atlasIndices === null) {
                         throw new me.Renderable.Error(
-                            "string parameters for addAnimation are only allowed for me.video.renderer.Texture"
+                            "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
                         this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
