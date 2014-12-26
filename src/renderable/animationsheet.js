@@ -82,7 +82,7 @@
                 this.atlasIndices = settings.atlasIndices;
             } else {
                 // "regular" spritesheet
-                this.textureAtlas = me.video.renderer.Texture.prototype.buildFromSpriteSheet(settings);
+                this.textureAtlas = me.video.renderer.cache.get(settings, settings.image).getAtlas();
                 this.atlasIndices = null;
             }
 

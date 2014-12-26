@@ -190,6 +190,17 @@
         },
 
         /**
+         * return the Atlas dictionnary
+         * @name getAtlas
+         * @memberOf me.video.renderer.Texture
+         * @function
+         * @return {Object}
+         */
+        getAtlas : function () {
+            return this.atlas;
+        },
+        
+        /**
          * return the Atlas texture
          * @name getTexture
          * @memberOf me.video.renderer.Texture

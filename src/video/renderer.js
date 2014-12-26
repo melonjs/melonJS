@@ -6,6 +6,26 @@
  */
 
 (function () {
+    
+    // a basic cache object
+    var TextureCache = Object.extend({
+        /**
+         * @ignore
+         */
+        init : function () {
+            this.cache = {};
+        },
+        
+       /**
+         * @ignore
+         */
+        get : function (atlas, texture) {
+            if (typeof(this.cache[texture]) === "undefined") {
+                this.cache[texture] = new me.video.renderer.Texture(atlas, texture);
+            }
+            return this.cache[texture];
+        }
+    });
 
     /**
      * a base renderer object
@@ -47,6 +67,8 @@
             //global color and stack for save/restore
             this.colorStack = [];
             this.globalColor = new me.Color(255, 255, 255, 1.0);
+            
+            this.cache = new TextureCache();
             
             return this;
         },
