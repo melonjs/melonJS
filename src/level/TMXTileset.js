@@ -97,7 +97,7 @@
         },
 
         /**
-         * create a transformation matrix for this tilee
+         * create a transformation matrix for this tile
          * @ignore
          */
         createTransform : function () {
@@ -109,20 +109,23 @@
             var a = this.transform.val;
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.set(0, 1, 1, 0, a[4], a[5]);
+                this.transform.set(
+                    0, 1, 0,
+                    1, 0, 0,
+                    0, 0, 1
+                );
                 this.transform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
-
                 a[0] *= -1;
-                a[2] *= -1;
-                this.transform.translate((this.flippedAD ? this.height : this.width), 0);
+                a[3] *= -1;
+                this.transform.translate(-(this.flippedAD ? this.height : this.width), 0);
 
             }
             if (this.flippedY) {
                 a[1] *= -1;
-                a[3] *= -1;
-                this.transform.translate(0, (this.flippedAD ? this.width : this.height));
+                a[4] *= -1;
+                this.transform.translate(0, -(this.flippedAD ? this.width : this.height));
             }
         }
     });
@@ -377,13 +380,8 @@
             if (tmxTile.flipped) {
                 renderer.save();
                 // apply the tile current transform
-                var a = tmxTile.transform.val;
-
-                renderer.transform(
-                    a[0], a[1],
-                    a[2], a[3],
-                    a[4] + dx, a[5] + dy
-                );
+                renderer.translate(dx, dy);
+                renderer.transform(tmxTile.transform);
                 // reset both values as managed through transform();
                 dx = dy = 0;
             }

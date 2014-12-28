@@ -12,7 +12,7 @@
      * @class
      * @extends me.Renderer
      * @memberOf me
-     * @constructor     
+     * @constructor
      * @param {Canvas} canvas - the html canvas tag to draw to on screen.
      * @param {Number} game_width - the width of the canvas without scaling
      * @param {Number} game_height - the height of the canvas without scaling
@@ -30,7 +30,7 @@
         init : function (c, width, height, options) {
             // parent constructor
             this._super(me.Renderer, "init", [c, width, height, options]);
-            
+
             // defined the 2d context
             this.context = this.getContext2d(this.canvas, !this.transparent);
 
@@ -48,10 +48,10 @@
                 this.backBufferCanvas = this.canvas;
                 this.backBufferContext2D = this.context;
             }
-            
+
             // apply the default color to the 2d context
             this.setColor(this.globalColor);
-            
+
             return this;
         },
 
@@ -75,7 +75,7 @@
          * @function
          */
         blitSurface : function () {
-        
+
             if (this.doubleBuffering) {
                 this.context.drawImage(
                     this.backBufferCanvas, 0, 0,
@@ -505,25 +505,21 @@
         },
 
         /**
-         * transforms the context. Accepts any number of integer arguments
-         * @name transform
+         * Multiply given matrix into the renderer tranformation matrix
+         * @name multiplyMatrix
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} m11
-         * @param {Number} m12
-         * @param {Number} m21
-         * @param {Number} m22
-         * @param {Number} dx
-         * @param {Number} dy
+         * @param {me.Matrix2d} mat2d Matrix to transform by
          */
-        transform : function () {
+        transform : function (mat2d) {
+            var a = mat2d.val;
             this.backBufferContext2D.transform(
-                arguments[0],
-                arguments[1],
-                arguments[2],
-                arguments[3],
-                arguments[4],
-                arguments[5]
+                a[0],
+                a[1],
+                a[3],
+                a[4],
+                a[6],
+                a[7]
             );
         },
 

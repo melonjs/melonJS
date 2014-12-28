@@ -53,15 +53,13 @@
              * @type me.Matrix3d
              * @memberOf me.WebGLRenderer
              */
-            this.uniformMatrix = new me.Matrix3d();
+            this.uniformMatrix = new me.Matrix2d();
 
-            this._projection = new me.Matrix3d({
-                val: new Float32Array([
-                    2 / width,  0,              0,
-                    0,          -2 / height,    0,
-                    -1,         1,              1
-                ])
-            });
+            this._projection = new me.Matrix2d(
+                2 / width,  0,              0,
+                0,          -2 / height,    0,
+                -1,         1,              1
+            );
 
             this.createShader();
             this._shaderProgram.bind();
@@ -819,28 +817,14 @@
         },
 
         /**
-         * Sets the uniform matrix to the specified values from a Matrix2d
-         * Created to support the original canvas method on the webgl renderer
-         * @name transform
+         * Multiply given matrix into the renderer tranformation matrix
+         * @name multiplyMatrix
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Array} mat2d array representation to transform by
+         * @param {me.Matrix2d} mat2d Matrix to transform by
          */
-        transform : function () {
-            // TODO: Try to optimize or pool this.
-            var out = new Float32Array(9);
-            out[0] = arguments[0];
-            out[1] = arguments[1];
-            out[2] = 0;
-
-            out[3] = arguments[2];
-            out[4] = arguments[3];
-            out[5] = 0;
-
-            out[6] = arguments[4];
-            out[7] = arguments[5];
-            out[8] = 1;
-            this.uniformMatrix.multiplyArray(out);
+        transform : function (mat2d) {
+            this.uniformMatrix.multiply(mat2d);
         },
 
         /**

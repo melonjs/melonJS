@@ -120,10 +120,15 @@
             // If necessary update the rotation of particle in accordance the particle trajectory
             var angle = this.followTrajectory ? Math.atan2(this.vel.y, this.vel.x) : this.angle;
 
-            // Update particle transform
-            this.transform.set(scale, 0, 0, scale, 0, 0).rotate(angle);
             this.pos.x += this.vel.x * skew;
             this.pos.y += this.vel.y * skew;
+
+            // Update particle transform
+            this.transform.set(
+                scale, 0, 0,
+                0, scale, 0,
+                ~~this.pos.x, ~~this.pos.y, 1
+            ).rotate(angle);
 
             // Return true if the particle is not dead yet
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
@@ -136,12 +141,7 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
-            var transform = this.transform.val;
-            renderer.transform(
-                transform[0], transform[1],
-                transform[2], transform[3],
-                ~~this.pos.x, ~~this.pos.y
-            );
+            renderer.transform(this.transform);
 
             var w = this.width, h = this.height;
             renderer.drawImage(
