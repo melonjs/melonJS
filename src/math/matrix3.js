@@ -18,7 +18,7 @@
         },
 
         /**
-         * Adjoint the matrix. Returns self
+         * Adjoint the matrix.
          * @name adjoint
          * @memberOf me.Matrix3d
          * @function
@@ -41,14 +41,14 @@
             a[8] = (a00 * a11 - a01 * a10);
             return this;
         },
-        
+
         /**
          * returns true if the matrix is an identity matrix.
          * @name isIdentity
          * @memberOf me.Matrix3d
          * @function
          * @return {Boolean}
-         **/
+         */
         isIdentity : function () {
             var a = this.val;
             return (a[0] === 1 && a[1] === 0 && a[2] === 0 &&
@@ -67,7 +67,7 @@
         },
 
         /**
-         * Copies over the values from another me.Matrix3d. Returns self
+         * Copies over the values from another me.Matrix3d.
          * @name copy
          * @memberOf me.Matrix3d
          * @function
@@ -126,7 +126,7 @@
         },
 
         /**
-         * Inverts the matrix, and returns self
+         * Inverts the matrix
          * @name invert
          * @memberOf me.Matrix3d
          * @function
@@ -162,9 +162,8 @@
             return this;
         },
 
-
         /**
-         * Multiplies this current matrix by a given Matrix3d object. Returns self
+         * Multiplies this current matrix by a given Matrix3d object.
          * @name multiple
          * @memberOf me.Matrix3d
          * @function
@@ -208,7 +207,7 @@
          * @name rotate
          * @memberOf me.Matrix3d
          * @function
-         * @param {Number} rad - degrees to rotate in radians
+         * @param {Number} rad - angle of rotation in radians
          * @return {me.Matrix3d} this matrix for chaining
          */
         rotate : function (rad) {
@@ -230,7 +229,7 @@
         },
 
         /**
-         * Scales the matrix by x & y values. Returns self
+         * Scales the matrix by x & y values.
          * @name scale
          * @memberOf me.Matrix3d
          * @function
@@ -297,9 +296,9 @@
             a[8] = x * a[2] + y * a[5] + a[8];
             return this;
         },
-        
+
         /**
-         * translate the matrix the matrix
+         * translate the matrix by a vector
          * @name translateV
          * @memberOf me.Matrix3d
          * @function
@@ -358,7 +357,7 @@
             a[7] = a12;
             return this;
         },
-        
+
         /**
          * convert the object to a string representation
          * @name toString
