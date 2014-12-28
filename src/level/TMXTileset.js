@@ -117,15 +117,15 @@
                 this.transform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
+                this.transform.translate((this.flippedAD ? this.height : this.width), 0);
                 a[0] *= -1;
                 a[3] *= -1;
-                this.transform.translate(-(this.flippedAD ? this.height : this.width), 0);
 
             }
             if (this.flippedY) {
+                this.transform.translate(0, (this.flippedAD ? this.width : this.height));
                 a[1] *= -1;
                 a[4] *= -1;
-                this.transform.translate(0, -(this.flippedAD ? this.width : this.height));
             }
         }
     });
