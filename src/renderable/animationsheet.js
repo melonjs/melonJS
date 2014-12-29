@@ -75,14 +75,14 @@
 
             // call the constructor
             this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight]);
-            
+
             // store/reset the current atlas information
             if (typeof(settings.atlas) !== "undefined") {
                 this.textureAtlas = settings.atlas;
                 this.atlasIndices = settings.atlasIndices;
             } else {
                 // "regular" spritesheet
-                this.textureAtlas = me.video.renderer.cache.get(settings, settings.image).getAtlas();
+                this.textureAtlas = me.video.renderer.cache.get(settings.image, settings).getAtlas();
                 this.atlasIndices = null;
             }
 
@@ -129,10 +129,9 @@
 
             if (index == null) {
                 index = [];
-                var j = 0;
                 // create a default animation with all frame
-                this.textureAtlas.forEach(function () {
-                    index[j] = j++;
+                Object.keys(this.textureAtlas).forEach(function (v, i) {
+                    index[i] = i;
                 });
             }
 

@@ -48,12 +48,27 @@
         }
 
         /**
-         * Useless bind function for compatibility with glslify
-         * @name bind
-         * @memberOf me.video.shader
-         * @function
+         * Hash map of GLSL data types to WebGL Uniform methods
+         * @private
          */
-        api.bind = function () {};
+        var fnHash = {
+            "bool"      : "1i",
+            "int"       : "1i",
+            "float"     : "1f",
+            "vec2"      : "2fv",
+            "vec3"      : "3fv",
+            "vec4"      : "4fv",
+            "bvec2"     : "2iv",
+            "bvec3"     : "3iv",
+            "bvec4"     : "4iv",
+            "ivec2"     : "2iv",
+            "ivec3"     : "3iv",
+            "ivec4"     : "4iv",
+            "mat2"      : "Matrix2fv",
+            "mat3"      : "Matrix3fv",
+            "mat4"      : "Matrix4fv",
+            "sampler2D" : "1i",
+        };
 
         /**
          *
@@ -61,9 +76,11 @@
          * @memberOf me.video.shader
          * @function
          * @param {WebGLContext} gl WebGL Context
+         * @param {String[]} attributes Array of attribute names
+         * @param {Object} uniforms Hash map of uniform names to data types
          * @return {me.video.shader} A reference to the WebGL Shader singleton
          */
-        api.createShader = function (gl) {
+        api.createShader = function (gl, attributes, uniforms) {
             var handle = api.handle = gl.createProgram();
             gl.attachShader(handle, getShader(gl, gl.VERTEX_SHADER, vertex));
             gl.attachShader(handle, getShader(gl, gl.FRAGMENT_SHADER, fragment));
@@ -76,126 +93,88 @@
             gl.useProgram(handle);
 
             // Get attribute references
-            var attributes = {};
-            var aLocations = {};
-            [
-                "aPosition",
-                "aTexture"
-            ].forEach(function (attr) {
-                aLocations[attr] = {
-                    "location" : gl.getAttribLocation(handle, attr)
-                };
-                gl.enableVertexAttribArray(aLocations[attr].location);
-                attributes[attr] = {
-                    "get" : (function (attr) {
-                        /**
-                         * A getter for the attribute location
-                         * @ignore
-                         */
-                        return function () {
-                            return aLocations[attr];
-                        };
-                    })(attr),
-                };
+            attributes.forEach(function (attr) {
+                api.attributes[attr] = gl.getAttribLocation(handle, attr);
+                gl.enableVertexAttribArray(api.attributes[attr]);
             });
-            Object.defineProperties(api.attributes, attributes);
 
             // Get uniform references
-            var uniforms = {};
-            var uLocations = {};
-            [
-                "pMatrix",
-                "uMatrix",
-                "uColor",
-                "texture"
-            ].forEach(function (uniform) {
-                uLocations[uniform] = {
-                    "location" : gl.getUniformLocation(handle, uniform)
-                };
-                uniforms[uniform] = {
-                    "get" : (function (uniform) {
+            var descriptor = {};
+            var locations = {};
+            Object.keys(uniforms).forEach(function (name) {
+                var type = uniforms[name];
+                locations[name] = gl.getUniformLocation(handle, name);
+
+                descriptor[name] = {
+                    "get" : (function (name) {
                         /**
                          * A getter for the uniform location
                          * @ignore
                          */
                         return function () {
-                            return uLocations[uniform];
+                            return locations[name];
                         };
-                    })(uniform),
-                    "set" : (function (uniform) {
-                        if (uniform === "uColor") {
+                    })(name),
+                    "set" : (function (name, type, fn) {
+                        if (type.indexOf("mat") === 0) {
                             /**
-                             * A setter for 4-element float vectors, e.g. colors
+                             * A generic setter for uniform matrices
                              * @ignore
                              */
                             return function (val) {
-                                gl.uniform4fv(
-                                    uLocations[uniform].location,
-                                    val
-                                );
+                                gl[fn](locations[name], false, val);
                             };
                         }
-                        if (uniform === "texture") {
+                        else {
                             /**
-                             * A setter for sampler2D uniforms, e.g. textures
-                             * @ignore
-                             */
-                            return function () {
-                                gl.uniform1i(
-                                    uLocations[uniform].location,
-                                    0
-                                );
+                            * A generic setter for uniform vectors
+                            * @ignore
+                            */
+                            return function (val) {
+                                var fnv = fn;
+                                if (val.length && fn.substr(-1) !== "v") {
+                                    fnv += "v";
+                                }
+                                gl[fnv](locations[name], val);
                             };
                         }
-                        return function (val) {
-                            /**
-                             * A setter for 3x3 matrices
-                             * @ignore
-                             */
-                            gl.uniformMatrix3fv(
-                                uLocations[uniform].location,
-                                false,
-                                val
-                            );
-                        };
-                    })(uniform),
+                    })(name, type, "uniform" + fnHash[type]),
                 };
             });
-            Object.defineProperties(api.uniforms, uniforms);
+            Object.defineProperties(api.uniforms, descriptor);
 
             return api;
         };
 
         /**
          * Create a texture from an image
-         * @name gltexture2d
+         * @name createTexture
          * @memberOf me.video.shader
          * @function
          * @param {WebGLContext} gl WebGL Context
-         * @param {Image|Canvas|ImageData} image Source image
-         * @return {WebGLTexture} A newly created texture
+         * @param {Number} unit Destination texture unit
+         * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
+         * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @return {WebGLTexture} A texture object
          */
-        api.gltexture2d = function (gl, image) {
+        api.createTexture = function (gl, unit, image, w, h, b) {
             var texture = gl.createTexture(),
                 filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST;
 
-            /**
-             * A convenience method for binding this texture to the current
-             * texture element for compatibility with gl-texture2d
-             * @ignore
-             */
-            texture.bind = function () {
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, texture);
-                return texture;
-            };
-
-            texture.bind();
+            gl.activeTexture(gl.TEXTURE0 + unit);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            if (w || h || b) {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
+            else {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
 
             return texture;
         };

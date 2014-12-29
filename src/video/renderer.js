@@ -6,33 +6,13 @@
  */
 
 (function () {
-    
-    // a basic cache object
-    var TextureCache = Object.extend({
-        /**
-         * @ignore
-         */
-        init : function () {
-            this.cache = {};
-        },
-        
-       /**
-         * @ignore
-         */
-        get : function (atlas, texture) {
-            if (typeof(this.cache[texture]) === "undefined") {
-                this.cache[texture] = new me.video.renderer.Texture(atlas, texture);
-            }
-            return this.cache[texture];
-        }
-    });
 
     /**
      * a base renderer object
      * @class
      * @extends Object
      * @memberOf me
-     * @constructor     
+     * @constructor
      * @param {Canvas} canvas - the html canvas tag to draw to on screen.
      * @param {Number} game_width - the width of the canvas without scaling
      * @param {Number} game_height - the height of the canvas without scaling
@@ -54,22 +34,20 @@
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
-            
+
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
-            
+
             this.dimensions = { width: width, height: height };
-               
+
             // canvas object and context
             this.canvas = c;
             this.context = null;
-            
+
             //global color and stack for save/restore
             this.colorStack = [];
             this.globalColor = new me.Color(255, 255, 255, 1.0);
-            
-            this.cache = new TextureCache();
-            
+
             return this;
         },
 

@@ -25,6 +25,7 @@
      * @constructor
      * @param {Object} atlas atlas information. See {@link me.loader#getJSON}
      * @param {Image} [texture=atlas.meta.image] texture name
+     * @param {Boolean} [cached=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
      * texture = new me.video.renderer.Texture(
@@ -44,7 +45,7 @@
         /**
          * @ignore
          */
-        init : function (atlas, texture) {
+        init : function (atlas, texture, cached) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore
@@ -54,6 +55,7 @@
             /**
              * the image texture itself
              * @ignore
+             * FIXME: This should be named `image`
              */
             this.texture = texture || null;
 
@@ -99,7 +101,7 @@
                     }
                     // initialize the atlas
                     this.atlas = this.build(atlas);
-                
+
                 } else {
                     // a regular spritesheet ?
                     if (typeof(atlas.framewidth) !== "undefined" &&
@@ -117,6 +119,11 @@
             // if format not recognized
             if (!this.atlas) {
                 throw new me.video.renderer.Texture.Error("texture atlas format not supported");
+            }
+
+            // Add self to TextureCache
+            if (!cached) {
+                me.video.renderer.cache.put(this.texture, this);
             }
         },
 
@@ -152,7 +159,7 @@
             var image = data.region || data.image;
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
-            
+
             // calculate the sprite count (line, col)
             if ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
                 (image.height - margin) % (data.frameheight + spacing) !== 0) {
@@ -186,7 +193,7 @@
                 };
             }
             return atlas;
-            
+
         },
 
         /**
@@ -199,7 +206,7 @@
         getAtlas : function () {
             return this.atlas;
         },
-        
+
         /**
          * return the Atlas texture
          * @name getTexture
@@ -269,7 +276,7 @@
          * @name createAnimationFromName
          * @memberOf me.video.renderer.Texture
          * @function
-         * @param {String[]||Number[]} names list of names for each sprite 
+         * @param {String[]||Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
          * @return {me.AnimationSheet}
          * @example

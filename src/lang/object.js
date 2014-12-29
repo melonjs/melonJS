@@ -109,13 +109,52 @@ if (!Function.prototype.bind) {
     };
 }
 
+if (!Object.is) {
+    /**
+     * The Object.is() method determines whether two values are the same value.
+     * @name is
+     * @memberOf external:Object#
+     * @function
+     * @param {Object} a The first value to compare
+     * @param {Object} b The second value to compare
+     * @return {Boolean}
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+     * @example
+     * // Strings are equal
+     * var s = "foo";
+     * Object.is(s, "foo"); //> true
+     *
+     * // 0 and -0 are not equal
+     * Object.is(0, -0); //>false
+     *
+     * // NaN and NaN are equal
+     * Object.is(NaN, NaN); //> true
+     *
+     * // Two object references are not equal
+     * Object.is({}, {}); //> false
+     *
+     * // Two vars referencing one object are equal
+     * var a = {}, b = a;
+     * Object.is(a, b); //> true
+     */
+    Object.is = function (a, b) {
+        if (a === 0 && b === 0) {
+            return 1 / a === 1 / b;
+        }
+        if (a !== a) {
+            return b !== b;
+        }
+        return a === b;
+    };
+}
+
 if (!Object.assign) {
     /**
-     * The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object. 
-     * The Object.assign method only copies enumerable and own properties from a source object to a target object. 
-     * It uses [[Get]] on the source and [[Put]] on the target, so it will invoke getters and setters. 
-     * Therefore it assigns properties versus just copying or defining new properties. 
-     * This may make it unsuitable for merging new properties into a prototype if the merge sources contain getters. 
+     * The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object.
+     * The Object.assign method only copies enumerable and own properties from a source object to a target object.
+     * It uses [[Get]] on the source and [[Put]] on the target, so it will invoke getters and setters.
+     * Therefore it assigns properties versus just copying or defining new properties.
+     * This may make it unsuitable for merging new properties into a prototype if the merge sources contain getters.
      * For copying propertiy definitions, including their enumerability, into prototypes Object.getOwnPropertyDescriptor and Object.defineProperty should be used instead.
      * @name assign
      * @memberOf external:Object#
@@ -133,7 +172,7 @@ if (!Object.assign) {
      * console.log(obj);
      * // { a: 1, b: 2, c: 3 }
      */
-    
+
     Object.defineProperty(Object, "assign", {
         enumerable: false,
         configurable: true,

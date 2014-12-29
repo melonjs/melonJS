@@ -35,142 +35,74 @@
              * @memberOf me.WebGLRenderer
              */
             this.gl = this.getContextGL(c, !this.transparent);
-
-            this._fontCache = {};
-            this._lineTextureCoords = new Float32Array(8);
-            this._lineVerticeArray = new Float32Array(8);
-            this._matrixStack = [];
-            this._positionBuffer = null;
-            this._textureBuffer = null;
-            this._textureCoords = new Float32Array(12);
-            this._textureLocation = null;
-            this._verticeArray = new Float32Array(12);
-            this._white1PixelTexture = null;
+            var gl = this.gl;
 
             /**
-             * The uniform matrix. Used for transformations on the overall scene
-             * @name uniformMatrix
+             * @ignore
+             */
+            this._matrixStack = [];
+
+            /**
+             * The global matrix. Used for transformations on the overall scene
+             * @name globalMatrix
              * @type me.Matrix3d
              * @memberOf me.WebGLRenderer
              */
-            this.uniformMatrix = new me.Matrix2d();
+            this.globalMatrix = new me.Matrix2d();
 
-            this._projection = new me.Matrix2d(
-                2 / width,  0,              0,
-                0,          -2 / height,    0,
-                -1,         1,              1
+            // Create a batcher
+            this.batcher = new me.WebGLRenderer.Batcher(
+                gl,
+                this.globalMatrix,
+                this.globalColor
             );
 
-            this.createShader();
-            this._shaderProgram.bind();
+            // Create a texture cache
+            var max_textures = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+            this.cache = new me.Renderer.TextureCache(max_textures);
 
-            var shaderProgram = this._shaderProgram;
-            var gl = this.gl;
+            // FIXME: Cannot reference me.video.renderer yet
+            me.video.renderer = this;
 
-            gl.enableVertexAttribArray(shaderProgram.attributes.aTexture.location);
-            gl.enableVertexAttribArray(shaderProgram.attributes.aPosition.location);
+            // Create a 1x1 white texture for fill operations
+            this.fillTexture = new me.video.renderer.Texture({
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : { "w" : 1, "h" : 1 }
+                },
+                "frames" : [{
+                    "filename" : "default",
+                    "frame" : { "x" : 0, "y" : 0, "w" : 1, "h" : 1 }
+                }]
+            }, new Uint8Array([255, 255, 255, 255]));
 
-            this._fontCanvas = me.video.createCanvas(width, height, false);
-            this._fontContext = this.getContext2d(this._fontCanvas, !this.transparent);
+            this.batcher.uploadTexture(
+                this.cache.getUnit(this.fillTexture),
+                this.fillTexture,
+                1,
+                1,
+                0
+            );
 
-            this._white1PixelTexture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
-
-            this.createBuffers();
-
+            // Initialize clear color and blend function
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.BLEND);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-            this._textureLocation = gl.getUniformLocation(shaderProgram.handle, "texture");
-
+            // Configure the WebGL viewport
             this.resize(1, 1);
 
             return this;
         },
 
         /**
-         * Binds the projection matrix to the shader
-         * @name applyProjection
+         * Flush the batcher to the frame buffer
+         * @name blitSurface
          * @memberOf me.WebGLRenderer
          * @function
          */
-        applyProjection : function () {
-            this._shaderProgram.uniforms.pMatrix = this._projection.val;
-        },
-
-        /**
-         * @ignore
-         */
-        bindTexture : function (image) {
-            // FIXME: Create a new object for this instead of modifying the image
-            var w = image.width,
-                h = image.height,
-                gl = this.gl;
-            // Create a Texture from the image
-            image.texture = me.video.shader.gltexture2d(gl, image);
-
-            // Create a Vertex Buffer
-            image.vb = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                0, 0,
-                w, 0,
-                0, h,
-                w, h
-            ]), gl.STATIC_DRAW);
-
-            // Create a Texture Coordinate Buffer
-            image.t = {};
-            var key = "0,0," + w + "," + h;
-            this.cacheTextureCoords(image, key, 0, 0, w, h);
-
-            // Create an Index Buffer
-            image.ib = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, image.ib);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([
-                0, 1, 2,
-                2, 1, 3
-            ]), gl.STATIC_DRAW);
-        },
-
-        /**
-         * @ignore
-         */
-        bindTextureCoords : function (image, x, y, w, h) {
-            // Texture coordinates are cached
-            // They can be looked up by indexing "x,y,w,h"
-            var key = x + "," + y + "," + w + "," + h;
-
-            if (key in image.t) {
-                // Bind the new texture coordinates buffer to the ARRAY_BUFFER
-                this.gl.bindBuffer(this.gl.ARRAY_BUFFER, image.t[key]);
-            }
-            else {
-                this.cacheTextureCoords(image, key, x, y, w, h);
-            }
-        },
-
-        /**
-         * @ignore
-         */
-        cacheTextureCoords : function (image, key, x, y, w, h) {
-            w = (x + w) / image.width;
-            h = (y + h) / image.height;
-            x /= image.width;
-            y /= image.height;
-            var gl = this.gl;
-
-            image.t[key] = gl.createBuffer();
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, image.t[key]);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                x, y,
-                w, y,
-                x, h,
-                w, h
-            ]), gl.STATIC_DRAW);
+        blitSurface : function () {
+            this.batcher.flush();
         },
 
         /**
@@ -198,21 +130,6 @@
         },
 
         /**
-         * @ignore
-         */
-        createBuffers : function () {
-            this._textureBuffer = this.gl.createBuffer();
-            this._positionBuffer = this.gl.createBuffer();
-        },
-
-        /**
-         * @ignore
-         */
-        createShader : function () {
-            this._shaderProgram = me.video.shader.createShader(this.gl);
-        },
-
-        /**
          * draws font to an off screen context, and blits to the backbuffer canvas.
          * @name drawFont
          * @memberOf me.WebGLRenderer
@@ -222,7 +139,8 @@
          * @param {Number} x - the x position to draw at
          * @param {Number} y - the y position to draw at
          */
-        drawFont : function (fontObject, text, x, y) {
+        drawFont : function (/*fontObject, text, x, y*/) {
+            /*
             var fontDimensions;
             var gid = fontObject.gid;
             var fontCache = this._fontCache;
@@ -298,6 +216,7 @@
                 x, y, fontCache[gid].width, fontCache[gid].height,
                 x, y, fontCache[gid].width, fontCache[gid].height
             );
+            */
         },
 
         /**
@@ -311,7 +230,7 @@
          * @param {Number} endY end y position
          */
         drawLine : function (/*startX, startY, endX, endY*/) {
-            // todo
+            // TODO
         },
 
         /**
@@ -330,10 +249,6 @@
          * @param {Number} dh the height value to draw the image at on the screen
          */
         drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-            if (typeof image.texture === "undefined") {
-                this.bindTexture(image);
-            }
-
             if (typeof sw === "undefined") {
                 sw = dw = image.width;
                 sh = dh = image.height;
@@ -353,39 +268,8 @@
                 sy = 0;
             }
 
-            var gl = this.gl;
-            // Save
-            this._matrixStack.push(this.uniformMatrix.clone());
-
-            // Translate and scale the destination vertices
-            this.uniformMatrix.translate(~~dx, ~~dy);
-            this.uniformMatrix.scale(dw / image.width, dh / image.height);
-
-            // Set vertex positions
-            gl.bindBuffer(gl.ARRAY_BUFFER, image.vb);
-            gl.vertexAttribPointer(this._shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
-
-            // Set texture coordinates
-            this.bindTextureCoords(image, ~~sx, ~~sy, ~~sw, ~~sh);
-            gl.vertexAttribPointer(this._shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
-
-            // Set index buffer
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, image.ib);
-
-            // Bind the texture
-            this._shaderProgram.uniforms.texture = image.texture.bind();
-
-            // Set the transformation matrix
-            this._shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-
-            // Set the color
-            this._shaderProgram.uniforms.uColor = this.globalColor.toGL();
-
-            // MAKE IT SO
-            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-
-            // Restore
-            this.uniformMatrix.copy(this._matrixStack.pop());
+            // TODO: Use `region` in place of sx, sy, sw, sh
+            this.batcher.add(this.cache.get(image), sx, sy, sw, sh, dx, dy, dw, dh);
         },
 
         /**
@@ -399,54 +283,7 @@
          * @param {Number} height
          */
         fillRect : function (x, y, width, height) {
-            var x1 = x;
-            var y1 = y;
-            var x2 = x + width;
-            var y2 = y + height;
-            var gl = this.gl;
-            var verticeArray = this._verticeArray;
-            verticeArray[0] = x1;
-            verticeArray[1] = y1;
-            verticeArray[2] = x2;
-            verticeArray[3] = y1;
-            verticeArray[4] = x1;
-            verticeArray[5] = y2;
-            verticeArray[6] = x1;
-            verticeArray[7] = y2;
-            verticeArray[8] = x2;
-            verticeArray[9] = y1;
-            verticeArray[10] = x2;
-            verticeArray[11] = y2;
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, verticeArray, gl.STATIC_DRAW);
-
-            gl.vertexAttribPointer(this._shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
-
-            var textureCoords = this._textureCoords;
-            textureCoords[0] = 0.0;
-            textureCoords[1] = 0.0;
-            textureCoords[2] = 1.0;
-            textureCoords[3] = 0.0;
-            textureCoords[4] = 0.0;
-            textureCoords[5] = 1.0;
-            textureCoords[6] = 0.0;
-            textureCoords[7] = 1.0;
-            textureCoords[8] = 1.0;
-            textureCoords[9] = 0.0;
-            textureCoords[10] = 1.0;
-            textureCoords[11] = 1.0;
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._textureBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, textureCoords, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(this._shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
-
-            gl.uniform1i(this._textureLocation, 0);
-            this._shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
-
-            this._shaderProgram.uniforms.uColor = this.globalColor.toGL();
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            this.batcher.add(this.fillTexture, "default", x, y, width, height);
         },
 
         /**
@@ -504,7 +341,6 @@
             return this.canvas;
         },
 
-
         /**
          * Returns the WebGLContext instance for the renderer
          * return a reference to the system 2d Context
@@ -517,7 +353,6 @@
             return this.gl;
         },
 
-
         /**
          * returns the text size based on dimensions from the font. Uses the font drawing context
          * @name measureText
@@ -527,8 +362,9 @@
          * @param {String} text
          * @return {Object}
          */
-        measureText : function (fontObject, text) {
-            return fontObject.measureText(this._fontContext, text);
+        measureText : function (/*fontObject, text*/) {
+            //return fontObject.measureText(this._fontContext, text);
+            return { "width" : 0 };
         },
 
         /**
@@ -538,7 +374,7 @@
          * @function
          */
         resetTransform : function () {
-            this.uniformMatrix.identity();
+            this.globalMatrix.identity();
         },
 
         /**
@@ -562,10 +398,8 @@
                 this.canvas.style.width = w + "px";
                 this.canvas.style.height = h + "px";
             }
-            this.gl.viewport(0, 0, this.dimensions.width, this.dimensions.height);
 
-            this.setProjection();
-            this.applyProjection();
+            this.batcher.setProjection(this.canvas.width, this.canvas.height);
         },
 
         /**
@@ -578,7 +412,7 @@
             var color = this.colorStack.pop();
             me.pool.push("me.Color", color);
             this.globalColor.copy(color);
-            this.uniformMatrix.copy(this._matrixStack.pop());
+            this.globalMatrix.copy(this._matrixStack.pop());
         },
 
         /**
@@ -589,7 +423,7 @@
          * @param {Number} angle in radians
          */
         rotate : function (angle) {
-            this.uniformMatrix.rotate(angle);
+            this.globalMatrix.rotate(angle);
         },
 
         /**
@@ -600,7 +434,7 @@
          */
         save : function () {
             this.colorStack.push(this.getColor());
-            this._matrixStack.push(this.uniformMatrix.clone());
+            this._matrixStack.push(this.globalMatrix.clone());
         },
 
         /**
@@ -612,16 +446,7 @@
          * @param {Number} y
          */
         scale : function (x, y) {
-            this.uniformMatrix.scale(x, y);
-        },
-
-        /**
-         * @ignore
-         */
-        setProjection : function () {
-            this._projection.set(2 / this.canvas.width, 0, 0,
-                0, -2 / this.canvas.height, 0,
-                -1, 1, 1);
+            this.globalMatrix.scale(x, y);
         },
 
         /**
@@ -666,6 +491,7 @@
          * @param {Number} width the width to set;
          */
         setLineWidth : function () {
+            // TODO
         },
 
         /**
@@ -681,7 +507,7 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         strokeArc : function (/*x, y, radius, start, end, antiClockwise*/) {
-            //todo
+            // TODO
         },
 
         /**
@@ -695,7 +521,7 @@
          * @param {Number} h vertical radius of the ellipse
          */
         strokeEllipse : function (/*x, y, w, h*/) {
-            //todo
+            // TODO
         },
 
         /**
@@ -709,7 +535,7 @@
          * @param {Number} endY the end y coordinate
          */
         strokeLine : function (/*startX, startY, endX, endY*/) {
-            //todo
+            // TODO
         },
 
         /**
@@ -720,7 +546,7 @@
          * @param {me.Polygon} poly the shape to draw
          */
         strokePolygon : function (/*poly*/) {
-            // todo
+            // TODO
         },
 
         /**
@@ -733,7 +559,8 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (x, y, width, height) {
+        strokeRect : function (/*x, y, width, height*/) {
+            /*
             var x1 = x;
             var y1 = y;
             var x2 = x + width;
@@ -754,7 +581,7 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, lineVerticeArray, gl.STATIC_DRAW);
 
-            gl.vertexAttribPointer(shaderProgram.attributes.aPosition.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(shaderProgram.attributes.aPosition, 2, gl.FLOAT, false, 0, 0);
 
             var lineTextureCoords = this._lineTextureCoords;
             lineTextureCoords[0] = 0.0;
@@ -769,13 +596,14 @@
             gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
             gl.bindBuffer(gl.ARRAY_BUFFER, this._textureBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, lineTextureCoords, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(shaderProgram.attributes.aTexture.location, 2, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(shaderProgram.attributes.aTexture, 2, gl.FLOAT, false, 0, 0);
 
-            gl.uniform1i(this._textureLocation, 0);
-            shaderProgram.uniforms.uMatrix = this.uniformMatrix.val;
+            gl.uniform1i(shaderProgram.uniforms.texture, 0);
+            shaderProgram.uniforms.uMatrix = this.globalMatrix.val;
 
             shaderProgram.uniforms.uColor = this.globalColor.toGL();
             gl.drawArrays(gl.LINE_LOOP, 0, 4);
+            */
         },
 
         /**
@@ -824,7 +652,7 @@
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            this.uniformMatrix.multiply(mat2d);
+            this.globalMatrix.multiply(mat2d);
         },
 
         /**
@@ -836,7 +664,7 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            this.uniformMatrix.translate(x, y);
+            this.globalMatrix.translate(x, y);
         }
     });
 

@@ -16,17 +16,8 @@
          * @ignore
          */
         build : function (data) {
-            var size = data.meta.size;
-            var w = size.w;
-            var h = size.h;
-
-            // Vertex buffer
-            this.vb = new Float32Array([
-                0, 0,
-                w, 0,
-                0, h,
-                w, h
-            ]);
+            var w = data.meta.size.w;
+            var h = data.meta.size.h;
 
             var atlas = this._super(me.CanvasRenderer.prototype.Texture, "build", [ data ]);
 
@@ -36,30 +27,44 @@
                 var sw = atlas[frame].width;
                 var sh = atlas[frame].height;
 
-                // UV texture coordinates
-                var u1 = s.x / w;
-                var v1 = s.y / h;
-                var u2 = (s.x + sw) / w;
-                var v2 = (s.y + sh) / h;
-
-                atlas[frame].uvMap = new Float32Array([
-                    u1, v1,
-                    u2, v1,
-                    u1, v2,
-                    u2, v2
+                // ST texture coordinates
+                atlas[frame].stMap = new Float32Array([
+                    s.x / w,        // Left
+                    s.y / h,        // Top
+                    (s.x + sw) / w, // Right
+                    (s.y + sh) / h  // Bottom
                 ]);
 
-                // Index buffer
-                atlas[frame].ib = new Uint16Array([
-                    // Upper-left triangle
-                    0, 1, 2,
-
-                    // Lower-right triangle
-                    2, 1, 3
-                ]);
+                // Cache source coordinates
+                // TODO: Remove this when the Batcher only accepts a region name
+                var key = s.x + "," + s.y + "," + w + "," + h;
+                atlas[key] = atlas[frame];
             });
 
             return atlas;
+        },
+
+        /**
+         * @ignore
+         */
+        _insertRegion : function (name, x, y, w, h) {
+            var dw = this.texture.width;
+            var dh = this.texture.height;
+            this.atlas[name] = {
+                name    : name,
+                offset  : new me.Vector2d(x, y),
+                width   : w,
+                height  : h,
+                angle   : 0,
+                stMap   : new Float32Array([
+                    x / dw,         // Left
+                    y / dh,         // Top
+                    (x + w) / dw,   // Right
+                    (y + h) / dh    // Bottom
+                ])
+            };
+
+            return this.atlas[name];
         }
     });
 

@@ -52,9 +52,11 @@
             // apply the default color to the 2d context
             this.setColor(this.globalColor);
 
+            // create a texture cache
+            this.cache = new me.Renderer.TextureCache();
+
             return this;
         },
-
 
         /**
          * prepare the framebuffer for drawing a new frame
@@ -75,7 +77,6 @@
          * @function
          */
         blitSurface : function () {
-
             if (this.doubleBuffering) {
                 this.context.drawImage(
                     this.backBufferCanvas, 0, 0,

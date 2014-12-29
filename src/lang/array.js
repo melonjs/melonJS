@@ -96,11 +96,37 @@ me.TypedArray = function (a) {
 me.TypedArray.prototype = Array.prototype;
 
 /**
+ * The set() method stores multiple values in the typed array, reading input values from a specified array.
+ * @ignore
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/set|TypedArray.prototype.set}
+ */
+me.TypedArray.prototype.set = function (source, offset) {
+    offset = offset || 0;
+
+    if (source.length + offset > this.length) {
+        throw new me.Error(
+            "TypedArray pollyfill: Buffer overflow in set"
+        );
+    }
+
+    for (var i = 0; i < source.length; i++, offset++) {
+        this[offset] = source[i];
+    }
+};
+
+/**
  * The built in Float32Array object.
  * @external Float32Array
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Float32Array|Float32Array}
  */
 window.Float32Array = window.Float32Array || me.TypedArray;
+
+/**
+ * The built in Uint8Array object.
+ * @external Uint8Array
+ * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint8Array|Uint8Array}
+ */
+window.Uint8Array = window.Uint8Array || me.TypedArray;
 
 /**
  * The built in Uint16Array object.
