@@ -84,13 +84,13 @@
         },
 
         /**
-        * Copies over the values from another me.Matrix2d.
-        * @name copy
-        * @memberOf me.Matrix2d
-        * @function
-        * @param {me.Matrix2d} b the matrix object to copy from
-        * @return {me.Matrix2d} Reference to this object for method chaining
-        */
+         * Copies over the values from another me.Matrix2d.
+         * @name copy
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Matrix2d} b the matrix object to copy from
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
         copy : function (b) {
             b = b.val;
             var a = this.val;
@@ -141,9 +141,9 @@
         },
 
         /**
-        * Multiply this matrix into a vector
-        * @ignore
-        */
+         * Multiply this matrix into a vector
+         * @ignore
+         */
         vectorMultiply : function (v) {
             var a = this.val,
                 x = v.x,
