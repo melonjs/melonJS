@@ -222,12 +222,12 @@
          * @param {Number} sy Source y-coordinate
          * @param {Number} sw Source width
          * @param {Number} sh Source height
-         * @param {Number} x Destination x-coordinate
-         * @param {Number} y Destination y-coordinate
-         * @param {Number} w Destination width
-         * @param {Number} h Destination height
+         * @param {Number} dx Destination x-coordinate
+         * @param {Number} dy Destination y-coordinate
+         * @param {Number} dw Destination width
+         * @param {Number} dh Destination height
          */
-        add : function (texture, sx, sy, sw, sh, x, y, w, h) {
+        add : function (texture, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (this.length >= MAX_LENGTH) {
                 this.flush();
             }
@@ -235,9 +235,14 @@
             // TODO: Replace the function signature with:
             // add(texture, region, x, y, w, h)
             // This can only be done after TextureAtlas is used on tilesets
-            var region;
+            var region,
+                x = dx,
+                y = dy,
+                w = dw,
+                h = dh;
+
             if (arguments.length === 6) {
-                h = x;
+                h = dx;
                 w = sh;
                 y = sw;
                 x = sy;
@@ -261,10 +266,10 @@
             this.uploadTexture(unit, texture);
 
             // Transform vertices
-            var v0 = m.vectorMultiply(me.pool.pull("me.Vector2d", x, y));
-            var v1 = m.vectorMultiply(me.pool.pull("me.Vector2d", x + w, y));
-            var v2 = m.vectorMultiply(me.pool.pull("me.Vector2d", x, y + h));
-            var v3 = m.vectorMultiply(me.pool.pull("me.Vector2d", x + w, y + h));
+            var v0 = m.vectorMultiply(new me.Vector2d(x, y));
+            var v1 = m.vectorMultiply(new me.Vector2d(x + w, y));
+            var v2 = m.vectorMultiply(new me.Vector2d(x, y + h));
+            var v3 = m.vectorMultiply(new me.Vector2d(x + w, y + h));
 
             // Fill vertex buffer
             // FIXME: Pack each vertex vector into single float
@@ -276,12 +281,6 @@
             this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 2 + 1] = v2.y;
             this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 3 + 0] = v3.x;
             this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 3 + 1] = v3.y;
-
-            // Push vertices back into pool
-            me.pool.push(v0);
-            me.pool.push(v1);
-            me.pool.push(v2);
-            me.pool.push(v3);
 
             // Fill color buffer
             // FIXME: Pack color vector into single float
