@@ -183,10 +183,10 @@
             /**
              * Tileset animations
              * @private
-             * @type Object
+             * @type Map
              * @name me.TMXTileset#animations
              */
-            this.animations = {};
+            this.animations = new Map();
 
             var tiles = tileset.tiles;
             if (typeof(tiles) !== "undefined") {
@@ -194,12 +194,12 @@
                 for (i in tiles) {
                     if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
                         this.isAnimated = true;
-                        this.animations[+i + this.firstgid] = {
+                        this.animations.set(+i + this.firstgid, {
                             dt      : 0,
                             idx     : 0,
                             frames  : tiles[i].animation,
                             cur     : tiles[i].animation[0]
-                        };
+                        });
                     }
                 }
             }
@@ -239,12 +239,12 @@
                     // Get animations
                     if ("animation" in tileInfo[i]) {
                         this.isAnimated = true;
-                        this.animations[tileID] = {
+                        this.animations.set(tileID, {
                             dt      : 0,
                             idx     : 0,
                             frames  : tileInfo[i].animation.frame,
                             cur     : tileInfo[i].animation.frame[0]
-                        };
+                        });
                     }
                 }
             }
@@ -350,24 +350,19 @@
 
         // update tile animations
         update : function (dt) {
-            var anim = null,
-                duration = 0,
+            var duration = 0,
                 result = false;
 
-            for (var i in this.animations) {
-                if (this.animations.hasOwnProperty(i)) {
-                    anim = this.animations[i];
-
-                    anim.dt += dt;
-                    duration = anim.cur.duration;
-                    if (anim.dt >= duration) {
-                        anim.dt -= duration;
-                        anim.idx = (anim.idx + 1) % anim.frames.length;
-                        anim.cur = anim.frames[anim.idx];
-                        result = true;
-                    }
+            this.animations.forEach(function (anim) {
+                anim.dt += dt;
+                duration = anim.cur.duration;
+                if (anim.dt >= duration) {
+                    anim.dt -= duration;
+                    anim.idx = (anim.idx + 1) % anim.frames.length;
+                    anim.cur = anim.frames[anim.idx];
+                    result = true;
                 }
-            }
+            });
 
             return result;
         },
@@ -387,8 +382,8 @@
             }
 
             // apply animations
-            if (tileid in this.animations) {
-                tileid = this.animations[tileid].cur.tileid;
+            if (this.animations.has(tileid)) {
+                tileid = this.animations.get(tileid).cur.tileid;
             }
             else {
                 // get the local tileset id
