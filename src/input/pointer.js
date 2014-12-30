@@ -240,10 +240,10 @@
     function dispatchEvent(e, changedTouches) {
         var handled = false;
         var handlers = evtHandlers[e.type];
-
+		var eventType = activeEventList.indexOf(e.type);
         // Convert touchcancel -> touchend, and pointercancel -> pointerup
         if (!handlers) {
-            if (activeEventList.indexOf(e.type) === POINTER_CANCEL) {
+            if (eventType === POINTER_CANCEL) {
                 handlers = evtHandlers[activeEventList[POINTER_UP]];
             } else {
                 handlers = evtHandlers[e.type];
@@ -280,23 +280,88 @@
                     if (handler.floating === true) {
                         e.gameX = e.gameScreenX;
                         e.gameY = e.gameScreenY;
-                    }
-                    else {
+                    } else {
                         e.gameX = e.gameWorldX;
                         e.gameY = e.gameWorldY;
                     }
-                    // call the defined handler
-                    if (handler.rect.getBounds().containsPoint(
-                            e.gameX,
-                            e.gameY
-                        )) {
-                        // trigger the corresponding callback
-                        if (handler.cb(e) === false) {
-                            // stop propagating the event if return false
-                            handled = true;
-                            break;
-                        }
-                    }
+					var eventInBounds = handler.rect.getBounds().containsPoint(e.gameX, e.gameY);
+					switch (eventType) {
+						case POINTER_MOVE:
+							if (handler.rect.pointerId === e.pointerId) {
+								// if event moves inside of bounds, trigger the corresponding callback
+								if (eventInBounds) {
+									if (handler.cb(e) === false) {
+										// stop propagating the event if return false
+										handled = true;
+										break;
+									}
+								} else {
+									// if event moves out of bounds, fires a POINTER_LEAVE
+									var leaveEvent = {
+										type : activeEventList[POINTER_LEAVE],
+										clientX: e.clientX,
+										clientY: e.clientY,
+										which: e.which,
+										timeStamp: Date.now()
+									};
+									// dispatch event to registered objects
+									dispatchEvent(leaveEvent, updateCoordFromEvent(leaveEvent));
+								}
+							} else if (handler.rect.pointerId === undefined) {
+								// if event moves inside of bounds, fires a POINTER_ENTER
+								if (eventInBounds) {
+									var enterEvent = {
+										type : activeEventList[POINTER_ENTER],
+										clientX: e.clientX,
+										clientY: e.clientY,
+										which: e.which,
+										timeStamp: Date.now()
+									};
+									// dispatch event to registered objects
+									dispatchEvent(enterEvent, updateCoordFromEvent(enterEvent));
+								}
+							}
+							break;
+						// POINTER_UP should be forwarded only if inside bounds
+						case POINTER_UP:
+							if (eventInBounds) {
+								// delete the pointerId
+								delete handler.rect.pointerId;
+								// trigger the corresponding callback
+								if (handler.cb(e) === false) {
+									// stop propagating the event if return false
+									handled = true;
+									break;
+								}
+							}
+							break;
+						// POINTER_ENTER and POINTER_DOWN should be forwarded only if inside bounds
+						case POINTER_ENTER:
+						case POINTER_DOWN:
+							if (eventInBounds) {
+								// save the pointerId
+								handler.rect.pointerId = e.pointerId;
+								// trigger the corresponding callback
+								if (handler.cb(e) === false) {
+									// stop propagating the event if return false
+									handled = true;
+									break;
+								}
+							}
+							break;
+						// POINTER_CANCEL and POINTER_LEAVE should be forwarded even if are outside bounds
+						case POINTER_CANCEL:
+						case POINTER_LEAVE:
+							// delete the pointerId
+							delete handler.rect.pointerId;
+							// trigger the corresponding callback
+							if (handler.cb(e) === false) {
+								// stop propagating the event if return false
+								handled = true;
+								break;
+							}
+							break;
+					}
                 }
             }
         }
