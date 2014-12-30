@@ -59,6 +59,14 @@
             // Hash map of texture units
             this.units = [];
 
+            // Vector pool
+            this.v = [
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d()
+            ];
+
             // WebGL context
             this.gl = gl;
 
@@ -266,10 +274,10 @@
             this.uploadTexture(unit, texture);
 
             // Transform vertices
-            var v0 = m.vectorMultiply(new me.Vector2d(x, y));
-            var v1 = m.vectorMultiply(new me.Vector2d(x + w, y));
-            var v2 = m.vectorMultiply(new me.Vector2d(x, y + h));
-            var v3 = m.vectorMultiply(new me.Vector2d(x + w, y + h));
+            var v0 = m.vectorMultiply(this.v[0].set(x, y));
+            var v1 = m.vectorMultiply(this.v[1].set(x + w, y));
+            var v2 = m.vectorMultiply(this.v[2].set(x, y + h));
+            var v3 = m.vectorMultiply(this.v[3].set(x + w, y + h));
 
             // Fill vertex buffer
             // FIXME: Pack each vertex vector into single float
