@@ -201,9 +201,9 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, alpha) {
-            // Private initialization: copy Float32Array directly
-            if (r instanceof Float32Array) {
-                return this.glArray.set(r);
+            // Private initialization: copy Color value directly
+            if (r instanceof me.Color) {
+                return this.glArray.set(r.glArray);
             }
             this.r = r;
             this.g = g;
@@ -220,7 +220,7 @@
          * @return {me.Color} Reference to the newly cloned object
          */
         clone : function () {
-            return me.pool.pull("me.Color", this.glArray);
+            return me.pool.pull("me.Color", this);
         },
 
         /**
