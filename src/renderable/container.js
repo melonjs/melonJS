@@ -673,13 +673,20 @@
 
             this.drawCount = 0;
 
-            renderer.save();
+            var restore = false;
+            if (!this.transform.isIdentity()) {
+                restore = true;
 
-            // apply the container current transform
-            renderer.transform(this.transform);
+                // save context
+                renderer.save();
+
+                // apply the container current transform
+                renderer.transform(this.transform);
+            }
 
             // apply the group opacity
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+            var alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // translate to the container position
             renderer.translate(this.pos.x, this.pos.y);
@@ -710,7 +717,16 @@
                 }
             }
 
-            renderer.restore();
+            // restore the group opacity
+            renderer.setGlobalAlpha(alpha);
+
+            // restore the container position
+            renderer.translate(-this.pos.x, -this.pos.y);
+
+            if (restore) {
+                // restore context
+                renderer.restore();
+            }
         }
     });
 

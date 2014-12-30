@@ -266,10 +266,10 @@
                     return;
                 }
             }
-            // save context
-            renderer.save();
+            // save global alpha
+            var alpha = renderer.globalAlpha();
             // sprite alpha value
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
@@ -278,6 +278,9 @@
             var angle = this.angle + this._sourceAngle;
 
             if ((this.scaleFlag) || (angle !== 0)) {
+                // save context
+                renderer.save();
+
                 // calculate pixel pos of the anchor point
                 var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
                 // translate to the defined anchor point
@@ -305,7 +308,6 @@
                 }
             }
 
-
             renderer.drawImage(
                 this.image,
                 this.offset.x, this.offset.y,   // sx,sy
@@ -314,8 +316,12 @@
                 w, h                            // dw,dh
             );
 
-            // restore context
-            renderer.restore();
+            if ((this.scaleFlag) || (angle !== 0)) {
+                // restore context
+                renderer.restore();
+            }
+            // restore global alpha
+            renderer.setGlobalAlpha(alpha);
         },
 
         /**
@@ -337,5 +343,5 @@
             // to be extended !
         }
     });
-    
+
 })();
