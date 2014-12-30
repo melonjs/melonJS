@@ -188,7 +188,7 @@
             if (!ctx) {
                 ctx = this.gl;
             }
-            this.colorStack.push(this.getColor());
+            this.colorStack.push(this.getColor(true));
             this.setColor(col);
             if (opaque) {
                 this.gl.clear(this.gl.COLOR_BUFFER_BIT);
@@ -196,7 +196,9 @@
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            this.setColor(this.colorStack.pop());
+            var color = this.colorStack.pop();
+            this.setColor(color);
+            me.pool.push(color);
         },
 
         /**
@@ -578,9 +580,9 @@
          */
         restore : function () {
             var color = this.colorStack.pop();
-            me.pool.push("me.Color", color);
-            this.globalColor.copy(color);
-            this.uniformMatrix.copy(this._matrixStack.pop());
+            this.setColor(color);
+            me.pool.push(color);
+            this.globalMatrix.copy(this._matrixStack.pop());
         },
 
         /**
@@ -601,8 +603,8 @@
          * @function
          */
         save : function () {
-            this.colorStack.push(this.getColor());
-            this._matrixStack.push(this.uniformMatrix.clone());
+            this.colorStack.push(this.getColor(true));
+            this._matrixStack.push(this.globalMatrix.clone());
         },
 
         /**
