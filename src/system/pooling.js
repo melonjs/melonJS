@@ -111,7 +111,10 @@
          */
         api.pull = function (data) {
             var name = typeof data === "string" ? data.toLowerCase() : undefined;
-            var args = Array.prototype.slice.call(arguments);
+            var args = [];
+            for (var i = 0; i < arguments.length; i++) {
+                args.push(arguments[i]);
+            }
             if (name && entityClass[name]) {
                 var proto;
                 if (!entityClass[name].pool) {
@@ -124,13 +127,14 @@
                 proto = entity["class"];
                 if (entity.pool.length > 0) {
                     obj = entity.pool.pop();
+                    args.shift();
                     // call the object init function if defined (JR's Inheritance)
                     if (typeof obj.init === "function") {
-                        obj.init.apply(obj, args.slice(1));
+                        obj.init.apply(obj, args);
                     }
                     // call the object onResetEvent function if defined
                     if (typeof obj.onResetEvent === "function") {
-                        obj.onResetEvent.apply(obj, args.slice(1));
+                        obj.onResetEvent.apply(obj, args);
                     }
                 }
                 else {

@@ -193,10 +193,16 @@
          * @name getColor
          * @memberOf me.CanvasRenderer
          * @function
+         * @param {Boolean} [pooled=false] Whether to pull the color from the pool
          * @return {me.Color}
          */
-        getColor : function () {
-            return this.globalColor.clone();
+        getColor : function (pooled) {
+            if (pooled) {
+                return this.globalColor.clone();
+            }
+            else {
+                return new me.Color(this.globalColor.toGL());
+            }
         },
 
         /**

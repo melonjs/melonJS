@@ -280,7 +280,7 @@
          * @function
          */
         save : function () {
-            this.colorStack.push(this.getColor());
+            this.colorStack.push(this.getColor(true));
             this.backBufferContext2D.save();
         },
 
@@ -292,9 +292,9 @@
          */
         restore : function () {
             var color = this.colorStack.pop();
-            me.pool.push("me.Color", color);
-            this.backBufferContext2D.restore();
             this.setColor(color);
+            me.pool.push(color);
+            this.backBufferContext2D.restore();
         },
 
         /**

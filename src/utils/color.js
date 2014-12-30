@@ -190,13 +190,6 @@
         },
 
         /**
-         * @ignore
-         */
-        onResetEvent : function (r, g, b, alpha) {
-            return this.setColor(r, g, b, alpha);
-        },
-
-        /**
          * Set this color to the specified value.
          * @name setColor
          * @memberOf me.Color
