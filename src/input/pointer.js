@@ -93,8 +93,8 @@
         "pointerdown",
         "pointerup",
         "pointercancel",
-        undefined,
-        undefined
+        "pointerenter",
+        "pointerleave"
     ];
 
     // previous MS prefixed pointer event type
@@ -104,8 +104,8 @@
         "MSPointerDown",
         "MSPointerUp",
         "MSPointerCancel",
-        undefined,
-        undefined
+        "MSPointerEnter",
+        "MSPointerLeave"
     ];
 
     // legacy mouse event type
@@ -115,8 +115,8 @@
         "mousedown",
         "mouseup",
         undefined,
-        undefined,
-        undefined
+        "mouseenter",
+        "mouseleave"
     ];
 
     // iOS style touch event type
@@ -126,8 +126,8 @@
         "touchstart",
         "touchend",
         "touchcancel",
-        undefined,
-        undefined
+        "touchenter",
+        "touchleave"
     ];
 
     // internal constants
@@ -136,6 +136,8 @@
     var POINTER_DOWN    = 2;
     var POINTER_UP      = 3;
     var POINTER_CANCEL  = 4;
+	var POINTER_ENTER	= 5;
+	var POINTER_LEAVE	= 6;
 
     /**
      * cache value for the offset of the canvas position within the page
