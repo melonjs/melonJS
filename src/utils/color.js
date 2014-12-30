@@ -194,37 +194,21 @@
          * @name setColor
          * @memberOf me.Color
          * @function
-         * @param {Float32Array|Number} r red component [0 .. 255] or array of color components
+         * @param {Number} r red component [0 .. 255]
          * @param {Number} g green component [0 .. 255]
          * @param {Number} b blue component [0 .. 255]
          * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
          * @return {me.Color} Reference to this object for method chaining
          */
         setColor : function (r, g, b, alpha) {
+            // Private initialization: copy Float32Array directly
             if (r instanceof Float32Array) {
-                return this.setGLColor(r);
+                return this.glArray.set(r);
             }
             this.r = r;
             this.g = g;
             this.b = b;
             this.alpha = alpha;
-            return this;
-        },
-
-        /**
-         * Set this color to the specified value.
-         * @name setGLColor
-         * @memberOf me.Color
-         * @function
-         * @param {Float32Array} glArray WebGL color components
-         * @return {me.Color} Reference to this object for method chaining
-         */
-        setGLColor : function (glArray) {
-            this.glArray[0] = (glArray[0] || 0).clamp(0, 1);
-            this.glArray[1] = (glArray[1] || 0).clamp(0, 1);
-            this.glArray[2] = (glArray[2] || 0).clamp(0, 1);
-            this.glArray[3] = typeof(glArray[3]) === "undefined" ? 1.0 : (+glArray[3]).clamp(0, 1);
-
             return this;
         },
 
@@ -250,7 +234,7 @@
         copy : function (color) {
             return (
                 (color instanceof me.Color) ?
-                this.setGLColor(color.toGL()) :
+                this.glArray.set(color.glArray) :
                 this.parseCSS(color)
             );
         },
