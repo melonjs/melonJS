@@ -335,7 +335,7 @@
                 var gl = this.gl;
                 gl.drawElements(
                     gl.TRIANGLES,
-                    this.length * ELEMENTS_PER_RECT * INDICES_PER_RECT,
+                    this.length * INDICES_PER_RECT,
                     gl.UNSIGNED_SHORT,
                     0
                 );
