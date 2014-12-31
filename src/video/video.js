@@ -41,12 +41,12 @@
          * Auto-detect the best renderer to use
          * @ignore
          */
-        function autoDetectRenderer() {
+        function autoDetectRenderer(c, width, height, options) {
             try {
-                return new me.WebGLRenderer(arguments);
+                return new me.WebGLRenderer(c, width, height, options);
             }
             catch (e) {
-                return new me.CanvasRenderer(arguments);
+                return new me.CanvasRenderer(c, width, height, options);
             }
         }
 
