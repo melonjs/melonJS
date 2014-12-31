@@ -68,17 +68,9 @@
          * me.pool.register("starentity", StarEntity, true);
          */
         api.register = function (className, entityObj, pooling) {
-            if (!pooling) {
-                entityClass[className.toLowerCase()] = {
-                    "class" : entityObj,
-                    "pool" : undefined
-                };
-                return;
-            }
-
-            entityClass[className.toLowerCase()] = {
+            entityClass[className] = {
                 "class" : entityObj,
-                "pool" : []
+                "pool" : (pooling ? [] : undefined)
             };
         };
 
@@ -109,46 +101,38 @@
          * me.game.world.removeChild(enemy);
          * me.game.world.removeChild(bullet);
          */
-        api.pull = function (data) {
-            var name = typeof data === "string" ? data.toLowerCase() : undefined;
+        api.pull = function (name) {
             var args = new Array(arguments.length);
             for (var i = 0; i < arguments.length; i++) {
                 args[i] = arguments[i];
             }
-            if (name && entityClass[name]) {
-                var proto;
-                if (!entityClass[name].pool) {
-                    proto = entityClass[name]["class"];
-                    args[0] = proto;
-                    return new (proto.bind.apply(proto, args))();
-                }
+            var entity = entityClass[name];
+            if (entity) {
+                var proto = entity["class"],
+                    pool = entity.pool,
+                    obj;
 
-                var obj, entity = entityClass[name];
-                proto = entity["class"];
-                if (entity.pool.length > 0) {
-                    obj = entity.pool.pop();
+                if (pool && ((obj = pool.pop()))) {
                     args.shift();
-                    // call the object init function if defined (JR's Inheritance)
-                    if (typeof obj.init === "function") {
-                        obj.init.apply(obj, args);
-                    }
                     // call the object onResetEvent function if defined
-                    if (typeof obj.onResetEvent === "function") {
+                    if (typeof(obj.onResetEvent) === "function") {
                         obj.onResetEvent.apply(obj, args);
+                    }
+                    else {
+                        obj.init.apply(obj, args);
                     }
                 }
                 else {
                     args[0] = proto;
                     obj = new (proto.bind.apply(proto, args))();
-                    obj.className = name;
+                    if (pool) {
+                        obj.className = name;
+                    }
                 }
                 return obj;
             }
 
-            if (name) {
-                console.error("Cannot instantiate entity of type '" + data + "': Class not found!");
-            }
-            return null;
+            throw new me.Error("Cannot instantiate entity of type '" + name + "'");
         };
 
         /**
@@ -162,7 +146,7 @@
          */
         api.purge = function () {
             for (var className in entityClass) {
-                if (entityClass.hasOwnProperty(className)) {
+                if (entityClass[className]) {
                     entityClass[className].pool = [];
                 }
             }
