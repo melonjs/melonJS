@@ -432,7 +432,7 @@
             var height = (typeof settings.height === "number") ? settings.height : defaults.height;
             this.resize(width, height);
 
-            Object.assign(this, settings, defaults);
+            Object.assign(this, defaults, settings);
 
             // reset particle container values
             this.container.destroy();
