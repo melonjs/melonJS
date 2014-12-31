@@ -36,14 +36,14 @@
             this.image = emitter.image;
 
             // Set the start particle Angle and Speed as defined in emitter
-            var angle = emitter.angle + ((emitter.angleVariation > 0) ? (-1).random(2) * emitter.angleVariation : 0);
-            var speed = emitter.speed + ((emitter.speedVariation > 0) ? (-1).random(2) * emitter.speedVariation : 0);
+            var angle = emitter.angle + ((emitter.angleVariation > 0) ? ((0).randomFloat(2) - 1) * emitter.angleVariation : 0);
+            var speed = emitter.speed + ((emitter.speedVariation > 0) ? ((0).randomFloat(2) - 1) * emitter.speedVariation : 0);
 
             // Set the start particle Velocity
             this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
 
             // Set the start particle Time of Life as defined in emitter
-            this.life = emitter.minLife.random(emitter.maxLife);
+            this.life = emitter.minLife.randomFloat(emitter.maxLife);
             this.startLife = this.life;
 
             // Set the start and end particle Scale as defined in emitter
