@@ -230,7 +230,10 @@ if (!Object.assign) {
     Object.defineProperty(Object.prototype, "extend", {
         "value" : function () {
             var methods = {};
-            var mixins = Array.prototype.slice.call(arguments, 0);
+            var mixins = new Array(arguments.length);
+            for (var i = 0; i < arguments.length; i++) {
+                mixins.push(arguments[i]);
+            }
 
             /**
              * The class constructor which calls the user `init` constructor.
