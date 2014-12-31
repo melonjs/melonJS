@@ -85,16 +85,17 @@
         /**
          * @ignore
          */
-        draw : function (context, rect) {
+        draw : function (renderer, rect) {
             if (this.children.length > 0) {
-                var gco;
+                var context = renderer.getContext(),
+                    gco;
                 // Check for additive draw
                 if (this._emitter.textureAdditive) {
                     gco = context.globalCompositeOperation;
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super(me.Container, "draw", [context, rect]);
+                this._super(me.Container, "draw", [renderer, rect]);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {
