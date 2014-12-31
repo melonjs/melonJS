@@ -42,8 +42,8 @@ game.PlayScreen = me.ScreenObject.extend({
                     } else {
                         pos = mousepos;
                     }
-                    obj.pos.x = pos.x - obj.hWidth;
-                    obj.pos.y = pos.y - obj.hHeight;
+                    obj.pos.x = pos.x - obj.width / 2;
+                    obj.pos.y = pos.y - obj.height / 2;
                 }
 
                 me.event.publish("propertyChanged", [ game.EmitterController.emitter ]);
