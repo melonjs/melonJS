@@ -201,7 +201,7 @@
                 return this.globalColor.clone();
             }
             else {
-                return new me.Color(this.globalColor.toGL());
+                return new me.Color(this.globalColor);
             }
         },
 
