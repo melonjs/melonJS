@@ -307,8 +307,6 @@
         },
         enable : function(container) {
             me.input.registerPointerEvent("pointerdown", this, this._startDrag);
-            // me.input.registerPointerEvent("pointerup", me.game.viewport, this._stopDrag);
-            // me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
             (container || me.game.world).addChild(this);
         },
         disable : function(container) {
@@ -316,8 +314,6 @@
                 this.stopDrag();
             }
             me.input.releasePointerEvent("pointerdown", this, this._startDrag);
-            // me.input.releasePointerEvent("pointerup", me.game.viewport, this._stopDrag);
-            // me.input.releasePointerEvent("pointermove", me.game.viewport, this._drag);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {
@@ -361,8 +357,8 @@
         draw : function(renderer) {
             renderer.save();
             var context = renderer.getContext();
-            context.fillStyle = context.strokeStyle = this.color;
-            renderer.fillArc(this.pos.x, this.pos.y, this.hWidth, 0, Math.PI * 2);
+            context.fillStyle = this.color;
+            renderer.fillArc(this.pos.x, this.pos.y, this.width / 2, 0, Math.PI * 2);
             renderer.restore();
         }
     });
