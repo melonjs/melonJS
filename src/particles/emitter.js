@@ -432,30 +432,7 @@
             var height = (typeof settings.height === "number") ? settings.height : defaults.height;
             this.resize(width, height);
 
-            this.image = settings.image || defaults.image;
-            this.totalParticles = (typeof settings.totalParticles === "number") ? settings.totalParticles : defaults.totalParticles;
-            this.angle = (typeof settings.angle === "number") ? settings.angle : defaults.angle;
-            this.angleVariation = (typeof settings.angleVariation === "number") ? settings.angleVariation : defaults.angleVariation;
-            this.minLife = (typeof settings.minLife === "number") ? settings.minLife : defaults.minLife;
-            this.maxLife = (typeof settings.maxLife === "number") ? settings.maxLife : defaults.maxLife;
-            this.speed = (typeof settings.speed === "number") ? settings.speed : defaults.speed;
-            this.speedVariation = (typeof settings.speedVariation === "number") ? settings.speedVariation : defaults.speedVariation;
-            this.minRotation = (typeof settings.minRotation === "number") ? settings.minRotation : defaults.minRotation;
-            this.maxRotation = (typeof settings.maxRotation === "number") ? settings.maxRotation : defaults.maxRotation;
-            this.minStartScale = (typeof settings.minStartScale === "number") ? settings.minStartScale : defaults.minStartScale;
-            this.maxStartScale = (typeof settings.maxStartScale === "number") ? settings.maxStartScale : defaults.maxStartScale;
-            this.minEndScale = (typeof settings.minEndScale === "number") ? settings.minEndScale : defaults.minEndScale;
-            this.maxEndScale = (typeof settings.maxEndScale === "number") ? settings.maxEndScale : defaults.maxEndScale;
-            this.gravity = (typeof settings.gravity === "number") ? settings.gravity : defaults.gravity;
-            this.wind = (typeof settings.wind === "number") ? settings.wind : defaults.wind;
-            this.followTrajectory = (typeof settings.followTrajectory === "boolean") ? settings.followTrajectory : defaults.followTrajectory;
-            this.textureAdditive = (typeof settings.textureAdditive === "boolean") ? settings.textureAdditive : defaults.textureAdditive;
-            this.onlyInViewport = (typeof settings.onlyInViewport === "boolean") ? settings.onlyInViewport : defaults.onlyInViewport;
-            this.floating = (typeof settings.floating === "boolean") ? settings.floating : defaults.floating;
-            this.maxParticles = (typeof settings.maxParticles === "number") ? settings.maxParticles : defaults.maxParticles;
-            this.frequency = (typeof settings.frequency === "number") ? settings.frequency : defaults.frequency;
-            this.duration = (typeof settings.duration === "number") ? settings.duration : defaults.duration;
-            this.framesToSkip = (typeof settings.framesToSkip === "number") ? settings.framesToSkip : defaults.framesToSkip;
+            Object.assign(this, settings, defaults);
 
             // reset particle container values
             this.container.destroy();
