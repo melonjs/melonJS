@@ -203,7 +203,8 @@
         setColor : function (r, g, b, alpha) {
             // Private initialization: copy Color value directly
             if (r instanceof me.Color) {
-                return this.glArray.set(r.glArray);
+                this.glArray.set(r.glArray);
+                return r;
             }
             this.r = r;
             this.g = g;
@@ -232,11 +233,12 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         copy : function (color) {
-            return (
-                (color instanceof me.Color) ?
-                this.glArray.set(color.glArray) :
-                this.parseCSS(color)
-            );
+            if (color instanceof me.Color) {
+                this.glArray.set(color.glArray);
+                return this;
+            }
+
+            return this.parseCSS(color);
         },
 
         /**
