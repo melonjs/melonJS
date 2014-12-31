@@ -466,12 +466,7 @@
          * @return {Number}
          */
         setGlobalAlpha : function (a) {
-            this.globalColor.setColor(
-                this.globalColor.r,
-                this.globalColor.g,
-                this.globalColor.b,
-                a
-            );
+            this.globalColor.glArray[3] = a;
         },
 
         /**

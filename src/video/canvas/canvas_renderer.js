@@ -340,13 +340,7 @@
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha : function (a) {
-            this.globalColor.setColor(
-                this.globalColor.r,
-                this.globalColor.g,
-                this.globalColor.b,
-                a
-            );
-            this.backBufferContext2D.globalAlpha = a;
+            this.backBufferContext2D.globalAlpha = this.globalColor.glArray[3] = a;
         },
 
         /**

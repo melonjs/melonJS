@@ -235,7 +235,7 @@
          * @return {Number}
          */
         globalAlpha : function () {
-            return this.globalColor.alpha;
+            return this.globalColor.glArray[3];
         },
 
         /**
