@@ -111,9 +111,9 @@
          */
         api.pull = function (data) {
             var name = typeof data === "string" ? data.toLowerCase() : undefined;
-            var args = [];
+            var args = new Array(arguments.length);
             for (var i = 0; i < arguments.length; i++) {
-                args.push(arguments[i]);
+                args[i] = arguments[i];
             }
             if (name && entityClass[name]) {
                 var proto;
