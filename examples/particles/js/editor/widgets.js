@@ -455,7 +455,12 @@
             renderer.save();
             renderer.setColor(this.color);
             renderer.setLineWidth(5);
-            renderer.drawLine(origin.x, origin.y, vector.x, vector.y);
+            renderer.drawLine(
+                origin.x,
+                origin.y,
+                origin.x + vector.x,
+                origin.y + vector.y
+            );
             renderer.restore();
         }
     });

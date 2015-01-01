@@ -135,13 +135,11 @@
          * @param {Number} endY end y position
          */
         drawLine : function (startX, startY, endX, endY) {
-            this.backBufferContext2D.translate(startX, startY);
             this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.moveTo(0, 0);
+            this.backBufferContext2D.moveTo(startX, startY);
             this.backBufferContext2D.lineTo(endX, endY);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
-            this.backBufferContext2D.translate(-startX, -startY);
         },
 
         /**
