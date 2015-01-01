@@ -44,8 +44,7 @@
             this.canvas = c;
             this.context = null;
 
-            //global color and stack for save/restore
-            this.colorStack = [];
+            // global color
             this.globalColor = new me.Color(255, 255, 255, 1.0);
 
             return this;
@@ -186,23 +185,6 @@
             }
             this.setImageSmoothing(_context, this.antiAlias);
             return _context;
-        },
-
-        /**
-         * returns the current color of the context
-         * @name getColor
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Boolean} [pooled=false] Whether to pull the color from the pool
-         * @return {me.Color}
-         */
-        getColor : function (pooled) {
-            if (pooled) {
-                return this.globalColor.clone();
-            }
-            else {
-                return new me.Color(this.globalColor);
-            }
         },
 
         /**

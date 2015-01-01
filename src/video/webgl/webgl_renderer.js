@@ -40,6 +40,11 @@
             /**
              * @ignore
              */
+            this.colorStack = [];
+
+             /**
+             * @ignore
+             */
             this._matrixStack = [];
 
             /**
@@ -118,17 +123,14 @@
             if (!ctx) {
                 ctx = this.gl;
             }
-            this.colorStack.push(this.getColor(true));
             this.setColor(col);
             if (opaque) {
+                // FIXME
                 this.gl.clear(this.gl.COLOR_BUFFER_BIT);
             }
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            var color = this.colorStack.pop();
-            this.setColor(color);
-            me.pool.push(color);
         },
 
         /**
@@ -411,10 +413,9 @@
          * @function
          */
         restore : function () {
-            var color = this.colorStack.pop();
-            this.setColor(color);
-            me.pool.push(color);
-            this.globalMatrix.copy(this._matrixStack.pop());
+            me.pool.push(this.globalColor);
+            this.globalColor = this.colorStack.pop();
+            this.globalMatrix = this._matrixStack.pop();
         },
 
         /**
@@ -435,7 +436,7 @@
          * @function
          */
         save : function () {
-            this.colorStack.push(this.getColor(true));
+            this.colorStack.push(this.globalColor.clone());
             this._matrixStack.push(this.globalMatrix.clone());
         },
 

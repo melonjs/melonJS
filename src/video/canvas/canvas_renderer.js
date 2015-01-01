@@ -280,7 +280,6 @@
          * @function
          */
         save : function () {
-            this.colorStack.push(this.getColor(true));
             this.backBufferContext2D.save();
         },
 
@@ -291,10 +290,8 @@
          * @function
          */
         restore : function () {
-            var color = this.colorStack.pop();
-            this.setColor(color);
-            me.pool.push(color);
             this.backBufferContext2D.restore();
+            this.globalColor.glArray[3] = this.backBufferContext2D.globalAlpha;
         },
 
         /**
@@ -328,8 +325,12 @@
          * @param {me.Color|String} color css color value
          */
         setColor : function (color) {
-            this.globalColor.copy(color);
-            this.backBufferContext2D.strokeStyle = this.backBufferContext2D.fillStyle = this.globalColor.toRGBA();
+            this.backBufferContext2D.strokeStyle =
+            this.backBufferContext2D.fillStyle = (
+                color instanceof me.Color ?
+                color.toRGBA() :
+                color
+            );
         },
 
         /**
