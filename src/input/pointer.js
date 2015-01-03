@@ -114,7 +114,7 @@
         "mousemove",
         "mousedown",
         "mouseup",
-        undefined,
+        "mousecancel",
         "mouseenter",
         "mouseleave"
     ];
@@ -239,131 +239,139 @@
      */
     function dispatchEvent(e, changedTouches) {
         var handled = false;
-        var handlers = evtHandlers[e.type];
-		var eventType = activeEventList.indexOf(e.type);
-        // Convert touchcancel -> touchend, and pointercancel -> pointerup
-        if (!handlers) {
-            if (eventType === POINTER_CANCEL) {
-                handlers = evtHandlers[activeEventList[POINTER_UP]];
-            } else {
-                handlers = evtHandlers[e.type];
-            }
-        }
+		
+        for (var guid in evtHandlers) {
+			if (evtHandlers.hasOwnProperty(guid)) {
+				var handlers = evtHandlers[guid];
+				// get the current screen to world offset
+				me.game.viewport.localToWorld(0, 0, viewportOffset);
+				for (var t = 0, tl = changedTouches.length; t < tl; t++) {
+					// Do not fire older events
+					if (typeof(e.timeStamp) !== "undefined") {
+						if (e.timeStamp < lastTimeStamp) {
+							continue;
+						}
+						lastTimeStamp = e.timeStamp;
+					}
 
-        if (handlers) {
-            // get the current screen to world offset
-            me.game.viewport.localToWorld(0, 0, viewportOffset);
-            for (var t = 0, l = changedTouches.length; t < l; t++) {
-                // Do not fire older events
-                if (typeof(e.timeStamp) !== "undefined") {
-                    if (e.timeStamp < lastTimeStamp) {
-                        continue;
-                    }
-                    lastTimeStamp = e.timeStamp;
-                }
+					// if PointerEvent is not supported
+					if (!me.device.pointerEnabled) {
+						// -> define pointerId to simulate the PointerEvent standard
+						e.pointerId = changedTouches[t].id;
+					}
 
-                // if PointerEvent is not supported
-                if (!me.device.pointerEnabled) {
-                    // -> define pointerId to simulate the PointerEvent standard
-                    e.pointerId = changedTouches[t].id;
-                }
-
-                /* Initialize the two coordinate space properties. */
-                e.gameScreenX = changedTouches[t].x;
-                e.gameScreenY = changedTouches[t].y;
-                e.gameWorldX = e.gameScreenX + viewportOffset.x;
-                e.gameWorldY = e.gameScreenY + viewportOffset.y;
-
-                // parse all handlers
-                for (var i = handlers.length, handler; i--, (handler = handlers[i]);) {
-                    /* Set gameX and gameY depending on floating. */
-                    if (handler.floating === true) {
-                        e.gameX = e.gameScreenX;
-                        e.gameY = e.gameScreenY;
-                    } else {
-                        e.gameX = e.gameWorldX;
-                        e.gameY = e.gameWorldY;
-                    }
-					var eventInBounds = handler.rect.getBounds().containsPoint(e.gameX, e.gameY);
-					switch (eventType) {
+					/* Initialize the two coordinate space properties. */
+					e.gameScreenX = changedTouches[t].x;
+					e.gameScreenY = changedTouches[t].y;
+					e.gameWorldX = e.gameScreenX + viewportOffset.x;
+					e.gameWorldY = e.gameScreenY + viewportOffset.y;
+					if (handlers.rect.floating === true) {
+						e.gameX = e.gameScreenX;
+						e.gameY = e.gameScreenY;
+					} else {
+						e.gameX = e.gameWorldX;
+						e.gameY = e.gameWorldY;
+					}
+					var eventInBounds = handlers.rect.getBounds().containsPoint(e.gameX, e.gameY);
+					
+					switch (activeEventList.indexOf(e.type)) {
 						case POINTER_MOVE:
-							if (handler.rect.pointerId === e.pointerId) {
-								// if event moves inside of bounds, trigger the corresponding callback
+							var i, callback;
+							if (handlers.pointerId === e.pointerId) {
 								if (eventInBounds) {
-									if (handler.cb(e) === false) {
-										// stop propagating the event if return false
-										handled = true;
-										break;
+									// pointer defined & inside of bounds: trigger the POINTER_MOVE callback
+									if (handlers.callbacks[e.type]) {
+										for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
+											if (callback(e) === false) {
+												// stop propagating the event if return false
+												handled = true;
+												break;
+											}
+										}
 									}
 								} else {
-									// if event moves out of bounds, fires a POINTER_LEAVE
-									var leaveEvent = {
-										type : activeEventList[POINTER_LEAVE],
-										clientX: e.clientX,
-										clientY: e.clientY,
-										which: e.which,
-										timeStamp: Date.now()
-									};
-									// dispatch event to registered objects
-									dispatchEvent(leaveEvent, updateCoordFromEvent(leaveEvent));
+									// moved out of bounds: trigger the POINTER_LEAVE callbacks instead
+									if (handlers.callbacks[activeEventList[POINTER_LEAVE]]) {
+										for (i = handlers.callbacks[activeEventList[POINTER_LEAVE]].length - 1; (callback = handlers.callbacks[activeEventList[POINTER_LEAVE]][i]); i--) {
+											// delete the pointerId
+											handlers.pointerId = null;
+											if (callback(e) === false) {
+												// stop propagating the event if return false
+												handled = true;
+												break;
+											}
+										}
+									}
 								}
-							} else if (handler.rect.pointerId === undefined) {
-								// if event moves inside of bounds, fires a POINTER_ENTER
-								if (eventInBounds) {
-									var enterEvent = {
-										type : activeEventList[POINTER_ENTER],
-										clientX: e.clientX,
-										clientY: e.clientY,
-										which: e.which,
-										timeStamp: Date.now()
-									};
-									// dispatch event to registered objects
-									dispatchEvent(enterEvent, updateCoordFromEvent(enterEvent));
-								}
-							}
-							break;
-						// POINTER_UP should be forwarded only if inside bounds
-						case POINTER_UP:
-							if (eventInBounds) {
-								// delete the pointerId
-								delete handler.rect.pointerId;
-								// trigger the corresponding callback
-								if (handler.cb(e) === false) {
-									// stop propagating the event if return false
-									handled = true;
-									break;
+							} else if (handlers.pointerId === null && eventInBounds) {
+								// no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks instead
+								if (handlers.callbacks[activeEventList[POINTER_ENTER]]) {
+									for (i = handlers.callbacks[activeEventList[POINTER_ENTER]].length - 1; (callback = handlers.callbacks[activeEventList[POINTER_ENTER]][i]); i--) {
+										// save the pointerId
+										handlers.pointerId = e.pointerId;
+										if (callback(e) === false) {
+											// stop propagating the event if return false
+											handled = true;
+											break;
+										}
+									}
 								}
 							}
 							break;
-						// POINTER_ENTER and POINTER_DOWN should be forwarded only if inside bounds
-						case POINTER_ENTER:
 						case POINTER_DOWN:
+							// event inside of bounds: trigger the POINTER_DOWN callback
 							if (eventInBounds) {
 								// save the pointerId
-								handler.rect.pointerId = e.pointerId;
+								handlers.pointerId = e.pointerId;
 								// trigger the corresponding callback
-								if (handler.cb(e) === false) {
-									// stop propagating the event if return false
-									handled = true;
-									break;
+								if (handlers.callbacks[e.type]) {
+									for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
+										if (callback(e) === false) {
+											// stop propagating the event if return false
+											handled = true;
+											break;
+										}
+									}
 								}
 							}
 							break;
-						// POINTER_CANCEL and POINTER_LEAVE should be forwarded even if are outside bounds
+						case POINTER_UP:
+							// pointer defined & inside of bounds: trigger the POINTER_UP callback
+							if (handlers.pointerId === e.pointerId && eventInBounds) {
+								// delete the pointerId
+								handlers.pointerId = null;
+								// trigger the corresponding callback
+								if (handlers.callbacks[e.type]) {
+									for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
+										if (callback(e) === false) {
+											// stop propagating the event if return false
+											handled = true;
+											break;
+										}
+									}
+								}
+							}
+							break;
 						case POINTER_CANCEL:
-						case POINTER_LEAVE:
-							// delete the pointerId
-							delete handler.rect.pointerId;
-							// trigger the corresponding callback
-							if (handler.cb(e) === false) {
-								// stop propagating the event if return false
-								handled = true;
-								break;
+							// pointer defined: trigger the POINTER_CANCEL callback
+							if (handlers.pointerId === e.pointerId) {
+								// delete the pointerId
+								handlers.pointerId = null;
+								// trigger the corresponding callback
+								if (handlers.callbacks[e.type]) {
+									for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
+										if (callback(e) === false) {
+											// stop propagating the event if return false
+											handled = true;
+											break;
+										}
+									}
+								}
 							}
 							break;
 					}
-                }
-            }
+				}
+			}
         }
         return handled;
     }
@@ -623,7 +631,7 @@
      * // register on the 'pointerdown' event
      * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
      */
-    obj.registerPointerEvent = function (eventType, rect, callback, floating) {
+    obj.registerPointerEvent = function (eventType, rect, callback) {
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
@@ -635,25 +643,28 @@
         if (pointerEventList !== activeEventList) {
             eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
-
+		
+		// allocated a GUID value if not present
+		if (!rect.GUID) {
+			rect.GUID = me.utils.createGUID();
+		}
+		
         // register the event
-        if (!evtHandlers[eventType]) {
-            evtHandlers[eventType] = [];
+        if (!evtHandlers[rect.GUID]) {
+            evtHandlers[rect.GUID] = {
+				rect : rect,
+				callbacks : {},
+				pointerId : null,
+			};
         }
-        // check if this is a floating object or not
-        var _float = rect.floating === true ? true : false;
-        // check if there is a given parameter
-        if (floating) {
-            // ovveride the previous value
-            _float = floating === true ? true : false;
-        }
-
+		
+		// allocate array if not defined
+		if (!evtHandlers[rect.GUID].callbacks[eventType]) {
+			evtHandlers[rect.GUID].callbacks[eventType] = [];
+		}
+		
         // initialize the handler
-        evtHandlers[eventType].push({
-            rect : rect,
-            cb : callback,
-            floating : _float
-        });
+        evtHandlers[rect.GUID].callbacks[eventType].push(callback);
         return;
     };
 
@@ -681,20 +692,10 @@
             eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
 
-        // unregister the event
-        if (!evtHandlers[eventType]) {
-            evtHandlers[eventType] = [];
-        }
-        var handlers = evtHandlers[eventType];
-        if (handlers) {
-            for (var i = handlers.length, handler; i--, (handler = handlers[i]);) {
-                if (handler.rect === rect) {
-                    // make sure all references are null
-                    handler.rect = handler.cb = handler.floating = null;
-                    evtHandlers[eventType].splice(i, 1);
-                }
-            }
-        }
+		// unregister all callbacks of "eventType" for object "rect"
+		while (evtHandlers[rect.GUID].callbacks[eventType].length > 0) {
+			evtHandlers[rect.GUID].callbacks[eventType].pop();
+		}
     };
 
     /**
