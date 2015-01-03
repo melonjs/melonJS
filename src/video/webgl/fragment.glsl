@@ -10,7 +10,7 @@ varying vec2 vRegion;
 void main(void) {
     for (int i = 0; i < 16; i++) {
         if (vTexture == float(i)) {
-            gl_FragColor = texture2D(uSampler[i], vec2(vRegion.s, vRegion.t)) * vColor;
+            gl_FragColor = texture2D(uSampler[i], vRegion) * vColor;
             break;
         }
     }

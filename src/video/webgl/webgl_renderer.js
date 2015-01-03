@@ -123,14 +123,23 @@
             if (!ctx) {
                 ctx = this.gl;
             }
-            this.setColor(col);
+
+            var color = this.globalColor.clone();
+            var matrix = this.globalMatrix.clone();
+            this.globalColor.copy(col);
+            this.globalMatrix.identity();
+
             if (opaque) {
                 // FIXME
-                this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+                ctx.clear(this.gl.COLOR_BUFFER_BIT);
             }
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
+
+            this.globalMatrix.copy(matrix);
+            this.globalColor.copy(color);
+            me.pool.push(color);
         },
 
         /**
@@ -413,9 +422,10 @@
          * @function
          */
         restore : function () {
-            me.pool.push(this.globalColor);
-            this.globalColor = this.colorStack.pop();
-            this.globalMatrix = this._matrixStack.pop();
+            var color = this.colorStack.pop();
+            me.pool.push(color);
+            this.globalColor.copy(color);
+            this.globalMatrix.copy(this._matrixStack.pop());
         },
 
         /**

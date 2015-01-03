@@ -92,19 +92,7 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         copy : function (b) {
-            b = b.val;
-            var a = this.val;
-
-            a[0] = b[0];
-            a[1] = b[1];
-            a[2] = b[2];
-            a[3] = b[3];
-            a[4] = b[4];
-            a[5] = b[5];
-            a[6] = b[6];
-            a[7] = b[7];
-            a[8] = b[8];
-
+            this.val.set(b.val);
             return this;
         },
 

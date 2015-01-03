@@ -40,11 +40,13 @@
          // draw function
         draw : function (renderer) {
             // draw the progress bar
-            renderer.setColor("#000000");
+            renderer.setColor("black");
             renderer.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
 
             renderer.setColor("#55aa00");
             renderer.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
+
+            renderer.setColor("white");
         }
     });
 

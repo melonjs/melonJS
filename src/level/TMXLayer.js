@@ -45,6 +45,7 @@
             );
             // restore context alpha value
             renderer.setGlobalAlpha(_alpha);
+            renderer.setColor("#fff");
         }
     });
 

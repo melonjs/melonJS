@@ -381,14 +381,18 @@
             // TODO : Memoize this function by caching its input
 
             var match;
-            if (
-                ((match = hex6Rx.exec(hexColor))) ||
-                ((match = hex3Rx.exec(hexColor)))
-            ) {
+            if ((match = hex6Rx.exec(hexColor))) {
                 return this.setColor(
                     parseInt(match[1], 16),
                     parseInt(match[2], 16),
                     parseInt(match[3], 16)
+                );
+            }
+            if ((match = hex3Rx.exec(hexColor))) {
+                return this.setColor(
+                    parseInt(match[1] + match[1], 16),
+                    parseInt(match[2] + match[2], 16),
+                    parseInt(match[3] + match[3], 16)
                 );
             }
 
