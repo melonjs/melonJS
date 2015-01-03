@@ -96,6 +96,9 @@
             // register on mouse event
             me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
             me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
+			me.input.registerPointerEvent("pointerenter", this, this.clicked.bind(this));
+			me.input.registerPointerEvent("pointerleave", this, this.release.bind(this));
+			me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
         },
 
         /**
@@ -118,20 +121,31 @@
          * @ignore
          */
         clicked : function (event) {
-            if (this.isClickable) {
-                this.updated = true;
-                if (this.isHoldable) {
-                    if (this.holdTimeout !== null) {
-                        me.timer.clearTimeout(this.holdTimeout);
-                    }
-                    this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
-                    this.released = false;
-                }
-                return this.onClick(event);
-            }
+			// Check if left mouse button is pressed OR if device has touch
+			if ((event.which === 1 || me.device.touch) && this.isClickable) {
+				this.updated = true;
+				if (this.isHoldable) {
+					if (this.holdTimeout !== null) {
+						me.timer.clearTimeout(this.holdTimeout);
+					}
+					this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+					this.released = false;
+				}
+				return this.onClick(event);
+			}
         },
 
         /**
+         * function callback for the pointerup event
+         * @ignore
+         */
+        release : function (event) {
+            this.released = true;
+            me.timer.clearTimeout(this.holdTimeout);
+            return this.onRelease(event);
+        },
+		
+		/**
          * function called when the object is clicked <br>
          * to be extended <br>
          * return false if we need to stop propagating the event
@@ -143,16 +157,6 @@
          */
         onClick : function () {
             return false;
-        },
-
-        /**
-         * function callback for the pointerup event
-         * @ignore
-         */
-        release : function (event) {
-            this.released = true;
-            me.timer.clearTimeout(this.holdTimeout);
-            return this.onRelease(event);
         },
 
         /**
@@ -203,6 +207,9 @@
         onDestroyEvent : function () {
             me.input.releasePointerEvent("pointerdown", this);
             me.input.releasePointerEvent("pointerup", this);
+			me.input.releasePointerEvent("pointerenter", this);
+			me.input.releasePointerEvent("pointerleave", this);
+			me.input.releasePointerEvent("pointercancel", this);
             me.timer.clearTimeout(this.holdTimeout);
         }
     });
