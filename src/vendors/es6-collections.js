@@ -42,6 +42,7 @@ THE SOFTWARE.
       if (!this || this.constructor !== Collection) return new Collection(a);
       this._keys = [];
       this._values = [];
+      this._hash = {};
       this.objectOnly = objectOnly;
 
       //parse initial iterable argument passed
@@ -80,20 +81,31 @@ THE SOFTWARE.
 
   function sharedDelete(key) {
     if (this.has(key)) {
-      this._keys.splice(i, 1);
-      this._values.splice(i, 1);
+      if (typeof(key) === "string" || typeof(key) === "number") {
+        this._hash[key] = undefined;
+        return true;
+      }
+      else {
+        this._keys.splice(i, 1);
+        this._values.splice(i, 1);
+      }
     }
     // Aurora here does it while Canary doesn't
     return -1 < i;
   }
 
   function sharedGet(key) {
+    if (typeof(key) === "string" || typeof(key) === "number")
+      return this._hash[key];
     return this.has(key) ? this._values[i] : undefined;
   }
 
   function has(list, key) {
     if (this.objectOnly && key !== Object(key))
       throw new TypeError("Invalid value used as weak collection key");
+    if (typeof(key) === "string" || typeof(key) === "number") {
+      return this._hash.hasOwnProperty(key);
+    }
     //NaN passed
     if (key != key) for (i = list.length; i-- && !is(list[i], key););
     else i = list.indexOf(key);
@@ -110,7 +122,10 @@ THE SOFTWARE.
 
   /** @chainable */
   function sharedSet(key, value) {
-    if (this.has(key)) {
+    if (typeof(key) === "string" || typeof(key) === "number") {
+      this._hash[key] = value;
+    }
+    else if (this.has(key)) {
       this._values[i] = value;
     }
     else {
@@ -127,15 +142,18 @@ THE SOFTWARE.
 
   function sharedClear() {
     this._values.length = 0;
+    this._hash = {};
   }
 
   /** keys, values, and iterate related methods */
   function sharedValues() {
-    return this._values.slice();
+    return this._values.slice().concat(Object.keys(this._hash).map(function (k) {
+      return this._hash[k];
+    }));
   }
 
   function sharedKeys() {
-    return this._keys.slice();
+    return this._keys.slice().concat(Object.keys(this._hash));
   }
 
   function sharedSize() {
@@ -144,8 +162,8 @@ THE SOFTWARE.
 
   function sharedForEach(callback, context) {
     var self = this;
-    var values = self._values.slice();
-    self._keys.slice().forEach(function(key, n){
+    var values = self.sharedValues();
+    self.sharedKeys().forEach(function(key, n){
       callback.call(context, values[n], key, self);
     });
   }
