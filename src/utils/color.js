@@ -8,7 +8,9 @@
     var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
     var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
-    var cssToRGB = new Map([
+    var cssToRGB = new Map();
+    
+    var cssColors = [
         // CSS1
         [ "black",                  [   0,   0,   0 ] ],
         [ "silver",                 [ 192, 192, 129 ] ],
@@ -159,7 +161,9 @@
         [ "wheat",                  [ 245, 222, 179 ] ],
         [ "whitesmoke",             [ 245, 245, 245 ] ],
         [ "yellowgreen",            [ 154, 205,  50 ] ]
-    ]);
+    ].forEach(function (value) {
+        cssToRGB.set(value[0], value[1]);
+    });
 
     /**
      * A color manipulation object.
