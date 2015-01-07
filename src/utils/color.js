@@ -10,7 +10,7 @@
 
     var cssToRGB = new Map();
     
-    var cssColors = [
+    [
         // CSS1
         [ "black",                  [   0,   0,   0 ] ],
         [ "silver",                 [ 192, 192, 129 ] ],
