@@ -186,8 +186,7 @@
     /**
      * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
      * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
-     * @namespace
-     * @property {Singleton} collision
+     * @namespace me.collision
      * @memberOf me
      */
     me.collision = (function () {

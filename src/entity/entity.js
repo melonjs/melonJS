@@ -78,7 +78,8 @@
              * Entity name<br>
              * as defined in the Tiled Object Properties
              * @public
-             * @property String name
+             * @type String
+             * @name name
              * @memberOf me.Entity
              */
             this.name = settings.name ? settings.name.toLowerCase() : "";
@@ -86,7 +87,8 @@
             /**
              * object type (as defined in Tiled)
              * @public
-             * @property String type
+             * @type String
+             * @name type
              * @memberOf me.Entity
              */
             this.type = settings.type;
