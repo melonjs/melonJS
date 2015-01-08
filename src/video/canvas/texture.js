@@ -53,9 +53,8 @@
             this.format = null;
 
             /**
-             * the image texture itself
+             * the image texture itself (FIXME: This should be named `image`)
              * @ignore
-             * FIXME: This should be named `image`
              */
             this.texture = texture || null;
 
@@ -151,8 +150,8 @@
         },
 
         /**
-         * @ignore
          * build an atlas from the given spritesheet
+         * @ignore
          */
         buildFromSpriteSheet : function (data) {
             var atlas = []; // changing to {} breaks everything !
@@ -276,7 +275,7 @@
          * @name createAnimationFromName
          * @memberOf me.video.renderer.Texture
          * @function
-         * @param {String[]||Number[]} names list of names for each sprite
+         * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
          * @return {me.AnimationSheet}
          * @example
