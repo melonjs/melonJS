@@ -141,7 +141,21 @@
         }
     };
     
-       // a flag to know if melonJS
+    function parseHash() {
+        var hash = {};
+        document.location.hash.substr(1).split("&").filter(function (value) {
+            return (value !== "");
+        }).forEach(function (value) {
+            var kv = value.split("=");
+            var k = kv.shift();
+            var v = kv.join("=");
+            hash[k] = v || true;
+        });
+
+        return hash;
+    }
+    
+    // a flag to know if melonJS
     // is initialized
     var me_initialized = false;
 
@@ -167,9 +181,12 @@
         // initialize me.save
         me.save._init();
 
+        // parse optional url parameters/tags
+        me.game.HASH = parseHash();
+
         // enable/disable the cache
         me.loader.setNocache(
-            document.location.href.match(/\?nocache/) || false
+            me.game.HASH.nocache || false
         );
 
         // init the FPS counter if needed
