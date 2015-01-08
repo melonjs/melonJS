@@ -405,14 +405,12 @@
 
             this.context.restore();
             me.video.renderer.setGlobalAlpha(0.7);
-            var color = me.video.renderer.getColor();
             me.video.renderer.setColor(this.overlay);
             me.video.renderer.drawImage(
                 this.canvas, 0, 0,
                 this.canvas.width, this.canvas.height,
                 0, 0, this.rect.width, this.rect.height
             );
-            me.video.renderer.setColor(color);
             me.video.renderer.setGlobalAlpha(1.0);
         },
 
