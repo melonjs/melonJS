@@ -138,6 +138,11 @@
             settings.autoScale = (settings.scale === "auto") || false;
             settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
             settings.transparent = !!(settings.transparent);
+            
+            // override renderer settings if &renderer=webgl or &webgl is defined in the URL
+            if (typeof (me.game.HASH.renderer) !== "undefined" || me.game.HASH.wegbl === true) {
+                settings.renderer = me.game.HASH.renderer.match(/WebGL/i) ? api.WEBGL : api.CANVAS;
+            }
 
             // normalize scale
             settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
