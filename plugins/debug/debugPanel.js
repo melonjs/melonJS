@@ -141,9 +141,9 @@
         patchSystemFn : function () {
 
             // add a few new debug flag (if not yet defined)
-            me.debug.renderHitBox   = me.debug.renderHitBox   || false;
-            me.debug.renderVelocity = me.debug.renderVelocity || false;
-            me.debug.renderQuadTree = me.debug.renderQuadTree || false;
+            me.debug.renderHitBox   = me.debug.renderHitBox   || me.game.HASH.hitbox || false;
+            me.debug.renderVelocity = me.debug.renderVelocity || me.game.HASH.velocity || false;
+            me.debug.renderQuadTree = me.debug.renderQuadTree || me.game.HASH.quadtree || false;
 
             var _this = this;
 
