@@ -179,7 +179,7 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name
+         * @param {String} sound_name audio clip name - case sensitive
          * @param {Boolean} [loop=false] loop audio
          * @param {Function} [onend] Function to call when sound instance ends playing.
          * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
@@ -195,7 +195,7 @@
          * me.audio.play("gameover_sfx", false, null, 0.5);
          */
         api.play = function (sound_name, loop, onend, volume) {
-            var sound = audioTracks[sound_name.toLowerCase()];
+            var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 var instance_id = sound.play();
                 if (typeof loop === "boolean") {
@@ -221,14 +221,14 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name
+         * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} from Volume to fade from (0.0 to 1.0).
          * @param {Number} to Volume to fade to (0.0 to 1.0).
          * @param {Number} duration Time in milliseconds to fade.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
          */
         api.fade = function (sound_name, from, to, duration, instance_id) {
-            var sound = audioTracks[sound_name.toLowerCase()];
+            var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.fade(from, to, duration, instance_id);
             }
@@ -240,13 +240,13 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name
+         * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
          * @example
          * me.audio.stop("cling");
          */
         api.stop = function (sound_name, instance_id) {
-            var sound = audioTracks[sound_name.toLowerCase()];
+            var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.stop(instance_id);
                 // remove the defined onend callback (if any defined)
@@ -261,13 +261,13 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name
+         * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
          * @example
          * me.audio.pause("cling");
          */
         api.pause = function (sound_name, instance_id) {
-            var sound = audioTracks[sound_name.toLowerCase()];
+            var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.pause(instance_id);
             }
@@ -281,14 +281,14 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio track name
+         * @param {String} sound_name audio track name - case sensitive
          * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
          * @return {Number} the sound instance ID.
          * @example
          * me.audio.playTrack("awesome_music");
          */
         api.playTrack = function (sound_name, volume) {
-            current_track_id = sound_name.toLowerCase();
+            current_track_id = sound_name;
             return me.audio.play(
                 current_track_id,
                 true,
@@ -397,13 +397,13 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name
+         * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
          */
         api.mute = function (sound_name, instance_id, mute) {
             // if not defined : true
             mute = (typeof(mute) === "undefined" ? true : !!mute);
-            var sound = audioTracks[sound_name.toLowerCase()];
+            var sound = audioTracks[sound_name];
             if (sound && typeof(sound) !== "undefined") {
                 sound.mute(mute, instance_id);
             }
@@ -451,13 +451,13 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio track name
+         * @param {String} sound_name audio track name - case sensitive
          * @return {Boolean} true if unloaded
          * @example
          * me.audio.unload("awesome_music");
          */
         api.unload = function (sound_name) {
-            sound_name = sound_name.toLowerCase();
+            sound_name = sound_name;
             if (!(sound_name in audioTracks)) {
                 return false;
             }
