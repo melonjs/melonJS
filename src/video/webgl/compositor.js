@@ -79,17 +79,23 @@
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
 
-            // Quads buffer
-            this.buffer = new Float32Array(ELEMENT_SIZE * ELEMENTS_PER_QUAD);
-
             // Load and create shader program
             this.shader = this.createShader();
 
             // Stream buffer
             this.sb = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.sb);
-            gl.bufferData(gl.ARRAY_BUFFER, MAX_LENGTH * ELEMENT_OFFSET, gl.DYNAMIC_DRAW);
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD,
+                gl.STREAM_DRAW
+            );
             this.sbIndex = 0;
+
+            // Quad stream buffer
+            this.stream = new Float32Array(
+                MAX_LENGTH * ELEMENT_SIZE * ELEMENTS_PER_QUAD
+            );
 
             // Index buffer
             this.ib = gl.createBuffer();
@@ -271,7 +277,6 @@
                 }
             }
 
-            var gl = this.gl;
             var m = this.matrix;
 
             // Upload the texture if necessary
@@ -284,48 +289,51 @@
             var v2 = m.vectorMultiply(this.v[2].set(x, y + h));
             var v3 = m.vectorMultiply(this.v[3].set(x + w, y + h));
 
+            // Array index computation
+            var idx0 = this.sbIndex + ELEMENT_SIZE * 0;
+            var idx1 = this.sbIndex + ELEMENT_SIZE * 1;
+            var idx2 = this.sbIndex + ELEMENT_SIZE * 2;
+            var idx3 = this.sbIndex + ELEMENT_SIZE * 3;
+
             // Fill vertex buffer
             // FIXME: Pack each vertex vector into single float
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 0 + 0] = v0.x;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 0 + 1] = v0.y;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 1 + 0] = v1.x;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 1 + 1] = v1.y;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 2 + 0] = v2.x;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 2 + 1] = v2.y;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 3 + 0] = v3.x;
-            this.buffer[VERTEX_ELEMENT + ELEMENT_SIZE * 3 + 1] = v3.y;
+            this.stream[idx0 + VERTEX_ELEMENT + 0] = v0.x;
+            this.stream[idx0 + VERTEX_ELEMENT + 1] = v0.y;
+            this.stream[idx1 + VERTEX_ELEMENT + 0] = v1.x;
+            this.stream[idx1 + VERTEX_ELEMENT + 1] = v1.y;
+            this.stream[idx2 + VERTEX_ELEMENT + 0] = v2.x;
+            this.stream[idx2 + VERTEX_ELEMENT + 1] = v2.y;
+            this.stream[idx3 + VERTEX_ELEMENT + 0] = v3.x;
+            this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y;
 
             // Fill color buffer
             // FIXME: Pack color vector into single float
             var color = this.color.toGL();
-            this.buffer.set(color, COLOR_ELEMENT + ELEMENT_SIZE * 0);
-            this.buffer.set(color, COLOR_ELEMENT + ELEMENT_SIZE * 1);
-            this.buffer.set(color, COLOR_ELEMENT + ELEMENT_SIZE * 2);
-            this.buffer.set(color, COLOR_ELEMENT + ELEMENT_SIZE * 3);
+            this.stream.set(color, idx0 + COLOR_ELEMENT);
+            this.stream.set(color, idx1 + COLOR_ELEMENT);
+            this.stream.set(color, idx2 + COLOR_ELEMENT);
+            this.stream.set(color, idx3 + COLOR_ELEMENT);
 
             // Fill texture index buffer
             // FIXME: Can the texture index be packed into another element?
-            this.buffer[TEXTURE_ELEMENT + ELEMENT_SIZE * 0] =
-            this.buffer[TEXTURE_ELEMENT + ELEMENT_SIZE * 1] =
-            this.buffer[TEXTURE_ELEMENT + ELEMENT_SIZE * 2] =
-            this.buffer[TEXTURE_ELEMENT + ELEMENT_SIZE * 3] = unit;
+            this.stream[idx0 + TEXTURE_ELEMENT] =
+            this.stream[idx1 + TEXTURE_ELEMENT] =
+            this.stream[idx2 + TEXTURE_ELEMENT] =
+            this.stream[idx3 + TEXTURE_ELEMENT] = unit;
 
             // Fill texture coordinates buffer
             // FIXME: Pack each texture coordinate into single floats
             var stMap = region.stMap;
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 0 + 0] = stMap[0];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 0 + 1] = stMap[1];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 1 + 0] = stMap[2];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 1 + 1] = stMap[1];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 2 + 0] = stMap[0];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 2 + 1] = stMap[3];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 3 + 0] = stMap[2];
-            this.buffer[REGION_ELEMENT + ELEMENT_SIZE * 3 + 1] = stMap[3];
+            this.stream[idx0 + REGION_ELEMENT + 0] = stMap[0];
+            this.stream[idx0 + REGION_ELEMENT + 1] = stMap[1];
+            this.stream[idx1 + REGION_ELEMENT + 0] = stMap[2];
+            this.stream[idx1 + REGION_ELEMENT + 1] = stMap[1];
+            this.stream[idx2 + REGION_ELEMENT + 0] = stMap[0];
+            this.stream[idx2 + REGION_ELEMENT + 1] = stMap[3];
+            this.stream[idx3 + REGION_ELEMENT + 0] = stMap[2];
+            this.stream[idx3 + REGION_ELEMENT + 1] = stMap[3];
 
-            // Copy data into stream buffer
-            gl.bufferSubData(gl.ARRAY_BUFFER, this.sbIndex, this.buffer);
-
-            this.sbIndex += ELEMENT_OFFSET * ELEMENTS_PER_QUAD;
+            this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
             this.length++;
         },
 
@@ -338,6 +346,16 @@
         flush : function () {
             if (this.length) {
                 var gl = this.gl;
+
+                // Copy data into stream buffer
+                var len = this.length * ELEMENT_SIZE * ELEMENTS_PER_QUAD;
+                gl.bufferData(
+                    gl.ARRAY_BUFFER,
+                    this.stream.subarray(0, len),
+                    gl.STREAM_DRAW
+                );
+
+                // Draw the stream buffer
                 gl.drawElements(
                     gl.TRIANGLES,
                     this.length * INDICES_PER_QUAD,
