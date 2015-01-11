@@ -14,9 +14,7 @@
   </data>
  </layer>
  <objectgroup name="Player">
-  <object name="mainPlayer" type="actor1m" x="96" y="96" width="32" height="32">
-  </object>
-  <object x="256" y="288"/>
+  <object name="mainPlayer" type="actor1m" x="96" y="96" width="32" height="32"/>
  </objectgroup>
  <layer name="level 3" width="20" height="20">
   <data encoding="base64">

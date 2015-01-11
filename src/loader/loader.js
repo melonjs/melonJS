@@ -411,8 +411,6 @@
          * });
          */
         api.load = function (res, onload, onerror) {
-            // fore lowercase for the resource name
-            res.name = res.name.toLowerCase();
             // check ressource type
             switch (res.type) {
                 case "binary":
@@ -454,7 +452,6 @@
          * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
          */
         api.unload = function (res) {
-            res.name = res.name.toLowerCase();
             switch (res.type) {
                 case "binary":
                     if (!(res.name in binList)) {
@@ -566,9 +563,8 @@
          * @return {TMx}
          */
         api.getTMX = function (elt) {
-            // avoid case issue
+            // force as string
             elt = "" + elt;
-            elt = elt.toLowerCase();
             if (elt in tmxList) {
                 return tmxList[elt].data;
             }
@@ -588,9 +584,8 @@
          * @return {Object}
          */
         api.getBinary = function (elt) {
-            // avoid case issue
+            // force as string
             elt = "" + elt;
-            elt = elt.toLowerCase();
             if (elt in binList) {
                 return binList[elt];
             }
@@ -611,9 +606,8 @@
          * @return {Image}
          */
         api.getImage = function (elt) {
-            // avoid case issue
+            // force as string
             elt = "" + elt;
-            elt = elt.toLowerCase();
             if (elt in imgList) {
                 // return the corresponding Image object
                 return imgList[elt];
@@ -635,8 +629,8 @@
          * @return {Object}
          */
         api.getJSON = function (elt) {
+            // force as string
             elt = "" + elt;
-            elt = elt.toLowerCase();
             if (elt in jsonList) {
                 return jsonList[elt];
             }
