@@ -30,18 +30,18 @@
     var MAX_LENGTH = 16000;
 
     /**
-     * A WebGL texture batcher object. This class handles all of the WebGL state<br>
+     * A WebGL texture Compositor object. This class handles all of the WebGL state<br>
      * Pushes texture regions into WebGL buffers, automatically flushes to GPU
      * @extends Object
-     * @namespace me.WebGLRenderer.Batcher
+     * @namespace me.WebGLRenderer.Compositor
      * @memberOf me
      * @constructor
      * @param {WebGLContext} gl Destination WebGL Context
      * @param {me.Matrix2d} matrix Global transformation matrix
      * @param {me.Color} color Global color
      */
-    me.WebGLRenderer.Batcher = Object.extend(
-    /** @scope me.WebGLRenderer.Batcher.prototype */
+    me.WebGLRenderer.Compositor = Object.extend(
+    /** @scope me.WebGLRenderer.Compositor.prototype */
     {
         /**
          * @ignore
@@ -50,7 +50,7 @@
             /**
              * The number of rectangles held in the batch
              * @name length
-             * @memberOf me.WebGLRenderer.Batcher
+             * @memberOf me.WebGLRenderer.Compositor
              * @type Number
              * @readonly
              */
@@ -157,7 +157,7 @@
         /**
          * Sets the projection matrix with the given size
          * @name setProjection
-         * @memberOf me.WebGLRenderer.Batcher
+         * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {Number} w WebGL Canvas width
          * @param {Number} h WebGL Canvas height
@@ -223,7 +223,7 @@
         /**
          * Add a texture region
          * @name add
-         * @memberOf me.WebGLRenderer.Batcher
+         * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {me.video.renderer.Texture} texture Source texture
          * @param {Number} sx Source x-coordinate
@@ -327,7 +327,7 @@
         /**
          * Flush batched texture operations to the GPU
          * @name flush
-         * @memberOf me.WebGLRenderer.Batcher
+         * @memberOf me.WebGLRenderer.Compositor
          * @function
          */
         flush : function () {

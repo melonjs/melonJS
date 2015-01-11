@@ -44,7 +44,7 @@
     "src/video/webgl/shader.js",
     "src/video/webgl/webgl_renderer.js",
     "src/video/webgl/texture.js",
-    "src/video/webgl/batcher.js",
+    "src/video/webgl/compositor.js",
     "src/input/input.js",
     "src/input/keyboard.js",
     "src/input/pointer.js",

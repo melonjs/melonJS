@@ -55,8 +55,8 @@
              */
             this.globalMatrix = new me.Matrix2d();
 
-            // Create a batcher
-            this.batcher = new me.WebGLRenderer.Batcher(
+            // Create a compositor
+            this.compositor = new me.WebGLRenderer.Compositor(
                 gl,
                 this.globalMatrix,
                 this.globalColor
@@ -81,7 +81,7 @@
                 }]
             }, new Uint8Array([255, 255, 255, 255]));
 
-            this.batcher.uploadTexture(
+            this.compositor.uploadTexture(
                 this.cache.getUnit(this.fillTexture),
                 this.fillTexture,
                 1,
@@ -101,13 +101,13 @@
         },
 
         /**
-         * Flush the batcher to the frame buffer
+         * Flush the compositor to the frame buffer
          * @name blitSurface
          * @memberOf me.WebGLRenderer
          * @function
          */
         blitSurface : function () {
-            this.batcher.flush();
+            this.compositor.flush();
         },
 
         /**
@@ -282,7 +282,7 @@
             }
 
             // TODO: Use `region` in place of sx, sy, sw, sh
-            this.batcher.add(this.cache.get(image), sx, sy, sw, sh, dx, dy, dw, dh);
+            this.compositor.add(this.cache.get(image), sx, sy, sw, sh, dx, dy, dw, dh);
         },
 
         /**
@@ -296,7 +296,7 @@
          * @param {Number} height
          */
         fillRect : function (x, y, width, height) {
-            this.batcher.add(this.fillTexture, "default", x, y, width, height);
+            this.compositor.add(this.fillTexture, "default", x, y, width, height);
         },
 
         /**
@@ -412,7 +412,7 @@
                 this.canvas.style.height = h + "px";
             }
 
-            this.batcher.setProjection(this.canvas.width, this.canvas.height);
+            this.compositor.setProjection(this.canvas.width, this.canvas.height);
         },
 
         /**
