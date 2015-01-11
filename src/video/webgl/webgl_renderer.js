@@ -148,83 +148,7 @@
          * @param {Number} y - the y position to draw at
          */
         drawFont : function (/*fontObject, text, x, y*/) {
-            /*
-            var fontDimensions;
-            var gid = fontObject.gid;
-            var fontCache = this._fontCache;
-            var fontCanvas = this._fontCanvas;
-            var fontContext = this._fontContext;
-            if (!fontCache[gid]) {
-                fontObject.draw(fontContext, text, x, y);
-                fontDimensions = fontObject.measureText(fontContext, text);
-                fontCache[gid] = {
-                    "font" : fontObject.font,
-                    "fontSize" : fontObject.fontSize,
-                    "fillStyle" : fontObject.fillStyle,
-                    "textAlign" : fontObject.textAlign,
-                    "textBaseline" : fontObject.textBaseline,
-                    "lineHeight" : fontObject.lineHeight,
-                    "text" : fontObject.text,
-                    "image" : fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height),
-                    "width" : fontDimensions.width,
-                    // Roughly equivalent to the height reserved for descenders
-                    "height" : fontDimensions.height * 1.2,
-                    "yOffset" : 0,
-                };
-                switch (fontObject.textBaseline) {
-                    case "alphabetic":
-                    case "ideographic":
-                    case "bottom":
-                        fontCache[gid].yOffset = fontDimensions.height;
-                        break;
-
-                    case "middle":
-                        fontCache[gid].yOffset = fontDimensions.height / 2;
-                        break;
-                }
-                fontContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            }
-            else {
-                var cache = fontCache[gid];
-                if (fontObject.font !== cache.font || fontObject.fontSize !== cache.fontSize || fontObject.fillStyle !== cache.fillStyle || fontObject.textAlign !== cache.textAlign || fontObject.textBaseline !== cache.textBaseline || fontObject.lineHeight !== cache.lineHeight || text !== cache.text) {
-                    cache.font = fontObject.font;
-                    cache.fontSize = fontObject.fontSize;
-                    cache.fillStyle = fontObject.fillStyle;
-                    cache.textAlign = fontObject.textAlign;
-                    cache.textBaseline = fontObject.textBaseline;
-                    cache.lineHeight = fontObject.lineHeight;
-                    cache.text = text;
-
-                    fontObject.draw(fontContext, text, x, y);
-                    fontDimensions = fontObject.measureText(fontContext, text);
-                    cache.yOffset = 0;
-                    switch (cache.textBaseline) {
-                        case "alphabetic":
-                        case "ideographic":
-                        case "bottom":
-                            cache.yOffset = fontDimensions.height;
-                            break;
-
-                        case "middle":
-                            cache.yOffset = fontDimensions.height / 2;
-                            break;
-                    }
-                    cache.width = fontDimensions.width;
-                    // Roughly equivalent to the height reserved for descenders
-                    cache.height = fontDimensions.height * 1.2;
-                    cache.image = fontContext.getImageData(0, 0, fontCanvas.width, fontCanvas.height);
-
-                    fontContext.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-            }
-
-            y -= fontCache[gid].yOffset;
-            this.drawImage(
-                fontCache[gid].image,
-                x, y, fontCache[gid].width, fontCache[gid].height,
-                x, y, fontCache[gid].width, fontCache[gid].height
-            );
-            */
+            // TODO
         },
 
         /**
@@ -563,50 +487,7 @@
          * @param {Number} height
          */
         strokeRect : function (/*x, y, width, height*/) {
-            /*
-            var x1 = x;
-            var y1 = y;
-            var x2 = x + width;
-            var y2 = y + height;
-            var lineVerticeArray = this._lineVerticeArray;
-            lineVerticeArray[0] = x1;
-            lineVerticeArray[1] = y1;
-            lineVerticeArray[2] = x2;
-            lineVerticeArray[3] = y1;
-            lineVerticeArray[4] = x2;
-            lineVerticeArray[5] = y2;
-            lineVerticeArray[6] = x1;
-            lineVerticeArray[7] = y2;
-
-            var gl = this.gl;
-            var shaderProgram = this._shaderProgram;
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, lineVerticeArray, gl.STATIC_DRAW);
-
-            gl.vertexAttribPointer(shaderProgram.attributes.aPosition, 2, gl.FLOAT, false, 0, 0);
-
-            var lineTextureCoords = this._lineTextureCoords;
-            lineTextureCoords[0] = 0.0;
-            lineTextureCoords[1] = 0.0;
-            lineTextureCoords[2] = 1.0;
-            lineTextureCoords[3] = 0.0;
-            lineTextureCoords[4] = 1.0;
-            lineTextureCoords[5] = 1.0;
-            lineTextureCoords[6] = 0.0;
-            lineTextureCoords[7] = 1.0;
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this._white1PixelTexture);
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._textureBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, lineTextureCoords, gl.STATIC_DRAW);
-            gl.vertexAttribPointer(shaderProgram.attributes.aTexture, 2, gl.FLOAT, false, 0, 0);
-
-            gl.uniform1i(shaderProgram.uniforms.texture, 0);
-            shaderProgram.uniforms.uMatrix = this.globalMatrix.val;
-
-            shaderProgram.uniforms.uColor = this.globalColor.toGL();
-            gl.drawArrays(gl.LINE_LOOP, 0, 4);
-            */
+            // TODO
         },
 
         /**
