@@ -9,6 +9,7 @@ Version History
 * Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
 * Texture : added support for the WebGL Renderer
 * Texture : texture atlas can now be created using a “standard” sprite sheet
+* Audio : file/clip names passed to various methods are now case sensitive. Removed uses of toLowerCase on variables.
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
