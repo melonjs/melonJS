@@ -32,7 +32,7 @@
          * @name loadTMXLevel
          * @memberOf me.game
          * @private
-         * @param {String} level to be loaded
+         * @param {me.TMXTileMap} level to be loaded
          * @param {me.Container} target container
          * @ignore
          * @function
@@ -123,7 +123,7 @@
                     if (obj) {
                         // set the obj z order correspondingly to its parent container/group
                         obj.z = group.z;
-                        
+
                         //apply group opacity value to the child objects if group are merged
                         if (me.game.mergeGroup === true && obj.isRenderable === true) {
                             obj.setOpacity(obj.getOpacity() * group.opacity);
@@ -155,7 +155,7 @@
 
             // translate the display if required
             me.game.world.transform.translateV(me.game.currentLevel.pos);
-            
+
             // update the game world size to match the level size
             me.game.world.resize(me.game.currentLevel.width, me.game.currentLevel.height);
 

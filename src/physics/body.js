@@ -88,6 +88,7 @@
             /**
              * entity current friction<br>
              * @public
+             * @type me.Vector2d
              * @name friction
              * @memberOf me.Body
              */
