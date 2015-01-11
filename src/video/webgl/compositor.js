@@ -343,6 +343,18 @@
                 this.sbIndex = 0;
                 this.length = 0;
             }
+        },
+
+        /**
+         * Clear the frame buffer, flushes the composite operations and calls
+         * gl.clear()
+         * @name clear
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         */
+        clear : function () {
+            this.flush();
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         }
     });
 })();

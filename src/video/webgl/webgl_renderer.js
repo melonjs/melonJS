@@ -115,23 +115,18 @@
          * @name clearSurface
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {WebGLContext} [ctx=null] gl context, defaults to system context.
+         * @param {WebGLContext} [ctx=null] For compatibility only.
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearSurface : function (ctx, col, opaque) {
-            if (!ctx) {
-                ctx = this.gl;
-            }
-
             var color = this.globalColor.clone();
             var matrix = this.globalMatrix.clone();
             this.globalColor.copy(col);
             this.globalMatrix.identity();
 
             if (opaque) {
-                // FIXME
-                ctx.clear(this.gl.COLOR_BUFFER_BIT);
+                this.compositor.clear();
             }
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
