@@ -90,11 +90,13 @@
                 MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD,
                 gl.STREAM_DRAW
             );
+
+            this.sbSize = 256;
             this.sbIndex = 0;
 
             // Quad stream buffer
             this.stream = new Float32Array(
-                MAX_LENGTH * ELEMENT_SIZE * ELEMENTS_PER_QUAD
+                this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD
             );
 
             // Index buffer
@@ -232,6 +234,16 @@
         },
 
         /**
+         * @ignore
+         */
+        resizeSB : function () {
+            this.sbSize <<= 1;
+            var stream = new Float32Array(this.sbSize);
+            stream.set(this.stream);
+            this.stream = stream;
+        },
+
+        /**
          * Add a texture region
          * @name add
          * @memberOf me.WebGLRenderer.Compositor
@@ -249,6 +261,9 @@
         add : function (texture, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (this.length >= MAX_LENGTH) {
                 this.flush();
+            }
+            if (this.length >= this.sbSize) {
+                this.resizeSB();
             }
 
             // TODO: Replace the function signature with:
