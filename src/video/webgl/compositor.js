@@ -238,7 +238,7 @@
          */
         resizeSB : function () {
             this.sbSize <<= 1;
-            var stream = new Float32Array(this.sbSize);
+            var stream = new Float32Array(this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD);
             stream.set(this.stream);
             this.stream = stream;
         },
