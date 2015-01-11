@@ -24,8 +24,8 @@
     var TEXTURE_OFFSET = TEXTURE_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
     var REGION_OFFSET = REGION_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
 
-    var ELEMENTS_PER_RECT = 4;
-    var INDICES_PER_RECT = 6;
+    var ELEMENTS_PER_QUAD = 4;
+    var INDICES_PER_QUAD = 6;
 
     var MAX_LENGTH = 16000;
 
@@ -48,7 +48,7 @@
          */
         init : function (gl, matrix, color) {
             /**
-             * The number of rectangles held in the batch
+             * The number of quads held in the batch
              * @name length
              * @memberOf me.WebGLRenderer.Compositor
              * @type Number
@@ -79,8 +79,8 @@
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
 
-            // Rectangle buffer
-            this.buffer = new Float32Array(ELEMENT_SIZE * ELEMENTS_PER_RECT);
+            // Quads buffer
+            this.buffer = new Float32Array(ELEMENT_SIZE * ELEMENTS_PER_QUAD);
 
             // Load and create shader program
             this.shader = this.createShader();
@@ -216,10 +216,10 @@
             ];
 
             // ~128KB index buffer
-            var data = new Array(MAX_LENGTH * INDICES_PER_RECT);
+            var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
             for (var i = 0; i < data.length; i++) {
-                data[i] = indices[i % INDICES_PER_RECT] +
-                    ~~(i / INDICES_PER_RECT) * ELEMENTS_PER_RECT;
+                data[i] = indices[i % INDICES_PER_QUAD] +
+                    ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
             }
 
             return new Uint16Array(data);
@@ -325,7 +325,7 @@
             // Copy data into stream buffer
             gl.bufferSubData(gl.ARRAY_BUFFER, this.sbIndex, this.buffer);
 
-            this.sbIndex += ELEMENT_OFFSET * ELEMENTS_PER_RECT;
+            this.sbIndex += ELEMENT_OFFSET * ELEMENTS_PER_QUAD;
             this.length++;
         },
 
@@ -340,7 +340,7 @@
                 var gl = this.gl;
                 gl.drawElements(
                     gl.TRIANGLES,
-                    this.length * INDICES_PER_RECT,
+                    this.length * INDICES_PER_QUAD,
                     gl.UNSIGNED_SHORT,
                     0
                 );
