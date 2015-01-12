@@ -20,17 +20,17 @@ game.ShapeObject = me.Entity.extend({
      * mousemove function
      */
     mouseMove: function (event) {
-        this.hover = this.inViewport && 
-                     // this is a globa; event, so first do 
-                     // a basic rectangle detection to save some cycles
-                     this.getBounds().containsPoint(
-                        event.gameX, event.gameY
-                     ) &&
-                     // check the first shape
-                     this.body.getShape(0).containsPoint(
-                        // shape object position is relative to the entity
-                        event.gameX - this.pos.x, event.gameY - this.pos.y
-                     );
+        this.hover = false;
+        
+        // the pointer event system will use the object bounding rect, check then with with all defined shapes
+        if (this.inViewport && this.getBounds().containsPoint(event.gameX, event.gameY)) {
+            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+                    this.hover = true;
+                    break;
+                }
+            }
+        }
 
         if (this.canMove) {
             // follow the mouse/finger
@@ -44,13 +44,15 @@ game.ShapeObject = me.Entity.extend({
 
     // mouse down function
     onSelect : function (event) {
-        // the pointer event system will use the object bounding rect, check then with with the exact shape
-        if (this.body.getShape(0).containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-            this.grabOffset.set(event.gameX, event.gameY);
-            this.grabOffset.sub(this.pos);
-            this.canMove = true;
-            // don't propagate the event furthermore
-            return false;
+        // the pointer event system will use the object bounding rect, check then with with all defined shapes
+        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+            if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+                this.grabOffset.set(event.gameX, event.gameY);
+                this.grabOffset.sub(this.pos);
+                this.canMove = true;
+                // don't propagate the event furthermore
+                return false;
+            }
         }
         return true;
     },
@@ -125,22 +127,30 @@ game.Poly = game.ShapeObject.extend({
         // call the super constructor
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
-        // add a polygone shape
-        this.body.addShape(new me.Polygon(0, 0, [
-            // draw a star
-            new me.Vector2d(0, 0),
-            new me.Vector2d(28, 60),
-            new me.Vector2d(94, 70),
-            new me.Vector2d(46, 114),
-            new me.Vector2d(88, 180),
-            new me.Vector2d(0, 125),
-            new me.Vector2d(-88, 180),
-            new me.Vector2d(-46, 114),
-            new me.Vector2d(-94, 70),
-            new me.Vector2d(-28, 60)
-        ]));
+        var data = me.loader.getJSON("star_body")["sprites"];
+        
+        // few notes : compensate for the offset origin in the tileset and adjust the size
+        // to match the sprite size (7.5 scale ratio)
+   
+        // origin point of the shape in the tileset
+        var origin = new me.Vector2d(
+            data[0].shape[0],
+            data[0].shape[1]
+        ).negate().scale(7.5); // negate and scale
+        
+        // go through all shapes and add them to the entity body
+        for (var i = 0; i < data.length; i++) {
+            var points = [];
+            for (var s = 0; s < data[i].shape.length; s += 2)
+            {
+                points.push(new me.Vector2d(data[i].shape[s],data[i].shape[s + 1]));
+            }
+            this.body.addShape(new me.Polygon(0, 0, points).scale(7.5).translateV(origin)); // scale the polygon and translate back to (0,0)
+        }
+        // make sure the bounding box is up-to-date
+        this.body.updateBounds();
 
-        // star
+        // add the star sprite
         this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 24, 24);
         this.renderable.offset.x = 86;
         this.renderable.offset.y = 241;
