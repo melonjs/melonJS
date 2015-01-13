@@ -81,24 +81,7 @@ game.ShapeObject = me.Entity.extend({
     }
 });
 
-game.Square = game.ShapeObject.extend({
-    /**
-     * constructor
-     */
-    init: function (x, y, settings) {
-        // call the super constructor
-        this._super(game.ShapeObject, 'init', [x, y, settings]);
 
-        // add a rectangular shape
-        this.body.addShape(new me.Rect(0, 0, this.width, this.height));
-
-        // pienapple
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 24);
-        this.renderable.offset.x = 93;
-        this.renderable.offset.y = 151;
-        this.renderable.scale(7.5);
-    }
-});
 
 game.Circle = game.ShapeObject.extend({
     /**
@@ -112,10 +95,7 @@ game.Circle = game.ShapeObject.extend({
         this.body.addShape(new me.Ellipse(this.width/2, this.height/2, this.width, this.height));
 
         // tomato
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 20, 20);
-        this.renderable.offset.x = 65;
-        this.renderable.offset.y = 153;
-        this.renderable.scale(7.5);
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage("orange"));
     }
 });
 
@@ -127,33 +107,11 @@ game.Poly = game.ShapeObject.extend({
         // call the super constructor
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
-        var data = me.loader.getJSON("star_body")["sprites"];
-        
-        // few notes : compensate for the offset origin in the tileset and adjust the size
-        // to match the sprite size (7.5 scale ratio)
-   
-        // origin point of the shape in the tileset
-        var origin = new me.Vector2d(
-            data[0].shape[0],
-            data[0].shape[1]
-        ).negate().scale(7.5); // negate and scale
-        
-        // go through all shapes and add them to the entity body
-        for (var i = 0; i < data.length; i++) {
-            var points = [];
-            for (var s = 0; s < data[i].shape.length; s += 2)
-            {
-                points.push(new me.Vector2d(data[i].shape[s],data[i].shape[s + 1]));
-            }
-            this.body.addShape(new me.Polygon(0, 0, points).scale(7.5).translateV(origin)); // scale the polygon and translate back to (0,0)
-        }
-        // make sure the bounding box is up-to-date
-        this.body.updateBounds();
+        // add all PE shapes to the body
+        this.body.addShapesFromJSON(me.loader.getJSON("shapesdef"), settings.sprite);
 
         // add the star sprite
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage("sprites"), 24, 24);
-        this.renderable.offset.x = 86;
-        this.renderable.offset.y = 241;
-        this.renderable.scale(7.5);
-    }
+        this.renderable = new me.Sprite(0, 0, me.loader.getImage(settings.sprite));
+    },
+    
 });

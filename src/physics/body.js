@@ -184,7 +184,41 @@
             // return the length of the shape list
             return this.shapes.length;
         },
+        
+        /**
+         * add collision shapes based on the given PhysicsEditor JSON object
+         * @name addShapesFromJSON
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @param {Object} json a JSON object as exported from the PhysicsEditor tool
+         * @param {String} id the shape identifier within the given the json object
+         * @see https://www.codeandweb.com/physicseditor
+         * @return {Number} the shape array length
+         */
+        addShapesFromJSON : function (json, id) {
+            var data = json[id];
+            
+            if (typeof(data) === "undefined") {
+                throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+            }
+                
+            // go through all shapes and add them to the body
+            for (var i = 0; i < data.length; i++) {
+                var points = [];
+                for (var s = 0; s < data[i].shape.length; s += 2) {
+                    points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
+                }
+                this.addShape(new me.Polygon(0, 0, points));
+            }
 
+            // update the body bounds to take in account the added shapes
+            this.updateBounds();
+
+            // return the length of the shape list
+            return this.shapes.length;
+        },
+        
         /**
          * return the collision shape at the given index
          * @name getShape
