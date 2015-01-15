@@ -158,8 +158,8 @@
             return me.video.shader.createShader(
                 this.gl,
                 /* jshint ignore:start */
-                (@VERTEX)(),
-                (@FRAGMENT)({
+                (__VERTEX__)(),
+                (__FRAGMENT__)({
                     "maxTextures" : this.maxTextures
                 }),
                 /* jshint ignore:end */

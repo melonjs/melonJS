@@ -38,10 +38,10 @@
                  * this can be overridden by the plugin
                  * @public
                  * @type String
-                 * @default "@VERSION"
+                 * @default "__VERSION__"
                  * @name me.plugin.Base#version
                  */
-                this.version = "@VERSION";
+                this.version = "__VERSION__";
             }
         });
 

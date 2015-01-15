@@ -11,7 +11,7 @@
      * @ignore
      */
     me.mod = "melonJS";
-    me.version = "@VERSION";
+    me.version = "__VERSION__";
     /**
      * global system settings and browser capabilities
      * @namespace
@@ -140,7 +140,7 @@
             return result ? result : a.length - b.length;
         }
     };
-    
+
     function parseHash() {
         var hash = {};
         document.location.hash.substr(1).split("&").filter(function (value) {
@@ -154,7 +154,7 @@
 
         return hash;
     }
-    
+
     // a flag to know if melonJS
     // is initialized
     var me_initialized = false;

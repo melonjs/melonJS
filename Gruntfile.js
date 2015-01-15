@@ -23,11 +23,11 @@ module.exports = function (grunt) {
             dist : {
                 options : {
                     variables : {
-                        "FRAGMENT" : "<%= grunt.file.read('build/quad-fragment.glsl') %>",
-                        "VERTEX" : "<%= grunt.file.read('build/quad-vertex.glsl') %>",
-                        "VERSION" : "<%= pkg.version %>"
+                        "__FRAGMENT__" : "<%= grunt.file.read('build/quad-fragment.glsl') %>",
+                        "__VERTEX__" : "<%= grunt.file.read('build/quad-vertex.glsl') %>",
+                        "__VERSION__" : "<%= pkg.version %>"
                     },
-                    prefix : "@",
+                    usePrefix : false,
                     force : true,
                     patterns : [
                         {
