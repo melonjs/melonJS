@@ -25,13 +25,6 @@
         };
 
         /**
-         * Shader GLSL
-         * @ignore
-         */
-        var fragment = "@FRAGMENT";
-        var vertex = "@VERTEX";
-
-        /**
          * Compile GLSL into a shader object
          * @private
          */
@@ -76,11 +69,13 @@
          * @memberOf me.video.shader
          * @function
          * @param {WebGLContext} gl WebGL Context
+         * @param {String} vertex Vertex shader source
+         * @param {String} fragment Fragment shader source
          * @param {String[]} attributes Array of attribute names
          * @param {Object} uniforms Hash map of uniform names to data types
          * @return {me.video.shader} A reference to the WebGL Shader singleton
          */
-        api.createShader = function (gl, attributes, uniforms) {
+        api.createShader = function (gl, vertex, fragment, attributes, uniforms) {
             var handle = api.handle = gl.createProgram();
             gl.attachShader(handle, getShader(gl, gl.VERTEX_SHADER, vertex));
             gl.attachShader(handle, getShader(gl, gl.FRAGMENT_SHADER, fragment));

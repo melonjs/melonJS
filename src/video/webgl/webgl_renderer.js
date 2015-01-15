@@ -63,8 +63,9 @@
             );
 
             // Create a texture cache
-            var max_textures = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-            this.cache = new me.Renderer.TextureCache(max_textures);
+            this.cache = new me.Renderer.TextureCache(
+                this.compositor.maxTextures
+            );
 
             // FIXME: Cannot reference me.video.renderer yet
             me.video.renderer = this;

@@ -58,6 +58,9 @@
 
             // Hash map of texture units
             this.units = [];
+            this.maxTextures = gl.getParameter(
+                gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
+            );
 
             // Vector pool
             this.v = [
@@ -154,6 +157,12 @@
             // WebGL shader program
             return me.video.shader.createShader(
                 this.gl,
+                /* jshint ignore:start */
+                (@VERTEX)(),
+                (@FRAGMENT)({
+                    "maxTextures" : this.maxTextures
+                }),
+                /* jshint ignore:end */
                 [
                     "aVertex",
                     "aColor",
@@ -205,8 +214,7 @@
 
             var samplers = [];
 
-            var units = this.gl.getParameter(this.gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS);
-            for (var i = 0; i < units; i++) {
+            for (var i = 0; i < this.maxTextures; i++) {
                 this.units[i] = false;
                 samplers[i] = i;
             }

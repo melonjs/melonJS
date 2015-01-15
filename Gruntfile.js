@@ -3,7 +3,6 @@ module.exports = function (grunt) {
 
     var sourceFiles = grunt.file.readJSON("sourceFiles.json");
     var testSpecs = grunt.file.readJSON("testSpecs.json");
-    var glslSourceFiles = [ "src/video/webgl/*.glsl" ];
 
     // Project configuration.
     grunt.initConfig({
@@ -24,8 +23,8 @@ module.exports = function (grunt) {
             dist : {
                 options : {
                     variables : {
-                        "FRAGMENT" : "<%= grunt.file.read('build/fragment.glsl') %>",
-                        "VERTEX" : "<%= grunt.file.read('build/vertex.glsl') %>",
+                        "FRAGMENT" : "<%= grunt.file.read('build/quad-fragment.glsl') %>",
+                        "VERTEX" : "<%= grunt.file.read('build/quad-vertex.glsl') %>",
                         "VERSION" : "<%= pkg.version %>"
                     },
                     prefix : "@",
@@ -66,26 +65,27 @@ module.exports = function (grunt) {
 
             glsl : {
                 options : {
+                    preserveOrder : true,
                     patterns : [
                         {
-                            match : /(^\s+)|(\s+$)/gm,
+                            // Remove comments
+                            match : /(\/\/.*?\\n)|(\/\*(.|\\n)*?\*\/)/g,
                             replacement : ""
                         },
                         {
-                            match : /[\r\n]+/g,
+                            // Remove leading and trailing whitespace from lines
+                            match : /(\\n\s+)|(\s+\\n)/g,
                             replacement : ""
                         },
                         {
-                            match : /\\/g,
-                            replacement : "\\\\"
-                        },
-                        {
-                            match : /"/g,
-                            replacement : "\\\""
-                        },
-                        {
-                            match : /(\/\/.*)|(\/\*(.|\n)*?\*\/)/g,
+                            // Remove line breaks
+                            match : /(\\r|\\n)+/g,
                             replacement : ""
+                        },
+                        {
+                            // Remove unnecessary whitespace
+                            match : /\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g,
+                            replacement : "$1"
                         },
                     ],
                 },
@@ -93,7 +93,21 @@ module.exports = function (grunt) {
                     {
                         expand : true,
                         flatten : true,
-                        src : glslSourceFiles,
+                        src : [ "build/*.glsl" ],
+                        dest : "build/"
+                    }
+                ]
+            }
+        },
+
+        dot : {
+            glsl : {
+                options : {
+                    strip : false,
+                },
+                files : [
+                    {
+                        src : "src/video/webgl/glsl/",
                         dest : "build/"
                     }
                 ]
@@ -205,7 +219,7 @@ module.exports = function (grunt) {
     // Default task.
     grunt.registerTask("default", [ "test", "uglify" ]);
     grunt.registerTask("build", [ "lint", "uglify" ]);
-    grunt.registerTask("glsl", [ "replace:glsl" ]);
+    grunt.registerTask("glsl", [ "dot:glsl", "replace:glsl" ]);
     grunt.registerTask("lint", [
         "jshint:beforeConcat",
         "glsl",
