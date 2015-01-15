@@ -180,7 +180,7 @@ module.exports = function (grunt) {
         },
 
         jasmine : {
-            src : sourceFiles,
+            src : "build/<%= pkg.name %>-<%= pkg.version %>.js",
             options : {
                 specs : testSpecs,
                 helpers : [ "tests/spec/helper-spec.js" ],
