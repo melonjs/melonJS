@@ -190,6 +190,15 @@
                         obj.tilewidth,
                         obj.tileheight
                     );
+                
+                case "hexagonal":
+                    return new me.TMXHexagonalRenderer(
+                        obj.cols,
+                        obj.rows,
+                        obj.tilewidth,
+                        obj.tileheight,
+                        obj.hexsidelength
+                    );
 
                 // if none found, throw an exception
                 default:

@@ -8,6 +8,7 @@
  *
  */
 (function () {
+
     /**
      * an Orthogonal Map Renderder
      * Tiled QT 0.7.x format
@@ -313,4 +314,87 @@
             }
         }
     });
+    
+     /**
+     * an Hexagonal Map Renderder
+     * Tiled QT 0.7.x format
+     * @memberOf me
+     * @ignore
+     * @constructor
+     */
+    me.TMXHexagonalRenderer = Object.extend({
+        // constructor
+        init: function (/*cols, rows, tilewidth, tileheight, hexsidelength*/) {
+            // TBD
+            throw "Orthogonal type TMX Tile Map not supported!";
+        },
+
+        /**
+         * return true if the renderer can render the specified layer
+         * @ignore
+         */
+        canRender : function (layer) {
+            return (layer.orientation === "hexagonal");
+        },
+
+        /**
+         * return the tile position corresponding to the specified pixel
+         * @ignore
+         */
+        pixelToTileCoords : function (/*x, y*/) {
+            // TBD
+        },
+
+
+        /**
+         * return the tile position corresponding for the given X coordinate
+         * @ignore
+         */
+        pixelToTileX : function (/*x*/) {
+            // TBD
+        },
+
+
+        /**
+         * return the tile position corresponding for the given Y coordinates
+         * @ignore
+         */
+        pixelToTileY : function (/*y*/) {
+            // TBD
+        },
+
+        /**
+         * return the pixel position corresponding of the specified tile
+         * @ignore
+         */
+        tileToPixelCoords : function (/*x, y*/) {
+            // TBD
+        },
+
+        /**
+         * fix the position of Objects to match
+         * the way Tiled places them
+         * @ignore
+         */
+        adjustPosition: function (/*obj*/) {
+            // TBD
+        },
+
+        /**
+         * draw the tile map
+         * @ignore
+         */
+        drawTile : function (/*renderer, x, y, tmxTile, tileset*/) {
+            // TBD
+        },
+
+        /**
+         * draw the tile map
+         * @ignore
+         */
+        drawTileLayer : function (/*renderer, layer, rect*/) {
+            // TBD
+        }
+    });
+
 })();

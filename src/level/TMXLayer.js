@@ -367,6 +367,9 @@
             this.name = layer[TMXConstants.TMX_TAG_NAME];
             this.cols = +layer[TMXConstants.TMX_TAG_WIDTH];
             this.rows = +layer[TMXConstants.TMX_TAG_HEIGHT];
+            
+            // hexagonal maps only
+            this.hexsidelength = +layer[TMXConstants.TMX_HEXSIDELEN] || undefined;
 
             // layer opacity
             var visible = typeof(layer[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? layer[TMXConstants.TMX_TAG_VISIBLE] : true;
