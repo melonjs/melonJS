@@ -18,6 +18,7 @@
      * @param {Object} settings Entity properties, to be defined through Tiled or when caling the entity constructor
      * <img src="images/object_properties.png"/>
      * @param {String} [settings.name] object entity name
+     * @param {String} [settings.id] object unique IDs
      * @param {String} [settings.image] resource name of a spritesheet to use for the entity renderable component
      * @param {Number} [settings.framewidth] width of a single frame in the given spritesheet
      * @param {Number} [settings.frameheight] height of a single frame in the given spritesheet
@@ -92,6 +93,15 @@
              * @memberOf me.Entity
              */
             this.type = settings.type;
+            
+            /**
+             * object unique ID (as defined in Tiled)
+             * @public
+             * @type Number
+             * @name id
+             * @memberOf me.Entity
+             */
+            this.id = settings.id;
 
             /**
              * dead/living state of the entity<br>

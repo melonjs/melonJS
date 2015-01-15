@@ -5,11 +5,12 @@ Version History
 * Container: `getChildByProp` and friends now accepts a RegExp for value matching
 * CanvasRenderer : added support for the standard opaque canvas feature through the `transparent` option
 * Color : added high-precision color transformation for me.Color
-* Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
 * Texture : added support for the WebGL Renderer
 * Texture : texture atlas can now be created using a “standard” sprite sheet
+* Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
+* TMX : added parsing of the new `id` (unique ID) property for objects (Tiled 0.11.0)
 * Video : refactored the me.video.init to be more flexible in terms of mandatory/optional arguments
 
 2.0.2

@@ -130,8 +130,8 @@
                 // only allocate a GUID if the object has no previous ancestor
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
-                    // allocated a GUID value
-                    child.GUID = me.utils.createGUID();
+                    // allocated a GUID value (use child.id as based index if defined)
+                    child.GUID = me.utils.createGUID(child.id);
                 }
             }
 

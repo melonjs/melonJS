@@ -221,7 +221,16 @@
              * @memberOf me.TMXObject
              */
             this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
-
+            
+            /**
+             * object unique identifier per level (Tiled 0.11.x+)
+             * @public
+             * @type Number
+             * @name id
+             * @memberOf me.TMXObject
+             */
+            this.id = +tmxObj[TMXConstants.TMX_TAG_ID] || undefined;
+            
             /**
              * object orientation (orthogonal or isometric)
              * @public

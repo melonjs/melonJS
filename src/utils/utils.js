@@ -282,8 +282,10 @@
          * Game Unique ID
          * @ignore
          */
-        api.createGUID = function () {
-            return GUID_base + "-" + (GUID_index++);
+        api.createGUID = function (index) {
+            // to cover the case of undefined id for groups
+            GUID_index += index || 1;
+            return GUID_base + "-" + (index || GUID_index);
         };
 
         /**
