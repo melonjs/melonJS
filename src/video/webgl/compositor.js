@@ -157,12 +157,10 @@
             // WebGL shader program
             return me.video.shader.createShader(
                 this.gl,
-                /* jshint ignore:start */
                 (__VERTEX__)(),
                 (__FRAGMENT__)({
                     "maxTextures" : this.maxTextures
                 }),
-                /* jshint ignore:end */
                 [
                     "aVertex",
                     "aColor",
