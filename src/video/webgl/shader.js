@@ -71,12 +71,18 @@
          * @param {WebGLContext} gl WebGL Context
          * @param {String} vertex Vertex shader source
          * @param {String} fragment Fragment shader source
-         * @param {String[]} attributes Array of attribute names
-         * @param {Object} uniforms Hash map of uniform names to data types
          * @return {me.video.shader} A reference to the WebGL Shader singleton
          */
-        api.createShader = function (gl, vertex, fragment, attributes, uniforms) {
-            var handle = api.handle = gl.createProgram();
+        api.createShader = function (gl, vertex, fragment) {
+            var handle = api.handle = gl.createProgram(),
+                attrRx = /attribute\s+\w+\s+(\w+)/g,
+                uniRx = /uniform\s+(\w+)\s+(\w+)/g,
+                attributes = [],
+                uniforms = {},
+                match,
+                descriptor = {},
+                locations = {};
+
             gl.attachShader(handle, getShader(gl, gl.VERTEX_SHADER, vertex));
             gl.attachShader(handle, getShader(gl, gl.FRAGMENT_SHADER, fragment));
             gl.linkProgram(handle);
@@ -87,6 +93,18 @@
 
             gl.useProgram(handle);
 
+            // Detect all attribute names
+            while ((match = attrRx.exec(vertex))) {
+                attributes.push(match[1]);
+            }
+
+            // Detect all uniform names and types
+            [ vertex, fragment ].forEach(function (shader) {
+                while ((match = uniRx.exec(shader))) {
+                    uniforms[match[2]] = match[1];
+                }
+            });
+
             // Get attribute references
             attributes.forEach(function (attr) {
                 api.attributes[attr] = gl.getAttribLocation(handle, attr);
@@ -94,8 +112,6 @@
             });
 
             // Get uniform references
-            var descriptor = {};
-            var locations = {};
             Object.keys(uniforms).forEach(function (name) {
                 var type = uniforms[name];
                 locations[name] = gl.getUniformLocation(handle, name);

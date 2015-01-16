@@ -160,17 +160,7 @@
                 (__VERTEX__)(),
                 (__FRAGMENT__)({
                     "maxTextures" : this.maxTextures
-                }),
-                [
-                    "aVertex",
-                    "aColor",
-                    "aTexture",
-                    "aRegion",
-                ],
-                {
-                    "uMatrix"   : "mat3",
-                    "uSampler"  : "sampler2D",
-                }
+                })
             );
         },
 
