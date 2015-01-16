@@ -18,11 +18,7 @@
          * Public API
          * @ignore
          */
-        var api = {
-            "attributes"    : {},
-            "uniforms"      : {},
-            "handle"        : null,
-        };
+        var api = {};
 
         /**
          * Compile GLSL into a shader object
@@ -64,17 +60,22 @@
         };
 
         /**
-         *
+         * Create a shader program (with bindings) using the given GLSL sources
          * @name createShader
          * @memberOf me.video.shader
          * @function
          * @param {WebGLContext} gl WebGL Context
          * @param {String} vertex Vertex shader source
          * @param {String} fragment Fragment shader source
-         * @return {me.video.shader} A reference to the WebGL Shader singleton
+         * @return {Object} A reference to the WebGL Shader Program
          */
         api.createShader = function (gl, vertex, fragment) {
-            var handle = api.handle = gl.createProgram(),
+            var program = {
+                    "attributes"    : {},
+                    "uniforms"      : {},
+                    "handle"        : null,
+                },
+                handle = program.handle = gl.createProgram(),
                 attrRx = /attribute\s+\w+\s+(\w+)/g,
                 uniRx = /uniform\s+(\w+)\s+(\w+)/g,
                 attributes = [],
@@ -107,8 +108,8 @@
 
             // Get attribute references
             attributes.forEach(function (attr) {
-                api.attributes[attr] = gl.getAttribLocation(handle, attr);
-                gl.enableVertexAttribArray(api.attributes[attr]);
+                program.attributes[attr] = gl.getAttribLocation(handle, attr);
+                gl.enableVertexAttribArray(program.attributes[attr]);
             });
 
             // Get uniform references
@@ -152,9 +153,9 @@
                     })(name, type, "uniform" + fnHash[type]),
                 };
             });
-            Object.defineProperties(api.uniforms, descriptor);
+            Object.defineProperties(program.uniforms, descriptor);
 
-            return api;
+            return program;
         };
 
         /**

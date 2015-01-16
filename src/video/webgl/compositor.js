@@ -188,7 +188,14 @@
         uploadTexture : function (unit, texture, w, h, b) {
             if (!this.units[unit]) {
                 this.units[unit] = true;
-                this.shader.createTexture(this.gl, unit, texture.texture, w, h, b);
+                me.video.shader.createTexture(
+                    this.gl,
+                    unit,
+                    texture.texture,
+                    w,
+                    h,
+                    b
+                );
             }
         },
 
