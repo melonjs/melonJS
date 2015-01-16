@@ -12,13 +12,14 @@
      * @namespace me.WebGLRenderer
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-     * @param {Number} game_width - the width of the canvas without scaling
-     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {Number} game_width The width of the canvas without scaling
+     * @param {Number} game_height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
-     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
-     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
-     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
+     * @param {Boolean} [options.doubleBuffering] Whether to enable double buffering.
+     * @param {Number} [options.zoomX] The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY] The actual height of the canvas with scaling applied
+     * @param {me.WebGLRenderer.Compositor} [options.compositor=me.WebGLRenderer.Compositor] A class that implements the compositor API
      */
     me.WebGLRenderer = me.Renderer.extend(
     /** @scope me.WebGLRenderer.prototype */
@@ -56,7 +57,8 @@
             this.globalMatrix = new me.Matrix2d();
 
             // Create a compositor
-            this.compositor = new me.WebGLRenderer.Compositor(
+            var Compositor = options.compositor || me.WebGLRenderer.Compositor;
+            this.compositor = new Compositor(
                 gl,
                 this.globalMatrix,
                 this.globalColor

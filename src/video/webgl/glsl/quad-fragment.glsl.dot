@@ -73,8 +73,8 @@ void main(void) {
      * number of texture units supported by the WebGL implementation.
      *
      * The number of available texture units is at least 8, but can be as high
-     * as 192 (as of 2015-01); source: http://webglstats.com/
-     * See: MAX_COMBINED_TEXTURE_IMAGE_UNITS
+     * as 32 (as of 2015-01); source: http://webglstats.com/
+     * See: MAX_TEXTURE_IMAGE_UNITS
      *
      * The idea of sampler selection originated from work by Kenneth Russell and
      * Nat Duca from the Chromium Team.
