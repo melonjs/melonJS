@@ -72,6 +72,7 @@
 
             // Create a 1x1 white texture for fill operations
             this.fillTexture = new me.video.renderer.Texture({
+                // FIXME: Create a texture atlas helper function
                 "meta" : {
                     "app" : "melonJS",
                     "size" : { "w" : 1, "h" : 1 }

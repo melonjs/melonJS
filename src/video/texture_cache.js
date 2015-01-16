@@ -52,6 +52,7 @@
                     var w = image.width;
                     var h = image.height;
                     atlas = {
+                        // FIXME: Create a texture atlas helper function
                         "meta" : {
                             "app" : "melonJS",
                             "size" : { "w" : w, "h" : h }
