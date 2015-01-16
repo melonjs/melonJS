@@ -59,7 +59,7 @@
             // Hash map of texture units
             this.units = [];
             this.maxTextures = gl.getParameter(
-                gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS
+                gl.MAX_TEXTURE_IMAGE_UNITS
             );
 
             // Vector pool
