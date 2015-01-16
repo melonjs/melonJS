@@ -4,6 +4,9 @@ module.exports = function (grunt) {
     var sourceFiles = grunt.file.readJSON("sourceFiles.json");
     var testSpecs = grunt.file.readJSON("testSpecs.json");
 
+    var fragmentBuild = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
+    var vertexBuild = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
+
     // Project configuration.
     grunt.initConfig({
         pkg : grunt.file.readJSON("package.json"),
@@ -23,8 +26,8 @@ module.exports = function (grunt) {
             dist : {
                 options : {
                     variables : {
-                        "__FRAGMENT__" : "<%= grunt.file.read('build/quad-fragment.glsl') %>",
-                        "__VERTEX__" : "<%= grunt.file.read('build/quad-vertex.glsl') %>",
+                        "__FRAGMENT__" : fragmentBuild,
+                        "__VERTEX__" : vertexBuild,
                         "__VERSION__" : "<%= pkg.version %>"
                     },
                     usePrefix : false,
@@ -93,8 +96,8 @@ module.exports = function (grunt) {
                     {
                         expand : true,
                         flatten : true,
-                        src : [ "build/*.glsl" ],
-                        dest : "build/"
+                        src : [ "build/glsl/*.glsl" ],
+                        dest : "build/glsl/"
                     }
                 ]
             }
@@ -108,7 +111,7 @@ module.exports = function (grunt) {
                 files : [
                     {
                         src : "src/video/webgl/glsl/",
-                        dest : "build/"
+                        dest : "build/glsl/"
                     }
                 ]
             }
