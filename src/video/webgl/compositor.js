@@ -195,10 +195,10 @@
         },
 
         /**
+         * Reset compositor internal state
          * @ignore
          */
         reset : function () {
-            // TODO
             this.sbIndex = 0;
             this.length = 0;
 
@@ -213,6 +213,7 @@
         },
 
         /**
+         * Create a full index buffer for the element array
          * @ignore
          */
         createIB : function () {
@@ -221,7 +222,7 @@
                 2, 1, 3
             ];
 
-            // ~128KB index buffer
+            // ~384KB index buffer
             var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
             for (var i = 0; i < data.length; i++) {
                 data[i] = indices[i % INDICES_PER_QUAD] +
@@ -232,6 +233,7 @@
         },
 
         /**
+         * Resize the stream buffer, retaining its original contents
          * @ignore
          */
         resizeSB : function () {
