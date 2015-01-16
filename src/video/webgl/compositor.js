@@ -83,7 +83,13 @@
             this.uMatrix = new me.Matrix2d();
 
             // Load and create shader program
-            this.shader = this.createShader();
+            this.shader = me.video.shader.createShader(
+                this.gl,
+                (__VERTEX__)(),
+                (__FRAGMENT__)({
+                    "maxTextures" : this.maxTextures
+                })
+            );
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -151,20 +157,6 @@
         },
 
         /**
-         * @ignore
-         */
-        createShader : function () {
-            // WebGL shader program
-            return me.video.shader.createShader(
-                this.gl,
-                (__VERTEX__)(),
-                (__FRAGMENT__)({
-                    "maxTextures" : this.maxTextures
-                })
-            );
-        },
-
-        /**
          * Sets the projection matrix with the given size
          * @name setProjection
          * @memberOf me.WebGLRenderer.Compositor
@@ -185,7 +177,8 @@
         /**
          * @ignore
          */
-        uploadTexture : function (unit, texture, w, h, b) {
+        uploadTexture : function (texture, w, h, b) {
+            var unit = me.video.renderer.cache.getUnit(texture);
             if (!this.units[unit]) {
                 this.units[unit] = true;
                 me.video.shader.createTexture(
@@ -197,6 +190,8 @@
                     b
                 );
             }
+
+            return unit;
         },
 
         /**
@@ -298,8 +293,7 @@
             var m = this.matrix;
 
             // Upload the texture if necessary
-            var unit = me.video.renderer.cache.getUnit(texture);
-            this.uploadTexture(unit, texture);
+            var unit = this.uploadTexture(texture);
 
             // Transform vertices
             var v0 = m.vectorMultiply(this.v[0].set(x, y));

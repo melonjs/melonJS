@@ -71,7 +71,7 @@
             me.video.renderer = this;
 
             // Create a 1x1 white texture for fill operations
-            this.fillTexture = new me.video.renderer.Texture({
+            this.fillTexture = new this.Texture({
                 // FIXME: Create a texture atlas helper function
                 "meta" : {
                     "app" : "melonJS",
@@ -84,7 +84,6 @@
             }, new Uint8Array([255, 255, 255, 255]));
 
             this.compositor.uploadTexture(
-                this.cache.getUnit(this.fillTexture),
                 this.fillTexture,
                 1,
                 1,
