@@ -172,6 +172,18 @@
             // store back the object instance for later recycling
             entityClass[name].pool.push(obj);
         };
+        
+        /**
+         * Check if an object with the provided name is registered
+         * @name exists
+         * @memberOf me.pool
+         * @public
+         * @function
+         * @param {String} name of the registered object
+         */
+        api.exists = function (name) {
+            return typeof(entityClass[name]) === "object";
+        };
 
         // return our object
         return api;
