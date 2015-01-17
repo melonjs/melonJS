@@ -111,7 +111,7 @@
                         );
                     } else {
                         obj = me.pool.pull(
-                            settings.className || "me.Entity",
+                            settings.name || "me.Entity",
                             settings.x, settings.y,
                             settings
                         );
