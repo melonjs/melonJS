@@ -182,7 +182,7 @@
          * @param {String} name of the registered object
          */
         api.exists = function (name) {
-            return name.toLowerCase() in entityClass;
+            return name in entityClass;
         };
 
         // return our object
