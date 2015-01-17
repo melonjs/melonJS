@@ -182,7 +182,7 @@
          * @param {String} name of the registered object
          */
         api.exists = function (name) {
-            return typeof(entityClass[name]) === "object";
+            return name.toLowerCase() in entityClass;
         };
 
         // return our object
