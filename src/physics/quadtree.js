@@ -15,7 +15,7 @@
      * a pool of `QuadTree` objects
      */
     var QT_ARRAY = [];
-    
+
     /**
      * will pop a quadtree object from the array
      * or create a new one if the array is empty
@@ -32,14 +32,14 @@
             return new me.QuadTree(bounds, max_objects, max_levels, level);
         }
     };
-    
+
     /**
      * Push back a quadtree back into the array
      */
     var QT_ARRAY_PUSH = function (qt) {
         QT_ARRAY.push(qt);
     };
-    
+
 
     /**
      * Quadtree Constructor <br>
@@ -187,7 +187,7 @@
     Quadtree.prototype.insert = function (item) {
 
         var index = -1;
-        
+
         //if we have subnodes ...
         if (this.nodes.length > 0) {
             index = this.getIndex(item.getBounds());
@@ -232,7 +232,7 @@
      * @return {external:Object[]} array with all detected objects
      */
     Quadtree.prototype.retrieve = function (item) {
-        
+
         var returnObjects = this.objects;
 
         //if we have subnodes ...
@@ -272,7 +272,7 @@
         }
         // empty the array
         this.nodes = [];
-        
+
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {
             this.bounds.pos.x = bounds.pos.x;

@@ -16,18 +16,6 @@
     };
 
     /**
-     * A global "translation context" for nested Containers
-     * @ignore
-     */
-    var globalTranslation = new me.Rect(0, 0, 0, 0);
-
-    /**
-     * A global "floating children" reference counter for nested ObjectContainers
-     * @ignore
-     */
-    var globalFloatingCounter = 0;
-
-    /**
      * me.Container represents a collection of child objects
      * @class
      * @extends me.Renderable
@@ -109,6 +97,7 @@
              * @ignore
              */
             this.drawCount = 0;
+            this.translationStack = new me.TranslationStack();
         },
 
 
@@ -601,13 +590,9 @@
             var isDirty = false;
             var isFloating = false;
             var isPaused = me.state.isPaused();
-            var isTranslated = false;
-            var isStacked = false;
-            var stack = [];
-            var x = 0;
-            var y = 0;
-            var z = 0;
             var viewport = me.game.viewport;
+            var translationStack = this.translationStack;
+            translationStack.reset();
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
@@ -616,45 +601,16 @@
                 }
 
                 if (obj.isRenderable) {
-                    isFloating = (globalFloatingCounter > 0 || obj.floating);
-                    if (isFloating) {
-                        globalFloatingCounter++;
-                    }
-
-                    // Translate global context
-                    isTranslated = !isFloating;
-                    if (isTranslated) {
-                        x = obj.pos.x;
-                        y = obj.pos.y;
-                        z = Math.abs(x + y + obj.width + obj.height);
-                        if (z !== z || z === Infinity) {
-                            isStacked = true;
-                            stack.push(globalTranslation.clone());
-                        }
-                        globalTranslation.translateV(obj.pos);
-                        globalTranslation.resize(obj.width, obj.height);
-                    }
-
+                    isFloating = (translationStack.globalFloatingCounter > 0 || obj.floating);
+                    translationStack.translate(isFloating, obj);
                     // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(globalTranslation);
+                    obj.inViewport = isFloating || viewport.isVisible(translationStack.globalTranslation);
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
                     // Undo global context translation
-                    if (isTranslated) {
-                        if (isStacked) {
-                            isStacked = false;
-                            globalTranslation.copy(stack.pop());
-                        }
-                        else {
-                            globalTranslation.translate(-x, -y);
-                        }
-                    }
-
-                    if (globalFloatingCounter > 0) {
-                        globalFloatingCounter--;
-                    }
+                    translationStack.undoTranslation();
                 }
                 else {
                     // just directly call update() for non renderable object
