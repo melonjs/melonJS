@@ -168,17 +168,19 @@
          * @name drawImage
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {image} image html image element
-         * @param {Number} sx value, from the source image.
-         * @param {Number} sy value, from the source image.
-         * @param {Number} sw the width of the image to be drawn
-         * @param {Number} sh the height of the image to be drawn
-         * @param {Number} dx the x position to draw the image at on the screen
-         * @param {Number} dy the y position to draw the image at on the screen
-         * @param {Number} dw the width value to draw the image at on the screen
-         * @param {Number} dh the height value to draw the image at on the screen
+         * @param {Image} image Source image
+         * @param {Number} sx Source x-coordinate
+         * @param {Number} sy Source y-coordinate
+         * @param {Number} sw Source width
+         * @param {Number} sh Source height
+         * @param {Number} dx Destination x-coordinate
+         * @param {Number} dy Destination y-coordinate
+         * @param {Number} dw Destination width
+         * @param {Number} dh Destination height
          */
         drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
+            // TODO: Replace the function signature with:
+            // drawImage(Image|Object, sx, sy, sw, sh, dx, dy, dw, dh)
             if (typeof sw === "undefined") {
                 sw = dw = image.width;
                 sh = dh = image.height;
@@ -198,8 +200,8 @@
                 sy = 0;
             }
 
-            // TODO: Use `region` in place of sx, sy, sw, sh
-            this.compositor.add(this.cache.get(image), sx, sy, sw, sh, dx, dy, dw, dh);
+            var key = sx + "," + sy + "," + sw + "," + sh;
+            this.compositor.add(this.cache.get(image), key, dx, dy, dw, dh);
         },
 
         /**

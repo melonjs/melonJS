@@ -249,16 +249,13 @@
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {me.video.renderer.Texture} texture Source texture
-         * @param {Number} sx Source x-coordinate
-         * @param {Number} sy Source y-coordinate
-         * @param {Number} sw Source width
-         * @param {Number} sh Source height
-         * @param {Number} dx Destination x-coordinate
-         * @param {Number} dy Destination y-coordinate
-         * @param {Number} dw Destination width
-         * @param {Number} dh Destination height
+         * @param {String} key Source texture region name
+         * @param {Number} x Destination x-coordinate
+         * @param {Number} y Destination y-coordinate
+         * @param {Number} w Destination width
+         * @param {Number} h Destination height
          */
-        add : function (texture, sx, sy, sw, sh, dx, dy, dw, dh) {
+        add : function (texture, key, x, y, w, h) {
             if (this.length >= MAX_LENGTH) {
                 this.flush();
             }
@@ -266,48 +263,25 @@
                 this.resizeSB();
             }
 
-            // TODO: Replace the function signature with:
-            // add(texture, region, x, y, w, h)
-            // This can only be done after TextureAtlas is used on tilesets
-            var region,
-                x = dx,
-                y = dy,
-                w = dw,
-                h = dh;
-
-            if (arguments.length === 6) {
-                h = dx;
-                w = sh;
-                y = sw;
-                x = sy;
-                region = texture.getRegion(sx);
-            }
-            else {
-                // TODO: Remove this cache lookup and the assignment in Texture
-                var key = sx + "," + sy + "," + sw + "," + sh;
-                region = texture.getRegion(key);
-                if (typeof(region) === "undefined") {
-                    // TODO: Require proper atlas regions instead of caching arbitrary regions
-                    region = texture._insertRegion(key, sx, sy, sw, sh);
-                }
-            }
-
-            var m = this.matrix;
-
-            // Upload the texture if necessary
-            var unit = this.uploadTexture(texture);
-
             // Transform vertices
-            var v0 = m.vectorMultiply(this.v[0].set(x, y));
-            var v1 = m.vectorMultiply(this.v[1].set(x + w, y));
-            var v2 = m.vectorMultiply(this.v[2].set(x, y + h));
-            var v3 = m.vectorMultiply(this.v[3].set(x + w, y + h));
+            var m = this.matrix,
+                v0 = this.v[0].set(x, y),
+                v1 = this.v[1].set(x + w, y),
+                v2 = this.v[2].set(x, y + h),
+                v3 = this.v[3].set(x + w, y + h);
+
+            if (!m.isIdentity()) {
+                m.vectorMultiply(v0);
+                m.vectorMultiply(v1);
+                m.vectorMultiply(v2);
+                m.vectorMultiply(v3);
+            }
 
             // Array index computation
-            var idx0 = this.sbIndex + ELEMENT_SIZE * 0;
-            var idx1 = this.sbIndex + ELEMENT_SIZE * 1;
-            var idx2 = this.sbIndex + ELEMENT_SIZE * 2;
-            var idx3 = this.sbIndex + ELEMENT_SIZE * 3;
+            var idx0 = this.sbIndex,
+                idx1 = idx0 + ELEMENT_SIZE,
+                idx2 = idx1 + ELEMENT_SIZE,
+                idx3 = idx2 + ELEMENT_SIZE;
 
             // Fill vertex buffer
             // FIXME: Pack each vertex vector into single float
@@ -330,10 +304,25 @@
 
             // Fill texture index buffer
             // FIXME: Can the texture index be packed into another element?
+            var unit = this.uploadTexture(texture);
             this.stream[idx0 + TEXTURE_ELEMENT] =
             this.stream[idx1 + TEXTURE_ELEMENT] =
             this.stream[idx2 + TEXTURE_ELEMENT] =
             this.stream[idx3 + TEXTURE_ELEMENT] = unit;
+
+            // Get the source texture region
+            var region = texture.getRegion(key);
+            if (typeof(region) === "undefined") {
+                // TODO: Require proper atlas regions instead of caching arbitrary region keys
+                console.warn("Adding texture region", key, "for texture", texture);
+
+                var keys = key.split(","),
+                    sx = +keys[0],
+                    sy = +keys[1],
+                    sw = +keys[2],
+                    sh = +keys[3];
+                region = texture._insertRegion(key, sx, sy, sw, sh);
+            }
 
             // Fill texture coordinates buffer
             // FIXME: Pack each texture coordinate into single floats
