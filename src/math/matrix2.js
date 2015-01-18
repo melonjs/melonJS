@@ -109,21 +109,21 @@
             var a = this.val,
                 a0 = a[0],
                 a1 = a[1],
-                a2 = a[3],
-                a3 = a[4],
+                a3 = a[3],
+                a4 = a[4],
                 b0 = b[0],
                 b1 = b[1],
-                b2 = b[3],
-                b3 = b[4],
-                b4 = b[6],
-                b5 = b[7];
+                b3 = b[3],
+                b4 = b[4],
+                b6 = b[6],
+                b7 = b[7];
 
-            a[0] = a0 * b0 + a2 * b1;
-            a[1] = a1 * b0 + a3 * b1;
-            a[3] = a0 * b2 + a2 * b3;
-            a[4] = a1 * b2 + a3 * b3;
-            a[6] += a0 * b4 + a2 * b5;
-            a[7] += a1 * b4 + a3 * b5;
+            a[0] = a0 * b0 + a3 * b1;
+            a[1] = a1 * b0 + a4 * b1;
+            a[3] = a0 * b3 + a3 * b4;
+            a[4] = a1 * b3 + a4 * b4;
+            a[6] += a0 * b6 + a3 * b7;
+            a[7] += a1 * b6 + a4 * b7;
 
             return this;
         },
@@ -176,15 +176,15 @@
                 var a = this.val,
                     a0 = a[0],
                     a1 = a[1],
-                    a2 = a[3],
-                    a3 = a[4],
+                    a3 = a[3],
+                    a4 = a[4],
                     s = Math.sin(angle),
                     c = Math.cos(angle);
 
-                a[0] = a0 * c + a2 * s;
-                a[1] = a1 * c + a3 * s;
-                a[3] = a0 * -s + a2 * c;
-                a[4] = a1 * -s + a3 * c;
+                a[0] = a0 * c + a3 * s;
+                a[1] = a1 * c + a4 * s;
+                a[3] = a0 * -s + a3 * c;
+                a[4] = a1 * -s + a4 * c;
             }
             return this;
         },
@@ -208,7 +208,7 @@
         },
 
         /**
-         * translate the matrix the matrix
+         * translate the matrix by a vector
          * @name translateV
          * @memberOf me.Matrix2d
          * @function
