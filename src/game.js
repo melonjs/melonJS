@@ -212,8 +212,8 @@
                 }
             };
 
-            // reset the transform matrix to the normal one
-            renderer.resetTransform();
+            // reset the renderer
+            renderer.reset();
 
             // reset the frame counter
             frameCounter = 0;

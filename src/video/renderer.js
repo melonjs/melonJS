@@ -121,6 +121,14 @@
         prepareSurface : function () {},
 
         /**
+         * @ignore
+         */
+        reset : function () {
+            this.resetTransform();
+            this.cache.reset();
+        },
+
+        /**
          * return a reference to the screen canvas
          * @name getScreenCanvas
          * @memberOf me.CanvasRenderer

@@ -72,6 +72,18 @@
             // FIXME: Cannot reference me.video.renderer yet
             me.video.renderer = this;
 
+            this.createFillTexture();
+
+            // Configure the WebGL viewport
+            this.resize(1, 1);
+
+            return this;
+        },
+
+        /**
+         * @ignore
+         */
+        createFillTexture : function () {
             // Create a 1x1 white texture for fill operations
             this.fillTexture = new this.Texture({
                 // FIXME: Create a texture atlas helper function
@@ -91,11 +103,6 @@
                 1,
                 0
             );
-
-            // Configure the WebGL viewport
-            this.resize(1, 1);
-
-            return this;
         },
 
         /**
@@ -307,6 +314,19 @@
          */
         resetTransform : function () {
             this.globalMatrix.identity();
+        },
+
+        /**
+         * Reset context state
+         * @name reset
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        reset : function () {
+            this.globalMatrix.identity();
+            this.cache.reset();
+            this.compositor.reset();
+            this.createFillTexture();
         },
 
         /**
