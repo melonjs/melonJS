@@ -162,6 +162,7 @@
      * @param {me.Container} container group of objects to be added
      */
     Quadtree.prototype.insertContainer = function (container) {
+
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child instanceof me.Container) {
                 // recursivly insert childs

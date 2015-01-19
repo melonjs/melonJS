@@ -604,7 +604,7 @@
                     isFloating = (translationStack.globalFloatingCounter > 0 || obj.floating);
                     translationStack.translate(isFloating, obj);
                     // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(translationStack.globalTranslation);
+                    obj.inViewport = isFloating || viewport.isVisible(translationStack.rect);
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
