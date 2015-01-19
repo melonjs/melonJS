@@ -6,7 +6,7 @@
  * WebGL Fragment shader for quad compositing
  */
 
-precision mediump float;
+precision {{= ctx.precision }} float;
 
 
 // Uniforms
@@ -29,11 +29,13 @@ varying vec4 vColor;
 
 /**
  * Fragment texture unit index
+ * @ignore
  */
 varying float vTexture;
 
 /**
  * Fragment texture coordinates
+ * @ignore
  */
 varying vec2 vRegion;
 

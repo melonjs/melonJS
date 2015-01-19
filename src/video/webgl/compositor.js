@@ -87,7 +87,11 @@
                 this.gl,
                 (__VERTEX__)(),
                 (__FRAGMENT__)({
-                    "maxTextures" : this.maxTextures
+                    "precision"     : (gl.getShaderPrecisionFormat(
+                        gl.FRAGMENT_SHADER,
+                        gl.HIGH_FLOAT
+                    ).precision < 16) ? "mediump" : "highp",
+                    "maxTextures"   : this.maxTextures
                 })
             );
 
