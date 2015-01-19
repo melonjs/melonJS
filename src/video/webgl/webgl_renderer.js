@@ -43,10 +43,20 @@
              */
             this.colorStack = [];
 
-             /**
+            /**
              * @ignore
              */
             this._matrixStack = [];
+
+            /**
+             * @ignore
+             */
+            this._linePoints = [
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d()
+            ];
 
             /**
              * The global matrix. Used for transformations on the overall scene
@@ -208,7 +218,7 @@
             }
 
             var key = sx + "," + sy + "," + sw + "," + sh;
-            this.compositor.add(this.cache.get(image), key, dx, dy, dw, dh);
+            this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
         },
 
         /**
@@ -222,7 +232,7 @@
          * @param {Number} height
          */
         fillRect : function (x, y, width, height) {
-            this.compositor.add(this.fillTexture, "default", x, y, width, height);
+            this.compositor.addQuad(this.fillTexture, "default", x, y, width, height);
         },
 
         /**
@@ -431,14 +441,14 @@
         },
 
         /**
-         * sets the line width on the context
+         * Set the line width
          * @name setLineWidth
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} width the width to set;
+         * @param {Number} width Line width
          */
-        setLineWidth : function () {
-            // TODO
+        setLineWidth : function (width) {
+            this.compositor.lineWidth(width);
         },
 
         /**
@@ -481,8 +491,13 @@
          * @param {Number} endX the end x coordinate
          * @param {Number} endY the end y coordinate
          */
-        strokeLine : function (/*startX, startY, endX, endY*/) {
-            // TODO
+        strokeLine : function (startX, startY, endX, endY) {
+            var points = this._linePoints.slice(0, 2);
+            points[0].x = startX;
+            points[0].y = startY;
+            points[1].x = endX;
+            points[1].y = endY;
+            this.compositor.drawLine(points, true);
         },
 
         /**
@@ -492,8 +507,22 @@
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
-        strokePolygon : function (/*poly*/) {
-            // TODO
+        strokePolygon : function (poly) {
+            var len = poly.points.length,
+                points,
+                i;
+
+            // Grow internal points buffer if necessary
+            for (i = this._linePoints.length; i < len; i++) {
+                this._linePoints.push(new me.Vector2d());
+            }
+
+            points = this._linePoints.slice(0, len);
+            for (i = 0; i < len; i++) {
+                points[i].x = poly.pos.x + poly.points[i].x;
+                points[i].y = poly.pos.y + poly.points[i].y;
+            }
+            this.compositor.drawLine(points);
         },
 
         /**
@@ -506,8 +535,17 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (/*x, y, width, height*/) {
-            // TODO
+        strokeRect : function (x, y, width, height) {
+            var points = this._linePoints.slice(0, 4);
+            points[0].x = x;
+            points[0].y = y;
+            points[1].x = x + width;
+            points[1].y = y;
+            points[2].x = x + width;
+            points[2].y = y + height;
+            points[3].x = x;
+            points[3].y = y + height;
+            this.compositor.drawLine(points);
         },
 
         /**

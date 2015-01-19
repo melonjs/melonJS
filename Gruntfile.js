@@ -4,8 +4,10 @@ module.exports = function (grunt) {
     var sourceFiles = grunt.file.readJSON("sourceFiles.json");
     var testSpecs = grunt.file.readJSON("testSpecs.json");
 
-    var fragmentBuild = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
-    var vertexBuild = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
+    var quadFragment = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
+    var quadVertex = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
+    var lineFragment = "<%= grunt.file.read('build/glsl/line-fragment.glsl') %>";
+    var lineVertex = "<%= grunt.file.read('build/glsl/line-vertex.glsl') %>";
 
     // Project configuration.
     grunt.initConfig({
@@ -26,9 +28,11 @@ module.exports = function (grunt) {
             dist : {
                 options : {
                     variables : {
-                        "__FRAGMENT__" : fragmentBuild,
-                        "__VERTEX__" : vertexBuild,
-                        "__VERSION__" : "<%= pkg.version %>"
+                        "__VERSION__"       : "<%= pkg.version %>",
+                        "__QUAD_FRAGMENT__" : quadFragment,
+                        "__QUAD_VERTEX__"   : quadVertex,
+                        "__LINE_FRAGMENT__" : lineFragment,
+                        "__LINE_VERTEX__"   : lineVertex,
                     },
                     usePrefix : false,
                     force : true,

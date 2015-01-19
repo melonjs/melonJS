@@ -82,18 +82,30 @@
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
 
-            // Load and create shader program
-            this.shader = me.video.shader.createShader(
+            // Detect GPU capabilities
+            var precision = (gl.getShaderPrecisionFormat(
+                gl.FRAGMENT_SHADER,
+                gl.HIGH_FLOAT
+            ).precision < 16) ? "mediump" : "highp";
+
+            // Load and create shader programs
+            this.lineShader = me.video.shader.createShader(
                 this.gl,
-                (__VERTEX__)(),
-                (__FRAGMENT__)({
-                    "precision"     : (gl.getShaderPrecisionFormat(
-                        gl.FRAGMENT_SHADER,
-                        gl.HIGH_FLOAT
-                    ).precision < 16) ? "mediump" : "highp",
+                (__LINE_VERTEX__)(),
+                (__LINE_FRAGMENT__)({
+                    "precision"     : precision
+                })
+            );
+            this.quadShader = me.video.shader.createShader(
+                this.gl,
+                (__QUAD_VERTEX__)(),
+                (__QUAD_FRAGMENT__)({
+                    "precision"     : precision,
                     "maxTextures"   : this.maxTextures
                 })
             );
+
+            this.shader = this.quadShader.handle;
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -117,9 +129,9 @@
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
 
-            // Bind attribute pointers
+            // Bind attribute pointers for quad shader
             gl.vertexAttribPointer(
-                this.shader.attributes.aVertex,
+                this.quadShader.attributes.aVertex,
                 VERTEX_SIZE,
                 gl.FLOAT,
                 false,
@@ -127,7 +139,7 @@
                 VERTEX_OFFSET
             );
             gl.vertexAttribPointer(
-                this.shader.attributes.aColor,
+                this.quadShader.attributes.aColor,
                 COLOR_SIZE,
                 gl.FLOAT,
                 false,
@@ -135,7 +147,7 @@
                 COLOR_OFFSET
             );
             gl.vertexAttribPointer(
-                this.shader.attributes.aTexture,
+                this.quadShader.attributes.aTexture,
                 TEXTURE_SIZE,
                 gl.FLOAT,
                 false,
@@ -143,7 +155,7 @@
                 TEXTURE_OFFSET
             );
             gl.vertexAttribPointer(
-                this.shader.attributes.aRegion,
+                this.quadShader.attributes.aRegion,
                 REGION_SIZE,
                 gl.FLOAT,
                 false,
@@ -169,13 +181,15 @@
          * @param {Number} h WebGL Canvas height
          */
         setProjection : function (w, h) {
+            this.flush();
             this.gl.viewport(0, 0, w, h);
             this.uMatrix.set(
                 2 / w,  0,      0,
                 0,      -2 / h, 0,
                 -1,     1,      1
             );
-            this.shader.uniforms.uMatrix = this.uMatrix.val;
+            // FIXME: Configure the projection matrix in `useShader`
+            this.quadShader.uniforms.uMatrix = this.uMatrix.val;
         },
 
         /**
@@ -213,7 +227,7 @@
                 samplers[i] = i;
             }
 
-            this.shader.uniforms.uSampler = samplers;
+            this.quadShader.uniforms.uSampler = samplers;
         },
 
         /**
@@ -248,8 +262,23 @@
         },
 
         /**
-         * Add a texture region
-         * @name add
+         * Select the shader to use for compositing
+         * @name useShader
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {WebGLProgram} shader The shader program to use
+         */
+        useShader : function (shader) {
+            if (this.shader !== shader) {
+                this.flush();
+                this.shader = shader;
+                this.gl.useProgram(this.shader);
+            }
+        },
+
+        /**
+         * Add a textured quad
+         * @name addQuad
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {me.video.renderer.Texture} texture Source texture
@@ -259,7 +288,8 @@
          * @param {Number} w Destination width
          * @param {Number} h Destination height
          */
-        add : function (texture, key, x, y, w, h) {
+        addQuad : function (texture, key, x, y, w, h) {
+            this.useShader(this.quadShader.handle);
             if (this.length >= MAX_LENGTH) {
                 this.flush();
             }
@@ -373,6 +403,76 @@
                 this.sbIndex = 0;
                 this.length = 0;
             }
+        },
+
+        /**
+         * Draw a line
+         * @name drawLine
+         * @memberOf me.WebGLRenderer.Compositor
+         * @param {me.Vector2d[]} points Line vertices
+         * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
+         */
+        drawLine : function (points, open) {
+            this.useShader(this.lineShader.handle);
+
+            // Put vertex data into the stream buffer
+            var j = 0;
+            for (var i = 0; i < points.length; i++) {
+                if (!this.matrix.isIdentity()) {
+                    this.matrix.vectorMultiply(points[i]);
+                }
+                this.stream[j++] = points[i].x;
+                this.stream[j++] = points[i].y;
+            }
+
+            var gl = this.gl;
+
+            // FIXME
+            this.lineShader.uniforms.uMatrix = this.uMatrix.val;
+
+            // Set the line color
+            this.lineShader.uniforms.uColor = this.color.glArray;
+
+            // Copy data into the stream buffer
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                this.stream.subarray(0, points.length * 2),
+                gl.STREAM_DRAW
+            );
+
+            // FIXME: Configure vertex attrib pointers in `useShader`
+            gl.vertexAttribPointer(
+                this.lineShader.attributes.aVertex,
+                VERTEX_SIZE,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            // Draw the stream buffer
+            gl.drawArrays(open ? gl.LINE_STRIP : gl.LINE_LOOP, 0, points.length);
+
+            // FIXME: Configure vertex attrib pointers in `useShader`
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aVertex,
+                VERTEX_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                VERTEX_OFFSET
+            );
+        },
+
+        /**
+         * Set the line width
+         * @name lineWidth
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {Number} width Line width
+         */
+        lineWidth : function (width) {
+            this.gl.lineWidth(width);
         },
 
         /**

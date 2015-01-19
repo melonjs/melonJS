@@ -85,30 +85,32 @@
     // Custom Globals
     "globals"       : {
         // melonJS
-        "me"            : false,
-        "throttle"      : false,
-        "Windows"       : false,
-        "define"        : false,
-        "__VERTEX__"    : false,
-        "__FRAGMENT__"  : false,
+        "me"                    : false,
+        "throttle"              : false,
+        "Windows"               : false,
+        "define"                : false,
+        "__QUAD_VERTEX__"       : false,
+        "__QUAD_FRAGMENT__"     : false,
+        "__LINE_VERTEX__"       : false,
+        "__LINE_FRAGMENT__"     : false,
 
         // Howler
-        "AudioContext"  : false,
-        "webkitAudioContext" : false,
-        "Howl"          : false,
-        "Howler"        : false,
+        "AudioContext"          : false,
+        "webkitAudioContext"    : false,
+        "Howl"                  : false,
+        "Howler"                : false,
 
         // Jasmine
-        "jasmine"       : false,
-        "describe"      : false,
-        "it"            : false,
-        "expect"        : false,
-        "runs"          : false,
-        "waitsFor"      : false,
-        "beforeEach"    : false,
-        "afterEach"     : false,
-        "spyOn"         : false,
-        "xdescribe"     : false,
-        "xit"           : false
+        "jasmine"               : false,
+        "describe"              : false,
+        "it"                    : false,
+        "expect"                : false,
+        "runs"                  : false,
+        "waitsFor"              : false,
+        "beforeEach"            : false,
+        "afterEach"             : false,
+        "spyOn"                 : false,
+        "xdescribe"             : false,
+        "xit"                   : false
     }
 }
