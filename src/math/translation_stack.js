@@ -6,7 +6,6 @@
             this.rect = new me.Rect(0, 0, 0, 0);
             this.x = 0;
             this.y = 0;
-            this.z = 0;
             this.isTranslated = false;
             this.isStacked = false;
         },
@@ -26,8 +25,8 @@
             if (this.isTranslated) {
                 this.x = obj.pos.x;
                 this.y = obj.pos.y;
-                this.propertyVerification = Math.abs(this.x + this.y + obj.width + obj.height);
-                if (this.propertyVerification !== this.propertyVerification || this.propertyVerification === Infinity) {
+                var propertyVerification = Math.abs(this.x + this.y + obj.width + obj.height);
+                if (propertyVerification !== propertyVerification || propertyVerification === Infinity) {
                     this.isStacked = true;
                     this.stack.push(this.rect.clone());
                 }
