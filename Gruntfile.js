@@ -161,6 +161,7 @@ module.exports = function (grunt) {
             ],
             jsdoc : [
                 "build/docs",
+                "build/glsl/*.glsl",
                 "./docs/**/*.*",
                 "./docs/scripts",
                 "./docs/styles",
