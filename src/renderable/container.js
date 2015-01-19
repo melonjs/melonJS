@@ -15,6 +15,8 @@
         }
     };
 
+    var translationStack = new me.TranslationStack();
+
     /**
      * me.Container represents a collection of child objects
      * @class
@@ -97,7 +99,6 @@
              * @ignore
              */
             this.drawCount = 0;
-            this.translationStack = new me.TranslationStack();
         },
 
 
@@ -591,7 +592,6 @@
             var isFloating = false;
             var isPaused = me.state.isPaused();
             var viewport = me.game.viewport;
-            var translationStack = this.translationStack;
             translationStack.reset();
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
