@@ -154,7 +154,7 @@
          * @ignore
          */
         buildFromSpriteSheet : function (data) {
-            var atlas = []; // changing to {} breaks everything !
+            var atlas = {};
             var image = data.region || data.image;
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
@@ -180,7 +180,7 @@
             }
             // build the local atlas
             for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
-                atlas[frame] = {
+                atlas["" + frame] = {
                     name: "" + frame,
                     offset: new me.Vector2d(
                         margin + (spacing + data.framewidth) * (frame % spritecount.x) + offsetX,

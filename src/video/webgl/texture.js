@@ -40,7 +40,36 @@
                 var key = s.x + "," + s.y + "," + w + "," + h;
                 atlas[key] = atlas[frame];
             });
+            return atlas;
+        },
+        
+        buildFromSpriteSheet : function (data) {
+            var image = data.region || data.image;
+            var w = image.width;
+            var h = image.height;
+            
+            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "buildFromSpriteSheet", [ data ]);
+            
+            // TODO : duplicated !
+            Object.keys(atlas).forEach(function (frame) {
+                // Source coordinates
+                var s = atlas["" + frame].offset;
+                var sw = atlas["" + frame].width;
+                var sh = atlas["" + frame].height;
 
+                // ST texture coordinates
+                atlas["" + frame].stMap = new Float32Array([
+                    s.x / w,        // Left
+                    s.y / h,        // Top
+                    (s.x + sw) / w, // Right
+                    (s.y + sh) / h  // Bottom
+                ]);
+
+                // Cache source coordinates
+                // TODO: Remove this when the Batcher only accepts a region name
+                var key = s.x + "," + s.y + "," + w + "," + h;
+                atlas[key] = atlas["" + frame];
+            });
             return atlas;
         },
 

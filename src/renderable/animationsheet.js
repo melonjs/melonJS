@@ -120,7 +120,7 @@
         addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {
                 name : name,
-                frame : [],
+                frame : {},
                 idx : 0,
                 length : 0,
                 animationspeed: animationspeed || this.animationspeed,
@@ -135,10 +135,16 @@
                 });
             }
 
+            // # of frames
+            var counter = 0;
             // set each frame configuration (offset, size, etc..)
             for (var i = 0, len = index.length; i < len; i++) {
                 if (typeof(index[i]) === "number") {
-                    this.anim[name].frame[i] = this.textureAtlas[index[i]];
+                    if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
+                        // TODO: adding the cache source coordinates add undefined entries in webGL mode
+                        this.anim[name].frame["" + i] = this.textureAtlas[index[i]];
+                        counter++;
+                    }
                 } else { // string
                     if (this.atlasIndices === null) {
                         throw new me.Renderable.Error(
@@ -146,10 +152,11 @@
                         );
                     } else {
                         this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
+                        counter++;
                     }
                 }
             }
-            this.anim[name].length = this.anim[name].frame.length;
+            this.anim[name].length = counter;
         },
 
         /**
@@ -230,7 +237,7 @@
          */
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
-            var frame = this.current.frame[this.current.idx];
+            var frame = this.current.frame["" + this.current.idx];
             this.offset = frame.offset;
             this.width = frame.width;
             this.height = frame.height;
