@@ -301,8 +301,7 @@
                 var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
                 if (_alpha > 0.0) {
                     renderer.save();
-                    renderer.setGlobalAlpha(_alpha);
-                    renderer.setColor("red");
+                    renderer.setColor("rgba(255,0,0," + _alpha + ")");
                     renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
                     renderer.restore();
                 }
