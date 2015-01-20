@@ -158,7 +158,7 @@
             var image = data.image;
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
-            
+
             // calculate the sprite count (line, col)
             if (!data.ignoreError && ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
                 (image.height - margin) % (data.frameheight + spacing) !== 0)) {
@@ -185,7 +185,7 @@
                     angle: 0
                 };
             }
-            
+
             return atlas;
         },
 
@@ -247,11 +247,11 @@
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
-                var sprite = new me.Sprite(
-                    0, 0,
-                    this.getTexture(),
-                    region.width, region.height
-                );
+                var sprite = new me.Sprite(0, 0, {
+                    image: this.getTexture(),
+                    framewidth: region.width,
+                    frameheight: region.height
+                });
                 // set the sprite offset within the texture
                 sprite.offset.setV(region.offset);
                 // set angle if defined

@@ -13,12 +13,20 @@
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
-     * @param {Image} image reference to the Sprite Image. See {@link me.loader#getImage}
-     * @param {Number} [framewidth] sprite width. The width to draw the image as. Defaults to image width.
-     * @param {Number} [spriteheigth] sprite height. The height to draw the image as. Defaults to image height.
+     * @param {Object} settings Contains additional parameters for the sprite
+     * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader#getImage}
+     * @param {Number} [settings.frameX=0] Image source X-coordinate.
+     * @param {Number} [settings.frameY=0] Image source Y-coordinate.
+     * @param {Number} [settings.framewidth=settings.image.width] Image source width.
+     * @param {Number} [settings.frameheight=settings.image.height] Image source height.
+     * @param {Number} [settings.rotation] Initial rotation angle in radians.
+     * @param {Boolean} [settings.flipX] Initial flip for X-axis.
+     * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
      * @example
      * // create a static Sprite Object
-     * mySprite = new me.Sprite (100, 100, me.loader.getImage("mySpriteImage"));
+     * mySprite = new me.Sprite (100, 100, {
+     *     image : me.loader.getImage("mySpriteImage")
+     * });
      */
     me.Sprite = me.Renderable.extend(
     /** @scope me.Sprite.prototype */
@@ -26,7 +34,7 @@
         /**
          * @ignore
          */
-        init : function (x, y, image, framewidth, frameheight) {
+        init : function (x, y, settings) {
 
             /**
              * private/internal scale factor
@@ -41,17 +49,20 @@
             this.lastflipX = false;
             this.lastflipY = false;
 
+            this.flipX(!!settings.flipX);
+            this.flipY(!!settings.flipY);
+
             // current frame texture offset
-            this.offset = new me.Vector2d();
+            this.offset = new me.Vector2d(settings.frameX, settings.frameY);
 
             /**
              * Set the angle (in Radians) of a sprite to rotate it <br>
-             * WARNING: rotating sprites decreases performances
+             * WARNING: rotating sprites decreases performance with Canvas Renderer
              * @public
              * @type Number
              * @name me.Sprite#angle
              */
-            this.angle = 0;
+            this.angle = settings.rotation;
 
             /**
              * Source rotation angle for pre-rotating the source image<br>
@@ -70,10 +81,18 @@
             // sprite moves in and out of the viewport
             this.isSprite = true;
 
+            var image = (
+                (typeof(settings.image) === "string") ?
+                me.loader.getImage(settings.image) :
+                settings.image
+            );
+
             // call the super constructor
-            this._super(me.Renderable, "init", [x, y,
-                framewidth  || image.width,
-                frameheight || image.height]);
+            this._super(me.Renderable, "init", [
+                x, y,
+                settings.framewidth  || image.width,
+                settings.frameheight || image.height
+            ]);
 
             // cache image reference
             this.image = image;

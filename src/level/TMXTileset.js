@@ -134,11 +134,11 @@
             // extract base name
             imagesrc = me.utils.getBasename(imagesrc);
             this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
-            
+
             if (!this.image) {
                 console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
             }
-            
+
             // create a texture atlas for the given tileset
             this.texture = me.video.renderer.cache.get(this.image, {
                 framewidth : this.tilewidth,
@@ -149,7 +149,7 @@
                 ignoreError : true
             });
             this.atlas = this.texture.getAtlas();
-            
+
             // calculate the number of tiles per horizontal line
             var hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
             var vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
@@ -187,14 +187,25 @@
             return gid >= this.firstgid && gid <= this.lastgid;
         },
 
-        //return an Image Object with the specified tile
-        getTileImage : function (tmxTile) {
-            // create a new image object
-            var _context = me.video.renderer.getContext2d(
-                    me.video.createCanvas(this.tilewidth, this.tileheight)
-            );
-            this.drawTile(_context, 0, 0, tmxTile);
-            return _context.canvas;
+        /**
+         * Get the view (local) tile ID from a GID, with animations applied
+         * @name me.TMXTileset#getViewTileId
+         * @public
+         * @function
+         * @param {Number} gid Global tile ID
+         * @return {Number} View tile ID
+         */
+        getViewTileId : function (gid) {
+            if (this.animations.has(gid)) {
+                // apply animations
+                gid = this.animations.get(gid).cur.tileid;
+            }
+            else {
+                // get the local tileset id
+                gid -= this.firstgid;
+            }
+
+            return gid;
         },
 
         // e.g. getTileProperty (gid)
@@ -231,8 +242,6 @@
 
         // draw the x,y tile
         drawTile : function (renderer, dx, dy, tmxTile) {
-            var tileid = tmxTile.tileId;
-
             // check if any transformation is required
             if (tmxTile.flipped) {
                 renderer.save();
@@ -243,17 +252,8 @@
                 dx = dy = 0;
             }
 
-            // apply animations
-            if (this.animations.has(tileid)) {
-                tileid = this.animations.get(tileid).cur.tileid;
-            }
-            else {
-                // get the local tileset id
-                tileid -= this.firstgid;
-            }
-            
-            var offset = this.atlas[tileid].offset;
-            
+            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+
             // draw the tile
             renderer.drawImage(
                 this.image,

@@ -14,16 +14,14 @@
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
-     * @param {Object} settings Contains additional parameters for the animation sheet:
-     * <ul>
-     * <li>{Image} image to use for the animation</li>
-     * <li>{Number} framewidth - of a single frame within the spritesheet</li>
-     * <li>{Number} frameheight - height of a single frame within the spritesheet</li>
-     * </ul>
+     * @param {Object} settings Contains additional parameters for the animation sheet
+     * @param {Image|String} settings.image Image to use for the animation
+     * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
+     * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @example
      * // standalone image
      * var animationSheet = new me.AnimationSheet(0, 0, {
-     *   image: me.loader.getImage('animationsheet'),
+     *   image: "animationsheet",
      *   framewidth: 64,
      *   frameheight: 64
      * });
@@ -65,7 +63,7 @@
             this.animationspeed = 100;
 
             // call the constructor
-            this._super(me.Sprite, "init", [x, y, settings.image, settings.framewidth, settings.frameheight]);
+            this._super(me.Sprite, "init", [ x, y, settings ]);
 
             // store/reset the current atlas information
             if (typeof(settings.atlas) !== "undefined") {
@@ -73,7 +71,12 @@
                 this.atlasIndices = settings.atlasIndices;
             } else {
                 // "regular" spritesheet
-                this.textureAtlas = me.video.renderer.cache.get(settings.image, settings).getAtlas();
+                var image = (
+                    (typeof(settings.image) === "string") ?
+                    me.loader.getImage(settings.image) :
+                    settings.image
+                );
+                this.textureAtlas = me.video.renderer.cache.get(image, settings).getAtlas();
                 this.atlasIndices = null;
             }
 

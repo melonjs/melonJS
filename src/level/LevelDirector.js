@@ -102,19 +102,12 @@
 
                     var obj;
 
-                    if (isCollisionGroup === false) {
-                        obj = me.pool.pull(
-                            settings.name,
-                            settings.x, settings.y,
-                            // 'TileObject' will instantiate a Sprite Object
-                            settings.name === "TileObject" ? settings.image : settings
-                        );
-                    } else {
-                        obj = me.pool.pull(
-                            "me.Entity",
-                            settings.x, settings.y,
-                            settings
-                        );
+                    obj = me.pool.pull(
+                        settings.name || "me.Entity",
+                        settings.x, settings.y,
+                        settings
+                    );
+                    if (isCollisionGroup && !settings.name) {
                         // configure the body accordingly
                         obj.body.collisionType = me.collision.types.WORLD_SHAPE;
                     }

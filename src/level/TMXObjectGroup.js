@@ -9,6 +9,11 @@
  */
 (function (TMXConstants) {
 
+    // bitmask constants to check for flipped & rotated tiles
+    var FLIP_H  = 0x80000000;
+    var FLIP_V  = 0x40000000;
+    var FLIP_AD = 0x20000000;
+
     /**
      * TMX Object Group <br>
      * contains the object group definition as defined in Tiled. <br>
@@ -202,7 +207,9 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = +tmxObj[TMXConstants.TMX_TAG_GID] || null;
+            this.gid = (
+                +tmxObj[TMXConstants.TMX_TAG_GID] & ~(FLIP_H | FLIP_V | FLIP_AD)
+            ) || null;
 
             /**
              * object type
@@ -221,7 +228,13 @@
              * @memberOf me.TMXObject
              */
             this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
-            
+
+            if (tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_AD) {
+                this.rotation += Math.PI / 2;
+            }
+            this.flipX = !!(tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_H);
+            this.flipY = !!(tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_V);
+
             /**
              * object unique identifier per level (Tiled 0.11.x+)
              * @public
@@ -230,7 +243,7 @@
              * @memberOf me.TMXObject
              */
             this.id = +tmxObj[TMXConstants.TMX_TAG_ID] || undefined;
-            
+
             /**
              * object orientation (orthogonal or isometric)
              * @public
@@ -269,7 +282,7 @@
 
             // check if the object has an associated gid
             if (typeof this.gid === "number") {
-                this.setImage(this.gid, tilesets);
+                this.setImage(tilesets);
             }
             else {
                 if (typeof(tmxObj[TMXConstants.TMX_TAG_ELLIPSE]) !== "undefined") {
@@ -320,26 +333,26 @@
          * @ignore
          * @function
          */
-        setImage : function (gid, tilesets) {
+        setImage : function (tilesets) {
             // get the corresponding tileset
             var tileset = tilesets.getTilesetByGid(this.gid);
 
             // set width and height equal to tile size
-            this.width = tileset.tilewidth;
-            this.height = tileset.tileheight;
+            this.width = this.framewidth = tileset.tilewidth;
+            this.height = this.frameheight = tileset.tileheight;
 
-            // force framewidth size
-            this.framewidth = this.width;
+            // Get the atlas offset (tile source coordinates)
+            var offset = tileset.atlas[tileset.getViewTileId(this.gid)].offset;
 
-            // the object corresponding tile
-
-            var tmxTile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
+            // set offset using atlas
+            this.frameX = offset.x;
+            this.frameY = offset.y;
 
             // get the corresponding tile into our object
-            this.image = tileset.getTileImage(tmxTile);
+            this.image = tileset.image;
 
             // set a generic name if not defined
-            if (typeof (this.name) === "undefined") {
+            if (!this.name) {
                 this.name = "TileObject";
             }
         },

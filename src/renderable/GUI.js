@@ -63,7 +63,7 @@
              * @name me.GUI_Object#isClickable
              */
             this.isClickable = true;
-           
+
             /**
              * Tap and hold threshold timeout in ms (default 250)
              * @type {number}
@@ -78,17 +78,14 @@
              * @name me.GUI_Object#isHoldable
              */
             this.isHoldable = false;
-            
+
             // object has been updated (clicked,etc..)
             this.holdTimeout = null;
             this.updated = false;
             this.released = true;
-            
+
             // call the parent constructor
-            this._super(me.Sprite, "init", [x, y,
-                ((typeof settings.image === "string") ? me.loader.getImage(settings.image) : settings.image),
-                settings.framewidth,
-                settings.frameheight]);
+            this._super(me.Sprite, "init", [ x, y, settings ]);
 
             // GUI items use screen coordinates
             this.floating = true;

@@ -31,7 +31,6 @@
          "objects":[
                 {
                  "height":88,
-                 "id":1,
                  "name":"mainPlayer",
                  "properties":
                     {
@@ -48,7 +47,6 @@
                 {
                  "gid":19,
                  "height":0,
-                 "id":2,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -64,7 +62,6 @@
                 {
                  "gid":20,
                  "height":0,
-                 "id":3,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -78,9 +75,8 @@
                  "y":595
                 }, 
                 {
-                 "gid":20,
+                 "gid":2147483668,
                  "height":0,
-                 "id":4,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -94,9 +90,8 @@
                  "y":595
                 }, 
                 {
-                 "gid":19,
+                 "gid":2147483667,
                  "height":0,
-                 "id":5,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -111,7 +106,6 @@
                 }, 
                 {
                  "height":210,
-                 "id":6,
                  "name":"me.LevelEntity",
                  "properties":
                     {
@@ -125,6 +119,21 @@
                  "width":35,
                  "x":1715,
                  "y":245
+                }, 
+                {
+                 "gid":1073741853,
+                 "height":0,
+                 "name":"",
+                 "properties":
+                    {
+
+                    },
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":280,
+                 "y":385
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -141,7 +150,6 @@
          "objects":[
                 {
                  "height":35,
-                 "id":7,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -157,7 +165,6 @@
                 }, 
                 {
                  "height":35,
-                 "id":8,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -186,7 +193,6 @@
          "objects":[
                 {
                  "height":35,
-                 "id":9,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -225,7 +231,6 @@
          "objects":[
                 {
                  "height":35,
-                 "id":10,
                  "name":"FlyEntity",
                  "properties":
                     {
@@ -257,7 +262,6 @@
          "objects":[
                 {
                  "height":70,
-                 "id":11,
                  "name":"",
                  "properties":
                     {
@@ -272,7 +276,6 @@
                 }, 
                 {
                  "height":70,
-                 "id":12,
                  "name":"",
                  "properties":
                     {
@@ -287,7 +290,6 @@
                 }, 
                 {
                  "height":70,
-                 "id":13,
                  "name":"",
                  "properties":
                     {
@@ -302,7 +304,6 @@
                 }, 
                 {
                  "height":70,
-                 "id":14,
                  "name":"",
                  "properties":
                     {
@@ -317,7 +318,6 @@
                 }, 
                 {
                  "height":70,
-                 "id":15,
                  "name":"",
                  "properties":
                     {
@@ -332,7 +332,6 @@
                 }, 
                 {
                  "height":70,
-                 "id":16,
                  "name":"",
                  "properties":
                     {
@@ -347,7 +346,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":17,
                  "name":"",
                  "polygon":[
                         {
@@ -383,7 +381,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":18,
                  "name":"",
                  "polyline":[
                         {
@@ -407,7 +404,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":19,
                  "name":"",
                  "polyline":[
                         {
@@ -431,7 +427,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":20,
                  "name":"",
                  "polyline":[
                         {
@@ -460,7 +455,6 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":21,
  "orientation":"orthogonal",
  "properties":
     {

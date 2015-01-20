@@ -19,7 +19,7 @@
      * <img src="images/object_properties.png"/>
      * @param {String} [settings.name] object entity name
      * @param {String} [settings.id] object unique IDs
-     * @param {String} [settings.image] resource name of a spritesheet to use for the entity renderable component
+     * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
      * @param {Number} [settings.framewidth] width of a single frame in the given spritesheet
      * @param {Number} [settings.frameheight] height of a single frame in the given spritesheet
      * @param {String} [settings.type] object type
@@ -60,9 +60,8 @@
                         settings.height]);
 
             if (settings.image) {
-                var image = typeof settings.image === "object" ? settings.image : me.loader.getImage(settings.image);
                 this.renderable = new me.AnimationSheet(0, 0, {
-                    "image" : image,
+                    "image" : settings.image,
                     "framewidth" : ~~(settings.framewidth || settings.width),
                     "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
@@ -93,7 +92,7 @@
              * @memberOf me.Entity
              */
             this.type = settings.type;
-            
+
             /**
              * object unique ID (as defined in Tiled)
              * @public
