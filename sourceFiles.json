@@ -54,6 +54,7 @@
     "src/level/TMXConstants.js",
     "src/level/TMXUtils.js",
     "src/level/TMXObjectGroup.js",
+    "src/level/TMXTile.js",
     "src/level/TMXTileset.js",
     "src/level/TMXRenderer.js",
     "src/level/TMXLayer.js",
