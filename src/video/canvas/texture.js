@@ -158,10 +158,10 @@
             var image = data.region || data.image;
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
-
+            
             // calculate the sprite count (line, col)
-            if ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
-                (image.height - margin) % (data.frameheight + spacing) !== 0) {
+            if (!data.ignoreError && ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
+                (image.height - margin) % (data.frameheight + spacing) !== 0)) {
                 throw new me.video.renderer.Texture.Error(
                     "Spritesheet Texture for image: " + image.src +
                     " is not divisible by " + (data.framewidth + spacing) +
@@ -191,6 +191,7 @@
                     angle: 0
                 };
             }
+            
             return atlas;
 
         },

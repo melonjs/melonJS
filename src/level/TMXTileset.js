@@ -24,9 +24,6 @@
             // tile properties (collidable, etc..)
             this.TileProperties = [];
 
-            // a cache for offset value
-            this.tileXOffset = [];
-            this.tileYOffset = [];
             this.firstgid = this.lastgid = +tileset[TMXConstants.TMX_TAG_FIRSTGID];
             var src = tileset[TMXConstants.TMX_TAG_SOURCE];
             if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
@@ -137,24 +134,34 @@
             // extract base name
             imagesrc = me.utils.getBasename(imagesrc);
             this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
-
+            
             if (!this.image) {
                 console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
             }
-            else {
-                // number of tiles per horizontal line
-                this.hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-                this.vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
-                // compute the last gid value in the tileset
-                this.lastgid = this.firstgid + (((this.hTileCount * this.vTileCount) - 1) || 0);
+            
+            // create a texture atlas for the given tileset
+            this.texture = me.video.renderer.cache.get(this.image, {
+                framewidth : this.tilewidth,
+                frameheight : this.tileheight,
+                margin : this.margin,
+                spacing : this.spacing,
+                // ignore error where the tileset is not divisible by the tile size
+                ignoreError : true
+            });
+            this.atlas = this.texture.getAtlas();
+            
+            // calculate the number of tiles per horizontal line
+            var hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
+            var vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+            // compute the last gid value in the tileset
+            this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
 
-                // check if transparency is defined for a specific color
-                var transparency = tileset[TMXConstants.TMX_TAG_TRANS] || tileset[TMXConstants.TMX_TAG_IMAGE][TMXConstants.TMX_TAG_TRANS];
-                // set Color Key for transparency if needed
-                if (typeof(transparency) !== "undefined") {
-                    // applyRGB Filter (return a context object)
-                    this.image = me.video.renderer.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
-                }
+            // check if transparency is defined for a specific color
+            var transparency = tileset[TMXConstants.TMX_TAG_TRANS] || tileset[TMXConstants.TMX_TAG_IMAGE][TMXConstants.TMX_TAG_TRANS];
+            // set Color Key for transparency if needed
+            if (typeof(transparency) !== "undefined") {
+                // applyRGB Filter (return a context object)
+                this.image = me.video.renderer.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
             }
         },
 
@@ -203,30 +210,6 @@
             return this.TileProperties[tileId];
         },
 
-        /**
-         * return the x offset of the specified tile in the tileset image
-         * @ignore
-         */
-        getTileOffsetX : function (tileId) {
-            var offset = this.tileXOffset[tileId];
-            if (typeof(offset) === "undefined") {
-                offset = this.tileXOffset[tileId] = this.margin + (this.spacing + this.tilewidth)  * (tileId % this.hTileCount);
-            }
-            return offset;
-        },
-
-        /**
-         * return the y offset of the specified tile in the tileset image
-         * @ignore
-         */
-        getTileOffsetY : function (tileId) {
-            var offset = this.tileYOffset[tileId];
-            if (typeof(offset) === "undefined") {
-                offset = this.tileYOffset[tileId] = this.margin + (this.spacing + this.tileheight)  * ~~(tileId / this.hTileCount);
-            }
-            return offset;
-        },
-
         // update tile animations
         update : function (dt) {
             var duration = 0,
@@ -268,11 +251,13 @@
                 // get the local tileset id
                 tileid -= this.firstgid;
             }
-
+            
+            var offset = this.atlas[tileid].offset;
+            
             // draw the tile
             renderer.drawImage(
                 this.image,
-                this.getTileOffsetX(tileid), this.getTileOffsetY(tileid),
+                offset.x, offset.y,
                 this.tilewidth, this.tileheight,
                 dx, dy,
                 this.tilewidth, this.tileheight
