@@ -136,7 +136,7 @@
             this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
             
             if (!this.image) {
-                console.log("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+                throw new me.TMXTileset.Error("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
             }
             
             // create a texture atlas for the given tileset
@@ -144,9 +144,7 @@
                 framewidth : this.tilewidth,
                 frameheight : this.tileheight,
                 margin : this.margin,
-                spacing : this.spacing,
-                // ignore error where the tileset is not divisible by the tile size
-                ignoreError : true
+                spacing : this.spacing
             });
             this.atlas = this.texture.getAtlas();
             
@@ -325,4 +323,20 @@
             }
         }
     });
+    
+    /**
+     * Base class for TMXTileset exception handling.
+     * @name Error
+     * @class
+     * @memberOf me.TMXTileset
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.TMXTileset.Error = me.Error.extend({
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.TMXTileset.Error";
+        }
+    });
+    
 })(me.TMXConstants);
