@@ -400,10 +400,10 @@
          * @param {Number} endY the end y coordinate
          */
         strokeLine : function (startX, startY, endX, endY) {
-            this.context.beginPath();
-            this.context.moveTo(startX, startY);
-            this.context.lineTo(endX, endY);
-            this.context.stroke();
+            this.backBufferContext2D.beginPath();
+            this.backBufferContext2D.moveTo(startX, startY);
+            this.backBufferContext2D.lineTo(endX, endY);
+            this.backBufferContext2D.stroke();
         },
 
         /**
