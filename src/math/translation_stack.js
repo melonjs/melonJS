@@ -4,21 +4,15 @@
             this.stack = [];
             this.globalFloatingCounter = 0;
             this.rect = new me.Rect(0, 0, 0, 0);
-            this.x = 0;
-            this.y = 0;
             this.isTranslated = false;
             this.isStacked = false;
+            this.translationStack = [];
         },
 
         fullReset: function () {
-            this.reset();
-            this.rect.setShape(0, 0, 0, 0);
-        },
-
-        reset: function () {
-            this.x = 0;
-            this.y = 0;
+            this.translationStack = [];
             this.propertyVerification = 0;
+            this.rect.setShape(0, 0, 0, 0);
         },
 
         translate: function (isFloating, obj) {
@@ -35,6 +29,7 @@
                     this.isStacked = true;
                     this.stack.push(this.rect.clone());
                 }
+                this.translationStack.push(obj.pos.clone());
                 this.rect.translateV(obj.pos);
                 this.rect.resize(obj.width, obj.height);
             }
@@ -47,7 +42,8 @@
                     this.rect.copy(this.stack.pop());
                 }
                 else {
-                    this.rect.translate(-this.x, -this.y);
+                    var v = this.translationStack.pop();
+                    this.rect.translate(-v.x, -v.y);
                 }
             }
 

@@ -592,7 +592,6 @@
             var isFloating = false;
             var isPaused = me.state.isPaused();
             var viewport = me.game.viewport;
-            translationStack.reset();
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
