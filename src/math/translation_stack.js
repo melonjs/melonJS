@@ -10,6 +10,11 @@
             this.isStacked = false;
         },
 
+        fullReset: function () {
+            this.reset();
+            this.rect.setShape(0, 0, 0, 0);
+        },
+
         reset: function () {
             this.x = 0;
             this.y = 0;
