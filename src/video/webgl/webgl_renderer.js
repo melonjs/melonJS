@@ -167,20 +167,6 @@
         },
 
         /**
-         * Draw a line from the given point to the destination point.
-         * @name drawLine
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {Number} startX start x position
-         * @param {Number} startY start y position
-         * @param {Number} endX end x position
-         * @param {Number} endY end y position
-         */
-        drawLine : function (/*startX, startY, endX, endY*/) {
-            // TODO
-        },
-
-        /**
          * Draw an image to the gl context
          * @name drawImage
          * @memberOf me.WebGLRenderer

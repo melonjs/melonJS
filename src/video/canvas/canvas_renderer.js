@@ -125,24 +125,6 @@
         },
 
         /**
-         * Draw a line from the given point to the destination point.
-         * @name drawLine
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} startX start x position
-         * @param {Number} startY start y position
-         * @param {Number} endX end x position
-         * @param {Number} endY end y position
-         */
-        drawLine : function (startX, startY, endX, endY) {
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.moveTo(startX, startY);
-            this.backBufferContext2D.lineTo(endX, endY);
-            this.backBufferContext2D.stroke();
-            this.backBufferContext2D.closePath();
-        },
-
-        /**
          * Draw an image using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
