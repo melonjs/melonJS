@@ -146,6 +146,12 @@
     var viewportOffset = new me.Vector2d();
 
     /**
+     * Array of object containing changed touch information (iOS event model)
+     * @ignore
+     */
+    var changedTouches = [];
+
+    /**
      * cache value for the offset of the canvas position within the page
      * @ignore
      */
@@ -170,7 +176,7 @@
     function enablePointerEvent() {
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
-            // changedTouches.push({ x: 0, y: 0 });
+            changedTouches.push({ x: 0, y: 0 });
             obj.mouse.pos = new me.Vector2d(0, 0);
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
@@ -237,7 +243,7 @@
      * propagate events to registered objects
      * @ignore
      */
-    function dispatchEvent(e, changedTouches) {
+    function dispatchEvent(e) {
         var handled = false;
         
         for (var guid in evtHandlers) {
@@ -383,8 +389,8 @@
     function updateCoordFromEvent(event) {
         var local;
 
-        // touch array cache
-        var changedTouches = [];
+        // reset the touch array cache
+        changedTouches.length = 0;
 
         // PointerEvent or standard Mouse event
         if (!event.touches) {
@@ -403,14 +409,13 @@
         }
         // if event.isPrimary is defined and false, return
         if (event.isPrimary === false) {
-            return changedTouches;
+            return;
         }
         // Else use the first entry to simulate mouse event
         obj.mouse.pos.set(
             changedTouches[0].x,
             changedTouches[0].y
         );
-        return changedTouches;
     }
 
 
@@ -434,9 +439,8 @@
                 // Webkit also support wheelDeltaX
                 e.wheelDeltaX && (_event.deltaX = - 1 / 40 * e.wheelDeltaX);
             }
-            var changedTouches = updateCoordFromEvent(_event);
             // dispatch mouse event to registered object
-            if (dispatchEvent(_event, changedTouches)) {
+            if (dispatchEvent(_event)) {
                 // prevent default action
                 return obj._preventDefault(e);
             }
@@ -451,9 +455,9 @@
      */
     function onMoveEvent(e) {
         // update position
-        var changedTouches = updateCoordFromEvent(e);
+        updateCoordFromEvent(e);
         // dispatch mouse event to registered object
-        if (dispatchEvent(e, changedTouches)) {
+        if (dispatchEvent(e)) {
             // prevent default action
             return obj._preventDefault(e);
         }
@@ -466,10 +470,10 @@
      */
     function onPointerEvent(e) {
         // update the pointer position
-        var changedTouches = updateCoordFromEvent(e);
+        updateCoordFromEvent(e);
 
         // dispatch event to registered objects
-        if (dispatchEvent(e, changedTouches)) {
+        if (dispatchEvent(e)) {
             // prevent default action
             return obj._preventDefault(e);
         }
