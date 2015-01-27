@@ -57,6 +57,11 @@
         TMX_TAG_POINTS              : "points",
         TMX_BACKGROUND_COLOR        : "backgroundcolor",
         TMX_ROTATION                : "rotation",
-        TMX_HEXSIDELEN              : "hexsidelength"
+        TMX_HEXSIDELEN              : "hexsidelength",
+        // bitmask constants to check for flipped & rotated tiles
+        TMX_FLIP_H                  : 0x80000000,
+        TMX_FLIP_V                  : 0x40000000,
+        TMX_FLIP_AD                 : 0x20000000,
+        TMX_CLEAR_BIT_MASK          : ~(0x80000000 | 0x40000000 | 0x20000000)
     };
 })();

@@ -7,13 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function () {
-
-
-    // bitmask constants to check for flipped & rotated tiles
-    var FlippedHorizontallyFlag    = 0x80000000;
-    var FlippedVerticallyFlag      = 0x40000000;
-    var FlippedAntiDiagonallyFlag  = 0x20000000;
+(function (TMXConstants) {
 
     /**
      * a basic tile object
@@ -23,27 +17,27 @@
      * @constructor
      * @param {Number} x x index of the Tile in the map
      * @param {Number} y y index of the Tile in the map
-     * @param {Number} w Tile width
-     * @param {Number} h Tile height
-     * @param {Number} tileId tileId
+     * @param {Number} gid tile gid
+     * @param {me.TMXTileset} tileset the corresponding tileset object
+
      */
     me.Tile = me.Rect.extend({
         /** @ignore */
-        init : function (x, y, w, h, gid) {
+        init : function (x, y, gid, tileset) {
             /**
              * tileset
              * @public
              * @type me.TMXTileset
              * @name me.Tile#tileset
              */
-            this.tileset = null;
+            this.tileset = tileset;
 
             /**
              * the tile transformation matrix (if defined)
              * @ignore
              */
             this.transform = null;
-            this._super(me.Rect, "init", [x * w, y * h, w, h]);
+            this._super(me.Rect, "init", [x * tileset.tilewidth, y * tileset.tileheight, tileset.tilewidth, tileset.tileheight]);
 
             // Tile col / row pos
             this.col = x;
@@ -62,21 +56,21 @@
              * @type Boolean
              * @name me.Tile#flipX
              */
-            this.flippedX  = (this.tileId & FlippedHorizontallyFlag) !== 0;
+            this.flippedX  = (this.tileId & TMXConstants.TMX_FLIP_H) !== 0;
             /**
              * True if the tile is flipped vertically<br>
              * @public
              * @type Boolean
              * @name me.Tile#flippedY
              */
-            this.flippedY  = (this.tileId & FlippedVerticallyFlag) !== 0;
+            this.flippedY  = (this.tileId & TMXConstants.TMX_FLIP_V) !== 0;
             /**
              * True if the tile is flipped anti-diagonally<br>
              * @public
              * @type Boolean
              * @name me.Tile#flippedAD
              */
-            this.flippedAD = (this.tileId & FlippedAntiDiagonallyFlag) !== 0;
+            this.flippedAD = (this.tileId & TMXConstants.TMX_FLIP_AD) !== 0;
 
             /**
              * Global flag that indicates if the tile is flipped<br>
@@ -91,7 +85,7 @@
             }
 
             // clear out the flags and set the tileId
-            this.tileId &= ~(FlippedHorizontallyFlag | FlippedVerticallyFlag | FlippedAntiDiagonallyFlag);
+            this.tileId &= TMXConstants.TMX_CLEAR_BIT_MASK;
         },
 
         /**
@@ -127,4 +121,4 @@
             }
         }
     });
-})();
+})(me.TMXConstants);

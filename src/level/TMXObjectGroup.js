@@ -9,11 +9,6 @@
  */
 (function (TMXConstants) {
 
-    // bitmask constants to check for flipped & rotated tiles
-    var FLIP_H  = 0x80000000;
-    var FLIP_V  = 0x40000000;
-    var FLIP_AD = 0x20000000;
-
     /**
      * TMX Object Group <br>
      * contains the object group definition as defined in Tiled. <br>
@@ -327,16 +322,14 @@
          */
         setTile : function (tilesets) {
             // get the corresponding tileset
-            var tileset = tilesets.getTilesetByGid(this.gid & ~(FLIP_H | FLIP_V | FLIP_AD));
+            var tileset = tilesets.getTilesetByGid(this.gid & TMXConstants.TMX_CLEAR_BIT_MASK);
 
             // set width and height equal to tile size
             this.width = this.framewidth = tileset.tilewidth;
             this.height = this.frameheight = tileset.tileheight;
 
             // the object corresponding tile object
-            this.tile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
-            // TODO : why is the tileset reference not set anynmore in tmxtile 
-            this.tile.tileset = tileset;
+            this.tile = new me.Tile(this.x, this.y, this.gid, tileset);
         },
 
         /**

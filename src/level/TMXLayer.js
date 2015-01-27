@@ -5,6 +5,7 @@
  *
  */
 (function (TMXConstants) {
+    
     /**
      * a generic Color Layer Object
      * @class
@@ -485,13 +486,11 @@
          * @return {me.Tile} the corresponding newly created tile object
          */
         setTile : function (x, y, tileId) {
-            var tile = new me.Tile(x, y, this.tilewidth, this.tileheight, tileId);
-            if (!this.tileset.contains(tile.tileId)) {
-                tile.tileset = this.tileset = this.tilesets.getTilesetByGid(tile.tileId);
+            if (!this.tileset.contains(tileId)) {
+                // look for the corresponding tileset
+                this.tileset = this.tilesets.getTilesetByGid(tileId & TMXConstants.TMX_CLEAR_BIT_MASK);
             }
-            else {
-                tile.tileset = this.tileset;
-            }
+            var tile = new me.Tile(x, y, tileId, this.tileset);
             this.layerData[x][y] = tile;
             return tile;
         },
