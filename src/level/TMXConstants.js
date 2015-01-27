@@ -29,6 +29,7 @@
         TMX_TAG_GID                 : "gid",
         TMX_TAG_TILE                : "tile",
         TMX_TAG_ID                  : "id",
+        TMX_TAG_NEXTOBJID           : "nextobjectid",
         TMX_TAG_DATA                : "data",
         TMX_TAG_COMPRESSION         : "compression",
         TMX_TAG_GZIP                : "gzip",

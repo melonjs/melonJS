@@ -256,10 +256,6 @@
                 // reset the gameObject Manager (just in case!)
                 me.game.reset();
 
-                // reset the GUID generator
-                // and pass the level id as parameter
-                me.utils.resetGUID(levelId);
-
                 // clean the current (previous) level
                 if (levels[api.getCurrentLevelId()]) {
                     levels[api.getCurrentLevelId()].destroy();
@@ -267,6 +263,10 @@
 
                 // parse the give TMX file into the give level
                 me.mapReader.readMap(levels[levelId], me.loader.getTMX(levelId));
+
+                // reset the GUID generator
+                // and pass the level id as parameter
+                me.utils.resetGUID(levelId, levels[levelId].nextobjectid);
 
                 // update current level index
                 currentLevelIdx = levelIdx.indexOf(levelId);

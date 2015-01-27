@@ -38,6 +38,7 @@
             map.rows = +data[TMXConstants.TMX_TAG_HEIGHT];
             map.tilewidth = +data[TMXConstants.TMX_TAG_TILEWIDTH];
             map.tileheight = +data[TMXConstants.TMX_TAG_TILEHEIGHT];
+            map.nextobjectid = +data[TMXConstants.TMX_TAG_NEXTOBJID] || undefined;
             if (map.orientation === "isometric") {
                 map.width = (map.cols + map.rows) * (map.tilewidth / 2);
                 map.height = (map.cols + map.rows) * (map.tileheight / 2);
