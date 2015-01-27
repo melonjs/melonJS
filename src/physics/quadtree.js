@@ -201,8 +201,7 @@
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
-            // index = this.getIndex(item.getBounds());
-            index = this.getIndex(translationStack.rect);
+            index = this.getIndex(item._absoluteBounds);
 
             if (index !== -1) {
                 this.nodes[index].insert(item);
@@ -224,7 +223,7 @@
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
 
-                index = this.getIndex(this.objects[i].getBounds());
+                index = this.getIndex(this.objects[i]._absoluteBounds);
 
                 if (index !== -1) {
                     this.nodes[index].insert(this.objects.splice(i, 1)[0]);
@@ -250,7 +249,7 @@
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item.getBounds());
+            var index = this.getIndex(item._absoluteBounds);
 
             //if rect fits into a subnode ..
             if (index !== -1) {

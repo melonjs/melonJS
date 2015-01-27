@@ -136,6 +136,9 @@
             }
 
             child.ancestor = this;
+            if (child.updateAbsoluteBounds) {
+                child.updateAbsoluteBounds();
+            }
             this.children.push(child);
             if (this.autoSort === true) {
                 this.sort();
