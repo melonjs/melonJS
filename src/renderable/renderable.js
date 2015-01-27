@@ -139,7 +139,7 @@
             /**
              * Absolute position in the game world
              * @private
-             * @name me.Renderable#_absolutePos
+             * @name me.Renderable#_absoluteBounds
              */
             this._absoluteBounds = new me.Rect(x, y, width, height);
         },
