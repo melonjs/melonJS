@@ -159,19 +159,30 @@
             var spacing = data.spacing || 0;
             var margin = data.margin || 0;
 
-            // calculate the sprite count (line, col)
-            if (!data.ignoreError && ((image.width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
-                (image.height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
-                throw new me.video.renderer.Texture.Error(
+            var width = image.width;
+            var height = image.height;
+
+            // calculate the sprite count (line, col)            
+            var spritecount = new me.Vector2d(
+                ~~((width - margin + spacing) / (data.framewidth + spacing)),
+                ~~((height - margin + spacing) / (data.frameheight + spacing))
+            );
+            
+            // verifying the texture size
+            if (((width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
+                (height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
+                // "truncate size"
+                width = margin + spritecount.x * (data.framewidth + spacing);
+                height = margin + spritecount.y * (data.frameheight + spacing);
+                // warning message
+                console.warn(
                     "Spritesheet Texture for image: " + image.src +
                     " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing)
+                    "x" + (data.frameheight + spacing) +
+                    ", truncating effective size to " + width + "x" + height
                 );
             }
-            var spritecount = new me.Vector2d(
-                ~~((image.width - margin + spacing) / (data.framewidth + spacing)),
-                ~~((image.height - margin + spacing) / (data.frameheight + spacing))
-            );
+
             // build the local atlas
             for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
                 atlas["" + frame] = {

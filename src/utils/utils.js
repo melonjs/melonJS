@@ -271,10 +271,10 @@
          * per level / object
          * @ignore
          */
-        api.resetGUID = function (base) {
+        api.resetGUID = function (base, index) {
             // also ensure it's only 8bit ASCII characters
             GUID_base  = base.toString().toUpperCase().toHex();
-            GUID_index = 0;
+            GUID_index = index || 0;
         };
 
         /**

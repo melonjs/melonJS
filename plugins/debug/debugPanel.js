@@ -213,13 +213,15 @@
                 }
 
                 if (me.debug.renderVelocity) {
+                    var bounds = this.getBounds();
                     // draw entity current velocity
-                    var x = ~~(this.pos.x + this.hWidth);
-                    var y = ~~(this.pos.y + this.hHeight);
+                    var x = ~~(bounds.pos.x + (bounds.width / 2));
+                    var y = ~~(bounds.pos.y + (bounds.height / 2));
                     renderer.save();
+                    renderer.translate(x, y);
                     renderer.setColor("blue");
                     renderer.setLineWidth(1);
-                    renderer.strokeLine(x, y, x + ~~(this.body.vel.x * this.hWidth), y + ~~(this.body.vel.y * this.hHeight));
+                    renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
                     renderer.restore();
                 }
             });
@@ -301,8 +303,7 @@
                 var _alpha = (node.objects.length * 0.4) / me.collision.maxChildren;
                 if (_alpha > 0.0) {
                     renderer.save();
-                    renderer.setGlobalAlpha(_alpha);
-                    renderer.setColor("red");
+                    renderer.setColor("rgba(255,0,0," + _alpha + ")");
                     renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
                     renderer.restore();
                 }
