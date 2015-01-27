@@ -208,7 +208,37 @@
             return gid;
         },
 
-        // e.g. getTileProperty (gid)
+        /**
+         * return a renderable object based on the given gid, with animations applied
+         * @name me.TMXTileset#getTileObject
+         * @public
+         * @function
+         * @param {me.Tile} a Tile object
+         * @return {me.Renderable} either a me.Sprite object or a me.AnimationSheet
+         */
+        getTileObject : function (tile) {
+            var renderable;
+            
+            if (this.animations.has(tile.tileId)) {
+                var frames = [];
+                (this.animations.get(tile.tileId).frames).forEach(function (frame) {
+                    frames.push(frame.tileid);
+                });
+                renderable = this.texture.createAnimationFromName(frames);
+            } else {
+                renderable = this.texture.createSpriteFromName(tile.tileId);
+            }
+            
+            if (tile.fippedAD) {
+                renderable._sourceAngle += Math.PI / 2;
+            }
+            
+            renderable.flipX(tile.fippedX);
+            renderable.flipY(tile.fippedY);
+
+            return renderable;
+        },
+        
         /**
          * return the properties of the specified tile
          * @name me.TMXTileset#getTileProperties

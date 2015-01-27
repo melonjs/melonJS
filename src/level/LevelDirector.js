@@ -100,13 +100,17 @@
                     // TMX object settings
                     var settings = group.objects[o];
 
-                    var obj;
-
-                    obj = me.pool.pull(
+                    var obj = me.pool.pull(
                         settings.name || "me.Entity",
                         settings.x, settings.y,
                         settings
                     );
+                    
+                    // check if a me.Tile object is embedded
+                    if (typeof (settings.tile) === "object") {
+                        obj.renderable = settings.tile.tileset.getTileObject(settings.tile);
+                    }
+
                     if (isCollisionGroup && !settings.name) {
                         // configure the body accordingly
                         obj.body.collisionType = me.collision.types.WORLD_SHAPE;

@@ -72,7 +72,7 @@
              */
             this.objects = [];
 
-            var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
+            var visible = !!tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE];
 
             this.opacity = (visible === true) ? (+tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
 
@@ -207,9 +207,7 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = (
-                +tmxObj[TMXConstants.TMX_TAG_GID] & ~(FLIP_H | FLIP_V | FLIP_AD)
-            ) || null;
+            this.gid = (+tmxObj[TMXConstants.TMX_TAG_GID]) || null;
 
             /**
              * object type
@@ -228,12 +226,6 @@
              * @memberOf me.TMXObject
              */
             this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
-
-            if (tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_AD) {
-                this.rotation += Math.PI / 2;
-            }
-            this.flipX = !!(tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_H);
-            this.flipY = !!(tmxObj[TMXConstants.TMX_TAG_GID] & FLIP_V);
 
             /**
              * object unique identifier per level (Tiled 0.11.x+)
@@ -282,7 +274,7 @@
 
             // check if the object has an associated gid
             if (typeof this.gid === "number") {
-                this.setImage(tilesets);
+                this.setTile(tilesets);
             }
             else {
                 if (typeof(tmxObj[TMXConstants.TMX_TAG_ELLIPSE]) !== "undefined") {
@@ -333,28 +325,18 @@
          * @ignore
          * @function
          */
-        setImage : function (tilesets) {
+        setTile : function (tilesets) {
             // get the corresponding tileset
-            var tileset = tilesets.getTilesetByGid(this.gid);
+            var tileset = tilesets.getTilesetByGid(this.gid & ~(FLIP_H | FLIP_V | FLIP_AD));
 
             // set width and height equal to tile size
             this.width = this.framewidth = tileset.tilewidth;
             this.height = this.frameheight = tileset.tileheight;
 
-            // Get the atlas offset (tile source coordinates)
-            var offset = tileset.atlas[tileset.getViewTileId(this.gid)].offset;
-
-            // set offset using atlas
-            this.frameX = offset.x;
-            this.frameY = offset.y;
-
-            // get the corresponding tile into our object
-            this.image = tileset.image;
-
-            // set a generic name if not defined
-            if (!this.name) {
-                this.name = "TileObject";
-            }
+            // the object corresponding tile object
+            this.tile = new me.Tile(this.x, this.y, tileset.tilewidth, tileset.tileheight, this.gid);
+            // TODO : why is the tileset reference not set anynmore in tmxtile 
+            this.tile.tileset = tileset;
         },
 
         /**

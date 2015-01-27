@@ -40,7 +40,6 @@
             api.register("me.Entity", me.Entity);
             api.register("me.CollectableEntity", me.CollectableEntity);
             api.register("me.LevelEntity", me.LevelEntity);
-            api.register("TileObject", me.Sprite);
             api.register("me.Tween", me.Tween, true);
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);
