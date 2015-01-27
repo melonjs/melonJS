@@ -229,7 +229,7 @@
                 renderable = this.texture.createSpriteFromName(tile.tileId);
             }
             
-            if (tile.fippedAD) {
+            if (tile.flippedAD) {
                 renderable._sourceAngle += Math.PI / 2;
             }
             
