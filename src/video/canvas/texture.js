@@ -160,8 +160,8 @@
             var margin = data.margin || 0;
 
             // calculate the sprite count (line, col)
-            if (!data.ignoreError && ((image.width - margin) % (data.framewidth + spacing) !== 0 ||
-                (image.height - margin) % (data.frameheight + spacing) !== 0)) {
+            if (!data.ignoreError && ((image.width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
+                (image.height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
                 throw new me.video.renderer.Texture.Error(
                     "Spritesheet Texture for image: " + image.src +
                     " is not divisible by " + (data.framewidth + spacing) +
@@ -169,8 +169,8 @@
                 );
             }
             var spritecount = new me.Vector2d(
-                ~~((image.width - margin) / (data.framewidth + spacing)),
-                ~~((image.height - margin) / (data.frameheight + spacing))
+                ~~((image.width - margin + spacing) / (data.framewidth + spacing)),
+                ~~((image.height - margin + spacing) / (data.frameheight + spacing))
             );
             // build the local atlas
             for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
