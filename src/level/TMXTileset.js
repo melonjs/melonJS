@@ -233,8 +233,8 @@
                 renderable._sourceAngle += Math.PI / 2;
             }
             
-            renderable.flipX(tile.fippedX);
-            renderable.flipY(tile.fippedY);
+            renderable.flipX(tile.flippedX);
+            renderable.flipY(tile.flippedY);
 
             return renderable;
         },
