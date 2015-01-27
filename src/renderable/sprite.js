@@ -62,7 +62,7 @@
              * @type Number
              * @name me.Sprite#angle
              */
-            this.angle = settings.rotation;
+            this.angle = settings.rotation || 0;
 
             /**
              * Source rotation angle for pre-rotating the source image<br>
