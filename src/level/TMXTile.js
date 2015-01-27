@@ -120,7 +120,7 @@
                 a[4] *= -1;
             }
         },
-        
+
         /**
          * return a renderable object for this Tile object
          * @name me.Tile#getRenderable
@@ -130,7 +130,7 @@
          */
         getRenderable : function () {
             var renderable;
-            
+
             if (this.tileset.animations.has(this.tileId)) {
                 var frames = [];
                 (this.tileset.animations.get(this.tileId).frames).forEach(function (frame) {
@@ -138,16 +138,16 @@
                 });
                 renderable = this.tileset.texture.createAnimationFromName(frames);
             } else {
-                renderable = this.tileset.texture.createSpriteFromName(this.tileId);
+                renderable = this.tileset.texture.createSpriteFromName(this.tileId - this.tileset.firstgid);
             }
-            
+
             // any transformation to apply?
             if (this.flipped === true) {
-            
+
                 if (this.flippedAD) {
                     renderable._sourceAngle += Math.PI / 2;
                 }
-                
+
                 renderable.flipX(this.flippedX);
                 renderable.flipY(this.flippedY);
             }
