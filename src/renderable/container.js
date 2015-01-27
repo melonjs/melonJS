@@ -15,7 +15,7 @@
         }
     };
 
-    var translationStack = new me.TranslationStack();
+    var globalFloatingCounter = 0;
 
     /**
      * me.Container represents a collection of child objects
@@ -600,16 +600,19 @@
                 }
 
                 if (obj.isRenderable) {
-                    isFloating = (translationStack.globalFloatingCounter > 0 || obj.floating);
-                    translationStack.translate(isFloating, obj);
+                    isFloating = (globalFloatingCounter > 0 || obj.floating);
+                    if (isFloating) {
+                        globalFloatingCounter++;
+                    }
                     // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(translationStack.rect);
+                    obj.inViewport = isFloating || viewport.isVisible(obj._absoluteBounds);
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
-                    // Undo global context translation
-                    translationStack.undoTranslation();
+                    if (globalFloatingCounter > 0) {
+                        globalFloatingCounter--;
+                    }
                 }
                 else {
                     // just directly call update() for non renderable object
