@@ -119,6 +119,40 @@
                 a[1] *= -1;
                 a[4] *= -1;
             }
-        }
+        },
+        
+        /**
+         * return a renderable object for this Tile object
+         * @name me.Tile#getRenderable
+         * @public
+         * @function
+         * @return {me.Renderable} either a me.Sprite object or a me.AnimationSheet (for animated tiles)
+         */
+        getRenderable : function () {
+            var renderable;
+            
+            if (this.tileset.animations.has(this.tileId)) {
+                var frames = [];
+                (this.tileset.animations.get(this.tileId).frames).forEach(function (frame) {
+                    frames.push(frame.tileid);
+                });
+                renderable = this.tileset.texture.createAnimationFromName(frames);
+            } else {
+                renderable = this.tileset.texture.createSpriteFromName(this.tileId);
+            }
+            
+            // any transformation to apply?
+            if (this.flipped === true) {
+            
+                if (this.flippedAD) {
+                    renderable._sourceAngle += Math.PI / 2;
+                }
+                
+                renderable.flipX(this.flippedX);
+                renderable.flipY(this.flippedY);
+            }
+
+            return renderable;
+        },
     });
 })(me.TMXConstants);

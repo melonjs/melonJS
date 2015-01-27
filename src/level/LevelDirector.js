@@ -108,7 +108,7 @@
                     
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object") {
-                        obj.renderable = settings.tile.tileset.getTileObject(settings.tile);
+                        obj.renderable = settings.tile.getRenderable();
                     }
 
                     if (isCollisionGroup && !settings.name) {
