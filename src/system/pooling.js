@@ -43,6 +43,7 @@
             api.register("me.Tween", me.Tween, true);
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);
+            api.register("me.Sprite", me.Sprite);
             api.register("me.Vector2d", me.Vector2d, true);
         };
 

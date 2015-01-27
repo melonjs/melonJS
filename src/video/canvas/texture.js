@@ -247,11 +247,15 @@
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
-                var sprite = new me.Sprite(0, 0, {
-                    image: this.getTexture(),
-                    framewidth: region.width,
-                    frameheight: region.height
-                });
+                var sprite = me.pool.pull(
+                    "me.Sprite",
+                    0, 0,
+                    {
+                        image: this.getTexture(),
+                        framewidth: region.width,
+                        frameheight: region.height
+                    }
+                );
                 // set the sprite offset within the texture
                 sprite.offset.setV(region.offset);
                 // set angle if defined
