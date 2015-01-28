@@ -15,8 +15,6 @@
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the sprite
      * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader#getImage}
-     * @param {Number} [settings.frameX=0] Image source X-coordinate.
-     * @param {Number} [settings.frameY=0] Image source Y-coordinate.
      * @param {Number} [settings.framewidth=settings.image.width] Image source width.
      * @param {Number} [settings.frameheight=settings.image.height] Image source height.
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
@@ -53,7 +51,7 @@
             this.flipY(!!settings.flipY);
 
             // current frame texture offset
-            this.offset = new me.Vector2d(settings.frameX, settings.frameY);
+            this.offset = new me.Vector2d(0, 0);
 
             /**
              * Set the angle (in Radians) of a sprite to rotate it <br>
