@@ -67,7 +67,7 @@
              */
             this.objects = [];
 
-            var visible = !!tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE];
+            var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
 
             this.opacity = (visible === true) ? (+tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
 
