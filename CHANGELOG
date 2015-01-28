@@ -11,6 +11,7 @@ Version History
 * Texture : texture atlas can now be created using a “standard” sprite sheet
 * Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
 * TMX : added parsing of the new `id` (unique ID) property for objects (Tiled 0.11.0)
+* TMX : fixed horizontal and vertical flipping of tile object
 * Video : refactored the me.video.init to be more flexible in terms of mandatory/optional arguments
 
 2.0.2
