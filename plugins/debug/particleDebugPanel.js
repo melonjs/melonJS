@@ -204,7 +204,7 @@
 
             renderer.setGlobalAlpha(0.5);
             renderer.setColor("grey");
-            renderer.drawLine(0, where, width, where);
+            renderer.strokeLine(0, where, width, where);
             renderer.setGlobalAlpha(1.0);
             
 

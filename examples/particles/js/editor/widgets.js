@@ -455,7 +455,7 @@
             renderer.save();
             renderer.setColor(this.color);
             renderer.setLineWidth(5);
-            renderer.drawLine(
+            renderer.strokeLine(
                 origin.x,
                 origin.y,
                 origin.x + vector.x,
