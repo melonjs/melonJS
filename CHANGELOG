@@ -6,6 +6,7 @@ Version History
 * CanvasRenderer : added support for the standard opaque canvas feature through the `transparent` option
 * Color : added high-precision color transformation for me.Color
 * Font : updated me.Font to work with me.Color (xorinzor)
+* Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
 * Texture : added support for the WebGL Renderer
 * Texture : texture atlas can now be created using a “standard” sprite sheet
