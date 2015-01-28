@@ -82,6 +82,7 @@
          * @function
          * @param {String} className as used in {@link me.pool#register}
          * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
+         * @return {Object} the instance of the requested object
          * @example
          * me.pool.register("player", PlayerEntity);
          * var player = me.pool.pull("player");
@@ -171,6 +172,19 @@
             }
             // store back the object instance for later recycling
             entityClass[name].pool.push(obj);
+        };
+        
+        /**
+         * Check if an object with the provided name is registered
+         * @name exists
+         * @memberOf me.pool
+         * @public
+         * @function
+         * @param {String} name of the registered object
+         * @return {Boolean} true if the classname is registered
+         */
+        api.exists = function (name) {
+            return name in entityClass;
         };
 
         // return our object
