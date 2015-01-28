@@ -74,7 +74,7 @@ var Smilie = me.Entity.extend({
         this.alwaysUpdate = true;
 
         // add the coin sprite as renderable
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage(game.assets[i % 5].name));
+        this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(game.assets[i % 5].name)});
 
         // add a collision shape
         this.body.addShape(new me.Ellipse(4, 4, 8, 8));

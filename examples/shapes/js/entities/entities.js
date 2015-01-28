@@ -95,7 +95,7 @@ game.Circle = game.ShapeObject.extend({
         this.body.addShape(new me.Ellipse(this.width/2, this.height/2, this.width, this.height));
 
         // tomato
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage("orange"));
+        this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage("orange")});
     }
 });
 
@@ -111,7 +111,7 @@ game.Poly = game.ShapeObject.extend({
         this.body.addShapesFromJSON(me.loader.getJSON("shapesdef"), settings.sprite);
 
         // add the star sprite
-        this.renderable = new me.Sprite(0, 0, me.loader.getImage(settings.sprite));
+        this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(settings.sprite)});
     },
     
 });
