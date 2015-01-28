@@ -5,6 +5,7 @@ Version History
 * Container: `getChildByProp` and friends now accepts a RegExp for value matching
 * CanvasRenderer : added support for the standard opaque canvas feature through the `transparent` option
 * Color : added high-precision color transformation for me.Color
+* Core : added a `exists` function to `me.pool` (xorinzor)
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
