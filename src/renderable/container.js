@@ -591,6 +591,7 @@
          * @ignore
          */
         update : function (dt) {
+            this._super(me.Renderable, "update", [dt]);
             var isDirty = false;
             var isFloating = false;
             var isPaused = me.state.isPaused();
