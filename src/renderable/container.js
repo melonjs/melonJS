@@ -597,6 +597,8 @@
             var isPaused = me.state.isPaused();
             var viewport = me.game.viewport;
 
+            this._super(me.Renderable, "update", [dt]);
+
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
                     // skip this object

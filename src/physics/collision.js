@@ -466,7 +466,7 @@
                 // check if both objects "should" collide
                 if ((objB !== objA) && api.shouldCollide(objA, objB) &&
                     // fast AABB check if both bounding boxes are overlaping
-                    objA.getBounds().overlaps(objB.getBounds())) {
+                    objA._absoluteBounds.overlaps(objB._absoluteBounds)) {
 
                     // go trough all defined shapes in A
                     var aLen = objA.body.shapes.length;
@@ -538,8 +538,8 @@
             var bNormals = polyB.normals;
             var bLen = bNormals.length;
             // aboslute shape position
-            var posA = T_VECTORS.pop().copy(a.pos).add(polyA.pos);
-            var posB = T_VECTORS.pop().copy(b.pos).add(polyB.pos);
+            var posA = T_VECTORS.pop().copy(a._absoluteBounds.pos).add(polyA.pos);
+            var posB = T_VECTORS.pop().copy(b._absoluteBounds.pos).add(polyB.pos);
             var i;
 
             // If any of the edge normals of A is a separating axis, no intersection.
@@ -587,7 +587,7 @@
         api.testEllipseEllipse = function (a, ellipseA, b, ellipseB, response) {
             // Check if the distance between the centers of the two
             // circles is greater than their combined radius.
-            var differenceV = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).sub(ellipseA.pos);
+            var differenceV = T_VECTORS.pop().copy(b._absoluteBounds.pos).add(ellipseB.pos).sub(a._absoluteBounds.pos).sub(ellipseA.pos);
             var radiusA = ellipseA.radius;
             var radiusB = ellipseB.radius;
             var totalRadius = radiusA + radiusB;
@@ -625,7 +625,7 @@
          */
         api.testPolygonEllipse = function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
-            var circlePos = T_VECTORS.pop().copy(b.pos).add(ellipseB.pos).sub(a.pos).sub(polyA.pos);
+            var circlePos = T_VECTORS.pop().copy(b._absoluteBounds.pos).add(ellipseB.pos).sub(a._absoluteBounds.pos).sub(polyA.pos);
             var radius = ellipseB.radius;
             var radius2 = radius * radius;
             var points = polyA.points;

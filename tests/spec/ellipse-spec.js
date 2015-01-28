@@ -33,8 +33,8 @@ describe("Shape : me.Ellipse", function () {
 
         it("collision response is correct", function () {
             expect(me.collision.testEllipseEllipse(
-                new me.Rect(0, 0, 100, 100), circle,
-                new me.Rect(0, 50, 100, 100), circle,
+                new me.Renderable(0, 0, 100, 100), circle,
+                new me.Renderable(0, 50, 100, 100), circle,
                 me.collision.response.clear()
             )).toEqual(true);
             expect(me.collision.response.overlap).toEqual(50);
