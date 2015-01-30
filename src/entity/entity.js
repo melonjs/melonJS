@@ -249,6 +249,7 @@
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
+            this._super(me.Renderable, "update", [dt]);
             return false;
         },
 
