@@ -614,7 +614,9 @@
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
-                    obj.getAbsoluteBounds();
+                    if (obj.getAbsoluteBounds) {
+                        obj.getAbsoluteBounds();
+                    }
 
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;
