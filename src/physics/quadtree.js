@@ -40,8 +40,6 @@
         QT_ARRAY.push(qt);
     };
 
-    var translationStack = new me.TranslationStack();
-
 
     /**
      * Quadtree Constructor <br>
@@ -166,10 +164,6 @@
     Quadtree.prototype.insertContainer = function (container) {
 
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
-            if (child.isRenderable) {
-                var isFloating = (translationStack.globalFloatingCounter > 0 || child.floating);
-                translationStack.translate(isFloating, child);
-            }
             if (child instanceof me.Container) {
                 // recursivly insert childs
                 this.insertContainer(child);
@@ -178,10 +172,6 @@
                 if (typeof (child.body) !== "undefined") {
                     this.insert(child);
                 }
-            }
-
-            if (child.isRenderable) {
-                translationStack.undoTranslation();
             }
         }
     };
@@ -291,7 +281,6 @@
             this.bounds.width = bounds.width;
             this.bounds.height = bounds.height;
         }
-        translationStack.fullReset();
     };
 
     //make Quadtree available in the me namespace
