@@ -256,7 +256,7 @@
          * @see me.body.collisionType
          * @example
          * // set the entity body collision type
-         * myEntity.body.setCollisionType = me.collision.types.PLAYER_OBJECT;
+         * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
          * // filter collision detection with collision shapes, enemies and collectables
          * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
          */
