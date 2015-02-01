@@ -24,6 +24,7 @@
      * @param {Number} [settings.frameheight] height of a single frame in the given spritesheet
      * @param {String} [settings.type] object type
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
+     * @param {Boolean} [settings.noDefaultShape=false] Disable automatic creation of a default shape (as defined in Tiled), particulary useful if you use Tiled but want to use "custom" shapes
      */
     me.Entity = me.Renderable.extend(
     /** @scope me.Entity.prototype */
@@ -121,7 +122,7 @@
              */
             // initialize the default body
             this.body = new me.Body(this, (
-                typeof (settings.getTMXShapes) === "function" ?
+                settings.noDefaultShape !== true && typeof (settings.getTMXShapes) === "function" ?
                 settings.getTMXShapes() : []
             ));
 
