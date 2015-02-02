@@ -353,7 +353,7 @@
                         scaleX = scaleY = _max_height / sHeight;
                     }
                 }
-                else if(settings.scaleMethod === "stretch") {
+                else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
                     scaleX = _max_width / me.video.renderer.getWidth();
                     scaleY = _max_height / me.video.renderer.getHeight();
