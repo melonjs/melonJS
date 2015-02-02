@@ -378,6 +378,18 @@
          * @memberOf me.device
          */
         api.alpha = 0;
+        
+        /**
+         * a string representing the preferred language of the user, usually the language of the browser UI.
+         * (will default to "en" if the information is not available)
+         * @public
+         * @type String
+         * @readonly
+         * @see http://www.w3schools.com/tags/ref_language_codes.asp
+         * @name language
+         * @memberOf me.device
+         */
+        api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
 
         /**
          * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
