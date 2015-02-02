@@ -56,9 +56,11 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {String} name        layer name
+     * @param {Number} x           default x coordinates in pixels
+     * @param {Number} y           default x coordinates in pixels
      * @param {Number} width       layer width in pixels
      * @param {Number} height      layer height in pixels
+     * @param {String} name        layer name
      * @param {String} image       image name (as defined in the asset list)
      * @param {Number} z           z position
      * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
@@ -69,7 +71,7 @@
          * @ignore
          * @function
          */
-        init: function (name, width, height, imagesrc, z, ratio) {
+        init: function (x, y, width, height, name, imagesrc, z, ratio) {
             // layer name
             this.name = name;
 
@@ -82,13 +84,13 @@
             this.imagewidth = this.image.width;
             this.imageheight = this.image.height;
 
-            // a cached reference to the viewport
-            var viewport = me.game.viewport;
-
             // set layer width & height
-            width  = (width  ? Math.min(viewport.width, width)   : viewport.width);
-            height = (height ? Math.min(viewport.height, height) : viewport.height);
-            this._super(me.Renderable, "init", [0, 0, width, height]);
+            width  = (width  ? Math.min(me.game.viewport.width, width)   : me.game.viewport.width);
+            height = (height ? Math.min(me.game.viewport.height, height) : me.game.viewport.height);
+            this._super(me.Renderable, "init", [x, y, width, height]);
+            
+            // specify the start offset when drawing the image (for parallax/repeat features)
+            this.offset = new me.Vector2d(0, 0);
 
             // displaying order
             this.z = z;
@@ -116,7 +118,7 @@
             }
 
             // last position of the viewport
-            this.lastpos = viewport.pos.clone();
+            this.lastpos = me.game.viewport.pos.clone();
 
             // Image Layer is considered as a floating object
             this.floating = true;
@@ -185,15 +187,15 @@
             }
             else if (this.repeatX || this.repeatY) {
                 // parallax / scrolling image
-                this.pos.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
-                this.pos.x = (this.imagewidth + this.pos.x) % this.imagewidth;
+                this.offset.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
+                this.offset.x = (this.imagewidth + this.offset.x) % this.imagewidth;
 
-                this.pos.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
-                this.pos.y = (this.imageheight + this.pos.y) % this.imageheight;
+                this.offset.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
+                this.offset.y = (this.imageheight + this.offset.y) % this.imageheight;
             }
             else {
-                this.pos.x += (vpos.x - this.lastpos.x) * this.ratio.x;
-                this.pos.y += (vpos.y - this.lastpos.y) * this.ratio.y;
+                this.offset.x += (vpos.x - this.lastpos.x) * this.ratio.x;
+                this.offset.y += (vpos.y - this.lastpos.y) * this.ratio.y;
             }
             this.lastpos.setV(vpos);
         },
@@ -205,9 +207,9 @@
         draw : function (renderer, rect) {
             // translate default position using the anchorPoint value
             var viewport = me.game.viewport;
-            var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0;
-            var translateX = ~~(this.anchorPoint.x * (viewport.width - this.imagewidth));
-            var translateY = ~~(this.anchorPoint.y * (viewport.height - this.imageheight));
+            var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0 || this.pos.y !== 0 || this.pos.x !== 0;
+            var translateX = ~~(this.pos.x + (this.anchorPoint.x * (viewport.width - this.imagewidth)));
+            var translateY = ~~(this.pos.y + (this.anchorPoint.y * (viewport.height - this.imageheight)));
 
             if (shouldTranslate) {
                 renderer.translate(translateX, translateY);
@@ -234,8 +236,8 @@
             }
             // parallax / scrolling image
             else {
-                var sx = ~~this.pos.x;
-                var sy = ~~this.pos.y;
+                var sx = ~~this.offset.x;
+                var sy = ~~this.offset.y;
 
                 var dx = 0;
                 var dy = 0;
@@ -266,9 +268,9 @@
                     // else update required var for next iteration
                     sx = 0;
                     sw = Math.min(this.imagewidth, this.width - dx);
-                    sy = ~~this.pos.y;
+                    sy = ~~this.offset.y;
                     dy = 0;
-                    sh = Math.min(this.imageheight - ~~this.pos.y, this.height);
+                    sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
                 } while (true);
             }
 

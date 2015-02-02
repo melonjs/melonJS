@@ -67,8 +67,9 @@
             if (map.background_image) {
                 // add a new image layer
                 map.mapLayers.push(new me.ImageLayer(
-                    "background_image",
+                    0, 0,
                     map.width, map.height,
+                    "background_image",
                     map.background_image,
                     zOrder++
                 ));
@@ -283,13 +284,15 @@
 
         readImageLayer: function (map, data, z) {
             // extract layer information
+            var ilx = +data[TMXConstants.TMX_TAG_X] || 0;
+            var ily = +data[TMXConstants.TMX_TAG_Y] || 0;
             var iln = data[TMXConstants.TMX_TAG_NAME];
             var ilw = +data[TMXConstants.TMX_TAG_WIDTH];
             var ilh = +data[TMXConstants.TMX_TAG_HEIGHT];
             var ilsrc = typeof (data[TMXConstants.TMX_TAG_IMAGE]) !== "string" ? data[TMXConstants.TMX_TAG_IMAGE].source : data[TMXConstants.TMX_TAG_IMAGE];
 
             // create the layer
-            var imageLayer = new me.ImageLayer(iln, ilw * map.tilewidth, ilh * map.tileheight, ilsrc, z);
+            var imageLayer = new me.ImageLayer(ilx, ily, ilw * map.tilewidth, ilh * map.tileheight, iln, ilsrc, z);
 
             // set some additional flags
             var visible = typeof(data[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? data[TMXConstants.TMX_TAG_VISIBLE] : true;
