@@ -340,34 +340,27 @@
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
-                var sWidth= =me.video.renderer.getHeight()*screenRatio;
-                var sHeight=me.video.renderer.getWidth()*(window.innerHeight/window.innerWidth);
+                var sWidth = me.video.renderer.getHeight() * screenRatio;
+                var sHeight = me.video.renderer.getWidth() * (window.innerHeight / window.innerWidth);
+                var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
+                var screenRatio = _max_width / _max_height;
                 
-                if (settings.scaleMethod=="fill") {
-                   
-                    var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
-                    var screenRatio = _max_width / _max_height;
-                    if (screenRatio < designRatio)
-                    {
+                if (settings.scaleMethod == "fill") {
+                    if (screenRatio < designRatio) {
                         scaleX = scaleY = _max_width / sWidth;
                     }
-                    else
-                    {
+                    else {
                         scaleX = scaleY = _max_height / sHeight;
                     }
                 }
-                else if(settings.scaleMethod=="stretch")
-                {
+                else if(settings.scaleMethod == "stretch") {
                     // scale the display canvas to fit with the parent container
                     scaleX = _max_width / me.video.renderer.getWidth();
                     scaleY = _max_height / me.video.renderer.getHeight();
                 }
-                else
-                {
+                else {
                     // default screen fitting
                      // make sure we maintain the original aspect ratio
-                    var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
-                    var screenRatio = _max_width / _max_height;
                     if (screenRatio < designRatio) {
                         scaleX = scaleY = _max_width / me.video.renderer.getWidth();
                     }
