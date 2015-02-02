@@ -31,7 +31,7 @@
             doubleBuffering : false,
             autoScale : false,
             scale : 1.0,
-            maintainAspectRatio : true,
+            scaleMethod : "default",
             transparent : false,
             antiAlias : false,
         };
@@ -109,9 +109,9 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
+         * @param {Boolean} [options.scaleMethod="default"] ('default','fill','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
-         * @param {Boolean} [options.antiAlias=false] wheter to enable or not video scaling interpolation
+         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean}
          * @example
          * // init the video with a 640x480 canvas
@@ -119,7 +119,7 @@
          *       wrapper: "screen",
          *       renderer: me.video.CANVAS,
          *       scale: 'auto',
-         *       maintainAspectRatio: true,
+         *       scaleMethod: 'default',
          *       doubleBuffering: true
          *   });
          */
@@ -136,7 +136,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
+            settings.scaleMethod = !!(settings.scaleMethod);
             settings.transparent = !!(settings.transparent);
             
             // override renderer settings if &renderer=webgl or &webgl is defined in the URL
@@ -341,8 +341,31 @@
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
 
-                if (settings.maintainAspectRatio) {
-                    // make sure we maintain the original aspect ratio
+                if (settings.scaleMethod=="fill") {
+                   
+                    var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
+                    var screenRatio = _max_width / _max_height;
+                    if (screenRatio < designRatio)
+                    {
+                        var sWidth=me.video.renderer.getHeight()*screenRatio;
+                        scaleX = scaleY = _max_width / sWidth;
+                    }
+                    else
+                    {
+                        var sHeight=me.video.renderer.getWidth()*(window.innerHeight/window.innerWidth);
+                        scaleX = scaleY = _max_height / sHeight;
+                    }
+                }
+                else if(settings.scaleMethod=="stretch")
+                {
+                    // scale the display canvas to fit with the parent container
+                    scaleX = _max_width / me.video.renderer.getWidth();
+                    scaleY = _max_height / me.video.renderer.getHeight();
+                }
+                else
+                {
+                    // default screen fitting
+                     // make sure we maintain the original aspect ratio
                     var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                     var screenRatio = _max_width / _max_height;
                     if (screenRatio < designRatio) {
@@ -351,11 +374,6 @@
                     else {
                         scaleX = scaleY = _max_height / me.video.renderer.getHeight();
                     }
-                }
-                else {
-                    // scale the display canvas to fit with the parent container
-                    scaleX = _max_width / me.video.renderer.getWidth();
-                    scaleY = _max_height / me.video.renderer.getHeight();
                 }
 
                 // adjust scaling ratio based on the device pixel ratio
