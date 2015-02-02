@@ -340,19 +340,19 @@
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
-
+                var sWidth= =me.video.renderer.getHeight()*screenRatio;
+                var sHeight=me.video.renderer.getWidth()*(window.innerHeight/window.innerWidth);
+                
                 if (settings.scaleMethod=="fill") {
                    
                     var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                     var screenRatio = _max_width / _max_height;
                     if (screenRatio < designRatio)
                     {
-                        var sWidth=me.video.renderer.getHeight()*screenRatio;
                         scaleX = scaleY = _max_width / sWidth;
                     }
                     else
                     {
-                        var sHeight=me.video.renderer.getWidth()*(window.innerHeight/window.innerWidth);
                         scaleX = scaleY = _max_height / sHeight;
                     }
                 }
