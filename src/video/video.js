@@ -136,7 +136,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.scaleMethod = (settings.scaleMethod === "fill" || settings.scaleMethod === "stretch") ? settings.scaleMethod : "default";
+            settings.scaleMethod = [ "fill", "stretch" ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "default";
             settings.transparent = !!(settings.transparent);
             
             // override renderer settings if &renderer=webgl or &webgl is defined in the URL
