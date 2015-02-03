@@ -343,7 +343,7 @@
                 var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
                 var sWidth = me.video.renderer.getHeight() * screenRatio;
-                var sHeight = me.video.renderer.getWidth() * (window.innerHeight / window.innerWidth);
+                var sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
                 
                 if (settings.scaleMethod === "fill") {
                     if (screenRatio < designRatio) {
