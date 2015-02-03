@@ -336,25 +336,29 @@
             }
 
             if (settings.autoScale) {
-                // get the parent container max size
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
                 var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
-                var sWidth = me.video.renderer.getHeight() * screenRatio;
-                var sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
+                var backbuffer = me.video.renderer.getCanvas();
+                var sWidth = Infinity;
+                var sHeight = Infinity;
                 
                 if (settings.scaleMethod === "fill") {
+                    // scale the display canvas to fill the parent container
                     if (screenRatio < designRatio) {
+                        sWidth = me.video.renderer.getHeight() * screenRatio;
                         scaleX = scaleY = _max_width / sWidth;
+                        backbuffer.width = _max_width / scaleX;
+                        backbuffer.height = me.video.renderer.getHeight();
                     }
                     else {
+                        sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
                         scaleX = scaleY = _max_height / sHeight;
+                        backbuffer.width = me.video.renderer.getWidth();
+                        backbuffer.height = _max_height / scaleX;
                     }
-                    
-                    document.documentElement.style.overflow = "hidden";  // hide the overflow in firefox and chrome
-                    document.body.scroll = "no"; // hide the overflow in IE
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
