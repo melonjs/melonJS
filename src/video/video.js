@@ -353,7 +353,7 @@
                         scaleX = scaleY = _max_height / sHeight;
                     }
                     
-                    document.documentElement.style.overflow = 'hidden';  // hide the overflow in firefox and chrome
+                    document.documentElement.style.overflow = "hidden";  // hide the overflow in firefox and chrome
                     document.body.scroll = "no"; // hide the overflow in IE
                 }
                 else if (settings.scaleMethod === "stretch") {
