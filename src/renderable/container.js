@@ -625,7 +625,6 @@
                 else {
                     // just directly call update() for non renderable object
                     isDirty = obj.update(dt) || isDirty;
-                    obj.getAbsoluteBounds();
                 }
             }
 
