@@ -195,9 +195,9 @@
         /**
          * @ignore
          */
-        uploadTexture : function (texture, w, h, b) {
+        uploadTexture : function (texture, w, h, b, force) {
             var unit = me.video.renderer.cache.getUnit(texture);
-            if (!this.units[unit]) {
+            if (!this.units[unit] || force) {
                 this.units[unit] = true;
                 me.video.shader.createTexture(
                     this.gl,

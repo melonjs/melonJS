@@ -49,6 +49,8 @@
                 this.backBufferContext2D = this.context;
             }
 
+            this.fontContext2D = this.backBufferContext2D;
+
             // apply the default color to the 2d context
             this.setColor(this.globalColor);
 
@@ -107,21 +109,6 @@
             ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
             ctx.fillRect(0, 0, _canvas.width, _canvas.height);
             ctx.restore();
-        },
-
-        /**
-         * Quick helper method to draw the font on the backbuffer context. Useful for when using webgl with canvas fallback
-         * for different platforms.
-         * @name drawFont
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {me.Font} fontObject an instance of me.Font
-         * @param {String} text the string of text to draw
-         * @param {Number} x the x position to draw at
-         * @param {Number} y the y position to draw at
-         */
-        drawFont : function (fontObject, text, x, y) {
-            fontObject.draw(this.backBufferContext2D, text, x, y);
         },
 
         /**
@@ -205,19 +192,6 @@
          */
         getContext : function () {
             return this.backBufferContext2D;
-        },
-
-        /**
-         * returns the text size based on dimensions from the font. Uses the backbuffer context
-         * @name measureText
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {me.Font} the instance of the font object
-         * @param {String} text
-         * @return {Object}
-         */
-        measureText : function (fontObject, text) {
-            return fontObject.measureText(this.backBufferContext2D, text);
         },
 
         /**

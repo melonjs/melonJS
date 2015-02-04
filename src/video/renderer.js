@@ -239,7 +239,12 @@
          */
         setImageSmoothing : function (context, enable) {
             me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
-        }
+        },
+
+        /**
+         * @private
+         */
+        drawFont : function (/*bounds*/) {},
 
     });
 
