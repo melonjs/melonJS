@@ -102,6 +102,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
                 if (this.dragId === e.pointerId) {
                     this.pos.set(e.gameX, e.gameY);
                     this.pos.sub(this.grabOffset);
+                    this.updateBounds();
                 }
             }
         },

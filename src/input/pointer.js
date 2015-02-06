@@ -240,6 +240,23 @@
     }
 
     /**
+     * @ignore
+     */
+    function triggerEvent(handlers, type, e, pointerId) {
+        var callback;
+        if (handlers.callbacks[type]) {
+            handlers.pointerId = pointerId;
+            for (var i = handlers.callbacks[type].length - 1; (callback = handlers.callbacks[type][i]); i--) {
+                if (callback(e) === false) {
+                    // stop propagating the event if return false
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * propagate events to registered objects
      * @ignore
      */
@@ -282,96 +299,57 @@
 
                     switch (activeEventList.indexOf(e.type)) {
                         case POINTER_MOVE:
-                            var i, callback;
-                            if (handlers.pointerId === e.pointerId) {
-                                if (eventInBounds) {
-                                    // pointer defined & inside of bounds: trigger the POINTER_MOVE callback
-                                    if (handlers.callbacks[e.type]) {
-                                        for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
-                                            if (callback(e) === false) {
-                                                // stop propagating the event if return false
-                                                handled = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    // moved out of bounds: trigger the POINTER_LEAVE callbacks instead
-                                    if (handlers.callbacks[activeEventList[POINTER_LEAVE]]) {
-                                        for (i = handlers.callbacks[activeEventList[POINTER_LEAVE]].length - 1; (callback = handlers.callbacks[activeEventList[POINTER_LEAVE]][i]); i--) {
-                                            // delete the pointerId
-                                            handlers.pointerId = null;
-                                            if (callback(e) === false) {
-                                                // stop propagating the event if return false
-                                                handled = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            } else if (handlers.pointerId === null && eventInBounds) {
-                                // no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks instead
-                                if (handlers.callbacks[activeEventList[POINTER_ENTER]]) {
-                                    for (i = handlers.callbacks[activeEventList[POINTER_ENTER]].length - 1; (callback = handlers.callbacks[activeEventList[POINTER_ENTER]][i]); i--) {
-                                        // save the pointerId
-                                        handlers.pointerId = e.pointerId;
-                                        if (callback(e) === false) {
-                                            // stop propagating the event if return false
-                                            handled = true;
-                                            break;
-                                        }
-                                    }
+                            // moved out of bounds: trigger the POINTER_LEAVE callbacks
+                            if (handlers.pointerId === e.pointerId && !eventInBounds) {
+                                if (triggerEvent(handlers, activeEventList[POINTER_LEAVE], e, null)) {
+                                    handled = true;
+                                    break;
                                 }
                             }
+                            // no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks
+                            else if (handlers.pointerId === null && eventInBounds) {
+                                if (triggerEvent(handlers, activeEventList[POINTER_ENTER], e, e.pointerId)) {
+                                    handled = true;
+                                    break;
+                                }
+                            }
+
+                            // trigger the POINTER_MOVE callbacks
+                            if (eventInBounds && triggerEvent(handlers, e.type, e, e.pointerId)) {
+                                handled = true;
+                                break;
+                            }
                             break;
+
                         case POINTER_DOWN:
                             // event inside of bounds: trigger the POINTER_DOWN callback
                             if (eventInBounds) {
-                                // save the pointerId
-                                handlers.pointerId = e.pointerId;
                                 // trigger the corresponding callback
-                                if (handlers.callbacks[e.type]) {
-                                    for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
-                                        if (callback(e) === false) {
-                                            // stop propagating the event if return false
-                                            handled = true;
-                                            break;
-                                        }
-                                    }
+                                if (triggerEvent(handlers, e.type, e, e.pointerId)) {
+                                    handled = true;
+                                    break;
                                 }
                             }
                             break;
+
                         case POINTER_UP:
                             // pointer defined & inside of bounds: trigger the POINTER_UP callback
                             if (handlers.pointerId === e.pointerId && eventInBounds) {
-                                // delete the pointerId
-                                handlers.pointerId = null;
                                 // trigger the corresponding callback
-                                if (handlers.callbacks[e.type]) {
-                                    for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
-                                        if (callback(e) === false) {
-                                            // stop propagating the event if return false
-                                            handled = true;
-                                            break;
-                                        }
-                                    }
+                                if (triggerEvent(handlers, e.type, e, null)) {
+                                    handled = true;
+                                    break;
                                 }
                             }
                             break;
+
                         case POINTER_CANCEL:
                             // pointer defined: trigger the POINTER_CANCEL callback
                             if (handlers.pointerId === e.pointerId) {
-                                // delete the pointerId
-                                handlers.pointerId = null;
                                 // trigger the corresponding callback
-                                if (handlers.callbacks[e.type]) {
-                                    for (i = handlers.callbacks[e.type].length - 1; (callback = handlers.callbacks[e.type][i]); i--) {
-                                        if (callback(e) === false) {
-                                            // stop propagating the event if return false
-                                            handled = true;
-                                            break;
-                                        }
-                                    }
+                                if (triggerEvent(handlers, e.type, e, null)) {
+                                    handled = true;
+                                    break;
                                 }
                             }
                             break;
