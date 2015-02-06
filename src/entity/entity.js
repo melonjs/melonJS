@@ -68,11 +68,6 @@
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin
                 });
-
-                // check for user defined transparent color
-                if (settings.transparent_color) {
-                    this.renderable.setTransparency(settings.transparent_color);
-                }
             }
 
             /**

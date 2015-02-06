@@ -19,6 +19,7 @@ Version History
 * Texture : `me.TextureAtlas` has been renamed to `me.video.renderer.Texture`
 * TMX : added parsing of the new `id` (unique ID) property for objects (Tiled 0.11.0)
 * TMX : fixed horizontal, vertical and antidiagonal flipping for tile objects
+* TMX : remove deprecated "transparency color" - use PNG images with alpha channel instead
 * Video : refactored the me.video.init to be more flexible in terms of mandatory/optional arguments
 * Video : turn canvas transparency off by default; can be enabled by passing `options.transparent = true` to `me.video.init()`
 * Video : renderers are now classes that can be instantiated with `new me.CanvasRenderer` and `new me.WebGLRenderer`

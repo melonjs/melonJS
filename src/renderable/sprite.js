@@ -98,25 +98,6 @@
         },
 
         /**
-         * specify a transparent color
-         * @name setTransparency
-         * @memberOf me.Sprite
-         * @function
-         * @deprecated Use PNG or GIF with transparency instead
-         * @param {String} color color key in "#RRGGBB" format
-         */
-        setTransparency : function (color) {
-            // remove the # if present
-            color = (color.charAt(0) === "#") ? color.substring(1, 7) : color;
-            // applyRGB Filter (return a context object)
-            this.image = me.video.renderer.applyRGBFilter(
-                this.image,
-                "transparent",
-                color.toUpperCase()
-            ).canvas;
-        },
-
-        /**
          * return the flickering state of the object
          * @name isFlickering
          * @memberOf me.Sprite
