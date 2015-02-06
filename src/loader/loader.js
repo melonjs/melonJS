@@ -247,7 +247,6 @@
          * @name onload
          * @memberOf me.loader
          * @example
-         *
          * // set a callback when everything is loaded
          * me.loader.onload = this.loaded.bind(this);
          */
@@ -262,7 +261,6 @@
          * @name onProgress
          * @memberOf me.loader
          * @example
-         *
          * // set a callback for progress notification
          * me.loader.onProgress = this.updateProgress.bind(this);
          */
@@ -284,7 +282,7 @@
         });
 
         /**
-         *  just increment the number of already loaded resources
+         * just increment the number of already loaded resources
          * @ignore
          */
         api.onResourceLoaded = function (res) {
@@ -358,7 +356,6 @@
          *   // JSON file (used for texturePacker)
          *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
          * ];
-         * ...
          *
          * // set all resources to be loaded
          * me.loader.preload(g_resources);
@@ -560,7 +557,7 @@
          * @public
          * @function
          * @param {String} tmx name of the tmx/tsx element ("map1");
-         * @return {TMx}
+         * @return {XML|Object}
          */
         api.getTMX = function (elt) {
             // force as string

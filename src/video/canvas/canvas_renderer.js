@@ -13,13 +13,15 @@
      * @extends me.Renderer
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-     * @param {Number} game_width - the width of the canvas without scaling
-     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {Number} width The width of the canvas without scaling
+     * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
-     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
-     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
-     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
+     * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
     me.CanvasRenderer = me.Renderer.extend(
     /** @scope me.CanvasRenderer.prototype */
@@ -92,7 +94,7 @@
          * @name clearSurface
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Context2d} [ctx=null] canvas context, defaults to system context.
+         * @param {Context2d} [ctx=null] Canvas context, defaults to system context if falsy.
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
@@ -110,15 +112,15 @@
         },
 
         /**
-         * Quick helper method to draw the font on the backbuffer context. Useful for when using webgl with canvas fallback
+         * Helper method to draw the font on the backbuffer context.
          * for different platforms.
          * @name drawFont
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.Font} fontObject an instance of me.Font
-         * @param {String} text the string of text to draw
-         * @param {Number} x the x position to draw at
-         * @param {Number} y the y position to draw at
+         * @param {me.Font} fontObject An instance of me.Font
+         * @param {String} text The string of text to draw
+         * @param {Number} x The x position to draw at
+         * @param {Number} y The y position to draw at
          */
         drawFont : function (fontObject, text, x, y) {
             fontObject.draw(this.backBufferContext2D, text, x, y);
@@ -129,21 +131,21 @@
          * @name drawImage
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {image} image html image element
-         * @param {Number} sx sx value, from the source image.
-         * @param {Number} sy sy value, from the source image.
-         * @param {Number} sw sw the width of the image to be drawn
-         * @param {Number} sh sh the height of the image to be drawn
-         * @param {Number} dx dx the x position to draw the image at on the screen
-         * @param {Number} dy dy the y position to draw the image at on the screen
-         * @param {Number} dw dw the width value to draw the image at on the screen
-         * @param {Number} dh dh the height value to draw the image at on the screen
+         * @param {image} image Source image
+         * @param {Number} sx Source x-coordinate
+         * @param {Number} sy Source y-coordinate
+         * @param {Number} sw Source width
+         * @param {Number} sh Source height
+         * @param {Number} dx Destination x-coordinate
+         * @param {Number} dy Destination y-coordinate
+         * @param {Number} dw Destination width
+         * @param {Number} dh Destination height
          * @example
-         * Can be used in three ways:
-         * me.CanvasRenderer.drawImage(image, dx, dy);
-         * me.CanvasRenderer.drawImage(image, dx, dy, dw, dh);
-         * me.CanvasRenderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
-         * dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
+         * // Can be used in three ways:
+         * renderer.drawImage(image, dx, dy);
+         * renderer.drawImage(image, dx, dy, dw, dh);
+         * renderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+         * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
         drawImage : function () {
             this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
@@ -212,7 +214,7 @@
          * @name measureText
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.Font} the instance of the font object
+         * @param {me.Font} fontObject the instance of the font object
          * @param {String} text
          * @return {Object}
          */
@@ -329,7 +331,7 @@
          * @name setLineWidth
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} width the width to set;
+         * @param {Number} width Line width
          */
         setLineWidth : function (width) {
             this.backBufferContext2D.lineWidth = width;

@@ -115,15 +115,14 @@
          * @return {Boolean}
          * @example
          * // init the video with a 640x480 canvas
-         *   me.video.init(640, 480, {
-         *       wrapper: "screen",
-         *       renderer: me.video.CANVAS,
-         *       scale: 'auto',
-         *       maintainAspectRatio: true,
-         *       doubleBuffering: true
-         *   });
+         * me.video.init(640, 480, {
+         *     wrapper : "screen",
+         *     renderer : me.video.CANVAS,
+         *     scale : "auto",
+         *     maintainAspectRatio : true,
+         *     doubleBuffering : true
+         * });
          */
-        //api.init = function (wrapperid, renderer, game_width, game_height, doublebuffering, scale, aspectRatio) {
         api.init = function (game_width, game_height, options) {
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
@@ -138,11 +137,8 @@
             settings.autoScale = (settings.scale === "auto") || false;
             settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
             settings.transparent = !!(settings.transparent);
-            
-            // override renderer settings if &renderer=webgl or &webgl is defined in the URL
-            if (typeof (me.game.HASH.renderer) !== "undefined") {
-                settings.renderer = me.game.HASH.renderer.match(/WebGL/i) ? api.WEBGL : api.CANVAS;
-            }
+
+            // override renderer settings if &webgl is defined in the URL
             if (me.game.HASH.webgl === true) {
                 settings.renderer = api.WEBGL;
             }

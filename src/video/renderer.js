@@ -13,13 +13,15 @@
      * @extends Object
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas - the html canvas tag to draw to on screen.
-     * @param {Number} game_width - the width of the canvas without scaling
-     * @param {Number} game_height - the height of the canvas without scaling
+     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {Number} width The width of the canvas without scaling
+     * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
-     * @param {Boolean} [options.doubleBuffering] - whether to enable double buffering.
-     * @param {Number} [options.zoomX] - The actual width of the canvas with scaling applied
-     * @param {Number} [options.zoomY] - The actual height of the canvas with scaling applied
+     * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
     me.Renderer = Object.extend(
     /** @scope me.Renderer.prototype */
@@ -51,7 +53,7 @@
         },
 
         /**
-         * @private
+         * @ignore
          */
         applyRGBFilter : function (object, effect, option) {
             //create a output canvas using the given canvas or image size
@@ -113,11 +115,6 @@
         /**
          * @ignore
          */
-        blitSurface : function () {},
-
-        /**
-         * @ignore
-         */
         prepareSurface : function () {},
 
         /**
@@ -131,7 +128,7 @@
         /**
          * return a reference to the screen canvas
          * @name getScreenCanvas
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @return {Canvas}
          */
@@ -143,7 +140,7 @@
          * return a reference to the screen canvas corresponding 2d Context<br>
          * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
          * @name getScreenContext
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @return {Context2d}
          */
@@ -152,13 +149,13 @@
         },
 
         /**
-         * Returns the 2D Context object of the given Canvas
-         * `getContext2d` will also enable/disable antialiasing features based on global settings.
+         * Returns the 2D Context object of the given Canvas<br>
+         * Also configures anti-aliasing based on constructor options.
          * @name getContext2d
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
-         * @param {Canvas} [canvas=canvas instance of the renderer]
-         * @param {Boolean} [opaque=false] Use true to disable transparency
+         * @param {Canvas} canvas
+         * @param {Boolean} [opaque=false] True to disable transparency
          * @return {Context2d}
          */
         getContext2d : function (c, opaque) {
@@ -198,7 +195,7 @@
         /**
          * return the width of the system Canvas
          * @name getWidth
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @return {Number}
          */
@@ -209,7 +206,7 @@
         /**
          * return the height of the system Canvas
          * @name getHeight
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @return {Number}
          */
@@ -220,7 +217,7 @@
         /**
          * return the current global alpha
          * @name globalAlpha
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @return {Number}
          */
@@ -232,7 +229,7 @@
          * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
          * (!) this might not be supported by all browsers <br>
          * @name setImageSmoothing
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.Renderer
          * @function
          * @param {Context2d} context
          * @param {Boolean} [enable=false]

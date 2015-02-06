@@ -21,9 +21,9 @@
      * @example
      * // standalone image
      * var animationSheet = new me.AnimationSheet(0, 0, {
-     *   image: "animationsheet",
-     *   framewidth: 64,
-     *   frameheight: 64
+     *     image : "animationsheet",
+     *     framewidth : 64,
+     *     frameheight : 64
      * });
      */
     me.AnimationSheet = me.Sprite.extend(
@@ -168,7 +168,7 @@
          *
          * // set "walk" animation if it is not the current animation
          * if (this.isCurrentAnimation("walk")) {
-         *   this.setCurrentAnimation("walk");
+         *     this.setCurrentAnimation("walk");
          * }
          *
          * // set "eat" animation, and switch to "walk" when complete
@@ -212,7 +212,7 @@
          * @return {Boolean}
          * @example
          * if (!this.isCurrentAnimation("walk")) {
-         *    // do something funny...
+         *     // do something funny...
          * }
          */
         isCurrentAnimation : function (name) {
@@ -226,7 +226,7 @@
          * @function
          * @param {Number} [index=0] animation frame index
          * @example
-         * //reset the current animation to the first frame
+         * // reset the current animation to the first frame
          * this.setAnimationFrame();
          */
         setAnimationFrame : function (idx) {

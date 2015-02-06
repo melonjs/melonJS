@@ -23,22 +23,25 @@
          */
 
         /**
-         * Game FPS (default 60)
-         * @type {number}
+         * Game FPS
+         * @type {Number}
+         * @default 60
          * @memberOf me.sys
          */
         fps : 60,
 
         /**
-         * enable/disable frame interpolation (default disable)<br>
-         * @type {boolean}
+         * enable/disable frame interpolation
+         * @type {Boolean}
+         * @default false
          * @memberOf me.sys
          */
         interpolation : false,
 
         /**
-         * Global scaling factor(default 1.0)
+         * Global scaling factor
          * @type {me.Vector2d}
+         * @default <0,0>
          * @memberOf me.sys
          */
         scale : null, //initialized by me.video.init
@@ -46,8 +49,8 @@
         /**
          * Global gravity settings <br>
          * will override entities init value if defined<br>
-         * default value : undefined
-         * @type {(number|undefined)}
+         * @type {Number|undefined}
+         * @default undefined
          * @memberOf me.sys
          */
         gravity : undefined,
@@ -57,24 +60,24 @@
          * if true, melonJS will throw an exception and stop loading<br>
          * if false, melonJS will disable sounds and output a warning message
          * in the console<br>
-         * default value : true<br>
-         * @type {boolean}
+         * @type {Boolean}
+         * @default true
          * @memberOf me.sys
          */
         stopOnAudioError : true,
 
         /**
          * Specify whether to pause the game when losing focus.<br>
-         * default value : true<br>
-         * @type {boolean}
+         * @type {Boolean}
+         * @default true
          * @memberOf me.sys
          */
         pauseOnBlur : true,
 
         /**
          * Specify whether to unpause the game when gaining focus.<br>
-         * default value : true<br>
-         * @type {boolean}
+         * @type {Boolean}
+         * @default true
          * @memberOf me.sys
          */
         resumeOnFocus : true,
@@ -82,23 +85,23 @@
         /**
          * Specify whether to stop the game when losing focus or not<br>
          * The engine restarts on focus if this is enabled.
-         * default value : false<br>
          * @type {boolean}
+         * @default false
          * @memberOf me.sys
          */
         stopOnBlur : false,
 
         /**
          * Specify the rendering method for layers <br>
-         * if false, visible part of the layers are rendered dynamically
-         * (default)<br>
+         * if false, visible part of the layers are rendered dynamically<br>
          * if true, the entire layers are first rendered into an offscreen
          * canvas<br>
          * the "best" rendering method depends of your game<br>
-         * (amount of layer, layer size, amount of tiles per layer, etc…)<br>
+         * (amount of layer, layer size, amount of tiles per layer, etc.)<br>
          * note : rendering method is also configurable per layer by adding this
          * property to your layer (in Tiled)<br>
-         * @type {boolean}
+         * @type {Boolean}
+         * @default false
          * @memberOf me.sys
          */
         preRender : false,
@@ -111,15 +114,15 @@
          * Compare two version strings
          * @public
          * @function
-         * @param {string} first First version string to compare
-         * @param {string} [second="@VERSION"] Second version string to compare
-         * @return {number} comparison result <br>&lt; 0 : first &lt; second<br>
+         * @param {String} first First version string to compare
+         * @param {String} [second="__VERSION__"] Second version string to compare
+         * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
          * 0 : first == second<br>
          * &gt; 0 : first &gt; second
          * @example
-         * if (me.sys.checkVersion("0.9.5") > 0) {
+         * if (me.sys.checkVersion("__VERSION__") > 0) {
          *     console.error(
-         *         "melonJS is too old. Expected: 0.9.5, Got: " + me.version
+         *         "melonJS is too old. Expected: __VERSION__, Got: " + me.version
          *     );
          * }
          */

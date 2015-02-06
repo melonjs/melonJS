@@ -58,7 +58,7 @@
                     _timer.elapsed += dt;
                 }
                 if (_timer.elapsed >= _timer.delay) {
-                    _timer.func.apply(this);
+                    _timer.fn.apply(this);
                     if (_timer.repeat === true) {
                         _timer.elapsed -= _timer.delay;
                     } else {
@@ -75,7 +75,7 @@
         /**
          * last game tick value
          * @public
-         * @type Int
+         * @type Number
          * @name tick
          * @memberOf me.timer
          */
@@ -84,7 +84,7 @@
         /**
          * last measured fps rate
          * @public
-         * @type Int
+         * @type Number
          * @name fps
          * @memberOf me.timer
          */
@@ -120,15 +120,15 @@
          * Calls a function once after a specified delay.
          * @name setTimeout
          * @memberOf me.timer
-         * @param {Function} func the function you want to execute after delay milliseconds.
-         * @param {Function} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
-         * @return {Number}  timeoutID the numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
+         * @param {Function} fn the function you want to execute after delay milliseconds.
+         * @param {Number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+         * @param {Boolean} [pauseable=true] respects the pause state of the engine.
+         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
          * @function
          */
-        api.setTimeout = function (func, delay, pauseable) {
+        api.setTimeout = function (fn, delay, pauseable) {
             timers.push({
-                func: func,
+                fn : fn,
                 delay : delay,
                 elapsed : 0,
                 repeat : false,
@@ -142,15 +142,15 @@
          * Calls a function at specified interval.
          * @name setInterval
          * @memberOf me.timer
-         * @param {Function} func the function to execute
-         * @param {Function} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {Boolean} [pauseable = true] respects the pause state of the engine.
-         * @return {Number} intervalID the numerical ID of the timeout, which can be used later with me.timer.clearInterval().
+         * @param {Function} fn the function to execute
+         * @param {Number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param {Boolean} [pauseable=true] respects the pause state of the engine.
+         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearInterval().
          * @function
          */
-        api.setInterval = function (func, delay, pauseable) {
+        api.setInterval = function (fn, delay, pauseable) {
             timers.push({
-                func: func,
+                fn : fn,
                 delay : delay,
                 elapsed : 0,
                 repeat : true,
@@ -165,7 +165,7 @@
          * @name clearTimeout
          * @memberOf me.timer
          * @function
-         * @param {Number}  timeoutID ID of the timeout to be cleared
+         * @param {Number} timeoutID ID of the timeout to be cleared
          */
         api.clearTimeout = function (timeoutID) {
             clearTimer.defer(this, timeoutID);
@@ -202,7 +202,6 @@
          * @function
          */
         api.getDelta = function () {
-
             return delta;
         };
 
@@ -231,11 +230,8 @@
          * @ignore
          */
         api.update = function (time) {
-
             last = now;
-
             now = time;
-
             delta = (now - last);
 
             // get the game tick

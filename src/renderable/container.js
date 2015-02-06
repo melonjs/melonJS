@@ -76,9 +76,10 @@
             // by default reuse the global me.game.setting
             /**
              * The property of the child object that should be used to sort on <br>
-             * value : "x", "y", "z" (default: me.game.sortOn)
+             * value : "x", "y", "z"
              * @public
              * @type String
+             * @default me.game.sortOn
              * @name sortOn
              * @memberOf me.Container
              */
@@ -87,6 +88,7 @@
              * Specify if the children list should be automatically sorted when adding a new child
              * @public
              * @type Boolean
+             * @default true
              * @name autoSort
              * @memberOf me.Container
              */
@@ -109,10 +111,10 @@
          * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
-         * @param {number} [zIndex] forces the z index of the child to the specified value.
+         * @param {number} [z] forces the z index of the child to the specified value
          * @return {me.Renderable} the added child
          */
-        addChild : function (child, zIndex) {
+        addChild : function (child, z) {
             if (typeof(child.ancestor) !== "undefined") {
                 child.ancestor.removeChildNow(child);
             }
@@ -126,8 +128,8 @@
             }
 
             // change the child z-index if one is specified
-            if (typeof(zIndex) === "number") {
-                child.z = zIndex;
+            if (typeof(z) === "number") {
+                child.z = z;
             }
 
             // specify a z property to infinity if not defined
@@ -150,6 +152,7 @@
 
             return child;
         },
+
         /**
          * Add a child to the container at the specified index<br>
          * (the list won't be sorted after insertion)
@@ -189,12 +192,12 @@
         },
 
         /**
-         * Swaps the position (z depth) of 2 childs
+         * Swaps the position (z-index) of 2 children
          * @name swapChildren
          * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
-         * @param {me.Renderable} child
+         * @param {me.Renderable} child2
          */
         swapChildren : function (child, child2) {
             var index = this.getChildIndex(child);
@@ -262,7 +265,7 @@
          * @public
          * @function
          * @param {String} prop Property name
-         * @param {String|RegExp|Number} value Value of the property
+         * @param {String|RegExp|Number|Boolean} value Value of the property
          * @return {me.Renderable[]} Array of childs
          * @example
          * // get the first child object called "mainPlayer" in a specific container :
@@ -313,10 +316,9 @@
          * @memberOf me.Container
          * @public
          * @function
-         * @param {String|RegExp|Number} name entity name
-         * @return {me.Renderable[]} Array of childs
+         * @param {String|RegExp|Number|Boolean} name entity name
+         * @return {me.Renderable[]} Array of children
          */
-
         getChildByName : function (name) {
             return this.getChildByProp("name", name);
         },
@@ -329,7 +331,7 @@
          * @memberOf me.Container
          * @public
          * @function
-         * @param {String|RegExp|Number} GUID entity GUID
+         * @param {String|RegExp|Number|Boolean} GUID entity GUID
          * @return {me.Renderable} corresponding child or null
          */
         getChildByGUID : function (guid) {
@@ -342,7 +344,6 @@
          * @name getBounds
          * @memberOf me.Container
          * @function
-         * @param {me.Rect} [rect] an optional rectangle object to use when returning the bounding rect(else returns a new object)
          * @return {me.Rect} new rectangle
          */
         getBounds : function () {
@@ -428,7 +429,6 @@
          * @param {Object} value property value
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
-
         setChildsProperty : function (prop, val, recursive) {
             for (var i = this.children.length; i >= 0; i--) {
                 var obj = this.children[i];
@@ -512,7 +512,6 @@
          * @param {Boolean} [recursive=false] recursively sort all containers if true
          */
         sort : function (recursive) {
-
             // do nothing if there is already a pending sort
             if (this.pendingSort === null) {
                 if (recursive === true) {

@@ -154,10 +154,11 @@
     /**
      * Calculates which Vornoi region a point is on a line segment. <br>
      * It is assumed that both the line and the point are relative to `(0,0)`<br>
-     * <br>
-     *             |       (0)      |<br>
-     *      (-1)  [S]--------------[E]  (1)<br>
-     *             |       (0)      |<br>
+     * <pre>
+     *             |       (0)      |
+     *      (-1)  [S]--------------[E]  (1)
+     *             |       (0)      |
+     * </pre>
      *
      * @ignore
      * @param {Vector} line The line segment.
@@ -237,19 +238,18 @@
         api.bounds = null;
 
         /**
-         * Enum for collision type values. <br>
-         * Possible values are : <br>
-         * - <b>`NO_OBJECT`</b> (to disable collision check) <br>
-         * - <b>`PLAYER_OBJECT`</b> <br>
-         * - <b>`NPC_OBJECT`</b> <br>
-         * - <b>`ENEMY_OBJECT`</b> <br>
-         * - <b>`COLLECTABLE_OBJECT`</b> <br>
-         * - <b>`ACTION_OBJECT`</b> <br>
-         * - <b>`PROJECTILE_OBJECT`</b> <br>
-         * - <b>`WORLD_SHAPE`</b> (for collision check with collision shapes/tiles) <br>
-         * - <b>`ALL_OBJECT`</b> <br>
+         * Enum for collision type values.
+         * @property NO_OBJECT to disable collision check
+         * @property PLAYER_OBJECT
+         * @property NPC_OBJECT
+         * @property ENEMY_OBJECT
+         * @property COLLECTABLE_OBJECT
+         * @property ACTION_OBJECT e.g. doors
+         * @property PROJECTILE_OBJECT e.g. missiles
+         * @property WORLD_SHAPE e.g. walls; for map collision shapes
+         * @property ALL_OBJECT all of the above
          * @readonly
-         * @enum {number}
+         * @enum {Number}
          * @name types
          * @memberOf me.collision
          * @see me.body.setCollisionMask
@@ -263,69 +263,13 @@
         api.types = {
             /** to disable collision check */
             NO_OBJECT : 0,
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name PLAYER_OBJECT
-             * @memberOf me.collision.types
-             */
             PLAYER_OBJECT : 1,
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name NPC_OBJECT
-             * @memberOf me.collision.types
-             */
             NPC_OBJECT : 2,
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name ENEMY_OBJECT
-             * @memberOf me.collision.types
-             */
             ENEMY_OBJECT : 4,
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name COLLECTABLE_OBJECT
-             * @memberOf me.collision.types
-             */
             COLLECTABLE_OBJECT : 8,
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name ACTION_OBJECT
-             * @memberOf me.collision.types
-             */
             ACTION_OBJECT : 16, // door, etc...
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name PROJECTILE_OBJECT
-             * @memberOf me.collision.types
-             */
             PROJECTILE_OBJECT : 32, // missiles, etc...
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name WORLD_SHAPE
-             * @memberOf me.collision.types
-             */
             WORLD_SHAPE : 64, // walls, etc...
-
-            /**
-             * Default object type constant for collision filtering
-             * @constant
-             * @name ALL_OBJECT
-             * @memberOf me.collision.types
-             */
             ALL_OBJECT : 0xFFFFFFFF // all objects
         };
 
@@ -349,19 +293,20 @@
         };
 
         /**
-         * An object representing the result of an intersection, contains: <br>
-         *  - <b>`a`</b> and <b>`b`</b> {me.Entity} : The two objects participating in the intersection <br>
-         *  - <b>`overlap`</b> {number} : Magnitude of the overlap on the shortest colliding axis. <br>
-         *  - <b>`overlapV`</b> {me.vector2d}: The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding <br>
-         *  - <b>`overlapN`</b> {me.vector2d}: The shortest colliding axis (unit-vector) <br>
-         *  - <b>`aInB`</b>, <b>`bInA`</b> {boolean} : Whether the first object is entirely inside the second, and vice versa. <br>
-         *  - <b>`indexShapeA</b> {number} : the index of the colliding shape for the object a body. <br>
-         *  - <b>`indexShapeB</b> {number} : the index of the colliding shape for the object b body. <br>
-         *  - <b>`clear()`</b> {function} :  Set some values of the response back to their defaults. Call this between tests if you are going to reuse a single Response object for multiple intersection tests <br>
+         * An object representing the result of an intersection.
+         * @property {me.Entity} a The first object participating in the intersection
+         * @property {me.Entity} b The second object participating in the intersection
+         * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
+         * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+         * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
+         * @property {Boolean} aInB Whether the first object is entirely inside the second
+         * @property {Boolean} bInA Whether the second object is entirely inside the first
+         * @property {Number} indexShapeA The index of the colliding shape for the object a body
+         * @property {Number} indexShapeB The index of the colliding shape for the object b body
          * @name ResponseObject
          * @memberOf me.collision
          * @public
-         * @type {external:Object}
+         * @type {Object}
          * @see me.collision.check
          */
         api.ResponseObject = function () {
@@ -435,11 +380,13 @@
          * @return {Boolean} in case of collision, false otherwise
          * @example
          * update : function (dt) {
-         *    ...
+         *    // ...
+         *
          *    // handle collisions against other shapes
          *    me.collision.check(this);
-         *    ...
-         * };
+         *
+         *    // ...
+         * },
          *
          * // colision handler
          * onCollision : function (response) {
@@ -452,7 +399,7 @@
          *     }
          *     // Make the object solid
          *     return true;
-         * };
+         * },
          */
         api.check = function (objA, responseObject) {
             var collision = 0;

@@ -116,19 +116,17 @@
         api.onLevelLoaded = null;
 
         /**
-         * Provide an object hash with all tag parameters specified in the url.<br>
-         * Tags recognized by melonJS : <br>
-         * - hitbox (true/false) : draw the hitbox in the debug panel (if enabled)<br>
-         * - velocity (true/false) : draw the entities velocity in the debug panel (if enabled)<br>
-         * - quadtree (true/false) : draw the quadtree in the debug panel (if enabled)<br>
-         * - renderer (canvas/webgl) : force the renderer to the given mode <br>
-         * - webgl (true) : force the renderer to the give mode
+         * Provide an object hash with all tag parameters specified in the url.
+         * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
+         * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
+         * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
+         * @property {Boolean} [webgl=false] force the renderer to WebGL
          * @public
-         * @type {me.Object}
+         * @type {Object}
          * @name HASH
          * @memberOf me.game
          * @example
-         * http;//myurl/index.html#debug&hitbox=true&mytag=value
+         * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
          */
         api.HASH = null;
 

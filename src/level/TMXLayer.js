@@ -5,16 +5,16 @@
  *
  */
 (function (TMXConstants) {
-    
+
     /**
      * a generic Color Layer Object
      * @class
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {String}  name    layer name
-     * @param {String}  color   a CSS color value
-     * @param {Number}  z       z position
+     * @param {String} name Layer name
+     * @param {me.Color|String} color CSS color
+     * @param {Number} z z-index position
      */
     me.ColorLayer = me.Renderable.extend({
         // constructor
@@ -56,14 +56,14 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Number} x           default x coordinates in pixels
-     * @param {Number} y           default x coordinates in pixels
-     * @param {Number} width       layer width in pixels
-     * @param {Number} height      layer height in pixels
-     * @param {String} name        layer name
-     * @param {String} image       image name (as defined in the asset list)
-     * @param {Number} z           z position
-     * @param {me.Vector2d}  [ratio=1.0]   scrolling ratio to be applied
+     * @param {Number} x Y coordinate
+     * @param {Number} y X coordinate
+     * @param {Number} width Layer width in pixels
+     * @param {Number} height Layer height in pixels
+     * @param {String} name Layer name
+     * @param {String} image Image name (as defined in the asset list)
+     * @param {Number} z z-index position
+     * @param {me.Vector2d} [ratio=1.0] Scrolling ratio to be applied
      */
     me.ImageLayer = me.Renderable.extend({
         /**
@@ -88,7 +88,7 @@
             width  = (width  ? Math.min(me.game.viewport.width, width)   : me.game.viewport.width);
             height = (height ? Math.min(me.game.viewport.height, height) : me.game.viewport.height);
             this._super(me.Renderable, "init", [x, y, width, height]);
-            
+
             // specify the start offset when drawing the image (for parallax/repeat features)
             this.offset = new me.Vector2d(0, 0);
 
@@ -98,12 +98,12 @@
             /**
              * Define the image scrolling ratio<br>
              * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
-             * Default value : (1.0, 1.0) <br>
              * To specify a value through Tiled, use one of the following format : <br>
              * - a number, to change the value for both axis <br>
              * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
              * @public
              * @type me.Vector2d
+             * @default <1.0,1.0>
              * @name me.ImageLayer#ratio
              */
             this.ratio = new me.Vector2d(1.0, 1.0);
@@ -132,7 +132,7 @@
             /**
              * Define if and how an Image Layer should be repeated.<br>
              * By default, an Image Layer is repeated both vertically and horizontally.<br>
-             * Property values : <br>
+             * Acceptable values : <br>
              * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
              * * 'repeat-x' - The background image will be repeated only horizontally.<br>
              * * 'repeat-y' - The background image will be repeated only vertically.<br>
@@ -303,12 +303,12 @@
      * @param {Number} tileheight height of each tile in pixels
      * @param {String} orientation "isometric" or "orthogonal"
      * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
-     * @param {Number} zOrder layer z-order
+     * @param {Number} z z-index position
      */
     me.TMXLayer = me.Renderable.extend({
 
         /** @ignore */
-        init: function (tilewidth, tileheight, orientation, tilesets, zOrder) {
+        init: function (tilewidth, tileheight, orientation, tilesets, z) {
             // super constructor
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
@@ -332,7 +332,7 @@
 
             /**
              * All animated tilesets in this layer
-             * @public
+             * @private
              * @type Array
              * @name me.TMXLayer#animatedTilesets
              */
@@ -361,7 +361,7 @@
             }
 
             // for displaying order
-            this.z = zOrder;
+            this.z = z;
         },
 
         /** @ignore */
@@ -370,7 +370,7 @@
             this.name = layer[TMXConstants.TMX_TAG_NAME];
             this.cols = +layer[TMXConstants.TMX_TAG_WIDTH];
             this.rows = +layer[TMXConstants.TMX_TAG_HEIGHT];
-            
+
             // hexagonal maps only
             this.hexsidelength = +layer[TMXConstants.TMX_HEXSIDELEN] || undefined;
 
@@ -453,8 +453,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x x coordinate in pixel
-         * @param {Number} y y coordinate in pixel
+         * @param {Number} x X coordinate
+         * @param {Number} y Y coordinate
          * @return {Number} TileId
          */
         getTileId : function (x, y) {
@@ -468,8 +468,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x x coordinate in pixel
-         * @param {Number} y y coordinate in pixel
+         * @param {Number} x X coordinate
+         * @param {Number} y Y coordinate
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
@@ -482,8 +482,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x x coordinate in tile
-         * @param {Number} y y coordinate in tile
+         * @param {Number} x X coordinate
+         * @param {Number} y Y coordinate
          * @param {Number} tileId tileId
          * @return {me.Tile} the corresponding newly created tile object
          */
@@ -503,8 +503,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x x position
-         * @param {Number} y y position
+         * @param {Number} x X coordinate
+         * @param {Number} y Y coordinate
          */
         clearTile : function (x, y) {
             // clearing tile

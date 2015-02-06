@@ -9,7 +9,7 @@
     var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
     var cssToRGB = new Map();
-    
+
     [
         // CSS1
         [ "black",                  [   0,   0,   0 ] ],
@@ -525,7 +525,7 @@
      * Base class for me.Color exception handling.
      * @name Error
      * @class
-     * @memberOf me.Vector2d
+     * @memberOf me.Color
      * @constructor
      * @param {String} msg Error message.
      */

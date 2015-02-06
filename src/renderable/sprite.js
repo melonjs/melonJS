@@ -58,6 +58,7 @@
              * WARNING: rotating sprites decreases performance with Canvas Renderer
              * @public
              * @type Number
+             * @default 0
              * @name me.Sprite#angle
              */
             this.angle = settings.rotation || 0;
@@ -104,14 +105,14 @@
          * @deprecated Use PNG or GIF with transparency instead
          * @param {String} color color key in "#RRGGBB" format
          */
-        setTransparency : function (col) {
+        setTransparency : function (color) {
             // remove the # if present
-            col = (col.charAt(0) === "#") ? col.substring(1, 7) : col;
+            color = (color.charAt(0) === "#") ? color.substring(1, 7) : color;
             // applyRGB Filter (return a context object)
             this.image = me.video.renderer.applyRGBFilter(
                 this.image,
                 "transparent",
-                col.toUpperCase()
+                color.toUpperCase()
             ).canvas;
         },
 
@@ -136,9 +137,8 @@
          * @example
          * // make the object flicker for 1 second
          * // and then remove it
-         * this.flicker(1000, function ()
-         * {
-         *    me.game.world.removeChild(this);
+         * this.flicker(1000, function () {
+         *     me.game.world.removeChild(this);
          * });
          */
         flicker : function (duration, callback) {
@@ -257,7 +257,7 @@
          * @memberOf me.Sprite
          * @function
          * @protected
-         * @param {Renderer} a renderer object: me.CanvasRenderer or me.WebGLRenderer
+         * @param {me.CanvasRenderer|me.WebGLRenderer} a renderer object
          **/
         draw : function (renderer) {
             // do nothing if we are flickering

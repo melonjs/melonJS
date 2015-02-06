@@ -333,7 +333,7 @@
      * @constructor
      * @param {Number} x the x coordinates of the entity object
      * @param {Number} y the y coordinates of the entity object
-     * @param {me.ObjectSettings} settings Object Properties as defined in Tiled<br>
+     * @param {Object} settings See {@link me.Entity}
      */
     me.CollectableEntity = me.Entity.extend(
     /** @scope me.CollectableEntity.prototype */
@@ -357,7 +357,7 @@
      * @constructor
      * @param {Number} x the x coordinates of the object
      * @param {Number} y the y coordinates of the object
-     * @param {me.ObjectSettings} settings object settings
+     * @param {Object} settings See {@link me.Entity}
      * @example
      * me.game.world.addChild(new me.LevelEntity(
      *     x, y, {

@@ -126,7 +126,7 @@
          * @name me.Tile#getRenderable
          * @public
          * @function
-         * @param {Object} [settings] additional parameters as for me.Sprite object
+         * @param {Object} [settings] see {@link me.Sprite}
          * @return {me.Renderable} either a me.Sprite object or a me.AnimationSheet (for animated tiles)
          */
         getRenderable : function (settings) {
@@ -164,13 +164,13 @@
                     }
                 }
             }
-            
+
             // any H/V flipping to apply?
             if (this.flipped === true) {
                 renderable.flipX(this.flippedX);
                 renderable.flipY(this.flippedY);
             }
-            
+
             return renderable;
         },
     });

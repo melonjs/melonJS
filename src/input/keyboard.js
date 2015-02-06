@@ -339,7 +339,7 @@
      * @example
      * // Unlock jump when touching the ground
      * if (!this.falling && !this.jumping) {
-     * me.input.unlockKey("jump");
+     *     me.input.unlockKey("jump");
      * }
      */
     obj.unlockKey = function (action) {
