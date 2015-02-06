@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * a simple debug panel plugin
@@ -206,7 +206,7 @@
             renderer.setColor("grey");
             renderer.strokeLine(0, where, width, where);
             renderer.setGlobalAlpha(1.0);
-            
+
 
             var updateTimeSum = 0, drawTimeSum = 0, frameUpdateTimeSum = 0, frameDrawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
             // prepare data

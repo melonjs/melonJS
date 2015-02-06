@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2015, Olivier BIOT
  * http://www.melonjs.org
  * @desc Tests if a draggable entity can be dragged to a different location
  * by simulating the system events that would have been triggered by pointer events

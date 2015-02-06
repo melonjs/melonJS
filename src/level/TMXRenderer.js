@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -314,7 +314,7 @@
             }
         }
     });
-    
+
      /**
      * an Hexagonal Map Renderder
      * Tiled QT 0.7.x format

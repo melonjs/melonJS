@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -341,7 +341,7 @@
             }
             return this;
         },
-        
+
         /**
          * change this vector to be perpendicular to what it was before.<br>
          * (Effectively rotates it 90 degrees in a clockwise direction)
@@ -372,7 +372,7 @@
             this.y = x * Math.sin(angle) + y * Math.cos(angle);
             return this;
         },
-        
+
          /**
          * Reverse this vector.
          * @name reverse
@@ -385,7 +385,7 @@
             this.y = -this.y;
             return this;
         },
-        
+
         /**
          * return the dot product of this vector and the passed one
          * @name dotProduct
@@ -408,7 +408,7 @@
         length2 : function () {
             return this.dotProduct(this);
         },
-        
+
         /**
          * return the length (magnitude) of this vector
          * @name length
@@ -443,7 +443,7 @@
         angle : function (v) {
             return Math.atan2((v.y - this.y), (v.x - this.x));
         },
-            
+
         /**
          * project this vector on to another vector.
          * @name project
@@ -474,10 +474,10 @@
             this.y = amt * v.y;
             return this;
         },
-        
+
         /**
          * Reflect this vector on an arbitrary axis.
-         * @name reflect          
+         * @name reflect
          * @memberOf me.Vector2d
          * @function
          * @param {me.Vector2d} axis The vector representing the axis.
@@ -491,7 +491,7 @@
             this.y -= y;
             return this;
         },
- 
+
         /**
          * Reflect this vector on an arbitrary axis (represented by a unit vector) <br>
          * This is slightly more efficient than `reflect` when dealing with unit vectors.
@@ -509,7 +509,7 @@
             this.y -= y;
             return this;
         },
-        
+
         /**
          * return a clone copy of this vector
          * @name clone

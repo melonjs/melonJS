@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
+ * Copyright (C) 2011 - 2015, Olivier BIOT
  * http://www.melonjs.org
  * @desc Tests if a droptarget entity is able to detect a valid drop
  * of a draggable entity by simulating the system events that would have been triggered by

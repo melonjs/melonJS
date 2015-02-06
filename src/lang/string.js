@@ -1,6 +1,6 @@
 /**
  * MelonJS Game Engine
- * (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 
@@ -9,7 +9,7 @@
  * @external String
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String|String}
  */
- 
+
 if (!String.prototype.trim) {
     /**
      * returns the string stripped of whitespace from both ends

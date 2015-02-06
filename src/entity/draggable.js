@@ -1,7 +1,7 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier BIOT
- * http://www.melonjs.org
+ * * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ http://www.melonjs.org
  * @desc Used to make a game entity draggable
  */
 me.DraggableEntity = (function (Entity, Input, Event, Vector) {

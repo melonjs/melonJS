@@ -1,6 +1,6 @@
 /**
- * @license MelonJS Game Engine
- * @copyright (C) 2011 - 2014 Olivier Biot, Jason Oster, Aaron McLeod
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * melonJS is licensed under the MIT License.
@@ -8,7 +8,7 @@
  */
 
 (function () {
- 
+
     /**
      * The built in window Object
      * @external window
@@ -20,7 +20,10 @@
      * of this namespace.
      * <p>You generally should not add new properties to this namespace as it may be
      * overwritten in future versions.</p>
+     * @name me
      * @namespace
+     * @license {@link http://www.opensource.org/licenses/mit-license.php|MIT}
+     * @copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
      */
     window.me = window.me || {};
 
@@ -154,7 +157,7 @@
         }
         return this;
     };
-    
+
     // call the library init function when ready
     // (this should not be here?)
     if (me.skipAutoInit !== true) {
@@ -218,5 +221,5 @@
             }
         };
     }
- 
+
 })();

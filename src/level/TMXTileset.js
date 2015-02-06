@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * (C) 2011 - 2015 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -205,7 +205,7 @@
 
             return gid;
         },
-        
+
         /**
          * return the properties of the specified tile
          * @name me.TMXTileset#getTileProperties
@@ -322,7 +322,7 @@
             }
         }
     });
-    
+
     /**
      * Base class for TMXTileset exception handling.
      * @name Error
@@ -337,5 +337,5 @@
             this.name = "me.TMXTileset.Error";
         }
     });
-    
+
 })(me.TMXConstants);

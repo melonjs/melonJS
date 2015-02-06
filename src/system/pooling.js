@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2013, Olivier Biot
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -173,7 +173,7 @@
             // store back the object instance for later recycling
             entityClass[name].pool.push(obj);
         };
-        
+
         /**
          * Check if an object with the provided name is registered
          * @name exists
