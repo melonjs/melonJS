@@ -485,8 +485,8 @@
             var bNormals = polyB.normals;
             var bLen = bNormals.length;
             // aboslute shape position
-            var posA = T_VECTORS.pop().copy(a._absoluteBounds.pos).add(polyA.pos);
-            var posB = T_VECTORS.pop().copy(b._absoluteBounds.pos).add(polyB.pos);
+            var posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor._absoluteBounds.pos).add(polyA.pos);
+            var posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor._absoluteBounds.pos).add(polyB.pos);
             var i;
 
             // If any of the edge normals of A is a separating axis, no intersection.
