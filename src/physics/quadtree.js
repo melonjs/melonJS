@@ -51,9 +51,9 @@
      * @constructor
      * @see me.collision.quadTree
      * @param {me.Rect} bounds bounds of the node
-     * @param {external:Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-     * @param {external:Number} [max_levels=4] total max levels inside root Quadtree
-     * @param {external:Number} [level] deepth level, required for subnodes
+     * @param {Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+     * @param {Number} [max_levels=4] total max levels inside root Quadtree
+     * @param {Number} [level] deepth level, required for subnodes
      */
     function Quadtree(bounds, max_objects, max_levels, level) {
         this.max_objects = max_objects || 4;
@@ -183,7 +183,7 @@
      * @name insert
      * @memberOf me.QuadTree
      * @function
-     * @param {external:Object} item object to be added
+     * @param {Object} item object to be added
      */
     Quadtree.prototype.insert = function (item) {
 
@@ -229,8 +229,8 @@
      * @name retrieve
      * @memberOf me.QuadTree
      * @function
-     * @param {external:Object} object object to be checked against
-     * @return {external:Object[]} array with all detected objects
+     * @param {Object} object object to be checked against
+     * @return {Object[]} array with all detected objects
      */
     Quadtree.prototype.retrieve = function (item) {
 

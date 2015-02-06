@@ -13,13 +13,15 @@
      * @memberOf me
      * @constructor
      * @param {Canvas} canvas The html canvas tag to draw to on screen.
-     * @param {Number} game_width The width of the canvas without scaling
-     * @param {Number} game_height The height of the canvas without scaling
+     * @param {Number} width The width of the canvas without scaling
+     * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
-     * @param {Boolean} [options.doubleBuffering] Whether to enable double buffering.
-     * @param {Number} [options.zoomX] The actual width of the canvas with scaling applied
-     * @param {Number} [options.zoomY] The actual height of the canvas with scaling applied
-     * @param {me.WebGLRenderer.Compositor} [options.compositor=me.WebGLRenderer.Compositor] A class that implements the compositor API
+     * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
+     * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
      */
     me.WebGLRenderer = me.Renderer.extend(
     /** @scope me.WebGLRenderer.prototype */
@@ -239,6 +241,12 @@
          * @param {Number} dy Destination y-coordinate
          * @param {Number} dw Destination width
          * @param {Number} dh Destination height
+         * @example
+         * // Can be used in three ways:
+         * renderer.drawImage(image, dx, dy);
+         * renderer.drawImage(image, dx, dy, dw, dh);
+         * renderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+         * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
         drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             // TODO: Replace the function signature with:
@@ -296,7 +304,7 @@
          * @name getContextGL
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Canvas} [canvas=canvas instance of the renderer]
+         * @param {Canvas} canvas
          * @param {Boolean} [opaque=false] Use true to disable transparency
          * @return {WebGLContext}
          */
@@ -475,7 +483,7 @@
         /**
          * Set the line width
          * @name setLineWidth
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.WebGLRenderer
          * @function
          * @param {Number} width Line width
          */
@@ -502,7 +510,7 @@
         /**
          * Stroke an ellipse at the specified coordinates with given radius, start and end points
          * @name strokeEllipse
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.WebGLRenderer
          * @function
          * @param {Number} x arc center point x-axis
          * @param {Number} y arc center point y-axis

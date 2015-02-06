@@ -18,10 +18,10 @@
      * @extends me.Font
      * @memberOf me
      * @constructor
-     * @param {String} font
-     * @param {Number|Object} size either an int value, or an object like {x:16,y:16}
-     * @param {Number} [scale="1.0"]
-     * @param {String} [firstChar="0x20"]
+     * @param {String} font font name
+     * @param {Number|Object} size either a number value, or an object like { x : 16, y : 16 }
+     * @param {Number} [scale=1.0]
+     * @param {Number} [firstChar=0x20] charcode for the first character in the font sheet. Default is the space character.
      */
     me.BitmapFont = me.Font.extend(
     /** @scope me.BitmapFont.prototype */ {
@@ -30,8 +30,6 @@
             /** @ignore */
             // scaled font size;
             this.sSize = new me.Vector2d();
-            // first char in the ascii table
-            this.firstChar = 0x20;
 
             // #char per row
             this.charCount = 0;
@@ -107,7 +105,7 @@
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
-         * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
+         * @return {Object} an object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (renderer, text) {
             var strings = ("" + text).split("\n");

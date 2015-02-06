@@ -378,7 +378,7 @@
          * @memberOf me.device
          */
         api.alpha = 0;
-        
+
         /**
          * a string representing the preferred language of the user, usually the language of the browser UI.
          * (will default to "en" if the information is not available)
@@ -659,7 +659,7 @@
          * navigator.vibrate(1000);
          * // or alternatively
          * navigator.vibrate([1000]);
-         * vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+         * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
          * navigator.vibrate([50, 100, 150]);
          * // cancel any existing vibrations
          * navigator.vibrate(0);

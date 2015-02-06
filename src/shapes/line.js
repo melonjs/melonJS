@@ -13,7 +13,7 @@
      * @constructor
      * @param {Number} x origin point of the Line
      * @param {Number} y origin point of the Line
-     * @param {me.Vector2d[]} points array of vector defining the Line
+     * @param {me.Vector2d[]} points array of vectors defining the Line
      */
     me.Line = me.Polygon.extend(
     /** @scope me.Line.prototype */ {
@@ -40,19 +40,19 @@
          * @return {boolean} true if contains
          */
         containsPoint: function (x, y) {
-            // translate the given coordinates, 
-            // rather than creating temp translated vectors 
+            // translate the given coordinates,
+            // rather than creating temp translated vectors
             x -= this.pos.x; // Cx
             y -= this.pos.y; // Cy
             var start = this.points[0]; // Ax/Ay
             var end = this.points[1]; // Bx/By
-            
+
             //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
             return (y - start.y) * (end.x - start.x) === (end.y - start.y) * (x - start.x);
         },
-        
+
         /**
-         * Computes the calculated collision edges and normals. 
+         * Computes the calculated collision edges and normals.
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
          * @memberOf me.Line

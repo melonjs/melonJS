@@ -29,14 +29,14 @@
      * @example
      * // create a texture atlas from a JSON Object
      * texture = new me.video.renderer.Texture(
-     *    me.loader.getJSON("texture"),
-     *    me.loader.getImage("texture")
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
      * );
      *
      * // create a texture atlas for a spritesheet
      * texture = new me.video.renderer.Texture(
-     *    {framewidth:32, frameheight:32},
-     *    me.loader.getImage("spritesheet")
+     *     { framewidth : 32, frameheight : 32 },
+     *     me.loader.getImage("spritesheet")
      * );
      */
     me.CanvasRenderer.prototype.Texture = Object.extend(
@@ -162,12 +162,12 @@
             var width = image.width;
             var height = image.height;
 
-            // calculate the sprite count (line, col)            
+            // calculate the sprite count (line, col)
             var spritecount = new me.Vector2d(
                 ~~((width - margin + spacing) / (data.framewidth + spacing)),
                 ~~((height - margin + spacing) / (data.frameheight + spacing))
             );
-            
+
             // verifying the texture size
             if (((width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
                 (height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
@@ -290,17 +290,16 @@
          * @example
          * // create a new texture atlas object under the `game` namespace
          * game.texture = new me.video.renderer.Texture(
-         *    me.loader.getJSON("texture"),
-         *    me.loader.getImage("texture")
+         *     me.loader.getJSON("texture"),
+         *     me.loader.getImage("texture")
          * );
-         * ...
-         * ...
+         *
          * // create a new animationSheet as renderable for the entity
          * this.renderable = game.texture.createAnimationFromName([
-         *   "walk0001.png", "walk0002.png", "walk0003.png",
-         *   "walk0004.png", "walk0005.png", "walk0006.png",
-         *   "walk0007.png", "walk0008.png", "walk0009.png",
-         *   "walk0010.png", "walk0011.png"
+         *     "walk0001.png", "walk0002.png", "walk0003.png",
+         *     "walk0004.png", "walk0005.png", "walk0006.png",
+         *     "walk0007.png", "walk0008.png", "walk0009.png",
+         *     "walk0010.png", "walk0011.png"
          * ]);
          *
          * // define an additional basic walking animation

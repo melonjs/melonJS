@@ -105,10 +105,10 @@
                         settings.x, settings.y,
                         settings
                     );
-                    
+
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object") {
-                        obj.renderable = settings.tile.getRenderable();
+                        obj.renderable = settings.tile.getRenderable(settings);
                     }
 
                     if (isCollisionGroup && !settings.name) {
@@ -183,7 +183,6 @@
         };
 
         /**
-         *
          * add a TMX level
          * @ignore
          */
@@ -222,12 +221,15 @@
          * // the game defined ressources
          * // to be preloaded by the loader
          * // TMX maps
-         * ...
-         * {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
-         * {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
-         * {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
-         * ...
-         * ...
+         * var resources = [
+         *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
+         *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
+         *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
+         *     // ...
+         * ];
+         *
+         * // ...
+         *
          * // load a level
          * me.levelDirector.loadLevel("a4_level1");
          */

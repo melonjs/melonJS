@@ -17,7 +17,7 @@
      * @constructor
      * @param {Number} x the x coordinate of the GUI Object
      * @param {Number} y the y coordinate of the GUI Object
-     * @param {me.ObjectSettings} settings Object settings
+     * @param {Object} settings See {@link me.Entity}
      * @example
      *
      * // create a basic GUI Object
@@ -60,13 +60,15 @@
              * object can be clicked or not
              * @public
              * @type boolean
+             * @default true
              * @name me.GUI_Object#isClickable
              */
             this.isClickable = true;
 
             /**
-             * Tap and hold threshold timeout in ms (default 250)
+             * Tap and hold threshold timeout in ms
              * @type {number}
+             * @default 250
              * @name me.GUI_Object#holdThreshold
              */
             this.holdThreshold = 250;
@@ -75,6 +77,7 @@
              * object can be tap and hold
              * @public
              * @type boolean
+             * @default false
              * @name me.GUI_Object#isHoldable
              */
             this.isHoldable = false;
@@ -129,7 +132,7 @@
         },
 
         /**
-         * function called when the object is clicked <br>
+         * function called when the object is pressed <br>
          * to be extended <br>
          * return false if we need to stop propagating the event
          * @name onClick
@@ -153,7 +156,7 @@
         },
 
         /**
-         * function called when the object is clicked <br>
+         * function called when the object is pressed and released <br>
          * to be extended <br>
          * return false if we need to stop propagating the event
          * @name onClick
@@ -178,15 +181,14 @@
         },
 
         /**
-         * function called when the object is clicked and holded<br>
+         * function called when the object is pressed and held<br>
          * to be extended <br>
          * @name onHold
          * @memberOf me.GUI_Object
          * @public
          * @function
          */
-        onHold : function () {
-        },
+        onHold : function () {},
 
         /**
          * OnDestroy notification function<br>

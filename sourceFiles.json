@@ -1,8 +1,8 @@
 [
     "src/lang/window.js",
+    "src/lang/function.js",
     "src/lang/object.js",
     "src/lang/error.js",
-    "src/lang/function.js",
     "src/lang/number.js",
     "src/lang/string.js",
     "src/lang/array.js",

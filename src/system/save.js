@@ -9,24 +9,30 @@
      * A singleton object to access the device localStorage area
      * @example
      * // Initialize "score" and "lives" with default values
+     * // This loads the properties from localStorage if they exist, else it sets the given defaults
      * me.save.add({ score : 0, lives : 3 });
+     *
+     * // Print all
+     * // On first load, this prints { score : 0, lives : 3 }
+     * // On further reloads, it prints { score : 31337, lives : 3, complexObject : ... }
+     * // Because the following changes will be saved to localStorage
+     * console.log(JSON.stringify(me.save));
      *
      * // Save score
      * me.save.score = 31337;
      *
-     * // Load lives
-     * console.log(me.save.lives);
-     *
-     * // Also supports complex objects thanks to JSON backend
+     * // Also supports complex objects thanks to the JSON backend
+     * me.save.add({ complexObject : {} })
      * me.save.complexObject = { a : "b", c : [ 1, 2, 3, "d" ], e : { f : [{}] } };
-     * // DO NOT set any child properties of me.save.complexObject directly!
+     *
+     * // WARNING: Do not set any child properties of complex objects directly!
      * // Changes made that way will not save. Always set the entire object value at once.
+     * // If you cannot live with this limitation, there's a workaround:
+     * me.save.complexObject.c.push("foo"); // Modify a child property
+     * me.save.complexObject = me.save.complexObject; // Save the entire object!
      *
-     * // Print all
-     * console.log(JSON.stringify(me.save));
-     *
-     * // Remove "score" from localStorage
-     * me.save.remove('score');
+     * // Remove "lives" from localStorage
+     * me.save.remove("lives");
      * @namespace me.save
      * @memberOf me
      */

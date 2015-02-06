@@ -17,6 +17,7 @@ if (!Object.defineProperty) {
      * @param {Object} obj The object on which to define the property.
      * @param {string} prop The name of the property to be defined or modified.
      * @param {Object} desc The descriptor for the property being defined or modified.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty|Object.defineProperty}
      */
     Object.defineProperty = function (obj, prop, desc) {
         // check if Object support __defineGetter function
@@ -34,19 +35,19 @@ if (!Object.defineProperty) {
     };
 }
 
-if (typeof Object.create !== "function") {
+if (!Object.create) {
     /**
      * Prototypal Inheritance Create Helper
      * @name create
      * @memberOf external:Object#
      * @function
      * @param {Object} Object
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create|Object.create}
      * @example
      * // declare oldObject
      * oldObject = new Object();
      * // make some crazy stuff with oldObject (adding functions, etc...)
-     * ...
-     * ...
+     * // ...
      *
      * // make newObject inherits from oldObject
      * newObject = Object.create(oldObject);
@@ -55,57 +56,6 @@ if (typeof Object.create !== "function") {
         var Fn = function () {};
         Fn.prototype = o;
         return new Fn();
-    };
-}
-
-/**
- * The built in Function Object
- * @external Function
- * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function|Function}
- */
-
-if (!Function.prototype.bind) {
-    /** @ignore */
-    var Empty = function () {};
-
-    /**
-     * Binds this function to the given context by wrapping it in another function and returning the wrapper.<p>
-     * Whenever the resulting "bound" function is called, it will call the original ensuring that this is set to context. <p>
-     * Also optionally curries arguments for the function.
-     * @memberof! external:Function#
-     * @alias bind
-     * @param {Object} context the object to bind to.
-     * @param {} [arguments...] Optional additional arguments to curry for the function.
-     * @example
-     * // Ensure that our callback is triggered with the right object context (this):
-     * myObject.onComplete(this.callback.bind(this));
-     */
-    Function.prototype.bind = function bind(that) {
-        // ECMAScript 5 compliant implementation
-        // http://es5.github.com/#x15.3.4.5
-        // from https://github.com/kriskowal/es5-shim
-        var target = this;
-        if (typeof target !== "function") {
-            throw new TypeError("Function.prototype.bind called on incompatible " + target);
-        }
-        var args = Array.prototype.slice.call(arguments, 1);
-        var bound = function () {
-            if (this instanceof bound) {
-                var result = target.apply(this, args.concat(Array.prototype.slice.call(arguments)));
-                if (Object(result) === result) {
-                    return result;
-                }
-                return this;
-            } else {
-                return target.apply(that, args.concat(Array.prototype.slice.call(arguments)));
-            }
-        };
-        if (target.prototype) {
-            Empty.prototype = target.prototype;
-            bound.prototype = new Empty();
-            Empty.prototype = null;
-        }
-        return bound;
     };
 }
 
@@ -118,7 +68,7 @@ if (!Object.is) {
      * @param {Object} a The first value to compare
      * @param {Object} b The second value to compare
      * @return {Boolean}
-     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is|Object.is}
      * @example
      * // Strings are equal
      * var s = "foo";
@@ -162,6 +112,7 @@ if (!Object.assign) {
      * @param {Object} target The target object.
      * @param {Object[]} sources The source object(s).
      * @return {Object} The target object gets returned.
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign|Object.assign}
      * @example
      * // Merging objects
      * var o1 = { a: 1 };

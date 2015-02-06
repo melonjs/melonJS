@@ -56,9 +56,9 @@ module.exports = function (grunt) {
             docs : {
                 options : {
                     variables : {
-                        "VERSION" : "<%= pkg.version %>"
+                        "__VERSION__" : "<%= pkg.version %>"
                     },
-                    prefix : "@",
+                    usePrefix : false,
                     force : true
                 },
                 files : [

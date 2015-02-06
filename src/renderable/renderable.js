@@ -43,10 +43,10 @@
 
             /**
              * Whether the renderable object is visible and within the viewport<br>
-             * default value : false
              * @public
              * @readonly
              * @type Boolean
+             * @default false
              * @name inViewport
              * @memberOf me.Renderable
              */
@@ -54,9 +54,9 @@
 
             /**
              * Whether the renderable object will always update, even when outside of the viewport<br>
-             * default value : false
              * @public
              * @type Boolean
+             * @default false
              * @name alwaysUpdate
              * @memberOf me.Renderable
              */
@@ -64,9 +64,9 @@
 
             /**
              * Whether to update this object when the game is paused.
-             * default value : false
              * @public
              * @type Boolean
+             * @default false
              * @name updateWhenPaused
              * @memberOf me.Renderable
              */
@@ -74,9 +74,9 @@
 
             /**
              * make the renderable object persistent over level changes<br>
-             * default value : false
              * @public
              * @type Boolean
+             * @default false
              * @name isPersistent
              * @memberOf me.Renderable
              */
@@ -85,9 +85,9 @@
             /**
              * Define if a renderable follows screen coordinates (floating)<br>
              * or the world coordinates (not floating)<br>
-             * default value : false
              * @public
              * @type Boolean
+             * @default false
              * @name floating
              * @memberOf me.Renderable
              */
@@ -95,9 +95,9 @@
 
             /**
              * Z-order for object sorting<br>
-             * default value : NaN; will be automatically set by me.Container.addChild()
              * @private
              * @type Number
+             * @default NaN
              * @name z
              * @memberOf me.Renderable
              */
@@ -109,9 +109,9 @@
              * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>
              * (0, 0) means the top-left corner, <br>
              * (1, 1) means the bottom-right corner, <br>
-             * default anchoring point is the center (0.5, 0.5) of the object.
              * @public
              * @type me.Vector2d
+             * @default <0.5,0.5>
              * @name anchorPoint
              * @memberOf me.Renderable
              */
@@ -124,9 +124,11 @@
              * @see me.Renderable#getOpacity
              * @public
              * @type Number
+             * @default 1.0
              * @name me.Renderable#alpha
              */
             this.alpha = 1.0;
+
             // call the super constructor
             this._super(me.Rect, "init", [x, y, width, height]);
 
@@ -172,7 +174,7 @@
          * @name setOpacity
          * @memberOf me.Renderable
          * @function
-         * @param {Number} alpha opacity value between 0 and 1
+         * @param {Number} alpha opacity value between 0.0 and 1.0
          */
         setOpacity : function (alpha) {
             if (typeof (alpha) === "number") {
@@ -205,7 +207,7 @@
          * @memberOf me.Renderable
          * @function
          * @protected
-         * @param {Renderer} a renderer object: me.CanvasRenderer or me.WebGLRenderer
+         * @param {me.CanvasRenderer|me.WebGLRenderer} a renderer object
          **/
         draw : function (/*renderer*/) {
             // empty one !

@@ -42,6 +42,7 @@
              * (by default will collide with all entities)
              * @ignore
              * @type Number
+             * @default me.collision.types.ALL_OBJECT
              * @name collisionMask
              * @see me.collision.types
              * @memberOf me.Body
@@ -52,6 +53,7 @@
              * define the collision type of the body for collision filtering
              * @public
              * @type Number
+             * @default me.collision.types.ENEMY_OBJECT
              * @name collisionType
              * @see me.collision.types
              * @memberOf me.Body
@@ -65,6 +67,7 @@
              * entity current velocity<br>
              * @public
              * @type me.Vector2d
+             * @default <0,0>
              * @name vel
              * @memberOf me.Body
              */
@@ -77,6 +80,7 @@
              * entity current acceleration<br>
              * @public
              * @type me.Vector2d
+             * @default <0,0>
              * @name accel
              * @memberOf me.Body
              */
@@ -89,6 +93,7 @@
              * entity current friction<br>
              * @public
              * @type me.Vector2d
+             * @default <0,0>
              * @name friction
              * @memberOf me.Body
              */
@@ -101,6 +106,7 @@
              * max velocity (to limit entity velocity)<br>
              * @public
              * @type me.Vector2d
+             * @default <1000,1000>
              * @name maxVel
              * @memberOf me.Body
              */
@@ -111,12 +117,12 @@
 
             /**
              * Default gravity value of the entity<br>
-             * default value : 0.98 (earth gravity)<br>
              * to be set to 0 for RPG, shooter, etc...<br>
              * Note: Gravity can also globally be defined through me.sys.gravity
              * @public
              * @see me.sys.gravity
              * @type Number
+             * @default 0.98
              * @name gravity
              * @memberOf me.Body
              */
@@ -129,6 +135,7 @@
              * @readonly
              * @public
              * @type Boolean
+             * @default false
              * @name falling
              * @memberOf me.Body
              */
@@ -140,10 +147,11 @@
              * @readonly
              * @public
              * @type Boolean
+             * @default false
              * @name jumping
              * @memberOf me.Body
              */
-            this.jumping = true;
+            this.jumping = false;
 
             // call the super constructor
             this._super(
@@ -184,7 +192,7 @@
             // return the length of the shape list
             return this.shapes.length;
         },
-        
+
         /**
          * add collision shapes based on the given PhysicsEditor JSON object
          * @name addShapesFromJSON
@@ -198,11 +206,11 @@
          */
         addShapesFromJSON : function (json, id) {
             var data = json[id];
-            
+
             if (typeof(data) === "undefined") {
                 throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
             }
-                
+
             // go through all shapes and add them to the body
             for (var i = 0; i < data.length; i++) {
                 var points = [];
@@ -218,7 +226,7 @@
             // return the length of the shape list
             return this.shapes.length;
         },
-        
+
         /**
          * return the collision shape at the given index
          * @name getShape

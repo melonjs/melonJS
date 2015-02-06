@@ -25,16 +25,14 @@
         /** @ignore */
         init : function (minX, minY, maxX, maxY) {
             /**
-             * Axis definition :<br>
-             * <p>
-             * AXIS.NONE<br>
-             * AXIS.HORIZONTAL<br>
-             * AXIS.VERTICAL<br>
-             * AXIS.BOTH
-             * </p>
+             * Axis definition
+             * @property NONE
+             * @property HORIZONTAL
+             * @property VERTICAL
+             * @property BOTH
              * @public
              * @constant
-             * @type enum
+             * @enum {Number}
              * @name AXIS
              * @memberOf me.Viewport
              */
@@ -163,7 +161,7 @@
 
         /**
          * change the deadzone settings.
-         * the "deadzone" defines an area within the current viewport in which 
+         * the "deadzone" defines an area within the current viewport in which
          * the followed entity can move without scrolling the viewport.
          * @name setDeadzone
          * @see me.Viewport.follow
@@ -211,7 +209,7 @@
          * @function
          * @param {me.Entity|me.Vector2d} target Entity or Position
          * Vector to follow
-         * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] Which axis to follow
+         * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
          */
         follow : function (target, axis) {
             if (target instanceof me.Entity) {
@@ -348,8 +346,8 @@
          * @param {Number} intensity maximum offset that the screen can be moved
          * while shaking
          * @param {Number} duration expressed in milliseconds
-         * @param {me.Viewport#AXIS} [axis=AXIS.BOTH] specify on which axis you
-         * want the shake effect (AXIS.HORIZONTAL, AXIS.VERTICAL, AXIS.BOTH)
+         * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
+         *   want the shake effect
          * @param {Function} [onComplete] callback once shaking effect is over
          * @example
          * // shake it baby !
