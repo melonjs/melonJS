@@ -100,7 +100,7 @@
 
             var xmlhttp = new XMLHttpRequest();
             // check the data format ('tmx', 'json')
-            var format = me.utils.getFileExtension(tmxData.src).toLowerCase();
+            var format = me.utils.getFileExtension(tmxData.src);
 
             if (xmlhttp.overrideMimeType) {
                 if (format === "json") {

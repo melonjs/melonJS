@@ -26,7 +26,7 @@
 
             this.firstgid = this.lastgid = +tileset[TMXConstants.TMX_TAG_FIRSTGID];
             var src = tileset[TMXConstants.TMX_TAG_SOURCE];
-            if (src && me.utils.getFileExtension(src).toLowerCase() === "tsx") {
+            if (src && me.utils.getFileExtension(src) === "tsx") {
                 // load TSX
                 src = me.utils.getBasename(src);
                 // replace tileset with a local variable

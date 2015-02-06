@@ -234,8 +234,6 @@
          * me.levelDirector.loadLevel("a4_level1");
          */
         api.loadLevel = function (levelId) {
-            // make sure it's a string
-            levelId = levelId.toString().toLowerCase();
             // throw an exception if not existing
             if (typeof(levels[levelId]) === "undefined") {
                 throw new me.Error("level " + levelId + " not found");

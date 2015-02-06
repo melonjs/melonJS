@@ -48,7 +48,7 @@
              * @name bounds
              * @memberOf me.Ellipse
              */
-            this.bounds = undefined;
+            this.bounds = null;
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -78,7 +78,7 @@
              * @name name
              * @memberOf me.Entity
              */
-            this.name = settings.name ? settings.name.toLowerCase() : "";
+            this.name = settings.name || "";
 
             /**
              * object type (as defined in Tiled)
@@ -87,7 +87,7 @@
              * @name type
              * @memberOf me.Entity
              */
-            this.type = settings.type;
+            this.type = settings.type || "";
 
             /**
              * object unique ID (as defined in Tiled)
@@ -96,7 +96,7 @@
              * @name id
              * @memberOf me.Entity
              */
-            this.id = settings.id;
+            this.id = settings.id || "";
 
             /**
              * dead/living state of the entity<br>

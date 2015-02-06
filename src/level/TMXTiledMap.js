@@ -119,10 +119,8 @@
          */
         getObjectGroupByName : function (name) {
             var objectGroup = null;
-            // normalize name
-            name = name.trim().toLowerCase();
             for (var i = this.objectGroups.length; i--;) {
-                if (this.objectGroups[i].name.toLowerCase().contains(name)) {
+                if (this.objectGroups[i].name === name) {
                     objectGroup = this.objectGroups[i];
                     break;
                 }
@@ -162,11 +160,8 @@
          */
         getLayerByName : function (name) {
             var layer = null;
-
-            // normalize name
-            name = name.trim().toLowerCase();
             for (var i = this.mapLayers.length; i--;) {
-                if (this.mapLayers[i].name.toLowerCase().contains(name)) {
+                if (this.mapLayers[i].name === name) {
                     layer = this.mapLayers[i];
                     break;
                 }
