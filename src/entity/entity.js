@@ -174,6 +174,7 @@
             }
             this.bounds.pos.setV(this.pos).add(this.body.pos);
             this.bounds.resize(this.body.width, this.body.height);
+            this.updateAbsoluteBounds();
             return this.bounds;
         },
 
@@ -296,15 +297,12 @@
             this.body = null;
         },
 
-        getAbsoluteBounds: function () {
-            var x = this.pos.x + this.body.pos.x;
-            var y = this.pos.y + this.body.pos.y;
+        updateAbsoluteBounds: function () {
+            this._absoluteBounds.pos.setV(this.pos).add(this.body.pos);
+            this._absoluteBounds.resize(this.body.width, this.body.height);
             if (this.ancestor && this.ancestor._absoluteBounds) {
                 var pos = this.ancestor._absoluteBounds.pos;
-                this._absoluteBounds.setShape(x + pos.x, y + pos.y, this.body.width, this.body.height);
-            }
-            else {
-                this._absoluteBounds.setShape(x, y, this.body.width, this.body.height);
+                this._absoluteBounds.pos.add(pos);
             }
 
             return this._absoluteBounds;

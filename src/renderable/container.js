@@ -138,8 +138,8 @@
             }
 
             child.ancestor = this;
-            if (child.getAbsoluteBounds) {
-                child.getAbsoluteBounds();
+            if (child.updateAbsoluteBounds) {
+                child.updateAbsoluteBounds();
             }
             this.children.push(child);
             if (this.autoSort === true) {
@@ -613,8 +613,8 @@
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
-                    if (obj.getAbsoluteBounds) {
-                        obj.getAbsoluteBounds();
+                    if (obj.updateAbsoluteBounds) {
+                        obj.updateAbsoluteBounds();
                     }
 
                     if (globalFloatingCounter > 0) {
@@ -627,7 +627,7 @@
                 }
             }
 
-            this.getAbsoluteBounds();
+            this.updateAbsoluteBounds();
             return isDirty;
         },
 

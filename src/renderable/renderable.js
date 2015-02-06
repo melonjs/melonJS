@@ -146,7 +146,7 @@
             this._absoluteBounds = new me.Rect(x, y, width, height);
         },
 
-        getAbsoluteBounds : function () {
+        updateAbsoluteBounds : function () {
             if (this.ancestor && this.ancestor._absoluteBounds) {
                 var pos = this.ancestor._absoluteBounds.pos;
                 this._absoluteBounds.setShape(this.pos.x + pos.x, this.pos.y + pos.y, this.width, this.height);

@@ -191,7 +191,7 @@
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
-            index = this.getIndex(item.getAbsoluteBounds());
+            index = this.getIndex(item.updateAbsoluteBounds());
 
             if (index !== -1) {
                 this.nodes[index].insert(item);
@@ -213,7 +213,7 @@
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
 
-                index = this.getIndex(this.objects[i].getAbsoluteBounds());
+                index = this.getIndex(this.objects[i].updateAbsoluteBounds());
 
                 if (index !== -1) {
                     this.nodes[index].insert(this.objects.splice(i, 1)[0]);
@@ -239,7 +239,7 @@
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item.getAbsoluteBounds());
+            var index = this.getIndex(item.updateAbsoluteBounds());
 
             //if rect fits into a subnode ..
             if (index !== -1) {
