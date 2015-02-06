@@ -153,14 +153,6 @@
             var vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
-
-            // check if transparency is defined for a specific color
-            var transparency = tileset[TMXConstants.TMX_TAG_TRANS] || tileset[TMXConstants.TMX_TAG_IMAGE][TMXConstants.TMX_TAG_TRANS];
-            // set Color Key for transparency if needed
-            if (typeof(transparency) !== "undefined") {
-                // applyRGB Filter (return a context object)
-                this.image = me.video.renderer.applyRGBFilter(this.image, "transparent", transparency.toUpperCase()).canvas;
-            }
         },
 
         /**

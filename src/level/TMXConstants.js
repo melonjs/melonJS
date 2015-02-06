@@ -21,7 +21,6 @@
         TMX_TAG_HEIGHT              : "height",
         TMX_TAG_TYPE                : "type",
         TMX_TAG_OPACITY             : "opacity",
-        TMX_TAG_TRANS               : "trans",
         TMX_TAG_TILEWIDTH           : "tilewidth",
         TMX_TAG_TILEHEIGHT          : "tileheight",
         TMX_TAG_TILEOFFSET          : "tileoffset",
