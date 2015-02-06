@@ -261,11 +261,9 @@
      * @ignore
      */
     function dispatchEvent(e) {
-        var handled = false,
-            handlerMap = evtHandlers.values();
+        var handled = false;
 
-        for (var i = 0; i < handlerMap.length; i++) {
-            var handlers = handlerMap[i];
+        evtHandlers.forEach(function (handlers) {
             // get the current screen to world offset
             me.game.viewport.localToWorld(0, 0, viewportOffset);
             for (var t = 0, tl = changedTouches.length; t < tl; t++) {
@@ -355,7 +353,8 @@
                         break;
                 }
             }
-        }
+        });
+
         return handled;
     }
 
