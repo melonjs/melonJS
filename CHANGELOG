@@ -7,10 +7,11 @@ Version History
 * Core : added `me.pool.exists` (@xorinzor)
 * Core : fixed collision detection with nested Containers
 * Core : added `me.game.HASH` to pass key-value options in the URL
+* Core : now uses only case-sensitive string matching; DoN't MiX cAsE!
 * Device : added browser language detection
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
-* Particles : Fixed angle variation and speed variation in `me.ParticleEmitter`
+* Particles : fixed angle variation and speed variation in `me.ParticleEmitter`
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Renderable : removed `hWidth` and `hHeight` properties
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
