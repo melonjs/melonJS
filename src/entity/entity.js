@@ -296,6 +296,20 @@
             this.body = null;
         },
 
+        getAbsoluteBounds: function () {
+            var x = this.pos.x + this.body.pos.x;
+            var y = this.pos.y + this.body.pos.y;
+            if (this.ancestor && this.ancestor._absoluteBounds) {
+                var pos = this.ancestor._absoluteBounds.pos;
+                this._absoluteBounds.setShape(x + pos.x, y + pos.y, this.body.width, this.body.height);
+            }
+            else {
+                this._absoluteBounds.setShape(x, y, this.body.width, this.body.height);
+            }
+
+            return this._absoluteBounds;
+        },
+
         /**
          * OnDestroy Notification function<br>
          * Called by engine before deleting the object
