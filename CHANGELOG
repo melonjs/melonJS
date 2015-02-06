@@ -8,6 +8,7 @@ Version History
 * Core : added a `exists` function to `me.pool` (xorinzor)
 * Device : added browser language detection
 * Font : updated me.Font to work with me.Color (xorinzor)
+* Input : add emulation support for the `pointerenter` and `pointerleave` events (TheManuz)
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
 * Texture : added support for the WebGL Renderer
