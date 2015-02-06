@@ -2,14 +2,17 @@ Version History
 ---------------
 2.1.0
 * Audio & Loader : file/clip names passed to various methods are now case sensitive. Removed uses of toLowerCase on variables.
-* Container: `getChildByProp` and friends now accepts a RegExp for value matching
-* CanvasRenderer : added support for the standard opaque canvas feature through the `transparent` option
+* Container : `getChildByProp` and friends now accepts a RegExp for value matching
 * Color : added high-precision color transformation for me.Color
-* Core : added a `exists` function to `me.pool` (xorinzor)
+* Core : added `me.pool.exists` (@xorinzor)
+* Core : fixed collision detection with nested Containers
+* Core : added `me.game.HASH` to pass key-value options in the URL
 * Device : added browser language detection
 * Font : updated me.Font to work with me.Color (xorinzor)
-* Input : add emulation support for the `pointerenter` and `pointerleave` events (TheManuz)
+* Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
+* Particles : Fixed angle variation and speed variation in `me.ParticleEmitter`
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
+* Renderable : removed `hWidth` and `hHeight` properties
 * Shapes : added basic support for the PhysicsEditor tool (mainly shapes definition)
 * Texture : added support for the WebGL Renderer
 * Texture : texture atlas can now be created using a “standard” sprite sheet
@@ -17,6 +20,8 @@ Version History
 * TMX : added parsing of the new `id` (unique ID) property for objects (Tiled 0.11.0)
 * TMX : fixed horizontal, vertical and antidiagonal flipping for tile objects
 * Video : refactored the me.video.init to be more flexible in terms of mandatory/optional arguments
+* Video : turn canvas transparency off by default; can be enabled by passing `options.transparent = true` to `me.video.init()`
+* Video : renderers are now classes that can be instantiated with `new me.CanvasRenderer` and `new me.WebGLRenderer`
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
