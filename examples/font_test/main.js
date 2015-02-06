@@ -107,16 +107,11 @@ var FontTest = me.Renderable.extend ({
         this.font.setFont('Arial', 16, this.color);
         var baseline = 200;
 
-        // Draw the baseline
-        if (renderer instanceof me.CanvasRenderer) {
-            // FIXME: Not WebGL compatible
-            var context = renderer.getContext();
-            context.beginPath();
-            context.moveTo(0, baseline + 0.5);
-            context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-            context.strokeStyle = "red";
-            context.stroke();
-        }
+        // Draw the baseline        
+        me.video.renderer.strokeLine(
+            0, baseline + 0.5,
+            me.video.renderer.getWidth(), baseline + 0.5
+        );
 
         var baselines = [
             "bottom", "ideographic", "alphabetic", "middle", "hanging", "top"
@@ -169,14 +164,10 @@ var FontTest = me.Renderable.extend ({
         var baseline = 375;
 
         // Draw the baseline
-        if (renderer instanceof me.CanvasRenderer) {
-            // FIXME: Not WebGL compatible
-            context.beginPath();
-            context.moveTo(0, baseline + 0.5);
-            context.lineTo(me.video.renderer.getWidth(), baseline + 0.5);
-            context.strokeStyle = "red";
-            context.stroke();
-        }
+        me.video.renderer.strokeLine(
+            0, baseline + 0.5,
+            me.video.renderer.getWidth(), baseline + 0.5
+        );
 
         // font baseline test
         for (var i = 0; i < baselines.length; i++) {
