@@ -297,17 +297,6 @@
             this.body = null;
         },
 
-        updateAbsoluteBounds: function () {
-            this._absoluteBounds.pos.setV(this.pos).add(this.body.pos);
-            this._absoluteBounds.resize(this.body.width, this.body.height);
-            if (this.ancestor && this.ancestor._absoluteBounds) {
-                var pos = this.ancestor._absoluteBounds.pos;
-                this._absoluteBounds.pos.add(pos);
-            }
-
-            return this._absoluteBounds;
-        },
-
         /**
          * OnDestroy Notification function<br>
          * Called by engine before deleting the object

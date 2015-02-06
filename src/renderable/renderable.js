@@ -146,13 +146,17 @@
             this._absoluteBounds = new me.Rect(x, y, width, height);
         },
 
+        /**
+         * @ignore
+         */
         updateAbsoluteBounds : function () {
+            var bounds = this.getBounds();
             if (this.ancestor && this.ancestor._absoluteBounds) {
                 var pos = this.ancestor._absoluteBounds.pos;
-                this._absoluteBounds.setShape(this.pos.x + pos.x, this.pos.y + pos.y, this.width, this.height);
+                this._absoluteBounds.setShape(bounds.pos.x + pos.x, bounds.pos.y + pos.y, bounds.width, bounds.height);
             }
             else {
-                this._absoluteBounds.setShape(this.pos.x, this.pos.y, this.width, this.height);
+                this._absoluteBounds.setShape(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
             }
 
             return this._absoluteBounds;
