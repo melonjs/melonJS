@@ -31,7 +31,7 @@
             doubleBuffering : false,
             autoScale : false,
             scale : 1.0,
-            scaleMethod : "default",
+            scaleMethod : "fit",
             transparent : false,
             antiAlias : false,
         };
@@ -70,7 +70,7 @@
         });
 
         /**
-         * Select the HTML5 Canvas renderer
+         * Select the HTML5 Canvas rendererg
          * @public
          * @name CANVAS
          * @memberOf me.video
@@ -136,7 +136,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.scaleMethod = [ "fill", "stretch" ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "default";
+            settings.scaleMethod = [ "fill", "stretch" ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
             settings.transparent = !!(settings.transparent);
             
             // override renderer settings if &renderer=webgl or &webgl is defined in the URL
@@ -341,7 +341,7 @@
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
                 var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
-                var backbuffer = me.video.renderer.getCanvas();
+                var backbuffer = me.video.renderer.getWidth();
                 var sWidth = Infinity;
                 var sHeight = Infinity;
                 
@@ -366,8 +366,8 @@
                     scaleY = _max_height / me.video.renderer.getHeight();
                 }
                 else {
-                    // default screen fitting
-                     // make sure we maintain the original aspect ratio
+                    // scale the display canvas to fit the parent container
+                    // make sure we maintain the original aspect ratio
                     if (screenRatio < designRatio) {
                         scaleX = scaleY = _max_width / me.video.renderer.getWidth();
                     }
