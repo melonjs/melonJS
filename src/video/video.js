@@ -341,7 +341,7 @@
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
                 var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
-                var backbuffer = me.video.renderer.getWidth();
+                var backbuffer = me.video.renderer.getCanvas();
                 var sWidth = Infinity;
                 var sHeight = Infinity;
                 
