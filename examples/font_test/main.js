@@ -104,10 +104,11 @@ var FontTest = me.Renderable.extend ({
         this.bFont.setOpacity(1);
 
         // font baseline test
-        this.font.setFont('Arial', 16, this.color);
+        this.font.setFont('Arial', 16, "white");
         var baseline = 200;
 
         // Draw the baseline        
+        me.video.renderer.setColor("red");
         me.video.renderer.strokeLine(
             0, baseline + 0.5,
             me.video.renderer.getWidth(), baseline + 0.5
@@ -120,6 +121,7 @@ var FontTest = me.Renderable.extend ({
         var x_pos = 0;
 
         // font baseline test
+        me.video.renderer.setColor("white");
         for (var i = 0;i<baselines.length;i++) {
             var text = baselines[i];
             this.font.textBaseline = baselines[i];
@@ -164,12 +166,14 @@ var FontTest = me.Renderable.extend ({
         var baseline = 375;
 
         // Draw the baseline
+        me.video.renderer.setColor("red");
         me.video.renderer.strokeLine(
             0, baseline + 0.5,
             me.video.renderer.getWidth(), baseline + 0.5
         );
 
         // font baseline test
+        me.video.renderer.setColor("white");
         for (var i = 0; i < baselines.length; i++) {
             var text = baselines[i].toUpperCase();
             this.bFont.textBaseline = baselines[i];
