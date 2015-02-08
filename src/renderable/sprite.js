@@ -51,6 +51,13 @@
             this.flipY(!!settings.flipY);
 
             // current frame texture offset
+            /**
+             * The position to draw from on the source image.
+             * @public
+             * @type me.Vector2d
+             * @name offset
+             * @memberOf me.Vector2d
+             */
             this.offset = new me.Vector2d(0, 0);
 
             /**
