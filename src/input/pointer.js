@@ -286,14 +286,17 @@
                 e.gameScreenY = changedTouches[t].y;
                 e.gameWorldX = e.gameScreenX + viewportOffset.x;
                 e.gameWorldY = e.gameScreenY + viewportOffset.y;
-                if (handlers.rect.floating === true) {
+                if (handlers.region.floating === true) {
                     e.gameX = e.gameScreenX;
                     e.gameY = e.gameScreenY;
                 } else {
                     e.gameX = e.gameWorldX;
                     e.gameY = e.gameWorldY;
                 }
-                var eventInBounds = handlers.rect.getBounds().containsPoint(e.gameX, e.gameY);
+                
+                var region = handlers.region;
+                var eventInBounds = region.getBounds().containsPoint(e.gameX, e.gameY) &&
+                                    (region.shapeType === "Rectangle" || region.containsPoint(e.gameX, e.gameY));
 
                 switch (activeEventList.indexOf(e.type)) {
                     case POINTER_MOVE:
@@ -602,7 +605,7 @@
      * @function
      * @param {String} eventType  The event type for which the object is registering <br>
      * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
-     * @param {me.Rect} rect object target (or corresponding region defined through me.Rect)
+     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
      * @param {Boolean} [floating] specify if the object is a floating object
      * (if yes, screen coordinates are used, if not mouse/touch coordinates will
@@ -611,7 +614,7 @@
      * // register on the 'pointerdown' event
      * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
      */
-    obj.registerPointerEvent = function (eventType, rect, callback) {
+    obj.registerPointerEvent = function (eventType, region, callback) {
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
@@ -625,16 +628,16 @@
         }
 
         // register the event
-        if (!evtHandlers.has(rect)) {
-            evtHandlers.set(rect, {
-                rect : rect,
+        if (!evtHandlers.has(region)) {
+            evtHandlers.set(region, {
+                region : region,
                 callbacks : {},
                 pointerId : null,
             });
         }
 
         // allocate array if not defined
-        var handlers = evtHandlers.get(rect);
+        var handlers = evtHandlers.get(region);
         if (!handlers.callbacks[eventType]) {
             handlers.callbacks[eventType] = [];
         }
@@ -653,12 +656,12 @@
      * @function
      * @param {String} eventType  The event type for which the object was registered <br>
      * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
-     * @param {me.Rect} region object target (or corresponding region defined through me.Rect)
+     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} the registered region to release for this event
      * @example
-     * // release the registered object/region on the 'pointerdown' event
+     * // release the registered region on the 'pointerdown' event
      * me.input.releasePointerEvent('pointerdown', this);
      */
-    obj.releasePointerEvent = function (eventType, rect) {
+    obj.releasePointerEvent = function (eventType, region) {
         if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
@@ -668,8 +671,8 @@
             eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
 
-        // unregister all callbacks of "eventType" for object "rect"
-        var handlers = evtHandlers.get(rect);
+        // unregister all callbacks of "eventType" the given region
+        var handlers = evtHandlers.get(region);
         while (handlers.callbacks[eventType].length > 0) {
             handlers.callbacks[eventType].pop();
         }

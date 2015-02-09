@@ -11,6 +11,7 @@ Version History
 * Device : added browser language detection
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
+* Input : allow regions to be any shape when registering pointer event, and not just me.Rect
 * Particles : fixed angle variation and speed variation in `me.ParticleEmitter`
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Renderable : removed `hWidth` and `hHeight` properties
