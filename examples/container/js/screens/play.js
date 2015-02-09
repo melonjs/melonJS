@@ -11,9 +11,11 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.viewport.setBounds(0, 0, 1920, 1080);
  
         me.game.world.addChild(new me.ImageLayer(
-            "background",
+            0,
+            0,
             1024,
             768,
+            "background",
             "background",
             0,
             1
