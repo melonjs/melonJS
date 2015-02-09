@@ -12,6 +12,7 @@ Version History
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
 * Input : allow regions to be any shape when registering pointer event, and not just me.Rect
+* Input : `releasePointerEvent` now accepts an optional extra argument that references "which callback" to release
 * Particles : fixed angle variation and speed variation in `me.ParticleEmitter`
 * Renderable : normalized constructors for `me.Sprite` and `me.AnimationSheet` (see the wiki upgrade guide)
 * Renderable : removed `hWidth` and `hHeight` properties

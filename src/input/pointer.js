@@ -656,12 +656,13 @@
      * @function
      * @param {String} eventType  The event type for which the object was registered <br>
      * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
-     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} the registered region to release for this event
+     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release for this event
+     * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
      * @example
      * // release the registered region on the 'pointerdown' event
      * me.input.releasePointerEvent('pointerdown', this);
      */
-    obj.releasePointerEvent = function (eventType, region) {
+    obj.releasePointerEvent = function (eventType, region, callback) {
         if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
@@ -670,11 +671,15 @@
         if (pointerEventList !== activeEventList) {
             eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
-
-        // unregister all callbacks of "eventType" the given region
+        
         var handlers = evtHandlers.get(region);
-        while (handlers.callbacks[eventType].length > 0) {
-            handlers.callbacks[eventType].pop();
+        if (typeof(callback) === "undefined") {
+            // unregister all callbacks of "eventType" for the given region
+            while (handlers.callbacks[eventType].length > 0) {
+                handlers.callbacks[eventType].pop();
+            }
+        } else {
+            handlers.callbacks[eventType].remove(callback);
         }
     };
 
