@@ -70,7 +70,7 @@
         });
 
         /**
-         * Select the HTML5 Canvas rendererg
+         * Select the HTML5 Canvas renderer
          * @public
          * @name CANVAS
          * @memberOf me.video
