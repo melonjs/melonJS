@@ -341,7 +341,6 @@
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
                 var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
-                var backbuffer = me.video.renderer.getCanvas();
                 var sWidth = Infinity;
                 var sHeight = Infinity;
                 
@@ -350,14 +349,12 @@
                     if (screenRatio < designRatio) {
                         sWidth = me.video.renderer.getHeight() * screenRatio;
                         scaleX = scaleY = _max_width / sWidth;
-                        backbuffer.width = _max_width / scaleX;
-                        backbuffer.height = me.video.renderer.getHeight();
+                        this.renderer.resize(scaleX, _max_width / scaleX, me.video.renderer.getHeight());
                     }
                     else {
                         sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
                         scaleX = scaleY = _max_height / sHeight;
-                        backbuffer.width = me.video.renderer.getWidth();
-                        backbuffer.height = _max_height / scaleX;
+                        this.renderer.resize(scaleX, me.video.renderer.getWidth(), _max_height / scaleX);
                     }
                 }
                 else if (settings.scaleMethod === "stretch") {
@@ -381,7 +378,7 @@
                 scaleY *= me.device.getPixelRatio();
 
                 // scale if required
-                if (scaleX !== 1 || scaleY !== 1) {
+                if (!(settings.renderer === api.WEBGL && settings.scaleMethod === "fill") && (scaleX !== 1 || scaleY !== 1)) {
                     if (deferResizeId >= 0) {
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);
@@ -407,7 +404,7 @@
             me.sys.scale.set(scaleX, scaleY);
 
             // renderer resize logic
-            this.renderer.resize(scaleX, scaleY);
+            this.renderer.scaleCanvas(scaleX, scaleY);
 
             me.input._offset = me.video.getPos();
             // clear the timeout id
