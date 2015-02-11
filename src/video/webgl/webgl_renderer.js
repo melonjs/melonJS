@@ -332,10 +332,8 @@
          * @function
          */
         scaleCanvas : function (scaleX, scaleY) {
-            this.canvas.width = this.dimensions.width;
-            this.canvas.height = this.dimensions.height;
-            var w = this.dimensions.width * scaleX;
-            var h = this.dimensions.height * scaleY;
+            var w = this.canvas.width * scaleX;
+            var h = this.canvas.height * scaleY;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
@@ -356,25 +354,10 @@
          * @memberOf me.WebGLRenderer
          * @function
          */
-        resize : function (scale, width, height)
+        resize : function (width, height)
         {
-            var w = width * scale;
-            var h = height * scale;
-            
             this.canvas.width  = width;
             this.canvas.height = height;
-
-            // adjust CSS style for High-DPI devices
-            if (me.device.getPixelRatio() > 1) {
-                this.canvas.style.width = (w / me.device.getPixelRatio()) + "px";
-                this.canvas.style.height = (h / me.device.getPixelRatio()) + "px";
-            }
-            else {
-                this.canvas.style.width = w + "px";
-                this.canvas.style.height = h + "px";
-            }
-
-            this.compositor.setProjection(this.canvas.width, this.canvas.height);
         },
 
         /**

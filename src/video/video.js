@@ -349,12 +349,12 @@
                     if (screenRatio < designRatio) {
                         sWidth = me.video.renderer.getHeight() * screenRatio;
                         scaleX = scaleY = _max_width / sWidth;
-                        this.renderer.resize(scaleX, _max_width / scaleX, me.video.renderer.getHeight());
+                        this.renderer.resize(_max_width / scaleX, me.video.renderer.getHeight());
                     }
                     else {
                         sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
                         scaleX = scaleY = _max_height / sHeight;
-                        this.renderer.resize(scaleX, me.video.renderer.getWidth(), _max_height / scaleX);
+                        this.renderer.resize(me.video.renderer.getWidth(), _max_height / scaleX);
                     }
                 }
                 else if (settings.scaleMethod === "stretch") {
@@ -378,7 +378,7 @@
                 scaleY *= me.device.getPixelRatio();
 
                 // scale if required
-                if (!(settings.renderer === api.WEBGL && settings.scaleMethod === "fill") && (scaleX !== 1 || scaleY !== 1)) {
+                if (scaleX !== 1 || scaleY !== 1) {
                     if (deferResizeId >= 0) {
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);

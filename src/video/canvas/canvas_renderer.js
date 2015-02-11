@@ -260,7 +260,7 @@
          * @memberOf me.CanvasRenderer
          * @function
          */
-        resize : function (scale, width, height)
+        resize : function (width, height)
         {
             this.backBufferCanvas.width = width;
             this.backBufferCanvas.height = height;
