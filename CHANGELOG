@@ -26,6 +26,7 @@ Version History
 * Video : refactored the me.video.init to be more flexible in terms of mandatory/optional arguments
 * Video : turn canvas transparency off by default; can be enabled by passing `options.transparent = true` to `me.video.init()`
 * Video : renderers are now classes that can be instantiated with `new me.CanvasRenderer` and `new me.WebGLRenderer`
+* Video : added support for the `image-rendering` CSS property standard "pixelated" value
 
 2.0.2
 * Audio : automatically cleanup `onend` callbacks in `me.audio.play`
