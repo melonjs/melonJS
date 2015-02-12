@@ -233,12 +233,12 @@
         },
 
         /**
-         * resizes the canvas & 2d Context
-         * @name resize
+         * scales the canvas & 2d Context
+         * @name scaleCanvas
          * @memberOf me.CanvasRenderer
          * @function
          */
-        resize : function (scaleX, scaleY) {
+        scaleCanvas : function (scaleX, scaleY) {
             this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
             this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
 
@@ -253,6 +253,19 @@
             }
             this.setAntiAlias(this.context, this.antiAlias);
             this.blitSurface();
+        },
+
+
+        /**
+         * resizes the canvas
+         * @name resize
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        resize : function (width, height)
+        {
+            this.backBufferCanvas.width = width;
+            this.backBufferCanvas.height = height;
         },
 
         /**

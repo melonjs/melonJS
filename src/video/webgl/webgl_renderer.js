@@ -87,7 +87,7 @@
             this.createFillTexture();
 
             // Configure the WebGL viewport
-            this.resize(1, 1);
+            this.scaleCanvas(1, 1);
 
             return this;
         },
@@ -334,16 +334,14 @@
         },
 
         /**
-         * resizes the canvas & GL Context
-         * @name resize
+         * scales the canvas & GL Context
+         * @name scaleCanvas
          * @memberOf me.WebGLRenderer
          * @function
          */
-        resize : function (scaleX, scaleY) {
-            this.canvas.width = this.dimensions.width;
-            this.canvas.height = this.dimensions.height;
-            var w = this.dimensions.width * scaleX;
-            var h = this.dimensions.height * scaleY;
+        scaleCanvas : function (scaleX, scaleY) {
+            var w = this.canvas.width * scaleX;
+            var h = this.canvas.height * scaleY;
 
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
@@ -356,6 +354,18 @@
             }
 
             this.compositor.setProjection(this.canvas.width, this.canvas.height);
+        },
+
+        /**
+         * resizes the canvas & GL Context
+         * @name resize
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        resize : function (width, height)
+        {
+            this.canvas.width  = width;
+            this.canvas.height = height;
         },
 
         /**

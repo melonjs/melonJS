@@ -31,7 +31,7 @@
             doubleBuffering : false,
             autoScale : false,
             scale : 1.0,
-            maintainAspectRatio : true,
+            scaleMethod : "fit",
             transparent : false,
             antiAlias : false,
         };
@@ -109,9 +109,9 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [options.maintainAspectRatio=true] maintainAspectRatio when scaling the display
+         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
-         * @param {Boolean} [options.antiAlias=false] wheter to enable or not video scaling interpolation
+         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean}
          * @example
          * // init the video with a 640x480 canvas
@@ -119,7 +119,7 @@
          *     wrapper : "screen",
          *     renderer : me.video.CANVAS,
          *     scale : "auto",
-         *     maintainAspectRatio : true,
+         *     scaleMethod : "fit",
          *     doubleBuffering : true
          * });
          */
@@ -135,7 +135,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.maintainAspectRatio = !!(settings.maintainAspectRatio);
+            settings.scaleMethod = [ "fill", "stretch" ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
             settings.transparent = !!(settings.transparent);
 
             // override renderer settings if &webgl is defined in the URL
@@ -332,26 +332,41 @@
             }
 
             if (settings.autoScale) {
-                // get the parent container max size
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
+                var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
+                var screenRatio = _max_width / _max_height;
+                var sWidth = Infinity;
+                var sHeight = Infinity;
 
-                if (settings.maintainAspectRatio) {
+                if (settings.scaleMethod === "fill") {
+                    // scale the display canvas to fill the parent container
+                    if (screenRatio < designRatio) {
+                        sWidth = me.video.renderer.getHeight() * screenRatio;
+                        scaleX = scaleY = _max_width / sWidth;
+                        this.renderer.resize(_max_width / scaleX, me.video.renderer.getHeight());
+                    }
+                    else {
+                        sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
+                        scaleX = scaleY = _max_height / sHeight;
+                        this.renderer.resize(me.video.renderer.getWidth(), _max_height / scaleX);
+                    }
+                }
+                else if (settings.scaleMethod === "stretch") {
+                    // scale the display canvas to fit with the parent container
+                    scaleX = _max_width / me.video.renderer.getWidth();
+                    scaleY = _max_height / me.video.renderer.getHeight();
+                }
+                else {
+                    // scale the display canvas to fit the parent container
                     // make sure we maintain the original aspect ratio
-                    var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
-                    var screenRatio = _max_width / _max_height;
                     if (screenRatio < designRatio) {
                         scaleX = scaleY = _max_width / me.video.renderer.getWidth();
                     }
                     else {
                         scaleX = scaleY = _max_height / me.video.renderer.getHeight();
                     }
-                }
-                else {
-                    // scale the display canvas to fit with the parent container
-                    scaleX = _max_width / me.video.renderer.getWidth();
-                    scaleY = _max_height / me.video.renderer.getHeight();
                 }
 
                 // adjust scaling ratio based on the device pixel ratio
@@ -385,7 +400,7 @@
             me.sys.scale.set(scaleX, scaleY);
 
             // renderer resize logic
-            this.renderer.resize(scaleX, scaleY);
+            this.renderer.scaleCanvas(scaleX, scaleY);
 
             me.input._offset = me.video.getPos();
             // clear the timeout id
