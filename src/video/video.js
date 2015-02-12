@@ -109,7 +109,7 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','stretch') screen scaling modes
+         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','grow-width','grow-height','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean}
@@ -135,7 +135,12 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.scaleMethod = [ "fill", "stretch" ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
+            settings.scaleMethod = [
+                "fill",
+                "grow-width",
+                "grow-height",
+                "stretch"
+            ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
             settings.transparent = !!(settings.transparent);
 
             // override renderer settings if &webgl is defined in the URL
@@ -232,10 +237,10 @@
                 me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
             }
 
+            me.game.init();
+
             // trigger an initial resize();
             me.video.onresize();
-
-            me.game.init();
 
             return true;
         };
@@ -340,18 +345,27 @@
                 var sWidth = Infinity;
                 var sHeight = Infinity;
 
-                if (settings.scaleMethod === "fill") {
-                    // scale the display canvas to fill the parent container
-                    if (screenRatio < designRatio) {
-                        sWidth = me.video.renderer.getHeight() * screenRatio;
-                        scaleX = scaleY = _max_width / sWidth;
-                        this.renderer.resize(_max_width / scaleX, me.video.renderer.getHeight());
-                    }
-                    else {
-                        sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
-                        scaleX = scaleY = _max_height / sHeight;
-                        this.renderer.resize(me.video.renderer.getWidth(), _max_height / scaleX);
-                    }
+                if (
+                    (settings.scaleMethod === "fill" && screenRatio < designRatio) ||
+                    (settings.scaleMethod === "grow-width")
+                ) {
+                    // resize the display canvas to fill the parent container
+                    sWidth = me.video.renderer.getHeight() * screenRatio;
+                    scaleX = scaleY = _max_width / sWidth;
+                    this.renderer.resize(sWidth, me.video.renderer.getHeight());
+                    me.game.viewport.resize(sWidth, me.video.renderer.getHeight());
+                    me.game.viewport.setDeadzone(sWidth / 6, me.video.renderer.getHeight() / 6);
+                }
+                else if (
+                    (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
+                    (settings.scaleMethod === "grow-height")
+                ) {
+                    // resize the display canvas to fill the parent container
+                    sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
+                    scaleX = scaleY = _max_height / sHeight;
+                    this.renderer.resize(me.video.renderer.getWidth(), sHeight);
+                    me.game.viewport.resize(me.video.renderer.getWidth(), sHeight);
+                    me.game.viewport.setDeadzone(me.video.renderer.getWidth() / 6, sHeight / 6);
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
