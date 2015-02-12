@@ -20,7 +20,7 @@ game.PlayerEntity = me.Entity.extend({
         this.mutipleJump = 1;
 
         // set the display around our position
-        me.game.viewport.follow(this, me.game.viewport.AXIS.HORIZONTAL);
+        me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH);
 
         // enable keyboard
         me.input.bindKey(me.input.KEY.LEFT,  "left");

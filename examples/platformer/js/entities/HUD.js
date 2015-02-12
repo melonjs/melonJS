@@ -26,7 +26,7 @@ game.HUD.Container = me.Container.extend({
         this.name = "HUD";
 
         // add our child score object at position
-        this.addChild(new game.HUD.ScoreItem(790, 560));
+        this.addChild(new game.HUD.ScoreItem(-10, -40));
     }
 });
 
@@ -39,10 +39,16 @@ game.HUD.ScoreItem = me.Renderable.extend( {
      * constructor
      */
     init: function(x, y) {
+        this.relative = new me.Vector2d(x, y);
 
         // call the super constructor
         // (size does not matter here)
-        this._super(me.Renderable, 'init', [x, y, 10, 10]);
+        this._super(me.Renderable, 'init', [
+            me.game.viewport.width + x,
+            me.game.viewport.height + y,
+            10,
+            10
+        ]);
 
         // create a font
         this.font = new me.BitmapFont("atascii", {x:24});
@@ -57,6 +63,9 @@ game.HUD.ScoreItem = me.Renderable.extend( {
      * update function
      */
     update : function () {
+        this.pos.x = me.game.viewport.width + this.relative.x;
+        this.pos.y = me.game.viewport.height + this.relative.y;
+
         // we don't draw anything fancy here, so just
         // return true if the score has been updated
         if (this.score !== me.game.score) {
