@@ -407,8 +407,10 @@
 
         /**
          * @ignore
+         * NOT USED BY THIS RENDERER ?
          */
-        setImageSmoothing : function () {
+        setAntiAlias : function (context, enable) {
+            this._super(me.Renderer, "setAntiAlias", [context, enable]);
             // TODO: perhaps handle GLNEAREST or other options with texture binding
         },
 

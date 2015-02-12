@@ -188,7 +188,7 @@
             if (!_context.canvas) {
                 _context.canvas = c;
             }
-            this.setImageSmoothing(_context, this.antiAlias);
+            this.setAntiAlias(_context, this.antiAlias);
             return _context;
         },
 
@@ -234,10 +234,22 @@
          * @param {Context2d} context
          * @param {Boolean} [enable=false]
          */
-        setImageSmoothing : function (context, enable) {
-            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
+        setAntiAlias : function (context, enable) {
+            if (typeof(context) !== "undefined") {
+                // enable/disable antialis on the given context
+                me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
+            }
+            
+            // disable antialias CSS scaling on the main canvas
+            var cssStyle = this.canvas.style["image-rendering"];
+            if (enable === false && (cssStyle === "" || cssStyle === "auto")) {
+                // if a specific value is set through CSS or equal to the standard "auto" one
+                this.canvas.style["image-rendering"] = "pixelated";
+            } else if (enable === true && cssStyle === "pixelated") {
+                // if set to the standard "pixelated"
+                this.canvas.style["image-rendering"] = "auto";
+            }
         }
-
     });
 
 })();
