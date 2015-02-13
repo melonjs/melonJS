@@ -126,6 +126,18 @@
         },
 
         /**
+         * resizes the canvas
+         * @name resize
+         * @memberOf me.Renderer
+         * @function
+         */
+        resize : function (width, height)
+        {
+            this.canvas.width  = width;
+            this.canvas.height = height;
+        },
+
+        /**
          * return a reference to the screen canvas
          * @name getScreenCanvas
          * @memberOf me.Renderer

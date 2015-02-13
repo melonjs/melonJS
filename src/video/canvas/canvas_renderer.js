@@ -255,19 +255,6 @@
             this.blitSurface();
         },
 
-
-        /**
-         * resizes the canvas
-         * @name resize
-         * @memberOf me.CanvasRenderer
-         * @function
-         */
-        resize : function (width, height)
-        {
-            this.backBufferCanvas.width = width;
-            this.backBufferCanvas.height = height;
-        },
-
         /**
          * save the canvas context
          * @name save
