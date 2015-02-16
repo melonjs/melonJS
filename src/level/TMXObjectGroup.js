@@ -239,6 +239,15 @@
              * @memberOf me.TMXObject
              */
             this.orientation = orientation;
+            
+            /**
+             * the collision shapes defined for this object
+             * @public
+             * @type Array
+             * @name shapes
+             * @memberOf me.TMXObject
+             */
+            this.shapes = undefined;
 
             /**
              * if true, the object is an Ellipse
@@ -313,6 +322,13 @@
 
             // set the object properties
             me.TMXUtils.applyTMXProperties(this, tmxObj);
+            
+            // define the object shapes if required
+            if (this.noDefaultShape === true) {
+                this.shapes = [];
+            } else {
+                this.shapes = this.parseTMXShapes();
+            }
         },
 
         /**
@@ -333,14 +349,14 @@
         },
 
         /**
-         * return a list of shapes for a TMX object
-         * @name getTMXShapes
+         * parses the TMX shape definition and returns a corresponding array of me.Shape object 
+         * @name parseTMXShapes
          * @memberOf me.TMXObject
          * @private
          * @function
-         * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} a list of shape objects
+         * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} an array of shape objects
          */
-        getTMXShapes : function () {
+        parseTMXShapes : function () {
             var i = 0;
             var shapes = [];
 

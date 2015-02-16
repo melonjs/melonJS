@@ -116,10 +116,7 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            this.body = new me.Body(this, (
-                settings.noDefaultShape !== true && typeof (settings.getTMXShapes) === "function" ?
-                settings.getTMXShapes() : []
-            ));
+            this.body = new me.Body(this, Array.isArray(settings.shapes) ? settings.shapes : [ new me.Rect(0, 0, this.width, this.height) ]);
 
             // ensure the entity bounds and pos are up-to-date
             this.body.updateBounds();
