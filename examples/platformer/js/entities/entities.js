@@ -238,6 +238,9 @@ game.PathEnemyEntity = me.Entity.extend({
         settings.width = settings.framewidth;
         settings.height = settings.frameheight;
 
+        // erase the default shape definition
+        settings.shapes = undefined;
+        
         // call the super constructor
         this._super(me.Entity, 'init', [x, y , settings]);
 
