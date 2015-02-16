@@ -22,10 +22,10 @@ and currently features :
 - Device motion & accelerometer support
 - High DPI & auto scaling
 - Multi-channel HTML5 audio support and Web Audio on supported devices
-- a lightweight physic implementation to ensure low cpu requirements
+- Lightweight physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
-- advanced math API for Vector and Matrix
+- Advanced math API for Vector and Matrix
 - Tween Effects
 - Transition effects
 - A basic set of Object Entities (to be extended)
@@ -49,10 +49,10 @@ and currently features :
     - Shape based Tile collision support
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
-- Built-in support for cocoonJS
+- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/)
 - Asynchronous messaging support (minPubSub)
-- some basic GUI elements
-- a customizable loader
+- Basic GUI elements included
+- Customizable loader
 
 Using melonJS
 -------------------------------------------------------------------------------
@@ -69,41 +69,41 @@ Building melonJS
 -------------------------------------------------------------------------------
 To build your own version of melonJS you will need to install :
 
-- the [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
-- the [Grunt](http://gruntjs.com/) task manager
+- The [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
+- The [Grunt](http://gruntjs.com/) task manager
 
 Once the Node.js package manager has been installed (using the installer from their website),
-we need to install Grunt and the Grunt CLI (Command Line Interface), by doing the following :
+you need to install Grunt and Grunt CLI (Command Line Interface), by doing the following :
 
 Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
     $ npm install -g grunt-cli
 
-then we can install the melonJS required dependencies, by typing :
+Next you need to install the melonJS dependencies, by typing :
 
     $ cd melonJS
     $ npm install
 
-Once all the above done, we are ready to build melonJS :
+Once this is done, you can build melonJS :
 
     $ cd melonJS (if not already in the melonJS directory)
     $ grunt
 
-Both plain and minified library will be available under the "build" directory.
+Both plain and minified versions of the library will be available under the "build" directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
-Just do the following to actually build the documentation :
+Here is how you can build your own copy of the docs locally :
 
     $ cd melonJS (if not already in the melonJS directory)
     $ grunt doc
 
-The generated documentation will be then available under the "docs" directory
+The generated documentation will be available in the `docs` directory
 
 Testing
 -------------------------------------------------------------------------------
-The recommended way to test is to start the `connect` server in keepalive mode:
+The recommended way to test is to start the `connect` server in the keepalive mode:
 
     $ grunt connect:keepalive
 
@@ -115,8 +115,8 @@ To run melonJS tests in node simply run the following:
 
     $ grunt test
 
-This will run the jasmine spec tests with the output on the shell. This is not
-recommended because tests are run by PhantomJS in this mode, and there are a
+This will run the jasmine spec tests with the output displayed on the shell. This however, is not
+recommended because the tests are run by PhantomJS in this mode, and there are a
 lot of known bugs and unsupported features in the version of WebKit shipped
 with PhantomJS.
 
