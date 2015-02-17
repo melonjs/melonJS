@@ -80,6 +80,21 @@
             normals.push(new me.Vector2d().copy(e).perp().normalize());
 
             return this;
+        },
+        
+        /**
+         * clone this line segment
+         * @name clone
+         * @memberOf me.Line
+         * @function
+         * @return {me.Line} new Line
+         */
+        clone : function () {
+            var copy = [];
+            this.points.forEach(function (point) {
+                copy.push(new me.Vector2d(point.x, point.y));
+            });
+            return new me.Line(this.pos.x, this.pos.y, copy);
         }
     });
 

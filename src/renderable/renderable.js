@@ -155,9 +155,6 @@
                 var pos = this.ancestor._absoluteBounds.pos;
                 this._absoluteBounds.setShape(bounds.pos.x + pos.x, bounds.pos.y + pos.y, bounds.width, bounds.height);
             }
-            else {
-                this._absoluteBounds.setShape(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
-            }
 
             return this._absoluteBounds;
         },

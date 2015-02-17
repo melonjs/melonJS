@@ -127,6 +127,7 @@
          * @memberOf me.game
          * @example
          * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
+         * console.log(me.game.HASH["mytag"]); //> "value"
          */
         api.HASH = null;
 

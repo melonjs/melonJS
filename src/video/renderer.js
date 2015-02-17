@@ -249,7 +249,13 @@
                 // if set to the standard "pixelated"
                 this.canvas.style["image-rendering"] = "auto";
             }
-        }
+        },
+
+        /**
+         * @private
+         */
+        drawFont : function (/*bounds*/) {},
+
     });
 
 })();
