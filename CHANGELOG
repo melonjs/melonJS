@@ -11,6 +11,8 @@ Version History
 * Device : added browser language detection
 * Entity : entity bodies now have a default shape if not overridden by the entity constructor.
 * Font : updated me.Font to work with me.Color (xorinzor)
+* Font : updated the me.Font api to be consistent with ne.BitmapFont and the Renderer class
+* Font : added support for WebGL (using me.Font is however not recommended for performances reason)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
 * Input : allow regions to be any shape when registering pointer event, and not just me.Rect
 * Input : `releasePointerEvent` now accepts an optional extra argument that references "which callback" to release
