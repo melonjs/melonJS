@@ -354,7 +354,6 @@
                     scaleX = scaleY = _max_width / sWidth;
                     this.renderer.resize(sWidth, me.video.renderer.getHeight());
                     me.game.viewport.resize(sWidth, me.video.renderer.getHeight());
-                    me.game.viewport.setDeadzone(sWidth / 6, me.video.renderer.getHeight() / 6);
                 }
                 else if (
                     (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
@@ -365,7 +364,6 @@
                     scaleX = scaleY = _max_height / sHeight;
                     this.renderer.resize(me.video.renderer.getWidth(), sHeight);
                     me.game.viewport.resize(me.video.renderer.getWidth(), sHeight);
-                    me.game.viewport.setDeadzone(me.video.renderer.getWidth() / 6, sHeight / 6);
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
@@ -417,6 +415,7 @@
             this.renderer.scaleCanvas(scaleX, scaleY);
 
             me.input._offset = me.video.getPos();
+            
             // clear the timeout id
             deferResizeId = -1;
         };

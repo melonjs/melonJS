@@ -202,6 +202,18 @@
         api.WINDOW_ONRESIZE = "window.onresize";
 
         /**
+         * Channel Constant for when the viewport is resized <br>
+         * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
+         * Data passed : {Number} viewport width <br>
+         * Data passed : {Number} viewport height <br>
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#VIEWPORT_ONRESIZE
+         */
+        api.VIEWPORT_ONRESIZE = "viewport.onresize";
+
+        /**
          * Channel Constant for when the device is rotated <br>
          * Data passed : {Event} Event object <br>
          * @public

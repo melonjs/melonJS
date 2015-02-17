@@ -24,7 +24,7 @@
             this.progress = ~~(progress * this.width);
             this.invalidate = true;
         },
-
+       
         // make sure the screen is refreshed every frame
         update : function () {
             if (this.invalidate === true) {
@@ -138,10 +138,17 @@
                 me.video.renderer.getWidth(),
                 me.video.renderer.getHeight()
             );
-            this.handle = me.event.subscribe(
+            
+            this.loaderHdlr = me.event.subscribe(
                 me.event.LOADER_PROGRESS,
                 progressBar.onProgressUpdate.bind(progressBar)
             );
+            
+            this.resizeHdlr = me.event.subscribe(
+                me.event.VIEWPORT_ONRESIZE,
+                progressBar.resize.bind(progressBar)
+            );
+            
             me.game.world.addChild(progressBar, 1);
             this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
             // melonJS text & logo
@@ -157,10 +164,9 @@
         // destroy object at end of loading
         onDestroyEvent : function () {
             // cancel the callback
-            if (this.handle)  {
-                me.event.unsubscribe(this.handle);
-                this.handle = null;
-            }
+            me.event.unsubscribe(this.loaderHdlr);
+            me.event.unsubscribe(this.resizeHdlr);
+            this.loaderHdlr = this.resizeHdlr = null;
         }
     });
 })();

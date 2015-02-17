@@ -172,9 +172,10 @@
             this.anchorPoint.set(0, 0);
 
             // register to the viewport change notification
-            this.handle = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
+            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
+            this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
         },
-
+        
         /**
          * updateLayer function
          * @ignore
@@ -282,9 +283,13 @@
         // called when the layer is destroyed
         destroy : function () {
             // cancel the event subscription
-            if (this.handle)  {
-                me.event.unsubscribe(this.handle);
-                this.handle = null;
+            if (this.vpChangeHdlr)  {
+                me.event.unsubscribe(this.vpChangeHdlr);
+                this.vpChangeHdlr = null;
+            }
+            if (this.vpResizeHdlr)  {
+                me.event.unsubscribe(this.vpResizeHdlr);
+                this.vpResizeHdlr = null;
             }
             // clear all allocated objects
             this.image = null;
