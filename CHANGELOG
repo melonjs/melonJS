@@ -9,6 +9,7 @@ Version History
 * Core : added `me.game.HASH` to pass key-value options in the URL
 * Core : now uses only case-sensitive string matching; DoN't MiX cAsE!
 * Device : added browser language detection
+* Entity : entity bodies now have a default shape if not overridden by the entity constructor.
 * Font : updated me.Font to work with me.Color (xorinzor)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
 * Input : allow regions to be any shape when registering pointer event, and not just me.Rect
