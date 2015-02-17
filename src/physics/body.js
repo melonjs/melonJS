@@ -35,7 +35,7 @@
              * @name shapes
              * @memberOf me.Body
              */
-            this.shapes = shapes || [];
+            this.shapes = [];
 
             /**
              * The body collision mask, that defines what should collide with what.<br>
@@ -165,6 +165,11 @@
                     entity.height
                 ]
             );
+            
+            // parses the given shapes array and add them
+            for (var s = 0; s < shapes.length; s++) {
+                this.addShape(shapes[s].clone(), true);
+            }
         },
 
         /**
@@ -177,7 +182,7 @@
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          * @return {Number} the shape array length
          */
-        addShape : function (shape) {
+        addShape : function (shape, batchInsert) {
             if (shape.shapeType === "Rectangle") {
                 // ensure that rect shape are managed as polygon
                 this.shapes.push(shape.toPolygon());
@@ -186,8 +191,10 @@
                 this.shapes.push(shape);
             }
 
-            // update the body bounds to take in account the added shape
-            this.updateBounds();
+            if (batchInsert !== true) {
+                // update the body bounds to take in account the added shape
+                this.updateBounds();
+            }
 
             // return the length of the shape list
             return this.shapes.length;

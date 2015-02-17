@@ -24,6 +24,7 @@
      * @param {Number} [settings.frameheight] height of a single frame in the given spritesheet
      * @param {String} [settings.type] object type
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
+     * @param {{me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]}} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      * @param {Boolean} [settings.noDefaultShape=false] Disable automatic creation of a default shape (as defined in Tiled), particulary useful if you use Tiled but want to use "custom" shapes
      */
     me.Entity = me.Renderable.extend(
@@ -116,10 +117,7 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            this.body = new me.Body(this, (
-                settings.noDefaultShape !== true && typeof (settings.getTMXShapes) === "function" ?
-                settings.getTMXShapes() : []
-            ));
+            this.body = new me.Body(this, Array.isArray(settings.shapes) ? settings.shapes : [ new me.Rect(0, 0, this.width, this.height) ]);
 
             // ensure the entity bounds and pos are up-to-date
             this.body.updateBounds();
