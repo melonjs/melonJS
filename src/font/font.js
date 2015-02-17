@@ -162,11 +162,13 @@
          * @name measureText
          * @memberOf me.Font
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
          */
-        measureText : function (context, text) {
+        measureText : function (renderer, text) {
+            var context = renderer.fontContext2D;
+
             // draw the text
             context.font = this.font;
             context.fillStyle = this.fillStyle.toRGBA();
@@ -191,38 +193,27 @@
          * @name draw
          * @memberOf me.Font
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
          */
 
-        draw : function (context, text, x, y) {
+        draw : function (renderer, text, x, y) {
             x = ~~x;
             y = ~~y;
 
             // save the previous global alpha value
-            var _alpha = context.globalAlpha;
-            context.globalAlpha *= this.getOpacity();
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // update initial position
             this.pos.set(x, y);
             // draw the text
-            context.font = this.font;
-            context.fillStyle = this.fillStyle.toRGBA();
-            context.textAlign = this.textAlign;
-            context.textBaseline = this.textBaseline;
-
-            var strings = ("" + text).split("\n");
-            for (var i = 0; i < strings.length; i++) {
-                // draw the string
-                context.fillText(strings[i].trimRight(), x, y);
-                // add leading space
-                y += this.fontSize.y * this.lineHeight;
-            }
+            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, false));
 
             // restore the previous global alpha value
-            context.globalAlpha = _alpha;
+            renderer.setGlobalAlpha(_alpha);
         },
 
         /**
@@ -232,42 +223,68 @@
          * @name drawStroke
          * @memberOf me.Font
          * @function
-         * @param {Context} context 2D Context
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
          */
-        drawStroke : function (context, text, x, y) {
+        drawStroke : function (renderer, text, x, y) {
             x = ~~x;
             y = ~~y;
 
             // save the previous global alpha value
-            var _alpha = context.globalAlpha;
-            context.globalAlpha *= this.getOpacity();
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // update initial position
             this.pos.set(x, y);
             // draw the text
+            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, true));
+
+            // restore the previous global alpha value
+            renderer.setGlobalAlpha(_alpha);
+        },
+
+        /**
+         * @private
+         */
+        _drawFont : function (context, text, x, y, stroke) {
             context.font = this.font;
             context.fillStyle = this.fillStyle.toRGBA();
-            context.strokeStyle = this.strokeStyle.toRGBA();
-            context.lineWidth = this.lineWidth;
+            if (stroke) {
+                context.strokeStyle = this.strokeStyle.toRGBA();
+            }
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
 
-            var strings = ("" + text).split("\n");
+            var strings = ("" + text).split("\n"), string = "";
+            var dw = 0;
+            var dy = y;
+            var lineHeight = this.fontSize.y * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                var _string = strings[i].trimRight();
-                // draw the border
-                context.strokeText(_string, x, y);
+                string = strings[i].trimRight();
+                // measure the string
+                dw = Math.max(dw, context.measureText(string).width);
                 // draw the string
-                context.fillText(_string, x, y);
+                context.fillText(string, x, y);
                 // add leading space
-                y += this.fontSize.y * this.lineHeight;
+                y += lineHeight;
             }
 
-            // restore the previous global alpha value
-            context.globalAlpha = _alpha;
+            // compute bounds
+            var dx = (this.textAlign === "right" ? x - dw : (
+                this.textAlign === "center" ? x - ~~(dw / 2) : x
+            ));
+            dy = [ "top", "hanging" ].indexOf(this.textBaseline) >= 0 ? dy : (
+                this.textBaseline === "middle" ? dy - ~~(lineHeight / 2) : dy - lineHeight
+            );
+
+            return {
+                x: ~~dx,
+                y: ~~dy,
+                w: ~~(dw + 0.5),
+                h: ~~(strings.length * lineHeight + 0.5)
+            };
         }
     });
 })();

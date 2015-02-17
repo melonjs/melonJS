@@ -85,6 +85,7 @@
             me.video.renderer = this;
 
             this.createFillTexture();
+            this.createFontTexture();
 
             // Configure the WebGL viewport
             this.resize(1, 1);
@@ -97,6 +98,11 @@
          */
         createFillTexture : function () {
             // Create a 1x1 white texture for fill operations
+            var img = new Uint8Array([255, 255, 255, 255]);
+
+            /**
+             * @ignore
+             */
             this.fillTexture = new this.Texture({
                 // FIXME: Create a texture atlas helper function
                 "meta" : {
@@ -107,14 +113,56 @@
                     "filename" : "default",
                     "frame" : { "x" : 0, "y" : 0, "w" : 1, "h" : 1 }
                 }]
-            }, new Uint8Array([255, 255, 255, 255]));
+            }, img);
 
+            this.cache.put(img, this.fillTexture);
             this.compositor.uploadTexture(
                 this.fillTexture,
                 1,
                 1,
                 0
             );
+        },
+
+        /**
+         * @ignore
+         */
+        createFontTexture : function () {
+            var img = me.video.createCanvas(
+                this.dimensions.width,
+                this.dimensions.height
+            );
+
+            /**
+             * @ignore
+             */
+            this.fontContext2D = this.getContext2d(img);
+
+            /**
+             * @ignore
+             */
+            this.fontTexture = new this.Texture({
+                // FIXME: Create a texture atlas helper function
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : {
+                        "w" : this.dimensions.width,
+                        "h" : this.dimensions.height
+                    }
+                },
+                "frames" : [{
+                    "filename" : "default",
+                    "frame" : {
+                        "x" : 0,
+                        "y" : 0,
+                        "w" : this.dimensions.width,
+                        "h" : this.dimensions.height
+                    }
+                }]
+            }, img);
+
+            this.cache.put(img, this.fontTexture);
+            this.compositor.uploadTexture(this.fontTexture);
         },
 
         /**
@@ -155,17 +203,28 @@
         },
 
         /**
-        * Helper method to draw the font on the backbuffer context.
-         * @name drawFont
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {me.Font} fontObject An instance of me.Font
-         * @param {String} text The string of text to draw
-         * @param {Number} x The x position to draw at
-         * @param {Number} y The y position to draw at
+         * @private
          */
-        drawFont : function (/*fontObject, text, x, y*/) {
-            // TODO
+        drawFont : function (bounds) {
+            // Flush the compositor so we can upload a new texture
+            this.compositor.flush();
+
+            // Force-upload the new texture
+            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
+
+            // Add the new quad
+            var key = bounds.x + "," + bounds.y + "," + bounds.w + "," + bounds.h;
+            this.compositor.addQuad(
+                this.fontTexture,
+                key,
+                bounds.x,
+                bounds.y,
+                bounds.w,
+                bounds.h
+            );
+
+            // Clear font context2D
+            this.fontContext2D.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
         },
 
         /**
@@ -297,20 +356,6 @@
         },
 
         /**
-         * returns the text size based on dimensions from the font. Uses the font drawing context
-         * @name measureText
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {me.Font} fontObject the instance of the font object
-         * @param {String} text
-         * @return {Object}
-         */
-        measureText : function (/*fontObject, text*/) {
-            //return fontObject.measureText(this._fontContext, text);
-            return { "width" : 0 };
-        },
-
-        /**
          * resets the gl transform to identity
          * @name resetTransform
          * @memberOf me.WebGLRenderer
@@ -331,6 +376,7 @@
             this.cache.reset();
             this.compositor.reset();
             this.createFillTexture();
+            this.createFontTexture();
         },
 
         /**
