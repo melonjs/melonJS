@@ -194,12 +194,13 @@
          * @function
          * @param {Number} w new width of the viewport
          * @param {Number} h new height of the viewport
-         * @return {me.Rect} this viewport
+         * @return {me.Viewport} this viewport
         */
         resize : function (w, h) {
             this._super(me.Renderable, "resize", [w, h]);
             this.setDeadzone(w / 6, h / 6);
             me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+            return this;
         },
         
         /**
