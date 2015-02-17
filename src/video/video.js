@@ -109,7 +109,7 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','grow-width','grow-height','stretch') screen scaling modes
+         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','flex-width','flex-height','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean}
@@ -137,8 +137,8 @@
             settings.autoScale = (settings.scale === "auto") || false;
             settings.scaleMethod = [
                 "fill",
-                "grow-width",
-                "grow-height",
+                "flex-width",
+                "flex-height",
                 "stretch"
             ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
             settings.transparent = !!(settings.transparent);
@@ -347,7 +347,7 @@
 
                 if (
                     (settings.scaleMethod === "fill" && screenRatio < designRatio) ||
-                    (settings.scaleMethod === "grow-width")
+                    (settings.scaleMethod === "flex-width")
                 ) {
                     // resize the display canvas to fill the parent container
                     sWidth = me.video.renderer.getHeight() * screenRatio;
@@ -358,7 +358,7 @@
                 }
                 else if (
                     (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
-                    (settings.scaleMethod === "grow-height")
+                    (settings.scaleMethod === "flex-height")
                 ) {
                     // resize the display canvas to fill the parent container
                     sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
