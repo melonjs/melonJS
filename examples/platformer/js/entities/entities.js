@@ -238,8 +238,8 @@ game.PathEnemyEntity = me.Entity.extend({
         settings.width = settings.framewidth;
         settings.height = settings.frameheight;
 
-        // erase the default shape definition
-        settings.shapes = undefined;
+        // redefine the default shape (used to define path) with a shape matching the renderable 
+        settings.shapes[0] = new me.Rect(0, 0, settings.framewidth, settings.frameheight);
         
         // call the super constructor
         this._super(me.Entity, 'init', [x, y , settings]);
