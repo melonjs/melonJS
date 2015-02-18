@@ -74,6 +74,10 @@
         init: function (x, y, width, height, name, imagesrc, z, ratio) {
             // layer name
             this.name = name;
+            
+            // maximum layer size
+            this.maxWidth = width;
+            this.maxHeight = height;
 
             // get the corresponding image (throw an exception if not found)
             this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
@@ -85,7 +89,9 @@
             this.imageheight = this.image.height;
 
             // call the constructor
-            this._super(me.Renderable, "init", [x, y, me.game.viewport.width, me.game.viewport.height]);
+            this._super(me.Renderable, "init", [x, y, width, height]);
+            // resize/compute the correct image layer size
+            this.resize(me.game.viewport.width, me.game.viewport.height);
 
             // specify the start offset when drawing the image (for parallax/repeat features)
             this.offset = new me.Vector2d(0, 0);
@@ -172,6 +178,21 @@
             // register to the viewport change notification
             this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+        },
+        
+        /**
+         * resize the Image Layer to match the given size
+         * @name resize
+         * @memberOf me.ImageLayer
+         * @function
+         * @param {Number} w new width
+         * @param {Number} h new height
+        */
+        resize : function (w, h) {
+            this._super(me.Renderable, "resize", [
+                (this.maxWidth ? Math.min(w, this.maxWidth) : w),
+                (this.maxHeight ? Math.min(h, this.maxHeight) : h)
+            ]);
         },
         
         /**
