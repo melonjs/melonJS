@@ -129,8 +129,8 @@
          */
         createFontTexture : function () {
             var img = me.video.createCanvas(
-                this.dimensions.width,
-                this.dimensions.height
+                this.backBufferCanvas.width,
+                this.backBufferCanvas.height
             );
 
             /**
@@ -146,8 +146,8 @@
                 "meta" : {
                     "app" : "melonJS",
                     "size" : {
-                        "w" : this.dimensions.width,
-                        "h" : this.dimensions.height
+                        "w" : this.backBufferCanvas.width,
+                        "h" : this.backBufferCanvas.height
                     }
                 },
                 "frames" : [{
@@ -155,8 +155,8 @@
                     "frame" : {
                         "x" : 0,
                         "y" : 0,
-                        "w" : this.dimensions.width,
-                        "h" : this.dimensions.height
+                        "w" : this.backBufferCanvas.width,
+                        "h" : this.backBufferCanvas.height
                     }
                 }]
             }, img);
@@ -224,7 +224,7 @@
             );
 
             // Clear font context2D
-            this.fontContext2D.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
+            this.fontContext2D.clearRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
         },
 
         /**

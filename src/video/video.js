@@ -19,6 +19,8 @@
         var canvas = null;
 
         var deferResizeId = -1;
+        
+        var designRatio = 1;
 
         // max display size
         var maxWidth = Infinity;
@@ -156,7 +158,10 @@
             if (settings.autoScale || (settings.scale !== 1.0)) {
                 settings.doubleBuffering = true;
             }
-
+            
+            // hold the requested video size ratio
+            designRatio = game_width / game_height;
+            
             // default scaled size value
             var game_width_zoom = game_width * me.sys.scale.x;
             var game_height_zoom = game_height * me.sys.scale.y;
@@ -230,6 +235,7 @@
                 canvas.style.width = (canvas.width / ratio) + "px";
                 canvas.style.height = (canvas.height / ratio) + "px";
             }
+            
 
             // set max the canvas max size if CSS values are defined
             if (window.getComputedStyle) {
@@ -340,7 +346,6 @@
                 var parent = me.video.renderer.getScreenCanvas().parentNode;
                 var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
-                var designRatio = me.video.renderer.getWidth() / me.video.renderer.getHeight();
                 var screenRatio = _max_width / _max_height;
                 var sWidth = Infinity;
                 var sHeight = Infinity;
