@@ -185,8 +185,8 @@
             // force a camera update
             this.updateTarget();
         },
-        
-        
+
+
         /**
          * resize the viewport
          * @name resize
@@ -199,10 +199,12 @@
         resize : function (w, h) {
             this._super(me.Renderable, "resize", [w, h]);
             this.setDeadzone(w / 6, h / 6);
+            this.moveTo(0, 0);
+            this.update();
             me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
             return this;
         },
-        
+
         /**
          * set the viewport boundaries (set to the world limit by default).
          * the viewport is bound to the given coordinates and cannot move/be scrolled outside of it.

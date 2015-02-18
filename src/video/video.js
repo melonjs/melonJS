@@ -363,8 +363,6 @@
                     scaleX = scaleY = _max_width / sWidth;
                     this.renderer.resize(sWidth, designHeight);
                     me.game.viewport.resize(sWidth, designHeight);
-                    me.game.viewport.moveTo(0, 0);
-                    me.game.viewport.update();
                 }
                 else if (
                     (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
@@ -375,8 +373,6 @@
                     scaleX = scaleY = _max_height / sHeight;
                     this.renderer.resize(designWidth, sHeight);
                     me.game.viewport.resize(designWidth, sHeight);
-                    me.game.viewport.moveTo(0, 0);
-                    me.game.viewport.update();
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
