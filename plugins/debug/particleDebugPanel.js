@@ -36,7 +36,7 @@
             this._super(me.plugin.Base, "init");
 
             // minimum melonJS version expected
-            this.version = "2.0.0";
+            this.version = "2.1.0";
 
             // to hold the debug options
             // clickable rect area
@@ -274,15 +274,14 @@
             renderer.translate(this.rect.left, this.rect.top);
 
             // # entities / draw
-            var context = renderer.getContext();
-            this.font.draw(context, "emitters : " + this.emitterCount, 5, 5);
-            this.font.draw(context, "particles : " + this.particleCount, 5, 18);
+            this.font.draw(renderer, "emitters : " + this.emitterCount, 5, 5);
+            this.font.draw(renderer, "particles : " + this.particleCount, 5, 18);
 
             // draw the update duration
-            this.font.draw(context, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
+            this.font.draw(renderer, "update: " + this.updateTimeAvg.toFixed(2) + "ms / " + this.frameUpdateTimeAvg.toFixed(2) + "ms", 5, 31);
 
             // draw the draw duration
-            this.font.draw(context, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
+            this.font.draw(renderer, "draw: " + this.drawTimeAvg.toFixed(2) + "ms / " + this.frameDrawTimeAvg.toFixed(2) + "ms", 5, 44);
 
             this.updateTimeSamples.push(this.updateTime);
             this.updateTime = 0;
