@@ -19,8 +19,10 @@
         var canvas = null;
 
         var deferResizeId = -1;
-        
+
         var designRatio = 1;
+        var designWidth = 0;
+        var designHeight = 0;
 
         // max display size
         var maxWidth = Infinity;
@@ -158,10 +160,12 @@
             if (settings.autoScale || (settings.scale !== 1.0)) {
                 settings.doubleBuffering = true;
             }
-            
+
             // hold the requested video size ratio
             designRatio = game_width / game_height;
-            
+            designWidth = game_width;
+            designHeight = game_height;
+
             // default scaled size value
             var game_width_zoom = game_width * me.sys.scale.x;
             var game_height_zoom = game_height * me.sys.scale.y;
@@ -235,7 +239,7 @@
                 canvas.style.width = (canvas.width / ratio) + "px";
                 canvas.style.height = (canvas.height / ratio) + "px";
             }
-            
+
 
             // set max the canvas max size if CSS values are defined
             if (window.getComputedStyle) {
@@ -355,34 +359,36 @@
                     (settings.scaleMethod === "flex-width")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sWidth = me.video.renderer.getHeight() * screenRatio;
+                    sWidth = designHeight * screenRatio;
                     scaleX = scaleY = _max_width / sWidth;
-                    this.renderer.resize(sWidth, me.video.renderer.getHeight());
-                    me.game.viewport.resize(sWidth, me.video.renderer.getHeight());
+                    this.renderer.resize(sWidth, designHeight);
+                    me.game.viewport.resize(sWidth, designHeight);
                 }
                 else if (
                     (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
                     (settings.scaleMethod === "flex-height")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sHeight = me.video.renderer.getWidth() * (_max_height / _max_width);
+                    sHeight = designWidth * (_max_height / _max_width);
                     scaleX = scaleY = _max_height / sHeight;
-                    this.renderer.resize(me.video.renderer.getWidth(), sHeight);
-                    me.game.viewport.resize(me.video.renderer.getWidth(), sHeight);
+                    this.renderer.resize(designWidth, sHeight);
+                    me.game.viewport.resize(designWidth, sHeight);
+                    me.game.viewport.moveTo(0, 0);
+                    me.game.viewport.update();
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container
-                    scaleX = _max_width / me.video.renderer.getWidth();
-                    scaleY = _max_height / me.video.renderer.getHeight();
+                    scaleX = _max_width / designWidth;
+                    scaleY = _max_height / designHeight;
                 }
                 else {
                     // scale the display canvas to fit the parent container
                     // make sure we maintain the original aspect ratio
                     if (screenRatio < designRatio) {
-                        scaleX = scaleY = _max_width / me.video.renderer.getWidth();
+                        scaleX = scaleY = _max_width / designWidth;
                     }
                     else {
-                        scaleX = scaleY = _max_height / me.video.renderer.getHeight();
+                        scaleX = scaleY = _max_height / designHeight;
                     }
                 }
 
@@ -420,7 +426,7 @@
             this.renderer.scaleCanvas(scaleX, scaleY);
 
             me.input._offset = me.video.getPos();
-            
+
             // clear the timeout id
             deferResizeId = -1;
         };
