@@ -363,6 +363,8 @@
                     scaleX = scaleY = _max_width / sWidth;
                     this.renderer.resize(sWidth, designHeight);
                     me.game.viewport.resize(sWidth, designHeight);
+                    me.game.viewport.moveTo(0, 0);
+                    me.game.viewport.update();
                 }
                 else if (
                     (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
