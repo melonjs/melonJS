@@ -452,8 +452,8 @@
         },
 
         /**
+         * not used by this renderer?
          * @ignore
-         * NOT USED BY THIS RENDERER ?
          */
         setAntiAlias : function (context, enable) {
             this._super(me.Renderer, "setAntiAlias", [context, enable]);

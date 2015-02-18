@@ -60,13 +60,6 @@
                 width || Infinity,
                 height || Infinity]
             );
-            // init the bounds to an empty rect
-
-            /**
-             * Container bounds
-             * @ignore
-             */
-            this.bounds = undefined;
 
             /**
              * The array of children of this container.
@@ -341,32 +334,38 @@
 
         /**
          * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
-         * @name getBounds
+         * @name getChildBounds
          * @memberOf me.Container
          * @function
+         * @param {me.Rect} [bounds] a rectangle to use for the bounds
          * @return {me.Rect} new rectangle
          */
-        getBounds : function () {
-            if (!this.bounds) {
-                this.bounds = new me.Rect(Infinity, Infinity, -Infinity, -Infinity);
-            } else {
-                // reset the rect with default values
-                this.bounds.pos.set(Infinity, Infinity);
-                this.bounds.resize(-Infinity, -Infinity);
+        getChildBounds : function (bounds) {
+            if (bounds) {
+                bounds.pos.set(Infinity, Infinity);
+                bounds.resize(-Infinity, -Infinity);
+            }
+            else {
+                bounds = new me.Rect(Infinity, Infinity, -Infinity, -Infinity);
             }
             var childBounds;
             for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (child.isRenderable) {
-                    childBounds = child.getBounds();
+                    if (child instanceof me.Container) {
+                        childBounds = child.getChildBounds();
+                    }
+                    else {
+                        childBounds = child.getBounds();
+                    }
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
                     if (childBounds !== null) {
-                        this.bounds.union(childBounds);
+                        bounds.union(childBounds);
                     }
                 }
             }
             // TODO : cache the value until any childs are modified? (next frame?)
-            return this.bounds;
+            return bounds;
         },
 
         /**
