@@ -81,8 +81,6 @@
             // WebGL/Canvas compatibility
             var canvas = me.video.renderer.getCanvas();
             this.canvas = me.video.createCanvas(canvas.width, DEBUG_HEIGHT, true);
-            this.context = me.video.renderer.getContext2d(this.canvas);
-            this.overlay = new me.Color(255, 255, 255, 1.0);
 
             // Size
             this.rect = new me.Rect(0, 0, canvas.width, DEBUG_HEIGHT);
@@ -104,9 +102,9 @@
 
             // some internal string/length
             this.help_str        = "(s)how/(h)ide";
-            this.help_str_len    = this.font.measureText(this.context, this.help_str).width;
-            this.fps_str_len     = this.font.measureText(this.context, "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(this.context, "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
+            this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
+            this.memoryPositionX = this.font.measureText(me.video.renderer, "Draw   : ").width * 2.2 + 310 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -333,7 +331,7 @@
         },
 
         /** @private */
-        drawMemoryGraph : function (context, endX) {
+        drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize / 1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize / 1048576, 2);
@@ -345,6 +343,7 @@
                 this.samples[len] = (usedHeap / totalHeap) * 20;
 
                 // draw the graph
+                var context = renderer.getContext();
                 for (var x = len; x >= 0; x--) {
                     var where = endX - (len - x) - 5;
                     context.beginPath();
@@ -355,17 +354,17 @@
                 }
                 // display the current value
 
-                this.font.draw(context, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX, 5 * this.mod);
             }
             else {
                 // Heap Memory information not available
-                this.font.draw(context, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }
         },
 
         /** @private */
         draw : function (renderer) {
-            this.context.save();
+            renderer.save();
 
             // draw the QuadTree (before the panel)
             if (me.debug.renderQuadTree === true) {
@@ -373,46 +372,40 @@
             }
 
             // draw the panel
-            this.context.globalAlpha = 0.5;
-            this.context.fillStyle = "black";
-            this.context.fillRect(this.rect.left,  this.rect.top,
-                                  this.rect.width, this.rect.height);
-            this.context.globalAlpha = 1.0;
+            renderer.setGlobalAlpha(0.5);
+            renderer.setColor("black");
+            renderer.fillRect(
+                this.rect.left,  this.rect.top,
+                this.rect.width, this.rect.height
+            );
+            renderer.setGlobalAlpha(1.0);
 
-            this.font.draw(this.context, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
-            this.font.draw(this.context, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 20 * this.mod);
+            this.font.draw(renderer, "#objects : " + me.game.world.children.length, 5 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "#draws   : " + me.game.world.drawCount, 5 * this.mod, 20 * this.mod);
 
             // debug checkboxes
-            this.font.draw(this.context, "?hitbox   [" + (me.debug.renderHitBox ? "x" : " ") + "]",   100 * this.mod, 5 * this.mod);
-            this.font.draw(this.context, "?velocity [" + (me.debug.renderVelocity ? "x" : " ") + "]", 100 * this.mod, 20 * this.mod);
+            this.font.draw(renderer, "?hitbox   [" + (me.debug.renderHitBox ? "x" : " ") + "]",   100 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?velocity [" + (me.debug.renderVelocity ? "x" : " ") + "]", 100 * this.mod, 20 * this.mod);
 
-            this.font.draw(this.context, "?QuadTree [" + (me.debug.renderQuadTree ? "x" : " ") + "]", 190 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "?QuadTree [" + (me.debug.renderQuadTree ? "x" : " ") + "]", 190 * this.mod, 5 * this.mod);
 
             // draw the update duration
-            this.font.draw(this.context, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
+            this.font.draw(renderer, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
-            this.font.draw(this.context, "Draw   : " + this.frameDrawTime.toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
+            this.font.draw(renderer, "Draw   : " + this.frameDrawTime.toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
 
             // draw the memory heap usage
             var endX = this.rect.width - 25;
-            this.drawMemoryGraph(this.context, endX - this.help_str_len);
+            this.drawMemoryGraph(renderer, endX - this.help_str_len);
 
             // some help string
-            this.font.draw(this.context, this.help_str, endX - this.help_str_len, 20 * this.mod);
+            this.font.draw(renderer, this.help_str, endX - this.help_str_len, 20 * this.mod);
 
             //fps counter
             var fps_str = me.timer.fps + "/" + me.sys.fps + " fps";
-            this.font.draw(this.context, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(renderer, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
 
-            this.context.restore();
-            me.video.renderer.setGlobalAlpha(0.7);
-            me.video.renderer.setColor(this.overlay);
-            me.video.renderer.drawImage(
-                this.canvas, 0, 0,
-                this.canvas.width, this.canvas.height,
-                0, 0, this.rect.width, this.rect.height
-            );
-            me.video.renderer.setGlobalAlpha(1.0);
+            renderer.restore();
         },
 
         /** @private */
