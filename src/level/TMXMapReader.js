@@ -67,11 +67,13 @@
             if (map.background_image) {
                 // add a new image layer
                 map.mapLayers.push(new me.ImageLayer(
-                    0, 0,
-                    map.width, map.height,
-                    "background_image",
-                    map.background_image,
-                    zOrder++
+                    0, 0, {
+                        width : map.width,
+                        height : map.height,
+                        name : "background_image",
+                        image : map.background_image,
+                        z: zOrder++
+                    }
                 ));
             }
 
@@ -292,7 +294,15 @@
             var ilsrc = typeof (data[TMXConstants.TMX_TAG_IMAGE]) !== "string" ? data[TMXConstants.TMX_TAG_IMAGE].source : data[TMXConstants.TMX_TAG_IMAGE];
 
             // create the layer
-            var imageLayer = new me.ImageLayer(ilx, ily, ilw * map.tilewidth, ilh * map.tileheight, iln, ilsrc, z);
+            var imageLayer = new me.ImageLayer(
+                ilx, ily, {
+                    width : ilw * map.tilewidth,
+                    height: ilh * map.tileheight,
+                    name: iln,
+                    image: ilsrc,
+                    z : z
+                }
+            );
 
             // set some additional flags
             var visible = typeof(data[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? data[TMXConstants.TMX_TAG_VISIBLE] : true;

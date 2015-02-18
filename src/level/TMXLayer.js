@@ -56,14 +56,15 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Number} x Y coordinate
-     * @param {Number} y X coordinate
-     * @param {Number} width Layer width in pixels
-     * @param {Number} height Layer height in pixels
-     * @param {String} name Layer name
-     * @param {String} image Image name (as defined in the asset list)
-     * @param {Number} z z-index position
-     * @param {me.Vector2d} [ratio=1.0] Scrolling ratio to be applied
+     * @param {Number} x x coordinate
+     * @param {Number} y y coordinate
+     * @param {Object} settings ImageLayer properties
+     * @param {Number} [settings.width] Layer width in pixels
+     * @param {Number} [settings.height] Layer height in pixels
+     * @param {String} [settings.name] Layer name
+     * @param {String} settings.image Image asset name (as defined in the asset list)
+     * @param {Number} [settings.z=0] z-index position
+     * @param {me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied
      */
     me.ImageLayer = me.Renderable.extend({
         /**
@@ -71,25 +72,25 @@
          * @ignore
          * @function
          */
-        init: function (x, y, width, height, name, imagesrc, z, ratio) {
+        init: function (x, y, settings) {
             // layer name
-            this.name = name;
+            this.name = settings.name || "me.ImageLayer";
             
             // maximum layer size
-            this.maxWidth = width;
-            this.maxHeight = height;
+            this.maxWidth = settings.width || 0;
+            this.maxHeight = settings.height || 0;
 
             // get the corresponding image (throw an exception if not found)
-            this.image = (imagesrc) ? me.loader.getImage(me.utils.getBasename(imagesrc)) : null;
+            this.image = (settings.image) ? me.loader.getImage(me.utils.getBasename(settings.image)) : null;
             if (!this.image) {
-                throw new me.Error("'" + imagesrc + "' file for Image Layer '" + this.name + "' not found!");
+                throw new me.Error("'" + settings.image + "' file for Image Layer '" + this.name + "' not found!");
             }
 
             this.imagewidth = this.image.width;
             this.imageheight = this.image.height;
 
             // call the constructor
-            this._super(me.Renderable, "init", [x, y, width, height]);
+            this._super(me.Renderable, "init", [x, y, this.maxWidth, this.maxHeight]);
             // resize/compute the correct image layer size
             this.resize(me.game.viewport.width, me.game.viewport.height);
 
@@ -97,7 +98,7 @@
             this.offset = new me.Vector2d(0, 0);
 
             // displaying order
-            this.z = z;
+            this.z = settings.z || 0;
 
             /**
              * Define the image scrolling ratio<br>
@@ -112,12 +113,12 @@
              */
             this.ratio = new me.Vector2d(1.0, 1.0);
 
-            if (typeof(ratio) !== "undefined") {
+            if (typeof(settings.ratio) !== "undefined") {
                 // little hack for backward compatiblity
-                if (typeof(ratio) === "number") {
-                    this.ratio.set(ratio, ratio);
+                if (typeof(settings.ratio) === "number") {
+                    this.ratio.set(settings.ratio, settings.ratio);
                 } else /* vector */ {
-                    this.ratio.setV(ratio);
+                    this.ratio.setV(settings.ratio);
                 }
             }
 

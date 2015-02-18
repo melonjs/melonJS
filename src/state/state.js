@@ -539,8 +539,10 @@
          *     onResetEvent: function() {
          *         // Load background image
          *         me.game.world.addChild(
-         *             new me.ImageLayer("bg", 0, 0, "bg"),
-         *             0 // z-index
+         *             new me.ImageLayer(0, 0, {
+         *                 image : "bg",
+         *                 z: 0 // z-index
+         *             }
          *         );
          *
          *         // Add a button
