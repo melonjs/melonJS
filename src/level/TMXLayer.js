@@ -84,10 +84,8 @@
             this.imagewidth = this.image.width;
             this.imageheight = this.image.height;
 
-            // set layer width & height
-            width  = (width  ? Math.min(me.game.viewport.width, width)   : me.game.viewport.width);
-            height = (height ? Math.min(me.game.viewport.height, height) : me.game.viewport.height);
-            this._super(me.Renderable, "init", [x, y, width, height]);
+            // call the constructor
+            this._super(me.Renderable, "init", [x, y, me.game.viewport.width, me.game.viewport.height]);
 
             // specify the start offset when drawing the image (for parallax/repeat features)
             this.offset = new me.Vector2d(0, 0);

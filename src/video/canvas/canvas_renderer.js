@@ -175,17 +175,6 @@
         },
 
         /**
-         * return a reference to the system canvas
-         * @name getCanvas
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @return {Canvas}
-         */
-        getCanvas : function () {
-            return this.backBufferCanvas;
-        },
-
-        /**
          * return a reference to the system 2d Context
          * @name getContext
          * @memberOf me.CanvasRenderer
@@ -215,31 +204,19 @@
         scaleCanvas : function (scaleX, scaleY) {
             this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
             this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
-
+            
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 this.canvas.style.width = (this.canvas.width / me.device.getPixelRatio()) + "px";
                 this.canvas.style.height = (this.canvas.height / me.device.getPixelRatio()) + "px";
             }
+            
             if (this.doubleBuffering && this.transparent) {
                 // Clears the front buffer for each frame blit
                 this.context.globalCompositeOperation = "copy";
             }
             this.setAntiAlias(this.context, this.antiAlias);
             this.blitSurface();
-        },
-
-
-        /**
-         * resizes the canvas
-         * @name resize
-         * @memberOf me.CanvasRenderer
-         * @function
-         */
-        resize : function (width, height)
-        {
-            this.backBufferCanvas.width = width;
-            this.backBufferCanvas.height = height;
         },
 
         /**

@@ -403,18 +403,6 @@
         },
 
         /**
-         * resizes the canvas & GL Context
-         * @name resize
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        resize : function (width, height)
-        {
-            this.canvas.width  = width;
-            this.canvas.height = height;
-        },
-
-        /**
          * restores the canvas context
          * @name restore
          * @memberOf me.WebGLRenderer

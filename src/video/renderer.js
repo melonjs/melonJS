@@ -40,10 +40,15 @@
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
 
+            // the original canvas dimensions
             this.dimensions = { width: width, height: height };
+            
+            // the texture dimension (scaled canvas)
+            this.textureSize = { width: width, height: height };
 
             // canvas object and context
             this.canvas = c;
+            this.backBufferCanvas = this.canvas;
             this.context = null;
 
             // global color
@@ -200,7 +205,7 @@
          * @return {Number}
          */
         getWidth : function () {
-            return this.dimensions.width;
+            return this.textureSize.width;
         },
 
         /**
@@ -211,7 +216,7 @@
          * @return {Number}
          */
         getHeight : function () {
-            return this.dimensions.height;
+            return this.textureSize.height;
         },
 
         /**
@@ -223,6 +228,20 @@
          */
         globalAlpha : function () {
             return this.globalColor.glArray[3];
+        },
+        
+        /**
+         * resizes the canvas
+         * @name resize
+         * @memberOf me.Renderer
+         * @function
+         */
+        resize : function (width, height)
+        {
+            this.backBufferCanvas.width = width;
+            this.backBufferCanvas.height = height;
+            this.textureSize.width = width;
+            this.textureSize.height = height;
         },
 
         /**
