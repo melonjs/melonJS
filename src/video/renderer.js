@@ -47,8 +47,7 @@
             this.textureSize = { width: width, height: height };
 
             // canvas object and context
-            this.canvas = c;
-            this.backBufferCanvas = this.canvas;
+            this.canvas = this.backBufferCanvas = c;
             this.context = null;
 
             // global color
@@ -128,6 +127,17 @@
         reset : function () {
             this.resetTransform();
             this.cache.reset();
+        },
+ 
+        /**
+         * return a reference to the system canvas
+         * @name getCanvas
+         * @memberOf me.Renderer
+         * @function
+         * @return {Canvas}
+         */
+        getCanvas : function () {
+            return this.backBufferCanvas;
         },
 
         /**

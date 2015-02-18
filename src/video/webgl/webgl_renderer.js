@@ -333,17 +333,6 @@
         },
 
         /**
-         * return a reference to the system canvas
-         * @name getCanvas
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @return {Canvas}
-         */
-        getCanvas : function () {
-            return this.canvas;
-        },
-
-        /**
          * Returns the WebGLContext instance for the renderer
          * return a reference to the system 2d Context
          * @name getContext
