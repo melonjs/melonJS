@@ -8,7 +8,7 @@
          "opacity":1,
          "properties":
             {
-             "ratio":"0",
+             "ratio":"1",
              "repeat":"repeat-x"
             },
          "type":"imagelayer",
@@ -36,6 +36,7 @@
          "objects":[
                 {
                  "height":88,
+                 "id":1,
                  "name":"mainPlayer",
                  "properties":
                     {
@@ -51,6 +52,7 @@
                 }, 
                 {
                  "height":525,
+                 "id":2,
                  "name":"me.LevelEntity",
                  "properties":
                     {
@@ -68,6 +70,7 @@
                 {
                  "gid":19,
                  "height":0,
+                 "id":3,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -83,6 +86,7 @@
                 {
                  "gid":20,
                  "height":0,
+                 "id":4,
                  "name":"me.Entity",
                  "properties":
                     {
@@ -110,6 +114,7 @@
          "objects":[
                 {
                  "height":35,
+                 "id":5,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -125,6 +130,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":6,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -140,6 +146,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":7,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -155,6 +162,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":8,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -170,6 +178,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":9,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -185,6 +194,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":10,
                  "name":"SlimeEntity",
                  "properties":
                     {
@@ -213,6 +223,7 @@
          "objects":[
                 {
                  "height":35,
+                 "id":11,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -227,6 +238,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":12,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -241,6 +253,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":13,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -255,6 +268,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":14,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -269,6 +283,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":15,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -283,6 +298,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":16,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -297,6 +313,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":17,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -311,6 +328,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":18,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -325,6 +343,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":19,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -339,6 +358,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":20,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -353,6 +373,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":21,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -367,6 +388,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":22,
                  "name":"CoinEntity",
                  "properties":
                     {
@@ -405,6 +427,7 @@
          "objects":[
                 {
                  "height":35,
+                 "id":23,
                  "name":"FlyEntity",
                  "properties":
                     {
@@ -423,6 +446,7 @@
                 }, 
                 {
                  "height":35,
+                 "id":24,
                  "name":"FlyEntity",
                  "properties":
                     {
@@ -454,6 +478,7 @@
          "objects":[
                 {
                  "height":70,
+                 "id":25,
                  "name":"",
                  "properties":
                     {
@@ -468,6 +493,7 @@
                 }, 
                 {
                  "height":70,
+                 "id":26,
                  "name":"",
                  "properties":
                     {
@@ -482,6 +508,7 @@
                 }, 
                 {
                  "height":70,
+                 "id":27,
                  "name":"",
                  "properties":
                     {
@@ -496,6 +523,7 @@
                 }, 
                 {
                  "height":70,
+                 "id":28,
                  "name":"",
                  "properties":
                     {
@@ -510,6 +538,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":29,
                  "name":"",
                  "polyline":[
                         {
@@ -533,6 +562,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":30,
                  "name":"",
                  "polyline":[
                         {
@@ -556,6 +586,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":31,
                  "name":"",
                  "polyline":[
                         {
@@ -579,6 +610,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":32,
                  "name":"",
                  "polyline":[
                         {
@@ -602,6 +634,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":33,
                  "name":"",
                  "polyline":[
                         {
@@ -625,6 +658,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":34,
                  "name":"",
                  "polyline":[
                         {
@@ -648,6 +682,7 @@
                 }, 
                 {
                  "height":0,
+                 "id":35,
                  "name":"",
                  "polyline":[
                         {
@@ -676,6 +711,7 @@
          "x":0,
          "y":0
         }],
+ "nextobjectid":36,
  "orientation":"orthogonal",
  "properties":
     {

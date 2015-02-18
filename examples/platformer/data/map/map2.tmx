@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="49" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="49" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff" nextobjectid="36">
  <tileset firstgid="1" source="tileset.tsx"/>
  <imagelayer name="gradient_background">
   <image source="../img/background.png"/>
   <properties>
-   <property name="ratio" value="0"/>
+   <property name="ratio" value="1"/>
    <property name="repeat" value="repeat-x"/>
   </properties>
  </imagelayer>
@@ -14,54 +14,54 @@
   </data>
  </layer>
  <objectgroup color="#55ff00" name="player">
-  <object name="mainPlayer" x="35" y="438" width="35" height="88">
+  <object id="1" name="mainPlayer" x="35" y="438" width="35" height="88">
    <properties>
     <property name="frameheight" value="98"/>
     <property name="framewidth" value="72"/>
    </properties>
   </object>
-  <object name="me.LevelEntity" x="1680" y="0" width="35" height="525">
+  <object id="2" name="me.LevelEntity" x="1680" y="0" width="35" height="525">
    <properties>
     <property name="duration" value="150"/>
     <property name="fade" value="#fff"/>
     <property name="to" value="map1"/>
    </properties>
   </object>
-  <object name="me.Entity" gid="19" x="1015" y="455"/>
-  <object name="me.Entity" gid="20" x="1050" y="455"/>
+  <object id="3" name="me.Entity" gid="19" x="1015" y="455"/>
+  <object id="4" name="me.Entity" gid="20" x="1050" y="455"/>
  </objectgroup>
  <objectgroup color="#ff0000" name="slimes">
-  <object name="SlimeEntity" x="700" y="420" width="840" height="35">
+  <object id="5" name="SlimeEntity" x="700" y="420" width="840" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="490" y="490" width="210" height="35">
+  <object id="6" name="SlimeEntity" x="490" y="490" width="210" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="770" y="350" width="700" height="35">
+  <object id="7" name="SlimeEntity" x="770" y="350" width="700" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="840" y="280" width="560" height="35">
+  <object id="8" name="SlimeEntity" x="840" y="280" width="560" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="910" y="210" width="420" height="35">
+  <object id="9" name="SlimeEntity" x="910" y="210" width="420" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
    </properties>
   </object>
-  <object name="SlimeEntity" x="980" y="140" width="280" height="35">
+  <object id="10" name="SlimeEntity" x="980" y="140" width="280" height="35">
    <properties>
     <property name="frameheight" value="35"/>
     <property name="framewidth" value="55"/>
@@ -69,18 +69,18 @@
   </object>
  </objectgroup>
  <objectgroup color="#ffff00" name="coins">
-  <object name="CoinEntity" x="315" y="315" width="35" height="35"/>
-  <object name="CoinEntity" x="280" y="315" width="35" height="35"/>
-  <object name="CoinEntity" x="1015" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1050" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1085" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1120" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1155" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1190" y="70" width="35" height="35"/>
-  <object name="CoinEntity" x="1050" y="210" width="35" height="35"/>
-  <object name="CoinEntity" x="1190" y="280" width="35" height="35"/>
-  <object name="CoinEntity" x="1085" y="420" width="35" height="35"/>
-  <object name="CoinEntity" x="1540" y="490" width="35" height="35"/>
+  <object id="11" name="CoinEntity" x="315" y="315" width="35" height="35"/>
+  <object id="12" name="CoinEntity" x="280" y="315" width="35" height="35"/>
+  <object id="13" name="CoinEntity" x="1015" y="70" width="35" height="35"/>
+  <object id="14" name="CoinEntity" x="1050" y="70" width="35" height="35"/>
+  <object id="15" name="CoinEntity" x="1085" y="70" width="35" height="35"/>
+  <object id="16" name="CoinEntity" x="1120" y="70" width="35" height="35"/>
+  <object id="17" name="CoinEntity" x="1155" y="70" width="35" height="35"/>
+  <object id="18" name="CoinEntity" x="1190" y="70" width="35" height="35"/>
+  <object id="19" name="CoinEntity" x="1050" y="210" width="35" height="35"/>
+  <object id="20" name="CoinEntity" x="1190" y="280" width="35" height="35"/>
+  <object id="21" name="CoinEntity" x="1085" y="420" width="35" height="35"/>
+  <object id="22" name="CoinEntity" x="1540" y="490" width="35" height="35"/>
  </objectgroup>
  <layer name="front layer" width="49" height="17">
   <data encoding="base64">
@@ -88,7 +88,7 @@
   </data>
  </layer>
  <objectgroup color="#ff0000" name="flies">
-  <object name="FlyEntity" x="210" y="385" width="210" height="35">
+  <object id="23" name="FlyEntity" x="210" y="385" width="210" height="35">
    <properties>
     <property name="animationspeed" value="200"/>
     <property name="frameheight" value="35"/>
@@ -97,7 +97,7 @@
     <property name="velX" value="2"/>
    </properties>
   </object>
-  <object name="FlyEntity" x="875" y="0" width="525" height="35">
+  <object id="24" name="FlyEntity" x="875" y="0" width="525" height="35">
    <properties>
     <property name="animationspeed" value="200"/>
     <property name="frameheight" value="35"/>
@@ -108,47 +108,47 @@
   </object>
  </objectgroup>
  <objectgroup color="#ff0000" name="collision">
-  <object x="0" y="525" width="140" height="70"/>
-  <object x="210" y="455" width="70" height="70"/>
-  <object x="350" y="455" width="70" height="70"/>
-  <object x="490" y="525" width="1225" height="70"/>
-  <object type="platform" x="700" y="455">
+  <object id="25" x="0" y="525" width="140" height="70"/>
+  <object id="26" x="210" y="455" width="70" height="70"/>
+  <object id="27" x="350" y="455" width="70" height="70"/>
+  <object id="28" x="490" y="525" width="1225" height="70"/>
+  <object id="29" type="platform" x="700" y="455">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 840,0"/>
   </object>
-  <object type="platform" x="1015" y="105">
+  <object id="30" type="platform" x="1015" y="105">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 210,0"/>
   </object>
-  <object type="platform" x="980" y="175">
+  <object id="31" type="platform" x="980" y="175">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 280,0"/>
   </object>
-  <object type="platform" x="910" y="245">
+  <object id="32" type="platform" x="910" y="245">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 420,0"/>
   </object>
-  <object type="platform" x="840" y="315">
+  <object id="33" type="platform" x="840" y="315">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 560,0"/>
   </object>
-  <object type="platform" x="770" y="385">
+  <object id="34" type="platform" x="770" y="385">
    <properties>
     <property name="platform" value="true"/>
    </properties>
    <polyline points="0,0 700,0"/>
   </object>
-  <object x="1" y="210">
+  <object id="35" x="1" y="210">
    <polyline points="0,0 0,315"/>
   </object>
  </objectgroup>
