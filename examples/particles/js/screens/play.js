@@ -7,7 +7,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.viewport.bounds.resize(2000, 2000);
 
         // add background to the game world
-        me.game.world.addChild(new me.ImageLayer(0, 0, 0, 0, "background", "grid", 1));
+        me.game.world.addChild(new me.ImageLayer(0, 0, {image:"grid", z:1}));
 
         var leftContainer = document.querySelector("#leftPanel .controls");
         var rightContainer = document.querySelector("#rightPanel .controls");
