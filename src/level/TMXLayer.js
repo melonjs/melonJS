@@ -80,12 +80,8 @@
             this.maxWidth = settings.width || Infinity;
             this.maxHeight = settings.height || Infinity;
 
-            // get the corresponding image (throw an exception if not found)
-            this.image = (
-                (typeof(settings.image) === "string") ?
-                me.loader.getImage(me.utils.getBasename(settings.image)) :
-                settings.image
-            );
+            // get the corresponding image
+            this.image = me.utils.getImage(settings.image);
 
             // XXX: Keep this check?
             if (!this.image) {

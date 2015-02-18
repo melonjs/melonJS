@@ -266,6 +266,23 @@
         };
 
         /**
+         * Normalize a String or Image to an Image reference
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name getImage
+         * @param {Image|String} image Image name or Image reference
+         * @return {Image} Image reference
+         */
+        api.getImage = function (image) {
+            return (
+                (typeof(image) === "string") ?
+                me.loader.getImage(me.utils.getBasename(image)) :
+                image
+            );
+        };
+
+        /**
          * reset the GUID Base Name
          * the idea here being to have a unique ID
          * per level / object

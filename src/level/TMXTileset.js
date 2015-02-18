@@ -131,10 +131,8 @@
                 typeof(tileset[TMXConstants.TMX_TAG_IMAGE]) === "string" ?
                 tileset[TMXConstants.TMX_TAG_IMAGE] : tileset[TMXConstants.TMX_TAG_IMAGE].source
             );
-            // extract base name
-            imagesrc = me.utils.getBasename(imagesrc);
-            this.image = imagesrc ? me.loader.getImage(imagesrc) : null;
 
+            this.image = me.utils.getImage(imagesrc);
             if (!this.image) {
                 throw new me.TMXTileset.Error("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
             }

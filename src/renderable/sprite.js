@@ -87,11 +87,7 @@
             // sprite moves in and out of the viewport
             this.isSprite = true;
 
-            var image = (
-                (typeof(settings.image) === "string") ?
-                me.loader.getImage(settings.image) :
-                settings.image
-            );
+            var image = me.utils.getImage(settings.image);
 
             // call the super constructor
             this._super(me.Renderable, "init", [

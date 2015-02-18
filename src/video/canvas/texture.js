@@ -72,10 +72,12 @@
                         this.format = "texturepacker";
                         // set the texture
                         if (typeof(texture) === "undefined") {
-                            var name = me.utils.getBasename(atlas.meta.image);
-                            this.texture = me.loader.getImage(name);
-                            if (this.texture === null) {
-                                throw new me.video.renderer.Texture.Error("Atlas texture '" + name + "' not found");
+                            var image = atlas.meta.image;
+                            this.texture = me.utils.getImage(image);
+                            if (!this.texture) {
+                                throw new me.video.renderer.Texture.Error(
+                                    "Atlas texture '" + image + "' not found"
+                                );
                             }
                         } else {
                             this.texture = texture;

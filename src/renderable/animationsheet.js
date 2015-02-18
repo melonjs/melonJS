@@ -71,12 +71,10 @@
                 this.atlasIndices = settings.atlasIndices;
             } else {
                 // "regular" spritesheet
-                var image = (
-                    (typeof(settings.image) === "string") ?
-                    me.loader.getImage(settings.image) :
-                    settings.image
-                );
-                this.textureAtlas = me.video.renderer.cache.get(image, settings).getAtlas();
+                this.textureAtlas = me.video.renderer.cache.get(
+                    me.utils.getImage(settings.image),
+                    settings
+                ).getAtlas();
                 this.atlasIndices = null;
             }
 
