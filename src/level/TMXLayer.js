@@ -59,12 +59,12 @@
      * @param {Number} x x coordinate
      * @param {Number} y y coordinate
      * @param {Object} settings ImageLayer properties
-     * @param {Number} [settings.width] Layer width in pixels
-     * @param {Number} [settings.height] Layer height in pixels
-     * @param {String} [settings.name] Layer name
-     * @param {String} settings.image Image asset name (as defined in the asset list)
+     * @param {Image|String} settings.image Image reference. See {@link me.loader#getImage}
+     * @param {Number} [settings.width=image.width] Layer width in pixels
+     * @param {Number} [settings.height=image.height] Layer height in pixels
+     * @param {String} [settings.name="me.ImageLayer"] Layer name
      * @param {Number} [settings.z=0] z-index position
-     * @param {me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied
+     * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied
      */
     me.ImageLayer = me.Renderable.extend({
         /**
@@ -75,15 +75,25 @@
         init: function (x, y, settings) {
             // layer name
             this.name = settings.name || "me.ImageLayer";
-            
+
             // maximum layer size
-            this.maxWidth = settings.width || 0;
-            this.maxHeight = settings.height || 0;
+            this.maxWidth = settings.width || Infinity;
+            this.maxHeight = settings.height || Infinity;
 
             // get the corresponding image (throw an exception if not found)
-            this.image = (settings.image) ? me.loader.getImage(me.utils.getBasename(settings.image)) : null;
+            this.image = (
+                (typeof(settings.image) === "string") ?
+                me.loader.getImage(me.utils.getBasename(settings.image)) :
+                settings.image
+            );
+
+            // XXX: Keep this check?
             if (!this.image) {
-                throw new me.Error("'" + settings.image + "' file for Image Layer '" + this.name + "' not found!");
+                throw new me.Error((
+                    (typeof(settings.image) === "string") ?
+                    "'" + settings.image + "'" :
+                    "Image"
+                ) + " file for Image Layer '" + this.name + "' not found!");
             }
 
             this.imagewidth = this.image.width;
@@ -180,7 +190,7 @@
             this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
         },
-        
+
         /**
          * resize the Image Layer to match the given size
          * @name resize
@@ -191,11 +201,11 @@
         */
         resize : function (w, h) {
             this._super(me.Renderable, "resize", [
-                (this.maxWidth ? Math.min(w, this.maxWidth) : w),
-                (this.maxHeight ? Math.min(h, this.maxHeight) : h)
+                Math.min(w, this.maxWidth),
+                Math.min(h, this.maxHeight)
             ]);
         },
-        
+
         /**
          * updateLayer function
          * @ignore
