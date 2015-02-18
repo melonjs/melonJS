@@ -512,7 +512,7 @@
          */
         sort : function (recursive) {
             // do nothing if there is already a pending sort
-            if (this.pendingSort === null) {
+            if (!this.pendingSort) {
                 if (recursive === true) {
                     // trigger other child container sort function (if any)
                     for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {

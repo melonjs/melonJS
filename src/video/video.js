@@ -18,7 +18,7 @@
         // internal variables
         var canvas = null;
 
-        var deferResizeId = -1;
+        var deferResizeId = 0;
 
         var designRatio = 1;
         var designWidth = 0;
@@ -398,11 +398,13 @@
 
                 // scale if required
                 if (scaleX !== 1 || scaleY !== 1) {
-                    if (deferResizeId >= 0) {
+                    if (deferResizeId) {
                         // cancel any previous pending resize
                         clearTimeout(deferResizeId);
                     }
                     deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
+
+                    // Do not update _offset yet
                     return;
                 }
             }
@@ -428,7 +430,7 @@
             me.input._offset = me.video.getPos();
 
             // clear the timeout id
-            deferResizeId = -1;
+            deferResizeId = 0;
         };
 
         // return our api
