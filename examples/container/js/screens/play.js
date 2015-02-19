@@ -33,22 +33,23 @@ game.PlayScreen = me.ScreenObject.extend({
                 renderer.strokeRect(this.pos.x, this.pos.y, this._absoluteBounds.width, this._absoluteBounds.height);
             }
         }));
-        // myContainer.floating = true;
+        myContainer.floating = true;
         var floatingEntity = new game.Entity(275, 125, {
             "width" : 50,
             "height" : 50,
             "color" : "blue",
             "moveControls" : true
         });
-        // floatingEntity.floating = true;
+        floatingEntity.floating = true;
         myContainer.addChild(floatingEntity);
+        me.game.world.addChild(myContainer);
 
         me.game.world.addChild(new game.Entity(250, 100, {
             "width" : 50,
             "height" : 50,
             "color" : "red"
         }));
-        me.game.world.addChild(myContainer);
+
 
         me.input.bindKey(me.input.KEY.LEFT, "left");
         me.input.bindKey(me.input.KEY.RIGHT, "right");

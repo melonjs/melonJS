@@ -665,9 +665,12 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = obj.floating;
+                isFloating = (globalFloatingCounter > 0 || obj.floating);
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
-                    if (isFloating === true) {
+                    if (isFloating) {
+                        globalFloatingCounter++;
+                    }
+                    if (globalFloatingCounter === 1) {
                         // translate to object
                         renderer.translate(
                             viewport.screenX - this.pos.x,
@@ -678,12 +681,16 @@
                     // draw the object
                     obj.draw(renderer, rect);
 
-                    if (isFloating === true) {
+                    if (globalFloatingCounter === 1) {
                         // translate back to viewport
                         renderer.translate(
                             this.pos.x - viewport.screenX,
                             this.pos.y - viewport.screenY
                         );
+                    }
+
+                    if (isFloating) {
+                        globalFloatingCounter--;
                     }
 
                     this.drawCount++;
