@@ -42,5 +42,7 @@ var game = {
 
         // switch to PLAY state
         me.state.change(me.state.PLAY);
-    }
+    },
+    WORLD_WIDTH: 1024,
+    WORLD_HEIHGT: 768
 };

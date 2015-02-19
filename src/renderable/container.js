@@ -94,6 +94,15 @@
              * @ignore
              */
             this.drawCount = 0;
+
+            /**
+             * The bounds that contains all its children
+             * @public
+             * @type me.Rect
+             * @name childBounds
+             * @memberOf me.Container
+             */
+            this.childBounds = this.getBounds().clone();
         },
 
 
@@ -143,6 +152,8 @@
                 child.onActivateEvent();
             }
 
+            this.resizeChildBounds();
+
             return child;
         },
 
@@ -172,6 +183,7 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
+                this.resizeChildBounds();
 
                 if (typeof child.onActivateEvent === "function") {
                     child.onActivateEvent();
@@ -333,26 +345,20 @@
         },
 
         /**
-         * returns the bounding box for this container, the smallest rectangle object completely containing all childrens
-         * @name getChildBounds
+         * resizes the child bounds rectangle, based on children bounds.
+         * @name resizeChildBounds
          * @memberOf me.Container
          * @function
-         * @param {me.Rect} [bounds] a rectangle to use for the bounds
-         * @return {me.Rect} new rectangle
+         * @return {me.Rect} updated child bounds
          */
-        getChildBounds : function (bounds) {
-            if (bounds) {
-                bounds.pos.set(Infinity, Infinity);
-                bounds.resize(-Infinity, -Infinity);
-            }
-            else {
-                bounds = new me.Rect(Infinity, Infinity, -Infinity, -Infinity);
-            }
+        resizeChildBounds : function () {
+            this.childBounds.pos.set(Infinity, Infinity);
+            this.childBounds.resize(-Infinity, -Infinity);
             var childBounds;
             for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (child.isRenderable) {
                     if (child instanceof me.Container) {
-                        childBounds = child.getChildBounds();
+                        childBounds = child.childBounds;
                     }
                     else {
                         childBounds = child.getBounds();
@@ -360,12 +366,13 @@
                     // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                     // TODO : getBounds should always return something anyway
                     if (childBounds !== null) {
-                        bounds.union(childBounds);
+                        this.childBounds.union(childBounds);
                     }
                 }
             }
-            // TODO : cache the value until any childs are modified? (next frame?)
-            return bounds;
+            this.childBounds.union(this.getBounds());
+            this.getBounds().resize(this.childBounds.width, this.childBounds.height);
+            return this.childBounds;
         },
 
         /**
@@ -412,7 +419,7 @@
                 }
 
                 this.children.splice(this.getChildIndex(child), 1);
-
+                this.resizeChildBounds();
             }
             else {
                 throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);

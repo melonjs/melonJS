@@ -21,52 +21,38 @@ game.Entity = me.Entity.extend({
     "init" : function (x, y, settings) {
         this._super(me.Entity, "init", [x, y, settings]);
         this.z = 1;
-        this.renderable = new me.Container(0, 0, 50, 50);
-        this.renderable.addChild(new game.Rect(
+        this.renderable = new game.Rect(
             0, 0,
             50,
             50,
             settings.color
-        ));
-    }
-});
+        );
+        this.moveControls = settings.moveControls;
+        this.name = settings.color;
 
-/**
- * a floating entity
- */
-game.FloatingEntity = me.Entity.extend({
-    "init" : function (x, y, settings) {
-        this._super(me.Entity, "init", [x, y, settings]);
-        this.z = 1;
-        this.floating = true;
-        this.renderable = new me.Container(0, 0, 50, 50);
-        this.renderable.addChild(new game.Rect(
-            0, 0,
-            50,
-            50,
-            settings.color
-        ));
+        this.followTarget = new me.Vector2d(x, y);
+        me.game.viewport.follow(this.followTarget, me.game.viewport.AXIS.BOTH);
     },
 
-    /**
-     * action to perform on frame update
-     */
-    "update" : function () {
-        var vp = me.game.viewport;
-        if (me.input.isKeyPressed("left")) {
-            vp.move(5, 0);
-        }
-        else if (me.input.isKeyPressed("right")) {
-            vp.move(-5, 0);
-        }
+    "update" : function (dt) {
+        this._super(me.Entity, "update", [dt]);
         if (me.input.isKeyPressed("up")) {
-            vp.move(0, 5);
-        }
-        else if (me.input.isKeyPressed("down")) {
-            vp.move(0, -5);
+            this.followTarget.y -= 5;
         }
 
-        this._super(me.Entity, "update");
-        return true;
+        if (me.input.isKeyPressed("down")) {
+            this.followTarget.y += 5;
+        }
+
+        if (me.input.isKeyPressed("left")) {
+            this.followTarget.x -= 5;
+        }
+
+        if (me.input.isKeyPressed("right")) {
+            this.followTarget.x += 5;
+        }
+
+        this.followTarget.x.clamp(0, game.WORLD_WIDTH - 50);
+        this.followTarget.y.clamp(0, game.WORLD_HEIGHT - 50);
     }
 });
