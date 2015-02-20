@@ -104,7 +104,7 @@
          * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
          * melonJS support various scaling mode : <br>
          *  - <i>`fit`</i> : Letterboxed; content is scaled to design aspect ratio <br>
-         *  - <i>`fill`</i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+         *  - <i>`fill-max`</i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
          *  - <i>`flex-height`</i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
          *  - <i>`flex-width`</i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
          *  - <i>`stretch`</i> : Canvas is resized to fit; content is scaled to screen aspect ratio
@@ -118,11 +118,11 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','flex-width','flex-height','stretch') screen scaling modes
+         * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill-max','flex-width','flex-height','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean} false if initialization failed (canvas not supported)
-         * @example 
+         * @example
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
          *     wrapper : "screen",
@@ -145,7 +145,7 @@
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
             settings.scaleMethod = [
-                "fill",
+                "fill-max",
                 "flex-width",
                 "flex-height",
                 "stretch"
@@ -360,7 +360,7 @@
                 var sHeight = Infinity;
 
                 if (
-                    (settings.scaleMethod === "fill" && screenRatio < designRatio) ||
+                    (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
                     (settings.scaleMethod === "flex-width")
                 ) {
                     // resize the display canvas to fill the parent container
@@ -370,7 +370,7 @@
                     me.game.viewport.resize(sWidth, designHeight);
                 }
                 else if (
-                    (settings.scaleMethod === "fill" && screenRatio > designRatio) ||
+                    (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
                     (settings.scaleMethod === "flex-height")
                 ) {
                     // resize the display canvas to fill the parent container
