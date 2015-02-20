@@ -131,7 +131,7 @@
     ];
 
     // internal constants
-    //var MOUSE_WHEEL   = 0;
+    var MOUSE_WHEEL   = 0;
     var POINTER_MOVE    = 1;
     var POINTER_DOWN    = 2;
     var POINTER_UP      = 3;
@@ -354,6 +354,17 @@
                             }
                         }
                         break;
+                        
+                    case MOUSE_WHEEL:
+                        // event inside of bounds: trigger the MOUSE_WHEEL callback
+                        if (eventInBounds) {
+                            // trigger the corresponding callback
+                            if (triggerEvent(handlers, e.type, e, e.pointerId)) {
+                                handled = true;
+                                break;
+                            }
+                        }
+                        break;                        
                 }
             }
         });
