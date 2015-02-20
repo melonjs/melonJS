@@ -101,8 +101,13 @@
         api.AUTO = 2;
 
         /**
-         * init the "video" part<br>
-         * return false if initialization failed (canvas not supported)
+         * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
+         * melonJS support various scaling mode : <br>
+         *  - <i>`fit`</i> : Letterboxed; content is scaled to design aspect ratio <br>
+         *  - <i>`fill`</i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+         *  - <i>`flex-height`</i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+         *  - <i>`flex-width`</i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+         *  - <i>`stretch`</i> : Canvas is resized to fit; content is scaled to screen aspect ratio
          * @name init
          * @memberOf me.video
          * @function
@@ -116,8 +121,8 @@
          * @param {Boolean} [options.scaleMethod="fit"] ('fit','fill','flex-width','flex-height','stretch') screen scaling modes
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
-         * @return {Boolean}
-         * @example
+         * @return {Boolean} false if initialization failed (canvas not supported)
+         * @example 
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
          *     wrapper : "screen",
