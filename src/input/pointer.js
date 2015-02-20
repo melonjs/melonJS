@@ -354,7 +354,7 @@
                             }
                         }
                         break;
-                        
+
                     case MOUSE_WHEEL:
                         // event inside of bounds: trigger the MOUSE_WHEEL callback
                         if (eventInBounds) {
@@ -364,7 +364,7 @@
                                 break;
                             }
                         }
-                        break;                        
+                        break;
                 }
             }
         });
