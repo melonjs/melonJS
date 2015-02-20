@@ -328,8 +328,8 @@
             // get the corresponding tile into our object
             this.image = tileset.getTileImage(tmxTile);
 
-            // set a generic name if not defined
-            if (typeof (this.name) === "undefined") {
+            // set a generic name if not defined or the empty string
+            if (!this.name) {
                 this.name = "TileObject";
             }
         },
