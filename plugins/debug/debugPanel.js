@@ -335,9 +335,9 @@
                 var maxLen = ~~(endX - this.memoryPositionX - 5);
                 var len = maxLen * (usedHeap / totalHeap);
 
-                renderer.setColor('#0065AD');
+                renderer.setColor("#0065AD");
                 renderer.fillRect(this.memoryPositionX, 0, maxLen, 20);
-                renderer.setColor('#3AA4F0');
+                renderer.setColor("#3AA4F0");
                 renderer.fillRect(this.memoryPositionX + 1, 1, len - 1, 17);
 
                 this.font.draw(renderer, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX + 5, 5 * this.mod);
