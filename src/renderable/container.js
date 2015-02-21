@@ -152,8 +152,6 @@
                 child.onActivateEvent();
             }
 
-            this.resizeChildBounds();
-
             return child;
         },
 
@@ -183,7 +181,6 @@
                 child.ancestor = this;
 
                 this.children.splice(index, 0, child);
-                this.resizeChildBounds();
 
                 if (typeof child.onActivateEvent === "function") {
                     child.onActivateEvent();
@@ -371,7 +368,6 @@
                 }
             }
             this.childBounds.union(this.getBounds());
-            this.getBounds().resize(this.childBounds.width, this.childBounds.height);
             return this.childBounds;
         },
 
@@ -419,7 +415,6 @@
                 }
 
                 this.children.splice(this.getChildIndex(child), 1);
-                this.resizeChildBounds();
             }
             else {
                 throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);
@@ -443,6 +438,19 @@
                 }
                 obj[prop] = val;
             }
+        },
+
+        /**
+         * @ignore
+         */
+        updateAbsoluteBounds : function () {
+            var bounds = this.resizeChildBounds();
+            if (this.ancestor && this.ancestor._absoluteBounds) {
+                var pos = this.ancestor._absoluteBounds.pos;
+                this._absoluteBounds.setShape(this.pos.x + pos.x, this.pos.y + pos.y, bounds.width, bounds.height);
+            }
+
+            return this._absoluteBounds;
         },
 
         /**
