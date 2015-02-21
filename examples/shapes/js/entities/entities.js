@@ -3,6 +3,8 @@ game.ShapeObject = me.Entity.extend({
      * constructor
      */
     init: function (x, y, settings) {
+        // ensure we do not create a default shape
+        settings.shapes = [];
         // call the super constructor
         this._super(me.Entity, 'init', [x, y, settings]);
         this.hover = false;
