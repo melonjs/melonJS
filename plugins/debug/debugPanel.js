@@ -124,9 +124,6 @@
                 }
             });
 
-            // memory heap sample points
-            this.samples = [];
-
             //patch patch patch !
             this.patchSystemFn();
             // make it visible
@@ -335,26 +332,15 @@
             if (window.performance && window.performance.memory) {
                 var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize / 1048576, 2);
                 var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize / 1048576, 2);
-                var len = ~~(endX - this.memoryPositionX - 5);
+                var maxLen = ~~(endX - this.memoryPositionX - 5);
+                var len = maxLen * (usedHeap / totalHeap);
 
-                // remove the first item
-                this.samples.shift();
-                // add a new sample (25 is the height of the graph)
-                this.samples[len] = (usedHeap / totalHeap) * 20;
+                renderer.setColor('#0065AD');
+                renderer.fillRect(this.memoryPositionX, 0, maxLen, 20);
+                renderer.setColor('#3AA4F0');
+                renderer.fillRect(this.memoryPositionX + 1, 1, len - 1, 17);
 
-                // draw the graph
-                var context = renderer.getContext();
-                for (var x = len; x >= 0; x--) {
-                    var where = endX - (len - x) - 5;
-                    context.beginPath();
-                    context.strokeStyle = "lightblue";
-                    context.moveTo(where, 40 * this.mod);
-                    context.lineTo(where, 40 * this.mod - (this.samples[x] || 0));
-                    context.stroke();
-                }
-                // display the current value
-
-                this.font.draw(renderer, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX, 5 * this.mod);
+                this.font.draw(renderer, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX + 5, 5 * this.mod);
             }
             else {
                 // Heap Memory information not available
