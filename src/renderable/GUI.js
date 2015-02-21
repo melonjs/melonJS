@@ -163,7 +163,7 @@
          * function called when the object is pressed and released <br>
          * to be extended <br>
          * return false if we need to stop propagating the event
-         * @name onClick
+         * @name onRelease
          * @memberOf me.GUI_Object
          * @public
          * @function
