@@ -103,6 +103,13 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
+
+            /*
+             * XXX: Default ancestor is self
+             * Removes the need for an if-statement when accessing ancestor
+             * properties in the update method
+             */
+            this.ancestor = this;
         },
 
 
@@ -610,6 +617,9 @@
             var isPaused = me.state.isPaused();
             var viewport = me.game.viewport;
 
+            // Update container's absolute position
+            this._absolutePos = this.pos.add(this.ancestor._absolutePos);
+
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
                     // skip this object
@@ -626,6 +636,11 @@
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
+
+                    // Update object's absolute position
+                    if (obj._absolutePos) { // XXX
+                        obj._absolutePos = obj.pos.add(obj.ancestor._absolutePos);
+                    }
 
                     if (obj.updateAbsoluteBounds) {
                         obj.updateAbsoluteBounds();

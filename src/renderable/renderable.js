@@ -139,11 +139,18 @@
             this.setOpacity(1.0);
 
             /**
-             * Absolute position in the game world
+             * Boundary box absolutely positioned in the game world
              * @private
              * @name me.Renderable#_absoluteBounds
              */
             this._absoluteBounds = new me.Rect(x, y, width, height);
+
+            /**
+             * Absolute position in the game world
+             * @private
+             * @name me.Renderable#_absolutePos
+             */
+            this._absolutePos = new me.Vector2d(x, y);
         },
 
         /**

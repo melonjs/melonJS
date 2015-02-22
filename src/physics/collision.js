@@ -572,7 +572,7 @@
          */
         api.testPolygonEllipse = function (a, polyA, b, ellipseB, response) {
             // Get the position of the circle relative to the polygon.
-            var circlePos = T_VECTORS.pop().copy(b._absoluteBounds.pos).add(ellipseB.pos).sub(a._absoluteBounds.pos).sub(polyA.pos);
+            var circlePos = T_VECTORS.pop().copy(b._absolutePos).add(ellipseB.pos).sub(a._absolutePos).sub(polyA.pos);
             var radius = ellipseB.radius;
             var radius2 = radius * radius;
             var points = polyA.points;
