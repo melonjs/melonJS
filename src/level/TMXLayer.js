@@ -429,7 +429,7 @@
             // TODO: this is really tied to the canvas api. need to abstract it.
             if (this.preRender === true) {
                 this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-                this.layerSurface = me.CanvasRenderer.getContext2d(this.layerCanvas);
+                this.canvasRenderer = new me.CanvasRenderer(this.layerCanvas, this.cols * this.tilewidth, this.rows * this.tileheight, {});
             }
 
             // initialize the layer data array
@@ -445,7 +445,7 @@
             // clear all allocated objects
             if (this.preRender) {
                 this.layerCanvas = null;
-                this.layerSurface = null;
+                this.canvasRenderer = null;
             }
             this.renderer = null;
             // clear all allocated objects
@@ -523,8 +523,11 @@
                 // look for the corresponding tileset
                 this.tileset = this.tilesets.getTilesetByGid(tileId & TMXConstants.TMX_CLEAR_BIT_MASK);
             }
-            var tile = new me.Tile(x, y, tileId, this.tileset);
-            this.layerData[x][y] = tile;
+            var tile = this.layerData[x][y] = new me.Tile(x, y, tileId, this.tileset);
+            // draw the corresponding tile
+            if (this.preRender) {
+                this.renderer.drawTile(this.canvasRenderer, x, y, tile, tile.tileset);
+            }
             return tile;
         },
 
@@ -542,7 +545,7 @@
             this.layerData[x][y] = null;
             // erase the corresponding area in the canvas
             if (this.preRender) {
-                this.layerSurface.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
+                this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
         },
 
@@ -573,9 +576,9 @@
                 var width = Math.min(rect.width, this.width);
                 var height = Math.min(rect.height, this.height);
 
-                this.layerSurface.globalAlpha = renderer.globalAlpha() * this.getOpacity();
+                this.canvasRenderer.setGlobalAlpha(this.canvasRenderer.globalAlpha() * this.getOpacity());
 
-                if (this.layerSurface.globalAlpha > 0) {
+                if (this.canvasRenderer.globalAlpha() > 0) {
                     // draw using the cached canvas
                     renderer.drawImage(
                         this.layerCanvas,

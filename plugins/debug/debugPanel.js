@@ -201,6 +201,27 @@
                     renderer.restore();
                 }
             });
+
+            // patch container.js
+            me.plugin.patch(me.Container, "draw", function (renderer, rect) {
+                // call the original me.Container.draw function
+                this._patched(renderer, rect);
+
+                // check if debug mode is enabled
+
+                if (me.debug.renderHitBox) {
+                    renderer.save();
+                    renderer.setColor("orange");
+                    renderer.setLineWidth(1);
+                    // draw the bounding rect shape
+                    renderer.drawShape(this.getBounds());
+                    renderer.setColor("purple");
+                    var bounds = this.childBounds.clone();
+                    bounds.pos.add(this.pos);
+                    renderer.drawShape(bounds);
+                    renderer.restore();
+                }
+            });
         },
 
         /**

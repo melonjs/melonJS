@@ -401,20 +401,12 @@
                 scaleX *= me.device.getPixelRatio();
                 scaleY *= me.device.getPixelRatio();
 
-                // scale if required
-                if (scaleX !== 1 || scaleY !== 1) {
-                    if (deferResizeId) {
-                        // cancel any previous pending resize
-                        clearTimeout(deferResizeId);
-                    }
-                    deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
-
-                    // Do not update _offset yet
-                    return;
+                if (deferResizeId) {
+                    // cancel any previous pending resize
+                    clearTimeout(deferResizeId);
                 }
+                deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
             }
-            // make sure we have the correct relative canvas position cached
-            me.input._offset = me.video.getPos();
         };
 
         /**
@@ -432,6 +424,7 @@
             // renderer resize logic
             this.renderer.scaleCanvas(scaleX, scaleY);
 
+            // make sure we have the correct relative canvas position cached
             me.input._offset = me.video.getPos();
 
             // clear the timeout id
