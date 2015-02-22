@@ -44,12 +44,12 @@
 
             /**
              * The bounding rectangle for this entity
-             * @protected
+             * @private
              * @type {me.Rect}
              * @name bounds
-             * @memberOf me.Ellipse
+             * @memberOf me.Entity
              */
-            this.bounds = null;
+            this._bounds = null;
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -120,11 +120,11 @@
             this.body = new me.Body(this, Array.isArray(settings.shapes) ? settings.shapes : [ new me.Rect(0, 0, this.width, this.height) ]);
 
             // ensure the entity bounds and pos are up-to-date
-            this.body.updateBounds();
+            var bounds = this.body.updateBounds();
 
             // resize the entity if required
             if (this.width === 0 && this.height === 0) {
-                this.resize(this.body.width, this.body.height);
+                this.resize(bounds.width, bounds.height);
             }
 
             // set the  collision mask if defined
@@ -142,7 +142,7 @@
             }
         },
 
-       /**
+        /**
          * returns the bounding box for this entity, the smallest rectangle object completely containing this entity body shapes
          * @name getBounds
          * @memberOf me.Entity
@@ -150,25 +150,28 @@
          * @return {me.Rect} this entity bounding box Rectangle object
          */
         getBounds : function () {
-            return this.bounds;
+            return this._bounds;
         },
 
         /**
          * update the entity bounding rect (private)
          * when manually update the entity pos, you need to call this function
-         * @protected
+         * @private
          * @name updateBounds
          * @memberOf me.Entity
          * @function
          */
         updateBounds : function () {
-            if (!this.bounds) {
-                this.bounds = new me.Rect(0, 0, 0, 0);
+            if (!this._bounds) {
+                this._bounds = new me.Rect(0, 0, 0, 0);
             }
-            this.bounds.pos.setV(this.pos).add(this.body.pos);
-            this.bounds.resize(this.body.width, this.body.height);
-            this.updateAbsoluteBounds();
-            return this.bounds;
+            this._bounds.pos.setV(this.pos).add(this.body._bounds.pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            this._bounds.resize(this.body._bounds.width, this.body._bounds.height);
+            return this._bounds;
         },
 
         /**
@@ -262,13 +265,11 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var _bounds = this.getBounds();
-
-                var x = ~~(0.5 + _bounds.pos.x + (
-                    this.anchorPoint.x * (_bounds.width - this.renderable.width)
+                var x = ~~(0.5 + this.pos.x + (
+                    this.anchorPoint.x * (this.width - this.renderable.width)
                 ));
-                var y = ~~(0.5 + _bounds.pos.y + (
-                    this.anchorPoint.y * (_bounds.height - this.renderable.height)
+                var y = ~~(0.5 + this.pos.y + (
+                    this.anchorPoint.y * (this.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);

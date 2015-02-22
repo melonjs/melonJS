@@ -69,13 +69,13 @@
             this.canvas = me.video.createCanvas(this.width, this.height, true);
 
             // create a default font, with fixed char width
-            var s = 10;
+            this.font_size = 10;
             this.mod = 1;
             if (this.width < 500) {
-                s = 7;
+                this.font_size = 7;
                 this.mod = 0.7;
             }
-            this.font = new me.Font("courier", s, "white");
+            this.font = new me.Font("courier", this.font_size, "white");
 
             // clickable areas
             var size = 12 * this.mod;
@@ -87,7 +87,7 @@
             this.help_str        = "(s)how/(h)ide";
             this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
             this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
-            this.memoryPositionX = this.font.measureText(me.video.renderer, "Draw   : ").width * 2.2 + 310 * this.mod;
+            this.memoryPositionX = 400 * this.mod;
 
             // enable the FPS counter
             me.debug.displayFPS = true;
@@ -122,6 +122,7 @@
             me.debug.renderQuadTree = me.debug.renderQuadTree || me.game.HASH.quadtree || false;
 
             var _this = this;
+            var bounds = new me.Rect(0, 0, 0, 0);
 
             // patch timer.js
             me.plugin.patch(me.timer, "update", function (dt) {
@@ -154,7 +155,7 @@
 
             // patch sprite.js
             me.plugin.patch(me.Sprite, "draw", function (renderer) {
-                // call the original me.Sprite function
+                // call the original me.Sprite.draw function
                 this._patched(renderer);
 
                 // draw the sprite rectangle
@@ -168,36 +169,44 @@
 
             // patch entities.js
             me.plugin.patch(me.Entity, "draw", function (renderer) {
-                // call the original me.game.draw function
+                // call the original me.Entity.draw function
                 this._patched(renderer);
 
                 // check if debug mode is enabled
-
                 if (me.debug.renderHitBox) {
                     renderer.save();
-                    renderer.setColor("orange");
                     renderer.setLineWidth(1);
+
                     // draw the bounding rect shape
-                    renderer.drawShape(this.getBounds());
-                    renderer.translate(this.pos.x, this.pos.y);
+                    renderer.setColor("orange");
+                    bounds.copy(this.getBounds());
+                    bounds.pos.sub(this.ancestor._absPos);
+                    renderer.drawShape(bounds);
+
                     // draw all defined shapes
                     renderer.setColor("red");
+                    renderer.translate(this.pos.x, this.pos.y);
                     for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                         renderer.drawShape(shape);
                     }
+
                     renderer.restore();
                 }
 
                 if (me.debug.renderVelocity) {
-                    var bounds = this.getBounds();
+                    bounds.copy(this.getBounds());
+                    bounds.pos.sub(this.ancestor._absPos);
                     // draw entity current velocity
                     var x = ~~(bounds.pos.x + (bounds.width / 2));
                     var y = ~~(bounds.pos.y + (bounds.height / 2));
+
                     renderer.save();
-                    renderer.translate(x, y);
-                    renderer.setColor("blue");
                     renderer.setLineWidth(1);
+
+                    renderer.setColor("blue");
+                    renderer.translate(x, y);
                     renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
+
                     renderer.restore();
                 }
             });
@@ -211,14 +220,20 @@
 
                 if (me.debug.renderHitBox) {
                     renderer.save();
-                    renderer.setColor("orange");
                     renderer.setLineWidth(1);
+
                     // draw the bounding rect shape
-                    renderer.drawShape(this.getBounds());
-                    renderer.setColor("purple");
-                    var bounds = this.childBounds.clone();
-                    bounds.pos.add(this.pos);
+                    renderer.setColor("orange");
+                    bounds.copy(this.getBounds());
+                    bounds.pos.sub(this.ancestor._absPos);
                     renderer.drawShape(bounds);
+
+                    // draw the children bounding rect shape
+                    renderer.setColor("purple");
+                    bounds.copy(this.childBounds);
+                    bounds.pos.sub(this.ancestor._absPos);
+                    renderer.drawShape(bounds);
+
                     renderer.restore();
                 }
             });
@@ -374,6 +389,27 @@
             this.font.draw(renderer, "Update : " + this.frameUpdateTime.toFixed(2) + " ms", 285 * this.mod, 5 * this.mod);
             // draw the draw duration
             this.font.draw(renderer, "Draw   : " + this.frameDrawTime.toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
+
+            this.font.bold();
+
+            // Draw color code hints
+            this.font.fillStyle.copy("red");
+            this.font.draw(renderer, "Shapes", 5 * this.mod, 35 * this.mod);
+
+            this.font.fillStyle.copy("green");
+            this.font.draw(renderer, "Sprites", 100 * this.mod, 35 * this.mod);
+
+            this.font.fillStyle.copy("blue");
+            this.font.draw(renderer, "Velocity", 190 * this.mod, 35 * this.mod);
+
+            this.font.fillStyle.copy("orange");
+            this.font.draw(renderer, "Bounds", 285 * this.mod, 35 * this.mod);
+
+            this.font.fillStyle.copy("purple");
+            this.font.draw(renderer, "Children", 400 * this.mod, 35 * this.mod);
+
+            // Reset font style
+            this.font.setFont("courier", this.font_size, "white");
 
             // draw the memory heap usage
             var endX = this.width - 25;

@@ -106,12 +106,12 @@
              */
             this.childBounds = this.getBounds().clone();
 
-            /*
-             * XXX: Default ancestor is self
-             * Removes the need for an if-statement when accessing ancestor
-             * properties in the update method
+            /**
+             * Absolute position in the game world
+             * @private
+             * @name me.Container#_absPos
              */
-            this.ancestor = this;
+            this._absPos = new me.Vector2d(x, y);
         },
 
 
@@ -149,9 +149,6 @@
             }
 
             child.ancestor = this;
-            if (child.updateAbsoluteBounds) {
-                child.updateAbsoluteBounds();
-            }
             this.children.push(child);
             if (this.autoSort === true) {
                 this.sort();
@@ -352,12 +349,12 @@
 
         /**
          * resizes the child bounds rectangle, based on children bounds.
-         * @name resizeChildBounds
+         * @name updateChildBounds
          * @memberOf me.Container
          * @function
          * @return {me.Rect} updated child bounds
          */
-        resizeChildBounds : function () {
+        updateChildBounds : function () {
             this.childBounds.pos.set(Infinity, Infinity);
             this.childBounds.resize(-Infinity, -Infinity);
             var childBounds;
@@ -376,7 +373,6 @@
                     }
                 }
             }
-            this.childBounds.union(this.getBounds());
             return this.childBounds;
         },
 
@@ -447,19 +443,6 @@
                 }
                 obj[prop] = val;
             }
-        },
-
-        /**
-         * @ignore
-         */
-        updateAbsoluteBounds : function () {
-            var bounds = this.resizeChildBounds();
-            if (this.ancestor && this.ancestor._absoluteBounds) {
-                var pos = this.ancestor._absoluteBounds.pos;
-                this._absoluteBounds.setShape(this.pos.x + pos.x, this.pos.y + pos.y, bounds.width, bounds.height);
-            }
-
-            return this._absoluteBounds;
         },
 
         /**
@@ -620,7 +603,7 @@
             var viewport = me.game.viewport;
 
             // Update container's absolute position
-            this._absolutePos = this.pos.add(this.ancestor._absolutePos);
+            this._absPos.setV(this.ancestor._absPos).add(this.pos);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
@@ -634,14 +617,10 @@
                         globalFloatingCounter++;
                     }
                     // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(obj._absoluteBounds);
+                    obj.inViewport = isFloating || viewport.isVisible(obj.getBounds());
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
-
-                    // Update object's absolute position
-                    obj._absolutePos = obj.pos.add(obj.ancestor._absolutePos);
-                    obj.updateAbsoluteBounds();
 
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;
@@ -653,7 +632,6 @@
                 }
             }
 
-            this.updateAbsoluteBounds();
             return isDirty;
         },
 
