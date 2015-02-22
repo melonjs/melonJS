@@ -423,6 +423,7 @@
 
             // renderer resize logic
             this.renderer.scaleCanvas(scaleX, scaleY);
+            me.game.repaint();
 
             // make sure we have the correct relative canvas position cached
             me.input._offset = me.video.getPos();
