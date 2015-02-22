@@ -25,7 +25,7 @@ game.square = me.DraggableEntity.extend({
     draw: function (renderer) {
         renderer.setColor(this.color);
         renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-        this.font.draw(renderer.getContext(), this.text, this.pos.x, this.pos.y);
+        this.font.draw(renderer, this.text, this.pos.x, this.pos.y);
     },
     /**
      * dragStart overwrite function
@@ -71,7 +71,7 @@ game.droptarget = me.DroptargetEntity.extend({
     draw: function (renderer) {
         renderer.setColor(this.color);
         renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-        this.font.draw(renderer.getContext(), this.text, this.pos.x, this.pos.y);
+        this.font.draw(renderer, this.text, this.pos.x, this.pos.y);
     },
     /**
      * drop overwrite function
