@@ -107,7 +107,7 @@
                 }
             });
             me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function (w) {
-                self.rect.resize(w, DEBUG_HEIGHT);
+                self.resize(w, DEBUG_HEIGHT);
             });
 
             //patch patch patch !
