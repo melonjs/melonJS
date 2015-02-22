@@ -162,8 +162,8 @@ THE SOFTWARE.
 
   function sharedForEach(callback, context) {
     var self = this;
-    var values = self.sharedValues();
-    self.sharedKeys().forEach(function(key, n){
+    var values = self.values();
+    self.keys().forEach(function(key, n){
       callback.call(context, values[n], key, self);
     });
   }
