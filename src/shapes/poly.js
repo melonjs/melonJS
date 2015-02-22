@@ -36,12 +36,12 @@
 
             /**
              * The bounding rectangle for this shape
-             * @protected
+             * @private
              * @type {me.Rect}
-             * @name bounds
+             * @name _bounds
              * @memberOf me.Polygon
              */
-            this.bounds = undefined;
+            this._bounds = undefined;
 
             /**
              * Array of points defining the Polygon <br>
@@ -176,7 +176,7 @@
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
-            this.bounds.translate(x, y);
+            this._bounds.translate(x, y);
             return this;
         },
 
@@ -190,7 +190,7 @@
          */
         translateV : function (v) {
             this.pos.add(v);
-            this.bounds.translateV(v);
+            this._bounds.translateV(v);
             return this;
         },
 
@@ -242,7 +242,7 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
-            return this.bounds;
+            return this._bounds;
         },
 
         /**
@@ -261,13 +261,13 @@
                 bottom = Math.max(bottom, point.y);
             });
 
-            if (!this.bounds) {
-                this.bounds = new me.Rect(x, y, right - x, bottom - y);
+            if (!this._bounds) {
+                this._bounds = new me.Rect(x, y, right - x, bottom - y);
             } else {
-                this.bounds.setShape(x, y, right - x, bottom - y);
+                this._bounds.setShape(x, y, right - x, bottom - y);
             }
 
-            return this.bounds.translateV(this.pos);
+            return this._bounds.translateV(this.pos);
         },
 
         /**
