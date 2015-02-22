@@ -641,10 +641,7 @@
 
                     // Update object's absolute position
                     obj._absolutePos = obj.pos.add(obj.ancestor._absolutePos);
-
-                    if (obj.updateAbsoluteBounds) {
-                        obj.updateAbsoluteBounds();
-                    }
+                    obj.updateAbsoluteBounds();
 
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;
