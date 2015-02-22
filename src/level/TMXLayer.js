@@ -425,11 +425,13 @@
                 this.preRender = me.sys.preRender;
             }
 
-            // if pre-rendering method is use, create the offline canvas
-            // TODO: this is really tied to the canvas api. need to abstract it.
+            // if pre-rendering method is use, create an offline canvas/renderer
             if (this.preRender === true) {
-                this.layerCanvas = me.video.createCanvas(this.cols * this.tilewidth, this.rows * this.tileheight);
-                this.canvasRenderer = new me.CanvasRenderer(this.layerCanvas, this.cols * this.tilewidth, this.rows * this.tileheight, {});
+                this.canvasRenderer = new me.CanvasRenderer(
+                    me.video.createCanvas(this.width, this.height),
+                    this.width, this.height,
+                    {/* use default values*/}
+                );
             }
 
             // initialize the layer data array
@@ -444,7 +446,6 @@
         destroy : function () {
             // clear all allocated objects
             if (this.preRender) {
-                this.layerCanvas = null;
                 this.canvasRenderer = null;
             }
             this.renderer = null;
@@ -581,7 +582,7 @@
                 if (this.canvasRenderer.globalAlpha() > 0) {
                     // draw using the cached canvas
                     renderer.drawImage(
-                        this.layerCanvas,
+                        this.canvasRenderer.getCanvas(),
                         rect.pos.x, rect.pos.y, // sx,sy
                         width, height,          // sw,sh
                         rect.pos.x, rect.pos.y, // dx,dy
