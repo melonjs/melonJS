@@ -21,6 +21,28 @@
 
     var DEBUG_HEIGHT = 50;
 
+    var Counters = Object.extend({
+        init : function (stats) {
+            this.stats = {};
+            this.reset(stats);
+        },
+
+        reset : function (stats) {
+            var self = this;
+            (stats || Object.keys(this.stats)).forEach(function (stat) {
+                self.stats[stat] = 0;
+            });
+        },
+
+        inc : function (stat, value) {
+            this.stats[stat] += (value || 1);
+        },
+
+        get : function (stat) {
+            return this.stats[stat];
+        }
+    })
+
     var DebugPanel = me.Renderable.extend({
         /** @private */
         init : function (showKey, hideKey) {
@@ -33,6 +55,15 @@
             // to hold the debug options
             // clickable rect area
             this.area = {};
+
+            // Useful counters
+            this.counters = new Counters([
+                "shapes",
+                "sprites",
+                "velocity",
+                "bounds",
+                "children"
+            ]);
 
             // for z ordering
             // make it ridiculously high
@@ -150,6 +181,7 @@
             me.plugin.patch(me.game, "draw", function () {
                 var frameDrawStartTime = window.performance.now();
 
+                _this.counters.reset();
                 this._patched();
 
                 // calculate the drawing time
@@ -166,6 +198,7 @@
                     renderer.save();
                     renderer.setColor("green");
                     renderer.strokeRect(this.left, this.top, this.width, this.height);
+                    _this.counters.inc("sprites");
                     renderer.restore();
                 }
             });
@@ -185,18 +218,20 @@
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     renderer.drawShape(bounds);
+                    _this.counters.inc("bounds");
 
                     // draw all defined shapes
                     renderer.setColor("red");
                     renderer.translate(this.pos.x, this.pos.y);
                     for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                         renderer.drawShape(shape);
+                        _this.counters.inc("shapes");
                     }
 
                     renderer.restore();
                 }
 
-                if (me.debug.renderVelocity) {
+                if (me.debug.renderVelocity && (this.body.vel.x || this.body.vel.y)) {
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     // draw entity current velocity
@@ -209,6 +244,7 @@
                     renderer.setColor("blue");
                     renderer.translate(x, y);
                     renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
+                    _this.counters.inc("velocity");
 
                     renderer.restore();
                 }
@@ -230,12 +266,14 @@
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     renderer.drawShape(bounds);
+                    _this.counters.inc("bounds");
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
                     bounds.copy(this.childBounds);
                     bounds.pos.sub(this.ancestor._absPos);
                     renderer.drawShape(bounds);
+                    _this.counters.inc("children");
 
                     renderer.restore();
                 }
@@ -397,19 +435,19 @@
 
             // Draw color code hints
             this.font.fillStyle.copy("red");
-            this.font.draw(renderer, "Shapes", 5 * this.mod, 35 * this.mod);
+            this.font.draw(renderer, "Shapes   : " + this.counters.get("shapes"), 5 * this.mod, 35 * this.mod);
 
             this.font.fillStyle.copy("green");
-            this.font.draw(renderer, "Sprites", 100 * this.mod, 35 * this.mod);
+            this.font.draw(renderer, "Sprites   : " + this.counters.get("sprites"), 100 * this.mod, 35 * this.mod);
 
             this.font.fillStyle.copy("blue");
-            this.font.draw(renderer, "Velocity", 190 * this.mod, 35 * this.mod);
+            this.font.draw(renderer, "Velocity  : " + this.counters.get("velocity"), 190 * this.mod, 35 * this.mod);
 
             this.font.fillStyle.copy("orange");
-            this.font.draw(renderer, "Bounds", 285 * this.mod, 35 * this.mod);
+            this.font.draw(renderer, "Bounds : " + this.counters.get("bounds"), 285 * this.mod, 35 * this.mod);
 
             this.font.fillStyle.copy("purple");
-            this.font.draw(renderer, "Children", 400 * this.mod, 35 * this.mod);
+            this.font.draw(renderer, "Children : " + this.counters.get("children"), 400 * this.mod, 35 * this.mod);
 
             // Reset font style
             this.font.setFont("courier", this.font_size, "white");
