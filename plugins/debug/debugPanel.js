@@ -21,21 +21,11 @@
 
     var DEBUG_HEIGHT = 50;
 
-    /**
-     * @class
-     * @public
-     * @extends me.plugin.Base
-     * @memberOf me
-     * @constructor
-     */
-    me.debug.Panel = me.plugin.Base.extend(
-    /** @scope me.debug.Panel.prototype */
-    {
-
+    var DebugPanel = me.Renderable.extend({
         /** @private */
         init : function (showKey, hideKey) {
             // call the super constructor
-            this._super(me.plugin.Base, "init");
+            this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
             // minimum melonJS version expected
             this.version = "2.1.0";
@@ -43,9 +33,6 @@
             // to hold the debug options
             // clickable rect area
             this.area = {};
-
-            // panel position and size
-            this.rect = null;
 
             // for z ordering
             // make it ridiculously high
@@ -79,16 +66,12 @@
             this.alwaysUpdate = true;
 
             // WebGL/Canvas compatibility
-            var canvas = me.video.renderer.getCanvas();
-            this.canvas = me.video.createCanvas(canvas.width, DEBUG_HEIGHT, true);
-
-            // Size
-            this.rect = new me.Rect(0, 0, canvas.width, DEBUG_HEIGHT);
+            this.canvas = me.video.createCanvas(this.width, this.height, true);
 
             // create a default font, with fixed char width
             var s = 10;
             this.mod = 1;
-            if (me.game.viewport.width < 500) {
+            if (this.width < 500) {
                 s = 7;
                 this.mod = 0.7;
             }
@@ -126,8 +109,6 @@
 
             //patch patch patch !
             this.patchSystemFn();
-            // make it visible
-            this.show();
         },
 
         /**
@@ -228,7 +209,7 @@
         show : function () {
             if (!this.visible) {
                 // register a mouse event for the checkboxes
-                me.input.registerPointerEvent("pointerdown", this.rect, this.onClick.bind(this), true);
+                me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this), true);
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible
@@ -242,7 +223,7 @@
         hide : function () {
             if (this.visible) {
                 // release the mouse event for the checkboxes
-                // me.input.releasePointerEvent("pointerdown", this.rect);
+                // me.input.releasePointerEvent("pointerdown", this);
                 this.canvas.removeEventListener("click", this.onClick.bind(this));
                 // remove the debug panel from the game world
                 me.game.world.removeChild(this);
@@ -261,13 +242,6 @@
                 this.hide();
             }
             return true;
-        },
-
-        /**
-         * @private
-         */
-        getBounds : function () {
-            return this.rect;
         },
 
         /** @private */
@@ -361,8 +335,8 @@
             renderer.setGlobalAlpha(0.5);
             renderer.setColor("black");
             renderer.fillRect(
-                this.rect.left,  this.rect.top,
-                this.rect.width, this.rect.height
+                this.left,  this.top,
+                this.width, this.height
             );
             renderer.setGlobalAlpha(1.0);
 
@@ -381,7 +355,7 @@
             this.font.draw(renderer, "Draw   : " + this.frameDrawTime.toFixed(2) + " ms", 285 * this.mod, 20 * this.mod);
 
             // draw the memory heap usage
-            var endX = this.rect.width - 25;
+            var endX = this.width - 25;
             this.drawMemoryGraph(renderer, endX - this.help_str_len);
 
             // some help string
@@ -389,7 +363,7 @@
 
             //fps counter
             var fps_str = me.timer.fps + "/" + me.sys.fps + " fps";
-            this.font.draw(renderer, fps_str, this.rect.width - this.fps_str_len - 5, 5 * this.mod);
+            this.font.draw(renderer, fps_str, this.width - this.fps_str_len - 5, 5 * this.mod);
 
             renderer.restore();
         },
@@ -402,6 +376,27 @@
             me.input.unbindKey(me.input.KEY.S);
             me.input.unbindKey(me.input.KEY.H);
             me.event.unsubscribe(this.keyHandler);
+        }
+    });
+
+    /**
+     * @class
+     * @public
+     * @extends me.plugin.Base
+     * @memberOf me
+     * @constructor
+     */
+    me.debug.Panel = me.plugin.Base.extend(
+    /** @scope me.debug.Panel.prototype */
+    {
+
+        /** @private */
+        init : function (showKey, hideKey) {
+            // call the super constructor
+            this._super(me.plugin.Base, "init");
+
+            var panel = new DebugPanel(showKey, hideKey);
+            panel.show();
         }
     });
 

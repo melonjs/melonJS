@@ -53,6 +53,7 @@
              * @memberOf me.Container
              */
             this.transform = new me.Matrix2d();
+
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
@@ -66,7 +67,7 @@
              * @ignore
              */
             this.children = [];
-            // by default reuse the global me.game.setting
+
             /**
              * The property of the child object that should be used to sort on <br>
              * value : "x", "y", "z"
@@ -77,6 +78,7 @@
              * @memberOf me.Container
              */
             this.sortOn = me.game.sortOn;
+
             /**
              * Specify if the children list should be automatically sorted when adding a new child
              * @public
@@ -85,8 +87,8 @@
              * @name autoSort
              * @memberOf me.Container
              */
-
             this.autoSort = true;
+
             this.transform.identity();
 
             /**
@@ -638,9 +640,7 @@
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
 
                     // Update object's absolute position
-                    if (obj._absolutePos) { // XXX
-                        obj._absolutePos = obj.pos.add(obj.ancestor._absolutePos);
-                    }
+                    obj._absolutePos = obj.pos.add(obj.ancestor._absolutePos);
 
                     if (obj.updateAbsoluteBounds) {
                         obj.updateAbsoluteBounds();
