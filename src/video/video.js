@@ -364,7 +364,7 @@
                     (settings.scaleMethod === "flex-width")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sWidth = designHeight * screenRatio;
+                    sWidth = Math.min(maxWidth, designHeight * screenRatio);
                     scaleX = scaleY = _max_width / sWidth;
                     sWidth = ~~(sWidth + 0.5);
                     this.renderer.resize(sWidth, designHeight);
@@ -375,7 +375,7 @@
                     (settings.scaleMethod === "flex-height")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sHeight = designWidth * (_max_height / _max_width);
+                    sHeight = Math.min(maxHeight, designWidth * (_max_height / _max_width));
                     scaleX = scaleY = _max_height / sHeight;
                     sHeight = ~~(sHeight + 0.5);
                     this.renderer.resize(designWidth, sHeight);
