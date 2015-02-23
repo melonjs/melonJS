@@ -203,7 +203,7 @@
         },
 
         /**
-         * @private
+         * @ignore
          */
         drawFont : function (bounds) {
             // Flush the compositor so we can upload a new texture

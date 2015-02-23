@@ -122,7 +122,7 @@
             this.resetTransform();
             this.cache.reset();
         },
- 
+
         /**
          * return a reference to the system canvas
          * @name getCanvas
@@ -233,7 +233,7 @@
         globalAlpha : function () {
             return this.globalColor.glArray[3];
         },
-        
+
         /**
          * resizes the canvas
          * @name resize
@@ -260,7 +260,7 @@
                 // enable/disable antialis on the given context
                 me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
             }
-            
+
             // disable antialias CSS scaling on the main canvas
             var cssStyle = this.canvas.style["image-rendering"];
             if (enable === false && (cssStyle === "" || cssStyle === "auto")) {
@@ -273,7 +273,7 @@
         },
 
         /**
-         * @private
+         * @ignore
          */
         drawFont : function (/*bounds*/) {},
 

@@ -246,7 +246,7 @@
         },
 
         /**
-         * @private
+         * @ignore
          */
         _drawFont : function (context, text, x, y, stroke) {
             context.font = this.font;
