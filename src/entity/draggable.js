@@ -1,13 +1,25 @@
 /*
  * MelonJS Game Engine
- * * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
- http://www.melonjs.org
- * @desc Used to make a game entity draggable
+ * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ */
+
+/**
+ * Used to make a game entity draggable
+ * @class
+ * @extends me.Entity
+ * @memberOf me
+ * @constructor
+ * @param {Number} x the x coordinates of the entity object
+ * @param {Number} y the y coordinates of the entity object
+ * @param {Object} settings Entity properties (see {@link me.Entity})
  */
 me.DraggableEntity = (function (Entity, Input, Event, Vector) {
     "use strict";
 
-    return Entity.extend({
+    return Entity.extend(
+    /** @scope me.DraggableEntity.prototype */
+    {
         /**
          * Constructor
          * @name init
@@ -33,7 +45,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * in order to make them pass through the system and to make
          * this module testable. Then we subscribe this module to the
          * transformed events.
-         * @name init
+         * @name initEvents
          * @memberOf me.DraggableEntity
          * @function
          */
@@ -62,7 +74,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
 
         /**
          * Translates a pointer event to a me.event
-         * @name init
+         * @name translatePointerEvent
          * @memberOf me.DraggableEntity
          * @function
          * @param {Object} e the pointer event you want to translate

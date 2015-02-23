@@ -2,12 +2,24 @@
  * MelonJS Game Engine
  * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
- * @desc Used to make a game entity a droptarget
+ */
+
+/**
+ * Used to make a game entity a droptarget
+ * @class
+ * @extends me.Entity
+ * @memberOf me
+ * @constructor
+ * @param {Number} x the x coordinates of the entity object
+ * @param {Number} y the y coordinates of the entity object
+ * @param {Object} settings Entity properties (see {@link me.Entity})
  */
 me.DroptargetEntity = (function (Entity, Event) {
     "use strict";
 
-    return Entity.extend({
+    return Entity.extend(
+    /** @scope me.DroptargetEntity.prototype */
+    {
         /**
          * Constructor
          * @name init
