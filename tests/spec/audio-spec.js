@@ -13,7 +13,7 @@ describe("Audio tests", function () {
             {
                 "name"  : "silence",
                 "type"  : "audio",
-                "src"   : "tests/data/sfx/"
+                "src"   : "data/sfx/"
             },
             done,
             function () {
@@ -31,7 +31,7 @@ describe("Audio tests", function () {
             {
                 "name"  : "silence",
                 "type"  : "audio",
-                "src"   : "tests/data/sfx/"
+                "src"   : "data/sfx/"
             },
             done,
             function () {
@@ -48,7 +48,7 @@ describe("Audio tests", function () {
             {
                 "name"  : "silence",
                 "type"  : "audio",
-                "src"   : "tests/data/sfx/"
+                "src"   : "data/sfx/"
             },
             done,
             function () {
