@@ -15,7 +15,7 @@
      * @constructor
      * @param {Number} x the x coordinates of the entity object
      * @param {Number} y the y coordinates of the entity object
-     * @param {Object} settings Entity properties, to be defined through Tiled or when caling the entity constructor
+     * @param {Object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
      * <img src="images/object_properties.png"/>
      * @param {String} [settings.name] object entity name
      * @param {String} [settings.id] object unique IDs
