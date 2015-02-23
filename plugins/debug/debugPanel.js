@@ -41,7 +41,7 @@
         get : function (stat) {
             return this.stats[stat];
         }
-    })
+    });
 
     var DebugPanel = me.Renderable.extend({
         /** @private */
