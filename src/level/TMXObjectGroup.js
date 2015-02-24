@@ -239,7 +239,7 @@
              * @memberOf me.TMXObject
              */
             this.orientation = orientation;
-            
+
             /**
              * the collision shapes defined for this object
              * @public
@@ -322,11 +322,9 @@
 
             // set the object properties
             me.TMXUtils.applyTMXProperties(this, tmxObj);
-            
+
             // define the object shapes if required
-            if (this.noDefaultShape === true) {
-                this.shapes = [];
-            } else {
+            if (!this.shapes) {
                 this.shapes = this.parseTMXShapes();
             }
         },
@@ -349,7 +347,7 @@
         },
 
         /**
-         * parses the TMX shape definition and returns a corresponding array of me.Shape object 
+         * parses the TMX shape definition and returns a corresponding array of me.Shape object
          * @name parseTMXShapes
          * @memberOf me.TMXObject
          * @private
