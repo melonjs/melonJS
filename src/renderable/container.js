@@ -53,6 +53,7 @@
              * @memberOf me.Container
              */
             this.transform = new me.Matrix2d();
+
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
@@ -66,7 +67,7 @@
              * @ignore
              */
             this.children = [];
-            // by default reuse the global me.game.setting
+
             /**
              * The property of the child object that should be used to sort on <br>
              * value : "x", "y", "z"
@@ -77,6 +78,7 @@
              * @memberOf me.Container
              */
             this.sortOn = me.game.sortOn;
+
             /**
              * Specify if the children list should be automatically sorted when adding a new child
              * @public
@@ -85,8 +87,8 @@
              * @name autoSort
              * @memberOf me.Container
              */
-
             this.autoSort = true;
+
             this.transform.identity();
 
             /**
@@ -103,6 +105,13 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
+
+            /**
+             * Absolute position in the game world
+             * @private
+             * @name me.Container#_absPos
+             */
+            this._absPos = new me.Vector2d(x, y);
         },
 
 
@@ -140,9 +149,6 @@
             }
 
             child.ancestor = this;
-            if (child.updateAbsoluteBounds) {
-                child.updateAbsoluteBounds();
-            }
             this.children.push(child);
             if (this.autoSort === true) {
                 this.sort();
@@ -343,12 +349,12 @@
 
         /**
          * resizes the child bounds rectangle, based on children bounds.
-         * @name resizeChildBounds
+         * @name updateChildBounds
          * @memberOf me.Container
          * @function
          * @return {me.Rect} updated child bounds
          */
-        resizeChildBounds : function () {
+        updateChildBounds : function () {
             this.childBounds.pos.set(Infinity, Infinity);
             this.childBounds.resize(-Infinity, -Infinity);
             var childBounds;
@@ -367,7 +373,6 @@
                     }
                 }
             }
-            this.childBounds.union(this.getBounds());
             return this.childBounds;
         },
 
@@ -438,19 +443,6 @@
                 }
                 obj[prop] = val;
             }
-        },
-
-        /**
-         * @ignore
-         */
-        updateAbsoluteBounds : function () {
-            var bounds = this.resizeChildBounds();
-            if (this.ancestor && this.ancestor._absoluteBounds) {
-                var pos = this.ancestor._absoluteBounds.pos;
-                this._absoluteBounds.setShape(this.pos.x + pos.x, this.pos.y + pos.y, bounds.width, bounds.height);
-            }
-
-            return this._absoluteBounds;
         },
 
         /**
@@ -610,6 +602,9 @@
             var isPaused = me.state.isPaused();
             var viewport = me.game.viewport;
 
+            // Update container's absolute position
+            this._absPos.setV(this.ancestor._absPos).add(this.pos);
+
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
                     // skip this object
@@ -622,14 +617,10 @@
                         globalFloatingCounter++;
                     }
                     // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(obj._absoluteBounds);
+                    obj.inViewport = isFloating || viewport.isVisible(obj.getBounds());
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
-
-                    if (obj.updateAbsoluteBounds) {
-                        obj.updateAbsoluteBounds();
-                    }
 
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;
@@ -641,7 +632,6 @@
                 }
             }
 
-            this.updateAbsoluteBounds();
             return isDirty;
         },
 

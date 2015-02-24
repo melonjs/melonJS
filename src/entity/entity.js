@@ -44,12 +44,14 @@
 
             /**
              * The bounding rectangle for this entity
-             * @protected
+             * @private
              * @type {me.Rect}
-             * @name bounds
-             * @memberOf me.Ellipse
+             * @name _bounds
+             * @memberOf me.Entity
              */
-            this.bounds = null;
+            if (!this._bounds) {
+                this._bounds = new me.Rect(0, 0, 0, 0);
+            }
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -117,14 +119,24 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            this.body = new me.Body(this, Array.isArray(settings.shapes) ? settings.shapes : [ new me.Rect(0, 0, this.width, this.height) ]);
+            var shapes = (
+                Array.isArray(settings.shapes) ?
+                settings.shapes :
+                [ new me.Rect(0, 0, this.width, this.height) ]
+            );
+            if (this.body) {
+                this.body.init(this, shapes);
+            }
+            else {
+                this.body = new me.Body(this, shapes);
+            }
 
             // ensure the entity bounds and pos are up-to-date
-            this.body.updateBounds();
+            var bounds = this.body.updateBounds();
 
             // resize the entity if required
             if (this.width === 0 && this.height === 0) {
-                this.resize(this.body.width, this.body.height);
+                this.resize(bounds.width, bounds.height);
             }
 
             // set the  collision mask if defined
@@ -142,7 +154,7 @@
             }
         },
 
-       /**
+        /**
          * returns the bounding box for this entity, the smallest rectangle object completely containing this entity body shapes
          * @name getBounds
          * @memberOf me.Entity
@@ -150,25 +162,25 @@
          * @return {me.Rect} this entity bounding box Rectangle object
          */
         getBounds : function () {
-            return this.bounds;
+            return this._bounds;
         },
 
         /**
          * update the entity bounding rect (private)
          * when manually update the entity pos, you need to call this function
-         * @protected
+         * @private
          * @name updateBounds
          * @memberOf me.Entity
          * @function
          */
         updateBounds : function () {
-            if (!this.bounds) {
-                this.bounds = new me.Rect(0, 0, 0, 0);
+            this._bounds.pos.setV(this.pos).add(this.body.pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
             }
-            this.bounds.pos.setV(this.pos).add(this.body.pos);
-            this.bounds.resize(this.body.width, this.body.height);
-            this.updateAbsoluteBounds();
-            return this.bounds;
+            this._bounds.resize(this.body.width, this.body.height);
+            return this._bounds;
         },
 
         /**
@@ -180,10 +192,12 @@
          * @return {Number} distance
          */
         distanceTo: function (e) {
+            var a = this.getBounds();
+            var b = e.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + (this.width / 2))  - (e.pos.x + (e.width / 2));
-            var dy = (this.pos.y + (this.height / 2)) - (e.pos.y + (e.height / 2));
+            var dx = (a.pos.x + (a.width / 2))  - (b.pos.x + (b.width / 2));
+            var dy = (a.pos.y + (a.height / 2)) - (b.pos.y + (b.height / 2));
             return Math.sqrt(dx * dx + dy * dy);
         },
 
@@ -196,10 +210,11 @@
          * @return {Number} distance
          */
         distanceToPoint: function (v) {
+            var a = this.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + (this.width / 2))  - (v.x);
-            var dy = (this.pos.y + (this.height / 2)) - (v.y);
+            var dx = (a.pos.x + (a.width / 2))  - (v.x);
+            var dy = (a.pos.y + (a.height / 2)) - (v.y);
             return Math.sqrt(dx * dx + dy * dy);
         },
 
@@ -262,13 +277,11 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var _bounds = this.getBounds();
-
-                var x = ~~(0.5 + _bounds.pos.x + (
-                    this.anchorPoint.x * (_bounds.width - this.renderable.width)
+                var x = ~~(0.5 + this.pos.x + (
+                    this.anchorPoint.x * (this.width - this.renderable.width)
                 ));
-                var y = ~~(0.5 + _bounds.pos.y + (
-                    this.anchorPoint.y * (_bounds.height - this.renderable.height)
+                var y = ~~(0.5 + this.pos.y + (
+                    this.anchorPoint.y * (this.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);

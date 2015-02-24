@@ -9,5 +9,6 @@
     "tests/spec/inheritance-spec.js",
     "tests/spec/draggable-spec.js",
     "tests/spec/droptarget-spec.js",
-    "tests/spec/plugin-spec.js"
+    "tests/spec/plugin-spec.js",
+    "tests/spec/entity-spec.js"
 ]

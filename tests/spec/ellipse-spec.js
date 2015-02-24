@@ -2,6 +2,16 @@ describe("Shape : me.Ellipse", function () {
 
     // define a ellipse object
     var circle = new me.Ellipse(50, 50, 100, 100);
+    var renderableA = new me.Renderable(0, 0, 100, 100);
+    var renderableB = new me.Renderable(0, 50, 100, 100);
+
+    // mock ancestor
+    circle.ancestor = renderableA.ancestor = renderableB.ancestor =  {
+        "_absPos" : {
+            "x" : 0,
+            "y" : 0
+        }
+    };
 
     // get the polyshape bounding rect
     var boundingRect = circle.getBounds();
@@ -20,7 +30,8 @@ describe("Shape : me.Ellipse", function () {
         });
 
         it("Ellipse pos is (50, 50)", function () {
-            expect(circle.pos.equals({x: 50, y: 50})).toEqual(true);
+            expect(circle.pos.x).toEqual(50);
+            expect(circle.pos.y).toEqual(50);
         });
 
         it("Ellipse contains the point (75, 75)", function () {
@@ -33,8 +44,8 @@ describe("Shape : me.Ellipse", function () {
 
         it("collision response is correct", function () {
             expect(me.collision.testEllipseEllipse(
-                new me.Renderable(0, 0, 100, 100), circle,
-                new me.Renderable(0, 50, 100, 100), circle,
+                renderableA, circle,
+                renderableB, circle,
                 me.collision.response.clear()
             )).toEqual(true);
             expect(me.collision.response.overlap).toEqual(50);
@@ -51,7 +62,8 @@ describe("Shape : me.Ellipse", function () {
         });
 
         it("Ellipse Bounding Rect pos is (0,0)", function () {
-            expect(boundingRect.pos.equals({x: 0, y: 0})).toEqual(true);
+            expect(boundingRect.pos.x).toEqual(0);
+            expect(boundingRect.pos.y).toEqual(0);
         });
     });
 

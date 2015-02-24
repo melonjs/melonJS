@@ -165,7 +165,7 @@
                     entity.height
                 ]
             );
-            
+
             // parses the given shapes array and add them
             for (var s = 0; s < shapes.length; s++) {
                 this.addShape(shapes[s].clone(), true);
@@ -336,7 +336,7 @@
         /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
-         * @protected
+         * @private
          * @name updateBounds
          * @memberOf me.Body
          * @function

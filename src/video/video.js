@@ -369,6 +369,11 @@
                     sWidth = ~~(sWidth + 0.5);
                     this.renderer.resize(sWidth, designHeight);
                     me.game.viewport.resize(sWidth, designHeight);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
                 }
                 else if (
                     (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
@@ -380,6 +385,11 @@
                     sHeight = ~~(sHeight + 0.5);
                     this.renderer.resize(designWidth, sHeight);
                     me.game.viewport.resize(designWidth, sHeight);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
                 }
                 else if (settings.scaleMethod === "stretch") {
                     // scale the display canvas to fit with the parent container

@@ -155,6 +155,12 @@
                 api.world = new me.Container(0, 0, width, height);
                 // give it a name
                 api.world.name = "rootContainer";
+                /*
+                 * XXX: Default ancestor is self
+                 * Removes the need for an if-statement when accessing ancestor
+                 * properties in the update method
+                 */
+                api.world.ancestor = api.world;
 
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
