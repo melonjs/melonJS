@@ -192,10 +192,12 @@
          * @return {Number} distance
          */
         distanceTo: function (e) {
+            var a = this.getBounds();
+            var b = e.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + (this.width / 2))  - (e.pos.x + (e.width / 2));
-            var dy = (this.pos.y + (this.height / 2)) - (e.pos.y + (e.height / 2));
+            var dx = (a.pos.x + (a.width / 2))  - (b.pos.x + (b.width / 2));
+            var dy = (a.pos.y + (a.height / 2)) - (b.pos.y + (b.height / 2));
             return Math.sqrt(dx * dx + dy * dy);
         },
 
@@ -208,10 +210,11 @@
          * @return {Number} distance
          */
         distanceToPoint: function (v) {
+            var a = this.getBounds();
             // the me.Vector2d object also implements the same function, but
             // we have to use here the center of both entities
-            var dx = (this.pos.x + (this.width / 2))  - (v.x);
-            var dy = (this.pos.y + (this.height / 2)) - (v.y);
+            var dx = (a.pos.x + (a.width / 2))  - (v.x);
+            var dy = (a.pos.y + (a.height / 2)) - (v.y);
             return Math.sqrt(dx * dx + dy * dy);
         },
 
