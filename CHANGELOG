@@ -10,6 +10,7 @@ Version History
 * Core : now uses only case-sensitive string matching; DoN't MiX cAsE!
 * Device : added browser language detection
 * Entity : entity bodies now have a default shape if not overridden by the entity constructor.
+* Entity : renderables are now positioned relative to the body bounds
 * Font : updated me.Font to work with me.Color (@xorinzor)
 * Font : updated the me.Font api to be consistent with ne.BitmapFont and the Renderer class
 * Font : added support for WebGL (using me.Font is however not recommended for performances reason)
