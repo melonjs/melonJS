@@ -10,13 +10,13 @@
     /**
      * a Generic Body Object <br>
      * @class
-     * @extends Object
+     * @extends me.Rect
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
      * @param {me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      */
-    me.Body = Object.extend(
+    me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
@@ -27,15 +27,6 @@
              * @ignore
              */
             this.entity = entity;
-
-            /**
-             * The bounding rectangle for this body
-             * @private
-             * @type {me.Rect}
-             * @name bounds
-             * @memberOf me.Body
-             */
-            this._bounds = null;
 
             /**
              * The collision shapes of the entity <br>
@@ -161,6 +152,19 @@
              * @memberOf me.Body
              */
             this.jumping = false;
+
+            // call the super constructor
+            this._super(
+                me.Rect,
+                // bounds the body by default
+                // to the parent entity
+                "init", [
+                    0,
+                    0,
+                    entity.width,
+                    entity.height
+                ]
+            );
 
             // parses the given shapes array and add them
             for (var s = 0; s < shapes.length; s++) {
@@ -330,17 +334,6 @@
         },
 
         /**
-         * returns the bounding box for this entity, the smallest rectangle object completely containing this entity body shapes
-         * @name getBounds
-         * @memberOf me.Body
-         * @function
-         * @return {me.Rect} this entity bounding box Rectangle object
-         */
-        getBounds : function () {
-            return this._bounds;
-        },
-
-        /**
          * update the body bounding rect (private)
          * the body rect size is here used to cache the total bounding rect
          * @private
@@ -349,24 +342,21 @@
          * @function
          */
         updateBounds : function () {
-            if (!this._bounds) {
-                this._bounds = new me.Rect(0, 0, 0, 0);
-            }
             if (this.shapes.length > 0) {
                 // reset the rect with default values
-                var bounds = this.shapes[0].getBounds();
-                this._bounds.pos.setV(bounds.pos);
-                this._bounds.resize(bounds.width, bounds.height);
+                var _bounds = this.shapes[0].getBounds();
+                this.pos.setV(_bounds.pos);
+                this.resize(_bounds.width, _bounds.height);
 
                 for (var i = 1 ; i < this.shapes.length; i++) {
-                    this._bounds.union(this.shapes[i].getBounds());
+                    this.union(this.shapes[i].getBounds());
                 }
             }
 
             // update the parent entity bounds
             this.entity.updateBounds();
 
-            return this._bounds;
+            return this;
         },
 
         /**

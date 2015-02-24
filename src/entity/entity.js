@@ -46,10 +46,12 @@
              * The bounding rectangle for this entity
              * @private
              * @type {me.Rect}
-             * @name bounds
+             * @name _bounds
              * @memberOf me.Entity
              */
-            this._bounds = null;
+            if (!this._bounds) {
+                this._bounds = new me.Rect(0, 0, 0, 0);
+            }
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -117,7 +119,17 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            this.body = new me.Body(this, Array.isArray(settings.shapes) ? settings.shapes : [ new me.Rect(0, 0, this.width, this.height) ]);
+            var shapes = (
+                Array.isArray(settings.shapes) ?
+                settings.shapes :
+                [ new me.Rect(0, 0, this.width, this.height) ]
+            );
+            if (this.body) {
+                this.body.init(this, shapes);
+            }
+            else {
+                this.body = new me.Body(this, shapes);
+            }
 
             // ensure the entity bounds and pos are up-to-date
             var bounds = this.body.updateBounds();
@@ -162,15 +174,12 @@
          * @function
          */
         updateBounds : function () {
-            if (!this._bounds) {
-                this._bounds = new me.Rect(0, 0, 0, 0);
-            }
-            this._bounds.pos.setV(this.pos).add(this.body._bounds.pos);
+            this._bounds.pos.setV(this.pos).add(this.body.pos);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
                 this._bounds.pos.add(this.ancestor._absPos);
             }
-            this._bounds.resize(this.body._bounds.width, this.body._bounds.height);
+            this._bounds.resize(this.body.width, this.body.height);
             return this._bounds;
         },
 
