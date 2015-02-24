@@ -277,11 +277,11 @@
             if (this.renderable) {
                 // translate the renderable position (relative to the entity)
                 // and keeps it in the entity defined bounds
-                var x = ~~(0.5 + this.pos.x + (
-                    this.anchorPoint.x * (this.width - this.renderable.width)
+                var x = ~~(0.5 + this.pos.x + this.body.pos.x + (
+                    this.anchorPoint.x * (this.body.width - this.renderable.width)
                 ));
-                var y = ~~(0.5 + this.pos.y + (
-                    this.anchorPoint.y * (this.height - this.renderable.height)
+                var y = ~~(0.5 + this.pos.y + this.body.pos.y + (
+                    this.anchorPoint.y * (this.body.height - this.renderable.height)
                 ));
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
