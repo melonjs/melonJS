@@ -288,8 +288,11 @@
             // max display size
             maxWidth = w || Infinity;
             maxHeight = h || Infinity;
+            // trigger a resize
+            // defer it to ensure everything is properly intialized
+            this.onresize.defer(this);
+            
         };
-
 
         /**
          * Create and return a new Canvas
