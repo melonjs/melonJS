@@ -198,6 +198,12 @@
         */
         resize : function (w, h) {
             this._super(me.Renderable, "resize", [w, h]);
+            var level = me.game.currentLevel;
+            this.setBounds(
+                0, 0,
+                Math.max(w, level.width),
+                Math.max(h, level.height)
+            );
             this.setDeadzone(w / 6, h / 6);
             this.moveTo(0, 0);
             this.update();
