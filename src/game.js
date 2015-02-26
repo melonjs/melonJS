@@ -36,6 +36,15 @@
         // reference to the renderer object
         var renderer = null;
 
+        // dummy current level
+        var dummyLevel = {
+            pos : {
+                x : 0,
+                y : 0
+            },
+            moveToCenter : function () {} // XXX
+        };
+
         /*
          * PUBLIC STUFF
          */
@@ -153,14 +162,26 @@
 
                 //the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
+
                 // give it a name
                 api.world.name = "rootContainer";
+
                 /*
                  * XXX: Default ancestor is self
                  * Removes the need for an if-statement when accessing ancestor
                  * properties in the update method
                  */
                 api.world.ancestor = api.world;
+
+                me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function () {
+                    var level = api.currentLevel,
+                        transform = api.world.transform;
+
+                    // Automatically adjust map and world position
+                    level.moveToCenter();
+                    transform.identity();
+                    transform.translateV(level.pos); // XXX: Does not update container.pos
+                });
 
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
@@ -176,13 +197,7 @@
                 // make display dirty by default
                 isDirty = true;
 
-                // dummy current level
-                api.currentLevel = {
-                    pos : {
-                        x : 0,
-                        y : 0
-                    }
-                };
+                api.currentLevel = dummyLevel;
 
                 // set as initialized
                 initialized = true;
@@ -209,13 +224,8 @@
             if (api.viewport) {
                 api.viewport.reset();
             }
-            // dummy current level
-            api.currentLevel = {
-                pos : {
-                    x : 0,
-                    y : 0
-                }
-            };
+
+            api.currentLevel = dummyLevel;
 
             // reset the renderer
             renderer.reset();

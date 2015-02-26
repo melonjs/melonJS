@@ -44,17 +44,6 @@
             // load our map
             me.game.currentLevel = level;
 
-            // change the viewport bounds
-            me.game.viewport.setBounds(
-                0, 0,
-                Math.max(level.width, me.game.viewport.width),
-                Math.max(level.height, me.game.viewport.height)
-            );
-
-            // adjust map position based on the viewport size
-            // (only update the map position if the map is smaller than the viewport)
-            level.setDefaultPosition(me.game.viewport.width, me.game.viewport.height);
-
             // add all defined layers
             var layers = level.getLayers();
             for (var i = layers.length; i--;) {
@@ -150,11 +139,21 @@
             // re-enable auto-sort
             container.autoSort = true;
 
+            // change the viewport bounds
+            me.game.viewport.setBounds(
+                0, 0,
+                Math.max(level.width, me.game.viewport.width),
+                Math.max(level.height, me.game.viewport.height)
+            );
+
+            // center map on the viewport
+            level.moveToCenter();
+
             // translate the display if required
-            me.game.world.transform.translateV(me.game.currentLevel.pos);
+            container.transform.translateV(level.pos);
 
             // update the game world size to match the level size
-            me.game.world.resize(me.game.currentLevel.width, me.game.currentLevel.height);
+            container.resize(level.width, level.height);
 
             // fire the callback if defined
             if (me.game.onLevelLoaded) {

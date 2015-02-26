@@ -90,15 +90,15 @@
         },
 
         /**
-         * set the default map position based on the given viewport size
-         * @name me.TMXTileMap#setDefaultPosition
+         * Center the map on the viewport
+         * @name me.TMXTileMap#moveToCenter
          * @public
          * @function
-         * @param {Number} width viewport width
-         * @param {Number} height viewport height
          */
-        setDefaultPosition: function (width, height) {
+        moveToCenter: function () {
             // center the map if smaller than the current viewport
+            var width = me.game.viewport.width,
+                height = me.game.viewport.height;
             if ((this.width < width) || (this.height < height)) {
                 var shiftX =  ~~((width - this.width) / 2);
                 var shiftY =  ~~((height - this.height) / 2);
