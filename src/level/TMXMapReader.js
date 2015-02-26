@@ -233,12 +233,12 @@
                         // CSV decode
                         data = me.utils.decodeCSV(data, layer.cols);
                     } else {
-                        // Base 64 decode
-                        data = me.utils.decodeBase64AsArray(data, 4);
                         // check if data is compressed
-                        if (compression !== null) {
+                        if (typeof compression === "string") {
                             data = me.utils.decompress(data, compression);
                         }
+                        // Base 64 decode
+                        data = me.utils.decodeBase64AsArray(data, 4);
                     }
                     break;
 
@@ -274,9 +274,13 @@
                 // use the default one
                 layer.setRenderer(me.game.tmxRenderer);
             }
+            
+            // detect encoding and compression
             var encoding = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_ENCODING] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_ENCODING];
+            var compression = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_COMPRESSION] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_COMPRESSION];
+            
             // parse the layer data
-            this.setLayerData(layer, data[TMXConstants.TMX_TAG_DATA], encoding || "json", null);
+            this.setLayerData(layer, data[TMXConstants.TMX_TAG_DATA], encoding || "json", compression);
             return layer;
         },
 
