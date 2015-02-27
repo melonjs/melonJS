@@ -131,13 +131,24 @@
 
             /**
              * The bounding rectangle for this renderable
-             * @private
+             * @ignore
              * @type {me.Rect}
              * @name _bounds
              * @memberOf me.Renderable
              */
             if (!this._bounds) {
-                this._bounds = new me.Rect(0, 0, 0, 0);
+                this._bounds = new me.Rect(x, y, width, height);
+            }
+
+            /**
+             * Absolute position in the game world
+             * @ignore
+             * @type {me.Vector2d}
+             * @name _absPos
+             * @memberOf me.Renderable
+             */
+            if (!this._absPos) {
+                this._absPos = new me.Vector2d(x, y);
             }
 
             // call the super constructor
@@ -205,19 +216,19 @@
 
         /**
          * update the renderable's bounding rect (private)
-         * when manually update the entity pos, you need to call this function
+         * when manually update the renderable pos, you need to call this function
          * @private
          * @name updateBounds
          * @memberOf me.Renderable
          * @function
          */
         updateBounds : function () {
-            this._bounds.pos.setV(this.pos).add(this.body.pos);
+            this._bounds.pos.setV(this.pos);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
                 this._bounds.pos.add(this.ancestor._absPos);
             }
-            this._bounds.resize(this.body.width, this.body.height);
+            this._bounds.resize(this.width, this.height);
             return this._bounds;
         },
 

@@ -105,13 +105,6 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
-
-            /**
-             * Absolute position in the game world
-             * @private
-             * @name me.Container#_absPos
-             */
-            this._absPos = new me.Vector2d(x, y);
         },
 
 
@@ -621,6 +614,9 @@
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
+
+                    // Update child's absolute position
+                    obj._absPos.setV(this._absPos).add(obj.pos);
 
                     if (globalFloatingCounter > 0) {
                         globalFloatingCounter--;

@@ -222,6 +222,24 @@
         },
 
         /**
+         * update the entity's bounding rect (private)
+         * when manually update the entity pos, you need to call this function
+         * @private
+         * @name updateBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBounds : function () {
+            this._bounds.pos.setV(this.pos).add(this.body.pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            this._bounds.resize(this.body.width, this.body.height);
+            return this._bounds;
+        },
+
+        /**
          * object draw<br>
          * not to be called by the end user<br>
          * called by the game manager on each game loop
