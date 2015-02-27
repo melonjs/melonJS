@@ -129,6 +129,17 @@
              */
             this.alpha = 1.0;
 
+            /**
+             * The bounding rectangle for this entity
+             * @private
+             * @type {me.Rect}
+             * @name _bounds
+             * @memberOf me.Renderable
+             */
+            if (!this._bounds) {
+                this._bounds = new me.Rect(0, 0, 0, 0);
+            }
+
             // call the super constructor
             this._super(me.Rect, "init", [x, y, width, height]);
 
@@ -137,6 +148,17 @@
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
+        },
+
+        /**
+         * returns the bounding box for this renderable
+         * @name getBounds
+         * @memberOf me.Renderable
+         * @function
+         * @return {me.Rect} bounding box Rectangle object
+         */
+        getBounds : function () {
+            return this._bounds;
         },
 
         /**
@@ -179,6 +201,24 @@
          **/
         update : function () {
             return false;
+        },
+
+        /**
+         * update the renderable's bounding rect (private)
+         * when manually update the entity pos, you need to call this function
+         * @private
+         * @name updateBounds
+         * @memberOf me.Renderable
+         * @function
+         */
+        updateBounds : function () {
+            this._bounds.pos.setV(this.pos).add(this.body.pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            this._bounds.resize(this.body.width, this.body.height);
+            return this._bounds;
         },
 
         /**
