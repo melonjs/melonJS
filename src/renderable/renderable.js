@@ -130,7 +130,7 @@
             this.alpha = 1.0;
 
             /**
-             * The bounding rectangle for this entity
+             * The bounding rectangle for this renderable
              * @private
              * @type {me.Rect}
              * @name _bounds
