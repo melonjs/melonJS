@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="600"
+   height="600"
+   viewBox="0 0 600.00001 600.00001"
+   id="svg3374"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="loading-screen-logo.svg">
+  <defs
+     id="defs3376" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="123.08836"
+     inkscape:cy="297.52485"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     units="px"
+     inkscape:window-width="1436"
+     inkscape:window-height="855"
+     inkscape:window-x="4"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3379">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2"
+     sodipodi:insensitive="true">
+    <rect
+       style="fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-opacity:1"
+       id="rect3391"
+       width="600"
+       height="600"
+       x="0"
+       y="-600"
+       transform="scale(1,-1)" />
+  </g>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-452.36216)">
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke:none"
+       d="M 45.248704,741.25521 C 102.5745,854.14905 258.2743,893.59435 393.0308,829.34661 527.78724,765.09892 590.54085,621.5018 533.21508,508.60799 l -0.15743,0.0749 C 549.6941,551.69541 458.85754,635.85422 326.75872,698.83485 194.65773,761.81647 70.421944,780.19854 45.405824,741.18019 l -0.15743,0.0749 z"
+       id="path3798"
+       inkscape:connector-curvature="0" />
+    <ellipse
+       ry="88.379959"
+       rx="263.75894"
+       cy="690.58051"
+       cx="-15.978445"
+       style="fill:#55aa00;fill-opacity:1;stroke:#ffffff;stroke-width:14.2173996;stroke-miterlimit:4;stroke-dasharray:none"
+       id="path3876"
+       transform="matrix(0.89726845,-0.44148537,0.44148535,0.89726846,0,0)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer 3">
+    <ellipse
+       style="fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-opacity:1"
+       id="path3394"
+       cx="184.44202"
+       cy="-284.06998"
+       rx="256.6564"
+       ry="84.208916"
+       transform="matrix(0.89684612,-0.44234268,-0.44108082,-0.89746739,0,0)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Layer 4">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:137.78588867px;line-height:125%;font-family:'Kingthings Christmas 2';-inkscape-font-specification:'Kingthings Christmas 2';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="30.884918"
+       y="557.14532"
+       id="text3397"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3399"
+         x="30.884918"
+         y="557.14532"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Century Gothic';-inkscape-font-specification:'Century Gothic';fill:#ffffff">melon</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:63.69992065px;line-height:125%;font-family:'Kingthings Christmas 2';-inkscape-font-specification:'Kingthings Christmas 2';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="448.29529"
+       y="556.41974"
+       id="text3401"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3403"
+         x="448.29529"
+         y="556.41974"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:127.39984131px;font-family:'Century Gothic';-inkscape-font-specification:'Century Gothic';fill:#55aa00;fill-opacity:1">JS</tspan></text>
+  </g>
+</svg>
