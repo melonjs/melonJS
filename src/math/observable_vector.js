@@ -28,8 +28,8 @@ me.ObservableVector2d = me.Vector2d.extend({
             },
 
             set : function (value) {
+                this.onUpdate(this._x, value, this._y, this._y);
                 this._x = value;
-                this.onUpdate();
             }
         });
 
@@ -46,8 +46,8 @@ me.ObservableVector2d = me.Vector2d.extend({
             },
 
             set : function (value) {
+                this.onUpdate(this._x, this._x, this._y, value);
                 this._y = value;
-                this.onUpdate();
             }
         });
 
