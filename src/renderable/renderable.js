@@ -179,7 +179,6 @@
 
             this._width = width;
             this._height = height;
-
             this.shapeType = "Rectangle";
 
             // set the default anchor point (middle of the renderable)
@@ -187,7 +186,6 @@
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
-            this.updateBounds();
         },
 
         /**
