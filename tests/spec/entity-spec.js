@@ -5,7 +5,7 @@ describe("Entity", function () {
         me.loader.load({
             "name"  : "rect",
             "type"  : "image",
-            "src"   : "tests/data/img/rect.png"
+            "src"   : "data/img/rect.png"
         },
         done,
         function () {

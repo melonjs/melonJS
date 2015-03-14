@@ -52,7 +52,8 @@ me.ObservableVector2d = me.Vector2d.extend({
         });
 
         this.onUpdate = settings.onUpdate;
-        this._super(me.Vector2d, "init", [x, y]);
+        this._x = x;
+        this._y = y;
     },
 
     /**

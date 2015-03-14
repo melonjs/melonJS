@@ -151,14 +151,43 @@
                 this._absPos = new me.Vector2d(x, y);
             }
 
-            // call the super constructor
-            this._super(me.Rect, "init", [x, y, width, height]);
+            // set position to observable. Can use updateBounds, as _bounds using a regular vector.
+            // will not lead to stack too deep.
+            this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBounds.bind(this) });
+
+            Object.defineProperty(this, "width", {
+                get : function () {
+                    return this._width;
+                },
+
+                set : function (value) {
+                    this._width = value;
+                    this.updateBounds();
+                }
+            });
+
+            Object.defineProperty(this, "height", {
+                get : function () {
+                    return this._height;
+                },
+
+                set : function (value) {
+                    this._width = value;
+                    this.updateBounds();
+                }
+            });
+
+            this._width = width;
+            this._height = height;
+
+            this.shapeType = "Rectangle";
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
+            this.updateBounds();
         },
 
         /**
