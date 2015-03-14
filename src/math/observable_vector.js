@@ -56,6 +56,21 @@ me.ObservableVector2d = me.Vector2d.extend({
     },
 
     /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberOf me.ObservableVector2d
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     */
+    add : function (v) {
+        this._x += v.x;
+        this._y += v.y;
+        this.onUpdate();
+        return this;
+    },
+
+    /**
      * set the Vector x and y properties to the given values<br>
      * @name set
      * @memberOf me.ObservableVector2d
