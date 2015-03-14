@@ -172,7 +172,7 @@
                 },
 
                 set : function (value) {
-                    this._width = value;
+                    this._height = value;
                     this.updateBounds();
                 }
             });

@@ -119,5 +119,5 @@ me.ObservableVector2d = me.Vector2d.extend({
         this._y -= v.y;
         this.onUpdate();
         return this;
-    },
+    }
 });
