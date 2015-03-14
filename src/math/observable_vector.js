@@ -103,5 +103,20 @@ me.ObservableVector2d = me.Vector2d.extend({
      */
     setV : function (v) {
         return this.set(v.x, v.y);
-    }
+    },
+
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberOf me.ObservableVector2d
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     */
+    sub : function (v) {
+        this._x -= v.x;
+        this._y -= v.y;
+        this.onUpdate();
+        return this;
+    },
 });
