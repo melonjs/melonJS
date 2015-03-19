@@ -354,7 +354,8 @@
             }
 
             // update the parent entity bounds
-            this.entity.updateBounds();
+            this.entity.updateBoundsPos(this.pos.x, this.pos.y);
+            this.entity.resizeBounds(this.width, this.height);
 
             return this;
         },

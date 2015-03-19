@@ -212,6 +212,17 @@
             return Math.atan2(ay, ax);
         },
 
+        /**
+         * update the bounding rect dimensions
+         * @private
+         * @name resizeBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        resizeBounds : function (width, height) {
+            this._bounds.resize(width, height);
+        },
+
         /** @ignore */
         update : function (dt) {
             if (this.renderable) {
@@ -222,18 +233,16 @@
         },
 
         /**
-         * update the entity's bounding rect (private)
-         * when manually update the entity pos, you need to call this function
+         * update the bounds position
          * @private
-         * @name updateBounds
+         * @name updateBoundsPos
          * @memberOf me.Entity
          * @function
          */
-        updateBounds : function () {
-            this._super(me.Renderable, "updateBounds");
-
-            this._bounds.pos.add(this.body.pos);
-            this._bounds.resize(this.body.width, this.body.height);
+        updateBoundsPos : function (newX, newY) {
+            this._super(me.Renderable, "updateBoundsPos", [this.pos.x, this.pos.y]);
+            this._bounds.pos.x += newX;
+            this._bounds.pos.y += newY;
             return this._bounds;
         },
 
