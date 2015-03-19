@@ -233,17 +233,34 @@
         },
 
         /**
-         * update the bounds position
+         * update the bounds position when the position is modified
          * @private
          * @name updateBoundsPos
          * @memberOf me.Entity
          * @function
          */
-        updateBoundsPos : function (newX, newY) {
-            this._super(me.Renderable, "updateBoundsPos", [this.pos.x, this.pos.y]);
-            this._bounds.pos.x += newX;
-            this._bounds.pos.y += newY;
+        updateBoundsPos : function (x, y) {
+            this._super(me.Renderable, "updateBoundsPos", [
+                x + this.body.pos.x,
+                y + this.body.pos.y
+            ]);
             return this._bounds;
+        },
+
+        /**
+         * update the bounds position when the body is modified
+         * @private
+         * @name onBodyUpdate
+         * @memberOf me.Entity
+         * @function
+         */
+        onBodyUpdate : function (pos, w, h) {
+            this._bounds.pos.setV(this.pos).add(pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            this._bounds.resize(w, h);
         },
 
         /**

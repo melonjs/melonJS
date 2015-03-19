@@ -328,9 +328,6 @@
                 this.falling = overlap.y >= 1;
                 this.jumping = overlap.y <= -1;
             }
-
-            // update the other entity bounds
-            this.entity.updateBounds();
         },
 
         /**
@@ -354,8 +351,7 @@
             }
 
             // update the parent entity bounds
-            this.entity.updateBoundsPos(this.pos.x, this.pos.y);
-            this.entity.resizeBounds(this.width, this.height);
+            this.entity.onBodyUpdate(this.pos, this.width, this.height);
 
             return this;
         },
@@ -453,9 +449,6 @@
 
             // update player entity position
             this.entity.pos.add(this.vel);
-
-            // update the entity and body bounds
-            this.entity.updateBounds();
 
             // returns true if vel is different from 0
             return (this.vel.x !== 0 || this.vel.y !== 0);
