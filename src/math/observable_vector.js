@@ -65,11 +65,9 @@ me.ObservableVector2d = me.Vector2d.extend({
      * @return {me.ObservableVector2d} Reference to this object for method chaining
      */
     add : function (v) {
-        var oldX = this._x;
-        var oldY = this._y;
+        this.onUpdate(this._x + v.x, this._x + v.y, this._x, this._y);
         this._x += v.x;
         this._y += v.y;
-        this.onUpdate(this._x, oldX, this._y, oldY);
         return this;
     },
 
@@ -89,11 +87,9 @@ me.ObservableVector2d = me.Vector2d.extend({
             );
         }
 
-        var oldX = this._x;
-        var oldY = this._y;
+        this.onUpdate(x, y, this._x, this._y);
         this._x = x;
         this._y = y;
-        this.onUpdate(this._x, oldX, this._y, oldY);
 
         return this;
     },
@@ -119,11 +115,9 @@ me.ObservableVector2d = me.Vector2d.extend({
      * @return {me.ObservableVector2d} Reference to this object for method chaining
      */
     sub : function (v) {
-        var oldX = this._x;
-        var oldY = this._y;
+        this.onUpdate(this._x - v.x, this._x - v.y, this._x, this._y);
         this._x -= v.x;
         this._y -= v.y;
-        this.onUpdate(this._x, oldX, this._y, oldY);
         return this;
     }
 });
