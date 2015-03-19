@@ -153,7 +153,7 @@
 
             // set position to observable. Can use updateBounds, as _bounds using a regular vector.
             // will not lead to stack too deep.
-            this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBounds.bind(this) });
+            this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
 
             Object.defineProperty(this, "width", {
                 get : function () {
@@ -161,8 +161,8 @@
                 },
 
                 set : function (value) {
+                    this.resizeBounds(value, this.height, this.width, this.height);
                     this._width = value;
-                    this.updateBounds();
                 }
             });
 
@@ -172,8 +172,8 @@
                 },
 
                 set : function (value) {
+                    this.resizeBounds(this.width, value, this.width, this.height);
                     this._height = value;
-                    this.updateBounds();
                 }
             });
 
@@ -211,6 +211,18 @@
         },
 
         /**
+         * update the renderable's bounding rect dimensions
+         * @private
+         * @name resizeBounds
+         * @memberOf me.Renderable
+         * @function
+         */
+        resizeBounds : function (width, height) {
+            this._bounds.resize(width, height);
+            return this._bounds;
+        },
+
+        /**
          * set the renderable alpha channel value<br>
          * @name setOpacity
          * @memberOf me.Renderable
@@ -245,17 +257,16 @@
          * update the renderable's bounding rect (private)
          * when manually update the renderable pos, you need to call this function
          * @private
-         * @name updateBounds
+         * @name updateBoundsPos
          * @memberOf me.Renderable
          * @function
          */
-        updateBounds : function () {
-            this._bounds.pos.setV(this.pos);
+        updateBoundsPos : function (newX, newY) {
+            this._bounds.pos.set(newX, newY);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
                 this._bounds.pos.add(this.ancestor._absPos);
             }
-            this._bounds.resize(this.width, this.height);
             return this._bounds;
         },
 
