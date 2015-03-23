@@ -62,14 +62,14 @@ game.HUD.ScoreItem = me.Renderable.extend( {
     /**
      * update function
      */
-    update : function () {
+    update : function (dt) {
         this.pos.x = me.game.viewport.width + this.relative.x;
         this.pos.y = me.game.viewport.height + this.relative.y;
 
         // we don't draw anything fancy here, so just
         // return true if the score has been updated
-        if (this.score !== me.game.score) {
-            this.score = me.game.score;
+        if (this.score !== game.data.score) {
+            this.score = game.data.score;
             return true;
         }
         return false;
@@ -78,8 +78,8 @@ game.HUD.ScoreItem = me.Renderable.extend( {
     /**
      * draw the score
      */
-    draw : function (context) {
-        this.font.draw (context, game.data.score, this.pos.x, this.pos.y);
+    draw : function (renderer) {
+        this.font.draw (renderer, game.data.score, this.pos.x, this.pos.y);
     }
 
 });
