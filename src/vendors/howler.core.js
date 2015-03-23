@@ -2,7 +2,7 @@
  *  howler.js v2.0.0-beta
  *  howlerjs.com
  *
- *  (c) 2013-2014, James Simpson of GoldFire Studios
+ *  (c) 2013-2015, James Simpson of GoldFire Studios
  *  goldfirestudios.com
  *
  *  MIT License
@@ -13,6 +13,7 @@
 /* jshint -W015 */
 /* jshint -W031 */
 /* jshint -W083 */
+/* jshint -W084 */
 /* jshint -W098 */
 /* jshint -W108 */
 /* jshint -W116 */
@@ -168,9 +169,11 @@
     _setupCodecs: function() {
       var self = this || Howler;
       var audioTest = new Audio();
-
+      var mpegTest = audioTest.canPlayType('audio/mpeg;').replace(/^no$/, '');
+      
       self._codecs = {
-        mp3: !!audioTest.canPlayType('audio/mpeg;').replace(/^no$/, ''),
+        mp3: !!(mpegTest || audioTest.canPlayType('audio/mp3;').replace(/^no$/, '')),
+        mpeg: !!mpegTest,
         opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
         ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
         wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
@@ -250,8 +253,8 @@
   var Howl = function(o) {
     var self = this;
 
-    // Throw an error if no source is provided
-    if (!o.src) {
+    // Throw an error if no source is provided.
+    if (!o.src || o.src.length === 0) {
       console.error('An array of source files must be passed with any new Howl.');
       return;
     }
@@ -384,6 +387,7 @@
      */
     play: function(sprite) {
       var self = this;
+      var args = arguments;
       var id = null;
 
       // Determine if a sprite, sound id or nothing was passed
@@ -413,13 +417,15 @@
 
       // Get the selected node, or get one from the pool.
       var sound = id ? self._soundById(id) : self._inactiveSound();
-      if (id && !sprite) {
-        sprite = sound._sprite || '__default';
-      }
 
       // If the sound doesn't exist, do nothing.
       if (!sound) {
         return null;
+      }
+
+      // Select the sprite definition.
+      if (id && !sprite) {
+        sprite = sound._sprite || '__default';
       }
 
       // If we have no sprite and the sound hasn't loaded, we must wait
@@ -512,9 +518,11 @@
             self._endTimers[sound._id] = setTimeout(ended, (duration * 1000) / Math.abs(self._rate));
           }
 
-          setTimeout(function() {
-            self._emit('play', sound._id);
-          }, 0);
+          if (!args[1]) {
+            setTimeout(function() {
+              self._emit('play', sound._id);
+            }, 0);
+          }
         };
 
         if (self._loaded) {
@@ -535,7 +543,9 @@
           node.playbackRate = self._rate;
           setTimeout(function() {
             node.play();
-            self._emit('play', sound._id);
+            if (!args[1]) {
+              self._emit('play', sound._id);
+            }
           }, 0);
         };
 
@@ -658,7 +668,7 @@
           sound._paused = true;
           sound._ended = true;
 
-          if (self._webAudio) {
+          if (self._webAudio && sound._node) {
             // make sure the sound has been created
             if (!sound._node.bufferSource) {
               return self;
@@ -672,7 +682,7 @@
 
             // Clean up the buffer source.
             sound._node.bufferSource = null;
-          } else if (!isNaN(sound._node.duration)) {
+          } else if (sound._node && !isNaN(sound._node.duration)) {
             sound._node.pause();
             sound._node.currentTime = sound._start || 0;
           }
@@ -993,10 +1003,14 @@
 
           // Restart the playback if the sound was playing.
           if (playing) {
-            self.play(id);
+            self.play(id, true);
           }
         } else {
-          return (self._webAudio) ? sound._seek + (ctx.currentTime - sound._playStart) : sound._node.currentTime;
+          if (self._webAudio) {
+            return (sound._seek + self.playing(id) ? ctx.currentTime - sound._playStart : 0);
+          } else {
+            return sound._node.currentTime;
+          }
         }
       }
 
@@ -1456,7 +1470,7 @@
       }
 
       // Clear the event listener.
-      self._node.removeEventListener('canplaythrough', self._loadListener, false);
+      self._node.removeEventListener('canplaythrough', self._loadFn, false);
     }
   };
 
@@ -1487,6 +1501,22 @@
       }
 
       if (/^data:[^;]+;base64,/.test(url)) {
+        // Setup polyfill for window.atob to support IE9.
+        // Modified from: https://github.com/davidchambers/Base64.js
+        window.atob = window.atob || function(input) {
+          var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+          var str = String(input).replace(/=+$/, '');
+          for (
+            var bc = 0, bs, buffer, idx = 0, output = '';
+            buffer = str.charAt(idx++);
+            ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer, bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
+          ) {
+            buffer = chars.indexOf(buffer);
+          }
+
+          return output;
+        };
+
         // Decode the base64 data URI without XHR, since some browsers don't support it.
         var data = atob(url.split(',')[1]);
         var dataView = new Uint8Array(data.length);
