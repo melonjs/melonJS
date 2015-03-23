@@ -464,8 +464,12 @@
 
             // destroy the Howl object
             audioTracks[sound_name].unload();
+            if (typeof(audioTracks[sound_name].dispose) === "function") {
+                // cocoonJS implements a dispose function to free
+                // corresponding allocated audio in memory
+                audioTracks[sound_name].dispose();
+            }
             delete audioTracks[sound_name];
-
             return true;
         };
 
