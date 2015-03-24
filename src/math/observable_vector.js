@@ -69,7 +69,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         add : function (v) {
-            this.onUpdate(this._x + v.x, this._x + v.y, this._x, this._y);
+            this.onUpdate(this._x + v.x, this._y + v.y, this._x, this._y);
             this._x += v.x;
             this._y += v.y;
             return this;
@@ -119,7 +119,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         sub : function (v) {
-            this.onUpdate(this._x - v.x, this._x - v.y, this._x, this._y);
+            this.onUpdate(this._x - v.x, this._y - v.y, this._x, this._y);
             this._x -= v.x;
             this._y -= v.y;
             return this;
