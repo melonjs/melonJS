@@ -61,67 +61,13 @@
         },
 
         /**
-         * Add the passed vector to this vector
-         * @name add
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @param {me.Vector2d} v
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         * @ignore
+         * redefine the private _set function
          */
-        add : function (v) {
-            this.onUpdate(this._x + v.x, this._y + v.y, this._x, this._y);
-            this._x += v.x;
-            this._y += v.y;
-            return this;
-        },
-
-        /**
-         * set the Vector x and y properties to the given values<br>
-         * @name set
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @param {Number} x
-         * @param {Number} y
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
-         */
-        set : function (x, y) {
-            if (x !== +x || y !== +y) {
-                throw new me.Vector2d.Error(
-                    "invalid x,y parameters (not a number)"
-                );
-            }
-
+        _set : function (x, y) {
             this.onUpdate(x, y, this._x, this._y);
             this._x = x;
             this._y = y;
-
-            return this;
-        },
-
-        /**
-         * set the Vector x and y properties using the passed vector
-         * @name setV
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @param {me.ObservableVector2d} v
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
-         */
-        setV : function (v) {
-            return this.set(v.x, v.y);
-        },
-
-        /**
-         * Substract the passed vector to this vector
-         * @name sub
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @param {me.Vector2d} v
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
-         */
-        sub : function (v) {
-            this.onUpdate(this._x - v.x, this._y - v.y, this._x, this._y);
-            this._x -= v.x;
-            this._y -= v.y;
             return this;
         }
     });

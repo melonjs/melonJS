@@ -21,6 +21,16 @@
         init : function (x, y) {
             return this.set(x || 0, y || 0);
         },
+        
+        /** 
+         * @ignore 
+         * a private set function with not error check
+         */
+        _set : function (x, y) {
+            this.x = x;
+            this.y = y;
+            return this;
+        },
 
         /**
          * set the Vector x and y properties to the given values<br>
@@ -45,7 +55,7 @@
              * @name x
              * @memberOf me.Vector2d
              */
-            this.x = x;
+            //this.x = x;
 
             /**
              * y value of the vector
@@ -54,9 +64,9 @@
              * @name y
              * @memberOf me.Vector2d
              */
-            this.y = y;
+            //this.y = y;
 
-            return this;
+            return this._set(x, y);
         },
 
         /**
@@ -79,9 +89,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         setV : function (v) {
-            this.x = v.x;
-            this.y = v.y;
-            return this;
+            return this._set(v.x, v.y);
         },
 
         /**
@@ -93,9 +101,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         add : function (v) {
-            this.x += v.x;
-            this.y += v.y;
-            return this;
+            return this._set(this.x + v.x, this.y + v.y);
         },
 
         /**
@@ -107,9 +113,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         sub : function (v) {
-            this.x -= v.x;
-            this.y -= v.y;
-            return this;
+            return this._set(this.x - v.x, this.y - v.y);
         },
 
         /**
