@@ -271,6 +271,19 @@
         },
 
         /**
+         * update the bounds
+         * @private
+         * @deprecated
+         * @name updateBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBounds : function () {
+            console.warn("Deprecated: me.Renderable.updateBounds");
+            return this._super(me.Rect, "updateBounds");
+        },
+
+        /**
          * object draw
          * called by the game manager on each game loop
          * @name draw
