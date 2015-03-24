@@ -76,8 +76,6 @@ game.MoleEntity = me.AnimationSheet.extend(
         this.displayTween = me.pool.pull("me.Tween", this.pos).to({y: finalpos }, 200);
         this.displayTween.easing(me.Tween.Easing.Quadratic.Out);
         this.displayTween.onComplete(this.onDisplayed.bind(this));
-        // update the renderable bounds when the tween is updated
-        this.displayTween.onUpdate(this.updateBounds.bind(this));
         this.displayTween.start();
         // the mole is visible
         this.isVisible = true;
@@ -100,9 +98,6 @@ game.MoleEntity = me.AnimationSheet.extend(
         this.displayTween = me.pool.pull("me.Tween", this.pos).to({y: finalpos }, 200);
         this.displayTween.easing(me.Tween.Easing.Quadratic.In);
         this.displayTween.onComplete(this.onHidden.bind(this));
-        // update the renderable bounds when the tween is updated
-        this.displayTween.onUpdate(this.updateBounds.bind(this));
-        
         this.displayTween.start();
     },
 
@@ -140,6 +135,7 @@ game.MoleEntity = me.AnimationSheet.extend(
                     game.data.score -= 25;
                     if (game.data.score < 0) {
                         game.data.score = 0;
+
                     }
                 }
                 return true;
