@@ -126,9 +126,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
-            this.x *= x;
-            this.y *= typeof (y) !== "undefined" ? y : x;
-            return this;
+            return this._set(this.x * x, this.y * typeof (y) !== "undefined" ? y : x);
         },
 
         /**
@@ -140,9 +138,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         scaleV : function (v) {
-            this.x *= v.x;
-            this.y *= v.y;
-            return this;
+            return this._set(this.x * v.x, this.y * v.y);
         },
 
         /**
@@ -154,9 +150,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         div : function (n) {
-            this.x /= n;
-            this.y /= n;
-            return this;
+            return this._set(this.x / n, this.y / n);
         },
 
         /**
@@ -167,13 +161,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         abs : function () {
-            if (this.x < 0) {
-                this.x = -this.x;
-            }
-            if (this.y < 0) {
-                this.y = -this.y;
-            }
-            return this;
+            return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y);
         },
 
         /**
@@ -199,9 +187,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         clampSelf : function (low, high) {
-            this.x = this.x.clamp(low, high);
-            this.y = this.y.clamp(low, high);
-            return this;
+            return this._set(this.x.clamp(low, high), this.y.clamp(low, high));
         },
 
         /**
@@ -213,9 +199,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         minV : function (v) {
-            this.x = this.x < v.x ? this.x : v.x;
-            this.y = this.y < v.y ? this.y : v.y;
-            return this;
+            return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y);
         },
 
         /**
@@ -227,9 +211,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         maxV : function (v) {
-            this.x = this.x > v.x ? this.x : v.x;
-            this.y = this.y > v.y ? this.y : v.y;
-            return this;
+            return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y);
         },
 
         /**
@@ -251,9 +233,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         floorSelf : function () {
-            this.x = ~~this.x;
-            this.y = ~~this.y;
-            return this;
+            return this._set(~~this.x, ~~this.y);
         },
 
         /**
@@ -275,9 +255,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         ceilSelf : function () {
-            this.x = Math.ceil(this.x);
-            this.y = Math.ceil(this.y);
-            return this;
+            return this._set(Math.ceil(this.x), Math.ceil(this.y));
         },
 
         /**
@@ -299,9 +277,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         negateSelf : function () {
-            this.x = -this.x;
-            this.y = -this.y;
-            return this;
+            return this._set(-this.x, -this.y);
         },
 
         /**
@@ -313,9 +289,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         copy : function (v) {
-            this.x = v.x;
-            this.y = v.y;
-            return this;
+            return this._set(v.x, v.y);
         },
 
         /**
@@ -340,8 +314,7 @@
         normalize : function () {
             var d = this.length();
             if (d > 0) {
-                this.x = this.x / d;
-                this.y = this.y / d;
+                return this._set(this.x / d, this.y / d);
             }
             return this;
         },
@@ -355,10 +328,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         perp : function () {
-            var x = this.x;
-            this.x = this.y;
-            this.y = -x;
-            return this;
+            return this._set(this.y, -this.x);
         },
 
         /**
@@ -372,9 +342,7 @@
         rotate : function (angle) {
             var x = this.x;
             var y = this.y;
-            this.x = x * Math.cos(angle) - y * Math.sin(angle);
-            this.y = x * Math.sin(angle) + y * Math.cos(angle);
-            return this;
+            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
         },
 
          /**
@@ -385,9 +353,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         reverse : function () {
-            this.x = -this.x;
-            this.y = -this.y;
-            return this;
+            return this._set(-this.x, -this.y);
         },
 
         /**
@@ -458,9 +424,7 @@
          */
         project : function (v) {
             var amt = this.dotProduct(v) / v.length2();
-            this.x = amt * v.x;
-            this.y = amt * v.y;
-            return this;
+            return this._set(amt * v.x, amt * v.y);
         },
 
         /**
@@ -474,9 +438,7 @@
          */
         projectN : function (v) {
             var amt = this.dotProduct(v);
-            this.x = amt * v.x;
-            this.y = amt * v.y;
-            return this;
+            return this._set(amt * v.x, amt * v.y);
         },
 
         /**
@@ -491,9 +453,7 @@
             var x = this.x;
             var y = this.y;
             this.project(axis).scale(2);
-            this.x -= x;
-            this.y -= y;
-            return this;
+            return this._set(this.x - x, this.y - y);
         },
 
         /**
@@ -509,9 +469,7 @@
             var x = this.x;
             var y = this.y;
             this.projectN(axis).scale(2);
-            this.x -= x;
-            this.y -= y;
-            return this;
+            return this._set(this.x - x, this.y - y);
         },
 
         /**
