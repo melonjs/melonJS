@@ -126,7 +126,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
-            return this._set(this.x * x, this.y * typeof (y) !== "undefined" ? y : x);
+            return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x));
         },
 
         /**
