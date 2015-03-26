@@ -38,8 +38,6 @@ game.ShapeObject = me.Entity.extend({
             // follow the mouse/finger
             this.pos.set(event.gameX, event.gameY);
             this.pos.sub(this.grabOffset);
-            // update the body bounds
-            this.updateBounds();
         }
     },
     
