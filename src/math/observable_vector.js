@@ -55,7 +55,7 @@
                 }
             });
 
-            if (typeof(settings) === "undefined" || typeof(settings.onUpdate) === "undefined") {
+            if (typeof(settings) === "undefined" || typeof(settings.onUpdate) !== "function") {
                 throw new me.ObservableVector2d.Error(
                     "undefined `onUpdate` callback"
                 );
@@ -110,7 +110,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
-            return this._set(this._x * x, this._y * typeof (y) !== "undefined" ? y : x);
+            return this._set(this._x * x, this._y * (typeof (y) !== "undefined" ? y : x));
         },
 
         /**
@@ -158,7 +158,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         clamp : function (low, high) {
-            return new me.ObservableVector2d(this.x.clamp(low, high), this.y.clamp(low, high), {onUpdate: this.settings.onUpdate});
+            return new me.ObservableVector2d(this.x.clamp(low, high), this.y.clamp(low, high), {onUpdate: this.onUpdate});
         },
 
         /**
@@ -206,7 +206,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         floor : function () {
-            return new me.ObservableVector2d(~~this._x, ~~this._y, {onUpdate: this.settings.onUpdate});
+            return new me.ObservableVector2d(~~this._x, ~~this._y, {onUpdate: this.onUpdate});
         },
 
         /**
@@ -228,7 +228,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         ceil : function () {
-            return new me.ObservableVector2d(Math.ceil(this._x), Math.ceil(this._y));
+            return new me.ObservableVector2d(Math.ceil(this._x), Math.ceil(this._y), {onUpdate: this.onUpdate});
         },
 
         /**
@@ -250,7 +250,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         negate : function () {
-            return new me.ObservableVector2d(-this._x, -this._y, {onUpdate: this.settings.onUpdate});
+            return new me.ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate});
         },
 
         /**
@@ -438,7 +438,7 @@
          */
         clone : function () {
             // shall we return a cloned me.ObservableVector2d here ?
-            return new me.Vector2d(this._x, this._y);
+            return new me.ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate});
         },
 
         /**
