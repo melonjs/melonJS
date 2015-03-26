@@ -89,10 +89,6 @@ var Smilie = me.Entity.extend({
         if( this.pos.y >= 768 ) this.pos.y = -15;
         if( this.pos.y < -15 ) this.pos.y = 768 - 1;
 
-        // update the entity bounds since
-        // we manipulated the entity pos manually
-        this.updateBounds();
-
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
@@ -112,7 +108,6 @@ var Smilie = me.Entity.extend({
         if (response.overlapN.y !== 0) {
             this.body.vel.y = (-4).randomFloat(4) * -this.body.vel.y.sign();
         }
-        this.updateBounds();
 
         return false;
     }
