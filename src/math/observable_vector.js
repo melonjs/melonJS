@@ -352,28 +352,6 @@
             return this._x * v.x + this._y * v.y;
         },
 
-       /**
-         * return the square length of this vector
-         * @name length2
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @return {Number} The length^2 of this vector.
-         */
-        length2 : function () {
-            return this.dotProduct(this);
-        },
-
-        /**
-         * return the length (magnitude) of this vector
-         * @name length
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @return {Number} the length of this vector
-         */
-        length : function () {
-            return Math.sqrt(this.length2());
-        },
-
         /**
          * return the distance between this vector and the passed one
          * @name distance
