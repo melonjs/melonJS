@@ -442,6 +442,17 @@
         },
 
         /**
+         * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
+         * @name toVector2d
+         * @memberOf me.ObservableVector2d
+         * @function
+         * @return {me.Vector2d} new me.Vector2d
+         */
+        toVector2d : function () {
+            return new me.Vector2d(this._x, this._y);
+        },
+        
+        /**
          * convert the object to a string representation
          * @name toString
          * @memberOf me.ObservableVector2d
