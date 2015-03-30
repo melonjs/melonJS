@@ -438,7 +438,7 @@
          */
         clone : function () {
             // shall we return a cloned me.ObservableVector2d here ?
-            return new me.ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate});
+            return new me.ObservableVector2d(this._x, this._y, {onUpdate: this.onUpdate});
         },
 
         /**
