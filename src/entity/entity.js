@@ -228,8 +228,7 @@
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
-            this._super(me.Renderable, "update", [dt]);
-            return false;
+            return this._super(me.Renderable, "update", [dt]);
         },
 
         /**
@@ -240,9 +239,10 @@
          * @function
          */
         updateBoundsPos : function (x, y) {
+            var _pos = this.body.pos;
             this._super(me.Renderable, "updateBoundsPos", [
-                x + this.body.pos.x,
-                y + this.body.pos.y
+                x + _pos.x,
+                y + _pos.y
             ]);
             return this._bounds;
         },
