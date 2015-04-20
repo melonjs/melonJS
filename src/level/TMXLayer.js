@@ -436,6 +436,9 @@
 
             // initialize the layer data array
             this.initArray(this.cols, this.rows);
+
+            // Resize the bounds
+            this.updateBounds();
         },
 
         /**

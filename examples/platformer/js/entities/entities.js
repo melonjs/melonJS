@@ -249,8 +249,6 @@ game.PathEnemyEntity = me.Entity.extend({
         this.startX = x;
         this.endX   = x + width - settings.framewidth
         this.pos.x  = x + width - settings.framewidth;
-        // update the entity bounds since we manually change the entity position
-        this.updateBounds();
 
         // apply gravity setting if specified
         this.body.gravity = settings.gravity || me.sys.gravity;

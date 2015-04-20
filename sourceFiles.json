@@ -15,6 +15,7 @@
     "src/system/timer.js",
     "src/system/pooling.js",
     "src/math/vector.js",
+    "src/math/observable_vector.js",
     "src/math/matrix2.js",
     "src/shapes/rectangle.js",
     "src/shapes/ellipse.js",

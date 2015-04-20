@@ -41,17 +41,6 @@
              */
             this.renderable = null;
 
-            /**
-             * The bounding rectangle for this entity
-             * @private
-             * @type {me.Rect}
-             * @name _bounds
-             * @memberOf me.Entity
-             */
-            if (!this._bounds) {
-                this._bounds = new me.Rect(0, 0, 0, 0);
-            }
-
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
@@ -154,35 +143,6 @@
         },
 
         /**
-         * returns the bounding box for this entity, the smallest rectangle object completely containing this entity body shapes
-         * @name getBounds
-         * @memberOf me.Entity
-         * @function
-         * @return {me.Rect} this entity bounding box Rectangle object
-         */
-        getBounds : function () {
-            return this._bounds;
-        },
-
-        /**
-         * update the entity bounding rect (private)
-         * when manually update the entity pos, you need to call this function
-         * @private
-         * @name updateBounds
-         * @memberOf me.Entity
-         * @function
-         */
-        updateBounds : function () {
-            this._bounds.pos.setV(this.pos).add(this.body.pos);
-            // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor) {
-                this._bounds.pos.add(this.ancestor._absPos);
-            }
-            this._bounds.resize(this.body.width, this.body.height);
-            return this._bounds;
-        },
-
-        /**
          * return the distance to the specified entity
          * @name distanceTo
          * @memberOf me.Entity
@@ -252,13 +212,55 @@
             return Math.atan2(ay, ax);
         },
 
+        /**
+         * update the bounding rect dimensions
+         * @private
+         * @name resizeBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        resizeBounds : function (width, height) {
+            this._bounds.resize(width, height);
+        },
+
         /** @ignore */
         update : function (dt) {
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
-            this._super(me.Renderable, "update", [dt]);
-            return false;
+            return this._super(me.Renderable, "update", [dt]);
+        },
+
+        /**
+         * update the bounds position when the position is modified
+         * @private
+         * @name updateBoundsPos
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBoundsPos : function (x, y) {
+            var _pos = this.body.pos;
+            this._super(me.Renderable, "updateBoundsPos", [
+                x + _pos.x,
+                y + _pos.y
+            ]);
+            return this._bounds;
+        },
+
+        /**
+         * update the bounds position when the body is modified
+         * @private
+         * @name onBodyUpdate
+         * @memberOf me.Entity
+         * @function
+         */
+        onBodyUpdate : function (pos, w, h) {
+            this._bounds.pos.setV(this.pos).add(pos);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            this._bounds.resize(w, h);
         },
 
         /**

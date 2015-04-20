@@ -139,4 +139,33 @@ describe("Entity", function () {
         expect(entity.width).toEqual(42);
         expect(entity.height).toEqual(74);
     });
+
+    it("moves properly", function () {
+        entity.pos.set(120, 150);
+        expect(entity.pos.x).toEqual(120);
+        expect(entity.pos.y).toEqual(150);
+    });
+
+    it("has the correct body bounds: D", function () {
+        var bounds = entity.body.getBounds();
+        expect(bounds.pos.x).toEqual(10);
+        expect(bounds.pos.y).toEqual(10);
+        expect(bounds.width).toEqual(32);
+        expect(bounds.height).toEqual(64);
+    });
+
+    it("has the correct renderable bounds: D", function () {
+        expect(entity.renderable.pos.x).toEqual(0);
+        expect(entity.renderable.pos.y).toEqual(0);
+        expect(entity.renderable.width).toEqual(32);
+        expect(entity.renderable.height).toEqual(64);
+    });
+
+    it("has the correct entity bounds: D", function () {
+        var bounds = entity.getBounds();
+        expect(bounds.pos.x).toEqual(130);
+        expect(bounds.pos.y).toEqual(160);
+        expect(bounds.width).toEqual(32);
+        expect(bounds.height).toEqual(64);
+    });
 });

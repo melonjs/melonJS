@@ -63,6 +63,7 @@ var Smilie = me.Entity.extend({
                 {
                     width : 16,
                     height : 16,
+                    shapes : [ new me.Ellipse(4, 4, 8, 8) ]
                 }
             ]
         );
@@ -75,9 +76,6 @@ var Smilie = me.Entity.extend({
 
         // add the coin sprite as renderable
         this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(game.assets[i % 5].name)});
-
-        // add a collision shape
-        this.body.addShape(new me.Ellipse(4, 4, 8, 8));
     },
 
     update : function (dt) {
@@ -88,10 +86,6 @@ var Smilie = me.Entity.extend({
         if( this.pos.x < -15 ) this.pos.x = 1024 - 1;
         if( this.pos.y >= 768 ) this.pos.y = -15;
         if( this.pos.y < -15 ) this.pos.y = 768 - 1;
-
-        // update the entity bounds since
-        // we manipulated the entity pos manually
-        this.updateBounds();
 
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
@@ -112,7 +106,6 @@ var Smilie = me.Entity.extend({
         if (response.overlapN.y !== 0) {
             this.body.vel.y = (-4).randomFloat(4) * -this.body.vel.y.sign();
         }
-        this.updateBounds();
 
         return false;
     }

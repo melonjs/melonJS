@@ -129,14 +129,74 @@
              */
             this.alpha = 1.0;
 
-            // call the super constructor
-            this._super(me.Rect, "init", [x, y, width, height]);
+            /**
+             * The bounding rectangle for this renderable
+             * @ignore
+             * @type {me.Rect}
+             * @name _bounds
+             * @memberOf me.Renderable
+             */
+            if (!this._bounds) {
+                this._bounds = new me.Rect(x, y, width, height);
+            }
+
+            /**
+             * Absolute position in the game world
+             * @ignore
+             * @type {me.Vector2d}
+             * @name _absPos
+             * @memberOf me.Renderable
+             */
+            if (!this._absPos) {
+                this._absPos = new me.Vector2d(x, y);
+            }
+
+            // set position to observable. Can use updateBounds, as _bounds using a regular vector.
+            // will not lead to stack too deep.
+            this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
+
+            Object.defineProperty(this, "width", {
+                get : function () {
+                    return this._width;
+                },
+
+                set : function (value) {
+                    this.resizeBounds(value, this.height, this.width, this.height);
+                    this._width = value;
+                }
+            });
+
+            Object.defineProperty(this, "height", {
+                get : function () {
+                    return this._height;
+                },
+
+                set : function (value) {
+                    this.resizeBounds(this.width, value, this.width, this.height);
+                    this._height = value;
+                }
+            });
+
+            this._width = width;
+            this._height = height;
+            this.shapeType = "Rectangle";
 
             // set the default anchor point (middle of the renderable)
             this.anchorPoint.set(0.5, 0.5);
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
+        },
+
+        /**
+         * returns the bounding box for this renderable
+         * @name getBounds
+         * @memberOf me.Renderable
+         * @function
+         * @return {me.Rect} bounding box Rectangle object
+         */
+        getBounds : function () {
+            return this._bounds;
         },
 
         /**
@@ -148,6 +208,18 @@
          */
         getOpacity : function () {
             return this.alpha;
+        },
+
+        /**
+         * update the renderable's bounding rect dimensions
+         * @private
+         * @name resizeBounds
+         * @memberOf me.Renderable
+         * @function
+         */
+        resizeBounds : function (width, height) {
+            this._bounds.resize(width, height);
+            return this._bounds;
         },
 
         /**
@@ -179,6 +251,36 @@
          **/
         update : function () {
             return false;
+        },
+
+        /**
+         * update the renderable's bounding rect (private)
+         * when manually update the renderable pos, you need to call this function
+         * @private
+         * @name updateBoundsPos
+         * @memberOf me.Renderable
+         * @function
+         */
+        updateBoundsPos : function (newX, newY) {
+            this._bounds.pos.set(newX, newY);
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                this._bounds.pos.add(this.ancestor._absPos);
+            }
+            return this._bounds;
+        },
+
+        /**
+         * update the bounds
+         * @private
+         * @deprecated
+         * @name updateBounds
+         * @memberOf me.Entity
+         * @function
+         */
+        updateBounds : function () {
+            console.warn("Deprecated: me.Renderable.updateBounds");
+            return this._super(me.Rect, "updateBounds");
         },
 
         /**
