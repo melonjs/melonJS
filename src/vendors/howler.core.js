@@ -11,6 +11,7 @@
 /* jshint -W003 */
 /* jshint -W013 */
 /* jshint -W015 */
+/* jshint -W030 */
 /* jshint -W031 */
 /* jshint -W083 */
 /* jshint -W084 */
