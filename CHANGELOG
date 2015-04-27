@@ -1,5 +1,7 @@
 Version History
 ---------------
+2.2.0
+
 2.1.0
 * Audio & Loader : file/clip names passed to various methods are now case sensitive. Removed uses of toLowerCase on variables.
 * Audio : properly dispose of audio resources when using cocoonJS
