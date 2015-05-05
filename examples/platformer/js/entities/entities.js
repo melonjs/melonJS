@@ -259,7 +259,7 @@ game.PathEnemyEntity = me.Entity.extend({
         this.body.setVelocity(settings.velX || 1, settings.velY || 6);
 
         // set a "enemyObject" type
-        this.collisionType = me.collision.types.ENEMY_OBJECT;
+        this.body.collisionType = me.collision.types.ENEMY_OBJECT;
 
         // don't update the entities when out of the viewport
         this.alwaysUpdate = false;
