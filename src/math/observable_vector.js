@@ -66,9 +66,7 @@
         },
 
         /**
-         * @ignore
-         * redefine the private _set function
-         */
+         * @ignore */
         _set : function (x, y) {
             this.onUpdate(x, y, this._x, this._y);
             this._x = x;

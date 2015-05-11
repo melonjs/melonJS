@@ -23,9 +23,7 @@
         },
         
         /** 
-         * @ignore 
-         * a private set function with not error check
-         */
+         * @ignore */
         _set : function (x, y) {
             this.x = x;
             this.y = y;
