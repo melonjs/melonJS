@@ -56,7 +56,10 @@ and currently features :
 
 Using melonJS
 -------------------------------------------------------------------------------
-For your first time using melonJS, follow the tutorial [here](http://melonjs.github.io/tutorial-platformer/).
+For your first time using melonJS, follow these tutorials :
+
+- [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
+- [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
 
 When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
 
