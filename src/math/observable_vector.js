@@ -18,6 +18,7 @@
     me.ObservableVector2d = me.Vector2d.extend({
     /** @scope me.ObservableVector2d.prototype */
 
+        /** @ignore */
         init : function (x, y, settings) {
             /**
              * x value of the vector
