@@ -14,7 +14,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(this.HUD);
 
         // play some music
-        me.audio.playTrack("DST-GameForest");
+        me.audio.playTrack("dst-gameforest");
     },
 
     /**
@@ -26,6 +26,6 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.removeChild(this.HUD);
 
         // stop some music
-        me.audio.stopTrack("DST-GameForest");
+        me.audio.stopTrack("dst-gameforest");
     }
 });
