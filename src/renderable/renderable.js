@@ -155,27 +155,31 @@
             // will not lead to stack too deep.
             this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
 
-            Object.defineProperty(this, "width", {
-                get : function () {
-                    return this._width;
-                },
+            if (typeof(this.width) === "undefined") {
+                Object.defineProperty(this, "width", {
+                    get : function () {
+                        return this._width;
+                    },
 
-                set : function (value) {
-                    this.resizeBounds(value, this.height, this.width, this.height);
-                    this._width = value;
-                }
-            });
+                    set : function (value) {
+                        this.resizeBounds(value, this.height, this.width, this.height);
+                        this._width = value;
+                    }
+                });
+            }
+    
+            if (typeof(this.height) === "undefined") {
+                Object.defineProperty(this, "height", {
+                    get : function () {
+                        return this._height;
+                    },
 
-            Object.defineProperty(this, "height", {
-                get : function () {
-                    return this._height;
-                },
-
-                set : function (value) {
-                    this.resizeBounds(this.width, value, this.width, this.height);
-                    this._height = value;
-                }
-            });
+                    set : function (value) {
+                        this.resizeBounds(this.width, value, this.width, this.height);
+                        this._height = value;
+                    }
+                });
+            }
 
             this._width = width;
             this._height = height;
