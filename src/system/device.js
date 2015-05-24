@@ -29,12 +29,12 @@
 
             // future proofing (MS) feature detection
             me.device.pointerEnabled = me.agent.prefixed("pointerEnabled", navigator);
-            navigator.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
+            me.device.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (navigator.isCocoonJS) || (me.device.pointerEnabled && (navigator.maxTouchPoints > 0));
+                              (navigator.isCocoonJS) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
 
             // accelerometer detection
             me.device.hasAccelerometer = (
@@ -232,6 +232,15 @@
          */
         api.nativeBase64 = (typeof(window.atob) === "function");
 
+         /**
+         * Return the maximum number of touch contacts of current device.
+         * @type Number
+         * @readonly
+         * @name maxTouchPoints
+         * @memberOf me.device
+         */
+        api.maxTouchPoints = 0;
+        
         /**
          * Touch capabilities
          * @type Boolean

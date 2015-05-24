@@ -3,6 +3,7 @@ Version History
 2.1.1
 * Core : fixed a regression when using the pooling system with renderables.
 * Examples : fixed conditional debugPanel loading in cocoonJS
+* Input : fixed an uncaught exception with the 'maxTouchPoints' polyfill under Chrome 43+
 * Loader : throw an exception indicating to use JSON if XML parsing is not supported by the browser/platform
 
 2.1.0
