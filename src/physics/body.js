@@ -208,23 +208,54 @@
          * @function
          * @param {Object} json a JSON object as exported from the PhysicsEditor tool
          * @param {String} id the shape identifier within the given the json object
+         * @param {String} [scale=1] the desired scale of the body (physic-body-editor only)
          * @see https://www.codeandweb.com/physicseditor
          * @return {Number} the shape array length
          */
-        addShapesFromJSON : function (json, id) {
-            var data = json[id];
+        addShapesFromJSON : function (json, id, scale) {
+            var data;
+            // identify the json format
+            if (typeof(json.rigidBodies) === "undefined") {
+                // Physic Editor Format (https://www.codeandweb.com/physicseditor)
+                data = json[id];
 
-            if (typeof(data) === "undefined") {
-                throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
-            }
-
-            // go through all shapes and add them to the body
-            for (var i = 0; i < data.length; i++) {
-                var points = [];
-                for (var s = 0; s < data[i].shape.length; s += 2) {
-                    points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
+                if (typeof(data) === "undefined") {
+                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
-                this.addShape(new me.Polygon(0, 0, points));
+               
+                // go through all shapes and add them to the body
+                for (var i = 0; i < data.length; i++) {
+                    var points = [];
+                    for (var s = 0; s < data[i].shape.length; s += 2) {
+                        points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
+                    }
+                    this.addShape(new me.Polygon(0, 0, points));
+                }
+            } else {
+                // Physic Body Editor Format (http://www.aurelienribon.com/blog/projects/physics-body-editor/)
+                json.rigidBodies.forEach(function (shape) {
+                    if (shape.name === id) {
+                        data = shape;
+                        // how to stop a forEach loop?
+                    }
+                });
+                
+                if (typeof(data) === "undefined") {
+                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+                }
+                
+                // the shape origin point
+                var origin = new me.Vector2d(data.origin.x, data.origin.y).scale(scale);
+                
+                var self = this;
+                // parse all polygons
+                data.polygons.forEach(function (poly) {
+                    var points = [];
+                    poly.forEach(function (point) {
+                        points.push(new me.Vector2d(point.x, point.y).scale(scale).sub(origin));
+                    });
+                    self.addShape(new me.Polygon(0, 0, points));
+                });
             }
 
             // update the body bounds to take in account the added shapes

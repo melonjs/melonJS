@@ -108,10 +108,26 @@ game.Poly = game.ShapeObject.extend({
         this._super(game.ShapeObject, 'init', [x, y, settings]);
 
         // add all PE shapes to the body
-        this.body.addShapesFromJSON(me.loader.getJSON("shapesdef"), settings.sprite);
+        this.body.addShapesFromJSON(me.loader.getJSON("shapesdef1"), settings.sprite);
 
         // add the star sprite
         this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(settings.sprite)});
     },
-    
+});
+
+
+ game.Poly2 = game.ShapeObject.extend({
+    /**
+     * constructor
+     */
+    init: function (x, y, settings) {
+        // call the super constructor
+        this._super(game.ShapeObject, 'init', [x, y, settings]);
+
+        // add all PE shapes to the body
+        this.body.addShapesFromJSON(me.loader.getJSON("shapesdef2"), settings.sprite, settings.width);
+
+        // add the star sprite
+        this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(settings.sprite)});
+    }
 });
