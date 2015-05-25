@@ -214,6 +214,8 @@
          */
         addShapesFromJSON : function (json, id, scale) {
             var data;
+            scale = scale || 1;
+            
             // identify the json format
             if (typeof(json.rigidBodies) === "undefined") {
                 // Physic Editor Format (https://www.codeandweb.com/physicseditor)
@@ -245,14 +247,16 @@
                 }
                 
                 // the shape origin point
-                var origin = new me.Vector2d(data.origin.x, data.origin.y).scale(scale);
+                // top-left origin in the editor is (0,1)
+                var origin = new me.Vector2d(data.origin.x, 1.0 - data.origin.y).scale(scale);
                 
                 var self = this;
                 // parse all polygons
                 data.polygons.forEach(function (poly) {
                     var points = [];
                     poly.forEach(function (point) {
-                        points.push(new me.Vector2d(point.x, point.y).scale(scale).sub(origin));
+                        // top-left origin in the editor is (0,1)
+                        points.push(new me.Vector2d(point.x, 1.0 - point.y).scale(scale).sub(origin));
                     });
                     self.addShape(new me.Polygon(0, 0, points));
                 });

@@ -10,6 +10,7 @@ game.resources = [
     {name: "icecream3",	type:"image",	src: "data/img/icecream3.png"},
     {name: "orange",	type:"image",	src: "data/img/orange.png"},
     {name: "test01",	type:"image",	src: "data/img/test01.png"},
+    {name: "test02",	type:"image",	src: "data/img/test02.png"},
     
     /* JSON Content. 
 	 */
