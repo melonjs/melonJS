@@ -260,6 +260,15 @@
                     });
                     self.addShape(new me.Polygon(0, 0, points));
                 });
+                // parse all circles
+                data.circles.forEach(function (circle) {
+                    self.addShape(new me.Ellipse(
+                        circle.cx * scale,
+                        (1.0 - circle.cy) * scale,
+                        circle.r * 2 * scale,
+                        circle.r * 2 * scale
+                    ).translate(-origin.x, -origin.y));
+                });
             }
 
             // update the body bounds to take in account the added shapes
