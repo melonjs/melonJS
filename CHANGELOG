@@ -1,6 +1,7 @@
 Version History
 ---------------
 2.2.0
+* Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support) 
 
 2.1.1
 * Core : fixed a regression when using the pooling system with renderables.
