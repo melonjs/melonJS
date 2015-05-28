@@ -397,7 +397,8 @@
          * @return {Number}
          */
         distance : function (v) {
-            return Math.sqrt((this.x - v.x) * (this.x - v.x) + (this.y - v.y) * (this.y - v.y));
+            var dx = this.x - v.x, dy = this.y - v.y;
+            return Math.sqrt(dx * dx + dy * dy);
         },
 
         /**
