@@ -183,6 +183,7 @@
          */
         leave : function (event) {
             this.hover = false;
+            this.release.call(this, event);
             return this.onOut(event);
         },
         
@@ -201,10 +202,11 @@
          * @ignore
          */
         release : function (event) {
-            this.released = true;
-            this.hover = false; // also clear the hover flag
-            me.timer.clearTimeout(this.holdTimeout);
-            return this.onRelease(event);
+            if (this.released === false) {
+                this.released = true;
+                me.timer.clearTimeout(this.holdTimeout);
+                return this.onRelease(event);
+            }
         },
 
         /**
