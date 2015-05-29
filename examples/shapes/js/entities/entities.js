@@ -44,17 +44,19 @@ game.ShapeObject = me.Entity.extend({
 
     // mouse down function
     onSelect : function (event) {
-        // the pointer event system will use the object bounding rect, check then with with all defined shapes
-        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-            if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-                this.grabOffset.set(event.gameX, event.gameY);
-                this.grabOffset.sub(this.pos);
-                this.canMove = true;
-                // don't propagate the event furthermore
-                return false;
+        if (this.hover === true) {
+            // the pointer event system will use the object bounding rect, check then with with all defined shapes
+            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+                    this.grabOffset.set(event.gameX, event.gameY);
+                    this.grabOffset.sub(this.pos);
+                    this.canMove = true;
+                    // don't propagate the event furthermore
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
     },
 
     // mouse up function
