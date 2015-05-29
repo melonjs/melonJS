@@ -179,11 +179,7 @@
         
         /**
          * function callback for the pointerLeave event
-         * @name leave
-         * @memberOf me.GUI_Object
-         * @public
-         * @function
-         * @param {Event} event the event object
+         * @ignore
          */
         leave : function (event) {
             this.hover = false;
@@ -192,7 +188,7 @@
         
         /**
          * function called when the pointer is leaving the object area
-         * @name onClick
+         * @name onOut
          * @memberOf me.GUI_Object
          * @public
          * @function
