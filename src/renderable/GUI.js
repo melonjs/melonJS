@@ -81,6 +81,15 @@
              * @name me.GUI_Object#isHoldable
              */
             this.isHoldable = false;
+            
+            /**
+             * true if the pointer is over the object
+             * @public
+             * @type boolean
+             * @default false
+             * @name me.GUI_Object#hover
+             */
+            this.hover = false;
 
             // object has been updated (clicked,etc..)
             this.holdTimeout = null;
@@ -96,9 +105,9 @@
             // register on mouse event
             me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
             me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
-            me.input.registerPointerEvent("pointerenter", this, this.clicked.bind(this));
-            me.input.registerPointerEvent("pointerleave", this, this.release.bind(this));
             me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
+            me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
+            me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
         },
 
         /**
@@ -145,18 +154,59 @@
          * @function
          * @param {Event} event the event object
          */
-        onClick : function () {
+        onClick : function (/* event */) {
             return false;
         },
-
+        
+        /**
+         * function callback for the pointerEnter event
+         * @ignore
+         */
+        enter : function (event) {
+            this.hover = true;
+            return this.onOver(event);
+        },
+        
+        /**
+         * function called when the pointer is over the object
+         * @name onOver
+         * @memberOf me.GUI_Object
+         * @public
+         * @function
+         * @param {Event} event the event object
+         */
+        onOver : function (/* event */) {},
+        
+        /**
+         * function callback for the pointerLeave event
+         * @ignore
+         */
+        leave : function (event) {
+            this.hover = false;
+            this.release.call(this, event);
+            return this.onOut(event);
+        },
+        
+        /**
+         * function called when the pointer is leaving the object area
+         * @name onOut
+         * @memberOf me.GUI_Object
+         * @public
+         * @function
+         * @param {Event} event the event object
+         */
+        onOut : function (/* event */) {},
+        
         /**
          * function callback for the pointerup event
          * @ignore
          */
         release : function (event) {
-            this.released = true;
-            me.timer.clearTimeout(this.holdTimeout);
-            return this.onRelease(event);
+            if (this.released === false) {
+                this.released = true;
+                me.timer.clearTimeout(this.holdTimeout);
+                return this.onRelease(event);
+            }
         },
 
         /**
@@ -206,9 +256,9 @@
         onDestroyEvent : function () {
             me.input.releasePointerEvent("pointerdown", this);
             me.input.releasePointerEvent("pointerup", this);
+            me.input.releasePointerEvent("pointercancel", this);
             me.input.releasePointerEvent("pointerenter", this);
             me.input.releasePointerEvent("pointerleave", this);
-            me.input.releasePointerEvent("pointercancel", this);
             me.timer.clearTimeout(this.holdTimeout);
         }
     });
