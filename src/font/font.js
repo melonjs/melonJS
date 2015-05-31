@@ -253,6 +253,7 @@
             context.fillStyle = this.fillStyle.toRGBA();
             if (stroke) {
                 context.strokeStyle = this.strokeStyle.toRGBA();
+                context.lineWidth = this.lineWidth;
             }
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
@@ -266,7 +267,11 @@
                 // measure the string
                 dw = Math.max(dw, context.measureText(string).width);
                 // draw the string
-                context.fillText(string, x, y);
+                if (stroke) {
+                    context.strokeText(string, x, y);
+                }else{
+                    context.fillText(string, x, y);
+                }
                 // add leading space
                 y += lineHeight;
             }
