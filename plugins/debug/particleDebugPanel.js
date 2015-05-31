@@ -3,11 +3,8 @@
  * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
- * a simple debug panel plugin
- * usage : me.plugin.register(debugPanel, "debug");
- *
- * you can then use me.plugin.debug.show() or me.plugin.debug.hide()
- * to show or hide the panel, or press respectively the "S" and "H" keys.
+ * a simple particle debug panel plugin
+ * usage : me.plugin.register.defer(this, me.debug.ParticlePanel, "particledebug");
  *
  * note :
  * Heap Memory information is available under Chrome when using
@@ -26,14 +23,14 @@
      * @memberOf me
      * @constructor
      */
-    me.debug.ParticlePanel = me.plugin.Base.extend(
+    me.debug.ParticlePanel = me.Renderable.extend(
     /** @scope me.debug.ParticlePanel.prototype */
     {
 
         /** @private */
         init : function () {
             // call the super constructor
-            this._super(me.plugin.Base, "init");
+            this._super(me.Renderable, "init", [ 0, me.video.renderer.getHeight() - 60, 200, 60 ]);
 
             // minimum melonJS version expected
             this.version = "2.1.0";
@@ -42,17 +39,13 @@
             // clickable rect area
             this.area = {};
 
-            // panel position and size
-            this.rect = null;
-
             // for z ordering
             // make it ridiculously high
             this.z = Infinity;
 
             // visibility flag
             this.visible = true;
-            this.rect = new me.Rect(0, me.video.renderer.getHeight() - 60, 200, 60);
-
+            
             // set the object GUID value
             this.GUID = "particledebug-" + me.utils.createGUID();
 
@@ -64,9 +57,6 @@
 
             // a floating object
             this.floating = true;
-
-            // renderable
-            this.isRenderable = true;
 
             // always update, even when not visible
             this.alwaysUpdate = true;
@@ -169,12 +159,6 @@
             return true;
         },
 
-        /**
-         * @private
-         */
-        getBounds : function () {
-            return this.rect;
-        },
 
         /**
          * @private
@@ -184,7 +168,7 @@
             var drawTimeSamples = this.drawTimeSamples;
             var frameUpdateTimeSamples = this.frameUpdateTimeSamples;
             var frameDrawTimeSamples = this.frameDrawTimeSamples;
-            var width = this.rect.width, height = this.rect.height;
+            var width = this._bounds.width, height = this._bounds.height;
 
             while (updateTimeSamples.length > width) {
                 updateTimeSamples.shift();
@@ -268,10 +252,10 @@
             // draw the panel
             renderer.setGlobalAlpha(0.5);
             renderer.setColor("black");
-            renderer.fillRect(this.rect.left,  this.rect.top,
-                              this.rect.width, this.rect.height);
+            renderer.fillRect(this._bounds.left,  this._bounds.top,
+                              this._bounds.width, this._bounds.height);
             renderer.setGlobalAlpha(1.0);
-            renderer.translate(this.rect.left, this.rect.top);
+            renderer.translate(this._bounds.left, this._bounds.top);
 
             // # entities / draw
             this.font.draw(renderer, "emitters : " + this.emitterCount, 5, 5);
