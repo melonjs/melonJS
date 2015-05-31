@@ -30,22 +30,9 @@
              */
             this.pos = new me.Vector2d(x, y);
 
-            /**
-             * width of the Rectangle
-             * @public
-             * @type {Number}
-             * @name width
-             * @memberOf me.Rect
-             */
-            this.width = w;
-            /**
-             * height of the Rectangle
-             * @public
-             * @type {Number}
-             * @name height
-             * @memberOf me.Rect
-             */
-            this.height = h;
+            // private properties for w & h
+            this._width = w;
+            this._height = h;
 
             // the shape type
             this.shapeType = "Rectangle";
@@ -117,7 +104,7 @@
          * @return {me.Rect} new rectangle
          */
         clone : function () {
-            return new me.Rect(this.pos.x, this.pos.y, this.width, this.height);
+            return new me.Rect(this.pos.x, this.pos.y, this._width, this._height);
         },
 
         /**
@@ -129,7 +116,7 @@
          * @return {me.Rect} new rectangle
          */
         copy : function (rect) {
-            return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
+            return this.setShape(rect.pos.x, rect.pos.y, rect._width, rect._height);
         },
 
         /**
@@ -254,8 +241,8 @@
          */
         toPolygon: function () {
             var pos = this.pos;
-            var w = this.width;
-            var h = this.height;
+            var w = this._width;
+            var h = this._height;
             return new me.Polygon(
                 pos.x, pos.y, [
                     new me.Vector2d(), new me.Vector2d(w, 0),
@@ -266,9 +253,9 @@
     });
 
     // redefine some properties to ease our life when getting the rectangle coordinates
+    
     /**
-     * left coordinate of the Rectangle<br>
-     * takes in account the adjusted size of the rectangle (if set)
+     * left coordinate of the Rectangle
      * @public
      * @type {Number}
      * @name left
@@ -282,8 +269,7 @@
     });
 
     /**
-     * right coordinate of the Rectangle<br>
-     * takes in account the adjusted size of the rectangle (if set)
+     * right coordinate of the Rectangle
      * @public
      * @type {Number}
      * @name right
@@ -291,14 +277,13 @@
      */
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
-            return (this.pos.x + this.width) || this.width;
+            return (this.pos.x + this._width) || this._width;
         },
         configurable : true
     });
 
     /**
-     * top coordinate of the Rectangle<br>
-     * takes in account the adjusted size of the rectangle (if set)
+     * top coordinate of the Rectangle
      * @public
      * @type {Number}
      * @name top
@@ -312,8 +297,7 @@
     });
 
     /**
-     * bottom coordinate of the Rectangle<br>
-     * takes in account the adjusted size of the rectangle (if set)
+     * bottom coordinate of the Rectangle
      * @public
      * @type {Number}
      * @name bottom
@@ -321,9 +305,43 @@
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
-            return (this.pos.y + this.height) || this.height;
+            return (this.pos.y + this._height) || this._height;
+        },
+        configurable : true
+    });
+    
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "width", {
+        get : function () {
+            return this._width;
+        },
+        set : function (value) {
+            this._width = value;
         },
         configurable : true
     });
 
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {Number}
+     * @name height
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "height", {
+        get : function () {
+            return this._height;
+        },
+        set : function (value) {
+            this._height = value;
+        },
+        configurable : true
+    });
+    
 })();

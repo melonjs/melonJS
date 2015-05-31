@@ -596,7 +596,10 @@
             var viewport = me.game.viewport;
 
             // Update container's absolute position
-            this._absPos.setV(this.ancestor._absPos).add(this.pos);
+            this._absPos.setV(this.pos);
+            if (this.ancestor) {
+                this._absPos.add(this.ancestor._absPos);
+            }
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (isPaused && (!obj.updateWhenPaused)) {
