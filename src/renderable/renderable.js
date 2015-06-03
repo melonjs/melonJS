@@ -155,34 +155,9 @@
             // will not lead to stack too deep.
             this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
 
-            if (typeof(this.width) === "undefined") {
-                Object.defineProperty(this, "width", {
-                    get : function () {
-                        return this._width;
-                    },
-
-                    set : function (value) {
-                        this.resizeBounds(value, this.height, this.width, this.height);
-                        this._width = value;
-                    }
-                });
-            }
-    
-            if (typeof(this.height) === "undefined") {
-                Object.defineProperty(this, "height", {
-                    get : function () {
-                        return this._height;
-                    },
-
-                    set : function (value) {
-                        this.resizeBounds(this.width, value, this.width, this.height);
-                        this._height = value;
-                    }
-                });
-            }
-
             this._width = width;
             this._height = height;
+
             this.shapeType = "Rectangle";
 
             // set the default anchor point (middle of the renderable)
@@ -259,7 +234,6 @@
 
         /**
          * update the renderable's bounding rect (private)
-         * when manually update the renderable pos, you need to call this function
          * @private
          * @name updateBoundsPos
          * @memberOf me.Renderable
@@ -299,6 +273,42 @@
         draw : function (/*renderer*/) {
             // empty one !
         }
+    });
+
+    /**
+     * width of the Renderable bounding box<br>
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "width", {
+        get : function () {
+            return this._width;
+        },
+        set : function (value) {
+            this.resizeBounds(value, this._height);
+            this._width = value;
+        },
+        configurable : true
+    });
+
+    /**
+     * height of the Renderable bounding box <br>
+     * @public
+     * @type {Number}
+     * @name height
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "height", {
+        get : function () {
+            return this._height;
+        },
+        set : function (value) {
+            this.resizeBounds(this._width, value);
+            this._height = value;
+        },
+        configurable : true
     });
 
     /**

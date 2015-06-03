@@ -30,7 +30,7 @@
         init : function (font, size, fillStyle, textAlign) {
             // private font properties
             /** @ignore */
-            this.fontSize = new me.Vector2d();
+            this.fontSize = new me.Vector2d(0, 0);
 
             /**
              * defines the color used to draw the font.<br>
@@ -89,12 +89,12 @@
              */
             this.lineHeight = 1.0;
 
+            // super constructor
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
+
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
-            // super constructor
-            this.pos = new me.Vector2d(0, 0);
-            this._super(me.Renderable, "init", [this.pos.x, this.pos.y, 0, this.fontSize.y]);
-
+            
             if (!this.gid) {
                 this.gid = me.utils.createGUID();
             }
