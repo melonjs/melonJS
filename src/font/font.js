@@ -269,7 +269,7 @@
                 // draw the string
                 if (stroke) {
                     context.strokeText(string, x, y);
-                }else{
+                }else {
                     context.fillText(string, x, y);
                 }
                 // add leading space
