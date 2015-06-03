@@ -154,10 +154,10 @@
             // set position to observable. Can use updateBounds, as _bounds using a regular vector.
             // will not lead to stack too deep.
             this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
-            
+
             this._width = width;
             this._height = height;
-            
+
             this.shapeType = "Rectangle";
 
             // set the default anchor point (middle of the renderable)
@@ -234,7 +234,6 @@
 
         /**
          * update the renderable's bounding rect (private)
-         * when manually update the renderable pos, you need to call this function
          * @private
          * @name updateBoundsPos
          * @memberOf me.Renderable
@@ -311,7 +310,7 @@
         },
         configurable : true
     });
-    
+
     /**
      * Base class for Renderable exception handling.
      * @name Error
