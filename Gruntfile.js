@@ -237,4 +237,5 @@ module.exports = function (grunt) {
     ]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
+    grunt.registerTask("release", [ "build", "dorelease" ]);
 };
