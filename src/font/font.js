@@ -262,13 +262,12 @@
             var dw = 0;
             var dy = y;
             var lineHeight = this.fontSize.y * this.lineHeight;
-            var drawText = context[ stroke ? "strokeText" : "fillText" ];
             for (var i = 0; i < strings.length; i++) {
                 string = strings[i].trimRight();
                 // measure the string
                 dw = Math.max(dw, context.measureText(string).width);
                 // draw the string
-                drawText(string, x, y);
+                context[ stroke ? "strokeText" : "fillText" ](string, x, y);
                 // add leading space
                 y += lineHeight;
             }
