@@ -37,8 +37,8 @@
     "grunt-jsdoc": "~0.6.7",
     "grunt-replace": "~0.9.2",
     "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
-    "q": "~1.0.0",
-    "shelljs": "~0.3.0"
+    "q": "~1.4.1",
+    "shelljs": "~0.5.0"
   },
   "scripts": {
     "install": "grunt",
