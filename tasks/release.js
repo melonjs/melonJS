@@ -7,7 +7,7 @@ module.exports = function (grunt) {
     grunt.registerTask("dorelease", "MelonJS Release", function () {
         var repo = path.join(__dirname, "..");
         var config = grunt.file.readJSON(path.join(repo, "package.json"));
-        var version = "v" + config.version;
+        var version = config.version;
         var currBranch;
         var verbose = grunt.option("verbose");
         var done = this.async();
