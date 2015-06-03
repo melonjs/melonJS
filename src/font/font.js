@@ -267,7 +267,7 @@
                 // measure the string
                 dw = Math.max(dw, context.measureText(string).width);
                 // draw the string
-                context[ stroke ? "strokeText" : "fillText" ](string, x, y);
+                context[stroke ? "strokeText" : "fillText"](string, x, y);
                 // add leading space
                 y += lineHeight;
             }
