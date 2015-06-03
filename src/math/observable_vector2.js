@@ -66,15 +66,14 @@
             this._y = y || 0;
         },
 
-        /**
-         * @ignore */
+        /** @ignore */
         _set : function (x, y) {
             this.onUpdate(x, y, this._x, this._y);
             this._x = x;
             this._y = y;
             return this;
         },
-        
+
         /**
          * Add the passed vector to this vector
          * @name add
@@ -428,7 +427,7 @@
         toVector2d : function () {
             return new me.Vector2d(this._x, this._y);
         },
-        
+
         /**
          * convert the object to a string representation
          * @name toString
