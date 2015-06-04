@@ -7,7 +7,10 @@ describe("Entity", function () {
             "type"  : "image",
             "src"   : "tests/data/img/rect.png"
         },
-        done,
+        function () {
+            expect(true).toBe(true);
+            done();
+        },
         function () {
             throw new Error("Failed to load `rect.png`");
         });
@@ -20,6 +23,7 @@ describe("Entity", function () {
             "image" : "rect",
             "shapes" : []
         });
+        expect(entity).toBeInstanceOf(me.Entity);
     });
 
     it("has an empty set of shapes", function () {
