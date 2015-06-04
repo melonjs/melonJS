@@ -10,12 +10,7 @@
   "bugs": {
     "url": "https://github.com/melonjs/melonJS/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT License",
-      "url": "https://github.com/melonjs/melonJS/blob/master/MIT-LICENSE"
-    }
-  ],
+  "license": "MIT",
   "author": {
     "name": "melonJS",
     "email": "contact@melonjs.org"
