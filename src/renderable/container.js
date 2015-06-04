@@ -376,26 +376,22 @@
          * @memberOf me.Container
          * @function
          */
-        updateBoundsPos : function (newX, newY, oldX, oldY) {
-            if (newX !== oldX || newY !== oldY) {
-                this._super(me.Renderable, "updateBoundsPos", [
-                    newX, newY,
-                    oldX, oldY
-                ]);
+        updateBoundsPos : function (newX, newY) {
+            this._super(me.Renderable, "updateBoundsPos", [ newX, newY ]);
 
-                // Update container's absolute position
-                this._absPos.set(newX, newY);
-                if (this.ancestor) {
-                    this._absPos.add(this.ancestor._absPos);
-                }
+            // Update container's absolute position
+            this._absPos.set(newX, newY);
+            if (this.ancestor) {
+                this._absPos.add(this.ancestor._absPos);
+            }
 
-                // Notify children that the parent's position has changed
-                for (var i = this.children.length, child; i--, (child = this.children[i]);) {
-                    if (child.isRenderable) {
-                        child.updateBoundsPos(child.pos.x, child.pos.y);
-                    }
+            // Notify children that the parent's position has changed
+            for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+                if (child.isRenderable) {
+                    child.updateBoundsPos(child.pos.x, child.pos.y);
                 }
             }
+
             return this._bounds;
         },
 
