@@ -73,8 +73,13 @@
          */
 
         /**
-         * last game tick value
+         * Last game tick value.<br/>
+         * Use this value to scale velocities during frame drops due to slow
+         * hardware or when setting an FPS limit. (See {@link me.sys.fps})
+         * This feature is disabled by default. Enable me.sys.interpolation to
+         * use it.
          * @public
+         * @see me.sys.interpolation
          * @type Number
          * @name tick
          * @memberOf me.timer
@@ -82,7 +87,9 @@
         api.tick = 1.0;
 
         /**
-         * last measured fps rate
+         * Last measured fps rate.<br/>
+         * This feature is disabled by default. Load and enable the DebugPanel
+         * plugin to use it.
          * @public
          * @type Number
          * @name fps
