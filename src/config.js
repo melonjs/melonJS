@@ -23,7 +23,8 @@
          */
 
         /**
-         * Game FPS
+         * Set game FPS limiting
+         * @see me.timer.tick
          * @type {Number}
          * @default 60
          * @memberOf me.sys
@@ -31,7 +32,8 @@
         fps : 60,
 
         /**
-         * enable/disable frame interpolation
+         * Enable/disable frame interpolation
+         * @see me.timer.tick
          * @type {Boolean}
          * @default false
          * @memberOf me.sys
