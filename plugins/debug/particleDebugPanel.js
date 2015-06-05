@@ -146,9 +146,9 @@
             });
 
             // patch me.ParticleContainer.draw
-            me.plugin.patch(me.ParticleContainer, "draw", function (context, rect) {
+            me.plugin.patch(me.ParticleContainer, "draw", function (renderer, rect) {
                 var startTime = now();
-                this._patched(context, rect);
+                this._patched(renderer, rect);
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });
