@@ -8,7 +8,7 @@
     /**
      * a rectangle Object
      * @class
-     * @extends Object
+     * @extends me.Polygon
      * @memberOf me
      * @constructor
      * @param {Number} x position of the Rectangle
@@ -16,7 +16,7 @@
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
-    me.Rect = Object.extend(
+    me.Rect = me.Polygon.extend(
     /** @scope me.Rect.prototype */ {
 
         /** @ignore */
@@ -28,14 +28,12 @@
              * @name pos
              * @memberOf me.Rect
              */
-            this.pos = new me.Vector2d(x, y);
-
-            // private properties for w & h
-            this._width = w;
-            this._height = h;
+            this.pos = new me.Vector2d();
 
             // the shape type
             this.shapeType = "Rectangle";
+
+            this.setShape(x, y, w, h);
         },
 
         /**
@@ -50,11 +48,17 @@
          * @return {me.Rect} this rectangle
          */
         setShape : function (x, y, w, h) {
-            // set the new position vector
-            this.pos.set(x, y);
 
-            // resize
-            this.resize(w, h);
+            // todo: reuse the existing array to avoid GC
+            this._super(me.Polygon, "setShape", [x, y, [
+                    new me.Vector2d(), new me.Vector2d(w, 0),
+                    new me.Vector2d(w, h), new me.Vector2d(0, h)
+                ]
+            ]);
+
+            // private property to cache w & h
+            this._width = w;
+            this._height = h;
 
             return this;
         },
@@ -240,14 +244,8 @@
          * @return {me.Polygon} a new Polygon that represents this rectangle.
          */
         toPolygon: function () {
-            var pos = this.pos;
-            var w = this._width;
-            var h = this._height;
             return new me.Polygon(
-                pos.x, pos.y, [
-                    new me.Vector2d(), new me.Vector2d(w, 0),
-                    new me.Vector2d(w, h), new me.Vector2d(0, h)
-                ]
+                this.pos.x, this.pos.y, this.points
             );
         }
     });
@@ -323,6 +321,7 @@
         },
         set : function (value) {
             this._width = value;
+            this.points[1].x = this.points[2].x = value;
         },
         configurable : true
     });
@@ -340,6 +339,7 @@
         },
         set : function (value) {
             this._height = value;
+            this.points[2].y = this.points[3].y = value;
         },
         configurable : true
     });
