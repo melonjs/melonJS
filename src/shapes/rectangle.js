@@ -21,14 +21,14 @@
 
         /** @ignore */
         init : function (x, y, w, h) {
-            /**
-             * position of the Rectangle
-             * @public
-             * @type {me.Vector2d}
-             * @name pos
-             * @memberOf me.Rect
-             */
+
             this.pos = new me.Vector2d();
+
+            // pre-allocate the vector array
+            this.points = [
+                new me.Vector2d(), new me.Vector2d(),
+                new me.Vector2d(), new me.Vector2d()
+            ];
 
             // the shape type
             this.shapeType = "Rectangle";
@@ -49,14 +49,19 @@
          */
         setShape : function (x, y, w, h) {
 
-            // todo: reuse the existing array to avoid GC
-            this._super(me.Polygon, "setShape", [x, y, [
-                    new me.Vector2d(), new me.Vector2d(w, 0),
-                    new me.Vector2d(w, h), new me.Vector2d(0, h)
-                ]
-            ]);
+            // position
+            this.pos.set(x, y);
 
-            // private property to cache w & h
+            // dimensions
+            this.points[0].set(0, 0); // 0, 0 
+            this.points[1].set(w, 0); // 1, 0
+            this.points[2].set(w, h); // 1, 1
+            this.points[3].set(0, h); // 0, 1
+
+            // recalculate edges (optimize for rect?)
+            this.recalc();
+
+            // private properties to cache w & h
             this._width = w;
             this._height = h;
 
