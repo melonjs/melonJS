@@ -57,7 +57,7 @@
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
-                [x, y,
+                [x || 0, y || 0,
                 width || Infinity,
                 height || Infinity]
             );
