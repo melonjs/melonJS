@@ -29,10 +29,8 @@
                 new me.Vector2d(), new me.Vector2d(),
                 new me.Vector2d(), new me.Vector2d()
             ];
-
-            // the shape type
-            this.shapeType = "Rectangle";
-
+            
+            this.shapeType = "Polygon";
             this.setShape(x, y, w, h);
         },
 
@@ -213,18 +211,6 @@
 
         /**
          * check if this rectangle contains the specified point
-         * @name containsPointV
-         * @memberOf me.Rect
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        containsPointV: function (v) {
-            return this.containsPoint(v.x, v.y);
-        },
-
-        /**
-         * check if this rectangle contains the specified point
          * @name containsPoint
          * @memberOf me.Rect
          * @function
@@ -327,6 +313,7 @@
         set : function (value) {
             this._width = value;
             this.points[1].x = this.points[2].x = value;
+            this.recalc();
         },
         configurable : true
     });
@@ -345,6 +332,7 @@
         set : function (value) {
             this._height = value;
             this.points[2].y = this.points[3].y = value;
+            this.recalc();
         },
         configurable : true
     });
