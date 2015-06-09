@@ -47,10 +47,12 @@
          */
         setShape : function (x, y, w, h) {
 
-            this._super(me.Polygon, "setShape", [x, y, [
-                this.points[0].set(0, 0), this.points[1].set(w, 0),
-                this.points[2].set(w, h), this.points[3].set(0, h)
-            ]]);
+            this.points[0].set(0, 0); // 0, 0 
+            this.points[1].set(w, 0); // 1, 0
+            this.points[2].set(w, h); // 1, 1
+            this.points[3].set(0, h); // 0, 1
+
+            this._super(me.Polygon, "setShape", [x, y, this.points]);
 
             // private properties to cache w & h
             this._width = w;
