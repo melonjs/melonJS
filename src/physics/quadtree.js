@@ -128,21 +128,25 @@
     Quadtree.prototype.getIndex = function (rect) {
 
         var index = -1,
+            rx = rect.pos.x,
+            ry = rect.pos.y,
+            rw = rect.width,
+            rh = rect.height,
             verticalMidpoint = this.bounds.pos.x + (this.bounds.width / 2),
             horizontalMidpoint = this.bounds.pos.y + (this.bounds.height / 2),
             //rect can completely fit within the top quadrants
-            topQuadrant = (rect.pos.y < horizontalMidpoint && rect.pos.y + rect.height < horizontalMidpoint),
+            topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
             //rect can completely fit within the bottom quadrants
-            bottomQuadrant = (rect.pos.y > horizontalMidpoint);
+            bottomQuadrant = (ry > horizontalMidpoint);
 
         //rect can completely fit within the left quadrants
-        if (rect.pos.x < verticalMidpoint && rect.pos.x + rect.width < verticalMidpoint) {
+        if (rx < verticalMidpoint && rx + rw < verticalMidpoint) {
             if (topQuadrant) {
                 index = 1;
             } else if (bottomQuadrant) {
                 index = 2;
             }
-        } else if (rect.pos.x > verticalMidpoint) {
+        } else if (rx > verticalMidpoint) {
             //rect can completely fit within the right quadrants
             if (topQuadrant) {
                 index = 0;
@@ -276,10 +280,7 @@
 
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {
-            this.bounds.pos.x = bounds.pos.x;
-            this.bounds.pos.y = bounds.pos.y;
-            this.bounds.width = bounds.width;
-            this.bounds.height = bounds.height;
+            this.bounds.setShape(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
         }
     };
 
