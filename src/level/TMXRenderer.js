@@ -11,16 +11,16 @@
 
     // scope global var & constants
     var offsetsStaggerX = [
-        {x: 0, y: 0},
-        {x:+1, y:-1},
-        {x:+1, y: 0},
-        {x:+2, y: 0},
+        {x:   0, y:   0},
+        {x: + 1, y: - 1},
+        {x: + 1, y:   0},
+        {x: + 2, y:   0},
     ];
     var offsetsStaggerY = [
-        {x: 0, y: 0},
-        {x:-1, y:+1},
-        {x: 0, y:+1},
-        {x: 0, y:+2},
+        {x:   0, y:   0},
+        {x: - 1, y: + 1},
+        {x:   0, y: + 1},
+        {x:   0, y: + 2},
     ];
 
     /**
@@ -126,11 +126,11 @@
         drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(rect.pos.x,
-                                               rect.pos.y, 
+                                               rect.pos.y,
                                                me.pool.pull("me.Vector2d")).floorSelf();
 
             var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
-                                             rect.pos.y + rect.height + this.tileheight, 
+                                             rect.pos.y + rect.height + this.tileheight,
                                              me.pool.pull("me.Vector2d")).ceilSelf();
 
             //ensure we are in the valid tile range
@@ -374,7 +374,7 @@
             this.sidelengthx = 0;
             this.sidelengthy = 0;
 
-            if(staggeraxis === "x"){
+            if (staggeraxis === "x") {
                 this.sidelengthx = hexsidelength;
             } else {
                 this.sidelengthy = hexsidelength;
@@ -406,10 +406,10 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y, v) {
-            var q,r;
+            var q, r;
             var ret = v || new me.Vector2d();
             
-            if (this.staggeraxis === "x"){ //flat top
+            if (this.staggeraxis === "x") { //flat top
                 x = x - ((this.staggerindex === "odd") ? this.sideoffsetx : this.tilewidth);
             } else { //pointy top
                 y = y - ((this.staggerindex === "odd") ? this.sideoffsety : this.tileheight);
@@ -429,14 +429,14 @@
             );
 
             // Adjust the reference point to the correct tile coordinates
-            if (this.staggeraxis === "x"){
+            if (this.staggeraxis === "x") {
                 referencePoint.x = referencePoint.x * 2;
-                if (this.staggerindex === "even"){
+                if (this.staggerindex === "even") {
                     ++referencePoint.x;
                 }
             } else {
                 referencePoint.y = referencePoint.y * 2;
-                if (this.staggerindex === "even"){
+                if (this.staggerindex === "even") {
                     ++referencePoint.y;
                 }
             }
@@ -467,7 +467,7 @@
             var minDist = Number.MAX_VALUE;
             var dc;
             for (var i = 0; i < 4; ++i) {
-                dc = Math.pow(this.centers[i].x - rel.x,2) + Math.pow(this.centers[i].y - rel.y,2);
+                dc = Math.pow(this.centers[i].x - rel.x, 2) + Math.pow(this.centers[i].y - rel.y, 2);
                 if (dc < minDist) {
                     minDist = dc;
                     nearest = i;
@@ -482,7 +482,7 @@
             me.pool.push(referencePoint);
             me.pool.push(rel);
             
-            return ret.set(q,r);
+            return ret.set(q, r);
         },
 
 
@@ -490,7 +490,7 @@
          * return the tile position corresponding for the given X coordinate
          * @ignore
          */
-        pixelToTileX : function (x,y) {
+        pixelToTileX : function (x, y) {
             var ret = me.pool.pull("me.Vector2d");
             this.pixelToTileCoords(x, y, ret);
             me.pool.push(ret);
@@ -503,7 +503,7 @@
          * return the tile position corresponding for the given Y coordinates
          * @ignore
          */
-        pixelToTileY : function (y,x) {
+        pixelToTileY : function (y, x) {
             var ret = me.pool.pull("me.Vector2d");
             this.pixelToTileCoords(x, y, ret);
             me.pool.push(ret);
@@ -515,32 +515,29 @@
          * @ignore
          */
         tileToPixelCoords : function (q, r) {
-            var x,y;
-            if (this.staggeraxis === "x") //flat top
-            {
+            var x, y;
+            if (this.staggeraxis === "x") {
+                //flat top
                 x = q * this.columnwidth;
-                if(this.staggerindex === "odd")
-                {
+                if (this.staggerindex === "odd") {
                     y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight*(q&1));
+                    y = y + (this.rowheight * (q&1));
                 } else {
                     y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight*(1-(q&1)));
+                    y = y + (this.rowheight * (1 - (q&1)));
                 }
-            }
-            else //pointy top
-            {
+            } else {
+                //pointy top
                 y = r * this.rowheight;
-                if(this.staggerindex === "odd")
-                {
+                if (this.staggerindex === "odd") {
                     x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth*(r&1));
+                    x = x + (this.columnwidth * (r&1));
                 } else {
                     x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth*(1-(r&1)));
+                    x = x + (this.columnwidth * (1 - (r&1)));
                 }
             }
-            return new me.Vector2d(x,y);
+            return new me.Vector2d(x, y);
         },
 
         /**
@@ -557,7 +554,7 @@
          * @ignore
          */
         drawTile : function (renderer, x, y, tmxTile, tileset) {
-            var point = this.tileToPixelCoords(x,y);
+            var point = this.tileToPixelCoords(x, y);
 
             // draw the tile
             tileset.drawTile(renderer,
@@ -566,13 +563,11 @@
                  tmxTile);
         },
 
-
-
         /**
          * draw the tile map
          * @ignore
          */
-          drawTileLayer : function (renderer, layer, rect) {
+        drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(rect.pos.x,
                                                rect.pos.y).floorSelf();
