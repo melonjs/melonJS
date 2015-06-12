@@ -55,9 +55,12 @@
          * return the tile position corresponding to the specified pixel
          * @ignore
          */
-        pixelToTileCoords : function (x, y) {
-            return new me.Vector2d(this.pixelToTileX(x),
-                                   this.pixelToTileY(y));
+        pixelToTileCoords : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+            return ret.set(
+                this.pixelToTileX(x),
+                this.pixelToTileY(y)
+            );
         },
 
 
@@ -82,9 +85,12 @@
          * return the pixel position corresponding of the specified tile
          * @ignore
          */
-        tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(x * this.tilewidth,
-                                   y * this.tileheight);
+        tileToPixelCoords : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+            return ret.set(
+                x * this.tilewidth,
+                y * this.tileheight
+            );
         },
 
         /**
@@ -120,10 +126,12 @@
         drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(rect.pos.x,
-                                               rect.pos.y).floorSelf();
+                                               rect.pos.y, 
+                                               me.pool.pull("me.Vector2d")).floorSelf();
 
             var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
-                                             rect.pos.y + rect.height + this.tileheight).ceilSelf();
+                                             rect.pos.y + rect.height + this.tileheight, 
+                                             me.pool.pull("me.Vector2d")).ceilSelf();
 
             //ensure we are in the valid tile range
             end.x = end.x > this.cols ? this.cols : end.x;
@@ -138,6 +146,10 @@
                     }
                 }
             }
+            
+            me.pool.push(start);
+            me.pool.push(end);
+            
         }
     });
 
@@ -178,9 +190,12 @@
          * return the tile position corresponding to the specified pixel
          * @ignore
          */
-        pixelToTileCoords : function (x, y) {
-            return new me.Vector2d(this.pixelToTileX(x, y),
-                                   this.pixelToTileY(y, x));
+        pixelToTileCoords : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+            return ret.set(
+                this.pixelToTileX(x, y),
+                this.pixelToTileY(y, x)
+            );
         },
 
 
@@ -205,8 +220,9 @@
          * return the pixel position corresponding of the specified tile
          * @ignore
          */
-        tileToPixelCoords : function (x, y) {
-            return new me.Vector2d(
+        tileToPixelCoords : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+            return ret.set(
                 (x - y) * this.hTilewidth + this.originX,
                 (x + y) * this.hTileheight
             );
@@ -253,17 +269,19 @@
             // get top-left and bottom-right tile position
             var rowItr = this.pixelToTileCoords(
                 rect.pos.x - tileset.tilewidth,
-                rect.pos.y - tileset.tileheight
+                rect.pos.y - tileset.tileheight,
+                me.pool.pull("me.Vector2d")
             ).floorSelf();
             var TileEnd = this.pixelToTileCoords(
                 rect.pos.x + rect.width + tileset.tilewidth,
-                rect.pos.y + rect.height + tileset.tileheight
+                rect.pos.y + rect.height + tileset.tileheight,
+                me.pool.pull("me.Vector2d")
             ).ceilSelf();
 
-            var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y);
+            var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y, me.pool.pull("me.Vector2d"));
 
             // Determine the tile and pixel coordinates to start at
-            var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y);
+            var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, me.pool.pull("me.Vector2d"));
             startPos.x -= this.hTilewidth;
             startPos.y += this.tileheight;
 
@@ -326,6 +344,11 @@
                     shifted = false;
                 }
             }
+                  
+            me.pool.push(rowItr);
+            me.pool.push(TileEnd);
+            me.pool.push(rectEnd);
+            me.pool.push(startPos);
         }
     });
 
