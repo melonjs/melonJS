@@ -554,13 +554,15 @@
          * @ignore
          */
         drawTile : function (renderer, x, y, tmxTile, tileset) {
-            var point = this.tileToPixelCoords(x, y);
+            var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d"));
 
             // draw the tile
             tileset.drawTile(renderer,
                  tileset.tileoffset.x + point.x,
                  tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
                  tmxTile);
+
+            me.pool.push(point);
         },
 
         /**
