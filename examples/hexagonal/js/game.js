@@ -48,14 +48,14 @@ var game = {
         me.state.transition("fade","#000000", 250);
 
         // register our objects entity in the object pool
-		var text = new game.TextEntity(0,0,100,20);
-		text.isPersistent = true;
-		me.game.world.addChild(text);
-		
-		// register on mouse event
-		me.input.registerPointerEvent("pointermove", me.game.viewport, function (event) {
-			me.event.publish("pointermove", [ event ]);
-		},false);
+        var text = new game.TextEntity(0,0,100,20);
+        text.isPersistent = true;
+        me.game.world.addChild(text);
+        
+        // register on mouse event
+        me.input.registerPointerEvent("pointermove", me.game.viewport, function (event) {
+            me.event.publish("pointermove", [ event ]);
+        },false);
 
         // switch to PLAY state
         me.state.change(me.state.PLAY);

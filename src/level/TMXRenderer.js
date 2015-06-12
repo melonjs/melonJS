@@ -9,6 +9,20 @@
  */
 (function () {
 
+    // scope global var & constants
+    var offsetsStaggerX = [
+        {x: 0, y: 0},
+        {x:+1, y:-1},
+        {x:+1, y: 0},
+        {x:+2, y: 0},
+    ];
+    var offsetsStaggerY = [
+        {x: 0, y: 0},
+        {x:-1, y:+1},
+        {x: 0, y:+1},
+        {x: 0, y:+2},
+    ];
+
     /**
      * an Orthogonal Map Renderder
      * Tiled QT 0.7.x format
@@ -323,37 +337,40 @@
      * @constructor
      */
     me.TMXHexagonalRenderer = Object.extend({
-		 // constructor
+        
+         // constructor
         init: function (cols, rows, tilewidth, tileheight, hexsidelength, staggeraxis, staggerindex) {
             this.cols = cols;
             this.rows = rows;
             this.tilewidth = tilewidth;
             this.tileheight = tileheight;
-			this.hexsidelength = hexsidelength;
-			this.staggeraxis = staggeraxis;
-			this.staggerindex = staggerindex;
-			
-			this.sidelengthx = 0;
-			this.sidelengthy = 0;
-			
-			if(staggeraxis === "x"){
-				this.sidelengthx = hexsidelength;
-			} else {
-				this.sidelengthy = hexsidelength;
-			}
-			
-			this.sideoffsetx = (this.tilewidth - this.sidelengthx)/2;
-			this.sideoffsety = (this.tileheight - this.sidelengthy)/2;
-			
-			this.columnwidth = this.sideoffsetx + this.sidelengthx;
-			this.rowheight = this.sideoffsety + this.sidelengthy;
+            this.hexsidelength = hexsidelength;
+            this.staggeraxis = staggeraxis;
+            this.staggerindex = staggerindex;
+
+            this.sidelengthx = 0;
+            this.sidelengthy = 0;
+
+            if(staggeraxis === "x"){
+                this.sidelengthx = hexsidelength;
+            } else {
+                this.sidelengthy = hexsidelength;
+            }
+
+            this.sideoffsetx = (this.tilewidth - this.sidelengthx) / 2;
+            this.sideoffsety = (this.tileheight - this.sidelengthy) / 2;
+
+            this.columnwidth = this.sideoffsetx + this.sidelengthx;
+            this.rowheight = this.sideoffsety + this.sidelengthy;
+            
+            this.centers = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()];
         },
-		
+
         /**
          * return true if the renderer can render the specified layer
          * @ignore
          */
-		canRender : function (layer) {
+        canRender : function (layer) {
             return ((layer.orientation === "hexagonal") &&
                     (this.cols === layer.cols) &&
                     (this.rows === layer.rows) &&
@@ -365,92 +382,84 @@
          * return the tile position corresponding to the specified pixel
          * @ignore
          */
-		pixelToTileCoords : function (x, y) {
-			var q,r;
-			if(this.staggeraxis === "x"){ //flat top
-				x = x - ((this.staggerindex === "odd") ? this.sideoffsetx : this.tilewidth);
-			} else { //pointy top
-				y = y - ((this.staggerindex === "odd") ? this.sideoffsety : this.tileheight);
-			}
-			
-			// Start with the coordinates of a grid-aligned tile
-			var referencePoint = {
-				x : Math.floor(x / (this.tilewidth + this.sidelengthx)),
-				y : Math.floor((y / (this.tileheight + this.sidelengthy))),
-			};
-			
-			
-			// Relative x and y position on the base square of the grid-aligned tile
-			var rel = {
-				rx : x - referencePoint.x * (this.tilewidth + this.sidelengthx),
-                ry : y - referencePoint.y * (this.tileheight + this.sidelengthy),
-			};
+        pixelToTileCoords : function (x, y, v) {
+            var q,r;
+            var ret = v || new me.Vector2d();
+            
+            if (this.staggeraxis === "x"){ //flat top
+                x = x - ((this.staggerindex === "odd") ? this.sideoffsetx : this.tilewidth);
+            } else { //pointy top
+                y = y - ((this.staggerindex === "odd") ? this.sideoffsety : this.tileheight);
+            }
 
-			// Adjust the reference point to the correct tile coordinates
-			if(this.staggeraxis === "x"){
-				referencePoint.x = referencePoint.x * 2;
-				if (this.staggerindex === "even"){
-					++referencePoint.x;
-				}
-			} else {
-				referencePoint.y = referencePoint.y * 2;
-				if (this.staggerindex === "even"){
-					++referencePoint.y;
-				}
-			}
+            // Start with the coordinates of a grid-aligned tile
+            var referencePoint = me.pool.pull("me.Vector2d",
+                Math.floor(x / (this.tilewidth + this.sidelengthx)),
+                Math.floor((y / (this.tileheight + this.sidelengthy)))
+            );
 
-			// Determine the nearest hexagon tile by the distance to the center
-			var centers = new Array(4);
-			var left, top, centerX, centerY;
-			if (this.staggeraxis === "x") {
-				left = this.sidelengthx / 2;
-				centerX = left + this.columnwidth;
-				centerY = this.tileheight / 2;
 
-				centers[0] = {rx:left,ry:centerY};
-				centers[1] = {rx:centerX, ry:centerY - this.rowheight};
-				centers[2] = {rx:centerX, ry:centerY + this.rowheight};
-				centers[3] = {rx:centerX + this.columnwidth, ry:centerY};
-			} else {
-				top = this.sidelengthy / 2;
-				centerX = this.tilewidth / 2;
-				centerY = top + this.rowheight;
+            // Relative x and y position on the base square of the grid-aligned tile
+            var rel = me.pool.pull("me.Vector2d",
+                x - referencePoint.x * (this.tilewidth + this.sidelengthx),
+                y - referencePoint.y * (this.tileheight + this.sidelengthy)
+            );
 
-				centers[0] = {rx:centerX, ry:top};
-				centers[1] = {rx:centerX - this.columnwidth, ry:centerY};
-				centers[2] = {rx:centerX + this.columnwidth, ry:centerY};
-				centers[3] = {rx:centerX, ry:centerY + this.rowheight};
-			}
+            // Adjust the reference point to the correct tile coordinates
+            if (this.staggeraxis === "x"){
+                referencePoint.x = referencePoint.x * 2;
+                if (this.staggerindex === "even"){
+                    ++referencePoint.x;
+                }
+            } else {
+                referencePoint.y = referencePoint.y * 2;
+                if (this.staggerindex === "even"){
+                    ++referencePoint.y;
+                }
+            }
 
-			var nearest = 0;
-			var minDist = Number.MAX_VALUE;
-			var dc;
-			for (var i = 0; i < 4; ++i) {
-				dc = Math.pow(centers[i].rx - rel.rx,2) + Math.pow(centers[i].ry - rel.ry,2);
-				if (dc < minDist) {
-					minDist = dc;
-					nearest = i;
-				}
-			}
+            // Determine the nearest hexagon tile by the distance to the center
+            var left, top, centerX, centerY;
+            if (this.staggeraxis === "x") {
+                left = this.sidelengthx / 2;
+                centerX = left + this.columnwidth;
+                centerY = this.tileheight / 2;
 
-			var offsetsStaggerX = [
-				{x: 0, y: 0},
-				{x:+1, y:-1},
-				{x:+1, y: 0},
-				{x:+2, y: 0},
-			];
-			var offsetsStaggerY = [
-				{x: 0, y: 0},
-				{x:-1, y:+1},
-				{x: 0, y:+1},
-				{x: 0, y:+2},
-			];
+                this.centers[0].set(left, centerY);
+                this.centers[1].set(centerX, centerY - this.rowheight);
+                this.centers[2].set(centerX, centerY + this.rowheight);
+                this.centers[3].set(centerX + this.columnwidth, centerY);
+            } else {
+                top = this.sidelengthy / 2;
+                centerX = this.tilewidth / 2;
+                centerY = top + this.rowheight;
 
-			var offsets = (this.staggeraxis === "x") ? offsetsStaggerX : offsetsStaggerY;
-			
-			q = referencePoint.x + offsets[nearest].x;
-			r = referencePoint.y + offsets[nearest].y;	
-			return new me.Vector2d(q,r);
+                this.centers[0].set(centerX, top);
+                this.centers[1].set(centerX - this.columnwidth, centerY);
+                this.centers[2].set(centerX + this.columnwidth, centerY);
+                this.centers[3].set(centerX, centerY + this.rowheight);
+            }
+
+            var nearest = 0;
+            var minDist = Number.MAX_VALUE;
+            var dc;
+            for (var i = 0; i < 4; ++i) {
+                dc = Math.pow(this.centers[i].x - rel.x,2) + Math.pow(this.centers[i].y - rel.y,2);
+                if (dc < minDist) {
+                    minDist = dc;
+                    nearest = i;
+                }
+            }
+
+            var offsets = (this.staggeraxis === "x") ? offsetsStaggerX : offsetsStaggerY;
+
+            q = referencePoint.x + offsets[nearest].x;
+            r = referencePoint.y + offsets[nearest].y;
+            
+            me.pool.push(referencePoint);
+            me.pool.push(rel);
+            
+            return ret.set(q,r);
         },
 
 
@@ -459,7 +468,11 @@
          * @ignore
          */
         pixelToTileX : function (x,y) {
-			return this.pixelToTileCoords(x,y).x;
+            var ret = me.pool.pull("me.Vector2d");
+            this.pixelToTileCoords(x, y, ret);
+            me.pool.push(ret);
+            return ret.x;
+            
         },
 
 
@@ -468,7 +481,10 @@
          * @ignore
          */
         pixelToTileY : function (y,x) {
-            return this.pixelToTileCoords(x,y).y;
+            var ret = me.pool.pull("me.Vector2d");
+            this.pixelToTileCoords(x, y, ret);
+            me.pool.push(ret);
+            return ret.y;
         },
 
         /**
@@ -477,31 +493,31 @@
          */
         tileToPixelCoords : function (q, r) {
             var x,y;
-			if(this.staggeraxis === "x") //flat top
-			{
-				x = q * this.columnwidth;
-				if(this.staggerindex === "odd")
-				{
-					y = r * (this.tileheight + this.sidelengthy);
-					y = y + (this.rowheight*(q&1));
-				} else {
-					y = r * (this.tileheight + this.sidelengthy);
-					y = y + (this.rowheight*(1-(q&1)));
-				}
-			}
-			else //pointy top
-			{
-				y = r * this.rowheight;
-				if(this.staggerindex === "odd")
-				{
-					x = q * (this.tilewidth + this.sidelengthx);
-					x = x + (this.columnwidth*(r&1));
-				} else {
-					x = q * (this.tilewidth + this.sidelengthx);
-					x = x + (this.columnwidth*(1-(r&1)));
-				}
-			}
-			return new me.Vector2d(x,y);
+            if (this.staggeraxis === "x") //flat top
+            {
+                x = q * this.columnwidth;
+                if(this.staggerindex === "odd")
+                {
+                    y = r * (this.tileheight + this.sidelengthy);
+                    y = y + (this.rowheight*(q&1));
+                } else {
+                    y = r * (this.tileheight + this.sidelengthy);
+                    y = y + (this.rowheight*(1-(q&1)));
+                }
+            }
+            else //pointy top
+            {
+                y = r * this.rowheight;
+                if(this.staggerindex === "odd")
+                {
+                    x = q * (this.tilewidth + this.sidelengthx);
+                    x = x + (this.columnwidth*(r&1));
+                } else {
+                    x = q * (this.tilewidth + this.sidelengthx);
+                    x = x + (this.columnwidth*(1-(r&1)));
+                }
+            }
+            return new me.Vector2d(x,y);
         },
 
         /**
@@ -516,24 +532,24 @@
         /**
          * draw the tile map
          * @ignore
-         */	
-		drawTile : function (renderer, x, y, tmxTile, tileset) {
-			var point = this.tileToPixelCoords(x,y);
-			
+         */
+        drawTile : function (renderer, x, y, tmxTile, tileset) {
+            var point = this.tileToPixelCoords(x,y);
+
             // draw the tile
-			tileset.drawTile(renderer,
-				 tileset.tileoffset.x + point.x,
-				 tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
-				 tmxTile);
+            tileset.drawTile(renderer,
+                 tileset.tileoffset.x + point.x,
+                 tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
+                 tmxTile);
         },
-		
+
 
 
         /**
          * draw the tile map
          * @ignore
          */
- 		 drawTileLayer : function (renderer, layer, rect) {
+          drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(rect.pos.x,
                                                rect.pos.y).floorSelf();
@@ -557,7 +573,7 @@
                 }
             }
         }
-		
+
     });
 
 })();
