@@ -483,10 +483,10 @@
 				if(this.staggerindex === "odd")
 				{
 					y = r * (this.tileheight + this.sidelengthy);
-					y = y + (this.rowheight*(r&1));
+					y = y + (this.rowheight*(q&1));
 				} else {
 					y = r * (this.tileheight + this.sidelengthy);
-					y = y + (this.rowheight*(1-(r&1)));
+					y = y + (this.rowheight*(1-(q&1)));
 				}
 			}
 			else //pointy top
