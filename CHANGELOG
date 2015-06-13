@@ -4,6 +4,9 @@ Version History
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * TMX : added hexagonal map support (matthewmmorrow)
 
+2.1.2
+* LevelDirector : do not replace Tile Object's `renderable`
+
 2.1.1
 * Container : fixed child bounds when manipulating the container position.
 * Core : fixed a regression when using the pooling system with renderables.
