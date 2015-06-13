@@ -1,6 +1,5 @@
 {
   "name": "melonJS",
-  "version": "2.1.1",
   "main": "build/melonJS-2.1.1-min.js",
   "repository": {
     "type": "git",
