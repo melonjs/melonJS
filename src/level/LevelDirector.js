@@ -50,7 +50,7 @@
                 Math.max(level.width, me.game.viewport.width),
                 Math.max(level.height, me.game.viewport.height)
             );
-            
+
             // add all defined layers
             var layers = level.getLayers();
             for (var i = layers.length; i--;) {
@@ -103,7 +103,7 @@
                     );
 
                     // check if a me.Tile object is embedded
-                    if (typeof (settings.tile) === "object") {
+                    if (typeof (settings.tile) === "object" && !obj.renderable) {
                         obj.renderable = settings.tile.getRenderable(settings);
                     }
 
