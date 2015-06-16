@@ -261,7 +261,8 @@
      */
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
-            return (this.pos.x + this._width) || this._width;
+            var w = this._width;
+            return (this.pos.x + w) || w;
         },
         configurable : true
     });
@@ -289,7 +290,8 @@
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
-            return (this.pos.y + this._height) || this._height;
+            var h = this._height;
+            return (this.pos.y + h) || h;
         },
         configurable : true
     });
