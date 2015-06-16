@@ -57,7 +57,9 @@
         TMX_TAG_POINTS              : "points",
         TMX_BACKGROUND_COLOR        : "backgroundcolor",
         TMX_ROTATION                : "rotation",
-        TMX_HEXSIDELEN              : "hexsidelength",
+        TMX_HEXSIDELENGTH           : "hexsidelength",
+        TMX_STAGGERAXIS             : "staggeraxis",
+        TMX_STAGGERINDEX            : "staggerindex",
         // bitmask constants to check for flipped & rotated tiles
         TMX_FLIP_H                  : 0x80000000,
         TMX_FLIP_V                  : 0x40000000,

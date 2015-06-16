@@ -339,7 +339,7 @@
     me.TMXLayer = me.Renderable.extend({
 
         /** @ignore */
-        init: function (tilewidth, tileheight, orientation, tilesets, z) {
+        init: function (tilewidth, tileheight, orientation, tilesets, z, hexsidelength, staggeraxis, staggerindex) {
             // super constructor
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
@@ -393,6 +393,11 @@
 
             // for displaying order
             this.z = z;
+			
+            // hexagonal maps only
+			this.hexsidelength = hexsidelength;
+			this.staggeraxis = staggeraxis;
+			this.staggerindex = staggerindex;
         },
 
         /** @ignore */
@@ -403,7 +408,9 @@
             this.rows = +layer[TMXConstants.TMX_TAG_HEIGHT];
 
             // hexagonal maps only
-            this.hexsidelength = +layer[TMXConstants.TMX_HEXSIDELEN] || undefined;
+            this.hexsidelength = +layer[TMXConstants.TMX_HEXSIDELENGTH] || undefined;
+            this.staggeraxis = layer[TMXConstants.TMX_STAGGERAXIS] || undefined;
+            this.staggerindex = layer[TMXConstants.TMX_STAGGERINDEX] || undefined;
 
             // layer opacity
             var visible = typeof(layer[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? layer[TMXConstants.TMX_TAG_VISIBLE] : true;

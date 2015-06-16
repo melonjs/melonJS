@@ -38,6 +38,9 @@
             map.rows = +data[TMXConstants.TMX_TAG_HEIGHT];
             map.tilewidth = +data[TMXConstants.TMX_TAG_TILEWIDTH];
             map.tileheight = +data[TMXConstants.TMX_TAG_TILEHEIGHT];
+            map.hexsidelength = +data[TMXConstants.TMX_HEXSIDELENGTH];
+            map.staggeraxis = data[TMXConstants.TMX_STAGGERAXIS];
+            map.staggerindex = data[TMXConstants.TMX_STAGGERINDEX];
             map.nextobjectid = +data[TMXConstants.TMX_TAG_NEXTOBJID] || undefined;
             if (map.orientation === "isometric") {
                 map.width = (map.cols + map.rows) * (map.tilewidth / 2);
@@ -201,7 +204,9 @@
                         obj.rows,
                         obj.tilewidth,
                         obj.tileheight,
-                        obj.hexsidelength
+                        obj.hexsidelength,
+						obj.staggeraxis,
+						obj.staggerindex
                     );
 
                 // if none found, throw an exception
