@@ -607,9 +607,6 @@
      * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
      * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
-     * @param {Boolean} [floating] specify if the object is a floating object
-     * (if yes, screen coordinates are used, if not mouse/touch coordinates will
-     * be converted to world coordinates)
      * @example
      * // register on the 'pointerdown' event
      * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
