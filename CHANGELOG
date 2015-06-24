@@ -6,6 +6,7 @@ Version History
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`
+* Renderable : fixed renderable bounds initialization with object pooling
 
 2.1.1
 * Container : fixed child bounds when manipulating the container position.
