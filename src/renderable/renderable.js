@@ -136,7 +136,10 @@
              * @name _bounds
              * @memberOf me.Renderable
              */
-            if (!this._bounds) {
+            if (this._bounds) {
+                this._bounds.setShape(x, y, width, height);
+            }
+            else {
                 this._bounds = new me.Rect(x, y, width, height);
             }
 
@@ -147,7 +150,10 @@
              * @name _absPos
              * @memberOf me.Renderable
              */
-            if (!this._absPos) {
+            if (this._absPos) {
+                this._absPos.set(x, y);
+            }
+            else {
                 this._absPos = new me.Vector2d(x, y);
             }
 
