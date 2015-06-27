@@ -76,7 +76,7 @@ To build your own version of melonJS you will need to install :
 - The [Grunt](http://gruntjs.com/) task manager
 
 Once the Node.js package manager has been installed (using the installer from their website),
-you need to install Grunt and Grunt CLI (Command Line Interface), by doing the following :
+you need to install build dependencies and Grunt CLI (Command Line Interface), by doing the following :
 
 Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
@@ -90,7 +90,7 @@ Next you need to install the melonJS dependencies, by typing :
 
 Once this is done, you can build melonJS :
 
-    $ cd melonJS (if not already in the melonJS directory)
+    $ cd melonJS # if not already in the melonJS directory
     $ grunt
 
 Both plain and minified versions of the library will be available under the "build" directory.
@@ -99,19 +99,19 @@ Building the documentation
 -------------------------------------------------------------------------------
 Here is how you can build your own copy of the docs locally :
 
-    $ cd melonJS (if not already in the melonJS directory)
+    $ cd melonJS # if not already in the melonJS directory
     $ grunt doc
 
 The generated documentation will be available in the `docs` directory
 
 Testing
 -------------------------------------------------------------------------------
-The recommended way to test is to start the `connect` server in the keepalive mode:
+The recommended way to test is to use the `serve` task:
 
-    $ grunt connect:keepalive
+    $ grunt serve
 
-Then navigate to http://localhost:8889/ in your browser. Stop the `connect`
-server when you are done by pressed `Ctrl+C` in the terminal.
+Then navigate to http://localhost:8000/ in your browser. Stop the server when
+you are done by pressed `Ctrl+C` in the terminal.
 
 
 To run melonJS tests in node simply run the following:

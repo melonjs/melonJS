@@ -192,20 +192,20 @@ module.exports = function (grunt) {
             options : {
                 specs : testSpecs,
                 helpers : [ "tests/spec/helper-spec.js" ],
-                host : "http://localhost:8889/"
+                host : "http://localhost:8000/"
             }
         },
 
         connect : {
             server : {
                 options : {
-                    port : 8889
+                    port : 8000
                 }
             },
 
             keepalive : {
                 options : {
-                    port : 8889,
+                    port : 8000,
                     keepalive : true
                 }
             }
@@ -237,5 +237,6 @@ module.exports = function (grunt) {
     ]);
     grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
     grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
+    grunt.registerTask("serve", [ "connect:keepalive" ]);
     grunt.registerTask("release", [ "build", "dorelease" ]);
 };
