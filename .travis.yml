@@ -15,7 +15,6 @@ after_success:
 
 env:
   global:
-  - "MELONJS_VERSION=2.2.0"
   - "ARTIFACTS_S3_BUCKET=melonjs-builds"
   - "ARTIFACTS_AWS_REGION=us-east-1"
   - secure: eIJEcZUfQet6hdDVoYQnoqMMKt9B7EaJtcnVp6GCsvQbDTlLPc1JCSa+iDcicp0podlayEb5Ovd7kcq+LJ7fvQx23UG2XFuVa9KpnYk4tLQ6wev/nYR7738KvECqDBTwyalF9E8uSS8WsGSG+PN2cb2s4IWWe2IQYEfPPjcniUI=

@@ -13,8 +13,8 @@ module.exports = function (grunt) {
   grunt.initConfig({
     pkg : grunt.file.readJSON("package.json"),
     path : {
-      main : "build/<%= pkg.name %>-<%= pkg.version %>.js",
-      min : "build/<%= pkg.name %>-<%= pkg.version %>-min.js"
+      main : "build/<%= pkg.name %>.js",
+      min : "build/<%= pkg.name %>-min.js"
     },
 
     concat : {
@@ -188,7 +188,7 @@ module.exports = function (grunt) {
     },
 
     jasmine : {
-      src : "build/<%= pkg.name %>-<%= pkg.version %>.js",
+      src : "<%= path.main %>",
       options : {
         specs : testSpecs,
         helpers : [ "tests/spec/helper-spec.js" ],
