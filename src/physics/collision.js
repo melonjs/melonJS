@@ -247,7 +247,8 @@
          * @property ACTION_OBJECT e.g. doors
          * @property PROJECTILE_OBJECT e.g. missiles
          * @property WORLD_SHAPE e.g. walls; for map collision shapes
-         * @property ALL_OBJECT all of the above
+         * @property USER user-defined collision types (see example)
+         * @property ALL_OBJECT all of the above (including user-defined types)
          * @readonly
          * @enum {Number}
          * @name types
@@ -257,20 +258,44 @@
          * @example
          * // set the entity body collision type
          * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+         *
          * // filter collision detection with collision shapes, enemies and collectables
-         * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+         * myEntity.body.setCollisionMask(
+         *     me.collision.types.WORLD_SHAPE |
+         *     me.collision.types.ENEMY_OBJECT |
+         *     me.collision.types.COLLECTABLE_OBJECT
+         * );
+         *
+         * // User-defined collision types are defined using BITWISE LEFT-SHIFT:
+         * game.collisionTypes = {
+         *     LOCKED_DOOR : me.collision.types.USER << 0,
+         *     OPEN_DOOR   : me.collision.types.USER << 1,
+         *     LOOT        : me.collision.types.USER << 2,
+         * };
+         *
+         * // Set collision type for a door entity
+         * myDoorEntity.body.collisionType = game.collisionTypes.LOCKED_DOOR;
+         *
+         * // Set collision mask for the player entity, so it collides with locked doors and loot
+         * myPlayerEntity.body.setCollisionMask(
+         *     me.collision.types.ENEMY_OBJECT |
+         *     me.collision.types.WORLD_SHAPE |
+         *     game.collisionTypes.LOCKED_DOOR |
+         *     game.collisionTypes.LOOT
+         * );
          */
         api.types = {
             /** to disable collision check */
-            NO_OBJECT : 0,
-            PLAYER_OBJECT : 1,
-            NPC_OBJECT : 2,
-            ENEMY_OBJECT : 4,
-            COLLECTABLE_OBJECT : 8,
-            ACTION_OBJECT : 16, // door, etc...
-            PROJECTILE_OBJECT : 32, // missiles, etc...
-            WORLD_SHAPE : 64, // walls, etc...
-            ALL_OBJECT : 0xFFFFFFFF // all objects
+            NO_OBJECT           : 0,
+            PLAYER_OBJECT       : 1 << 0,
+            NPC_OBJECT          : 1 << 1,
+            ENEMY_OBJECT        : 1 << 2,
+            COLLECTABLE_OBJECT  : 1 << 3,
+            ACTION_OBJECT       : 1 << 4, // door, etc...
+            PROJECTILE_OBJECT   : 1 << 5, // missiles, etc...
+            WORLD_SHAPE         : 1 << 6, // walls, etc...
+            USER                : 1 << 7, // user-defined types start here...
+            ALL_OBJECT          : 0xFFFFFFFF // all objects
         };
 
         /**
