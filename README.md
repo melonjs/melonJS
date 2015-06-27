@@ -111,7 +111,7 @@ The recommended way to test is to use the `serve` task:
     $ grunt serve
 
 Then navigate to http://localhost:8000/ in your browser. Stop the server when
-you are done by pressed `Ctrl+C` in the terminal.
+you are done by pressing `Ctrl+C` in the terminal.
 
 
 To run melonJS tests in node simply run the following:
