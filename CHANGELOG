@@ -1,8 +1,9 @@
 Version History
 ---------------
 2.2.0
+* General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
-* TMX : added hexagonal map support (matthewmmorrow)
+* TMX : added hexagonal map support (@matthewmmorrow)
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`
