@@ -118,7 +118,7 @@
          * @name setCallback
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {function} onUpdate callbackk
+         * @param {function} onUpdate callback
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         setCallback : function (fn) {
