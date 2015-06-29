@@ -103,11 +103,13 @@
          * @function
          * @param {Number} x x value of the vector
          * @param {Number} y y value of the vector
+         * @param {Number} z z value of the vector
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
-        setMuted : function (x, y) {
+        setMuted : function (x, y, z) {
             this._x = x;
             this._y = y;
+            this._z = z;
             return this;
         },
         
