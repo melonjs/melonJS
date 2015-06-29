@@ -8,7 +8,7 @@
     /**
      * a rectangle Object
      * @class
-     * @extends Object
+     * @extends me.Polygon
      * @memberOf me
      * @constructor
      * @param {Number} x position of the Rectangle
@@ -16,26 +16,22 @@
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
-    me.Rect = Object.extend(
+    me.Rect = me.Polygon.extend(
     /** @scope me.Rect.prototype */ {
 
         /** @ignore */
         init : function (x, y, w, h) {
-            /**
-             * position of the Rectangle
-             * @public
-             * @type {me.Vector2d}
-             * @name pos
-             * @memberOf me.Rect
-             */
-            this.pos = new me.Vector2d(x, y);
 
-            // private properties for w & h
-            this._width = w;
-            this._height = h;
+            this.pos = new me.Vector2d();
 
-            // the shape type
-            this.shapeType = "Rectangle";
+            // pre-allocate the vector array
+            this.points = [
+                new me.Vector2d(), new me.Vector2d(),
+                new me.Vector2d(), new me.Vector2d()
+            ];
+            
+            this.shapeType = "Polygon";
+            this.setShape(x, y, w, h);
         },
 
         /**
@@ -50,11 +46,17 @@
          * @return {me.Rect} this rectangle
          */
         setShape : function (x, y, w, h) {
-            // set the new position vector
-            this.pos.set(x, y);
 
-            // resize
-            this.resize(w, h);
+            this.points[0].set(0, 0); // 0, 0 
+            this.points[1].set(w, 0); // 1, 0
+            this.points[2].set(w, h); // 1, 1
+            this.points[3].set(0, h); // 0, 1
+
+            this._super(me.Polygon, "setShape", [x, y, this.points]);
+
+            // private properties to cache w & h
+            this._width = w;
+            this._height = h;
 
             return this;
         },
@@ -204,18 +206,6 @@
 
         /**
          * check if this rectangle contains the specified point
-         * @name containsPointV
-         * @memberOf me.Rect
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        containsPointV: function (v) {
-            return this.containsPoint(v.x, v.y);
-        },
-
-        /**
-         * check if this rectangle contains the specified point
          * @name containsPoint
          * @memberOf me.Rect
          * @function
@@ -240,14 +230,8 @@
          * @return {me.Polygon} a new Polygon that represents this rectangle.
          */
         toPolygon: function () {
-            var pos = this.pos;
-            var w = this._width;
-            var h = this._height;
             return new me.Polygon(
-                pos.x, pos.y, [
-                    new me.Vector2d(), new me.Vector2d(w, 0),
-                    new me.Vector2d(w, h), new me.Vector2d(0, h)
-                ]
+                this.pos.x, this.pos.y, this.points
             );
         }
     });
@@ -277,7 +261,8 @@
      */
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
-            return (this.pos.x + this._width) || this._width;
+            var w = this._width;
+            return (this.pos.x + w) || w;
         },
         configurable : true
     });
@@ -305,7 +290,8 @@
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
-            return (this.pos.y + this._height) || this._height;
+            var h = this._height;
+            return (this.pos.y + h) || h;
         },
         configurable : true
     });
@@ -323,6 +309,8 @@
         },
         set : function (value) {
             this._width = value;
+            this.points[1].x = this.points[2].x = value;
+            this.recalc();
         },
         configurable : true
     });
@@ -340,6 +328,8 @@
         },
         set : function (value) {
             this._height = value;
+            this.points[2].y = this.points[3].y = value;
+            this.recalc();
         },
         configurable : true
     });

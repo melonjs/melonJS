@@ -295,8 +295,12 @@
                 }
                 
                 var region = handlers.region;
-                var eventInBounds = region.getBounds().containsPoint(e.gameX, e.gameY) &&
-                                    (region.shapeType === "Rectangle" || region.containsPoint(e.gameX, e.gameY));
+                var bounds = region.getBounds();
+                var eventInBounds =
+                    // check the shape bounding box first
+                    bounds.containsPoint(e.gameX, e.gameY) &&
+                    // then check more precisely if needed
+                    (bounds !== region || region.containsPoint(e.gameX, e.gameY));
 
                 switch (activeEventList.indexOf(e.type)) {
                     case POINTER_MOVE:

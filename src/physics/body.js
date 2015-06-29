@@ -181,8 +181,7 @@
          * @return {Number} the shape array length
          */
         addShape : function (shape, batchInsert) {
-            if (shape.shapeType === "Rectangle") {
-                // ensure that rect shape are managed as polygon
+            if (shape instanceof me.Rect) {
                 this.shapes.push(shape.toPolygon());
             } else {
                 // else polygon or circle
