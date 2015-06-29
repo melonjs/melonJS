@@ -183,7 +183,12 @@
          * @return {Number} the shape array length
          */
         addShape : function (shape, batchInsert) {
-            this.shapes.push(shape);
+            if (shape instanceof me.Rect) {
+                this.shapes.push(shape.toPolygon());
+            } else {
+                // else polygon or circle
+                this.shapes.push(shape);
+            }
 
             if (batchInsert !== true) {
                 // update the body bounds to take in account the added shape
