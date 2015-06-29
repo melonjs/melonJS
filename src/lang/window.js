@@ -2,9 +2,6 @@
  * MelonJS Game Engine
  * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
- *
- * melonJS is licensed under the MIT License.
- * http://www.opensource.org/licenses/mit-license.php
  */
 
 (function () {
@@ -22,8 +19,6 @@
      * overwritten in future versions.</p>
      * @name me
      * @namespace
-     * @license {@link http://www.opensource.org/licenses/mit-license.php|MIT}
-     * @copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
      */
     window.me = window.me || {};
 

@@ -1,4 +1,5 @@
 [
+    "src/license.js",
     "src/lang/window.js",
     "src/lang/function.js",
     "src/lang/object.js",
