@@ -56,12 +56,12 @@
                 }
             });
 
-            if (typeof(settings) === "undefined" || typeof(settings.onUpdate) !== "function") {
+            if (typeof(settings) === "undefined") {
                 throw new me.ObservableVector2d.Error(
                     "undefined `onUpdate` callback"
                 );
             }
-            this.onUpdate = settings.onUpdate;
+            this.setCallback(settings.onUpdate);
             this._x = x || 0;
             this._y = y || 0;
         },
@@ -74,6 +74,39 @@
             return this;
         },
 
+        /**
+         * set the vector value without triggering the callback
+         * @name setMuted
+         * @memberOf me.ObservableVector2d
+         * @function
+         * @param {Number} x x value of the vector
+         * @param {Number} y y value of the vector
+         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         */
+        setMuted : function (x, y) {
+            this._x = x;
+            this._y = y;
+            return this;
+        },
+        
+        /**
+         * set the callback to be executed when the vector is changed
+         * @name setCallback
+         * @memberOf me.ObservableVector2d
+         * @function
+         * @param {function} onUpdate callbackk
+         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         */
+        setCallback : function (fn) {
+            if (typeof(fn) !== "function") {
+                throw new me.ObservableVector2d.Error(
+                    "invalid `onUpdate` callback"
+                );
+            }
+            this.onUpdate = fn;
+            return this;
+        },
+        
         /**
          * Add the passed vector to this vector
          * @name add

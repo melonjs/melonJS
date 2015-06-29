@@ -2,6 +2,7 @@ Version History
 ---------------
 2.2.0
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
+* Renderable : prevent position vector re-allocation when pooling renderable objects
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored me.Rect to inherit from me.Polygon
 * TMX : added hexagonal map support (@matthewmmorrow)
