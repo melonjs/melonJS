@@ -1,5 +1,6 @@
 (function() {
   var main;
+  var renderable;
   game.PlayScreen = me.ScreenObject.extend({
     onResetEvent: function() {
       // tell the entity pool what classes it needs to work with
@@ -8,26 +9,30 @@
 
       // create the main
       main = me.pool.pull('main', 100, 100);
+      renderable = me.pool.pull('renderable', 120, 120);
       me.game.world.addChild(new game.Background());
       me.game.world.addChild(main);
+      me.game.world.addChild(renderable);
       
       me.game.world.addChild(new (me.Renderable.extend({
         init: function() {
             this._super(me.Renderable, 'init', [0, 0, 100, 100]);
-            this.drawn = false;
             this.elapsed = 0;
+            this.odd = true;
+            
         },
         update: function(dt) {
             this.elapsed += dt;
-            if(!this.drawn && this.elapsed > 3000) {
-                this.drawn = true;
+            if(this.elapsed > 1000) {
                 this.elapsed = 0;
+                this.odd = !this.odd;
                 // purge the main
                 me.game.world.removeChild(main);
-                // main will get re-used but initialized elsewhere.
-                main = me.pool.pull('main', 20, 20);
+                me.game.world.removeChild(renderable);
+                // main will get re-used but initialized elsewhere
+                main = me.pool.pull('main', this.odd ? 100 : 200, this.odd ? 100 : 200);
                 // create the renderable
-                var renderable = me.pool.pull('renderable', 120, 120);
+                renderable = me.pool.pull('renderable', this.odd ? 120 : 220, this.odd ? 120 : 220);
                 me.game.world.addChild(main);
                 me.game.world.addChild(renderable);
             }
