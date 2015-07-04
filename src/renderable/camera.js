@@ -24,6 +24,12 @@
     /** @scope me.Viewport.prototype */ {
         /** @ignore */
         init : function (minX, minY, maxX, maxY) {
+            this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
+
+            // cache the screen rendering position
+            this.screenX = 0;
+            this.screenY = 0;
+
             /**
              * Axis definition
              * @property NONE
@@ -51,30 +57,6 @@
              * @name bounds
              * @memberOf me.Viewport
              */
-            this.bounds = null;
-
-            // camera deadzone
-            this.deadzone = null;
-
-            // target to follow
-            this.target = null;
-
-            // axis to follow
-            this.follow_axis = 0;
-
-            // shake parameters
-            this._shake = null;
-            // fade parameters
-            this._fadeIn = null;
-            this._fadeOut = null;
-
-            // cache the screen rendering position
-            this.screenX = 0;
-            this.screenY = 0;
-            // viewport coordinates
-            this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
-
-            // real world limits
             this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
             // offset for shake effect
