@@ -153,7 +153,7 @@
          * @param {Number} h deadzone height
          */
         setDeadzone : function (w, h) {
-            if (this.deadzone === null) {
+            if (typeof(this.deadzone) === "undefined") {
                 this.deadzone = new me.Rect(0, 0, 0, 0);
             }
 
