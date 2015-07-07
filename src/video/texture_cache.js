@@ -10,7 +10,7 @@
      * a basic texture cache object
      * @ignore
      */
-    me.Renderer.TextureCache = Object.extend({
+    me.Renderer.TextureCache = me.Object.extend({
         /**
          * @ignore
          */

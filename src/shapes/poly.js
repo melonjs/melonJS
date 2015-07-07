@@ -20,7 +20,7 @@
      * @param {Number} y origin point of the Polygon
      * @param {me.Vector2d[]} points array of vector defining the Polygon
      */
-    me.Polygon = Object.extend(
+    me.Polygon = me.Object.extend(
     /** @scope me.Polygon.prototype */ {
 
         /** @ignore */

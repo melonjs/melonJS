@@ -23,7 +23,7 @@
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
-    me.Renderer = Object.extend(
+    me.Renderer = me.Object.extend(
     /** @scope me.Renderer.prototype */
     {
         /**

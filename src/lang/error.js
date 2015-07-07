@@ -17,6 +17,15 @@
  * @constructor
  * @param {String} msg Error message.
  */
+
+/**
+* First, grab the extend method from me.Object
+* and attach it to Error object
+*/
+if (!Error.extend) {
+    Error.extend = me.Object.extend;
+}
+
 me.Error = Error.extend({
     init : function (msg) {
         this.name = "me.Error";

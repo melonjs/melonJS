@@ -15,7 +15,7 @@
      * @param {Number} [y=0] y value of the vector
      * @param {Number} [z=0] z value of the vector
      */
-    me.Vector3d = Object.extend(
+    me.Vector3d = me.Object.extend(
     /** @scope me.Vector3d.prototype */
     {
         /** @ignore */

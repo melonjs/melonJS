@@ -40,7 +40,7 @@
      * @param {me.Matrix2d} matrix Global transformation matrix
      * @param {me.Color} color Global color
      */
-    me.WebGLRenderer.Compositor = Object.extend(
+    me.WebGLRenderer.Compositor = me.Object.extend(
     /** @scope me.WebGLRenderer.Compositor.prototype */
     {
         /**

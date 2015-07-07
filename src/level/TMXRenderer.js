@@ -30,7 +30,7 @@
      * @ignore
      * @constructor
      */
-    me.TMXOrthogonalRenderer = Object.extend({
+    me.TMXOrthogonalRenderer = me.Object.extend({
         // constructor
         init: function (cols, rows, tilewidth, tileheight) {
             this.cols = cols;
@@ -160,7 +160,7 @@
      * @ignore
      * @constructor
      */
-    me.TMXIsometricRenderer = Object.extend({
+    me.TMXIsometricRenderer = me.Object.extend({
         // constructor
         init: function (cols, rows, tilewidth, tileheight) {
             this.cols = cols;
@@ -359,7 +359,7 @@
      * @ignore
      * @constructor
      */
-    me.TMXHexagonalRenderer = Object.extend({
+    me.TMXHexagonalRenderer = me.Object.extend({
         
          // constructor
         init: function (cols, rows, tilewidth, tileheight, hexsidelength, staggeraxis, staggerindex) {

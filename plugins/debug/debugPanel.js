@@ -21,7 +21,7 @@
 
     var DEBUG_HEIGHT = 50;
 
-    var Counters = Object.extend({
+    var Counters = me.Object.extend({
         init : function (stats) {
             this.stats = {};
             this.reset(stats);

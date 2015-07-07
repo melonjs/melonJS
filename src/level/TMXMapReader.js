@@ -16,7 +16,7 @@
      * @constructor
      * @ignore
      */
-    me.TMXMapReader = Object.extend({
+    me.TMXMapReader = me.Object.extend({
         init: function () {},
 
         readMap: function (map, data) {

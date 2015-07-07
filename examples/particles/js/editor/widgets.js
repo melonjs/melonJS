@@ -1,7 +1,7 @@
 (function() {
     var pe = game.ParticleEditor = game.ParticleEditor || {};
 
-    pe.PropertyWrapper = Object.extend({
+    pe.PropertyWrapper = me.Object.extend({
         init : function(propertyName) {
             this.object = null;
             this.propertyPath = propertyName.split(".");
@@ -35,7 +35,7 @@
         },
     });
 
-    pe.WidgetBase = Object.extend({
+    pe.WidgetBase = me.Object.extend({
         init : function(propertyName) {
             this.property = new pe.PropertyWrapper(propertyName);
             this.rootNode = null;

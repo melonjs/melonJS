@@ -19,7 +19,7 @@
      * @memberOf me
      * @constructor
      */
-    me.TMXObjectGroup = Object.extend({
+    me.TMXObjectGroup = me.Object.extend({
         init : function (name, tmxObjGroup, orientation, tilesets, z) {
             /**
              * group name
@@ -128,7 +128,7 @@
      * @memberOf me
      * @constructor
      */
-    me.TMXObject = Object.extend({
+    me.TMXObject = me.Object.extend({
         init :  function (tmxObj, orientation, tilesets, z) {
 
             /**

@@ -28,7 +28,7 @@
         * @memberOf me
         * @constructor
         */
-        singleton.Base = Object.extend(
+        singleton.Base = me.Object.extend(
         /** @scope me.plugin.Base.prototype */
         {
             /** @ignore */
@@ -68,7 +68,7 @@
             if (typeof proto.prototype !== "undefined") {
                 proto = proto.prototype;
             }
-            // reuse the logic behind Object.extend
+            // reuse the logic behind me.Object.extend
             if (typeof(proto[name]) === "function") {
                 // save the original function
                 var _parent = proto[name];

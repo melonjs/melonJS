@@ -1,6 +1,6 @@
 describe("Jay Inheritance", function () {
     describe("Simple inheritance tests", function () {
-        var Person = Object.extend({
+        var Person = me.Object.extend({
             "init" : function (isDancing) {
                 this.dancing = isDancing;
             },
@@ -153,7 +153,7 @@ describe("Jay Inheritance", function () {
         });
 
         describe("d = new D()", function () {
-            var A = Object.extend({
+            var A = me.Object.extend({
                 "init" : function () {},
                 "foo" : function () {
                     stepper.step("A.foo");
@@ -203,7 +203,7 @@ describe("Jay Inheritance", function () {
         });
 
         describe("z = new Z()", function () {
-            var X = Object.extend({
+            var X = me.Object.extend({
                 "init" : function () {},
                 "foo" : function () {
                     stepper.step("X.foo");
@@ -249,11 +249,11 @@ describe("Jay Inheritance", function () {
 
     describe("Correctness tests", function () {
         function missingConstructor() {
-            Object.extend({});
+            me.Object.extend({});
         }
 
         function nonMethod() {
-            Object.extend({
+            me.Object.extend({
                 "init" : function () {},
                 "bad" : 0
             });
@@ -270,7 +270,7 @@ describe("Jay Inheritance", function () {
 
 
     describe("Mixin tests", function () {
-        var Base = Object.extend({
+        var Base = me.Object.extend({
             "init" : function () {}
         });
 
