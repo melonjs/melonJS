@@ -19,7 +19,7 @@
  */
 
 /**
-* First, grab the extend method from me.BaseClass.prototype
+* First, grab the extend method from me.Object
 * and attach it to Error object
 */
 if (!Error.extend) {

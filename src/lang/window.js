@@ -23,17 +23,14 @@
     window.me = window.me || {};
 
     /**
-    * Empty BaseClass constructor and prototype attached to 
+    * me.Object constructor and prototype inherits from Object and is attached to 
     * `me` global object to act as the base class for inheritance 
     */
-    me.BaseClass = function () {};
-    me.BaseClass.prototype = Object.create(Object);
-
-    /**
-    * Instantiate new me.BaseClass and attach to me.Object
-    * to allow new sub-classes to be created using me.Object.extend
-    */
-    me.Object = new me.BaseClass();
+    me.Object = function () {
+        Object.apply(this, arguments);
+    };
+    me.Object.prototype = Object.create(Object.prototype);
+    me.Object.prototype.constructor = me.Object;
 
     /*
      * DOM loading stuff

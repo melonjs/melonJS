@@ -217,7 +217,7 @@ if (!Object.assign) {
  * console.log(r instanceof Ninja); // => false
  */
 (function () {
-    Object.defineProperty(me.BaseClass.prototype, "extend", {
+    Object.defineProperty(me.Object, "extend", {
         "value" : function () {
             var methods = {};
             var mixins = new Array(arguments.length);
