@@ -1,12 +1,13 @@
 Version History
 ---------------
 2.2.0
+* Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored me.Rect to inherit from me.Polygon
 * TMX : added hexagonal map support (@matthewmmorrow)
-* TMX : optimized all renderers to be more GC friendy (using the pooling system for temporary objects)
+* TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`
