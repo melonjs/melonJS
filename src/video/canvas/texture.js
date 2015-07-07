@@ -39,7 +39,7 @@
      *     me.loader.getImage("spritesheet")
      * );
      */
-    me.CanvasRenderer.prototype.Texture = Object.extend(
+    me.CanvasRenderer.prototype.Texture = me.Object.extend(
     /** @scope me.video.renderer.Texture.prototype */
     {
         /**

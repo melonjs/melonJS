@@ -15,7 +15,7 @@
      * @memberOf me
      * @constructor
      */
-    me.TMXTileset = Object.extend({
+    me.TMXTileset = me.Object.extend({
         // constructor
         init: function (tileset) {
             var i = 0;
@@ -263,7 +263,7 @@
      * @memberOf me
      * @constructor
      */
-    me.TMXTilesetGroup = Object.extend({
+    me.TMXTilesetGroup = me.Object.extend({
         // constructor
         init: function () {
             this.tilesets = [];

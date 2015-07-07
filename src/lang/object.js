@@ -165,7 +165,7 @@ if (!Object.assign) {
  * prototype.
  * @return {Object}
  * @example
- * var Person = Object.extend({
+ * var Person = me.Object.extend({
  *     "init" : function (isDancing) {
  *         this.dancing = isDancing;
  *     },
@@ -217,7 +217,7 @@ if (!Object.assign) {
  * console.log(r instanceof Ninja); // => false
  */
 (function () {
-    Object.defineProperty(Object.prototype, "extend", {
+    Object.defineProperty(me.BaseClass.prototype, "extend", {
         "value" : function () {
             var methods = {};
             var mixins = new Array(arguments.length);
@@ -260,6 +260,9 @@ if (!Object.assign) {
             Object.defineProperty(Class, "__methods__", {
                 "value" : methods
             });
+
+            // Make this class extendable
+            Class.extend = this.extend;
 
             return Class;
         }

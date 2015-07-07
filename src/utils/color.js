@@ -176,7 +176,7 @@
      * @param {Number} [b=0] blue component
      * @param {Number} [alpha=1.0] alpha value
      */
-    me.Color = Object.extend(
+    me.Color = me.Object.extend(
     /** @scope me.Color.prototype */
     {
 

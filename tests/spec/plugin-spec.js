@@ -1,6 +1,6 @@
 describe("me.plugin", function () {
     describe("#patch", function () {
-        var BaseObject = Object.extend({
+        var BaseObject = me.Object.extend({
             init : function () {
                 this.name = "John Doe";
             },

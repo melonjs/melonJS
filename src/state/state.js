@@ -18,7 +18,7 @@
      * @constructor
      * @see me.state
      */
-    me.ScreenObject = Object.extend(
+    me.ScreenObject = me.Object.extend(
     /** @scope me.ScreenObject.prototype */
     {
         /** @ignore */

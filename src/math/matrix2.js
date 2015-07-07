@@ -16,7 +16,7 @@
      * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
      * @param {Number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.set}
      */
-    me.Matrix2d = Object.extend(
+    me.Matrix2d = me.Object.extend(
     /** @scope me.Matrix2d.prototype */    {
 
         /** @ignore */

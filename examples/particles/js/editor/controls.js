@@ -1,7 +1,7 @@
 (function() {
     var pe = game.ParticleEditor = game.ParticleEditor || {};
 
-    pe.EmitterList = Object.extend({
+    pe.EmitterList = me.Object.extend({
         init : function(emitterController, container) {
             this.emitterController = emitterController;
             this.emitters = [];
@@ -137,7 +137,7 @@
         }
     });
 
-    pe.EmitterController = Object.extend({
+    pe.EmitterController = me.Object.extend({
         init : function(container) {
             this.widgets = [];
             this.ingameWidgets = [];
@@ -419,7 +419,7 @@
         },
     });
 
-    pe.CodeGenerator = Object.extend({
+    pe.CodeGenerator = me.Object.extend({
         init : function(controller, container) {
             this.emitter = null;
             this.syncId = null;
