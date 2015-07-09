@@ -182,9 +182,16 @@
             // default origin position
             this.anchorPoint.set(0, 0);
 
+        },
+        
+        // called when the layer is added to the game world or a container
+        onActivateEvent : function () {
             // register to the viewport change notification
             this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+            
+            // last position of the viewport
+            this.lastpos.copy(me.game.viewport.pos);
         },
 
         /**
@@ -306,8 +313,8 @@
             }
         },
 
-        // called when the layer is destroyed
-        destroy : function () {
+        // called when the layer is removed from the game world or a container
+        onDeactivateEvent : function () {
             // cancel the event subscription
             if (this.vpChangeHdlr)  {
                 me.event.unsubscribe(this.vpChangeHdlr);
@@ -317,10 +324,8 @@
                 me.event.unsubscribe(this.vpResizeHdlr);
                 this.vpResizeHdlr = null;
             }
-            // clear all allocated objects
-            this.image = null;
-            this.lastpos = null;
         }
+
     });
 
     /**
@@ -368,15 +373,6 @@
              * @name me.TMXLayer#animatedTilesets
              */
             this.animatedTilesets = [];
-            if (this.tilesets) {
-                var tileset = this.tilesets.tilesets;
-                for (var i = 0; i < tileset.length; i++) {
-                    if (tileset[i].isAnimated) {
-                        tileset[i].isAnimated = false;
-                        this.animatedTilesets.push(tileset[i]);
-                    }
-                }
-            }
 
             /**
              * Layer contains tileset animations
@@ -384,12 +380,7 @@
              * @type Boolean
              * @name me.TMXLayer#isAnimated
              */
-            this.isAnimated = this.animatedTilesets.length > 0;
-
-            // Force pre-render off when tileset animation is used
-            if (this.isAnimated) {
-                this.preRender = false;
-            }
+            this.isAnimated = false;
 
             // for displaying order
             this.z = z;
@@ -440,31 +431,51 @@
                     {/* use default values*/}
                 );
             }
-
-            // initialize the layer data array
+            
+            //initialize the layer data array
             this.initArray(this.cols, this.rows);
+        },
+        
+        // called when the layer is added to the game world or a container
+        onActivateEvent : function () {
+        
+            // (re)initialize the layer data array
+            /*if (this.layerData === undefined) {
+                this.initArray(this.cols, this.rows);
+            }*/
+            
+            if (this.animatedTilesets === undefined) {
+                this.animatedTilesets = [];
+            }
+            
+            if (this.tilesets) {
+                var tileset = this.tilesets.tilesets;
+                for (var i = 0; i < tileset.length; i++) {
+                    if (tileset[i].isAnimated) {
+                        tileset[i].isAnimated = false;
+                        this.animatedTilesets.push(tileset[i]);
+                    }
+                }
+            }
 
+            this.isAnimated = this.animatedTilesets.length > 0;
+
+            // Force pre-render off when tileset animation is used
+            if (this.isAnimated) {
+                this.preRender = false;
+            }
+            
             // Resize the bounding rect
             this.resizeBounds(this.width, this.height);
         },
-
-        /**
-         * destroy function
-         * @ignore
-         * @function
-         */
-        destroy : function () {
+        
+        // called when the layer is removed from the game world or a container
+        onDeactivateEvent : function () {
             // clear all allocated objects
-            if (this.preRender) {
-                this.canvasRenderer = null;
-            }
-            this.renderer = null;
-            // clear all allocated objects
-            this.layerData = null;
-            this.tileset = null;
-            this.tilesets = null;
-            this.animatedTilesets = null;
+            //this.layerData = undefined;
+            this.animatedTilesets = undefined;
         },
+
 
         /**
          * set the layer renderer

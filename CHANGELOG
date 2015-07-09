@@ -8,6 +8,7 @@ Version History
 * Shapes : refactored me.Rect to inherit from me.Polygon
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
+* TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`

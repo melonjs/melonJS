@@ -309,6 +309,30 @@
         },
 
         /**
+         * returns the list of childs with the specified class type
+         * @name getChildByType
+         * @memberOf me.Container
+         * @public
+         * @function
+         * @param {Object} class type
+         * @return {me.Renderable[]} Array of children
+         */
+        getChildByType : function (_class) {
+            var objList = [];
+
+            for (var i = this.children.length - 1; i >= 0; i--) {
+                var obj = this.children[i];
+                if (obj instanceof _class) {
+                    objList.push(obj);
+                }
+                if (obj instanceof me.Container) {
+                    objList = objList.concat(obj.getChildByType(_class));
+                }
+            }
+            return objList;
+        },
+
+        /**
          * returns the list of childs with the specified name<br>
          * as defined in Tiled (Name field of the Object Properties)<br>
          * note : avoid calling this function every frame since

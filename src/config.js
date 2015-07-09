@@ -200,9 +200,6 @@
         // init the FPS counter if needed
         me.timer.init();
 
-        // create a new map reader instance
-        me.mapReader = new me.TMXMapReader();
-
         // init the App Manager
         me.state.init();
 

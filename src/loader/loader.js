@@ -84,12 +84,12 @@
                     isTMX: (tmxData.type === "tmx"),
                     format : format
                 };
+                // add the tmx to the levelDirector
+                if (tmxData.type === "tmx") {
+                    me.levelDirector.addTMXLevel(tmxData.name);
+                }
             }
 
-            // add the tmx to the levelDirector
-            if (tmxData.type === "tmx") {
-                me.levelDirector.addTMXLevel(tmxData.name);
-            }
 
             //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
             if (tmxData.data) {
