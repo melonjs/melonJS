@@ -17,7 +17,7 @@ Version History
 * Container : fixed child bounds when manipulating the container position.
 * Core : fixed a regression when using the pooling system with renderables.
 * Examples : fixed conditional debugPanel loading in cocoonJS
-* Font : fixed the drawStroke function (zoiba)
+* Font : fixed the drawStroke function (@zoiba)
 * Input : fixed an uncaught exception with the 'maxTouchPoints' polyfill under Chrome 43+
 * Input : fixed/improved `pointerEvent` and `pointerLeave` event bindings for the sample GUI Object
 * Loader : throw an exception indicating to use JSON if XML parsing is not supported by the browser/platform
