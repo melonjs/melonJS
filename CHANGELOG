@@ -1,5 +1,8 @@
 Version History
 ---------------
+2.1.3
+* Particles : fix an exception in `me.ParticleContainer`
+
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`
 * Renderable : fixed renderable bounds initialization with object pooling
