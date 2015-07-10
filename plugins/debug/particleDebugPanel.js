@@ -16,16 +16,7 @@
     // ensure that me.debug is defined
     me.debug = me.debug || {};
 
-    /**
-     * @class
-     * @public
-     * @extends me.plugin.Base
-     * @memberOf me
-     * @constructor
-     */
-    me.debug.ParticlePanel = me.Renderable.extend(
-    /** @scope me.debug.ParticlePanel.prototype */
-    {
+    var ParticlePanel = me.Renderable.extend({
 
         /** @private */
         init : function () {
@@ -33,7 +24,7 @@
             this._super(me.Renderable, "init", [ 0, me.video.renderer.getHeight() - 60, 200, 60 ]);
 
             // minimum melonJS version expected
-            this.version = "2.1.0";
+            this.version = "2.2.0";
 
             // to hold the debug options
             // clickable rect area
@@ -45,7 +36,7 @@
 
             // visibility flag
             this.visible = true;
-            
+
             // set the object GUID value
             this.GUID = "particledebug-" + me.utils.createGUID();
 
@@ -277,6 +268,26 @@
 
             renderer.restore();
         },
+    });
+
+    /**
+     * @class
+     * @public
+     * @extends me.plugin.Base
+     * @memberOf me
+     * @constructor
+     */
+    me.debug.ParticlePanel = me.plugin.Base.extend(
+    /** @scope me.debug.ParticlePanel.prototype */
+    {
+
+        /** @private */
+        init : function () {
+            // call the super constructor
+            this._super(me.plugin.Base, "init");
+
+            this.panel = new ParticlePanel();
+        }
     });
 
     /*---------------------------------------------------------*/
