@@ -468,18 +468,18 @@
     pe.VelocityWidget = pe.VectorWidget.extend({
         init : function() {
             this._super(pe.VectorWidget, 'init', ["velocity", new me.Color(229, 216, 47, 0.3)]);
-            this.scale = 30;
+            this.scaler = 30;
         },
         onVectorChanged : function(vector) {
             var object = this.object;
-            object.speed = vector.length() / this.scale;
+            object.speed = vector.length() / this.scaler;
             object.angle = Math.atan2(vector.x, vector.y) - Math.PI / 2;
             if (object.angle < -Math.PI) {
                 object.angle += 2 * Math.PI;
             }
         },
         onSync : function(object) {
-            var length = object.speed * this.scale;
+            var length = object.speed * this.scaler;
             var angle = object.angle;
             this.setVector(Math.cos(angle) * length, -Math.sin(angle) * length);
         }
@@ -488,22 +488,22 @@
     pe.ForceWidget = pe.VectorWidget.extend({
         init : function() {
             this._super(pe.VectorWidget, 'init', ["force", new me.Color(79, 214, 72, 0.3)]);
-            this.scale = 300;
+            this.scaler = 300;
         },
         onVectorChanged : function(vector) {
             var object = this.object;
-            object.wind = vector.x / this.scale;
-            object.gravity = vector.y / this.scale;
+            object.wind = vector.x / this.scaler;
+            object.gravity = vector.y / this.scaler;
         },
         onSync : function(object) {
-            this.setVector(object.wind * this.scale, object.gravity * this.scale);
+            this.setVector(object.wind * this.scaler, object.gravity * this.scaler);
         }
     });
 
     pe.VelocityVariationWidget = pe.WidgetBase.extend({
         init : function() {
             this._super(pe.WidgetBase, 'init', [""]);
-            this.scale = 30;
+            this.scaler = 30;
 
             this.shape = new pe.VelocityVariationWidget.Helper(new me.Color(105, 190, 255, 0.3));
             this.dragHandler = new pe.DragHandler(new me.Color(150, 150, 255, 1));
@@ -524,7 +524,7 @@
                     variation += 2 * Math.PI;
                 }
                 object.angleVariation = variation.clamp(0, Math.PI);
-                variation = (pos.length() / this.scale) - object.speed;
+                variation = (pos.length() / this.scaler) - object.speed;
                 object.speedVariation = variation < 0 ? 0 : variation;
                 me.event.publish("propertyChanged", [ object ]);
             }
@@ -561,7 +561,7 @@
 
                 this.shape.set(object);
                 var angle = object.angle - object.angleVariation;
-                var radius = (object.speed + object.speedVariation) * this.scale;
+                var radius = (object.speed + object.speedVariation) * this.scaler;
                 var x = object.pos.x + (object.width / 2) + Math.cos(angle) * radius;
                 var y = object.pos.y + (object.height / 2) - Math.sin(angle) * radius;
                 this.dragHandler.setPosition(x, y);
@@ -577,15 +577,15 @@
             this.endAngle = 0;
             this.minRadius = 0;
             this.maxRadius = 0;
-            this.scale = 30;
+            this.scaler = 30;
             this.z = Infinity;
         },
         set : function(object) {
             this.pos.set(object.pos.x + (object.width / 2), object.pos.y + (object.height / 2));
             this.startAngle = -(object.angle - object.angleVariation);
             this.endAngle = -(object.angle + object.angleVariation);
-            this.minRadius = (object.speed - object.speedVariation) * this.scale;
-            this.maxRadius = (object.speed + object.speedVariation) * this.scale;
+            this.minRadius = (object.speed - object.speedVariation) * this.scaler;
+            this.maxRadius = (object.speed + object.speedVariation) * this.scaler;
         },
         draw : function(renderer) {
             var x = this.pos.x,
