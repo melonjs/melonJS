@@ -12,15 +12,20 @@
 
 if (!String.prototype.trim) {
     /**
-     * returns the string stripped of whitespace from both ends
+     * removes whitespace from both ends of a string. Whitespace in this context is all the whitespace characters (space, tab, no-break space, etc.) and all the line terminator characters (LF, CR, etc.).
      * @memberof! external:String#
      * @alias trim
-     * @return {string} trimmed string
+     * @return {string} the string stripped of whitespace from both ends. 
      */
-    String.prototype.trim = function () {
-        return this.replace(/^\s+|\s+$/gm, "");
-
-    };
+    if (!String.prototype.trim) {
+      (function() {
+        // Make sure we trim BOM and NBSP
+        var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+        String.prototype.trim = function() {
+          return this.replace(rtrim, "");
+        };
+      })();
+    }
 }
 
 if (!String.prototype.trimLeft) {
