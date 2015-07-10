@@ -6,7 +6,7 @@
  * a simple debug panel plugin
  * usage : me.plugin.register.defer(this, me.debug.Panel, "debug");
  *
- * you can then use me.plugin.debug.show() or me.plugin.debug.hide()
+ * you can then use me.plugins.debug.show() or me.plugins.debug.hide()
  * to show or hide the panel, or press respectively the "S" and "H" keys.
  *
  * note :
@@ -50,7 +50,7 @@
             this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
             // minimum melonJS version expected
-            this.version = "2.1.0";
+            this.version = "2.2.0";
 
             // to hold the debug options
             // clickable rect area

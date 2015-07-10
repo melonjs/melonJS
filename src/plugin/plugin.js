@@ -5,6 +5,15 @@
  */
 (function () {
     /**
+     * There is no constructor function for me.plugins<br>
+     * This namespace is a container for all registered plugins.
+     * @see me.plugin.register
+     * @namespace me.plugins
+     * @memberOf me
+     */
+    me.plugins = {};
+
+    /**
      * There is no constructor function for me.plugin
      * @namespace me.plugin
      * @memberOf me
@@ -104,8 +113,8 @@
          * // register a new plugin
          * me.plugin.register(TestPlugin, "testPlugin");
          * // the plugin then also become available
-         * // under then me.plugin namespace
-         * me.plugin.testPlugin.myfunction ();
+         * // under then me.plugins namespace
+         * me.plugins.testPlugin.myfunction ();
          */
         singleton.register = function (plugin, name) {
             // ensure me.plugin[name] is not already "used"
@@ -122,17 +131,20 @@
 
             // try to instantiate the plugin
             _args[0] = plugin;
-            me.plugin[name] = new (plugin.bind.apply(plugin, _args))();
+            var instance = new (plugin.bind.apply(plugin, _args))();
 
             // inheritance check
-            if (!me.plugin[name] || !(me.plugin[name] instanceof me.plugin.Base)) {
+            if (!instance || !(instance instanceof me.plugin.Base)) {
                 throw new me.Error("Plugin should extend the me.plugin.Base Class !");
             }
 
             // compatibility testing
-            if (me.sys.checkVersion(me.plugin[name].version) > 0) {
-                throw new me.Error("Plugin version mismatch, expected: " + me.plugin[name].version + ", got: " + me.version);
+            if (me.sys.checkVersion(instance.version) > 0) {
+                throw new me.Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
             }
+
+            // create a reference to the new plugin
+            me.plugins[name] = instance;
         };
 
         // return our singleton
