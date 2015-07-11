@@ -271,7 +271,10 @@
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
                 mx = me.game.currentLevel.pos.x,
-                my = me.game.currentLevel.pos.y;
+                my = me.game.currentLevel.pos.y,
+                alpha = renderer.globalAlpha();
+
+            renderer.globalAlpha(alpha * this.getOpacity());
 
             if (this.ratio.x === this.ratio.y === 0) {
                 // TODO: repeat
@@ -289,6 +292,8 @@
                     this.pos.y - my
                 );
             }
+
+            renderer.globalAlpha(alpha);
         },
 
         // called when the layer is destroyed
