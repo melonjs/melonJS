@@ -71,8 +71,6 @@
                 // add a new image layer
                 map.mapLayers.push(new me.ImageLayer(
                     0, 0, {
-                        width : map.width,
-                        height : map.height,
                         name : "background_image",
                         image : map.background_image,
                         z: zOrder++
@@ -311,12 +309,6 @@
 
             // check if we have any additional properties
             me.TMXUtils.applyTMXProperties(imageLayer, data);
-
-            // make sure ratio is a vector (backward compatibility)
-            if (typeof(imageLayer.ratio) === "number") {
-                var ratio = imageLayer.ratio;
-                imageLayer.ratio = new me.Vector2d(ratio, ratio);
-            }
 
             return imageLayer;
         },
