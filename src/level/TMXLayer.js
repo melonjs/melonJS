@@ -93,6 +93,9 @@
             // call the constructor
             this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
 
+            // render in screen coordinates
+            this.floating = true;
+
             // displaying order
             this.z = settings.z || 0;
 
@@ -238,21 +241,21 @@
                 vy = vpos.y,
 
                 // Final image position
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) + vx * rx),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) + vy * ry);
+                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
+                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
 
 
             // Repeat horizontally; start drawing from left boundary
-            if (this.repeatX && x > vx) {
-                this.pos.x = (x - vx) % width + vx - width;
+            if (this.repeatX) {
+                this.pos.x = x % width;
             }
             else {
                 this.pos.x = x;
             }
 
             // Repeat vertically; start drawing from top boundary
-            if (this.repeatY && y > vy) {
-                this.pos.y = (y - vy) % height + vy - height;
+            if (this.repeatY) {
+                this.pos.y = y % height;
             }
             else {
                 this.pos.y = y;
@@ -270,8 +273,6 @@
                 bh = me.game.viewport.bounds.height,
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
-                mx = me.game.currentLevel.pos.x,
-                my = me.game.currentLevel.pos.y,
                 alpha = renderer.globalAlpha();
 
             renderer.globalAlpha(alpha * this.getOpacity());
@@ -280,16 +281,16 @@
                 // TODO: repeat
                 renderer.drawImage(
                     this.image,
-                    ~~(this.pos.x - mx + ax * (bw - width)),
-                    ~~(this.pos.y - my + ay * (bh - height))
+                    ~~(this.pos.x + ax * (bw - width)),
+                    ~~(this.pos.y + ay * (bh - height))
                 );
             }
             else {
                 // TODO: repeat
                 renderer.drawImage(
                     this.image,
-                    this.pos.x - mx,
-                    this.pos.y - my
+                    this.pos.x,
+                    this.pos.y
                 );
             }
 
