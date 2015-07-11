@@ -68,7 +68,7 @@
 
                 if (typeof(atlas.meta) !== "undefined") {
                     // Texture Packer
-                    if (atlas.meta.app.contains("texturepacker")) {
+                    if (atlas.meta.app.includes("texturepacker")) {
                         this.format = "texturepacker";
                         // set the texture
                         if (typeof(texture) === "undefined") {
@@ -84,8 +84,8 @@
                         }
                     }
                     // ShoeBox
-                    else if (atlas.meta.app.contains("ShoeBox")) {
-                        if (!atlas.meta.exporter || !atlas.meta.exporter.contains("melonJS")) {
+                    else if (atlas.meta.app.includes("ShoeBox")) {
+                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
                             throw new me.video.renderer.Texture.Error(
                                 "ShoeBox requires the JSON exporter : " +
                                 "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
@@ -96,7 +96,7 @@
                         this.texture = texture;
                     }
                     // Internal texture atlas
-                    else if (atlas.meta.app.contains("melonJS")) {
+                    else if (atlas.meta.app.includes("melonJS")) {
                         this.format = "melonJS";
                         this.texture = texture;
                     }

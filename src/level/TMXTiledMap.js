@@ -477,7 +477,7 @@
                 var group = this.objectGroups[g];
 
                 // check if this is the collision shape group
-                isCollisionGroup = group.name.toLowerCase().contains(TMXConstants.COLLISION_GROUP);
+                isCollisionGroup = group.name.toLowerCase().includes(TMXConstants.COLLISION_GROUP);
                
                 if (flatten === false) {
                     // create a new container with Infinite size (?)

@@ -73,19 +73,19 @@ String.prototype.isBoolean = function () {
     return ("true" === trimmed) || ("false" === trimmed);
 };
 
-if (!String.prototype.contains) {
+if (!String.prototype.includes) {
     /**
-     * determines whether or not a string contains another string.
+     * determines whether one string may be found within another string.
      * @memberof! external:String#
-     * @alias contains
-     * @param {string} str A string to be searched for within this string.
-     * @param {number} [startIndex=0] The position in this string at which
-     * to begin searching for given string.
+     * @alias includes
+     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes
+     * @param {string} searchString A string to be searched for within this string.
+     * @param {number} [position=0] The position in this string at which to begin searching for the given string.
      * @return {boolean} true if contains the specified string
      */
-    String.prototype.contains = function (str, startIndex) {
-        return -1 !== String.prototype.indexOf.call(this, str, startIndex);
-    };
+  String.prototype.includes = function() {
+    return String.prototype.indexOf.apply(this, arguments) !== -1;
+  };
 }
 
 /**

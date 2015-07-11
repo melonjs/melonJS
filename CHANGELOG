@@ -3,6 +3,7 @@ Version History
 2.2.0
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
+* Core : replaced String.contains by its ES6 equivalent (String.includes)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)

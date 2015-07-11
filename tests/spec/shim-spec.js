@@ -5,23 +5,23 @@ describe("ES5/ES6 Shim", function () {
 
     describe("the String 'To be, or not to be, that is the question.'", function () {
         it("contains 'To Be'", function () {
-            expect(str.contains("To be")).toEqual(true);
+            expect(str.includes("To be")).toEqual(true);
         });
 
         it("contains 'question'", function () {
-            expect(str.contains("question")).toEqual(true);
+            expect(str.includes("question")).toEqual(true);
         });
         
         it("does no contain 'nonexistent'", function () {
-            expect(str.contains("nonexistent")).toEqual(false);
+            expect(str.includes("nonexistent")).toEqual(false);
         });
         
         it("does not contains 'To be' at index 1", function () {
-            expect(str.contains("To be", 1)).toEqual(false);
+            expect(str.includes("To be", 1)).toEqual(false);
         });
 
         it("does not contain 'TO BE'", function () {
-            expect(str.contains("TO BE")).toEqual(false);
+            expect(str.includes("TO BE")).toEqual(false);
         });
 
     });
