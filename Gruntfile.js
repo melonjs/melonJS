@@ -192,14 +192,14 @@ module.exports = function (grunt) {
       options : {
         specs : testSpecs,
         helpers : [ "tests/spec/helper-spec.js" ],
-        host : "http://localhost:8000/"
+        host : "http://localhost:8001/"
       }
     },
 
     connect : {
       server : {
         options : {
-          port : 8000
+          port : 8001
         }
       },
 
