@@ -154,6 +154,10 @@
          * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
         drawImage : function () {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
             this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
         },
 
@@ -170,6 +174,10 @@
          * @see me.CanvasRenderer#createPattern
          */
         drawPattern : function (pattern, x, y, width, height) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
             var fillStyle = this.backBufferContext2D.fillStyle;
             this.backBufferContext2D.fillStyle = pattern;
             this.backBufferContext2D.fillRect(x, y, width, height);
@@ -189,6 +197,10 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         fillArc : function (x, y, radius, start, end, antiClockwise) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
             this.backBufferContext2D.save();
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.translate(x + radius, y + radius);
@@ -209,6 +221,10 @@
          * @param {Number} height
          */
         fillRect : function (x, y, width, height) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
             this.backBufferContext2D.fillRect(x, y, width, height);
         },
 
@@ -352,11 +368,17 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         strokeArc : function (x, y, radius, start, end, antiClockwise) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.save();
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.translate(x + radius, y + radius);
             this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
+            this.restore();
         },
 
         /**
@@ -370,6 +392,11 @@
          * @param {Number} h vertical radius of the ellipse
          */
         strokeEllipse : function (x, y, w, h) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.save();
             this.context.beginPath();
             var hw = w,
                 hh = h,
@@ -391,6 +418,7 @@
             this.backBufferContext2D.bezierCurveTo(xmin, by, lx, ymax, lx, y);
             this.backBufferContext2D.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
             this.backBufferContext2D.stroke();
+            this.restore();
         },
 
         /**
@@ -404,10 +432,16 @@
          * @param {Number} endY the end y coordinate
          */
         strokeLine : function (startX, startY, endX, endY) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.save();
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(startX, startY);
             this.backBufferContext2D.lineTo(endX, endY);
             this.backBufferContext2D.stroke();
+            this.restore();
         },
 
         /**
@@ -418,6 +452,11 @@
          * @param {me.Polygon} poly the shape to draw
          */
         strokePolygon : function (poly) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.save();
             this.backBufferContext2D.translate(poly.pos.x, poly.pos.y);
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
@@ -430,6 +469,7 @@
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
             this.backBufferContext2D.translate(-poly.pos.x, -poly.pos.y);
+            this.restore();
         },
 
         /**
@@ -443,6 +483,10 @@
          * @param {Number} height
          */
         strokeRect : function (x, y, width, height) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
             this.backBufferContext2D.strokeRect(x, y, width, height);
         },
 
@@ -457,11 +501,8 @@
             if (shape instanceof me.Rect) {
                 this.strokeRect(shape.left, shape.top, shape.width, shape.height);
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.save();
                 this.strokePolygon(shape);
-                this.restore();
             } else if (shape instanceof me.Ellipse) {
-                this.save();
                 if (shape.radiusV.x === shape.radiusV.y) {
                     // it's a circle
                     this.strokeArc(
@@ -480,7 +521,6 @@
                         shape.radiusV.y
                     );
                 }
-                this.restore();
             }
         },
 

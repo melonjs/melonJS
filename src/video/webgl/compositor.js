@@ -290,6 +290,13 @@
          * @param {Number} h Destination height
          */
         addQuad : function (texture, key, x, y, w, h) {
+            var color = this.color.toGL();
+
+            if (color[3] < 1 / 255) {
+                // Fast path: don't send fully transparent quads
+                return;
+            }
+
             this.useShader(this.quadShader.handle);
             if (this.length >= MAX_LENGTH) {
                 this.flush();
@@ -331,7 +338,6 @@
 
             // Fill color buffer
             // FIXME: Pack color vector into single float
-            var color = this.color.toGL();
             this.stream.set(color, idx0 + COLOR_ELEMENT);
             this.stream.set(color, idx1 + COLOR_ELEMENT);
             this.stream.set(color, idx2 + COLOR_ELEMENT);
