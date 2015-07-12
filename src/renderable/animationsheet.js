@@ -135,6 +135,7 @@
                     if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
                         this.anim[name].frames[i] = Object.assign(
+                          {},
                           this.textureAtlas[index[i]],
                           { delay: this.anim[name].animationspeed }
                         );
@@ -147,6 +148,7 @@
                         );
                     } else {
                         this.anim[name].frames[i] = Object.assign(
+                          {},
                           this.textureAtlas[this.atlasIndices[index[i]]],
                           { delay: this.anim[name].animationspeed }
                         );
