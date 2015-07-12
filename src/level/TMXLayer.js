@@ -156,6 +156,8 @@
             this.repeatX = true;
             this.repeatY = true;
 
+            this.createPattern();
+
             /**
              * Define if and how an Image Layer should be repeated.<br>
              * By default, an Image Layer is repeated both vertically and horizontally.<br>
@@ -193,6 +195,7 @@
                             break;
                     }
                     this.resize(me.game.viewport.width, me.game.viewport.height);
+                    this.createPattern();
                 }
             });
 
@@ -214,6 +217,15 @@
                 this.repeatX ? Infinity : w,
                 this.repeatY ? Infinity : h
             ]);
+        },
+
+        /**
+         * createPattern function
+         * @ignore
+         * @function
+         */
+        createPattern : function () {
+            this._pattern = me.video.renderer.createPattern(this.image, this._repeat);
         },
 
         /**
@@ -240,7 +252,25 @@
                 vx = vpos.x,
                 vy = vpos.y,
 
-                // Final image position
+                /*
+                 * Automatic positioning
+                 *
+                 * The math for scrolling was worked out with the following intentions;
+                 * - `anchorPoint` positions the image relative to the boundary edges
+                 * - `ratio` scales the total image movement by the viewport position
+                 * - The image and viewport position are clamped to the viewport bounds
+                 * - Image position is cycled full-left/top to handle repeat modes
+                 *
+                 * The completed algorithm was then simplified with the help of
+                 * Wolfram Alpha!
+                 *
+                 * It's a bit unreadable, but it works by computing the viewport
+                 * extents (the clamped range of the viewport position) scaled by
+                 * the scrolling ratio. The scaled extents are placed inside a
+                 * "sliding window", allowing the image to move in the opposite
+                 * direction when anchored to the bottom or right sides of the
+                 * viewport boundary.
+                 */
                 x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
                 y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
 
@@ -267,33 +297,32 @@
          * @ignore
          */
         draw : function (renderer) {
-            var width = this.imagewidth,
+            var viewport = me.game.viewport,
+                width = this.imagewidth,
                 height = this.imageheight,
-                bw = me.game.viewport.bounds.width,
-                bh = me.game.viewport.bounds.height,
+                bw = viewport.bounds.width,
+                bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
+                x = this.pos.x,
+                y = this.pos.y,
                 alpha = renderer.globalAlpha();
 
-            renderer.globalAlpha(alpha * this.getOpacity());
-
             if (this.ratio.x === this.ratio.y === 0) {
-                // TODO: repeat
-                renderer.drawImage(
-                    this.image,
-                    ~~(this.pos.x + ax * (bw - width)),
-                    ~~(this.pos.y + ay * (bh - height))
-                );
-            }
-            else {
-                // TODO: repeat
-                renderer.drawImage(
-                    this.image,
-                    this.pos.x,
-                    this.pos.y
-                );
+                x = ~~(x + ax * (bw - width));
+                y = ~~(y + ay * (bh - height));
             }
 
+            renderer.globalAlpha(alpha * this.getOpacity());
+            renderer.translate(x, y);
+            renderer.drawPattern(
+                this._pattern,
+                0,
+                0,
+                viewport.width - x,
+                viewport.height - y
+            );
+            renderer.translate(-x, -y);
             renderer.globalAlpha(alpha);
         },
 

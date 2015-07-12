@@ -79,9 +79,8 @@
                                     "Atlas texture '" + image + "' not found"
                                 );
                             }
-                        } else {
-                            this.texture = texture;
                         }
+                        this.repeat = "no-repeat";
                     }
                     // ShoeBox
                     else if (atlas.meta.app.contains("ShoeBox")) {
@@ -92,13 +91,12 @@
                             );
                         }
                         this.format = "ShoeBox";
-                        // set the texture
-                        this.texture = texture;
+                        this.repeat = "no-repeat";
                     }
                     // Internal texture atlas
                     else if (atlas.meta.app.contains("melonJS")) {
                         this.format = "melonJS";
-                        this.texture = texture;
+                        this.repeat = atlas.meta.repeat || "no-repeat";
                     }
                     // initialize the atlas
                     this.atlas = this.build(atlas);
@@ -114,6 +112,7 @@
                         }
                         // initialize the atlas
                         this.atlas = this.buildFromSpriteSheet(atlas);
+                        this.repeat = "no-repeat";
                     }
                 }
             }

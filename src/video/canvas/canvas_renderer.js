@@ -114,6 +114,25 @@
         },
 
         /**
+         * Create a pattern with the specified repition
+         * @name createPattern
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {image} image Source image
+         * @param {String} repeat Define how the pattern should be repeated
+         * @return {CanvasPattern}
+         * @see me.ImageLayer#repeat
+         * @example
+         * var tileable   = renderer.createPattern(image, "repeat");
+         * var horizontal = renderer.createPattern(image, "repeat-x");
+         * var vertical   = renderer.createPattern(image, "repeat-y");
+         * var basic      = renderer.createPattern(image, "no-repeat");
+         */
+        createPattern : function (image, repeat) {
+            return this.backBufferContext2D.createPattern(image, repeat);
+        },
+
+        /**
          * Draw an image using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
@@ -136,6 +155,25 @@
          */
         drawImage : function () {
             this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
+        },
+
+        /**
+         * Draw a pattern within the given rectangle.
+         * @name drawPattern
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {CanvasPattern} pattern Pattern object
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         * @see me.CanvasRenderer#createPattern
+         */
+        drawPattern : function (pattern, x, y, width, height) {
+            var fillStyle = this.backBufferContext2D.fillStyle;
+            this.backBufferContext2D.fillStyle = pattern;
+            this.backBufferContext2D.fillRect(x, y, width, height);
+            this.backBufferContext2D.fillStyle = fillStyle;
         },
 
         /**
@@ -204,13 +242,13 @@
         scaleCanvas : function (scaleX, scaleY) {
             this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
             this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
-            
+
             // adjust CSS style for High-DPI devices
             if (me.device.getPixelRatio() > 1) {
                 this.canvas.style.width = (this.canvas.width / me.device.getPixelRatio()) + "px";
                 this.canvas.style.height = (this.canvas.height / me.device.getPixelRatio()) + "px";
             }
-            
+
             if (this.doubleBuffering && this.transparent) {
                 // Clears the front buffer for each frame blit
                 this.context.globalCompositeOperation = "copy";

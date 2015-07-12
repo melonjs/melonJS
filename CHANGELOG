@@ -3,10 +3,14 @@ Version History
 2.2.0
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Renderable : prevent position vector re-allocation when pooling renderable objects
+* Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored me.Rect to inherit from me.Polygon
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendy (using the pooling system for temporary objects)
+* TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
+* Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
+* WebGLRenderer : added `repeat` parameter to `createTexture` method
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`
