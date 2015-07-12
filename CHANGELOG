@@ -15,6 +15,7 @@ Version History
 * TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
+* Video : animations are now able to skip frames for low FPS devices and high-speed animations
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
 
 2.1.3
