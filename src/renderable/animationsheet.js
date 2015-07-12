@@ -127,6 +127,8 @@
                 });
             }
 
+            console.log(this.textureAtlas);
+
             // # of frames
             var counter = 0;
             // set each frame configuration (offset, size, etc..)
@@ -134,7 +136,7 @@
                 if (typeof(index[i]) === "number") {
                     if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
-                        this.anim[name].frame["" + i] = this.textureAtlas[index[i]];
+                        this.anim[name].frame["" + i] = Object.assign(this.textureAtlas[index[i]], { delay: this.anim[name].animationspeed });
                         counter++;
                     }
                 } else { // string
@@ -143,7 +145,7 @@
                             "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
-                        this.anim[name].frame[i] = this.textureAtlas[this.atlasIndices[index[i]]];
+                        this.anim[name].frame[i] = Object.assign(this.textureAtlas[this.atlasIndices[index[i]]], { delay: this.anim[name].animationspeed });
                         counter++;
                     }
                 }
@@ -229,7 +231,7 @@
          */
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
-            var frame = this.current.frame["" + this.current.idx];
+            var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
             this.offset = frame.offset;
             this.width = frame.width;
             this.height = frame.height;
@@ -245,6 +247,18 @@
          */
         getCurrentAnimationFrame : function () {
             return this.current.idx;
+        },
+
+        /**
+         * Returns the frame object by the index.
+         * @name getAnimationFrameObjectByIndex
+         * @memberOf me.AnimationSheet
+         * @function
+         * @private
+         * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
+         */
+        getAnimationFrameObjectByIndex : function (id) {
+            return this.current.frame["" + id];
         },
 
         /**
@@ -281,7 +295,7 @@
                     }
 
                     // set next frame timestamp
-                    this.current.nextFrame = this.current.animationspeed;
+                    this.current.nextFrame = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                     return this._super(me.Sprite, "update", [dt]) || true;
                 }
             }
