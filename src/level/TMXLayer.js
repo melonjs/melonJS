@@ -124,8 +124,8 @@
 
             if (typeof(settings.anchorPoint) === "undefined") {
                 /**
-                 * Define how the image is anchored to the viewport<br>
-                 * By default, its upper-left corner is anchored to the viewport's upper left corner.<br>
+                 * Define how the image is anchored to the viewport bounds<br>
+                 * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
                  * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
                  * Some common examples:<br>
                  * * &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
