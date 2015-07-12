@@ -26,7 +26,7 @@
          * set and interpret a TMX property value
          * @ignore
          */
-        function setTMXValue(value) {
+        function setTMXValue(name, value) {
             if (!value || value.isBoolean()) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
@@ -45,6 +45,18 @@
                     throw new me.Error("Unable to parse JSON: " + match);
                 }
             }
+
+            // normalize values
+            if (name.search(/^(ratio|anchorPoint)$/) >= 0) {
+                // convert number to vector
+                if (typeof(value) === "number") {
+                    value = {
+                        "x" : value,
+                        "y" : value
+                    };
+                }
+            }
+
             // return the interpreted value
             return value;
         }
@@ -56,10 +68,10 @@
                     var attribute = elt.attributes.item(j);
                     if (typeof(attribute.name) !== "undefined") {
                         // DOM4 (Attr no longer inherit from Node)
-                        obj[attribute.name] = setTMXValue(attribute.value);
+                        obj[attribute.name] = setTMXValue(attribute.name, attribute.value);
                     } else {
                         // else use the deprecated ones
-                        obj[attribute.nodeName] = setTMXValue(attribute.nodeValue);
+                        obj[attribute.nodeName] = setTMXValue(attribute.nodeName, attribute.nodeValue);
                     }
                 }
             }
@@ -149,7 +161,7 @@
                     for (var name in properties) {
                         if (properties.hasOwnProperty(name)) {
                             // set the value
-                            obj[name] = setTMXValue(properties[name]);
+                            obj[name] = setTMXValue(name, properties[name]);
                         }
                     }
                 }

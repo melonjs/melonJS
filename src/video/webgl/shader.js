@@ -166,19 +166,24 @@
          * @param {WebGLContext} gl WebGL Context
          * @param {Number} unit Destination texture unit
          * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
+         * @param {String} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
          * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @return {WebGLTexture} A texture object
          */
-        api.createTexture = function (gl, unit, image, w, h, b) {
+        api.createTexture = function (gl, unit, image, repeat, w, h, b) {
+            repeat = repeat || "no-repeat";
+
             var texture = gl.createTexture(),
-                filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST;
+                filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST,
+                rs = repeat.search(/^(repeat|repeat-x)$/) >= 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE,
+                rt = repeat.search(/^(repeat|repeat-y)$/) >= 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
             gl.activeTexture(gl.TEXTURE0 + unit);
             gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
             if (w || h || b) {

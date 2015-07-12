@@ -71,8 +71,6 @@
                 // add a new image layer
                 map.mapLayers.push(new me.ImageLayer(
                     0, 0, {
-                        width : map.width,
-                        height : map.height,
                         name : "background_image",
                         image : map.background_image,
                         z: zOrder++
@@ -279,11 +277,11 @@
                 // use the default one
                 layer.setRenderer(me.game.tmxRenderer);
             }
-            
+
             // detect encoding and compression
             var encoding = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_ENCODING] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_ENCODING];
             var compression = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_COMPRESSION] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_COMPRESSION];
-            
+
             // parse the layer data
             this.setLayerData(layer, data[TMXConstants.TMX_TAG_DATA], encoding || "json", compression);
             return layer;
@@ -294,15 +292,11 @@
             var ilx = +data[TMXConstants.TMX_TAG_X] || 0;
             var ily = +data[TMXConstants.TMX_TAG_Y] || 0;
             var iln = data[TMXConstants.TMX_TAG_NAME];
-            var ilw = +data[TMXConstants.TMX_TAG_WIDTH];
-            var ilh = +data[TMXConstants.TMX_TAG_HEIGHT];
             var ilsrc = typeof (data[TMXConstants.TMX_TAG_IMAGE]) !== "string" ? data[TMXConstants.TMX_TAG_IMAGE].source : data[TMXConstants.TMX_TAG_IMAGE];
 
             // create the layer
             var imageLayer = new me.ImageLayer(
                 ilx, ily, {
-                    width : ilw * map.tilewidth,
-                    height: ilh * map.tileheight,
                     name: iln,
                     image: ilsrc,
                     z : z
@@ -315,12 +309,6 @@
 
             // check if we have any additional properties
             me.TMXUtils.applyTMXProperties(imageLayer, data);
-
-            // make sure ratio is a vector (backward compatibility)
-            if (typeof(imageLayer.ratio) === "number") {
-                var ratio = imageLayer.ratio;
-                imageLayer.ratio = new me.Vector2d(ratio, ratio);
-            }
 
             return imageLayer;
         },

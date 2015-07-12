@@ -203,6 +203,7 @@
                     this.gl,
                     unit,
                     texture.texture,
+                    texture.repeat,
                     w,
                     h,
                     b

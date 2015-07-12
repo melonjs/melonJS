@@ -60,11 +60,10 @@
      * @param {Number} y y coordinate
      * @param {Object} settings ImageLayer properties
      * @param {Image|String} settings.image Image reference. See {@link me.loader#getImage}
-     * @param {Number} [settings.width=image.width] Layer width in pixels
-     * @param {Number} [settings.height=image.height] Layer height in pixels
      * @param {String} [settings.name="me.ImageLayer"] Layer name
      * @param {Number} [settings.z=0] z-index position
      * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied
+     * @param {Number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
      */
     me.ImageLayer = me.Renderable.extend({
         /**
@@ -75,10 +74,6 @@
         init: function (x, y, settings) {
             // layer name
             this.name = settings.name || "me.ImageLayer";
-
-            // maximum layer size
-            this.maxWidth = settings.width || Infinity;
-            this.maxHeight = settings.height || Infinity;
 
             // get the corresponding image
             this.image = me.utils.getImage(settings.image);
@@ -96,19 +91,18 @@
             this.imageheight = this.image.height;
 
             // call the constructor
-            this._super(me.Renderable, "init", [x, y, this.maxWidth, this.maxHeight]);
-            // resize/compute the correct image layer size
-            this.resize(me.game.viewport.width, me.game.viewport.height);
+            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
 
-            // specify the start offset when drawing the image (for parallax/repeat features)
-            this.offset = new me.Vector2d(0, 0);
+            // render in screen coordinates
+            this.floating = true;
 
             // displaying order
             this.z = settings.z || 0;
 
             /**
              * Define the image scrolling ratio<br>
-             * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio<br>
+             * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
+             * Setting this vector to &lt;0.0,0.0&gt; will disable automatic scrolling.<br>
              * To specify a value through Tiled, use one of the following format : <br>
              * - a number, to change the value for both axis <br>
              * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
@@ -128,17 +122,41 @@
                 }
             }
 
-            // last position of the viewport
-            this.lastpos = me.game.viewport.pos.clone();
-
-            // Image Layer is considered as a floating object
-            this.floating = true;
+            if (typeof(settings.anchorPoint) === "undefined") {
+                /**
+                 * Define how the image is anchored to the viewport bounds<br>
+                 * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
+                 * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
+                 * Some common examples:<br>
+                 * * &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
+                 * * &lt;0.5,0.5&gt; : Center the image within viewport bounds
+                 * * &lt;1.0,1.0&gt; : Anchor image to the lower-right corner of viewport bounds
+                 * To specify a value through Tiled, use one of the following format : <br>
+                 * - a number, to change the value for both axis <br>
+                 * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
+                 * @public
+                 * @type me.Vector2d
+                 * @default <0.0,0.0>
+                 * @name me.ImageLayer#anchorPoint
+                 */
+                this.anchorPoint.set(0, 0);
+            }
+            else {
+                if (typeof(settings.anchorPoint) === "number") {
+                    this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
+                }
+                else /* vector */ {
+                    this.anchorPoint.setV(settings.anchorPoint);
+                }
+            }
 
             // default value for repeat
             this._repeat = "repeat";
 
             this.repeatX = true;
             this.repeatY = true;
+
+            this.createPattern();
 
             /**
              * Define if and how an Image Layer should be repeated.<br>
@@ -176,22 +194,17 @@
                             this.repeatY = true;
                             break;
                     }
+                    this.resize(me.game.viewport.width, me.game.viewport.height);
+                    this.createPattern();
                 }
             });
-
-            // default origin position
-            this.anchorPoint.set(0, 0);
-
         },
-        
+
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
             // register to the viewport change notification
             this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
-            
-            // last position of the viewport
-            this.lastpos.copy(me.game.viewport.pos);
         },
 
         /**
@@ -204,9 +217,18 @@
         */
         resize : function (w, h) {
             this._super(me.Renderable, "resize", [
-                Math.min(w, this.maxWidth),
-                Math.min(h, this.maxHeight)
+                this.repeatX ? Infinity : w,
+                this.repeatY ? Infinity : h
             ]);
+        },
+
+        /**
+         * createPattern function
+         * @ignore
+         * @function
+         */
+        createPattern : function () {
+            this._pattern = me.video.renderer.createPattern(this.image, this._repeat);
         },
 
         /**
@@ -215,102 +237,96 @@
          * @function
          */
         updateLayer : function (vpos) {
-            if (0 === this.ratio.x && 0 === this.ratio.y) {
+            var rx = this.ratio.x,
+                ry = this.ratio.y;
+
+            if (rx === ry === 0) {
                 // static image
                 return;
             }
-            else if (this.repeatX || this.repeatY) {
-                // parallax / scrolling image
-                this.offset.x += ((vpos.x - this.lastpos.x) * this.ratio.x) % this.imagewidth;
-                this.offset.x = (this.imagewidth + this.offset.x) % this.imagewidth;
 
-                this.offset.y += ((vpos.y - this.lastpos.y) * this.ratio.y) % this.imageheight;
-                this.offset.y = (this.imageheight + this.offset.y) % this.imageheight;
+            var viewport = me.game.viewport,
+                width = this.imagewidth,
+                height = this.imageheight,
+                bw = viewport.bounds.width,
+                bh = viewport.bounds.height,
+                ax = this.anchorPoint.x,
+                ay = this.anchorPoint.y,
+                vx = vpos.x,
+                vy = vpos.y,
+
+                /*
+                 * Automatic positioning
+                 *
+                 * The math for scrolling was worked out with the following intentions;
+                 * - `anchorPoint` positions the image relative to the boundary edges
+                 * - `ratio` scales the total image movement by the viewport position
+                 * - The image and viewport position are clamped to the viewport bounds
+                 * - Image position is cycled full-left/top to handle repeat modes
+                 *
+                 * The completed algorithm was then simplified with the help of
+                 * Wolfram Alpha!
+                 *
+                 * It's a bit unreadable, but it works by computing the viewport
+                 * extents (the clamped range of the viewport position) scaled by
+                 * the scrolling ratio. The scaled extents are placed inside a
+                 * "sliding window", allowing the image to move in the opposite
+                 * direction when anchored to the bottom or right sides of the
+                 * viewport boundary.
+                 */
+                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
+                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
+
+
+            // Repeat horizontally; start drawing from left boundary
+            if (this.repeatX) {
+                this.pos.x = x % width;
             }
             else {
-                this.offset.x += (vpos.x - this.lastpos.x) * this.ratio.x;
-                this.offset.y += (vpos.y - this.lastpos.y) * this.ratio.y;
+                this.pos.x = x;
             }
-            this.lastpos.setV(vpos);
+
+            // Repeat vertically; start drawing from top boundary
+            if (this.repeatY) {
+                this.pos.y = y % height;
+            }
+            else {
+                this.pos.y = y;
+            }
         },
 
         /**
          * draw the image layer
          * @ignore
          */
-        draw : function (renderer, rect) {
-            // translate default position using the anchorPoint value
-            var viewport = me.game.viewport;
-            var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0 || this.pos.y !== 0 || this.pos.x !== 0;
-            var translateX = ~~(this.pos.x + (this.anchorPoint.x * (viewport.width - this.imagewidth)));
-            var translateY = ~~(this.pos.y + (this.anchorPoint.y * (viewport.height - this.imageheight)));
+        draw : function (renderer) {
+            var viewport = me.game.viewport,
+                width = this.imagewidth,
+                height = this.imageheight,
+                bw = viewport.bounds.width,
+                bh = viewport.bounds.height,
+                ax = this.anchorPoint.x,
+                ay = this.anchorPoint.y,
+                x = this.pos.x,
+                y = this.pos.y,
+                alpha = renderer.globalAlpha();
 
-            if (shouldTranslate) {
-                renderer.translate(translateX, translateY);
+            if (this.ratio.x === this.ratio.y === 0) {
+                x = ~~(x + ax * (bw - width));
+                y = ~~(y + ay * (bh - height));
             }
 
-            // set the layer alpha value
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-
-            var sw, sh;
-
-            // if not scrolling ratio define, static image
-            if (0 === this.ratio.x && 0 === this.ratio.y) {
-                // static image
-                sw = Math.min(rect.width, this.imagewidth);
-                sh = Math.min(rect.height, this.imageheight);
-
-                renderer.drawImage(
-                    this.image,
-                    rect.left, rect.top,    // sx, sy
-                    sw, sh,                 // sw, sh
-                    rect.left, rect.top,    // dx, dy
-                    sw, sh                  // dw, dh
-                );
-            }
-            // parallax / scrolling image
-            else {
-                var sx = ~~this.offset.x;
-                var sy = ~~this.offset.y;
-
-                var dx = 0;
-                var dy = 0;
-
-                sw = Math.min(this.imagewidth  - sx, this.width);
-                sh = Math.min(this.imageheight - sy, this.height);
-
-                do {
-                    do {
-                        renderer.drawImage(
-                            this.image,
-                            sx, sy, // sx, sy
-                            sw, sh,
-                            dx, dy, // dx, dy
-                            sw, sh
-                        );
-
-                        sy = 0;
-                        dy += sh;
-                        sh = Math.min(this.imageheight, this.height - dy);
-
-                    } while (this.repeatY && (dy < this.height));
-                    dx += sw;
-                    if (!this.repeatX || (dx >= this.width)) {
-                        // done ("end" of the viewport)
-                        break;
-                    }
-                    // else update required var for next iteration
-                    sx = 0;
-                    sw = Math.min(this.imagewidth, this.width - dx);
-                    sy = ~~this.offset.y;
-                    dy = 0;
-                    sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
-                } while (true);
-            }
-
-            if (shouldTranslate) {
-                renderer.translate(-translateX, -translateY);
-            }
+            renderer.globalAlpha(alpha * this.getOpacity());
+            renderer.translate(x, y);
+            renderer.drawPattern(
+                this._pattern,
+                0,
+                0,
+                viewport.width - x,
+                viewport.height - y
+            );
+            renderer.translate(-x, -y);
+            renderer.globalAlpha(alpha);
         },
 
         // called when the layer is removed from the game world or a container
@@ -384,7 +400,7 @@
 
             // for displaying order
             this.z = z;
-			
+
             // hexagonal maps only
 			this.hexsidelength = hexsidelength;
 			this.staggeraxis = staggeraxis;
@@ -431,23 +447,23 @@
                     {/* use default values*/}
                 );
             }
-            
+
             //initialize the layer data array
             this.initArray(this.cols, this.rows);
         },
-        
+
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
-        
+
             // (re)initialize the layer data array
             /*if (this.layerData === undefined) {
                 this.initArray(this.cols, this.rows);
             }*/
-            
+
             if (this.animatedTilesets === undefined) {
                 this.animatedTilesets = [];
             }
-            
+
             if (this.tilesets) {
                 var tileset = this.tilesets.tilesets;
                 for (var i = 0; i < tileset.length; i++) {
@@ -464,11 +480,11 @@
             if (this.isAnimated) {
                 this.preRender = false;
             }
-            
+
             // Resize the bounding rect
             this.resizeBounds(this.width, this.height);
         },
-        
+
         // called when the layer is removed from the game world or a container
         onDeactivateEvent : function () {
             // clear all allocated objects

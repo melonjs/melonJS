@@ -166,6 +166,42 @@
         },
 
         /**
+         * Create a pattern with the specified repition
+         * @name createPattern
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {image} image Source image
+         * @param {String} repeat Define how the pattern should be repeated
+         * @return {me.video.renderer.Texture}
+         * @see me.ImageLayer#repeat
+         * @example
+         * var tileable   = renderer.createPattern(image, "repeat");
+         * var horizontal = renderer.createPattern(image, "repeat-x");
+         * var vertical   = renderer.createPattern(image, "repeat-y");
+         * var basic      = renderer.createPattern(image, "no-repeat");
+         */
+        createPattern : function (image, repeat) {
+            var texture = new this.Texture({
+                // FIXME: Create a texture atlas helper function
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : { "w" : image.width, "h" : image.height },
+                    "repeat" : repeat
+                },
+                "frames" : [{
+                    "filename" : "default",
+                    "frame" : { "x" : 0, "y" : 0, "w" : image.width, "h" : image.height }
+                }]
+            }, image);
+
+            // FIXME: Remove old cache entry and texture when changing the repeat mode
+            this.cache.put(image, texture);
+            this.compositor.uploadTexture(texture);
+
+            return texture;
+        },
+
+        /**
          * Flush the compositor to the frame buffer
          * @name blitSurface
          * @memberOf me.WebGLRenderer
@@ -272,6 +308,23 @@
 
             var key = sx + "," + sy + "," + sw + "," + sh;
             this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+        },
+
+        /**
+         * Draw a pattern within the given rectangle.
+         * @name drawPattern
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.video.renderer.Texture} pattern Pattern object
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         * @see me.WebGLRenderer#createPattern
+         */
+        drawPattern : function (pattern, x, y, width, height) {
+            var key = "0,0," + pattern.texture.width + "," + pattern.texture.height;
+            this.compositor.addQuad(pattern, key, x, y, width, height);
         },
 
         /**
