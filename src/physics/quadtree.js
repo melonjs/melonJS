@@ -271,7 +271,7 @@
         this.objects = [];
 
         for (var i = 0; i < this.nodes.length; i = i + 1) {
-            this.nodes[i].clear(bounds);
+            this.nodes[i].clear();
             // recycle the quadTree object
             QT_ARRAY_PUSH(this.nodes[i]);
         }
