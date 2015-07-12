@@ -237,13 +237,14 @@
             var shouldTranslate = this.anchorPoint.y !== 0 || this.anchorPoint.x !== 0 || this.pos.y !== 0 || this.pos.x !== 0;
             var translateX = ~~(this.pos.x + (this.anchorPoint.x * (viewport.width - this.imagewidth)));
             var translateY = ~~(this.pos.y + (this.anchorPoint.y * (viewport.height - this.imageheight)));
+            var alpha = renderer.globalAlpha();
 
             if (shouldTranslate) {
                 renderer.translate(translateX, translateY);
             }
 
             // set the layer alpha value
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             var sw, sh;
 
@@ -300,6 +301,9 @@
                     sh = Math.min(this.imageheight - ~~this.offset.y, this.height);
                 } while (true);
             }
+
+            // reset the layer alpha value
+            renderer.setGlobalAlpha(alpha);
 
             if (shouldTranslate) {
                 renderer.translate(-translateX, -translateY);
