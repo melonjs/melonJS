@@ -144,7 +144,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex-(width|height)|stretch)$/) !== 0) {
+            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
                 settings.scaleMethod = "fit";
             }
             settings.transparent = !!(settings.transparent);
@@ -387,6 +387,16 @@
                     sHeight = ~~(sHeight + 0.5);
                     this.renderer.resize(designWidth, sHeight);
                     me.game.viewport.resize(designWidth, sHeight);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
+                }
+                else if (settings.scaleMethod === "flex") {
+                    // resize the display canvas to fill the parent container
+                    this.renderer.resize(_max_width, _max_height);
+                    me.game.viewport.resize(_max_width, _max_height);
                     /*
                      * XXX: Workaround for not updating container child-bounds
                      * automatically (it's expensive!)
