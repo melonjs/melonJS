@@ -144,12 +144,9 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            settings.scaleMethod = [
-                "fill-max",
-                "flex-width",
-                "flex-height",
-                "stretch"
-            ].indexOf(settings.scaleMethod) >= 0 ? settings.scaleMethod : "fit";
+            if (settings.scaleMethod.search(/^(fill-max|fit|flex-(width|height)|stretch)$/) !== 0) {
+                settings.scaleMethod = "fit";
+            }
             settings.transparent = !!(settings.transparent);
 
             // override renderer settings if &webgl is defined in the URL

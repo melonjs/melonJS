@@ -94,7 +94,7 @@
 
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
-            
+
             if (!this.gid) {
                 this.gid = me.utils.createGUID();
             }
@@ -276,7 +276,7 @@
             var dx = (this.textAlign === "right" ? x - dw : (
                 this.textAlign === "center" ? x - ~~(dw / 2) : x
             ));
-            dy = [ "top", "hanging" ].indexOf(this.textBaseline) >= 0 ? dy : (
+            dy = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? dy : (
                 this.textBaseline === "middle" ? dy - ~~(lineHeight / 2) : dy - lineHeight
             );
 

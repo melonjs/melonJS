@@ -47,7 +47,7 @@
             }
 
             // normalize values
-            if (name.search(/^(ratio|anchorPoint)$/) >= 0) {
+            if (name.search(/^(ratio|anchorPoint)$/) === 0) {
                 // convert number to vector
                 if (typeof(value) === "number") {
                     value = {

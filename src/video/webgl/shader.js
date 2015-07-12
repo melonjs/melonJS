@@ -177,8 +177,8 @@
 
             var texture = gl.createTexture(),
                 filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST,
-                rs = repeat.search(/^(repeat|repeat-x)$/) >= 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE,
-                rt = repeat.search(/^(repeat|repeat-y)$/) >= 0 ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+                rs = (repeat.search(/^repeat(-x)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE,
+                rt = (repeat.search(/^repeat(-y)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
             gl.activeTexture(gl.TEXTURE0 + unit);
             gl.bindTexture(gl.TEXTURE_2D, texture);
