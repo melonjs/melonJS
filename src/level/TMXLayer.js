@@ -574,38 +574,32 @@
          * @ignore
          */
         draw : function (renderer, rect) {
+            // set the layer alpha value
+            var alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
+
             // use the offscreen canvas
             if (this.preRender) {
-
                 var width = Math.min(rect.width, this.width);
                 var height = Math.min(rect.height, this.height);
 
-                this.canvasRenderer.setGlobalAlpha(this.canvasRenderer.globalAlpha() * this.getOpacity());
-
-                if (this.canvasRenderer.globalAlpha() > 0) {
-                    // draw using the cached canvas
-                    renderer.drawImage(
-                        this.canvasRenderer.getCanvas(),
-                        rect.pos.x, rect.pos.y, // sx,sy
-                        width, height,          // sw,sh
-                        rect.pos.x, rect.pos.y, // dx,dy
-                        width, height           // dw,dh
-                    );
-                }
+                // draw using the cached canvas
+                renderer.drawImage(
+                    this.canvasRenderer.getCanvas(),
+                    rect.pos.x, rect.pos.y, // sx,sy
+                    width, height,          // sw,sh
+                    rect.pos.x, rect.pos.y, // dx,dy
+                    width, height           // dw,dh
+                );
             }
             // dynamically render the layer
             else {
-                // set the layer alpha value
-                var _alpha = renderer.globalAlpha();
-                renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-                if (renderer.globalAlpha() > 0) {
-                    // draw the layer
-                    this.renderer.drawTileLayer(renderer, this, rect);
-                }
-
-                // restore context to initial state
-                renderer.setGlobalAlpha(_alpha);
+                // draw the layer
+                this.renderer.drawTileLayer(renderer, this, rect);
             }
+
+            // restore context to initial state
+            renderer.setGlobalAlpha(alpha);
         }
     });
 })(me.TMXConstants);
