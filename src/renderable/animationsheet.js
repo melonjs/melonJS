@@ -134,7 +134,10 @@
                 if (typeof(index[i]) === "number") {
                     if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
-                        this.anim[name].frames[i] = Object.assign(this.textureAtlas[index[i]], { delay: this.anim[name].animationspeed });
+                        this.anim[name].frames[i] = Object.assign(
+                          this.textureAtlas[index[i]],
+                          { delay: this.anim[name].animationspeed }
+                        );
                         counter++;
                     }
                 } else { // string
@@ -143,7 +146,10 @@
                             "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
-                        this.anim[name].frames[i] = Object.assign(this.textureAtlas[this.atlasIndices[index[i]]], { delay: this.anim[name].animationspeed });
+                        this.anim[name].frames[i] = Object.assign(
+                          this.textureAtlas[this.atlasIndices[index[i]]],
+                          { delay: this.anim[name].animationspeed }
+                        );
                         counter++;
                     }
                 }
