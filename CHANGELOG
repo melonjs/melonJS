@@ -14,6 +14,7 @@ Version History
 * TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
 * TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
+* Video : added `fill-min` and `flex` scaling modes
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
 
 2.1.3
