@@ -177,7 +177,7 @@
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
             changedTouches.push({ x: 0, y: 0 });
-            obj.mouse.pos = new me.Vector2d(0, 0);
+            obj.mouse.pos = new me.Vector2d();
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
             // Automatically update relative canvas position on scroll
@@ -293,7 +293,7 @@
                     e.gameX = e.gameWorldX;
                     e.gameY = e.gameWorldY;
                 }
-                
+
                 var region = handlers.region;
                 var bounds = region.getBounds();
                 var eventInBounds =
@@ -672,7 +672,7 @@
         if (pointerEventList !== activeEventList) {
             eventType = activeEventList[pointerEventList.indexOf(eventType)];
         }
-        
+
         var handlers = evtHandlers.get(region);
         if (typeof(callback) === "undefined") {
             // unregister all callbacks of "eventType" for the given region

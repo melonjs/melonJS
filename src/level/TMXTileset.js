@@ -46,7 +46,7 @@
             this.margin = +tileset[TMXConstants.TMX_TAG_MARGIN] || 0;
 
             // set tile offset properties (if any)
-            this.tileoffset = new me.Vector2d(0, 0);
+            this.tileoffset = new me.Vector2d();
 
             /**
              * Tileset contains animated tiles

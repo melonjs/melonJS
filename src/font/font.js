@@ -30,7 +30,7 @@
         init : function (font, size, fillStyle, textAlign) {
             // private font properties
             /** @ignore */
-            this.fontSize = new me.Vector2d(0, 0);
+            this.fontSize = new me.Vector2d();
 
             /**
              * defines the color used to draw the font.<br>

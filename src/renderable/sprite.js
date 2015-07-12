@@ -58,7 +58,7 @@
              * @name offset
              * @memberOf me.Vector2d
              */
-            this.offset = new me.Vector2d(0, 0);
+            this.offset = new me.Vector2d();
 
             /**
              * Set the angle (in Radians) of a sprite to rotate it <br>
