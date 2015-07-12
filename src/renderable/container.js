@@ -10,9 +10,7 @@
      * @ignore
      */
     var deferredRemove = function (child, keepalive) {
-        if (child.ancestor) {
-            child.ancestor.removeChildNow(child, keepalive);
-        }
+        this.removeChildNow(child, keepalive);
     };
 
     var globalFloatingCounter = 0;
@@ -446,8 +444,8 @@
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
         removeChildNow : function (child, keepalive) {
-            if  (this.hasChild(child)) {
-
+            var childIndex = -1;
+            if (this.hasChild(child) && ((childIndex = this.getChildIndex(child)) >= 0)) {
                 child.ancestor = undefined;
 
                 if (typeof child.onDeactivateEvent === "function") {
@@ -462,7 +460,7 @@
                     me.pool.push(child);
                 }
 
-                this.children.splice(this.getChildIndex(child), 1);
+                this.children.splice(childIndex, 1);
             }
             else {
                 throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);
@@ -512,7 +510,7 @@
          */
         moveDown : function (child) {
             var childIndex = this.getChildIndex(child);
-            if (childIndex + 1 < this.children.length) {
+            if (childIndex >= 0 && (childIndex + 1) < this.children.length) {
                 // note : we use an inverted loop
                 this.swapChildren(child, this.getChildAt(childIndex + 1));
             }
@@ -544,7 +542,7 @@
          */
         moveToBottom : function (child) {
             var childIndex = this.getChildIndex(child);
-            if (childIndex < (this.children.length - 1)) {
+            if (childIndex >= 0 && childIndex < (this.children.length - 1)) {
                 // note : we use an inverted loop
                 this.children.splice((this.children.length - 1), 0, this.children.splice(childIndex, 1)[0]);
                 // increment our child z value based on the next child depth
