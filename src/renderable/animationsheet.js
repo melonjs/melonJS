@@ -127,8 +127,6 @@
                 });
             }
 
-            console.log(this.textureAtlas);
-
             // # of frames
             var counter = 0;
             // set each frame configuration (offset, size, etc..)
