@@ -61,7 +61,7 @@
             return value;
         }
 
-        var parseAttributes = function (obj, elt) {
+        function parseAttributes(obj, elt) {
             // do attributes
             if (elt.attributes && elt.attributes.length > 0) {
                 for (var j = 0; j < elt.attributes.length; j++) {
@@ -75,7 +75,7 @@
                     }
                 }
             }
-        };
+        }
 
         /**
          * Parse a XML TMX object and returns the corresponding javascript object
