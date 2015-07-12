@@ -112,7 +112,7 @@
         addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {
                 name : name,
-                frame : {},
+                frames : [],
                 idx : 0,
                 length : 0,
                 animationspeed: animationspeed || this.animationspeed,
@@ -134,7 +134,7 @@
                 if (typeof(index[i]) === "number") {
                     if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
-                        this.anim[name].frame["" + i] = Object.assign(this.textureAtlas[index[i]], { delay: this.anim[name].animationspeed });
+                        this.anim[name].frames[i] = Object.assign(this.textureAtlas[index[i]], { delay: this.anim[name].animationspeed });
                         counter++;
                     }
                 } else { // string
@@ -143,7 +143,7 @@
                             "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
-                        this.anim[name].frame[i] = Object.assign(this.textureAtlas[this.atlasIndices[index[i]]], { delay: this.anim[name].animationspeed });
+                        this.anim[name].frames[i] = Object.assign(this.textureAtlas[this.atlasIndices[index[i]]], { delay: this.anim[name].animationspeed });
                         counter++;
                     }
                 }
@@ -256,7 +256,7 @@
          * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
          */
         getAnimationFrameObjectByIndex : function (id) {
-            return this.current.frame["" + id];
+            return this.current.frames[id];
         },
 
         /**
