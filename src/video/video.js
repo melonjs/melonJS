@@ -144,7 +144,7 @@
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.autoScale = (settings.scale === "auto") || false;
-            if (settings.scaleMethod.search(/^(fill-max|fit|flex-(width|height)|stretch)$/) !== 0) {
+            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex-(width|height)|stretch)$/) !== 0) {
                 settings.scaleMethod = "fit";
             }
             settings.transparent = !!(settings.transparent);
@@ -360,6 +360,7 @@
                 var sHeight = Infinity;
 
                 if (
+                    (settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
                     (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
                     (settings.scaleMethod === "flex-width")
                 ) {
@@ -376,6 +377,7 @@
                     me.game.world.updateChildBounds();
                 }
                 else if (
+                    (settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
                     (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
                     (settings.scaleMethod === "flex-height")
                 ) {
