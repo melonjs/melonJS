@@ -59,6 +59,9 @@
             // default animation sequence
             this.current = null;
 
+            // animation frame delta
+            this.dt = 0;
+
             // default animation speed (ms)
             this.animationspeed = 100;
 
@@ -115,8 +118,7 @@
                 frames : [],
                 idx : 0,
                 length : 0,
-                animationspeed: animationspeed || this.animationspeed,
-                nextFrame : 0
+                animationspeed: animationspeed || this.animationspeed
             };
 
             if (index == null) {
@@ -203,7 +205,6 @@
                 this.current = this.anim[name];
                 this.resetAnim = resetAnim || null;
                 this.setAnimationFrame(this.current.idx); // or 0 ?
-                this.current.nextFrame = this.current.animationspeed;
             } else {
                 throw new me.Renderable.Error("animation id '" + name + "' not defined");
             }
@@ -277,35 +278,43 @@
          * @param {Number} dt time since the last update in milliseconds.
          */
         update : function (dt) {
-            // update animation if necessary
-            if (!this.animationpause && this.current.length > 1) {
-                this.current.nextFrame -= dt;
-                if (this.current.nextFrame <= 0) {
-                    this.setAnimationFrame(++this.current.idx);
-
-                    // switch animation if we reach the end of the strip
-                    // and a callback is defined
-                    if (this.current.idx === 0 && this.resetAnim)  {
-                        // if string, change to the corresponding animation
-                        if (typeof this.resetAnim === "string") {
-                            this.setCurrentAnimation(this.resetAnim);
-                        }
-                        // if function (callback) call it
-                        else if (typeof this.resetAnim === "function" &&
-                                 this.resetAnim() === false) {
-                            this.current.idx = this.current.length - 1;
-                            this.setAnimationFrame(this.current.idx);
-                            this._super(me.Sprite, "update", [dt]);
-                            return false;
-                        }
-                    }
-
-                    // set next frame timestamp
-                    this.current.nextFrame = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-                    return this._super(me.Sprite, "update", [dt]) || true;
-                }
+            // Update animation if necessary
+            if (this.animationpause || this.current.length <= 1) {
+                return this._super(me.Sprite, "update", [ dt ]);
             }
-            return this._super(me.Sprite, "update", [dt]);
+
+            var duration = 0,
+                result = false;
+
+            this.dt += dt;
+            duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            while (this.dt >= duration) {
+                result = true;
+                this.dt -= duration;
+                this.setAnimationFrame(this.current.idx + 1);
+
+                // Switch animation if we reach the end of the strip and a callback is defined
+                if (this.current.idx === 0 && this.resetAnim)  {
+                    // If string, change to the corresponding animation
+                    if (typeof this.resetAnim === "string") {
+                        this.setCurrentAnimation(this.resetAnim);
+                    }
+                    // Otherwise is must be callable
+                    else if (this.resetAnim() === false) {
+                        // Reset to last frame
+                        this.setAnimationFrame(this.current.length - 1);
+
+                        // Bail early without skipping any more frames.
+                        this.dt %= duration;
+                        break;
+                    }
+                }
+
+                // Get next frame duration
+                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            }
+
+            return this._super(me.Sprite, "update", [ dt ]) || result;
         }
     });
 })();

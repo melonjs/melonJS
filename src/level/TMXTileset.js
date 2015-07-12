@@ -216,10 +216,11 @@
             this.animations.forEach(function (anim) {
                 anim.dt += dt;
                 duration = anim.cur.duration;
-                if (anim.dt >= duration) {
+                while (anim.dt >= duration) {
                     anim.dt -= duration;
                     anim.idx = (anim.idx + 1) % anim.frames.length;
                     anim.cur = anim.frames[anim.idx];
+                    duration = anim.cur.duration;
                     result = true;
                 }
             });
