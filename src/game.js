@@ -122,7 +122,7 @@
          * // call myFunction () everytime a level is loaded
          * me.game.onLevelLoaded = this.myFunction.bind(this);
          */
-        api.onLevelLoaded = null;
+        api.onLevelLoaded = function () {};
 
         /**
          * Provide an object hash with all tag parameters specified in the url.
@@ -160,10 +160,8 @@
                 // create a defaut viewport of the same size
                 api.viewport = new me.Viewport(0, 0, width, height);
 
-                //the root object of our world is an entity container
+                // the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
-
-                // give it a name
                 api.world.name = "rootContainer";
 
                 /*

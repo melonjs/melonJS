@@ -27,6 +27,33 @@
         // current level index
         var currentLevelIdx = 0;
 
+        function safeLoadLevel(levelId, options, restart) {
+            // clean the destination container
+            options.container.destroy();
+
+            // clean the current (previous) level
+            if (levels[api.getCurrentLevelId()]) {
+                levels[api.getCurrentLevelId()].destroy();
+            }
+
+            // update current level index
+            currentLevelIdx = levelIdx.indexOf(levelId);
+
+            // add the specified level to the game world
+            loadTMXLevel(levelId, options.container, options.flatten);
+
+            // publish the corresponding message
+            me.event.publish(me.event.LEVEL_LOADED, [ levelId ]);
+
+            // fire the callback
+            options.onLoaded(levelId);
+
+            if (restart) {
+                // resume the game loop if it was previously running
+                me.state.restart();
+            }
+        }
+
         /**
          * Load a TMX level
          * @name loadTMXLevel
@@ -38,12 +65,13 @@
          * @ignore
          * @function
          */
-        var loadTMXLevel = function (levelId, container, flatten) {
+        function loadTMXLevel(levelId, container, flatten) {
             var level = levels[levelId];
-            
+
             // disable auto-sort for the given container
+            var autoSort = container.autoSort;
             container.autoSort = false;
-                        
+
             // change the viewport bounds
             me.game.viewport.setBounds(
                 0, 0,
@@ -54,7 +82,7 @@
             // reset the GUID generator
             // and pass the level id as parameter
             me.utils.resetGUID(levelId, level.nextobjectid);
-            
+
             // add all level elements to the target container
             level.reset();
             level.addTo(container, flatten);
@@ -66,7 +94,7 @@
             container.sort(true);
 
             // re-enable auto-sort
-            container.autoSort = true;
+            container.autoSort = autoSort;
 
             // center map on the viewport
             level.moveToCenter();
@@ -76,7 +104,7 @@
 
             // update the game world size to match the level size
             container.resize(level.width, level.height);
-        };
+        }
 
         /*
          * PUBLIC STUFF
@@ -150,11 +178,12 @@
          * me.levelDirector.loadLevel("a4_level1");
          */
         api.loadLevel = function (levelId, options) {
-            options = options || {};
-            var container = options.container || me.game.world;
-            var callback = options.callback || me.game.onLevelLoaded;
-            var flatten = options.flatten || me.game.mergeGroup;
-                        
+            options = Object.assign({
+                "container" : me.game.world,
+                "onLoaded"  : me.game.onLevelLoaded,
+                "flatten"   : me.game.mergeGroup
+            }, options || {});
+
             // throw an exception if not existing
             if (typeof(levels[levelId]) === "undefined") {
                 throw new me.Error("level " + levelId + " not found");
@@ -169,34 +198,11 @@
                     // stop the game loop to avoid
                     // some silly side effects
                     me.state.stop();
+
+                    safeLoadLevel.defer(this, levelId, options, true);
                 }
-
-                // reset the gameObject Manager (just in case!)
-                me.game.reset();
-
-                // clean the current (previous) level
-                if (levels[api.getCurrentLevelId()]) {
-                    levels[api.getCurrentLevelId()].destroy();
-                }
-
-                // update current level index
-                currentLevelIdx = levelIdx.indexOf(levelId);
-
-                // add the specified level to the game world
-                loadTMXLevel(levelId, container, flatten);
-                
-                //publish the corresponding message
-                me.event.publish(me.event.LEVEL_LOADED, [levelId]);
-                
-                // fire the callback if defined
-                if (typeof (callback) === "function") {
-                    callback.call(callback, levelId);
-                }
-
-                if (wasRunning) {
-                    // resume the game loop if it was
-                    // previously running
-                    me.state.restart.defer(this);
+                else {
+                    safeLoadLevel(levelId, options);
                 }
             }
             else {
