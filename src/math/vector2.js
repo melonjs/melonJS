@@ -410,7 +410,7 @@
          * @return {Number} angle in radians
          */
         angle : function (v) {
-            return Math.atan2((v.y - this.y), (v.x - this.x));
+            return Math.acos(this.dotProduct(v) / (this.length() * v.length()));
         },
 
         /**

@@ -39,6 +39,9 @@ describe("me.Vector3d", function () {
         var b = new me.Vector3d(-x, -y, -z);
         var result = "x:"+x*(-x)+",y:"+y*(-y)+",z:"+z*(-z);
         expect(a.scaleV(b).toString() === result).toEqual(true);
+
+        a.set(x, y, z);
+        expect(a.scale(-1).equals(b)).toEqual(true);
     });
     
     it("negate (1, 2, 3)", function () {
@@ -101,6 +104,21 @@ describe("me.Vector3d", function () {
         expect( a.distance( d ) === x).toEqual(true);
         expect( b.distance( d ) === y).toEqual(true);
         expect( c.distance( d ) === z).toEqual(true);
+    });
+
+    it("angle between a and b is 180deg", function () {
+        var a = new me.Vector3d(x, y, z);
+        var b = new me.Vector3d(-x, -y, -z);
+
+        expect(a.angle(b) === Math.PI).toEqual(true);
+    });
+
+    it("project a on b", function () {
+        var a = new me.Vector3d(x, y, z);
+        var b = new me.Vector3d(-x, -y, -z);
+        
+        // the following only works with (-)1, (-)2, (-)3 style of values
+        expect(a.project(b).equals(b)).toEqual(true);
     });
         
 });

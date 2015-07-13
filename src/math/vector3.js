@@ -137,7 +137,9 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
-            return this._set(this.x * x, this.y * (typeof (y) !== "undefined" ? y : x), this.y * (typeof (z) !== "undefined" ? z : x));
+            y = (typeof (y) !== "undefined" ? y : x);
+            z = (typeof (z) !== "undefined" ? z : x);
+            return this._set(this.x * x, this.y * y, this.z * z);
         },
 
         /**
@@ -425,7 +427,7 @@
          * @return {Number} angle in radians
          */
         angle : function (v) {
-            return Math.atan2((v.y - this.y), (v.x - this.x)); // z ?
+            return Math.acos(this.dotProduct(v) / (this.length() * v.length()));
         },
 
         /**
