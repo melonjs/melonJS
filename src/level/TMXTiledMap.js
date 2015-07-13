@@ -117,11 +117,11 @@
             // use the default one
             layer.setRenderer(me.game.tmxRenderer);
         }
-        
+
         // detect encoding and compression
         var encoding = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_ENCODING] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_ENCODING];
         var compression = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_COMPRESSION] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_COMPRESSION];
-        
+
         // parse the layer data
         setLayerData(layer, data[TMXConstants.TMX_TAG_DATA], encoding || "json", compression);
         return layer;
@@ -220,7 +220,7 @@
              */
             this.name = levelId;
 
-            /** 
+            /**
              * the level data (JSON)
              * @ignore
              */
@@ -263,10 +263,10 @@
             this.layers = [];
             // group objects
             this.objectGroups = [];
-            
+
             // tilemap version
             this.version = data[TMXConstants.TMX_TAG_VERSION];
-            
+
             // map type (orthogonal or isometric)
             this.orientation = data[TMXConstants.TMX_TAG_ORIENTATION];
             if (this.orientation === "isometric") {
@@ -276,23 +276,23 @@
                 this.width = this.cols * this.tilewidth;
                 this.height = this.rows * this.tileheight;
             }
-            
+
 
             // objects minimum z order
             this.z = 0;
 
             // object id
             this.nextobjectid = +data[TMXConstants.TMX_TAG_NEXTOBJID] || undefined;
-            
+
 
             // hex/iso properties
             this.hexsidelength = +data[TMXConstants.TMX_HEXSIDELENGTH];
             this.staggeraxis = data[TMXConstants.TMX_STAGGERAXIS];
             this.staggerindex = data[TMXConstants.TMX_STAGGERINDEX];
-            
+
             // background color
             this.backgroundcolor = data[TMXConstants.TMX_BACKGROUND_COLOR];
-            
+
             // set additional map properties (if any)
             me.TMXUtils.applyTMXProperties(this, data);
 
@@ -430,7 +430,7 @@
             this.initialized = true;
         },
 
-        
+
         /**
          * add all the map layers and objects to the given container
          * @name me.TMXTileMap#addTo
@@ -449,7 +449,7 @@
             this.getLayers().forEach(function (layer) {
                 container.addChild(layer);
             });
-            
+
             // add all Object instances
             this.getObjects(flatten).forEach(function (object) {
                 container.addChild(object);
@@ -469,7 +469,7 @@
             var objects = [];
             var isCollisionGroup = false;
             var targetContainer;
-            
+
             // parse the map for objects
             this.readMapObjects(this.data);
 
@@ -478,16 +478,10 @@
 
                 // check if this is the collision shape group
                 isCollisionGroup = group.name.toLowerCase().includes(TMXConstants.COLLISION_GROUP);
-               
+
                 if (flatten === false) {
-                    // create a new container with Infinite size (?)
-                    // note: initial position and size seems to be meaningless in Tiled
-                    // https://github.com/bjorn/tiled/wiki/TMX-Map-Format :
-                    // x: Defaults to 0 and can no longer be changed in Tiled Qt.
-                    // y: Defaults to 0 and can no longer be changed in Tiled Qt.
-                    // width: The width of the object group in tiles. Meaningless.
-                    // height: The height of the object group in tiles. Meaningless.
-                    targetContainer = new me.Container();
+                    // create a new container
+                    targetContainer = new me.Container(0, 0, this.width, this.height);
 
                     // set additional properties
                     targetContainer.name = group.name;
@@ -497,7 +491,7 @@
                     // disable auto-sort
                     targetContainer.autoSort = false;
                 }
-                
+
                 // iterate through the group and add all object into their
                 // corresponding target Container
                 for (var o = 0; o < group.objects.length; o++) {
@@ -524,7 +518,7 @@
                     if (typeof obj !== "object") {
                         continue;
                     }
-                    
+
                     // set the obj z order correspondingly to its parent container/group
                     obj.z = group.z;
 
@@ -545,20 +539,20 @@
                     }
 
                 }
-                
+
                 // if we created a new container
                 if ((flatten === false) && (targetContainer.children.length > 0)) {
 
                     // re-enable auto-sort
                     targetContainer.autoSort = true;
-                    
+
                     // add our container to the world
                     objects.push(targetContainer);
                 }
             }
             return objects;
         },
-        
+
         /**
          * return all the existing layers
          * @name me.TMXTileMap#getLayers
