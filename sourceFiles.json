@@ -30,7 +30,7 @@
     "src/renderable/renderable.js",
     "src/renderable/sprite.js",
     "src/renderable/animationsheet.js",
-    "src/renderable/camera.js",
+    "src/renderable/viewport.js",
     "src/renderable/GUI.js",
     "src/renderable/container.js",
     "src/entity/entity.js",
