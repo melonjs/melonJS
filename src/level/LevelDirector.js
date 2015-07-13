@@ -72,13 +72,6 @@
             var autoSort = container.autoSort;
             container.autoSort = false;
 
-            // change the viewport bounds
-            me.game.viewport.setBounds(
-                0, 0,
-                Math.max(level.width, me.game.viewport.width),
-                Math.max(level.height, me.game.viewport.height)
-            );
-
             // reset the GUID generator
             // and pass the level id as parameter
             me.utils.resetGUID(levelId, level.nextobjectid);
@@ -87,23 +80,29 @@
             level.reset();
             level.addTo(container, flatten);
 
-            // load our map
-            me.game.currentLevel = level;
-
             // sort everything (recursively)
             container.sort(true);
-
-            // re-enable auto-sort
             container.autoSort = autoSort;
 
-            // center map on the viewport
-            level.moveToCenter();
-
-            // translate the display if required
-            container.transform.translateV(level.pos);
-
-            // update the game world size to match the level size
             container.resize(level.width, level.height);
+
+            if (container === me.game.world) {
+                // save a reference to our map
+                me.game.currentLevel = level;
+
+                // update the viewport bounds
+                me.game.viewport.setBounds(
+                    0, 0,
+                    Math.max(level.width, me.game.viewport.width),
+                    Math.max(level.height, me.game.viewport.height)
+                );
+
+                // center map on the viewport
+                level.moveToCenter();
+
+                // translate the display if required
+                container.transform.translateV(level.pos);
+            }
         }
 
         /*
