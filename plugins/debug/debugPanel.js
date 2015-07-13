@@ -264,14 +264,18 @@
                     // draw the bounding rect shape
                     renderer.setColor("orange");
                     bounds.copy(this.getBounds());
-                    bounds.pos.sub(this.ancestor._absPos);
+                    if (this.ancestor) {
+                        bounds.pos.sub(this.ancestor._absPos);
+                    }
                     renderer.drawShape(bounds);
                     _this.counters.inc("bounds");
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
                     bounds.copy(this.childBounds);
-                    bounds.pos.sub(this.ancestor._absPos);
+                    if (this.ancestor) {
+                        bounds.pos.sub(this.ancestor._absPos);
+                    }
                     renderer.drawShape(bounds);
                     _this.counters.inc("children");
 

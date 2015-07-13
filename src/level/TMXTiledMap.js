@@ -204,15 +204,6 @@
         init: function (levelId, data) {
 
             /**
-             * default level position in the game world
-             * @ignore
-             * @type {me.Vector2d}
-             * @name pos
-             * @memberOf me.TMXTileMap
-             */
-            this.pos = new me.Vector2d(0 ,0);
-
-            /**
              * name of the tilemap
              * @public
              * @type String
@@ -564,37 +555,6 @@
             // parse the map for objects
             this.readMapObjects(this.data);
             return this.layers;
-        },
-
-        /**
-         * Center the map on the viewport
-         * @name me.TMXTileMap#moveToCenter
-         * @public
-         * @function
-         */
-        moveToCenter: function () {
-            // center the map if smaller than the current viewport
-            var width = me.game.viewport.width,
-                height = me.game.viewport.height;
-            if ((this.width < width) || (this.height < height)) {
-                var shiftX =  ~~((width - this.width) / 2);
-                var shiftY =  ~~((height - this.height) / 2);
-                // update the map default position
-                this.pos.set(
-                    shiftX > 0 ? shiftX : 0,
-                    shiftY > 0 ? shiftY : 0
-                );
-            }
-        },
-
-        /**
-         * reset function
-         * @name me.TMXTileMap#reset
-         * @public
-         * @function
-         */
-        reset : function () {
-            this.pos.set(0, 0);
         },
 
         /**

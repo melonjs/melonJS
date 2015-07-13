@@ -686,71 +686,50 @@
          * @ignore
          */
         draw : function (renderer, rect) {
-            var viewport = me.game.viewport;
-            var isFloating = false;
+            var isFloating = false,
+                restore = false,
+                alpha = renderer.globalAlpha();
 
             this.drawCount = 0;
 
-            var restore = false;
-            if (!this.transform.isIdentity()) {
+            if (this.transform.isIdentity()) {
+                renderer.translate(this.pos.x, this.pos.y);
+            }
+            else {
                 restore = true;
-
-                // save context
                 renderer.save();
-
-                // apply the container current transform
                 renderer.transform(this.transform);
             }
 
             // apply the group opacity
-            var alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(alpha * this.getOpacity());
 
-            // translate to the container position
-            renderer.translate(this.pos.x, this.pos.y);
-
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = (globalFloatingCounter > 0 || obj.floating);
+                isFloating = obj.floating;
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
                     if (isFloating) {
-                        globalFloatingCounter++;
-                    }
-                    if (globalFloatingCounter === 1) {
-                        // translate to object
-                        renderer.translate(
-                            viewport.screenX - this.pos.x,
-                            viewport.screenY - this.pos.y
-                        );
+                        // translate to screen coordinates
+                        renderer.save();
+                        renderer.resetTransform();
                     }
 
                     // draw the object
                     obj.draw(renderer, rect);
 
-                    if (globalFloatingCounter === 1) {
-                        // translate back to viewport
-                        renderer.translate(
-                            this.pos.x - viewport.screenX,
-                            this.pos.y - viewport.screenY
-                        );
-                    }
-
                     if (isFloating) {
-                        globalFloatingCounter--;
+                        renderer.restore();
                     }
 
                     this.drawCount++;
                 }
             }
 
-            // restore the group opacity
-            renderer.setGlobalAlpha(alpha);
-
-            // restore the container position
-            renderer.translate(-this.pos.x, -this.pos.y);
-
             if (restore) {
-                // restore context
                 renderer.restore();
+            }
+            else {
+                renderer.translate(-this.pos.x, -this.pos.y);
+                renderer.setGlobalAlpha(alpha);
             }
         }
     });

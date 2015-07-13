@@ -26,10 +26,6 @@
         init : function (minX, minY, maxX, maxY) {
             this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
-            // cache the screen rendering position
-            this.screenX = 0;
-            this.screenY = 0;
-
             /**
              * Axis definition
              * @property NONE
@@ -477,7 +473,7 @@
          */
         localToWorld : function (x, y, v) {
             v = v || new me.Vector2d();
-            return (v.set(x, y)).add(this.pos).sub(me.game.currentLevel.pos);
+            return (v.set(x, y)).add(this.pos).sub(me.game.world.pos);
         },
 
         /**
@@ -493,7 +489,7 @@
          */
         worldToLocal : function (x, y, v) {
             v = v || new me.Vector2d();
-            return (v.set(x, y)).sub(this.pos).add(me.game.currentLevel.pos);
+            return (v.set(x, y)).sub(this.pos).add(me.game.world.pos);
         },
 
         /**

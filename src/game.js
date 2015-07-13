@@ -164,21 +164,20 @@
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
 
-                /*
-                 * XXX: Default ancestor is self
-                 * Removes the need for an if-statement when accessing ancestor
-                 * properties in the update method
-                 */
-                api.world.ancestor = api.world;
-
                 me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function () {
-                    var level = api.currentLevel,
-                        transform = api.world.transform;
+                    var level = api.currentLevel;
 
-                    // Automatically adjust map and world position
-                    level.moveToCenter();
-                    transform.identity();
-                    transform.translateV(level.pos); // XXX: Does not update container.pos
+                    if (level !== dummyLevel) {
+                        // Center the map if smaller than the current viewport
+                        me.game.world.pos.set(
+                            Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
+                            Math.max(0, ~~((me.game.viewport.height - level.height) / 2))
+                        );
+
+                        // Translate the display if required
+                        api.world.transform.identity();
+                        api.world.transform.translateV(me.game.world.pos);
+                    }
                 });
 
                 // initialize the collision system (the quadTree mostly)
@@ -307,10 +306,6 @@
 
                 // translate the world coordinates by default to screen coordinates
                 api.world.transform.translate(-translateX, -translateY);
-
-                // substract the map offset to current the current pos
-                api.viewport.screenX = translateX - api.currentLevel.pos.x;
-                api.viewport.screenY = translateY - api.currentLevel.pos.y;
 
                 // prepare renderer to draw a new frame
                 me.video.renderer.prepareSurface();

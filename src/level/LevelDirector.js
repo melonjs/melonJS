@@ -77,7 +77,6 @@
             me.utils.resetGUID(levelId, level.nextobjectid);
 
             // add all level elements to the target container
-            level.reset();
             level.addTo(container, flatten);
 
             // sort everything (recursively)
@@ -97,11 +96,15 @@
                     Math.max(level.height, me.game.viewport.height)
                 );
 
-                // center map on the viewport
-                level.moveToCenter();
+                // center the map if smaller than the current viewport
+                container.pos.set(
+                    Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
+                    Math.max(0, ~~((me.game.viewport.height - level.height) / 2))
+                );
 
                 // translate the display if required
-                container.transform.translateV(level.pos);
+                container.transform.identity();
+                container.transform.translateV(container.pos);
             }
         }
 
