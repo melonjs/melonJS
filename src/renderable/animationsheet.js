@@ -200,11 +200,14 @@
          *    return false; // do not reset to first frame
          * }).bind(this));
          **/
-        setCurrentAnimation : function (name, resetAnim) {
+        setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
             if (this.anim[name]) {
                 this.current = this.anim[name];
                 this.resetAnim = resetAnim || null;
-                this.setAnimationFrame(this.current.idx); // or 0 ?
+                this.setAnimationFrame(this.current.idx);
+                if (!_preserve_dt) {
+                    this.dt = 0;
+                }
             } else {
                 throw new me.Renderable.Error("animation id '" + name + "' not defined");
             }
@@ -297,7 +300,7 @@
                 if (this.current.idx === 0 && this.resetAnim)  {
                     // If string, change to the corresponding animation
                     if (typeof this.resetAnim === "string") {
-                        this.setCurrentAnimation(this.resetAnim);
+                        this.setCurrentAnimation(this.resetAnim, null, true);
                     }
                     // Otherwise is must be callable
                     else if (this.resetAnim() === false) {
