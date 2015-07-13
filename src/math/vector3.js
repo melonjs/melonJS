@@ -99,7 +99,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         setV : function (v) {
-            return this._set(v.x, v.y, v.z || 0);
+            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
         },
 
         /**
@@ -302,7 +302,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, v.z || 0);
+            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
         },
 
         /**
@@ -467,7 +467,7 @@
             var x = this.x;
             var y = this.y;
             this.project(axis).scale(2);
-            return this._set(this.x - x, this.y - y); //z ?
+            return this._set(this.x - x, this.y - y, this.z);
         },
 
         /**
@@ -483,7 +483,7 @@
             var x = this.x;
             var y = this.y;
             this.projectN(axis).scale(2);
-            return this._set(this.x - x, this.y - y); //z ?
+            return this._set(this.x - x, this.y - y, this.z);
         },
 
         /**
