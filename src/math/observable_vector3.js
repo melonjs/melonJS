@@ -136,11 +136,11 @@
          * @name add
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         add : function (v) {
-            return this._set(this._x + v.x, this._y + v.y, this._z + v.z);
+            return this._set(this._x + v.x, this._y + v.y, this._z + (v.z || 0));
         },
 
         /**
@@ -148,11 +148,11 @@
          * @name sub
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         sub : function (v) {
-            return this._set(this._x - v.x, this._y - v.y, this._z - v.z);
+            return this._set(this._x - v.x, this._y - v.y, this._z - (v.z || 0));
         },
 
         /**
@@ -162,12 +162,12 @@
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
-         * @param {Number} [z=y||x]
+         * @param {Number} [z=x]
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
             y = (typeof (y) !== "undefined" ? y : x);
-            z = (typeof (z) !== "undefined" ? z : y);
+            z = (typeof (z) !== "undefined" ? z : x);
             return this._set(this._x * x, this._y * y, this._z * z);
         },
 
@@ -176,11 +176,11 @@
          * @name scaleV
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         scaleV : function (v) {
-            return this._set(this._x * v.x, this._y * v.y, this._z * v.z);
+            return this._set(this._x * v.x, this._y * v.y, this._z * (v.z || 1));
         },
 
         /**
@@ -221,9 +221,9 @@
          */
         clamp : function (low, high) {
             return new me.ObservableVector3d(
-                this.x.clamp(low, high),
-                this.y.clamp(low, high),
-                this.z.clamp(low, high),
+                this._x.clamp(low, high),
+                this._y.clamp(low, high),
+                this._z.clamp(low, high),
                 {onUpdate: this.onUpdate}
             );
         },
@@ -250,14 +250,15 @@
          * @name minV
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         minV : function (v) {
+            var _vz = v.z || 0;
             return this._set(
                 (this._x < v.x) ? this._x : v.x,
                 (this._y < v.y) ? this._y : v.y,
-                (this._z < v.z) ? this._z : v.z
+                (this._z < _vz) ? this._z : _vz
             );
         },
 
@@ -266,14 +267,15 @@
          * @name maxV
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         maxV : function (v) {
+            var _vz = v.z || 0;
             return this._set(
                 (this._x > v.x) ? this._x : v.x,
                 (this._y > v.y) ? this._y : v.y,
-                (this._z > v.z) ? this._z : v.z
+                (this._z > _vz) ? this._z : _vz
             );
         },
 
@@ -363,11 +365,11 @@
          * @name copy
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, v.z);
+            return this._set(v.x, v.y,typeof (v.z) !== "undefined" ? v.z : this._z);
         },
 
         /**
@@ -375,11 +377,11 @@
          * @name equals
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {Boolean}
          */
         equals : function (v) {
-            return ((this._x === v.x) && (this._y === v.y) && (this._z === v.z));
+            return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
         },
 
         /**
@@ -406,7 +408,7 @@
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         perp : function () {
-            return this._set(this._y, -this._x); //z ?
+            return this._set(this._y, -this._x, this._z);
         },
 
         /**
@@ -422,8 +424,9 @@
             var y = this._y;
             return this._set(
                 x * Math.cos(angle) - y * Math.sin(angle),
-                x * Math.sin(angle) + y * Math.cos(angle)
-            ); //z ?
+                x * Math.sin(angle) + y * Math.cos(angle).
+                this._z
+            );
         },
 
          /**
@@ -442,11 +445,11 @@
          * @name dotProduct
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {Number} The dot product.
          */
         dotProduct : function (v) {
-            return this._x * v.x + this._y * v.y + this._z * v.z;
+            return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
         },
 
         /**
@@ -454,13 +457,11 @@
          * @name distance
          * @memberOf me.ObservableVector3d
          * @function
-         * @param {me.ObservableVector3d} v
+         * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this._x - v.x,
-                dy = this._y - v.y,
-                dz = this._z - v.z;
+            var dx = this._x - v.x, dy = this._y - v.y, dz = this._z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
@@ -488,7 +489,7 @@
             var x = this._x;
             var y = this._y;
             this.project(axis).scale(2);
-            return this._set(this._x - x, this._y - y); //z?
+            return this._set(this._x - x, this._y - y, this._z);
         },
 
         /**
@@ -504,7 +505,7 @@
             var x = this._x;
             var y = this._y;
             this.projectN(axis).scale(2);
-            return this._set(this._x - x, this._y - y); //Z?
+            return this._set(this._x - x, this._y - y, this._z);
         },
 
         /**

@@ -310,11 +310,11 @@
          * @name equals
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {Boolean}
          */
         equals : function (v) {
-            return ((this.x === v.x) && (this.y === v.y) && (this.z === (v.z || 0)));
+            return ((this.x === v.x) && (this.y === v.y) && (this.z === (v.z || this.z)));
         },
 
         /**
