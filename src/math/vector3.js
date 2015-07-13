@@ -95,11 +95,11 @@
          * @name setV
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         setV : function (v) {
-            return this._set(v.x, v.y, v.z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -107,11 +107,11 @@
          * @name add
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         add : function (v) {
-            return this._set(this.x + v.x, this.y + v.y, this.z + v.z);
+            return this._set(this.x + v.x, this.y + v.y, this.z + (v.z || 0));
         },
 
         /**
@@ -119,11 +119,11 @@
          * @name sub
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         sub : function (v) {
-            return this._set(this.x - v.x, this.y - v.y, this.z - v.z);
+            return this._set(this.x - v.x, this.y - v.y, this.z - (v.z || 0));
         },
 
         /**
@@ -145,11 +145,11 @@
          * @name scaleV
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scaleV : function (v) {
-            return this._set(this.x * v.x, this.y * v.y, this.z * v.z);
+            return this._set(this.x * v.x, this.y * v.y, this.z * (v.z || 1));
         },
 
         /**
@@ -206,11 +206,12 @@
          * @name minV
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         minV : function (v) {
-            return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < v.z) ? this.z : v.z);
+            var _vz = v.z || 0;
+            return this._set((this.x < v.x) ? this.x : v.x, (this.y < v.y) ? this.y : v.y, (this.z < _vz) ? this.z : _vz);
         },
 
         /**
@@ -218,11 +219,12 @@
          * @name maxV
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         maxV : function (v) {
-            return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > v.z) ? this.z : v.z);
+            var _vz = v.z || 0;
+            return this._set((this.x > v.x) ? this.x : v.x, (this.y > v.y) ? this.y : v.y, (this.z > _vz) ? this.z : _vz);
         },
 
         /**
@@ -296,11 +298,11 @@
          * @name copy
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, v.z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -312,7 +314,7 @@
          * @return {Boolean}
          */
         equals : function (v) {
-            return ((this.x === v.x) && (this.y === v.y) && (this.z === v.z));
+            return ((this.x === v.x) && (this.y === v.y) && (this.z === (v.z || 0)));
         },
 
         /**
@@ -339,7 +341,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         perp : function () {
-            return this._set(this.y, -this.x); //z ?
+            return this._set(this.y, -this.x. this.z);
         },
 
         /**
@@ -353,7 +355,7 @@
         rotate : function (angle) {
             var x = this.x;
             var y = this.y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle)); //z ?
+            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle), this.z);
         },
 
          /**
@@ -372,11 +374,11 @@
          * @name dotProduct
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {Number} The dot product.
          */
         dotProduct : function (v) {
-            return this.x * v.x + this.y * v.y + this.z * v.z;
+            return this.x * v.x + this.y * v.y + this.z * (v.z || 1);
         },
 
        /**
@@ -406,11 +408,11 @@
          * @name distance
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
+            var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
@@ -419,7 +421,7 @@
          * @name angle
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v
+         * @param {me.Vector2d|me.Vector3d} v
          * @return {Number} angle in radians
          */
         angle : function (v) {
@@ -431,12 +433,12 @@
          * @name project
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v The vector to project onto.
+         * @param {me.Vector2d|me.Vector3d} v The vector to project onto.
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         project : function (v) {
             var amt = this.dotProduct(v) / v.length2();
-            return this._set(amt * v.x, amt * v.y); //z ?
+            return this.scale(amt);
         },
 
         /**
@@ -445,12 +447,12 @@
          * @name projectN
          * @memberOf me.Vector3d
          * @function
-         * @param {me.Vector3d} v The unit vector to project onto.
+         * @param {me.Vector2d|me.Vector3d} v The unit vector to project onto.
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         projectN : function (v) {
             var amt = this.dotProduct(v);
-            return this._set(amt * v.x, amt * v.y); // z ?
+            return this.scale(amt);
         },
 
         /**
