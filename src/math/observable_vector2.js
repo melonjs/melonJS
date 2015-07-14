@@ -248,7 +248,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         floorSelf : function () {
-            this._set(Math.floor(this._x), Math.floor(this._y));
+            return this._set(Math.floor(this._x), Math.floor(this._y));
         },
 
         /**

@@ -132,13 +132,13 @@ describe("me.ObservableVector2d", function () {
     });
     
     it( "ceil/floor", function() {
-        expect( new me.Vector2d( -0.1, 0.1 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
-        expect( new me.Vector2d( -0.5, 0.5 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
-        expect( new me.Vector2d( -0.9, 0.9 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
+        expect(a.setMuted( -0.1, 0.1 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
+        expect(b.setMuted( -0.5, 0.5 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
+        expect(c.setMuted( -0.9, 0.9 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
 
-        expect( new me.Vector2d( -0.1, 0.1 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
-        expect( new me.Vector2d( -0.5, 0.5 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
-        expect( new me.Vector2d( -0.9, 0.9 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
+        expect(a.setMuted( -0.1, 0.1 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
+        expect(b.setMuted( -0.5, 0.5 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
+        expect(c.setMuted( -0.9, 0.9 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
     });
     
     it("project a on b", function () {
