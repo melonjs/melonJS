@@ -8,46 +8,46 @@ describe("me.Vector2d", function () {
         expect(vec.toString() === result).toEqual(true);
     });
 
-    it("a(1, 2, 3) should be copied into b", function () {
+    it("a(1, 2) should be copied into b", function () {
         var a = new me.Vector2d(x, y);
         var b = new me.Vector2d().copy(a);
         expect(b.equals(a)).toEqual(true);
     });
     
-    it("set (1, 2, 3) into a defined vector", function () {
+    it("set (1, 2) into a defined vector", function () {
         var vec = new me.Vector2d().set(x, y);
         var result = "x:"+x+",y:"+y;
         expect(vec.toString() === result).toEqual(true);
     });
     
-    it("add (1, 2, 3) to (-1, -2, -3)", function () {
+    it("add (1, 2) to (-1, -2)", function () {
         var a = new me.Vector2d(x, y);
         var b = new me.Vector2d(-x, -y);
         var result = "x:0,y:0";
         expect(a.add(b).toString() === result).toEqual(true);
     });
     
-    it("sub (1, 2, 3) to (-1, -2)", function () {
+    it("sub (1, 2) to (-1, -2)", function () {
         var a = new me.Vector2d(x, y);
         var b = new me.Vector2d(-x, -y);
         var result = "x:"+(x-(-x))+",y:"+(y-(-y));
         expect(a.sub(b).toString() === result).toEqual(true);
     });
     
-    it("scale (1, 2, 3) by (-1, -2)", function () {
+    it("scale (1, 2) by (-1, -2)", function () {
         var a = new me.Vector2d(x, y);
         var b = new me.Vector2d(-x, -y);
         var result = "x:"+x*(-x)+",y:"+y*(-y);
         expect(a.scaleV(b).toString() === result).toEqual(true);
     });
     
-    it("negate (1, 2, 3)", function () {
+    it("negate (1, 2)", function () {
         var a = new me.Vector2d(x, y);
         var result = "x:"+-x+",y:"+-y;
         expect(a.negateSelf().toString() === result).toEqual(true);
     });
     
-    it("dotProduct (1, 2, 3) and (-1, -2)", function () {
+    it("dotProduct (1, 2) and (-1, -2)", function () {
         var a = new me.Vector2d(x, y);
         var b = new me.Vector2d(-x, -y);
         // calculate the dot product
