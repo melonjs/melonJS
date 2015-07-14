@@ -160,9 +160,9 @@
             // set position to observable. Can use updateBounds, as _bounds using a regular vector.
             // will not lead to stack too deep.
             if (this.pos) {
-                this.pos.setMuted(x, y).setCallback(this.updateBoundsPos.bind(this));
+                this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
-                this.pos = new me.ObservableVector2d(x, y, { onUpdate: this.updateBoundsPos.bind(this) });
+                this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
             }
 
             this._width = width;

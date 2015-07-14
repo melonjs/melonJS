@@ -99,7 +99,8 @@
                 // center the map if smaller than the current viewport
                 container.pos.set(
                     Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
-                    Math.max(0, ~~((me.game.viewport.height - level.height) / 2))
+                    Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
+                    0
                 );
 
                 // translate the display if required

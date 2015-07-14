@@ -139,7 +139,7 @@
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // update initial position
-            this.pos.set(x, y);
+            this.pos.set(x, y, this.pos.z); // TODO : z ?
             for (var i = 0; i < strings.length; i++) {
                 x = lX;
                 var string = strings[i].trimRight();

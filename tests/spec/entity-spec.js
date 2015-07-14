@@ -145,7 +145,7 @@ describe("Entity", function () {
     });
 
     it("moves properly", function () {
-        entity.pos.set(120, 150);
+        entity.pos.set(120, 150, 0);
         expect(entity.pos.x).toEqual(120);
         expect(entity.pos.y).toEqual(150);
     });

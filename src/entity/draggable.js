@@ -112,7 +112,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
         dragMove: function (e) {
             if (this.dragging === true) {
                 if (this.dragId === e.pointerId) {
-                    this.pos.set(e.gameX, e.gameY);
+                    this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
                     this.pos.sub(this.grabOffset);
                 }
             }

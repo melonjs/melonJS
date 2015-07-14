@@ -476,7 +476,7 @@
 
                     // set additional properties
                     targetContainer.name = group.name;
-                    targetContainer.z = group.z;
+                    targetContainer.pos.z = group.z;
                     targetContainer.setOpacity(group.opacity);
 
                     // disable auto-sort
@@ -511,7 +511,7 @@
                     }
 
                     // set the obj z order correspondingly to its parent container/group
-                    obj.z = group.z;
+                    obj.pos.z = group.z;
 
                     //apply group opacity value to the child objects if group are merged
                     if (flatten === true) {

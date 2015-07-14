@@ -131,13 +131,16 @@
 
             // change the child z-index if one is specified
             if (typeof(z) === "number") {
-                child.z = z;
+                child.pos.z = z;
             }
 
             // specify a z property to infinity if not defined
+            /*
             if ((typeof child.z === "undefined") || (child.z !== child.z)) {
+                TOTO : WHAT CONDITION CAN WE DEFINE NOW FOR THIS ?
                 child.z = this.children.length;
             }
+            */
 
             child.ancestor = this;
             this.children.push(child);
@@ -204,9 +207,9 @@
 
             if ((index !== -1) && (index2 !== -1)) {
                 // swap z index
-                var _z = child.z;
-                child.z = child2.z;
-                child2.z = _z;
+                var _z = child.pos.z;
+                child.pos.z = child2.pos.z;
+                child2.pos.z = _z;
                 // swap the positions..
                 this.children[index] = child2;
                 this.children[index2] = child;
@@ -529,7 +532,7 @@
                 // note : we use an inverted loop
                 this.children.splice(0, 0, this.children.splice(childIndex, 1)[0]);
                 // increment our child z value based on the previous child depth
-                child.z = this.children[1].z + 1;
+                child.pos.z = this.children[1].pos.z + 1;
             }
         },
 
@@ -546,7 +549,7 @@
                 // note : we use an inverted loop
                 this.children.splice((this.children.length - 1), 0, this.children.splice(childIndex, 1)[0]);
                 // increment our child z value based on the next child depth
-                child.z = this.children[(this.children.length - 2)].z - 1;
+                child.pos.z = this.children[(this.children.length - 2)].pos.z - 1;
             }
         },
 
@@ -588,7 +591,7 @@
          * @ignore
          */
         _sortZ : function (a, b) {
-            return (b.z) - (a.z);
+            return (b.pos.z) - (a.pos.z);
         },
 
         /**
@@ -597,8 +600,8 @@
          */
         _sortX : function (a, b) {
             /* ? */
-            var result = (b.z - a.z);
-            return (result ? result : ((b.pos && b.pos.x) - (a.pos && a.pos.x)) || 0);
+            var result = (b.pos.z - a.pos.z);
+            return (result ? result : (b.pos.x - a.pos.x) || 0);
         },
 
         /**
@@ -606,8 +609,8 @@
          * @ignore
          */
         _sortY : function (a, b) {
-            var result = (b.z - a.z);
-            return (result ? result : ((b.pos && b.pos.y) - (a.pos && a.pos.y)) || 0);
+            var result = (b.pos.z - a.pos.z);
+            return (result ? result : (b.pos.y - a.pos.y) || 0);
         },
 
         /**

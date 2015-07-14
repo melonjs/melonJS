@@ -25,7 +25,7 @@
             // apply given parameters
             this.name = name;
             this.color = color;
-            this.z = z;
+            this.pos.z = z;
             this.floating = true;
         },
 
@@ -97,7 +97,7 @@
             this.floating = true;
 
             // displaying order
-            this.z = settings.z || 0;
+            this.pos.z = settings.z || 0;
 
             /**
              * Define the image scrolling ratio<br>
@@ -399,7 +399,7 @@
             this.isAnimated = false;
 
             // for displaying order
-            this.z = z;
+            this.pos.z = z;
 
             // hexagonal maps only
 			this.hexsidelength = hexsidelength;
