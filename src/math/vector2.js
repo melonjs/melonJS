@@ -343,17 +343,6 @@
             return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
         },
 
-         /**
-         * Reverse this vector.
-         * @name reverse
-         * @memberOf me.Vector2d
-         * @function
-         * @return {me.Vector2d} Reference to this object for method chaining
-         */
-        reverse : function () {
-            return this._set(-this.x, -this.y);
-        },
-
         /**
          * return the dot product of this vector and the passed one
          * @name dotProduct

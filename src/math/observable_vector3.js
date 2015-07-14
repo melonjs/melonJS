@@ -429,17 +429,6 @@
             );
         },
 
-         /**
-         * Reverse this vector.
-         * @name reverse
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @return {me.ObservableVector3d} Reference to this object for method chaining
-         */
-        reverse : function () {
-            return this._set(-this._x, -this._y, -this._z);
-        },
-
         /**
          * return the dot product of this vector and the passed one
          * @name dotProduct

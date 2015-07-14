@@ -140,7 +140,7 @@
                 response.overlap = absOverlap;
                 response.overlapN.copy(axis);
                 if (overlap < 0) {
-                    response.overlapN.reverse();
+                    response.overlapN.negateSelf();
                 }
             }
         }
@@ -770,8 +770,8 @@
                 // Swap A and B in the response.
                 var resa = response.a;
                 var aInB = response.aInB;
-                response.overlapN.reverse();
-                response.overlapV.reverse();
+                response.overlapN.negateSelf();
+                response.overlapV.negateSelf();
                 response.a = response.b;
                 response.b = resa;
                 response.aInB = response.bInA;
