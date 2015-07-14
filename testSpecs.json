@@ -4,6 +4,7 @@
     "tests/spec/vect2d-spec.js",
     "tests/spec/observableVect2d-spec.js",
     "tests/spec/vect3d-spec.js",
+    "tests/spec/observableVect3d-spec.js",
     "tests/spec/rectangle-spec.js",
     "tests/spec/polygon-spec.js",
     "tests/spec/line-spec.js",

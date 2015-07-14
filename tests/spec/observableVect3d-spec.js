@@ -1,54 +1,63 @@
-describe("me.Vector3d", function () {
+describe("me.ObservableVector3d", function () {
 
     var x = 1, y = 2, z = 3;
-    
+        
     var a, b, c, d;
-
-    it("should be initialized to a (0, 0, 0) 3d vector", function () {
-        a = new me.Vector3d();
-        b = new me.Vector3d();
-        c = new me.Vector3d();
-        d = new me.Vector3d();
-
+    
+    var _newX, _newY,  _newZ, _oldX, _oldY, _oldZ;
+    
+    var callback = function (newX, newY, newZ, oldX, oldY, oldZ) {
+        // this will also validate the argument list
+        _newX = newX;
+        _newY = newY;
+        _newZ = newZ;
+        _oldX = oldX;
+        _oldY = oldY;
+        _oldZ = oldZ;
+    };
+    
+    it("should be initialized to a (0, 0) 2d vector", function () {
+        a = new me.ObservableVector3d(0, 0, 0, {
+            onUpdate : callback.bind(this)
+        });
+        b = new me.ObservableVector3d(x, 0, 0, {
+            onUpdate : callback.bind(this)
+        });
+        c = new me.ObservableVector3d(x, y, 0,{
+            onUpdate : callback.bind(this)
+        });
+        
+        d = new me.ObservableVector3d(x, y, z,{
+            onUpdate : callback.bind(this)
+        });
+        
         expect(a.toString()).toEqual("x:0,y:0,z:0");
     });
 
-    it("a(1, 2, 3) should be copied into b", function () {
-        a.set(x, y, z);
-        b.copy(a);
+    it("setting the vector triggers the callback", function () {
+        a.set(10, 100, 20);
         
-        expect(b.equals(a)).toEqual(true);
+        expect(a.x + a.y + a.z).toEqual(_newX + _newY + _newZ);
     });
-    
-    it("set (1, 2, 3) into a defined vector", function () {
-        a.set(x, y, z);
 
-        expect(a.toString()).toEqual("x:"+x+",y:"+y+",z:"+z);
-    });
-    
-    it("add (1, 2, 3) to (-1, -2, -3)", function () {
-        a.set(x, y, z);
-        b.set(-x, -y, -z);
-
-        expect(a.add(b).toString()).toEqual("x:0,y:0,z:0");
-    });
-    
-    it("sub (1, 2, 3) to (-1, -2, -3)", function () {
-        a.set(x, y, z);
-        b.set(-x, -y, -z);
-
-        expect(a.sub(b).toString()).toEqual("x:"+(x-(-x))+",y:"+(y-(-y))+",z:"+(z-(-z)));
-    });
-    
-    it("scale (1, 2, 3) by (-1, -2, -3)", function () {
-        a.set(x, y, z);
-        b.set(-x, -y, -z);
-
-        expect(a.scaleV(b).toString()).toEqual("x:"+x*(-x)+",y:"+y*(-y)+",z:"+z*(-z));
-
-        a.set(x, y, z);
+    it("add a vector triggers the callback", function () {
+        a.add(new me.Vector3d(10, 10, 10));
         
-        expect(a.scale(-1).equals(b)).toEqual(true);
+        expect(a.y).toEqual(_oldY + 10);
+    });
+    
+    it("sub a vector triggers the callback", function () {
+        a.sub(new me.Vector3d(10, 10, 10));
+        
+        expect(a.x).toEqual(_oldX - 10);
+    });
+    
+    it("scale a vector triggers the callback", function () {
+        a.scaleV(new me.Vector3d(10, 10, 10));
+        
+        expect(a.x).toEqual(_oldX * 10);
+        expect(a.y).toEqual(_oldY * 10);
+        expect(a.z).toEqual(_oldZ * 10);
     });
     
     it("negate (1, 2, 3)", function () {
@@ -172,5 +181,4 @@ describe("me.Vector3d", function () {
         b.set(4*x, -y, 0);
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
-        
 });

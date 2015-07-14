@@ -455,18 +455,6 @@
         },
 
         /**
-         * return the angle between this vector and the passed one
-         * @name angle
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @param {me.ObservableVector3d} v
-         * @return {Number} angle in radians
-         */
-        angle : function (v) {
-            return Math.acos((this.dotProduct(v) / (this.length() * v.length())).clamp(-1, 1));
-        },
-
-        /**
          * return a clone copy of this vector
          * @name clone
          * @memberOf me.ObservableVector3d
