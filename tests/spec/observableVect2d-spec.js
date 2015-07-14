@@ -1,17 +1,48 @@
-describe("me.Vector2d", function () {
+describe("me.ObservableVector2d", function () {
 
     var x = 1, y = 2;
-    
+        
     var a, b, c;
-
+    
+    var _newX, _newY, _oldX, _oldY;
+    
+    var callback = function (newX, newY, oldX, oldY) {
+        // this will also validate the argument list
+        _newX = newX;
+        _newY = newY;
+        _oldX = oldX;
+        _oldY = oldY;
+    };
+    
     it("should be initialized to a (0, 0) 2d vector", function () {
-        a = new me.Vector2d();
-        b = new me.Vector2d();
-        c = new me.Vector2d();
+        a = new me.ObservableVector2d(0, 0, {
+            onUpdate : callback.bind(this)
+        });
+        b = new me.ObservableVector2d(0, 0, {
+            onUpdate : callback.bind(this)
+        });
+        c = new me.ObservableVector2d(0, 0, {
+            onUpdate : callback.bind(this)
+        });
 
         expect(a.toString()).toEqual("x:0,y:0");
     });
 
+    it("setting the vector triggers the callback", function () {
+        a.set(10, 100);
+        expect(a.x + a.y).toEqual(_newX + _newY);
+    });
+
+    it("add a vector triggers the callback", function () {
+        a.add(new me.Vector2d(10, 10));
+        expect(a.y).toEqual(_oldY + 10);
+    });
+    
+    it("sub a vector triggers the callback", function () {
+        a.sub(new me.Vector2d(10, 10));
+        expect(a.x).toEqual(_oldX - 10);
+    });
+    
     it("a(1, 2) should be copied into b", function () {
         a.set(x, y);
         b.copy(a);
@@ -19,26 +50,7 @@ describe("me.Vector2d", function () {
         expect(b.equals(a)).toEqual(true);
     });
     
-    it("set (1, 2) into a defined vector", function () {
-        a.set(x, y);
-
-        expect(a.toString()).toEqual("x:"+x+",y:"+y);
-    });
-    
-    it("add (1, 2) to (-1, -2)", function () {
-        a.set(x, y);
-        b.set(-x, -y);
-
-        expect(a.add(b).toString()).toEqual("x:0,y:0");
-    });
-    
-    it("sub (1, 2) to (-1, -2)", function () {
-        a.set(x, y);
-        b.set(-x, -y);
-
-        expect(a.sub(b).toString()).toEqual("x:"+(x-(-x))+",y:"+(y-(-y)));
-    });
-    
+        
     it("scale (1, 2) by (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
