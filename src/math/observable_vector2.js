@@ -237,7 +237,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         floor : function () {
-            return new me.ObservableVector2d(~~this._x, ~~this._y, {onUpdate: this.onUpdate});
+            return new me.ObservableVector2d(Math.floor(this._x), Math.floor(this._y), {onUpdate: this.onUpdate});
         },
 
         /**
@@ -248,7 +248,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         floorSelf : function () {
-            return this._set(~~this._x, ~~this._y);
+            this._set(Math.floor(this._x), Math.floor(this._y));
         },
 
         /**

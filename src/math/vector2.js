@@ -220,7 +220,7 @@
          * @return {me.Vector2d} new me.Vector2d
          */
         floor : function () {
-            return new me.Vector2d(~~this.x, ~~this.y);
+            return new me.Vector2d(Math.floor(this.x), Math.floor(this.y));
         },
 
         /**
@@ -231,7 +231,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         floorSelf : function () {
-            return this._set(~~this.x, ~~this.y);
+            return this._set(Math.floor(this.x), Math.floor(this.y));
         },
 
         /**
@@ -422,8 +422,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         project : function (v) {
-            var amt = this.dotProduct(v) / v.length2();
-            return this._set(amt * v.x, amt * v.y);
+            return this.scale(this.dotProduct(v) / v.length2());
         },
 
         /**
@@ -436,8 +435,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         projectN : function (v) {
-            var amt = this.dotProduct(v);
-            return this._set(amt * v.x, amt * v.y);
+            return this.scale(this.dotProduct(v));
         },
 
         /**
