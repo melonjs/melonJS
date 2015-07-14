@@ -428,37 +428,6 @@
         },
 
         /**
-         * Reflect this vector on an arbitrary axis.
-         * @name reflect
-         * @memberOf me.Vector2d
-         * @function
-         * @param {me.Vector2d} axis The vector representing the axis.
-         * @return {me.Vector2d} Reference to this object for method chaining.
-         */
-        reflect : function (axis) {
-            var x = this.x;
-            var y = this.y;
-            this.project(axis).scale(2);
-            return this._set(this.x - x, this.y - y);
-        },
-
-        /**
-         * Reflect this vector on an arbitrary axis (represented by a unit vector) <br>
-         * This is slightly more efficient than `reflect` when dealing with unit vectors.
-         * @name reflectN
-         * @memberOf me.Vector2d
-         * @function
-         * @param {me.Vector2d} axis The vector representing the axis.
-         * @return {me.Vector2d} Reference to this object for method chaining.
-         */
-        reflectN : function (axis) {
-            var x = this.x;
-            var y = this.y;
-            this.projectN(axis).scale(2);
-            return this._set(this.x - x, this.y - y);
-        },
-
-        /**
          * return a clone copy of this vector
          * @name clone
          * @memberOf me.Vector2d

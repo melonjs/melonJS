@@ -467,37 +467,6 @@
         },
 
         /**
-         * Reflect this vector on an arbitrary axis.
-         * @name reflect
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @param {me.ObservableVector3d} axis The vector representing the axis.
-         * @return {me.ObservableVector3d} Reference to this object for method chaining.
-         */
-        reflect : function (axis) {
-            var x = this._x;
-            var y = this._y;
-            this.project(axis).scale(2);
-            return this._set(this._x - x, this._y - y, this._z);
-        },
-
-        /**
-         * Reflect this vector on an arbitrary axis (represented by a unit vector) <br>
-         * This is slightly more efficient than `reflect` when dealing with unit vectors.
-         * @name reflectN
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @param {me.ObservableVector3d} axis The vector representing the axis.
-         * @return {me.ObservableVector3d} Reference to this object for method chaining.
-         */
-        reflectN : function (axis) {
-            var x = this._x;
-            var y = this._y;
-            this.projectN(axis).scale(2);
-            return this._set(this._x - x, this._y - y, this._z);
-        },
-
-        /**
          * return a clone copy of this vector
          * @name clone
          * @memberOf me.ObservableVector3d
