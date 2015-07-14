@@ -148,4 +148,11 @@ describe("me.Vector2d", function () {
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
     
+    it("perp function", function () {
+        a.set(x, y);
+        b.copy(a).perp();
+        
+        expect(b.angle(a)).toEqual(Math.PI / 2);
+    });
+    
 });

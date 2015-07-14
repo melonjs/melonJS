@@ -336,18 +336,18 @@
 
         /**
          * change this vector to be perpendicular to what it was before.<br>
-         * (Effectively rotates it 90 degrees in a clockwise direction)
+         * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
          * @name perp
          * @memberOf me.Vector3d
          * @function
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         perp : function () {
-            return this._set(this.y, -this.x. this.z);
+            return this._set(this.y, -this.x, this.z);
         },
 
         /**
-         * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+         * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
          * @name rotate
          * @memberOf me.Vector3d
          * @function

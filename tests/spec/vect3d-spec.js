@@ -172,5 +172,15 @@ describe("me.Vector3d", function () {
         b.set(4*x, -y, 0);
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
+    
+    /*
+    HOMEWORK: perp function for 3d vectors
+    it("perp function", function () {
+        a.set(x, y, z);
+        b.copy(a).perp();
+  
+        expect(a.angle(b).radToDeg()).toEqual(90); //?
+    });
+    */
         
 });
