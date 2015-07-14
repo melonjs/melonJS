@@ -16,7 +16,7 @@ describe("me.ObservableVector3d", function () {
         _oldZ = oldZ;
     };
     
-    it("should be initialized to a (0, 0) 2d vector", function () {
+    it("should be initialized to a (0, 0, 0) 3d vector", function () {
         a = new me.ObservableVector3d(0, 0, 0, {
             onUpdate : callback.bind(this)
         });
