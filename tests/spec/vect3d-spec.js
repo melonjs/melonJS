@@ -105,6 +105,38 @@ describe("me.Vector3d", function () {
         expect( b.distance( d ) === y).toEqual(true);
         expect( c.distance( d ) === z).toEqual(true);
     });
+    
+    it( "min/max/clamp", function() {
+        var a = new me.Vector3d( x, y, z );
+        var b = new me.Vector3d( -x, -y, -z );
+        var c = new me.Vector3d();
+
+        c.copy( a ).minV( b );
+        expect( c.x === -x).toEqual(true);
+        expect( c.y === -y).toEqual(true);
+        expect( c.z === -z).toEqual(true);
+
+        c.copy( a ).maxV( b );
+        expect( c.x === x).toEqual(true);
+        expect( c.y === y).toEqual(true);
+        expect( c.z === z).toEqual(true);
+
+        c.set( -2*x, 2*x, 2*z );
+        c.clampSelf( -x, x );
+        expect( c.x === -x).toEqual(true);
+        expect( c.y === x).toEqual(true);
+        expect( c.z === x).toEqual(true);
+    });
+    
+    it( "ceil/floor", function() {
+        expect( new me.Vector3d( -0.1, 0.1, 0.3 ).floorSelf().equals(new me.Vector3d( -1, 0, 0 ))).toEqual(true);
+        expect( new me.Vector3d( -0.5, 0.5, 0.6 ).floorSelf().equals(new me.Vector3d( -1, 0, 0 ))).toEqual(true);
+        expect( new me.Vector3d( -0.9, 0.9, 0.8 ).floorSelf().equals(new me.Vector3d( -1, 0, 0 ))).toEqual(true);
+
+        expect( new me.Vector3d( -0.1, 0.1, 0.3 ).ceilSelf().equals(new me.Vector3d( 0, 1, 1 ))).toEqual(true);
+        expect( new me.Vector3d( -0.5, 0.5, 0.6 ).ceilSelf().equals(new me.Vector3d( 0, 1, 1 ))).toEqual(true);
+        expect( new me.Vector3d( -0.9, 0.9, 0.9 ).ceilSelf().equals(new me.Vector3d( 0, 1, 1 ))).toEqual(true);
+    });
 
     it("angle between a and b is 180deg", function () {
         var a = new me.Vector3d(x, y, z);
@@ -113,12 +145,31 @@ describe("me.Vector3d", function () {
         expect(a.angle(b) === Math.PI).toEqual(true);
     });
 
+
     it("project a on b", function () {
         var a = new me.Vector3d(x, y, z);
         var b = new me.Vector3d(-x, -y, -z);
         
         // the following only works with (-)1, (-)2, (-)3 style of values
         expect(a.project(b).equals(b)).toEqual(true);
+    });
+    
+    it("angle between a and b", function () {
+    
+        var a = new me.Vector3d( 0, -0.18851655680720186, 0.9820700116639124 );
+        var b = new me.Vector3d( 0, 0.18851655680720186, -0.9820700116639124 );
+
+        expect( a.angle( a ) === 0 ).toEqual(true);
+        expect( a.angle( b ) === Math.PI ).toEqual(true);
+        
+        a.set(x, y, 0);
+        b.set(-x, -y, 0);
+        
+        // why is this not perfectly 180 degrees ?
+        expect(Math.round(a.angle(b).radToDeg()) === 180).toEqual(true);
+        
+        b.set(4*x, -y, 0);
+        expect(a.angle(b) === Math.PI / 2).toEqual(true);
     });
         
 });

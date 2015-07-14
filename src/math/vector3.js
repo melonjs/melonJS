@@ -427,7 +427,7 @@
          * @return {Number} angle in radians
          */
         angle : function (v) {
-            return Math.acos(this.dotProduct(v) / (this.length() * v.length()));
+            return Math.acos((this.dotProduct(v) / (this.length() * v.length())).clamp(-1, 1));
         },
 
         /**
