@@ -67,7 +67,7 @@
 
             // for z ordering
             // make it ridiculously high
-            this.z = Infinity;
+            this.pos.z = Infinity;
 
             // visibility flag
             this.visible = false;
@@ -292,7 +292,9 @@
                 // register a mouse event for the checkboxes
                 me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this), true);
                 // add the debug panel to the game world
+                me.game.world.autoDepth = false;
                 me.game.world.addChild(this, Infinity);
+                me.game.world.autoDepth = true;
                 // mark it as visible
                 this.visible = true;
             }
