@@ -436,6 +436,13 @@
          * level.addTo(me.game.world, true);
          */
         addTo : function (container, flatten) {
+            var _sort = container.autoSort;
+            var _depth = container.autoDepth;
+            
+            // disable auto-sort and auto-depth
+            container.autoSort = false;
+            container.autoDepth = false;
+
             // add all layers instances
             this.getLayers().forEach(function (layer) {
                 container.addChild(layer);
@@ -445,6 +452,13 @@
             this.getObjects(flatten).forEach(function (object) {
                 container.addChild(object);
             });
+
+            //  set back auto-sort and auto-depth
+            container.autoSort = _sort;
+            container.autoDepth = _depth;
+
+            // force a sort
+            container.sort(true);
         },
 
         /**

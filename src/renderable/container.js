@@ -144,7 +144,7 @@
             if (typeof(child.pos) !== "undefined") {
                 if (typeof(z) === "number") {
                         child.pos.z = z;
-                } else  if (this.autoDepth === true) {
+                } else if (this.autoDepth === true) {
                     child.pos.z = this.children.length;
                 }
             }
