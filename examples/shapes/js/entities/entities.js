@@ -36,7 +36,8 @@ game.ShapeObject = me.Entity.extend({
 
         if (this.canMove) {
             // follow the mouse/finger
-            this.pos.set(event.gameX, event.gameY);
+            me.game.world.moveToTop(this);
+            this.pos.set(event.gameX, event.gameY, this.pos.z);
             this.pos.sub(this.grabOffset);
         }
     },
