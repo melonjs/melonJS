@@ -124,7 +124,7 @@
          * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
-         * @param {number} [z] when autoDepth is disabled, forces the z index of the child to the specified value
+         * @param {number} [z] forces the z index of the child to the specified value
          * @return {me.Renderable} the added child
          */
         addChild : function (child, z) {
@@ -142,13 +142,10 @@
 
             // set the child z value if required
             if (typeof(child.pos) !== "undefined") {
-                if (this.autoDepth === true) {
-                    child.pos.z = this.children.length;
-                } else {
-                    // change the child z-index if one is specified
-                    if (typeof(z) === "number") {
+                if (typeof(z) === "number") {
                         child.pos.z = z;
-                    }
+                } else  if (this.autoDepth === true) {
+                    child.pos.z = this.children.length;
                 }
             }
 

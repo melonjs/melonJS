@@ -32,7 +32,7 @@
 
             // for z ordering
             // make it ridiculously high
-            this.z = Infinity;
+            this.pos.z = Infinity;
 
             // visibility flag
             this.visible = true;
@@ -74,7 +74,7 @@
             this.patchSystemFn();
 
             // add the debug panel to the game world
-            me.game.world.addChild(this);
+            me.game.world.addChild(this, Infinity);
         },
 
 
