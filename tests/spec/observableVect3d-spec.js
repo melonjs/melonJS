@@ -181,4 +181,14 @@ describe("me.ObservableVector3d", function () {
         b.set(4*x, -y, 0);
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
+    
+    it("perp and rotate function", function () {
+        a.set(x, y, z);
+        b.copy(a).perp();
+        // perp rotate the vector by 90 degree clockwise on the z axis
+        c.copy(a).rotate(Math.PI/2);
+  
+        expect(a.angle(b)).toEqual(a.angle(c));
+    });
+    
 });
