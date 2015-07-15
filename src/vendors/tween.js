@@ -64,9 +64,6 @@
 
         }
 
-        // position vector (NOT USED for insertion into container)
-        this.pos = new me.Vector3d(0, 0, 0);
-
         /**
          * reset the tween object to default value
          * @ignore

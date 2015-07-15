@@ -595,13 +595,13 @@
                 }.defer(this, this);
             }
         },
-
+        
         /**
          * Z Sorting function
          * @ignore
          */
         _sortZ : function (a, b) {
-            return (b.pos.z) - (a.pos.z);
+            return (b.pos && a.pos) ? (b.pos.z) - (a.pos.z) : 0;
         },
 
         /**
@@ -609,8 +609,10 @@
          * @ignore
          */
         _sortX : function (a, b) {
-            /* ? */
-            var result = (b.pos.z - a.pos.z);
+            if (!b.pos || !a.pos) {
+                return 0;
+            }
+            var result = b.pos.z - a.pos.z;
             return (result ? result : (b.pos.x - a.pos.x) || 0);
         },
 
@@ -619,7 +621,10 @@
          * @ignore
          */
         _sortY : function (a, b) {
-            var result = (b.pos.z - a.pos.z);
+            if (!b.pos || !a.pos) {
+                return 0;
+            }
+            var result = b.pos.z - a.pos.z;
             return (result ? result : (b.pos.y - a.pos.y) || 0);
         },
 
