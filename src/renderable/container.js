@@ -87,8 +87,16 @@
              */
             this.autoSort = true;
 
-            this.transform.identity();
-
+            /**
+             * Specify if the children z index should automatically be managed by the parent container
+             * @public
+             * @type Boolean
+             * @default true
+             * @name autoDepth
+             * @memberOf me.Container
+             */
+            this.autoDepth = true;
+            
             /**
              * Used by the debug panel plugin
              * @ignore
@@ -103,6 +111,9 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
+            
+            // reset the transformation matrix
+            this.transform.identity();
         },
 
 
@@ -113,7 +124,7 @@
          * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
-         * @param {number} [z] forces the z index of the child to the specified value
+         * @param {number} [z] when autoDepth is disabled, forces the z index of the child to the specified value
          * @return {me.Renderable} the added child
          */
         addChild : function (child, z) {
@@ -129,18 +140,17 @@
                 }
             }
 
-            // change the child z-index if one is specified
-            if (typeof(z) === "number") {
-                child.pos.z = z;
+            // set the child z value if required
+            if (typeof(child.pos) !== "undefined") {
+                if (this.autoDepth === true) {
+                    child.pos.z = this.children.length;
+                } else {
+                    // change the child z-index if one is specified
+                    if (typeof(z) === "number") {
+                        child.pos.z = z;
+                    }
+                }
             }
-
-            // specify a z property to infinity if not defined
-            /*
-            if ((typeof child.z === "undefined") || (child.z !== child.z)) {
-                TOTO : WHAT CONDITION CAN WE DEFINE NOW FOR THIS ?
-                child.z = this.children.length;
-            }
-            */
 
             child.ancestor = this;
             this.children.push(child);

@@ -479,8 +479,9 @@
                     targetContainer.pos.z = group.z;
                     targetContainer.setOpacity(group.opacity);
 
-                    // disable auto-sort
+                    // disable auto-sort and auto-depth
                     targetContainer.autoSort = false;
+                    targetContainer.autoDepth = false;
                 }
 
                 // iterate through the group and add all object into their
@@ -534,8 +535,9 @@
                 // if we created a new container
                 if ((flatten === false) && (targetContainer.children.length > 0)) {
 
-                    // re-enable auto-sort
+                    // re-enable auto-sort and auto-depth
                     targetContainer.autoSort = true;
+                    targetContainer.autoDepth = true;
 
                     // add our container to the world
                     objects.push(targetContainer);
