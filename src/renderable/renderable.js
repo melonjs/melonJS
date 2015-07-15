@@ -94,16 +94,6 @@
             this.floating = false;
 
             /**
-             * Z-order for object sorting<br>
-             * @private
-             * @type Number
-             * @default NaN
-             * @name z
-             * @memberOf me.Renderable
-             */
-            this.z = NaN;
-
-            /**
              * Define the object anchoring point<br>
              * This is used when positioning, or scaling the object<br>
              * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>

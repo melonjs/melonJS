@@ -32,7 +32,7 @@
      *       // super constructor
      *       this._super(me.GUI_Object, "init", [x, y, settings]);
      *       // define the object z order
-     *       this.z = 4;
+     *       this.pos.z = 4;
      *    },
      *
      *    // output something in the console

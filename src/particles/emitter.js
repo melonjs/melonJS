@@ -375,8 +375,8 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "z", {
-                get : function () { return this.container.z; },
-                set : function (value) { this.container.z = value; },
+                get : function () { return this.container.pos.z; },
+                set : function (value) { this.container.pos.z = value; },
                 enumerable : true,
                 configurable : true
             });

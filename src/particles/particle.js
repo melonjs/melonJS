@@ -66,7 +66,7 @@
             this.onlyInViewport = emitter.onlyInViewport;
 
             // Set the particle Z Order
-            this.z = emitter.z;
+            this.pos.z = emitter.z;
 
             // cache inverse of the expected delta time
             this._deltaInv = me.sys.fps / 1000;

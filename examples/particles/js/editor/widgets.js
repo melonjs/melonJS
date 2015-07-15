@@ -252,12 +252,12 @@
     pe.ShapeWidget.Helper = me.Renderable.extend({
         init : function(color) {
             this._super(me.Renderable, 'init', [0, 0, 0, 0]);
-            this.z = Infinity;
+            this.pos.z = Infinity;
             this.color = color;
         },
         setShape : function(v, w, h) {
             this.resize(w, h);
-            this.pos.set(v.x, v.y);
+            this.pos.set(v.x, v.y, this.pos.z);
             return this;
         },
         draw : function(renderer) {
@@ -273,7 +273,7 @@
             this.originalSize = 40;
             this.createGradients(color, this.originalSize);
             this._super(me.Renderable, 'init', [0, 0, this.originalSize, this.originalSize]);
-            this.z = Infinity;
+            this.pos.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
 
@@ -317,7 +317,7 @@
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {
-            this.pos.set(x - (this.width / 2), y - (this.height / 2));
+            this.pos.set(x - (this.width / 2), y - (this.height / 2), this.pos.z);
         },
         startDrag : function(event) {
             this.dragging = true;
@@ -439,13 +439,13 @@
         init : function(widget, color) {
             this._super(me.Renderable, 'init', [0, 0, 0, 0]);
             this.widget = widget;
-            this.z = Infinity;
+            this.pos.z = Infinity;
             this.color = color.toRGBA();
         },
         setShape : function(v, w, h) {
             var x = w < 0 ? v.x + w : v.x;
             var y = h < 0 ? v.y + h : v.y;
-            this.pos.set(x, y);
+            this.pos.set(x, y, this.pos.z);
             this.resize(Math.abs(w), Math.abs(h));
             return this;
         },
@@ -578,10 +578,10 @@
             this.minRadius = 0;
             this.maxRadius = 0;
             this.scaler = 30;
-            this.z = Infinity;
+            this.pos.z = Infinity;
         },
         set : function(object) {
-            this.pos.set(object.pos.x + (object.width / 2), object.pos.y + (object.height / 2));
+            this.pos.set(object.pos.x + (object.width / 2), object.pos.y + (object.height / 2), this.pos.z);
             this.startAngle = -(object.angle - object.angleVariation);
             this.endAngle = -(object.angle + object.angleVariation);
             this.minRadius = (object.speed - object.speedVariation) * this.scaler;
