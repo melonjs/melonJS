@@ -5,8 +5,10 @@ Version History
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
+* Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
 * LevelDirector : level loading is now asynchronous; for sequential behavior, use the LEVEL_LOADED event or new `onLoaded` callback
 * Renderable : prevent position vector re-allocation when pooling renderable objects
+* Renderable : renderables are now using a 3d Vector for position, and using the z component for z ordering.
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored me.Rect to inherit from me.Polygon
