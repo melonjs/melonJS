@@ -160,11 +160,13 @@ describe("me.ObservableVector2d", function () {
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
     
-    it("perp function", function () {
+    it("perp and rotate function", function () {
         a.set(x, y);
         b.copy(a).perp();
-        
-        expect(b.angle(a)).toEqual(Math.PI / 2);
+        // perp rotate the vector by 90 degree clockwise on the z axis
+        c.copy(a).rotate(Math.PI/2);
+  
+        expect(a.angle(b)).toEqual(a.angle(c));
     });
     
 });

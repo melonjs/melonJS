@@ -424,7 +424,7 @@
             var y = this._y;
             return this._set(
                 x * Math.cos(angle) - y * Math.sin(angle),
-                x * Math.sin(angle) + y * Math.cos(angle).
+                x * Math.sin(angle) + y * Math.cos(angle),
                 this._z
             );
         },
