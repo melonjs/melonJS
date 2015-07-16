@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function (TMXConstants) {
+(function () {
 
     /**
      * set a compatible renderer object
@@ -53,45 +53,13 @@
      * Set tiled layer Data
      * @ignore
      */
-    function setLayerData(layer, rawdata, encoding, compression) {
-        // data
-        var data = Array.isArray(rawdata) === true ? rawdata : rawdata.value;
-
-        // decode data based on encoding type
-        switch (encoding) {
-            case "json":
-                // do nothing as data can be directly reused
-                data = rawdata;
-                break;
-            // CSV encoding
-            case TMXConstants.TMX_TAG_CSV:
-            // Base 64 encoding
-            case TMXConstants.TMX_TAG_ATTR_BASE64:
-                // and then decode them
-                if (encoding === TMXConstants.TMX_TAG_CSV) {
-                    // CSV decode
-                    data = me.utils.decodeCSV(data, layer.cols);
-                } else {
-                    // check if data is compressed
-                    if (typeof compression === "string") {
-                        data = me.utils.decompress(data, compression);
-                    }
-                    // Base 64 decode
-                    data = me.utils.decodeBase64AsArray(data, 4);
-                }
-                break;
-
-
-            default:
-                throw new me.Error("TMX Tile Map " + encoding + " encoding not supported!");
-        }
-
+    function setLayerData(layer, data) {
         var idx = 0;
         // set everything
         for (var y = 0 ; y < layer.rows; y++) {
             for (var x = 0; x < layer.cols; x++) {
                 // get the value of the gid
-                var gid = (encoding == null) ? this.TMXParser.getIntAttribute(data[idx++], TMXConstants.TMX_TAG_GID) : data[idx++];
+                var gid = data[idx++];
                 // fill the array
                 if (gid !== 0) {
                     // add a new tile to the layer
@@ -118,12 +86,8 @@
             layer.setRenderer(me.game.tmxRenderer);
         }
 
-        // detect encoding and compression
-        var encoding = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_ENCODING] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_ENCODING];
-        var compression = Array.isArray(data[TMXConstants.TMX_TAG_DATA]) ? data[TMXConstants.TMX_TAG_COMPRESSION] : data[TMXConstants.TMX_TAG_DATA][TMXConstants.TMX_TAG_COMPRESSION];
-
         // parse the layer data
-        setLayerData(layer, data[TMXConstants.TMX_TAG_DATA], encoding || "json", compression);
+        setLayerData(layer, data.data);
         return layer;
     }
 
@@ -133,12 +97,12 @@
      */
     function readImageLayer(map, data, z) {
         // extract layer information
-        var ilx = +data[TMXConstants.TMX_TAG_X] || 0;
-        var ily = +data[TMXConstants.TMX_TAG_Y] || 0;
-        var iln = data[TMXConstants.TMX_TAG_NAME];
-        var ilw = +data[TMXConstants.TMX_TAG_WIDTH];
-        var ilh = +data[TMXConstants.TMX_TAG_HEIGHT];
-        var ilsrc = typeof (data[TMXConstants.TMX_TAG_IMAGE]) !== "string" ? data[TMXConstants.TMX_TAG_IMAGE].source : data[TMXConstants.TMX_TAG_IMAGE];
+        var ilx = +data.x || 0;
+        var ily = +data.y || 0;
+        var iln = data.name;
+        var ilw = +data.width;
+        var ilh = +data.height;
+        var ilsrc = data.image;
 
         // create the layer
         var imageLayer = new me.ImageLayer(
@@ -152,8 +116,8 @@
         );
 
         // set some additional flags
-        var visible = typeof(data[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? data[TMXConstants.TMX_TAG_VISIBLE] : true;
-        imageLayer.setOpacity((visible === true) ? (+data[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0);
+        var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+        imageLayer.setOpacity(visible ? +data.opacity : 0);
 
         // check if we have any additional properties
         me.TMXUtils.applyTMXProperties(imageLayer, data);
@@ -180,7 +144,7 @@
      * @ignore
      */
     function readObjectGroup(map, data, z) {
-        return (new me.TMXObjectGroup(data[TMXConstants.TMX_TAG_NAME], data, map.orientation, map.tilesets, z));
+        return (new me.TMXObjectGroup(data.name, data, map.orientation, map.tilesets, z));
     }
 
 
@@ -223,14 +187,14 @@
              * @type Int
              * @name me.TMXTileMap#cols
              */
-            this.cols = +data[TMXConstants.TMX_TAG_WIDTH];
+            this.cols = +data.width;
             /**
              * height of the tilemap in tiles
              * @public
              * @type Int
              * @name me.TMXTileMap#rows
              */
-            this.rows = +data[TMXConstants.TMX_TAG_HEIGHT];
+            this.rows = +data.height;
 
             /**
              * Tile width
@@ -238,7 +202,7 @@
              * @type Int
              * @name me.TMXTileMap#tilewidth
              */
-            this.tilewidth = +data[TMXConstants.TMX_TAG_TILEWIDTH];
+            this.tilewidth = +data.tilewidth;
 
             /**
              * Tile height
@@ -246,7 +210,7 @@
              * @type Int
              * @name me.TMXTileMap#tileheight
              */
-            this.tileheight = +data[TMXConstants.TMX_TAG_TILEHEIGHT];
+            this.tileheight = +data.tileheight;
 
             // tilesets for this map
             this.tilesets = null;
@@ -256,10 +220,10 @@
             this.objectGroups = [];
 
             // tilemap version
-            this.version = data[TMXConstants.TMX_TAG_VERSION];
+            this.version = data.version;
 
             // map type (orthogonal or isometric)
-            this.orientation = data[TMXConstants.TMX_TAG_ORIENTATION];
+            this.orientation = data.orientation;
             if (this.orientation === "isometric") {
                 this.width = (this.cols + this.rows) * (this.tilewidth / 2);
                 this.height = (this.cols + this.rows) * (this.tileheight / 2);
@@ -273,16 +237,16 @@
             this.z = 0;
 
             // object id
-            this.nextobjectid = +data[TMXConstants.TMX_TAG_NEXTOBJID] || undefined;
+            this.nextobjectid = +data.nextobjectid || undefined;
 
 
             // hex/iso properties
-            this.hexsidelength = +data[TMXConstants.TMX_HEXSIDELENGTH];
-            this.staggeraxis = data[TMXConstants.TMX_STAGGERAXIS];
-            this.staggerindex = data[TMXConstants.TMX_STAGGERINDEX];
+            this.hexsidelength = +data.hexsidelength;
+            this.staggeraxis = data.staggeraxis;
+            this.staggerindex = data.staggerindex;
 
             // background color
-            this.backgroundcolor = data[TMXConstants.TMX_BACKGROUND_COLOR];
+            this.backgroundcolor = data.backgroundcolor;
 
             // set additional map properties (if any)
             me.TMXUtils.applyTMXProperties(this, data);
@@ -353,71 +317,25 @@
                 ));
             }
 
-            // native JSON format
-            if (typeof (data.layers) !== "undefined") {
-                data.layers.forEach(function (layer) {
-                    switch (layer.type) {
-                        case TMXConstants.TMX_TAG_IMAGE_LAYER :
-                            self.layers.push(readImageLayer(self, layer, zOrder++));
-                            break;
+            data.layers.forEach(function (layer) {
+                switch (layer.type) {
+                    case "imagelayer":
+                        self.layers.push(readImageLayer(self, layer, zOrder++));
+                        break;
 
-                        case TMXConstants.TMX_TAG_TILE_LAYER :
-                            self.layers.push(readLayer(self, layer, zOrder++));
-                            break;
+                    case "tilelayer":
+                        self.layers.push(readLayer(self, layer, zOrder++));
+                        break;
 
-                        // get the object groups information
-                        case TMXConstants.TMX_TAG_OBJECTGROUP:
-                            self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
-                            break;
+                    // get the object groups information
+                    case "objectgroup":
+                        self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                        break;
 
-                        default:
-                            break;
-                    }
-                });
-            } else if (typeof (data.layer) !== "undefined") {
-                // converted XML format
-                // in converted format, these are not under the generic layers structure
-                // and each element can be either an array of object of just one object
-
-                var layers = data.layer;
-                if (Array.isArray(layers) === true) {
-                    layers.forEach(function (layer) {
-                        // get the object information
-                        self.layers.push(readLayer(self, layer, layer._draworder));
-                    });
+                    default:
+                        break;
                 }
-                else {
-                    // get the object information
-                    self.layers.push(readLayer(self, layers, layers._draworder));
-                }
-
-                // in converted format, these are not under the generic layers structure
-                if (typeof(data[TMXConstants.TMX_TAG_OBJECTGROUP]) !== "undefined") {
-                    var groups = data[TMXConstants.TMX_TAG_OBJECTGROUP];
-                    if (Array.isArray(groups) === true) {
-                        groups.forEach(function (group) {
-                            self.objectGroups.push(readObjectGroup(self, group, group._draworder));
-                        });
-                    }
-                    else {
-                        // get the object information
-                        self.objectGroups.push(readObjectGroup(self, groups, groups._draworder));
-                    }
-                }
-
-                // in converted format, these are not under the generic layers structure
-                if (typeof(data[TMXConstants.TMX_TAG_IMAGE_LAYER]) !== "undefined") {
-                    var imageLayers = data[TMXConstants.TMX_TAG_IMAGE_LAYER];
-                    if (Array.isArray(imageLayers) === true) {
-                        imageLayers.forEach(function (imageLayer) {
-                            self.layers.push(readImageLayer(self, imageLayer, imageLayer._draworder));
-                        });
-                    }
-                    else {
-                        self.layers.push(readImageLayer(self, imageLayers, imageLayers._draworder));
-                    }
-                }
-            }
+            });
             this.initialized = true;
         },
 
@@ -438,7 +356,7 @@
         addTo : function (container, flatten) {
             var _sort = container.autoSort;
             var _depth = container.autoDepth;
-            
+
             // disable auto-sort and auto-depth
             container.autoSort = false;
             container.autoDepth = false;
@@ -482,7 +400,7 @@
                 var group = this.objectGroups[g];
 
                 // check if this is the collision shape group
-                isCollisionGroup = group.name.toLowerCase().includes(TMXConstants.COLLISION_GROUP);
+                isCollisionGroup = group.name.toLowerCase().includes(me.TMXConstants.COLLISION_GROUP);
 
                 if (flatten === false) {
                     // create a new container
@@ -586,4 +504,4 @@
             this.initialized = false;
         }
     });
-})(me.TMXConstants);
+})();

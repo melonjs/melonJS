@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function (TMXConstants) {
+(function () {
     /**
      * a collection of TMX utility Function
      * @final
@@ -78,19 +78,122 @@
         }
 
         /**
+         * Normalize TMX format to Tiled JSON format
+         * @ignore
+         */
+        api.normalize = function (obj, item) {
+            var nodeName = item.nodeName;
+
+            switch (nodeName) {
+                case "data":
+                    var data = api.parse(item);
+                    var compression = data.compression || "none";
+
+                    switch (data.encoding) {
+                        case "csv":
+                            obj.data = me.utils.decodeCSV(data.text);
+                            break;
+
+                        case "base64":
+                            var decoded = me.utils.decodeBase64AsArray(data.text, 4);
+                            obj.data = (
+                                (compression === "none") ?
+                                decoded :
+                                me.utils.decompress(decoded, compression)
+                            );
+                            break;
+
+                        default:
+                            throw new me.Error("Unknown layer encoding: " + data.encoding);
+                    }
+                    break;
+
+                case "imagelayer":
+                case "layer":
+                case "objectgroup":
+                    var layer = api.parse(item);
+                    layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
+                    if (layer.image) {
+                        layer.image = layer.image.source;
+                    }
+
+                    obj.layers = obj.layers || [];
+                    obj.layers.push(layer);
+                    break;
+
+                case "animation":
+                    obj.animation = api.parse(item).frames;
+                    break;
+
+                case "frame":
+                case "object":
+                    var name = nodeName + "s";
+                    obj[name] = obj[name] || [];
+                    obj[name].push(api.parse(item));
+                    break;
+
+                case "tile":
+                    var tile = api.parse(item);
+                    obj.tiles = obj.tiles || {};
+                    obj.tiles[tile.id] = tile;
+                    break;
+
+                case "tileset":
+                    var tileset = api.parse(item);
+                    if (tileset.image) {
+                        tileset.imagewidth = tileset.image.width;
+                        tileset.imageheight = tileset.image.height;
+                        tileset.image = tileset.image.source;
+                    }
+
+                    obj.tilesets = obj.tilesets || [];
+                    obj.tilesets.push(tileset);
+                    break;
+
+                case "polygon":
+                case "polyline":
+                    obj[nodeName] = [];
+
+                    // Get a point array
+                    var points = api.parse(item).points.split(" ");
+
+                    // And normalize them into an array of vectors
+                    for (var i = 0, v; i < points.length; i++) {
+                        v = points[i].split(",");
+                        obj[nodeName].push({
+                            "x" : +v[0],
+                            "y" : +v[1]
+                        });
+                    }
+
+                    break;
+
+                case "properties":
+                    obj.properties = api.parse(item);
+                    break;
+
+                case "property":
+                    var property = api.parse(item);
+                    obj[property.name] = "" + property.value;
+                    break;
+
+                default:
+                    obj[nodeName] = api.parse(item);
+                    break;
+            }
+
+            return obj;
+        };
+
+        /**
          * Parse a XML TMX object and returns the corresponding javascript object
          * @ignore
          */
-        api.parse = function (xml, draworder) {
+        api.parse = function (xml) {
             // Create the return object
             var obj = {};
 
-            // temporary cache value for concatenated #text element
-            var cacheValue = "";
-
-            // make sure draworder is defined
-            // note: `draworder` is a new object property in next coming version of Tiled
-            draworder = draworder || 1;
+            var text = "";
 
             if (xml.nodeType === 1) {
                 // do attributes
@@ -101,37 +204,23 @@
             if (xml.hasChildNodes()) {
                 for (var i = 0; i < xml.childNodes.length; i++) {
                     var item = xml.childNodes.item(i);
-                    var nodeName = item.nodeName;
 
-                    if (typeof(obj[nodeName]) === "undefined") {
-                        if (item.nodeType === 3) {
-                            /* nodeType is "Text"  */
-                            var value = item.nodeValue.trim();
-                            if (value && value.length > 0) {
-                                cacheValue += value;
-                            }
-                        }
-                        else if (item.nodeType === 1) {
-                            /* nodeType is "Element" */
-                            obj[nodeName] =  me.TMXUtils.parse(item, draworder);
-                            obj[nodeName]._draworder = draworder++;
-                        }
+                    switch (item.nodeType) {
+                        case 1:
+                            obj = api.normalize(obj, item);
+                            break;
+
+                        case 3:
+                            text += item.nodeValue.trim();
+                            break;
                     }
-                    else {
-                        if (Array.isArray(obj[nodeName]) === false) {
-                            obj[nodeName] = [obj[nodeName]];
-                        }
-                        obj[nodeName].push(me.TMXUtils.parse(item, draworder));
-                        obj[nodeName][obj[nodeName].length - 1]._draworder = draworder++;
-                    }
-                }
-                // set concatenated string value
-                // cheap hack that will only probably work with the TMX format
-                if (cacheValue.length > 0) {
-                    obj.value = cacheValue;
-                    cacheValue = "";
                 }
             }
+
+            if (text) {
+                obj.text = text;
+            }
+
             return obj;
         };
 
@@ -140,29 +229,12 @@
          * @ignore
          */
         api.applyTMXProperties = function (obj, data) {
-            var properties = data[TMXConstants.TMX_TAG_PROPERTIES];
+            var properties = data.properties;
             if (typeof(properties) !== "undefined") {
-                if (typeof(properties.property) !== "undefined") {
-                    // XML converted format
-                    var property = properties.property;
-                    if (Array.isArray(property) === true) {
-                        property.forEach(function (prop) {
-                            // value are already converted in this case
-                            obj[prop.name] = prop.value;
-                        });
-                    }
-                    else {
-                        // value are already converted in this case
-                        obj[property.name] = property.value;
-                    }
-                }
-                else {
-                    // native json format
-                    for (var name in properties) {
-                        if (properties.hasOwnProperty(name)) {
-                            // set the value
-                            obj[name] = setTMXValue(name, properties[name]);
-                        }
+                for (var name in properties) {
+                    if (properties.hasOwnProperty(name)) {
+                        // set the value
+                        obj[name] = setTMXValue(name, properties[name]);
                     }
                 }
             }
@@ -171,4 +243,4 @@
         // return our object
         return api;
     })();
-})(me.TMXConstants);
+})();

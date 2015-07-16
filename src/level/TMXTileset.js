@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function (TMXConstants) {
+(function () {
 
     /**
      * a TMX Tile Set Object
@@ -24,26 +24,22 @@
             // tile properties (collidable, etc..)
             this.TileProperties = [];
 
-            this.firstgid = this.lastgid = +tileset[TMXConstants.TMX_TAG_FIRSTGID];
-            var src = tileset[TMXConstants.TMX_TAG_SOURCE];
+            this.firstgid = this.lastgid = +tileset.firstgid;
+            var src = tileset.source;
             if (src && me.utils.getFileExtension(src) === "tsx") {
                 // load TSX
-                src = me.utils.getBasename(src);
-                // replace tileset with a local variable
-                tileset = me.loader.getTMX(src).tileset;
+                tileset = me.loader.getTMX(me.utils.getBasename(src));
 
                 if (!tileset) {
                     throw new me.Error(src + " TSX tileset not found");
                 }
-                // normally tileset shoudld directly contains the required
-                //information : UNTESTED as I did not find how to generate a JSON TSX file
             }
 
-            this.name = tileset[TMXConstants.TMX_TAG_NAME];
-            this.tilewidth = +tileset[TMXConstants.TMX_TAG_TILEWIDTH];
-            this.tileheight = +tileset[TMXConstants.TMX_TAG_TILEHEIGHT];
-            this.spacing = +tileset[TMXConstants.TMX_TAG_SPACING] || 0;
-            this.margin = +tileset[TMXConstants.TMX_TAG_MARGIN] || 0;
+            this.name = tileset.name;
+            this.tilewidth = +tileset.tilewidth;
+            this.tileheight = +tileset.tileheight;
+            this.spacing = +tileset.spacing || 0;
+            this.margin = +tileset.margin || 0;
 
             // set tile offset properties (if any)
             this.tileoffset = new me.Vector2d();
@@ -65,76 +61,37 @@
             this.animations = new Map();
 
             var tiles = tileset.tiles;
-            if (typeof(tiles) !== "undefined") {
-                // native JSON format
-                for (i in tiles) {
-                    if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
-                        this.isAnimated = true;
-                        this.animations.set(+i + this.firstgid, {
-                            dt      : 0,
-                            idx     : 0,
-                            frames  : tiles[i].animation,
-                            cur     : tiles[i].animation[0]
-                        });
-                    }
+            for (i in tiles) {
+                if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
+                    this.isAnimated = true;
+                    this.animations.set(+i + this.firstgid, {
+                        dt      : 0,
+                        idx     : 0,
+                        frames  : tiles[i].animation,
+                        cur     : tiles[i].animation[0]
+                    });
                 }
             }
 
-            var offset = tileset[TMXConstants.TMX_TAG_TILEOFFSET];
+            var offset = tileset.tileoffset;
             if (offset) {
-                this.tileoffset.x = +offset[TMXConstants.TMX_TAG_X];
-                this.tileoffset.y = +offset[TMXConstants.TMX_TAG_Y];
+                this.tileoffset.x = +offset.x;
+                this.tileoffset.y = +offset.y;
             }
 
             // set tile properties, if any
             var tileInfo = tileset.tileproperties;
-
             if (tileInfo) {
-                // native JSON format
                 for (i in tileInfo) {
                     if (tileInfo.hasOwnProperty(i)) {
                         this.setTileProperty(i + this.firstgid, tileInfo[i]);
                     }
                 }
             }
-            else if (tileset[TMXConstants.TMX_TAG_TILE]) {
-                // converted XML format
-                tileInfo = tileset[TMXConstants.TMX_TAG_TILE];
-                if (!Array.isArray(tileInfo)) {
-                    tileInfo = [ tileInfo ];
-                }
 
-                // iterate it
-                for (i = 0; i < tileInfo.length; i++) {
-                    var tileID = +tileInfo[i][TMXConstants.TMX_TAG_ID] + this.firstgid;
-                    var prop = {};
-                    me.TMXUtils.applyTMXProperties(prop, tileInfo[i]);
-                    //apply tiled defined properties
-                    this.setTileProperty(tileID, prop);
-
-                    // Get animations
-                    if ("animation" in tileInfo[i]) {
-                        this.isAnimated = true;
-                        this.animations.set(tileID, {
-                            dt      : 0,
-                            idx     : 0,
-                            frames  : tileInfo[i].animation.frame,
-                            cur     : tileInfo[i].animation.frame[0]
-                        });
-                    }
-                }
-            }
-
-            // check for the texture corresponding image
-            // manage inconstency between XML and JSON format
-            var imagesrc = (
-                typeof(tileset[TMXConstants.TMX_TAG_IMAGE]) === "string" ?
-                tileset[TMXConstants.TMX_TAG_IMAGE] : tileset[TMXConstants.TMX_TAG_IMAGE].source
-            );
-
-            this.image = me.utils.getImage(imagesrc);
+            this.image = me.utils.getImage(tileset.image);
             if (!this.image) {
-                throw new me.TMXTileset.Error("melonJS: '" + imagesrc + "' file for tileset '" + this.name + "' not found!");
+                throw new me.TMXTileset.Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
             }
 
             // create a texture atlas for the given tileset
@@ -329,4 +286,4 @@
         }
     });
 
-})(me.TMXConstants);
+})();

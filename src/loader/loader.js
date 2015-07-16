@@ -77,13 +77,10 @@
          * @ignore
          */
         function preloadTMX(tmxData, onload, onerror) {
-            function addToTMXList(data, format) {
+            function addToTMXList(data) {
                 // set the TMX content
-                tmxList[tmxData.name] = {
-                    data: data,
-                    isTMX: (tmxData.type === "tmx"),
-                    format : format
-                };
+                tmxList[tmxData.name] = data;
+
                 // add the tmx to the levelDirector
                 if (tmxData.type === "tmx") {
                     me.levelDirector.addTMXLevel(tmxData.name);
@@ -93,7 +90,7 @@
 
             //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
             if (tmxData.data) {
-                addToTMXList(tmxData.data, tmxData.format);
+                addToTMXList(tmxData.data);
                 onload();
                 return;
             }
@@ -141,13 +138,17 @@
                                     result = xmlhttp.responseXML;
                                 }
                                 // converts to a JS object
-                                // (returns with map as a the root object, to match native json format)
-                                result = me.TMXUtils.parse(result);
-                                if (format === "tmx") {
-                                    result = result.map;
+                                var data = me.TMXUtils.parse(result);
+                                switch (format) {
+                                    case "tmx":
+                                        result = data.map;
+                                        break;
+
+                                    case "tsx":
+                                        result = data.tilesets[0];
+                                        break;
                                 }
-                                // force format to json
-                                format = "json";
+
                                 break;
 
                             case "json":
@@ -159,7 +160,7 @@
                         }
 
                         //set the TMX content
-                        addToTMXList(result, format);
+                        addToTMXList(result);
 
                         // fire the callback
                         onload();
@@ -567,7 +568,7 @@
             // force as string
             elt = "" + elt;
             if (elt in tmxList) {
-                return tmxList[elt].data;
+                return tmxList[elt];
             }
             else {
                 //console.log ("warning %s resource not yet loaded!",name);

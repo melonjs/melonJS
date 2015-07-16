@@ -162,7 +162,7 @@
          * @name decodeBase64AsArray
          * @param {String} input Base64 encoded data
          * @param {Number} [bytes] number of bytes per array entry
-         * @return {Number[]} Array of bytes
+         * @return {Number[]} Decoded data
          */
         api.decodeBase64AsArray = function (input, bytes) {
             bytes = bytes || 1;
@@ -187,7 +187,7 @@
          * @name decompress
          * @param  {Number[]} data Array of bytes
          * @param  {String} format compressed data format ("gzip","zlib")
-         * @return {Number[]} Array of bytes
+         * @return {Number[]} Decompressed data
          */
         api.decompress = function () {
             throw new me.Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
@@ -200,18 +200,14 @@
          * @memberOf me.utils
          * @name decodeCSV
          * @param  {String} input CSV formatted data
-         * @param  {Number} limit row split limit
-         * @return {Number[]} Int Array
+         * @return {Number[]} Decoded data
          */
-        api.decodeCSV = function (input, limit) {
-            input = input.trim().split("\n");
+        api.decodeCSV = function (input) {
+            var entries = input.replace("\n", "").trim().split(",");
 
             var result = [];
-            for (var i = 0; i < input.length; i++) {
-                var entries = input[i].split(",", limit);
-                for (var e = 0; e < entries.length; e++) {
-                    result.push(+entries[e]);
-                }
+            for (var i = 0; i < entries.length; i++) {
+                result.push(+entries[i]);
             }
             return result;
         };

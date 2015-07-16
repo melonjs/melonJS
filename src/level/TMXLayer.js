@@ -4,7 +4,7 @@
  * http://www.melonjs.org
  *
  */
-(function (TMXConstants) {
+(function () {
 
     /**
      * a generic Color Layer Object
@@ -410,18 +410,18 @@
         /** @ignore */
         initFromJSON: function (layer) {
             // additional TMX flags
-            this.name = layer[TMXConstants.TMX_TAG_NAME];
-            this.cols = +layer[TMXConstants.TMX_TAG_WIDTH];
-            this.rows = +layer[TMXConstants.TMX_TAG_HEIGHT];
+            this.name = layer.name;
+            this.cols = +layer.width;
+            this.rows = +layer.height;
 
             // hexagonal maps only
-            this.hexsidelength = +layer[TMXConstants.TMX_HEXSIDELENGTH] || undefined;
-            this.staggeraxis = layer[TMXConstants.TMX_STAGGERAXIS] || undefined;
-            this.staggerindex = layer[TMXConstants.TMX_STAGGERINDEX] || undefined;
+            this.hexsidelength = +layer.hexsidelength || undefined;
+            this.staggeraxis = layer.staggeraxis || undefined;
+            this.staggerindex = layer.staggerindex || undefined;
 
             // layer opacity
-            var visible = typeof(layer[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? layer[TMXConstants.TMX_TAG_VISIBLE] : true;
-            this.setOpacity(visible ? +layer[TMXConstants.TMX_TAG_OPACITY] : 0);
+            var visible = typeof(layer.visible) !== "undefined" ? layer.visible : true;
+            this.setOpacity(visible ? +layer.opacity : 0);
 
             // layer "real" size
             if (this.orientation === "isometric") {
@@ -559,7 +559,7 @@
         setTile : function (x, y, tileId) {
             if (!this.tileset.contains(tileId)) {
                 // look for the corresponding tileset
-                this.tileset = this.tilesets.getTilesetByGid(tileId & TMXConstants.TMX_CLEAR_BIT_MASK);
+                this.tileset = this.tilesets.getTilesetByGid(tileId & me.TMXConstants.TMX_CLEAR_BIT_MASK);
             }
             var tile = this.layerData[x][y] = new me.Tile(x, y, tileId, this.tileset);
             // draw the corresponding tile
@@ -636,4 +636,4 @@
             renderer.setGlobalAlpha(alpha);
         }
     });
-})(me.TMXConstants);
+})();

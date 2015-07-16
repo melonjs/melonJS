@@ -7,7 +7,7 @@
  * http://www.mapeditor.org/
  *
  */
-(function (TMXConstants) {
+(function () {
 
     /**
      * TMX Object Group <br>
@@ -37,7 +37,7 @@
              * @name width
              * @memberOf me.TMXObjectGroup
              */
-            this.width = tmxObjGroup[TMXConstants.TMX_TAG_WIDTH];
+            this.width = tmxObjGroup.width;
 
             /**
              * group height
@@ -46,7 +46,7 @@
              * @name height
              * @memberOf me.TMXObjectGroup
              */
-            this.height = tmxObjGroup[TMXConstants.TMX_TAG_HEIGHT];
+            this.height = tmxObjGroup.height;
 
             /**
              * group z order
@@ -67,26 +67,18 @@
              */
             this.objects = [];
 
-            var visible = typeof(tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE]) !== "undefined" ? tmxObjGroup[TMXConstants.TMX_TAG_VISIBLE] : true;
-
-            this.opacity = (visible === true) ? (+tmxObjGroup[TMXConstants.TMX_TAG_OPACITY] || 1.0).clamp(0.0, 1.0) : 0;
+            var visible = typeof(tmxObjGroup.visible) !== "undefined" ? tmxObjGroup.visible : true;
+            this.opacity = (visible === true) ? (+tmxObjGroup.opacity || 1.0).clamp(0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
 
             // parse all objects
-            // (under `objects` for XML converted map, under `object` for native json map)
-            var _objects = tmxObjGroup.objects || tmxObjGroup.object;
+            var _objects = tmxObjGroup.objects;
             var self = this;
-            if (Array.isArray(_objects) === true) {
-                // JSON native format
-                _objects.forEach(function (tmxObj) {
-                    self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
-                });
-            }
-            else if (_objects) {
-                self.objects.push(new me.TMXObject(_objects, orientation, tilesets, z));
-            }
+            _objects.forEach(function (tmxObj) {
+                self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
+            });
         },
 
         /**
@@ -147,7 +139,7 @@
              * @name name
              * @memberOf me.TMXObject
              */
-            this.name = tmxObj[TMXConstants.TMX_TAG_NAME];
+            this.name = tmxObj.name;
 
             /**
              * object x position
@@ -156,7 +148,7 @@
              * @name x
              * @memberOf me.TMXObject
              */
-            this.x = +tmxObj[TMXConstants.TMX_TAG_X];
+            this.x = +tmxObj.x;
 
             /**
              * object y position
@@ -165,7 +157,7 @@
              * @name y
              * @memberOf me.TMXObject
              */
-            this.y = +tmxObj[TMXConstants.TMX_TAG_Y];
+            this.y = +tmxObj.y;
 
             /**
              * object z order
@@ -183,7 +175,7 @@
              * @name width
              * @memberOf me.TMXObject
              */
-            this.width = +tmxObj[TMXConstants.TMX_TAG_WIDTH] || 0;
+            this.width = +tmxObj.width || 0;
 
             /**
              * object height
@@ -192,7 +184,7 @@
              * @name height
              * @memberOf me.TMXObject
              */
-            this.height = +tmxObj[TMXConstants.TMX_TAG_HEIGHT] || 0;
+            this.height = +tmxObj.height || 0;
 
             /**
              * object gid value
@@ -202,7 +194,7 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = (+tmxObj[TMXConstants.TMX_TAG_GID]) || null;
+            this.gid = +tmxObj.gid || null;
 
             /**
              * object type
@@ -211,7 +203,7 @@
              * @name type
              * @memberOf me.TMXObject
              */
-            this.type = tmxObj[TMXConstants.TMX_TAG_TYPE];
+            this.type = tmxObj.type;
 
             /**
              * The rotation of the object in radians clockwise (defaults to 0)
@@ -220,7 +212,7 @@
              * @name rotation
              * @memberOf me.TMXObject
              */
-            this.rotation = Number.prototype.degToRad(+(tmxObj[TMXConstants.TMX_ROTATION] || 0));
+            this.rotation = Number.prototype.degToRad(+tmxObj.rotation || 0);
 
             /**
              * object unique identifier per level (Tiled 0.11.x+)
@@ -229,7 +221,7 @@
              * @name id
              * @memberOf me.TMXObject
              */
-            this.id = +tmxObj[TMXConstants.TMX_TAG_ID] || undefined;
+            this.id = +tmxObj.id || undefined;
 
             /**
              * object orientation (orthogonal or isometric)
@@ -281,38 +273,26 @@
                 this.setTile(tilesets);
             }
             else {
-                if (typeof(tmxObj[TMXConstants.TMX_TAG_ELLIPSE]) !== "undefined") {
+                if (typeof(tmxObj.ellipse) !== "undefined") {
                     this.isEllipse = true;
                 }
                 else {
-                    var points = tmxObj[TMXConstants.TMX_TAG_POLYGON];
+                    var points = tmxObj.polygon;
                     if (typeof(points) !== "undefined") {
                         this.isPolygon = true;
                     }
                     else {
-                        points = tmxObj[TMXConstants.TMX_TAG_POLYLINE];
+                        points = tmxObj.polyline;
                         if (typeof(points) !== "undefined") {
                             this.isPolyLine = true;
                         }
                     }
                     if (typeof(points) !== "undefined") {
                         this.points = [];
-                        if (typeof(points.points) !== "undefined") {
-                            // get a point array
-                            points = points.points.split(" ");
-                            // and normalize them into an array of vectors
-                            for (var i = 0, v; i < points.length; i++) {
-                                v = points[i].split(",");
-                                this.points.push(new me.Vector2d(+v[0], +v[1]));
-                            }
-                        }
-                        else {
-                            // already an object (native json format)
-                            var self = this;
-                            points.forEach(function (point) {
-                                self.points.push(new me.Vector2d(+point.x, +point.y));
-                            });
-                        }
+                        var self = this;
+                        points.forEach(function (point) {
+                            self.points.push(new me.Vector2d(point.x, point.y));
+                        });
                     }
                 }
             }
@@ -336,7 +316,7 @@
          */
         setTile : function (tilesets) {
             // get the corresponding tileset
-            var tileset = tilesets.getTilesetByGid(this.gid & TMXConstants.TMX_CLEAR_BIT_MASK);
+            var tileset = tilesets.getTilesetByGid(this.gid & me.TMXConstants.TMX_CLEAR_BIT_MASK);
 
             // set width and height equal to tile size
             this.width = this.framewidth = tileset.tilewidth;
@@ -420,4 +400,4 @@
             return this[name];
         }
     });
-})(me.TMXConstants);
+})();
