@@ -360,7 +360,7 @@
     me.TMXLayer = me.Renderable.extend({
 
         /** @ignore */
-        init: function (tilewidth, tileheight, orientation, tilesets, z, hexsidelength, staggeraxis, staggerindex) {
+        init: function (tilewidth, tileheight, orientation, tilesets, z) {
             // super constructor
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
@@ -400,11 +400,6 @@
 
             // for displaying order
             this.pos.z = z;
-
-            // hexagonal maps only
-			this.hexsidelength = hexsidelength;
-			this.staggeraxis = staggeraxis;
-			this.staggerindex = staggerindex;
         },
 
         /** @ignore */
@@ -416,8 +411,8 @@
 
             // hexagonal maps only
             this.hexsidelength = +layer.hexsidelength || undefined;
-            this.staggeraxis = layer.staggeraxis || undefined;
-            this.staggerindex = layer.staggerindex || undefined;
+            this.staggeraxis = layer.staggeraxis;
+            this.staggerindex = layer.staggerindex;
 
             // layer opacity
             var visible = typeof(layer.visible) !== "undefined" ? layer.visible : true;
