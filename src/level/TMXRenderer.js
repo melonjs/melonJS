@@ -24,13 +24,12 @@
     ];
 
     /**
-     * an Orthogonal Map Renderder
-     * Tiled QT 0.7.x format
+     * The map renderder base class
      * @memberOf me
      * @ignore
      * @constructor
      */
-    me.TMXOrthogonalRenderer = me.Object.extend({
+    me.TMXRenderer = me.Object.extend({
         // constructor
         init: function (cols, rows, tilewidth, tileheight) {
             this.cols = cols;
@@ -44,11 +43,34 @@
          * @ignore
          */
         canRender : function (layer) {
-            return ((layer.orientation === "orthogonal") &&
-                    (this.cols === layer.cols) &&
-                    (this.rows === layer.rows) &&
-                    (this.tilewidth === layer.tilewidth) &&
-                    (this.tileheight === layer.tileheight));
+            return (
+                (this.cols === layer.cols) &&
+                (this.rows === layer.rows) &&
+                (this.tilewidth === layer.tilewidth) &&
+                (this.tileheight === layer.tileheight)
+            );
+        }
+    });
+
+
+    /**
+     * an Orthogonal Map Renderder
+     * Tiled QT 0.7.x format
+     * @memberOf me
+     * @extends me.TMXRenderer
+     * @ignore
+     * @constructor
+     */
+    me.TMXOrthogonalRenderer = me.TMXRenderer.extend({
+        /**
+         * return true if the renderer can render the specified layer
+         * @ignore
+         */
+        canRender : function (layer) {
+            return (
+                (layer.orientation === "orthogonal") &&
+                this._super(me.TMXRenderer, "canRender", [ layer ])
+            );
         },
 
         /**
@@ -63,7 +85,6 @@
             );
         },
 
-
         /**
          * return the tile position corresponding for the given X coordinate
          * @ignore
@@ -71,7 +92,6 @@
         pixelToTileX : function (x) {
             return x / this.tilewidth;
         },
-
 
         /**
          * return the tile position corresponding for the given Y coordinates
@@ -101,8 +121,8 @@
         adjustPosition: function (obj) {
             // only adjust position if obj.gid is defined
             if (typeof(obj.gid) === "number") {
-                 // Tiled objects origin point is "bottom-left" in Tiled,
-                 // "top-left" in melonJS)
+                // Tiled objects origin point is "bottom-left" in Tiled,
+                // "top-left" in melonJS)
                 obj.y -= obj.height;
             }
         },
@@ -113,10 +133,12 @@
          */
         drawTile : function (renderer, x, y, tmxTile, tileset) {
             // draw the tile
-            tileset.drawTile(renderer,
-                             tileset.tileoffset.x + x * this.tilewidth,
-                             tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
-                             tmxTile);
+            tileset.drawTile(
+                renderer,
+                tileset.tileoffset.x + x * this.tilewidth,
+                tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight,
+                tmxTile
+            );
         },
 
         /**
@@ -125,13 +147,17 @@
          */
         drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
-            var start = this.pixelToTileCoords(rect.pos.x,
-                                               rect.pos.y,
-                                               me.pool.pull("me.Vector2d")).floorSelf();
+            var start = this.pixelToTileCoords(
+                rect.pos.x,
+                rect.pos.y,
+                me.pool.pull("me.Vector2d")
+            ).floorSelf();
 
-            var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
-                                             rect.pos.y + rect.height + this.tileheight,
-                                             me.pool.pull("me.Vector2d")).ceilSelf();
+            var end = this.pixelToTileCoords(
+                rect.pos.x + rect.width + this.tilewidth,
+                rect.pos.y + rect.height + this.tileheight,
+                me.pool.pull("me.Vector2d")
+            ).ceilSelf();
 
             //ensure we are in the valid tile range
             end.x = end.x > this.cols ? this.cols : end.x;
@@ -146,27 +172,31 @@
                     }
                 }
             }
-            
+
             me.pool.push(start);
             me.pool.push(end);
-            
         }
     });
+
 
     /**
      * an Isometric Map Renderder
      * Tiled QT 0.7.x format
      * @memberOf me
+     * @extends me.TMXRenderer
      * @ignore
      * @constructor
      */
-    me.TMXIsometricRenderer = me.Object.extend({
+    me.TMXIsometricRenderer = me.TMXRenderer.extend({
         // constructor
         init: function (cols, rows, tilewidth, tileheight) {
-            this.cols = cols;
-            this.rows = rows;
-            this.tilewidth = tilewidth;
-            this.tileheight = tileheight;
+            this._super(me.TMXRenderer, "init", [
+                cols,
+                rows,
+                tilewidth,
+                tileheight
+            ]);
+
             this.hTilewidth = tilewidth / 2;
             this.hTileheight = tileheight / 2;
             this.originX = this.rows * this.hTilewidth;
@@ -179,10 +209,7 @@
         canRender : function (layer) {
             return (
                 (layer.orientation === "isometric") &&
-                (this.cols === layer.cols) &&
-                (this.rows === layer.rows) &&
-                (this.tilewidth === layer.tilewidth) &&
-                (this.tileheight === layer.tileheight)
+                this._super(me.TMXRenderer, "canRender", [ layer ])
             );
         },
 
@@ -198,7 +225,6 @@
             );
         },
 
-
         /**
          * return the tile position corresponding for the given X coordinate
          * @ignore
@@ -206,7 +232,6 @@
         pixelToTileX : function (x, y) {
             return (y / this.tileheight) + ((x - this.originX) / this.tilewidth);
         },
-
 
         /**
          * return the tile position corresponding for the given Y coordinates
@@ -261,7 +286,6 @@
          * @ignore
          */
         drawTileLayer : function (renderer, layer, rect) {
-
             // cache a couple of useful references
             var tileset = layer.tileset;
             var offset  = tileset.tileoffset;
@@ -305,8 +329,7 @@
                 startPos.y -= this.hTileheight;
             }
 
-
-             // Determine whether the current row is shifted half a tile to the right
+            // Determine whether the current row is shifted half a tile to the right
             var shifted = inUpperHalf ^ inLeftHalf;
 
             // initialize the columItr vector
@@ -317,14 +340,24 @@
                 columnItr.setV(rowItr);
                 for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
                     //check if it's valid tile, if so render
-                    if ((columnItr.x >= 0) && (columnItr.y >= 0) && (columnItr.x < this.cols) && (columnItr.y < this.rows)) {
+                    if (
+                        (columnItr.x >= 0) &&
+                        (columnItr.y >= 0) &&
+                        (columnItr.x < this.cols) &&
+                        (columnItr.y < this.rows)
+                    ) {
                         var tmxTile = layer.layerData[columnItr.x][columnItr.y];
                         if (tmxTile) {
                             tileset = tmxTile.tileset;
                             // offset could be different per tileset
                             offset  = tileset.tileoffset;
                             // draw our tile
-                            tileset.drawTile(renderer, offset.x + x, offset.y + y - tileset.tileheight, tmxTile);
+                            tileset.drawTile(
+                                renderer,
+                                offset.x + x,
+                                offset.y + y - tileset.tileheight,
+                                tmxTile
+                            );
                         }
                     }
                     // Advance to the next column
@@ -344,7 +377,7 @@
                     shifted = false;
                 }
             }
-                  
+
             me.pool.push(rowItr);
             me.pool.push(TileEnd);
             me.pool.push(rectEnd);
@@ -352,21 +385,25 @@
         }
     });
 
-     /**
+
+    /**
      * an Hexagonal Map Renderder
      * Tiled QT 0.7.x format
      * @memberOf me
+     * @extends me.TMXRenderer
      * @ignore
      * @constructor
      */
-    me.TMXHexagonalRenderer = me.Object.extend({
-        
-         // constructor
+    me.TMXHexagonalRenderer = me.TMXRenderer.extend({
+        // constructor
         init: function (cols, rows, tilewidth, tileheight, hexsidelength, staggeraxis, staggerindex) {
-            this.cols = cols;
-            this.rows = rows;
-            this.tilewidth = tilewidth;
-            this.tileheight = tileheight;
+            this._super(me.TMXRenderer, "init", [
+                cols,
+                rows,
+                tilewidth,
+                tileheight
+            ]);
+
             this.hexsidelength = hexsidelength;
             this.staggeraxis = staggeraxis;
             this.staggerindex = staggerindex;
@@ -376,7 +413,8 @@
 
             if (staggeraxis === "x") {
                 this.sidelengthx = hexsidelength;
-            } else {
+            }
+            else {
                 this.sidelengthy = hexsidelength;
             }
 
@@ -385,8 +423,13 @@
 
             this.columnwidth = this.sideoffsetx + this.sidelengthx;
             this.rowheight = this.sideoffsety + this.sidelengthy;
-            
-            this.centers = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()];
+
+            this.centers = [
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d(),
+                new me.Vector2d()
+            ];
         },
 
         /**
@@ -394,11 +437,10 @@
          * @ignore
          */
         canRender : function (layer) {
-            return ((layer.orientation === "hexagonal") &&
-                    (this.cols === layer.cols) &&
-                    (this.rows === layer.rows) &&
-                    (this.tilewidth === layer.tilewidth) &&
-                    (this.tileheight === layer.tileheight));
+            return (
+                (layer.orientation === "hexagonal") &&
+                this._super(me.TMXRenderer, "canRender", [ layer ])
+            );
         },
 
         /**
@@ -408,10 +450,11 @@
         pixelToTileCoords : function (x, y, v) {
             var q, r;
             var ret = v || new me.Vector2d();
-            
+
             if (this.staggeraxis === "x") { //flat top
                 x = x - ((this.staggerindex === "odd") ? this.sideoffsetx : this.tilewidth);
-            } else { //pointy top
+            }
+            else { //pointy top
                 y = y - ((this.staggerindex === "odd") ? this.sideoffsety : this.tileheight);
             }
 
@@ -420,7 +463,6 @@
                 Math.floor(x / (this.tilewidth + this.sidelengthx)),
                 Math.floor((y / (this.tileheight + this.sidelengthy)))
             );
-
 
             // Relative x and y position on the base square of the grid-aligned tile
             var rel = me.pool.pull("me.Vector2d",
@@ -434,7 +476,8 @@
                 if (this.staggerindex === "even") {
                     ++referencePoint.x;
                 }
-            } else {
+            }
+            else {
                 referencePoint.y = referencePoint.y * 2;
                 if (this.staggerindex === "even") {
                     ++referencePoint.y;
@@ -452,7 +495,8 @@
                 this.centers[1].set(centerX, centerY - this.rowheight);
                 this.centers[2].set(centerX, centerY + this.rowheight);
                 this.centers[3].set(centerX + this.columnwidth, centerY);
-            } else {
+            }
+            else {
                 top = this.sidelengthy / 2;
                 centerX = this.tilewidth / 2;
                 centerY = top + this.rowheight;
@@ -478,13 +522,12 @@
 
             q = referencePoint.x + offsets[nearest].x;
             r = referencePoint.y + offsets[nearest].y;
-            
+
             me.pool.push(referencePoint);
             me.pool.push(rel);
-            
+
             return ret.set(q, r);
         },
-
 
         /**
          * return the tile position corresponding for the given X coordinate
@@ -495,9 +538,7 @@
             this.pixelToTileCoords(x, y, ret);
             me.pool.push(ret);
             return ret.x;
-            
         },
-
 
         /**
          * return the tile position corresponding for the given Y coordinates
@@ -521,20 +562,23 @@
                 x = q * this.columnwidth;
                 if (this.staggerindex === "odd") {
                     y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight * (q&1));
-                } else {
-                    y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight * (1 - (q&1)));
+                    y = y + (this.rowheight * (q & 1));
                 }
-            } else {
+                else {
+                    y = r * (this.tileheight + this.sidelengthy);
+                    y = y + (this.rowheight * (1 - (q & 1)));
+                }
+            }
+            else {
                 //pointy top
                 y = r * this.rowheight;
                 if (this.staggerindex === "odd") {
                     x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth * (r&1));
-                } else {
+                    x = x + (this.columnwidth * (r & 1));
+                }
+                else {
                     x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth * (1 - (r&1)));
+                    x = x + (this.columnwidth * (1 - (r & 1)));
                 }
             }
             return new me.Vector2d(x, y);
@@ -548,8 +592,8 @@
         adjustPosition: function (obj) {
             // only adjust position if obj.gid is defined
             if (typeof(obj.gid) === "number") {
-                 // Tiled objects origin point is "bottom-left" in Tiled,
-                 // "top-left" in melonJS)
+                // Tiled objects origin point is "bottom-left" in Tiled,
+                // "top-left" in melonJS)
                 obj.y -= obj.height;
             }
         },
@@ -562,10 +606,12 @@
             var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d"));
 
             // draw the tile
-            tileset.drawTile(renderer,
-                 tileset.tileoffset.x + point.x,
-                 tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
-                 tmxTile);
+            tileset.drawTile(
+                renderer,
+                tileset.tileoffset.x + point.x,
+                tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight),
+                tmxTile
+            );
 
             me.pool.push(point);
         },
@@ -576,11 +622,15 @@
          */
         drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
-            var start = this.pixelToTileCoords(rect.pos.x,
-                                               rect.pos.y).floorSelf();
+            var start = this.pixelToTileCoords(
+                rect.pos.x,
+                rect.pos.y
+           ).floorSelf();
 
-            var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth,
-                                             rect.pos.y + rect.height + this.tileheight).ceilSelf();
+            var end = this.pixelToTileCoords(
+                rect.pos.x + rect.width + this.tilewidth,
+                rect.pos.y + rect.height + this.tileheight
+            ).ceilSelf();
 
             //ensure we are in the valid tile range
             start.x = start.x < 0 ? 0 : start.x;
@@ -598,7 +648,6 @@
                 }
             }
         }
-
     });
 
 })();
