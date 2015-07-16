@@ -69,7 +69,7 @@
                 }, 
                 {
                  "gid":19,
-                 "height":0,
+                 "height":35,
                  "id":3,
                  "name":"me.Entity",
                  "properties":
@@ -79,13 +79,13 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":0,
+                 "width":35,
                  "x":1015,
                  "y":455
                 }, 
                 {
                  "gid":20,
-                 "height":0,
+                 "height":35,
                  "id":4,
                  "name":"me.Entity",
                  "properties":
@@ -95,7 +95,7 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":0,
+                 "width":35,
                  "x":1050,
                  "y":455
                 }],
