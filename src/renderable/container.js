@@ -607,10 +607,10 @@
          */
         _sortX : function (a, b) {
             if (!b.pos || !a.pos) {
-                return 0;
+                return (a.pos ? -Infinity : Infinity);
             }
             var result = b.pos.z - a.pos.z;
-            return (result ? result : (b.pos.x - a.pos.x) || (a.pos ? -Infinity : Infinity));
+            return (result ? result : (b.pos.x - a.pos.x));
         },
 
         /**
@@ -619,10 +619,10 @@
          */
         _sortY : function (a, b) {
             if (!b.pos || !a.pos) {
-                return 0;
+                return (a.pos ? -Infinity : Infinity);
             }
             var result = b.pos.z - a.pos.z;
-            return (result ? result : (b.pos.y - a.pos.y) || (a.pos ? -Infinity : Infinity));
+            return (result ? result : (b.pos.y - a.pos.y));
         },
 
         /**
