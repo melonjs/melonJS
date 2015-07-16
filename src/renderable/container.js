@@ -96,7 +96,7 @@
              * @memberOf me.Container
              */
             this.autoDepth = true;
-            
+
             /**
              * Used by the debug panel plugin
              * @ignore
@@ -111,7 +111,7 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
-            
+
             // reset the transformation matrix
             this.transform.identity();
         },
@@ -592,13 +592,13 @@
                 }.defer(this, this);
             }
         },
-        
+
         /**
          * Z Sorting function
          * @ignore
          */
         _sortZ : function (a, b) {
-            return (b.pos && a.pos) ? (b.pos.z) - (a.pos.z) : 0;
+            return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
         },
 
         /**
@@ -610,7 +610,7 @@
                 return 0;
             }
             var result = b.pos.z - a.pos.z;
-            return (result ? result : (b.pos.x - a.pos.x) || 0);
+            return (result ? result : (b.pos.x - a.pos.x) || (a.pos ? -Infinity : Infinity));
         },
 
         /**
@@ -622,7 +622,7 @@
                 return 0;
             }
             var result = b.pos.z - a.pos.z;
-            return (result ? result : (b.pos.y - a.pos.y) || 0);
+            return (result ? result : (b.pos.y - a.pos.y) || (a.pos ? -Infinity : Infinity));
         },
 
         /**
