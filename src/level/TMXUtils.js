@@ -181,8 +181,6 @@
                     obj[nodeName] = api.parse(item);
                     break;
             }
-
-            return obj;
         };
 
         /**
@@ -207,7 +205,7 @@
 
                     switch (item.nodeType) {
                         case 1:
-                            obj = api.normalize(obj, item);
+                            api.normalize(obj, item);
                             break;
 
                         case 3:
