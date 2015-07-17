@@ -100,15 +100,11 @@
         var ilx = +data.x || 0;
         var ily = +data.y || 0;
         var iln = data.name;
-        var ilw = +data.width;
-        var ilh = +data.height;
         var ilsrc = data.image;
 
         // create the layer
         var imageLayer = new me.ImageLayer(
             ilx, ily, {
-                width : ilw * map.tilewidth,
-                height: ilh * map.tileheight,
                 name: iln,
                 image: ilsrc,
                 z : z
@@ -241,7 +237,7 @@
 
 
             // hex/iso properties
-            this.hexsidelength = +data.hexsidelength;
+            this.hexsidelength = +data.hexsidelength || undefined;
             this.staggeraxis = data.staggeraxis;
             this.staggerindex = data.staggerindex;
 
@@ -282,15 +278,11 @@
             }
 
             // parse all tileset objects
-            var tilesets = data.tilesets || data.tileset;
-            if (Array.isArray(tilesets) === true) {
-                tilesets.forEach(function (tileset) {
-                    // add the new tileset
-                    self.tilesets.add(readTileset(tileset));
-                });
-            } else {
-                self.tilesets.add(readTileset(tilesets));
-            }
+            var tilesets = data.tilesets;
+            tilesets.forEach(function (tileset) {
+                // add the new tileset
+                self.tilesets.add(readTileset(tileset));
+            });
 
             // check if a user-defined background color is defined
             if (this.backgroundcolor) {
@@ -308,8 +300,6 @@
                 // add a new image layer
                 this.layers.push(new me.ImageLayer(
                     0, 0, {
-                        width : this.width,
-                        height : this.height,
                         name : "background_image",
                         image : this.background_image,
                         z : zOrder++
@@ -427,6 +417,10 @@
                         settings.x, settings.y,
                         settings
                     );
+                    // skip if the pull function does not return a corresponding object
+                    if (typeof obj !== "object") {
+                        continue;
+                    }
 
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {
@@ -436,11 +430,6 @@
                     if (isCollisionGroup && !settings.name) {
                         // configure the body accordingly
                         obj.body.collisionType = me.collision.types.WORLD_SHAPE;
-                    }
-
-                    // skip if the pull function does not return a corresponding object
-                    if (typeof obj !== "object") {
-                        continue;
                     }
 
                     // set the obj z order correspondingly to its parent container/group
