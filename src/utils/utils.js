@@ -301,18 +301,6 @@
             return GUID_base + "-" + (index || GUID_index);
         };
 
-        /**
-         * apply friction to a force
-         * @ignore
-         * @TODO Move this somewhere else
-         */
-        api.applyFriction = function (v, f) {
-            return (
-                (v + f < 0) ? v + (f * me.timer.tick) :
-                (v - f > 0) ? v - (f * me.timer.tick) : 0
-            );
-        };
-
         // return our object
         return api;
     })();

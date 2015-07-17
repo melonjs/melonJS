@@ -445,6 +445,28 @@
         },
 
         /**
+         * apply friction to a vector
+         * @ignore
+         */
+        applyFriction : function (vel) {
+            var fx = this.friction.x * me.timer.tick,
+                nx = vel.x + fx,
+                x = vel.x - fx,
+                fy = this.friction.y * me.timer.tick,
+                ny = vel.y + fy,
+                y = vel.y - fy;
+
+            vel.x = (
+                (nx < 0) ? nx :
+                ( x > 0) ? x  : 0
+            );
+            vel.y = (
+                (ny < 0) ? ny :
+                ( y > 0) ? y  : 0
+            );
+        },
+
+        /**
          * compute the new velocity value
          * @ignore
          */
@@ -461,11 +483,8 @@
             }
 
             // apply friction
-            if (this.friction.x) {
-                vel.x = me.utils.applyFriction(vel.x, this.friction.x);
-            }
-            if (this.friction.y) {
-                vel.y = me.utils.applyFriction(vel.y, this.friction.y);
+            if (this.friction.x || this.friction.y) {
+                this.applyFriction(vel);
             }
 
             // cap velocity
