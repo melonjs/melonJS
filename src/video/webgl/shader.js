@@ -89,7 +89,7 @@
             gl.linkProgram(handle);
 
             if (!gl.getProgramParameter(handle, gl.LINK_STATUS)) {
-                throw new me.video.Error("Could not initialize shaders");
+                throw new me.video.Error(gl.getProgramInfoLog(handle));
             }
 
             gl.useProgram(handle);
