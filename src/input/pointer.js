@@ -685,7 +685,7 @@
      * which should be catched at root level, into minipubsub system events
      * @name _translatePointerEvents
      * @memberOf me.input
-     * @private
+     * @ignore
      * @function
      */
     obj._translatePointerEvents = function () {
