@@ -227,16 +227,34 @@
         };
 
         /**
+         * return the current level definition.
+         * for a reference to the live instantiated level, 
+         * rather use the container in which it was loaded (e.g. me.game.world)
+         * @name getCurrentLevel
+         * @memberOf me.levelDirector
+         * @public
+         * @function
+         * @return {me.TMXTileMap}
+         */
+        api.getCurrentLevel = function () {
+            return levels[api.getCurrentLevelId()];
+        };
+
+        /**
          * reload the current level<br>
          * @name reloadLevel
          * @memberOf me.levelDirector
          * @public
          * @function
+         * @param {Object} [options] additional optional parameters
+         * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+         * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
          */
-        api.reloadLevel = function () {
+        api.reloadLevel = function (options) {
             // reset the level to initial state
             //levels[currentLevel].reset();
-            return api.loadLevel(api.getCurrentLevelId());
+            return api.loadLevel(api.getCurrentLevelId(), options);
         };
 
         /**
@@ -245,11 +263,15 @@
          * @memberOf me.levelDirector
          * @public
          * @function
+         * @param {Object} [options] additional optional parameters
+         * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+         * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
          */
-        api.nextLevel = function () {
+        api.nextLevel = function (options) {
             //go to the next level
             if (currentLevelIdx + 1 < levelIdx.length) {
-                return api.loadLevel(levelIdx[currentLevelIdx + 1]);
+                return api.loadLevel(levelIdx[currentLevelIdx + 1], options);
             }
             else {
                 return false;
@@ -262,11 +284,15 @@
          * @memberOf me.levelDirector
          * @public
          * @function
+         * @param {Object} [options] additional optional parameters
+         * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+         * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
          */
-        api.previousLevel = function () {
+        api.previousLevel = function (options) {
             // go to previous level
             if (currentLevelIdx - 1 >= 0) {
-                return api.loadLevel(levelIdx[currentLevelIdx - 1]);
+                return api.loadLevel(levelIdx[currentLevelIdx - 1], options);
             }
             else {
                 return false;
