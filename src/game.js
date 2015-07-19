@@ -36,15 +36,6 @@
         // reference to the renderer object
         var renderer = null;
 
-        // dummy current level
-        var dummyLevel = {
-            pos : {
-                x : 0,
-                y : 0
-            },
-            moveToCenter : function () {} // XXX
-        };
-
         /*
          * PUBLIC STUFF
          */
@@ -57,15 +48,6 @@
          * @memberOf me.game
          */
         api.viewport = null;
-
-        /**
-         * a reference to the game current level
-         * @public
-         * @type {me.TMXTileMap}
-         * @name currentLevel
-         * @memberOf me.game
-         */
-        api.currentLevel = null;
 
         /**
          * a reference to the game world <br>
@@ -165,9 +147,9 @@
                 api.world.name = "rootContainer";
 
                 me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function () {
-                    var level = api.currentLevel;
+                    var level = me.levelDirector.getCurrentLevel();
 
-                    if (level !== dummyLevel) {
+                    if (typeof(level) !== "undefined") {
                         // Center the map if smaller than the current viewport
                         me.game.world.pos.set(
                             Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
@@ -195,8 +177,6 @@
                 // make display dirty by default
                 isDirty = true;
 
-                api.currentLevel = dummyLevel;
-
                 // set as initialized
                 initialized = true;
             }
@@ -222,8 +202,6 @@
             if (api.viewport) {
                 api.viewport.reset();
             }
-
-            api.currentLevel = dummyLevel;
 
             // reset the renderer
             renderer.reset();

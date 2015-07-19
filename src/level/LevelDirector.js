@@ -86,8 +86,6 @@
             container.resize(level.width, level.height);
 
             if (container === me.game.world) {
-                // save a reference to our map
-                me.game.currentLevel = level;
 
                 // update the viewport bounds
                 me.game.viewport.setBounds(
