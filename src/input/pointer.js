@@ -177,7 +177,7 @@
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
             changedTouches.push({ x: 0, y: 0 });
-            obj.mouse.pos = new me.Vector2d();
+            obj.pointer.pos.set(0, 0);
             // get relative canvas position in the page
             obj._offset = me.video.getPos();
             // Automatically update relative canvas position on scroll
@@ -394,11 +394,19 @@
         if (event.isPrimary === false) {
             return;
         }
+
         // Else use the first entry to simulate mouse event
-        obj.mouse.pos.set(
+        obj.pointer.pos.set(
             changedTouches[0].x,
             changedTouches[0].y
         );
+
+        if (typeof(event.width) === "number") {
+            // resize the pointer object if necessary
+            if (event.width !== obj.pointer.width || event.height !== obj.pointer.height) {
+                obj.pointer.resize(event.width || 1, event.height || 1);
+            }
+        }
     }
 
 
@@ -463,7 +471,7 @@
 
         // in case of touch event button is undefined
         var button = e.button || 0;
-        var keycode = obj.mouse.bind[button];
+        var keycode = obj.pointer.bind[button];
 
         // check if mapped to a key
         if (keycode) {
@@ -483,27 +491,25 @@
      */
 
     /**
-     * Mouse information<br>
+     * Pointer information (current position and size) <br>
      * properties : <br>
-     * pos (me.Vector2d) : pointer position (in screen coordinates) <br>
      * LEFT : constant for left button <br>
      * MIDDLE : constant for middle button <br>
-     * RIGHT : constant for right button <br>
+     * RIGHT : constant for right button
      * @public
-     * @enum {Object}
-     * @name mouse
+     * @type {me.Rect}
+     * @name pointer
      * @memberOf me.input
      */
-    obj.mouse = {
-        // mouse position
-        pos : null,
-        // button constants (W3C)
-        LEFT:   0,
-        MIDDLE: 1,
-        RIGHT:  2,
-        // bind list for mouse buttons
-        bind: [ 0, 0, 0 ]
-    };
+    obj.pointer = new me.Rect(0, 0, 1, 1);
+
+    // bind list for mouse buttons
+    obj.pointer.bind = [ 0, 0, 0 ];
+
+    // W3C button constants
+    obj.pointer.LEFT = 0;
+    obj.pointer.MIDDLE = 1;
+    obj.pointer.RIGHT = 2;
 
     /**
      * time interval for event throttling in milliseconds<br>
@@ -555,7 +561,7 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @param {me.input#KEY} keyCode
      * @example
      * // enable the keyboard
@@ -563,10 +569,10 @@
      * // map the left button click on the X key (default if the button is not specified)
      * me.input.bindPointer(me.input.KEY.X);
      * // map the right button click on the X key
-     * me.input.bindPointer(me.input.mouse.RIGHT, me.input.KEY.X);
+     * me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.X);
      */
     obj.bindPointer = function () {
-        var button = (arguments.length < 2) ? obj.mouse.LEFT : arguments[0];
+        var button = (arguments.length < 2) ? obj.pointer.LEFT : arguments[0];
         var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
 
         // make sure the mouse is initialized
@@ -577,7 +583,7 @@
             throw new me.Error("no action defined for keycode " + keyCode);
         }
         // map the mouse button to the keycode
-        obj.mouse.bind[button] = keyCode;
+        obj.pointer.bind[button] = keyCode;
     };
     /**
      * unbind the defined keycode
@@ -585,15 +591,15 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} [button=me.input.mouse.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+     * @param {Number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
      * @example
-     * me.input.unbindPointer(me.input.mouse.LEFT);
+     * me.input.unbindPointer(me.input.pointer.LEFT);
      */
     obj.unbindPointer = function (button) {
         // clear the event status
-        obj.mouse.bind[
+        obj.pointer.bind[
             typeof(button) === "undefined" ?
-            me.input.mouse.LEFT : button
+            obj.pointer.LEFT : button
         ] = null;
     };
 
