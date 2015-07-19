@@ -109,6 +109,16 @@
             // convert it into an array
             this.audioFormats = audioFormat.split(",");
 
+            // XXX: workaround https://github.com/goldfire/howler.js/issues/328
+            if (me.device.ua.includes("OPR/")) {
+                this.audioFormats = this.audioFormats.filter(function (f) {
+                    return f !== "mp3";
+                });
+                if (!this.audioFormats.length) {
+                    this.audioFormats.push("ogg");
+                }
+            }
+
             return !Howler.noAudio;
         };
 
