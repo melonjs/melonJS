@@ -147,8 +147,9 @@ THE SOFTWARE.
 
   /** keys, values, and iterate related methods */
   function sharedValues() {
+    var self = this;
     return this._values.slice().concat(Object.keys(this._hash).map(function (k) {
-      return this._hash[k];
+      return self._hash[k];
     }));
   }
 
