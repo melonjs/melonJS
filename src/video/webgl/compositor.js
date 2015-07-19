@@ -58,9 +58,26 @@
 
             // Hash map of texture units
             this.units = [];
-            this.maxTextures = gl.getParameter(
+            /*
+             * XXX: The GLSL compiler pukes with "memory exhausted" when it is
+             * given long if-then-else chains.
+             *
+             * See: http://stackoverflow.com/questions/15828966/glsl-compile-error-memory-exhausted
+             *
+             * Workaround the problem by limiting the max texture support to 24.
+             * The magic number was determined by testing under different UAs.
+             * All Desktop UAs were capable of compiling with 27 fragment shader
+             * samplers. Using 24 seems like a reasonable compromise;
+             *
+             * 24 = 2^4 + 2^3
+             *
+             * As of July 2015, approximately 1.5% of all WebGL-enabled UAs
+             * support more than 24 max textures, according to
+             * http://webglstats.com/
+             */
+            this.maxTextures = Math.min(24, gl.getParameter(
                 gl.MAX_TEXTURE_IMAGE_UNITS
-            );
+            ));
 
             // Vector pool
             this.v = [
