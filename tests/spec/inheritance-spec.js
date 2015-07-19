@@ -315,4 +315,40 @@ describe("Jay Inheritance", function () {
             });
         });
     });
+
+
+    describe("Inheritance binding tests", function () {
+        var E = me.Object.extend.bind(Error)({
+            "init" : function (message) {
+                this.name = "E";
+                this.message = message;
+            }
+        });
+
+        var MyE = E.extend({});
+
+        describe("e = new E()", function () {
+            var e = new E("foo");
+
+            it("is an instance of Error", function () {
+                expect(e).toBeInstanceOf(Error);
+            });
+
+            it("is not an instance of me.Object", function () {
+                expect(e).not.toBeInstanceOf(me.Object);
+            });
+        });
+
+        describe("m = new MyE()", function () {
+            var m = new MyE("bar");
+
+            it("is an instance of Error", function () {
+                expect(m).toBeInstanceOf(Error);
+            });
+
+            it("is not an instance of me.Object", function () {
+                expect(m).not.toBeInstanceOf(me.Object);
+            });
+        });
+    });
 });

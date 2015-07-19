@@ -17,7 +17,7 @@
  * @constructor
  * @param {String} msg Error message.
  */
-me.Error = me.Object.extend({
+me.Error = me.Object.extend.bind(Error)({
     init : function (msg) {
         this.name = "me.Error";
         this.message = msg;

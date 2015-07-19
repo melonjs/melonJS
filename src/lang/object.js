@@ -154,11 +154,10 @@ if (!Object.assign) {
 }
 
 /**
- * Sourced from: https://gist.github.com/parasyte/9712366
  * Extend a class prototype with the provided mixin descriptors.
  * Designed as a faster replacement for John Resig's Simple Inheritance.
  * @name extend
- * @memberOf external:Object#
+ * @memberOf me#Object
  * @function
  * @param {Object[]} mixins... Each mixin is a dictionary of functions, or a
  * previously extended class whose methods will be applied to the target class
@@ -217,56 +216,54 @@ if (!Object.assign) {
  * console.log(r instanceof Ninja); // => false
  */
 (function () {
-    Object.defineProperty(me.Object, "extend", {
-        "value" : function () {
-            var methods = {};
-            var mixins = new Array(arguments.length);
-            for (var i = 0; i < arguments.length; i++) {
-                mixins.push(arguments[i]);
-            }
-
-            /**
-             * The class constructor which calls the user `init` constructor.
-             * @ignore
-             */
-            function Class() {
-                // Call the user constructor
-                this.init.apply(this, arguments);
-                return this;
-            }
-
-            // Apply superClass
-            Class.prototype = Object.create(this.prototype);
-
-            // Apply all mixin methods to the class prototype
-            mixins.forEach(function (mixin) {
-                apply_methods(Class, methods, mixin.__methods__ || mixin);
-            });
-
-            // Verify constructor exists
-            if (!("init" in Class.prototype)) {
-                throw new TypeError(
-                    "extend: Class is missing a constructor named `init`"
-                );
-            }
-
-            // Apply syntactic sugar for accessing methods on super classes
-            Object.defineProperty(Class.prototype, "_super", {
-                "value" : _super
-            });
-
-            // Create a hidden property on the class itself
-            // List of methods, used for applying classes as mixins
-            Object.defineProperty(Class, "__methods__", {
-                "value" : methods
-            });
-
-            // Make this class extendable
-            Class.extend = this.extend;
-
-            return Class;
+    function extend() {
+        var methods = {};
+        var mixins = new Array(arguments.length);
+        for (var i = 0; i < arguments.length; i++) {
+            mixins.push(arguments[i]);
         }
-    });
+
+        /**
+         * The class constructor which calls the user `init` constructor.
+         * @ignore
+         */
+        function Class() {
+            // Call the user constructor
+            this.init.apply(this, arguments);
+            return this;
+        }
+
+        // Apply superClass
+        Class.prototype = Object.create(this.prototype);
+
+        // Apply all mixin methods to the class prototype
+        mixins.forEach(function (mixin) {
+            apply_methods(Class, methods, mixin.__methods__ || mixin);
+        });
+
+        // Verify constructor exists
+        if (!("init" in Class.prototype)) {
+            throw new TypeError(
+                "extend: Class is missing a constructor named `init`"
+            );
+        }
+
+        // Apply syntactic sugar for accessing methods on super classes
+        Object.defineProperty(Class.prototype, "_super", {
+            "value" : _super
+        });
+
+        // Create a hidden property on the class itself
+        // List of methods, used for applying classes as mixins
+        Object.defineProperty(Class, "__methods__", {
+            "value" : methods
+        });
+
+        // Make this class extendable
+        Class.extend = extend;
+
+        return Class;
+    }
 
     /**
      * Apply methods to the class prototype.
@@ -297,4 +294,26 @@ if (!Object.assign) {
     function _super(superClass, method, args) {
         return superClass.prototype[method].apply(this, args);
     }
+
+    /**
+     * The base class from which all jay-extend classes inherit.
+     * @ignore
+     */
+    var Jay = function () {
+        Object.apply(this, arguments);
+    };
+    Jay.prototype = Object.create(Object.prototype);
+    Jay.prototype.constructor = Jay;
+
+    Object.defineProperty(Jay, "extend", {
+        "value" : extend
+    });
+
+    /**
+     * The base class from which all melonJS objects inherit.
+     * See: {@link https://github.com/parasyte/jay-extend}
+     * @name Object
+     * @memberOf me
+     */
+    me.Object = Jay;
 })();
