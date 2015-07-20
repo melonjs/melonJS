@@ -1,25 +1,36 @@
 Version History
 ---------------
 2.2.0
+* Container : added `autoDepth` feature that auto-increments a child's z-coordinate when inserted
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
+* Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
+* Geometry : removed `reverse` method from Vector classes; use `negateSelf` instead
+* Geometry : removed `reflect` and `reflectN` methods from Vector classes
+* Geometry : fixed `floor` and `floorSelf` methods on Vector classes with negative values
+* Geometry : fixed `angle` method on Vector classes
 * LevelDirector : level loading is now asynchronous; for sequential behavior, use the LEVEL_LOADED event or new `onLoaded` callback
+* LevelDirector : added an `options` argument to the loading method; for specifying a target container, callback, and whether to merge (flatten) object groups
+* Input : `me.input.mouse` has been renamed to `me.input.pointer`
 * Renderable : prevent position vector re-allocation when pooling renderable objects
-* Renderable : renderables are now using a 3d Vector for position, and using the z component for z ordering.
+* Renderable : renderables are now using a 3d Vector for position, and using the z axis for layer ordering.
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
-* Shapes : refactored me.Rect to inherit from me.Polygon
+* Shapes : refactored `me.Rect` to inherit from `me.Polygon`
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
 * TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
 * TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
+* TMX : internally normalizes XML into the same JSON format supported by Tiled; cleans up many compatibility functions and removes several fallback cases
+* TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
+* WebGLRenderer : fixed a bug that causes a compile failure with the quad fragment shader on a small number of platforms
 
 2.1.3
 * Particles : fix an exception in `me.ParticleContainer`
