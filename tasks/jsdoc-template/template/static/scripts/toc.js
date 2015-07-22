@@ -16,6 +16,7 @@ $.fn.toc = function(options) {
 
       $('body,html').animate({ scrollTop: $el.offset().top }, 400, 'swing', function() {
         location.hash = elScrollTo;
+        opts.onHighlight($el);
       });
     }
     $('li', self).removeClass(activeClassName);

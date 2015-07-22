@@ -3,7 +3,7 @@ var data = obj;
 var self = this;
 ?>
 <dt>
-    <h4 class="name toc-target" id="<?js= id ?>"><?js= data.attribs + name + (data.signature ? data.signature : '') ?></h4>
+    <h4 class="name toc-target" id="<?js= id.replace(/^\./, "") ?>"><?js= data.attribs + name + (data.signature ? data.signature : '') ?></h4>
 
     <?js if (data.summary) { ?>
     <p class="summary"><?js= summary ?></p>

@@ -5628,6 +5628,7 @@ h4.toc-active {
   border-radius: 3px;
 }
 #toc .toc-active a,
+#toc .toc-active a:target,
 #toc .toc-active a:hover,
 #toc .toc-active a:active,
 #toc .toc-active a:visited {
