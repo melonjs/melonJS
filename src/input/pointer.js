@@ -603,9 +603,18 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {String} eventType  The event type for which the object is registering <br>
-     * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
-     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
+     * @param {String} eventType The event type for which the object is registering <br>
+     * melonJS currently supports: <br>
+     * <ul>
+     *   <li><code>"pointermove"</code></li>
+     *   <li><code>"pointerdown"</code></li>
+     *   <li><code>"pointerup"</code></li>
+     *   <li><code>"pointerenter"</code></li>
+     *   <li><code>"pointerleave"</code></li>
+     *   <li><code>"pointercancel"</code></li>
+     *   <li><code>"mousewheel"</code></li>
+     * </ul>
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
      * @example
      * // register on the 'pointerdown' event
@@ -641,7 +650,6 @@
 
         // initialize the handler
         handlers.callbacks[eventType].push(callback);
-        return;
     };
 
     /**
@@ -651,9 +659,8 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {String} eventType  The event type for which the object was registered <br>
-     * melonJS currently support <b>['pointermove','pointerdown','pointerup','mousewheel']</b>
-     * @param  {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release for this event
+     * @param {String} eventType The event type for which the object was registered. See {@link me.input.registerPointerEvent}
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release for this event
      * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
      * @example
      * // release the registered region on the 'pointerdown' event
