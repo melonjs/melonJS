@@ -226,6 +226,13 @@
                 return false;
             }
 
+            /**
+             * A reference to the current video renderer
+             * @public
+             * @memberOf me.video
+             * @name renderer
+             * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
+             */
             switch (settings.renderer) {
                 case api.WEBGL:
                     this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);

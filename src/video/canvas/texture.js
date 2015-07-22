@@ -12,18 +12,20 @@
     var nhPI = -(Math.PI / 2);
 
     /**
-     * A Texture atlas object<br>
-     * Currently support : <br>
+     * A Texture atlas object <br>
+     * For portability, a global reference to this class is available through the default renderer: {@link me.video.renderer}.Texture <br>
+     * <br>
+     * Currently supports : <br>
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
      * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx} object
      * @class
      * @extends Object
-     * @memberOf me.video.renderer
+     * @memberOf me.CanvasRenderer
      * @name Texture
      * @constructor
-     * @param {Object} atlas atlas information. See {@link me.loader#getJSON}
+     * @param {Object} atlas atlas information. See {@link me.loader.getJSON}
      * @param {Image} [texture=atlas.meta.image] texture name
      * @param {Boolean} [cached=false] Use true to skip caching this Texture
      * @example

@@ -80,7 +80,7 @@
          * @memberOf me.pool
          * @public
          * @function
-         * @param {String} className as used in {@link me.pool#register}
+         * @param {String} className as used in {@link me.pool.register}
          * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
          * @return {Object} the instance of the requested object
          * @example

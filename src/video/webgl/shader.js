@@ -7,11 +7,10 @@
 (function () {
 
     /**
-     * The WebGL Shader singleton
+     * The WebGL Shader singleton <br>
      * There is no constructor function for me.video.shader
      * @namespace me.video.shader
      * @memberOf me.video
-     * @ignore
      */
     me.video.shader = (function () {
         /**

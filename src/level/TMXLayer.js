@@ -59,7 +59,7 @@
      * @param {Number} x x coordinate
      * @param {Number} y y coordinate
      * @param {Object} settings ImageLayer properties
-     * @param {Image|String} settings.image Image reference. See {@link me.loader#getImage}
+     * @param {Image|String} settings.image Image reference. See {@link me.loader.getImage}
      * @param {Number} [settings.width=image.width] Layer width in pixels
      * @param {Number} [settings.height=image.height] Layer height in pixels
      * @param {String} [settings.name="me.ImageLayer"] Layer name
