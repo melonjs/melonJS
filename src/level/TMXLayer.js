@@ -59,7 +59,7 @@
      * @param {Number} x x coordinate
      * @param {Number} y y coordinate
      * @param {Object} settings ImageLayer properties
-     * @param {Image|String} settings.image Image reference. See {@link me.loader#getImage}
+     * @param {Image|String} settings.image Image reference. See {@link me.loader.getImage}
      * @param {String} [settings.name="me.ImageLayer"] Layer name
      * @param {Number} [settings.z=0] z-index position
      * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied

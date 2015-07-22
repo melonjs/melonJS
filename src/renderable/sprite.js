@@ -14,7 +14,7 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the sprite
-     * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader#getImage}
+     * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader.getImage}
      * @param {Number} [settings.framewidth=settings.image.width] Image source width.
      * @param {Number} [settings.frameheight=settings.image.height] Image source height.
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
