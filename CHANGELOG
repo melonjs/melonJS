@@ -4,6 +4,7 @@ Version History
 * Particles : fix an exception in `me.ParticleContainer`
 * TMX : fixed TMXLayer opacity when preRender is enabled
 * TMX : fixed ImageLayer opacity
+* Video : fixed a regression where `me.device.getPixelRatio()` no longer works when called before `me.video.init()`
 
 2.1.2
 * LevelDirector : do not replace Tile Object's `renderable`

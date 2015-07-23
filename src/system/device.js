@@ -240,7 +240,7 @@
          * @memberOf me.device
          */
         api.maxTouchPoints = 0;
-        
+
         /**
          * Touch capabilities
          * @type Boolean
