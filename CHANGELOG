@@ -29,6 +29,7 @@ Version History
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
+* Video : fixed a regression where `me.device.getPixelRatio()` no longer works when called before `me.video.init()`
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
 * WebGLRenderer : fixed a bug that causes a compile failure with the quad fragment shader on a small number of platforms
 

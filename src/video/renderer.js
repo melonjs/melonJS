@@ -262,13 +262,13 @@
             }
 
             // disable antialias CSS scaling on the main canvas
-            var cssStyle = this.canvas.style["image-rendering"];
+            var cssStyle = context.canvas.style["image-rendering"];
             if (enable === false && (cssStyle === "" || cssStyle === "auto")) {
                 // if a specific value is set through CSS or equal to the standard "auto" one
-                this.canvas.style["image-rendering"] = "pixelated";
+                context.canvas.style["image-rendering"] = "pixelated";
             } else if (enable === true && cssStyle === "pixelated") {
                 // if set to the standard "pixelated"
-                this.canvas.style["image-rendering"] = "auto";
+                context.canvas.style["image-rendering"] = "auto";
             }
         },
 
