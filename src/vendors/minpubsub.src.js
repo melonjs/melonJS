@@ -111,9 +111,9 @@
          * Data passed : {String} user-defined action, {Number} keyCode,
          * {Boolean} edge state <br>
          * Edge-state is for detecting "locked" key bindings. When a locked key
-         * is pressed and held, the first event will have have the third
-         * argument set true. subsequent events will continue firing with the
-         * third argument set false.
+         * is pressed and held, the first event will have the third argument
+         * set true. Subsequent events will continue firing with the third
+         * argument set false.
          * @public
          * @constant
          * @type String
