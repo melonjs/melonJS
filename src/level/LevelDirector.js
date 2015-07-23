@@ -72,6 +72,16 @@
             var autoSort = container.autoSort;
             container.autoSort = false;
 
+            if (container === me.game.world) {
+
+                // update the viewport bounds
+                me.game.viewport.setBounds(
+                    0, 0,
+                    Math.max(level.width, me.game.viewport.width),
+                    Math.max(level.height, me.game.viewport.height)
+                );
+            }
+
             // reset the GUID generator
             // and pass the level id as parameter
             me.utils.resetGUID(levelId, level.nextobjectid);
@@ -86,13 +96,6 @@
             container.resize(level.width, level.height);
 
             if (container === me.game.world) {
-
-                // update the viewport bounds
-                me.game.viewport.setBounds(
-                    0, 0,
-                    Math.max(level.width, me.game.viewport.width),
-                    Math.max(level.height, me.game.viewport.height)
-                );
 
                 // center the map if smaller than the current viewport
                 container.pos.set(
@@ -226,7 +229,7 @@
 
         /**
          * return the current level definition.
-         * for a reference to the live instantiated level, 
+         * for a reference to the live instantiated level,
          * rather use the container in which it was loaded (e.g. me.game.world)
          * @name getCurrentLevel
          * @memberOf me.levelDirector
@@ -247,7 +250,7 @@
          * @param {Object} [options] additional optional parameters
          * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
          * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
          */
         api.reloadLevel = function (options) {
             // reset the level to initial state
@@ -264,7 +267,7 @@
          * @param {Object} [options] additional optional parameters
          * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
          * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
          */
         api.nextLevel = function (options) {
             //go to the next level
@@ -285,7 +288,7 @@
          * @param {Object} [options] additional optional parameters
          * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
          * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container         
+         * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
          */
         api.previousLevel = function (options) {
             // go to previous level
