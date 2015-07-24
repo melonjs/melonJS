@@ -8,7 +8,7 @@ body {
   -o-user-select: none;
   -webkit-user-select: none;
   user-select: none;
-  
+
   /* disable touch panning/zooming */
   -ms-touch-action: none;
   touch-action: none;
@@ -22,7 +22,7 @@ body {
 
   /* Hide the gap for font descenders. */
   display: block;
-  
+
   /* disable scaling interpolation */
   image-rendering: optimizeSpeed;
   image-rendering: -moz-crisp-edges;

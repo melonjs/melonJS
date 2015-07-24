@@ -9,22 +9,22 @@
  **/
 var game = {
 
-	/**
-	 * local game data
-	 */
-	data : {
-		// score information
-		score : 0,
-		hiscore : 0,
-	},
+    /**
+     * local game data
+     */
+    data : {
+        // score information
+        score : 0,
+        hiscore : 0,
+    },
 
-	/**
-	 * some Initialization
-	 */
-	onload: function() {
+    /**
+     * some Initialization
+     */
+    onload: function() {
 
-		// we don't need the default 60fps for a whack-a-mole !
-		me.sys.fps = 30;
+        // we don't need the default 60fps for a whack-a-mole !
+        me.sys.fps = 30;
 
         // Initialize the video.
         if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {
@@ -34,42 +34,42 @@ var game = {
 
         // add "#debug" to the URL to enable the debug Panel
         if (me.game.HASH.debug === true) {
-			window.onReady(function () {
-				me.plugin.register.defer(this, me.debug.Panel, "debug");
-			});
-		}
+            window.onReady(function () {
+                me.plugin.register.defer(this, me.debug.Panel, "debug");
+            });
+        }
 
-		// initialize the "sound engine"
-		me.audio.init("mp3,ogg");
+        // initialize the "sound engine"
+        me.audio.init("mp3,ogg");
 
-		// add a new hiscore key if not yet defined
-		me.save.add({hiscore : 0});
-		// set the local hiscore value
-		game.data.hiscore = me.save.hiscore;
+        // add a new hiscore key if not yet defined
+        me.save.add({hiscore : 0});
+        // set the local hiscore value
+        game.data.hiscore = me.save.hiscore;
 
-		// set all ressources to be loaded
-		me.loader.onload = this.loaded.bind(this);
-		// set all ressources to be loaded
-		me.loader.preload(game.resources);
+        // set all ressources to be loaded
+        me.loader.onload = this.loaded.bind(this);
+        // set all ressources to be loaded
+        me.loader.preload(game.resources);
 
-		// load everything & display a loading screen
-		me.state.change(me.state.LOADING);
-	},
+        // load everything & display a loading screen
+        me.state.change(me.state.LOADING);
+    },
 
 
-	/**
-	 * callback when everything is loaded
-	 */
-	loaded: function () {
+    /**
+     * callback when everything is loaded
+     */
+    loaded: function () {
 
-		// set the "Play/Ingame" Screen Object
-		me.state.set(me.state.PLAY, new game.PlayScreen());
+        // set the "Play/Ingame" Screen Object
+        me.state.set(me.state.PLAY, new game.PlayScreen());
 
-		// set a fade transition effect
-		me.state.transition("fade","#000000", 250);
+        // set a fade transition effect
+        me.state.transition("fade","#000000", 250);
 
-		// start the game
-		me.state.change(me.state.PLAY);
-	}
+        // start the game
+        me.state.change(me.state.PLAY);
+    }
 
 }; // game

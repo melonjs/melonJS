@@ -9,18 +9,18 @@ var game = {
             return;
         }
 
-		// add "#debug" to the URL to enable the debug Panel
+        // add "#debug" to the URL to enable the debug Panel
         if (me.game.HASH.debug === true) {
-			window.onReady(function () {
-				me.plugin.register.defer(this, me.debug.Panel, "debug");
-			});
-		}
+            window.onReady(function () {
+                me.plugin.register.defer(this, me.debug.Panel, "debug");
+            });
+        }
 
         // Initialize the audio.
         me.audio.init("mp3,ogg");
 
         // switch to the Play Screen.
-		me.state.set(me.state.PLAY, new game.PlayScreen());
+        me.state.set(me.state.PLAY, new game.PlayScreen());
         me.state.change(me.state.PLAY);
     }
 };
