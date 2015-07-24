@@ -54,6 +54,7 @@ var game = {
      */
     changelevel: function() {
 
+        var level = "";
         var level_id = document.getElementById("level_name").value;
 
         switch (level_id) {

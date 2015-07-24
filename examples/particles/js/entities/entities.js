@@ -239,10 +239,10 @@ game.togglePanel = function(element) {
         classList.add("hidden");
         classList.add("slideout");
     }
-}
+};
 
 game.clearPanelAnimation = function(event) {
     var classList = event.target.classList;
     classList.remove("slidein");
     classList.remove("slideout");
-}
+};

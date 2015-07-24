@@ -31,7 +31,7 @@
         },
 
         clear : function() {
-            for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            for ( var emitters = this.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {
                 me.game.world.removeChild(obj.container);
                 me.game.world.removeChild(obj);
             }
@@ -70,7 +70,7 @@
         },
 
         removeEmitter : function(emitter) {
-            for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            for ( var emitters = this.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {
                 if (obj === emitter) {
                     emitters.splice(i, 1);
                     this.updateList();
@@ -81,7 +81,7 @@
 
         selectEmitter : function(emitter) {
             this.emitterList.selectedIndex = -1;
-            for ( var emitters = this.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+            for ( var emitters = this.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {
                 if (obj === emitter) {
                     this.emitterList.selectedIndex = i;
                     break;
@@ -100,7 +100,7 @@
                 option = option.nextSibling;
             }
 
-            for ( var i = 0, emitters = this.emitters, length = emitters.length, emitter; i < length; ++i) {
+            for (var i = 0, emitters = this.emitters, length = emitters.length, emitter; i < length; ++i) {
                 emitter = emitters[i];
                 if (options[i]) {
                     option = options[i];
@@ -114,7 +114,7 @@
                 select.appendChild(option);
             }
 
-            for ( var i = options.length, obj; i--, obj = options[i];) {
+            for (var j = options.length, obj; j--, (obj = options[j]);) {
                 if (!!obj) {
                     if (obj.remove) {
                         obj.remove();
@@ -177,7 +177,7 @@
                     this.input.value = value;
                     game.EmitterList.updateList();
                 }
-            }
+            };
             this.addWidget(widget);
 
             this.addWidget(new pe.NumberInputWidget("z", {
@@ -365,7 +365,7 @@
             this.rootNode.appendChild(separator);
         },
 
-        controlStream : function(event) {
+        controlStream : function(/*event*/) {
             if (!this.emitter.isRunning()) {
                 this.emitter.streamParticles();
             } else {
@@ -374,7 +374,7 @@
             this.updateStreamButton();
         },
 
-        controlBurst : function(event) {
+        controlBurst : function(/*event*/) {
             this.emitter.burstParticles();
             this.updateStreamButton();
         },

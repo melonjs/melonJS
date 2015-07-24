@@ -4,14 +4,14 @@ game.square = me.DraggableEntity.extend({
      */
     init: function (x, y, settings) {
         // call the super constructor
-        this._super(me.DraggableEntity, 'init', [x, y, settings]);
+        this._super(me.DraggableEntity, "init", [x, y, settings]);
         // set the color to white
         this.color = "white";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, "black");
+        this.font = new me.Font("Verdana", 15, "black");
         this.font.bold();
         // set the text
-        this.text = 'Drag me';
+        this.text = "Drag me";
     },
     /**
      * update function
@@ -32,15 +32,15 @@ game.square = me.DraggableEntity.extend({
      */
     dragStart: function (e) {
         // call the super function
-        this._super(me.DraggableEntity, 'dragStart', [e]);
+        this._super(me.DraggableEntity, "dragStart", [e]);
         // set the color to blue
-        this.color = 'blue';
+        this.color = "blue";
     },
     dragEnd: function (e) {
         // call the super function
-        this._super(me.DraggableEntity, 'dragEnd', [e]);
+        this._super(me.DraggableEntity, "dragEnd", [e]);
         // set the color to white
-        this.color = 'white';
+        this.color = "white";
     }
 });
 
@@ -50,14 +50,14 @@ game.droptarget = me.DroptargetEntity.extend({
      */
     init: function (x, y, settings) {
         // call the parent constructor
-        this._super(me.DroptargetEntity, 'init', [x, y, settings]);
+        this._super(me.DroptargetEntity, "init", [x, y, settings]);
         // set the color to white
         this.color = "red";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, "black");
+        this.font = new me.Font("Verdana", 15, "black");
         this.font.bold();
         // set the text
-        this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: overlap';
+        this.text = "Drop on me\n\nAnd I\"ll turn green\n\ncheckmethod: overlap";
     },
     /**
      * update function
@@ -80,12 +80,12 @@ game.droptarget = me.DroptargetEntity.extend({
         // save a reference to this to use in the timeout
         var self = this;
         // call the super function
-        this._super(me.DroptargetEntity, 'draw', [e]);
+        this._super(me.DroptargetEntity, "draw", [e]);
         // indicate a succesful drop
-        this.color = 'green';
+        this.color = "green";
         // set the color back to red after a second
         window.setTimeout(function () {
-            self.color = 'red';
+            self.color = "red";
         }, 1000);
     }
 });
@@ -96,15 +96,15 @@ game.droptarget2 = game.droptarget.extend({
      */
     init: function (x, y, settings) {
         // call the super constructor
-        this._super(game.droptarget, 'init', [x, y, settings]);
+        this._super(game.droptarget, "init", [x, y, settings]);
         // set the color to white
         this.color = "red";
         // set the font we want to use
-        this.font = new me.Font('Verdana', 15, new me.Color(0, 0, 0));
+        this.font = new me.Font("Verdana", 15, new me.Color(0, 0, 0));
         this.font.bold();
         // set the text
-        this.text = 'Drop on me\n\nAnd I\'ll turn green\n\ncheckmethod: contains';
-        // set the check method to 'contains' (default is 'overlap')
+        this.text = "Drop on me\n\nAnd I\"ll turn green\n\ncheckmethod: contains";
+        // set the check method to "contains" (default is "overlap")
         this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
     }
 });

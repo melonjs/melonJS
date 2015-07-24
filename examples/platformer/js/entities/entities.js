@@ -6,7 +6,7 @@
 game.PlayerEntity = me.Entity.extend({
     init: function(x, y, settings) {
         // call the constructor
-        this._super(me.Entity, 'init', [x, y , settings]);
+        this._super(me.Entity, "init", [x, y , settings]);
 
         // player can exit the viewport (jumping, falling into a hole, etc.)
         this.alwaysUpdate = true;
@@ -59,19 +59,19 @@ game.PlayerEntity = me.Entity.extend({
     ------            */
     update : function (dt) {
 
-        if (me.input.isKeyPressed('left'))    {
+        if (me.input.isKeyPressed("left"))    {
             this.body.vel.x -= this.body.accel.x * me.timer.tick;
             this.renderable.flipX(true);
-        } else if (me.input.isKeyPressed('right')) {
+        } else if (me.input.isKeyPressed("right")) {
             this.body.vel.x += this.body.accel.x * me.timer.tick;
             this.renderable.flipX(false);
         }
 
-        if (me.input.isKeyPressed('jump')) {
+        if (me.input.isKeyPressed("jump")) {
             this.body.jumping = true;
 
             if (this.multipleJump <= 2) {
-                // easy 'math' for double jump
+                // easy "math" for double jump
                 this.body.vel.y -= (this.body.maxVel.y * this.multipleJump++) * me.timer.tick;
                 me.audio.play("jump", false);
             }
@@ -92,10 +92,10 @@ game.PlayerEntity = me.Entity.extend({
         if (!this.inViewport && (this.pos.y > me.video.renderer.getHeight())) {
             // if yes reset the game
             me.game.world.removeChild(this);
-            me.game.viewport.fadeIn('#fff', 150, function(){
+            me.game.viewport.fadeIn("#fff", 150, function(){
                 me.audio.play("die", false);
                 me.levelDirector.reloadLevel();
-                me.game.viewport.fadeOut('#fff', 150);
+                me.game.viewport.fadeOut("#fff", 150);
             });
             return true;
         }
@@ -104,8 +104,10 @@ game.PlayerEntity = me.Entity.extend({
         me.collision.check(this);
 
         // check if we moved (an "idle" animation would definitely be cleaner)
-        if (this.body.vel.x!=0 || this.body.vel.y!=0 || (this.renderable&&this.renderable.isFlickering())) {
-            this._super(me.Entity, 'update', [dt]);
+        if (this.body.vel.x !== 0 || this.body.vel.y !== 0 ||
+            (this.renderable && this.renderable.isFlickering())
+        ) {
+            this._super(me.Entity, "update", [dt]);
             return true;
         }
 
@@ -122,7 +124,7 @@ game.PlayerEntity = me.Entity.extend({
                 // Simulate a platform object
                 if (other.type === "platform") {
                     if (this.body.falling &&
-                        !me.input.isKeyPressed('down') &&
+                        !me.input.isKeyPressed("down") &&
                         // Shortest overlap would move the player upward
                         (response.overlapV.y > 0) &&
                         // The velocity is reasonably fast enough to have penetrated to the overlap depth
@@ -192,7 +194,7 @@ game.CoinEntity = me.CollectableEntity.extend({
     init: function (x, y, settings) {
 
         // call the super constructor
-        this._super(me.CollectableEntity, 'init', [x, y , settings]);
+        this._super(me.CollectableEntity, "init", [x, y , settings]);
 
         // add the coin sprite as renderable
         this.renderable = game.texture.createSpriteFromName("coin.png");
@@ -204,7 +206,7 @@ game.CoinEntity = me.CollectableEntity.extend({
     /**
      * collision handling
      */
-    onCollision : function (response) {
+    onCollision : function (/*response*/) {
 
         // do something when collide
         me.audio.play("cling", false);
@@ -232,22 +234,21 @@ game.PathEnemyEntity = me.Entity.extend({
 
         // save the area size defined in Tiled
         var width = settings.width || settings.framewidth;
-        var height = settings.height || settings.frameheight;
 
         // adjust the setting size to the sprite one
         settings.width = settings.framewidth;
         settings.height = settings.frameheight;
 
-        // redefine the default shape (used to define path) with a shape matching the renderable 
+        // redefine the default shape (used to define path) with a shape matching the renderable
         settings.shapes[0] = new me.Rect(0, 0, settings.framewidth, settings.frameheight);
-        
+
         // call the super constructor
-        this._super(me.Entity, 'init', [x, y , settings]);
+        this._super(me.Entity, "init", [x, y , settings]);
 
         // set start/end position based on the initial area size
         x = this.pos.x;
         this.startX = x;
-        this.endX   = x + width - settings.framewidth
+        this.endX   = x + width - settings.framewidth;
         this.pos.x  = x + width - settings.framewidth;
 
         // apply gravity setting if specified
@@ -291,7 +292,7 @@ game.PathEnemyEntity = me.Entity.extend({
         }
 
         // return true if we moved of if flickering
-        return (this._super(me.Entity, 'update', [dt]) || this.body.vel.x != 0 || this.body.vel.y != 0);
+        return (this._super(me.Entity, "update", [dt]) || this.body.vel.x !== 0 || this.body.vel.y !== 0);
     },
 
     /**
@@ -309,7 +310,9 @@ game.PathEnemyEntity = me.Entity.extend({
             this.renderable.setCurrentAnimation("dead");
             // make it flicker and call destroy once timer finished
             var self = this;
-            this.renderable.flicker(750, function(){me.game.world.removeChild(self)});
+            this.renderable.flicker(750, function () {
+                me.game.world.removeChild(self);
+            });
             // dead sfx
             me.audio.play("enemykill", false);
             // give some score
@@ -331,7 +334,7 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
      */
     init: function (x, y, settings) {
         // super constructor
-        this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
+        this._super(game.PathEnemyEntity, "init", [x, y, settings]);
 
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([
@@ -367,7 +370,7 @@ game.FlyEnemyEntity = game.PathEnemyEntity.extend({
      */
     init: function (x, y, settings) {
         // super constructor
-        this._super(game.PathEnemyEntity, 'init', [x, y, settings]);
+        this._super(game.PathEnemyEntity, "init", [x, y, settings]);
 
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([

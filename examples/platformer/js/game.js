@@ -72,7 +72,7 @@ var game = {
         );
 
         // add some keyboard shortcuts
-        me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+        me.event.subscribe(me.event.KEYDOWN, function (action, keyCode /*, edge */) {
 
             // change global volume setting
             if (keyCode === me.input.KEY.PLUS) {

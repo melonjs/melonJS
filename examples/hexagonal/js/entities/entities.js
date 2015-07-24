@@ -12,7 +12,7 @@ game.TextEntity = me.Renderable.extend({
         this.font = new me.Font("courier", this.font_size, "white");
 
         // call the constructor
-        this._super(me.Renderable, 'init', [x, y , width, height]);
+        this._super(me.Renderable, "init", [x, y , width, height]);
         this.floating = true;
 
         this.pointerDown = me.event.subscribe("pointermove", function (event) {

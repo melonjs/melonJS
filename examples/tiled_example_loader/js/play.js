@@ -13,24 +13,24 @@ game.PlayScreen = me.ScreenObject.extend({
     /**
      * update function
      */
-    keyPressed: function (action, keyCode, edge) {
+    keyPressed: function (action /*, keyCode, edge */) {
 
         // navigate the map :)
-        if (action == 'left') {
+        if (action === "left") {
             me.game.viewport.move(-(me.levelDirector.getCurrentLevel().tilewidth / 2), 0);
 
-        } else if (action == 'right') {
+        } else if (action === "right") {
             me.game.viewport.move(me.levelDirector.getCurrentLevel().tilewidth / 2, 0);
         }
 
-        if (action === 'up') {
+        if (action === "up") {
             me.game.viewport.move(0, -(me.levelDirector.getCurrentLevel().tileheight / 2));
 
-        } else if (action === 'down') {
+        } else if (action === "down") {
             me.game.viewport.move(0, me.levelDirector.getCurrentLevel().tileheight / 2);
         }
 
-        if (action === 'enter') {
+        if (action === "enter") {
             me.game.viewport.shake(16, 500);
         }
 

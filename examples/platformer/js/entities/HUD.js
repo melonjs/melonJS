@@ -11,7 +11,7 @@ game.HUD.Container = me.Container.extend({
 
     init: function() {
         // call the constructor
-        this._super(me.Container, 'init');
+        this._super(me.Container, "init");
 
         // persistent across level change
         this.isPersistent = true;
@@ -43,7 +43,7 @@ game.HUD.ScoreItem = me.Renderable.extend( {
 
         // call the super constructor
         // (size does not matter here)
-        this._super(me.Renderable, 'init', [
+        this._super(me.Renderable, "init", [
             me.game.viewport.width + x,
             me.game.viewport.height + y,
             10,
@@ -62,7 +62,7 @@ game.HUD.ScoreItem = me.Renderable.extend( {
     /**
      * update function
      */
-    update : function (dt) {
+    update : function (/*dt*/) {
         this.pos.x = me.game.viewport.width + this.relative.x;
         this.pos.y = me.game.viewport.height + this.relative.y;
 

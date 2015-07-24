@@ -12,7 +12,7 @@ var game = {
     onload: function()
     {
         // Initialize the video.
-        if (!me.video.init(1024, 768, {wrapper : "screen", scale : 'auto'})) {
+        if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -78,21 +78,30 @@ var Smilie = me.Entity.extend({
         this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(game.assets[i % 5].name)});
     },
 
-    update : function (dt) {
+    update : function () {
         this.pos.add(this.body.vel);
 
         // world limit check
-        if( this.pos.x >= 1024 ) this.pos.x = -15;
-        if( this.pos.x < -15 ) this.pos.x = 1024 - 1;
-        if( this.pos.y >= 768 ) this.pos.y = -15;
-        if( this.pos.y < -15 ) this.pos.y = 768 - 1;
+        if (this.pos.x >= 1024) {
+            this.pos.x = -15;
+        }
+        if (this.pos.x < -15) {
+            this.pos.x = 1024 - 1;
+        }
+        if (this.pos.y >= 768) {
+            this.pos.y = -15;
+        }
+        if (this.pos.y < -15) {
+            this.pos.y = 768 - 1;
+        }
 
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
             this.renderable.setOpacity(1.0);
-        } else {
+        }
+        else {
             this.renderable.setOpacity(0.5);
-        };
+        }
         return true;
     },
 

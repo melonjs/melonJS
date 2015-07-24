@@ -1,12 +1,12 @@
 /**
  * a mole entity
- * note : we don't use EntityObject, since we wont' use regular collision, etc..
+ * note : we don"t use EntityObject, since we wont" use regular collision, etc..
  */
 game.MoleEntity = me.AnimationSheet.extend(
 {
     init:function (x, y) {
         // call the constructor
-        this._super(me.AnimationSheet, 'init', [x, y , { image: me.loader.getImage("mole"), framewidth: 178, frameheight: 140}]);
+        this._super(me.AnimationSheet, "init", [x, y , { image: me.loader.getImage("mole"), framewidth: 178, frameheight: 140}]);
 
         // idle animation
         this.addAnimation ("idle",  [0]);
@@ -30,7 +30,7 @@ game.MoleEntity = me.AnimationSheet.extend(
         this.hideTween = null;
 
         // register on mouse event
-        me.input.registerPointerEvent('pointerdown', this, this.onMouseDown.bind(this));
+        me.input.registerPointerEvent("pointerdown", this, this.onMouseDown.bind(this));
 
     },
 
@@ -63,7 +63,7 @@ game.MoleEntity = me.AnimationSheet.extend(
             // stop propagating the event
             return false;
 
-        };
+        }
     },
 
 
@@ -118,7 +118,7 @@ game.MoleEntity = me.AnimationSheet.extend(
     {
         if (this.isVisible) {
             // call the super function to manage animation
-            this._super(me.AnimationSheet, 'update', [dt] );
+            this._super(me.AnimationSheet, "update", [dt] );
 
             // hide the mode after 1/2 sec
             if (this.isOut===true) {
@@ -152,6 +152,7 @@ game.MoleManager = me.Entity.extend(
 {
     init: function ()
     {
+        var i = 0;
         this.moles = [];
 
         this.timer = 0;
@@ -159,23 +160,23 @@ game.MoleManager = me.Entity.extend(
         settings.width = 10;
         settings.height = 10;
         // call the super constructor
-        this._super(me.Entity, 'init', [0, 0, settings]);
+        this._super(me.Entity, "init", [0, 0, settings]);
 
         // add the first row of moles
-        for ( var i = 0; i < 3; i ++) {
-            this.moles[i] = new game.MoleEntity((112 + (i * 310)), 127+40)
+        for (i = 0; i < 3; i ++) {
+            this.moles[i] = new game.MoleEntity((112 + (i * 310)), 127+40);
             me.game.world.addChild (this.moles[i], 15);
         }
 
         // add the 2nd row of moles
-        for ( var i = 3; i < 6; i ++) {
-            this.moles[i] = new game.MoleEntity((112 + ((i-3) * 310)), 383+40)
+        for (i = 3; i < 6; i ++) {
+            this.moles[i] = new game.MoleEntity((112 + ((i-3) * 310)), 383+40);
             me.game.world.addChild (this.moles[i], 35);
         }
 
         // add the 3rd row of moles
-        for ( var i = 6; i < 9; i ++) {
-            this.moles[i] = new game.MoleEntity((112 + ((i-6) * 310)), 639+40)
+        for (i = 6; i < 9; i ++) {
+            this.moles[i] = new game.MoleEntity((112 + ((i-6) * 310)), 639+40);
             me.game.world.addChild (this.moles[i], 55);
         }
 

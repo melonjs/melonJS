@@ -45,8 +45,8 @@
                 this.rootNode = document.createElement("div");
             }
             var labelNode = document.createElement("label");
-            labelNode.appendChild(document.createTextNode(label.replace(/([A-Z])/g, ' $1').toLowerCase()))
-            labelNode.appendChild(input)
+            labelNode.appendChild(document.createTextNode(label.replace(/([A-Z])/g, " $1").toLowerCase()));
+            labelNode.appendChild(input);
             this.rootNode.appendChild(labelNode);
         },
         setObject : function(object) {
@@ -64,7 +64,7 @@
 
     pe.NumberInputWidget = pe.WidgetBase.extend({
         init : function(propertyName, settings) {
-            this._super(pe.WidgetBase, 'init', [propertyName]);
+            this._super(pe.WidgetBase, "init", [propertyName]);
             settings = settings || {};
 
             var container = document.createElement("div");
@@ -121,7 +121,7 @@
 
     pe.TextInputWidget = pe.WidgetBase.extend({
         init : function(propertyName) {
-            this._super(pe.WidgetBase, 'init', [propertyName]);
+            this._super(pe.WidgetBase, "init", [propertyName]);
 
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "text");
@@ -140,7 +140,7 @@
 
     pe.BooleanInputWidget = pe.WidgetBase.extend({
         init : function(propertyName) {
-            this._super(pe.WidgetBase, 'init', [propertyName]);
+            this._super(pe.WidgetBase, "init", [propertyName]);
 
             var input = this.input = document.createElement("input");
             input.setAttribute("type", "checkbox");
@@ -157,7 +157,7 @@
 
     pe.ImageSelectionWidget = pe.WidgetBase.extend({
         init : function(propertyName, resourceList) {
-            this._super(pe.WidgetBase, 'init', [propertyName]);
+            this._super(pe.WidgetBase, "init", [propertyName]);
 
             var select = this.select = document.createElement("select");
             select.addEventListener("change", this.onChange.bind(this));
@@ -196,7 +196,7 @@
 
     pe.ShapeWidget = pe.WidgetBase.extend({
         init : function() {
-            this._super(pe.WidgetBase, 'init', [""]);
+            this._super(pe.WidgetBase, "init", [""]);
 
             this.shape = new pe.ShapeWidget.Helper("rgba(255, 86, 86, 0.3)");
             this.dragHandler = new pe.DragHandler(new me.Color(255, 86, 86, 1));
@@ -251,7 +251,7 @@
 
     pe.ShapeWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
             this.pos.z = Infinity;
             this.color = color;
         },
@@ -272,7 +272,7 @@
         init : function(color) {
             this.originalSize = 40;
             this.createGradients(color, this.originalSize);
-            this._super(me.Renderable, 'init', [0, 0, this.originalSize, this.originalSize]);
+            this._super(me.Renderable, "init", [0, 0, this.originalSize, this.originalSize]);
             this.pos.z = Infinity;
             this.dragging = false;
             this.grabOffset = new me.Vector2d(0, 0);
@@ -319,7 +319,7 @@
         setPosition : function(x, y) {
             this.pos.set(x - (this.width / 2), y - (this.height / 2), this.pos.z);
         },
-        startDrag : function(event) {
+        startDrag : function(/*event*/) {
             this.dragging = true;
             this.color = this.smallGradient;
 
@@ -345,7 +345,7 @@
                 return false;
             }
         },
-        drag : function(event) {
+        drag : function(/*event*/) {
             if (this.dragging) {
                 var pos = me.input.mouse.pos.clone().sub(this.grabOffset);
                 pos.x += (this.width / 2);
@@ -365,7 +365,7 @@
 
     pe.VectorWidget = pe.WidgetBase.extend({
         init : function(name, color) {
-            this._super(pe.WidgetBase, 'init', [""]);
+            this._super(pe.WidgetBase, "init", [""]);
             this.origin = new me.Vector2d(0, 0);
             this.vector = new me.Vector2d(0, 0);
 
@@ -429,15 +429,15 @@
                 this.shape.setShape(this.origin, this.vector.x, this.vector.y);
             }
         },
-        onVectorChanged : function(vector) {
+        onVectorChanged : function(/*vector*/) {
         },
-        onSync : function(object) {
+        onSync : function(/*object*/) {
         }
     });
 
     pe.VectorWidget.Helper = me.Renderable.extend({
         init : function(widget, color) {
-            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
             this.widget = widget;
             this.pos.z = Infinity;
             this.color = color.toRGBA();
@@ -467,7 +467,7 @@
 
     pe.VelocityWidget = pe.VectorWidget.extend({
         init : function() {
-            this._super(pe.VectorWidget, 'init', ["velocity", new me.Color(229, 216, 47, 0.3)]);
+            this._super(pe.VectorWidget, "init", ["velocity", new me.Color(229, 216, 47, 0.3)]);
             this.scaler = 30;
         },
         onVectorChanged : function(vector) {
@@ -487,7 +487,7 @@
 
     pe.ForceWidget = pe.VectorWidget.extend({
         init : function() {
-            this._super(pe.VectorWidget, 'init', ["force", new me.Color(79, 214, 72, 0.3)]);
+            this._super(pe.VectorWidget, "init", ["force", new me.Color(79, 214, 72, 0.3)]);
             this.scaler = 300;
         },
         onVectorChanged : function(vector) {
@@ -502,7 +502,7 @@
 
     pe.VelocityVariationWidget = pe.WidgetBase.extend({
         init : function() {
-            this._super(pe.WidgetBase, 'init', [""]);
+            this._super(pe.WidgetBase, "init", [""]);
             this.scaler = 30;
 
             this.shape = new pe.VelocityVariationWidget.Helper(new me.Color(105, 190, 255, 0.3));
@@ -571,7 +571,7 @@
 
     pe.VelocityVariationWidget.Helper = me.Renderable.extend({
         init : function(color) {
-            this._super(me.Renderable, 'init', [0, 0, 0, 0]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
             this.color = color.toRGBA();
             this.startAngle = 0;
             this.endAngle = 0;

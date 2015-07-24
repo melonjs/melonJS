@@ -36,7 +36,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.event.subscribe(me.event.MOUSEMOVE, function() {
             if (me.input.isKeyPressed("moveEmitter")) {
                 var pos;
-                for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, obj = emitters[i];) {
+                for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {
                     if (!obj.floating) {
                         pos = viewport.localToWorld(mousepos.x, mousepos.y);
                     } else {

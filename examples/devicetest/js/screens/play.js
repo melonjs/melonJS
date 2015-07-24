@@ -11,10 +11,10 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new me.ColorLayer("background", "#000000", 0));
 
         // renderable to display device information
-        me.game.world.addChild(new (me.Renderable.extend({
+        me.game.world.addChild(new me.Renderable.extend({
             init: function() {
-                this._super(me.Renderable, 'init', [0, 0, 100, 200]);
-                this.font = new me.Font('arial', '24px', "white");
+                this._super(me.Renderable, "init", [0, 0, 100, 200]);
+                this.font = new me.Font("arial", "24px", "white");
             },
             update: function() {
                 return true;
@@ -28,7 +28,7 @@ game.PlayScreen = me.ScreenObject.extend({
                 this.font.draw(renderer, "Z: " + me.device.accelerationZ, 10, 150);
                 this.font.draw(renderer, "orientation: " + me.device.orientation + " degrees", 10, 180);
             }
-        })), 1);
+        }), 1);
     },
 
     /**
