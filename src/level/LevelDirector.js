@@ -31,6 +31,9 @@
             // clean the destination container
             options.container.destroy();
 
+            // reset the renderer
+            me.video.renderer.reset();
+
             // clean the current (previous) level
             if (levels[api.getCurrentLevelId()]) {
                 levels[api.getCurrentLevelId()].destroy();
