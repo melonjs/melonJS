@@ -17,17 +17,17 @@ game.PlayScreen = me.ScreenObject.extend({
 	
 		// navigate the map :)
 		if (action == 'left') {
-			me.game.viewport.move(-(me.game.currentLevel.tilewidth/2),0);
+			me.game.viewport.move(-(me.levelDirector.getCurrentLevel().tilewidth / 2), 0);
 			
 		} else if (action == 'right') {
-			me.game.viewport.move(me.game.currentLevel.tilewidth/2,0);		
+			me.game.viewport.move(me.levelDirector.getCurrentLevel().tilewidth / 2, 0);		
 		}
 				
 		if (action === 'up') {
-			me.game.viewport.move(0,-(me.game.currentLevel.tileheight/2));
+			me.game.viewport.move(0, -(me.levelDirector.getCurrentLevel().tileheight / 2));
 
 		} else if (action === 'down') {
-			me.game.viewport.move(0,me.game.currentLevel.tileheight/2);
+			me.game.viewport.move(0, me.levelDirector.getCurrentLevel().tileheight / 2);
 		}
 
 		if (action === 'enter') {
