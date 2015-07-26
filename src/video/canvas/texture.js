@@ -207,7 +207,7 @@
         /**
          * return the Atlas dictionnary
          * @name getAtlas
-         * @memberOf me.video.renderer.Texture
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @return {Object}
          */
@@ -218,7 +218,7 @@
         /**
          * return the Atlas texture
          * @name getTexture
-         * @memberOf me.video.renderer.Texture
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @return {Image}
          */
@@ -229,7 +229,7 @@
         /**
          * return a normalized region/frame information for the specified sprite name
          * @name getRegion
-         * @memberOf me.video.renderer.Texture
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {Object}
@@ -241,7 +241,7 @@
         /**
          * Create a sprite object using the first region found using the specified name
          * @name createSpriteFromName
-         * @memberOf me.video.renderer.Texture
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @return {me.Sprite}
@@ -286,7 +286,7 @@
         /**
          * Create an animation object using the first region found using all specified names
          * @name createAnimationFromName
-         * @memberOf me.video.renderer.Texture
+         * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
@@ -344,7 +344,7 @@
      * Base class for Texture exception handling.
      * @name Error
      * @class
-     * @memberOf me.video.renderer.Texture
+     * @memberOf me.CanvasRenderer.Texture
      * @constructor
      * @param {String} msg Error message.
      */
