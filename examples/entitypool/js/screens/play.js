@@ -16,7 +16,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(main);
         me.game.world.addChild(renderable);
 
-        me.game.world.addChild(new me.Renderable.extend({
+        var Generator = me.Renderable.extend({
             init: function() {
                 this._super(me.Renderable, "init", [0, 0, 100, 100]);
                 this.elapsed = 0;
@@ -39,7 +39,9 @@ game.PlayScreen = me.ScreenObject.extend({
                 }
                 return true;
             }
-        }));
+        });
+
+        me.game.world.addChild(new Generator());
     }
 });
 

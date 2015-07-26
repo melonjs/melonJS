@@ -26,8 +26,7 @@ var game = {
      * callback when everything is loaded
      */
     loaded: function () {
-        // set the "Play/Ingame" Screen Object
-        me.state.set(me.state.PLAY, new me.ScreenObject.extend({
+        var PlayScreen = me.ScreenObject.extend({
             // on reset event function
             onResetEvent : function() {
                 // black background
@@ -35,7 +34,10 @@ var game = {
                 // the font stuff
                 me.game.world.addChild(new FontTest(), 1);
             }
-        }));
+        });
+
+        // set the "Play/Ingame" Screen Object
+        me.state.set(me.state.PLAY, new PlayScreen());
         // switch to PLAY state
         me.state.change(me.state.PLAY);
     }
