@@ -110,7 +110,7 @@
             this.audioFormats = audioFormat.split(",");
 
             // XXX: workaround https://github.com/goldfire/howler.js/issues/328
-            if (me.device.ua.includes("OPR/")) {
+            if (me.device.ua.contains("OPR/")) {
                 this.audioFormats = this.audioFormats.filter(function (f) {
                     return f !== "mp3";
                 });
