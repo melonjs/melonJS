@@ -1,6 +1,6 @@
 Version History
 ---------------
-2.2.0
+3.0.0
 * Container : added `autoDepth` feature that auto-increments a child's z-coordinate when inserted
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
