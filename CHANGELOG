@@ -5,10 +5,10 @@ Version History
 * Audio : updated to the latest 2.0 Howler beta (fixes a loop issue on Chrome mobile, and touch event for iOS playback)
 * Core : fixed an exception in the Map polyfill
 * Documentation : added docs for the Renderer interface, including the beta WebGLRenderer and shader
-* Particles : fix an exception in `me.ParticleContainer`
+* Particles : fix an exception in `me.ParticleContainer` (introduced in 2.1.2)
 * TMX : fixed TMXLayer opacity when preRender is enabled
 * TMX : fixed ImageLayer opacity
-* Video : fixed a regression where `me.device.getPixelRatio()` no longer works when called before `me.video.init()`
+* Video : fixed a regression where `me.device.getPixelRatio()` no longer works when called before `me.video.init()` (introduced in 2.1.0)
 * WebGLRenderer : fixed a bug that causes a compile failure with the quad fragment shader on a small number of platforms
 
 2.1.2
@@ -37,7 +37,7 @@ Version History
 * Entity : entity bodies now have a default shape if not overridden by the entity constructor.
 * Entity : renderables are now positioned relative to the body bounds
 * Font : updated me.Font to work with me.Color (@xorinzor)
-* Font : updated the me.Font api to be consistent with ne.BitmapFont and the Renderer class
+* Font : updated the me.Font api to be consistent with me.BitmapFont and the Renderer class
 * Font : added support for WebGL (using me.Font is however not recommended for performances reason)
 * Input : added support for `pointerenter` and `pointerleave` events (@TheManuz)
 * Input : allow regions to be any shape when registering pointer event, and not just me.Rect
