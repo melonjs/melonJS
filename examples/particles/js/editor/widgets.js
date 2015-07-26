@@ -328,7 +328,7 @@
             size /= 2;
             this.translate(size, size);
 
-            var mousepos = me.input.mouse.pos;
+            var mousepos = me.input.pointer.pos;
             var x = mousepos.x - this.pos.x;
             var y = mousepos.y - this.pos.y;
             this.grabOffset.set(x, y);
@@ -347,7 +347,7 @@
         },
         drag : function(/*event*/) {
             if (this.dragging) {
-                var pos = me.input.mouse.pos.clone().sub(this.grabOffset);
+                var pos = me.input.pointer.pos.clone().sub(this.grabOffset);
                 pos.x += (this.width / 2);
                 pos.y += (this.height / 2);
                 this.onDrag(pos);

@@ -23,15 +23,15 @@ game.PlayScreen = me.ScreenObject.extend({
         me.input.bindKey(me.input.KEY.C, "moveViewport", false, false);
 
         // map the left button click on the enter key
-        me.input.bindPointer(me.input.mouse.LEFT, me.input.KEY.X);
-        me.input.bindPointer(me.input.mouse.MIDDLE, me.input.KEY.C);
+        me.input.bindPointer(me.input.pointer.LEFT, me.input.KEY.X);
+        me.input.bindPointer(me.input.pointer.MIDDLE, me.input.KEY.C);
 
         // flush cached html layout after we added the editor elements
         me.video.onresize();
 
         // listen to mouse movement
         var viewport = me.game.viewport;
-        var mousepos = me.input.mouse.pos;
+        var mousepos = me.input.pointer.pos;
         var lastX = mousepos.x, lastY = mousepos.y;
         me.event.subscribe(me.event.MOUSEMOVE, function() {
             if (me.input.isKeyPressed("moveEmitter")) {
