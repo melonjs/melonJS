@@ -300,7 +300,7 @@
                     // check the shape bounding box first
                     bounds.containsPoint(e.gameX, e.gameY) &&
                     // then check more precisely if needed
-                    (bounds !== region || region.containsPoint(e.gameX, e.gameY));
+                    (bounds === region || region.containsPoint(e.gameX, e.gameY));
 
                 switch (activeEventList.indexOf(e.type)) {
                     case POINTER_MOVE:
