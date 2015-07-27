@@ -97,7 +97,7 @@
          * @memberOf me.AnimationSheet
          * @function
          * @param {String} name animation id
-         * @param {Number[]|String[]} index list of sprite index or name
+         * @param {Number[]|String[]|Object[]} index list of sprite index or name
          * defining the animation. Can also use objects to specify delay for each frame, see below
          * @param {Number} [animationspeed] cycling speed for animation in ms
          * (delay between each frame).
@@ -138,19 +138,19 @@
             for (var i = 0, len = index.length; i < len; i++) {
                 var frameObject = index[i];
                 if (typeof(frameObject) === "number" || typeof(frameObject) === "string") {
-                  frameObject = {
-                    name: frameObject,
-                    delay: animationspeed || this.animationspeed
-                  };
+                    frameObject = {
+                        name: frameObject,
+                        delay: animationspeed || this.animationspeed
+                    };
                 }
                 var frameObjectName = frameObject.name;
                 if (typeof(frameObjectName) === "number") {
                     if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
                         this.anim[name].frames[i] = Object.assign(
-                          {},
-                          this.textureAtlas[frameObjectName],
-                          frameObject
+                            {},
+                            this.textureAtlas[frameObjectName],
+                            frameObject
                         );
                         counter++;
                     }
@@ -161,9 +161,9 @@
                         );
                     } else {
                         this.anim[name].frames[i] = Object.assign(
-                          {},
-                          this.textureAtlas[this.atlasIndices[frameObjectName]],
-                          frameObject
+                            {},
+                            this.textureAtlas[this.atlasIndices[frameObjectName]],
+                            frameObject
                         );
                         counter++;
                     }
