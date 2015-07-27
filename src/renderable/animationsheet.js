@@ -98,7 +98,7 @@
          * @function
          * @param {String} name animation id
          * @param {Number[]|String[]} index list of sprite index or name
-         * defining the animation
+         * defining the animation. Can also use objects to specify delay for each frame, see below
          * @param {Number} [animationspeed] cycling speed for animation in ms
          * (delay between each frame).
          * @see me.AnimationSheet#animationspeed
@@ -111,14 +111,17 @@
          * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
          * // slower animation
          * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
+         * // or get more specific with delay for each frame. Good solution instead of repeating:
+         * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
+         * // can do this with atlas values as well:
+         * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
          */
         addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {
                 name : name,
                 frames : [],
                 idx : 0,
-                length : 0,
-                animationspeed: animationspeed || this.animationspeed
+                length : 0
             };
 
             if (index == null) {
@@ -133,13 +136,21 @@
             var counter = 0;
             // set each frame configuration (offset, size, etc..)
             for (var i = 0, len = index.length; i < len; i++) {
-                if (typeof(index[i]) === "number") {
-                    if (typeof (this.textureAtlas[index[i]]) !== "undefined") {
+                var frameObject = index[i];
+                if (typeof(frameObject) === "number" || typeof(frameObject) === "string") {
+                  frameObject = {
+                    name: frameObject,
+                    delay: animationspeed || this.animationspeed
+                  };
+                }
+                var frameObjectName = frameObject.name;
+                if (typeof(frameObjectName) === "number") {
+                    if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
                         // TODO: adding the cache source coordinates add undefined entries in webGL mode
                         this.anim[name].frames[i] = Object.assign(
                           {},
-                          this.textureAtlas[index[i]],
-                          { delay: this.anim[name].animationspeed }
+                          this.textureAtlas[frameObjectName],
+                          frameObject
                         );
                         counter++;
                     }
@@ -151,8 +162,8 @@
                     } else {
                         this.anim[name].frames[i] = Object.assign(
                           {},
-                          this.textureAtlas[this.atlasIndices[index[i]]],
-                          { delay: this.anim[name].animationspeed }
+                          this.textureAtlas[this.atlasIndices[frameObjectName]],
+                          frameObject
                         );
                         counter++;
                     }

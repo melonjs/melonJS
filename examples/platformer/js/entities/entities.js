@@ -44,7 +44,7 @@ game.PlayerEntity = me.Entity.extend({
         ]);
 
         // define a basic walking animatin
-        this.renderable.addAnimation ("walk",  ["walk0001.png", "walk0002.png", "walk0003.png"]);
+        this.renderable.addAnimation ("walk",  [{ name: "walk0001.png", delay: 100 }, { name: "walk0002.png", delay: 100 }, { name: "walk0003.png", delay: 100 }]);
         // set as default
         this.renderable.setCurrentAnimation("walk");
 
