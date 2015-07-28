@@ -87,15 +87,16 @@ if (!Object.is) {
      * var a = {}, b = a;
      * Object.is(a, b); //> true
      */
-    Object.is = function (a, b) {
-        if (a === 0 && b === 0) {
-            return 1 / a === 1 / b;
+    Object.is = function(x, y) {
+        // SameValue algorithm
+        if (x === y) { // Steps 1-5, 7-10
+            // Steps 6.b-6.e: +0 != -0
+            return x !== 0 || 1 / x === 1 / y;
+        } else {
+            // Step 6.a: NaN == NaN
+            return x !== x && y !== y;
         }
-        if (a !== a) {
-            return b !== b;
-        }
-        return a === b;
-    };
+  };
 }
 
 if (!Object.assign) {
