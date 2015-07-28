@@ -136,12 +136,16 @@
             var counter = 0;
             // set each frame configuration (offset, size, etc..)
             for (var i = 0, len = index.length; i < len; i++) {
-                var frameObject = index[i];
-                if (typeof(frameObject) === "number" || typeof(frameObject) === "string") {
+                var frame = index[i];
+                var frameObject;
+                if (typeof(frame) === "number" || typeof(frame) === "string") {
                     frameObject = {
-                        name: frameObject,
+                        name: frame,
                         delay: animationspeed || this.animationspeed
                     };
+                }
+                else {
+                  frameObject = frame;
                 }
                 var frameObjectName = frameObject.name;
                 if (typeof(frameObjectName) === "number") {
