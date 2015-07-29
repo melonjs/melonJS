@@ -21,5 +21,24 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new game.Poly2(200, 275, {width: 300, height: 300, sprite:"test02"}), 1);
         me.game.world.addChild(new game.Poly2(526, 325, {width: 256, height: 256, sprite:"test01"}), 1);
         
+        // display the current pointer coordinates on top of the pointer arrow
+        me.game.world.addChild(new (me.Renderable.extend({
+            init: function() {
+                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
+                this.font = new me.Font("Arial", 10, "#FFFFFF");
+                this.font.textAlign = "center";
+                this.fontHeight = this.font.measureText(me.video.renderer, "DUMMY").height;
+            },
+            draw: function(renderer){
+                var x = Math.round(me.input.pointer.pos.x);
+                var y = Math.round(me.input.pointer.pos.y);
+                this.font.draw (
+                    renderer, 
+                    "( " + x + "," + y + " )", 
+                    x, 
+                    y - this.fontHeight);
+            }
+        })), Infinity);
+        
     }
 });
