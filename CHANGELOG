@@ -14,7 +14,7 @@ Version History
 * Geometry : fixed `angle` method on Vector classes
 * LevelDirector : level loading is now asynchronous; for sequential behavior, use the LEVEL_LOADED event or new `onLoaded` callback
 * LevelDirector : added an `options` argument to the loading method; for specifying a target container, callback, and whether to merge (flatten) object groups
-* Input : `me.input.mouse` has been renamed to `me.input.pointer`
+* Input : fixed last standing mouse event related object or constant names : `me.input.mouse` to `me.input.pointer`, `me.event.MOVEMOVE` to `me.event.POINTERMOVE`
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Renderable : renderables are now using a 3d Vector for position, and using the z axis for layer ordering.
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`

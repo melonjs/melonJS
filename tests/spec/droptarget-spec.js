@@ -65,7 +65,7 @@
             drag = function (startFrom, moveTo) {
                 // mock user drag events
                 Event.publish(Event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 2}, draggable]);
-                Event.publish(Event.MOUSEMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
+                Event.publish(Event.POINTERMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
                 Event.publish(Event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 2}, draggable]);
             },
             // removes all test entities from the game

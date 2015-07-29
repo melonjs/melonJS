@@ -20,10 +20,5 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new game.Poly2(375, 425, {width: 300, height: 300, sprite:"test02"}), 1);
         me.game.world.addChild(new game.Poly2(650, 550, {width: 256, height: 256, sprite:"test01"}), 1);
         me.game.world.addChild(new game.Poly2(650, 250, {width: 256, height: 256, sprite:"test03"}), 1);
-
-        // register on the mousemove event
-        me.input.registerPointerEvent("pointermove", me.game.viewport, function (event) {
-            me.event.publish("pointermove", [ event ]);
-        });
     }
 });

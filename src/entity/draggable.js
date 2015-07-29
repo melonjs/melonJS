@@ -59,7 +59,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             };
             this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
             this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
-            Event.subscribe(Event.MOUSEMOVE, this.dragMove.bind(this));
+            Event.subscribe(Event.POINTERMOVE, this.dragMove.bind(this));
             Event.subscribe(Event.DRAGSTART, function (e, draggable) {
                 if (draggable === self) {
                     self.dragStart(e);
@@ -140,7 +140,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          * @function
          */
         destroy: function () {
-            Event.unsubscribe(Event.MOUSEMOVE, this.dragMove);
+            Event.unsubscribe(Event.POINTERMOVE, this.dragMove);
             Event.unsubscribe(Event.DRAGSTART, this.dragStart);
             Event.unsubscribe(Event.DRAGEND, this.dragEnd);
             this.removePointerEvent("pointerdown", this);

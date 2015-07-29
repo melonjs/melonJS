@@ -158,14 +158,14 @@
         api.KEYUP = "me.input.keyup";
 
         /**
-         * Channel Constant for mousemove or dragmove events on the game viewport <br>
-         * Data passed : {Object} the mousemove or dragmove event <br>
+         * Channel Constant for pointermove events on the viewport area <br>
+         * Data passed : {Object} the Event object <br>
          * @public
          * @constant
          * @type String
-         * @name me.event#MOUSEMOVE
+         * @name me.event#POINTERMOVE
          */
-        api.MOUSEMOVE = "me.game.pointermove";
+        api.POINTERMOVE = "me.event.pointermove";
 
         /**
          * Channel Constant for dragstart events on a Draggable entity <br>

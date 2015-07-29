@@ -8,7 +8,7 @@ game.ShapeObject = me.Entity.extend({
         // call the super constructor
         this._super(me.Entity, "init", [x, y, settings]);
         this.hover = false;
-        this.handler = me.event.subscribe("pointermove", this.mouseMove.bind(this));
+        this.handler = me.event.subscribe(me.event.POINTERMOVE, this.mouseMove.bind(this));
 
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
