@@ -17,8 +17,9 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new game.Poly(350, 100, {width: 200, height: 200, sprite:"icecream3"}), 1);
         
         // physic-body-editor
-        me.game.world.addChild(new game.Poly2(375, 425, {width: 300, height: 300, sprite:"test02"}), 1);
-        me.game.world.addChild(new game.Poly2(650, 550, {width: 256, height: 256, sprite:"test01"}), 1);
-        me.game.world.addChild(new game.Poly2(650, 250, {width: 256, height: 256, sprite:"test03"}), 1);
+        me.game.world.addChild(new game.Poly2(540, 50, {width: 256, height: 256, sprite:"test03"}), 1);
+        me.game.world.addChild(new game.Poly2(200, 275, {width: 300, height: 300, sprite:"test02"}), 1);
+        me.game.world.addChild(new game.Poly2(526, 325, {width: 256, height: 256, sprite:"test01"}), 1);
+        
     }
 });

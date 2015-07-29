@@ -228,7 +228,7 @@
                     for (var s = 0; s < data[i].shape.length; s += 2) {
                         points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
                     }
-                    this.addShape(new me.Polygon(0, 0, points));
+                    this.addShape(new me.Polygon(0, 0, points), true);
                 }
             } else {
                 // Physic Body Editor Format (http://www.aurelienribon.com/blog/projects/physics-body-editor/)
@@ -243,9 +243,9 @@
                     throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
-                // the shape origin point
+                // shapes origin point
                 // top-left origin in the editor is (0,1)
-                var origin = new me.Vector2d(data.origin.x, 1.0 - data.origin.y).scale(scale);
+                this.pos.set(data.origin.x, 1.0 - data.origin.y).scale(scale);
 
                 var self = this;
                 // parse all polygons
@@ -253,9 +253,9 @@
                     var points = [];
                     poly.forEach(function (point) {
                         // top-left origin in the editor is (0,1)
-                        points.push(new me.Vector2d(point.x, 1.0 - point.y).scale(scale).sub(origin));
+                        points.push(new me.Vector2d(point.x, 1.0 - point.y).scale(scale));
                     });
-                    self.addShape(new me.Polygon(0, 0, points));
+                    self.addShape(new me.Polygon(0, 0, points), true);
                 });
                 // parse all circles
                 data.circles.forEach(function (circle) {
@@ -264,7 +264,7 @@
                         (1.0 - circle.cy) * scale,
                         circle.r * 2 * scale,
                         circle.r * 2 * scale
-                    ).translate(-origin.x, -origin.y));
+                    ), true);
                 });
             }
 
