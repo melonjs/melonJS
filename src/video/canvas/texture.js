@@ -279,8 +279,7 @@
                     {
                         image: this.getTexture(),
                         framewidth: region.width,
-                        frameheight: region.height,
-                        origin: region.origin
+                        frameheight: region.height
                     }
                 );
                 // set the sprite offset within the texture
