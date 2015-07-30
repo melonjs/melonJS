@@ -19,11 +19,12 @@
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @example
-     * // standalone image
+     * // standalone image, with anchor in the center
      * var animationSheet = new me.AnimationSheet(0, 0, {
      *     image : "animationsheet",
      *     framewidth : 64,
-     *     frameheight : 64
+     *     frameheight : 64,
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
      * });
      */
     me.AnimationSheet = me.Sprite.extend(
@@ -261,6 +262,10 @@
             this.width = frame.width;
             this.height = frame.height;
             this._sourceAngle = frame.angle;
+            this.hasTextureAnchorPoint = frame.hasTextureAnchorPoint;
+            if (frame.hasTextureAnchorPoint) {
+                this.anchorPoint = frame.anchorPoint;
+            }
         },
 
         /**
