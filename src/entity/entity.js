@@ -276,26 +276,19 @@
         draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
-                var x = 0, y = 0;
+                var x = 0.5 + this.pos.x + this.body.pos.x ,
+                    y = 0.5 + this.pos.y + this.body.pos.y;
                 if (this.renderable.hasTextureAnchorPoint) {
                     // in this case, the entity's anchor point is in relation to the body
                     // draw the renderable's anchorPoint at the Entity's anchor point
-                    x = ~~(0.5 + this.pos.x + this.body.pos.x + (
-                        (this.anchorPoint.x * this.body.width) - (this.renderable.anchorPoint.x * this.renderable.width)
-                    ));
-                    y = ~~(0.5 + this.pos.y + this.body.pos.y + (
-                        (this.anchorPoint.y * this.body.height) - (this.renderable.anchorPoint.y * this.renderable.height)
-                    ));
+                    x = ~~( x + (this.anchorPoint.x * this.body.width) - (this.renderable.anchorPoint.x * this.renderable.width));
+                    y = ~~( y + (this.anchorPoint.y * this.body.height) - (this.renderable.anchorPoint.y * this.renderable.height));
                 }
                 else {
                     // translate the renderable position (relative to the entity)
                     // and keeps it in the entity defined bounds
-                    x = ~~(0.5 + this.pos.x + this.body.pos.x + (
-                        this.anchorPoint.x * (this.body.width - this.renderable.width)
-                    ));
-                    y = ~~(0.5 + this.pos.y + this.body.pos.y + (
-                        this.anchorPoint.y * (this.body.height - this.renderable.height)
-                    ));
+                    x = ~~( x + (this.anchorPoint.x * (this.body.width - this.renderable.width)));
+                    y = ~~( y + (this.anchorPoint.y * (this.body.height - this.renderable.height)));
                 }
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);

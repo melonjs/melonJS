@@ -151,7 +151,6 @@
                     atlas[frame.filename] = {
                         name         : name, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
-                        hasTextureAnchorPoint : hasTextureAnchorPoint,
                         anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
                         width        : s.w,
                         height       : s.h,
@@ -204,7 +203,6 @@
                         margin + (spacing + data.framewidth) * (frame % spritecount.x),
                         margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                     ),
-                    hasTextureAnchorPoint : (!!data.anchorPoint),
                     anchorPoint: (data.anchorPoint || null),
                     width: data.framewidth,
                     height: data.frameheight,

@@ -262,8 +262,8 @@
             this.width = frame.width;
             this.height = frame.height;
             this._sourceAngle = frame.angle;
-            this.hasTextureAnchorPoint = frame.hasTextureAnchorPoint;
-            if (frame.hasTextureAnchorPoint) {
+            this.hasTextureAnchorPoint = (!!frame.anchorPoint);
+            if (this.hasTextureAnchorPoint) {
                 this.anchorPoint = frame.anchorPoint;
             }
         },
