@@ -24,6 +24,14 @@
 
             this.pos = new me.Vector2d();
 
+            /**
+             * Properties for configuring the position of 
+             * the geometry bounding box if needed.
+             * @ignore
+             */
+            this._leftOffset = 0;
+            this._topOffset = 0;
+            
             // pre-allocate the vector array
             this.points = [
                 new me.Vector2d(), new me.Vector2d(),
@@ -247,7 +255,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "left", {
         get : function () {
-            return this.pos.x;
+            return this.pos.x + (this._leftOffset || 0);
         },
         configurable : true
     });
@@ -262,7 +270,7 @@
     Object.defineProperty(me.Rect.prototype, "right", {
         get : function () {
             var w = this._width;
-            return (this.pos.x + w) || w;
+            return (this.pos.x + (this._leftOffset || 0) + w) || w;
         },
         configurable : true
     });
@@ -276,7 +284,7 @@
      */
     Object.defineProperty(me.Rect.prototype, "top", {
         get : function () {
-            return this.pos.y;
+            return this.pos.y + (this._topOffset || 0);
         },
         configurable : true
     });
@@ -291,7 +299,7 @@
     Object.defineProperty(me.Rect.prototype, "bottom", {
         get : function () {
             var h = this._height;
-            return (this.pos.y + h) || h;
+            return (this.pos.y + (this._topOffset || 0) + h) || h;
         },
         configurable : true
     });

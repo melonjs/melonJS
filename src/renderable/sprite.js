@@ -262,12 +262,19 @@
             var w = this.width, h = this.height;
             var angle = this.angle + this._sourceAngle;
 
+            // save context
+            renderer.save();
+            
+            // calculate pixel pos of the anchor point
+            var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
+            renderer.translate(-ax, -ay);
+            
+            // adjust geometry box position based on anchor point offset
+            this._leftOffset = xpos - ax;
+            this._topOffset = ypos - ay;
+            
             if ((this.scaleFlag) || (angle !== 0)) {
-                // save context
-                renderer.save();
 
-                // calculate pixel pos of the anchor point
-                var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
                 // translate to the defined anchor point
                 renderer.translate(xpos + ax, ypos + ay);
                 // scale
@@ -301,10 +308,9 @@
                 w, h                            // dw,dh
             );
 
-            if ((this.scaleFlag) || (angle !== 0)) {
-                // restore context
-                renderer.restore();
-            }
+            // restore context
+            renderer.restore();
+                
             // restore global alpha
             renderer.setGlobalAlpha(alpha);
         },

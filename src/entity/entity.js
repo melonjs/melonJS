@@ -40,7 +40,19 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
-
+            
+            /**
+             * If true, the entity's renderable object is drawn<br>
+             * relative to the entity's defined bounds. <br>
+             * This is the old positioning behavior that ignores<br>
+             * the renderable's anchorPoint.
+             * @public
+             * @type Boolean
+             * @name drawRenderableInBounds
+             * @memberOf me.Entity
+             */
+            this.drawRenderableInBounds = false;
+            
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
@@ -276,19 +288,21 @@
         draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
-                var x = 0.5 + this.pos.x + this.body.pos.x ,
+                var x = 0.5 + this.pos.x + this.body.pos.x,
                     y = 0.5 + this.pos.y + this.body.pos.y;
-                if (this.renderable.hasTextureAnchorPoint) {
-                    // in this case, the entity's anchor point is in relation to the body
-                    // draw the renderable's anchorPoint at the Entity's anchor point
-                    x = ~~( x + (this.anchorPoint.x * this.body.width) - (this.renderable.anchorPoint.x * this.renderable.width));
-                    y = ~~( y + (this.anchorPoint.y * this.body.height) - (this.renderable.anchorPoint.y * this.renderable.height));
-                }
-                else {
+                if (this.drawRenderableInBounds) {
+                    // Old positioning method:
                     // translate the renderable position (relative to the entity)
                     // and keeps it in the entity defined bounds
-                    x = ~~( x + (this.anchorPoint.x * (this.body.width - this.renderable.width)));
-                    y = ~~( y + (this.anchorPoint.y * (this.body.height - this.renderable.height)));
+                    x = ~~( x + (this.anchorPoint.x * (this.body.width - this.renderable.width))) + (this.renderable.anchorPoint.x * this.renderable.width);
+                    y = ~~( y + (this.anchorPoint.y * (this.body.height - this.renderable.height))) + (this.renderable.anchorPoint.y * this.renderable.height);
+                }
+                else {
+                    // New positioning method:
+                    // draw the renderable's anchorPoint at the entity's anchor point
+                    // the entity's anchor point is a scale from body position to body width/height
+                    x = ~~( x + (this.anchorPoint.x * this.body.width));
+                    y = ~~( y + (this.anchorPoint.y * this.body.height));
                 }
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
