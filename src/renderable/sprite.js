@@ -269,10 +269,6 @@
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
             renderer.translate(-ax, -ay);
             
-            // adjust geometry box position based on anchor point offset
-            this._leftOffset = xpos - ax;
-            this._topOffset = ypos - ay;
-            
             if ((this.scaleFlag) || (angle !== 0)) {
 
                 // translate to the defined anchor point
