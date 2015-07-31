@@ -144,8 +144,8 @@
                     // Pixel-based offset origin from the top-left of the source frame
                     var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
                     if (hasTextureAnchorPoint) {
-                        originX = (frame.sourceSize.w * frame.pivot.x) - frame.spriteSourceSize.x;
-                        originY = (frame.sourceSize.h * frame.pivot.y) - frame.spriteSourceSize.y;
+                        originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
+                        originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
                     }
                     
                     atlas[frame.filename] = {
