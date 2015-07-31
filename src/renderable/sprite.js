@@ -273,12 +273,12 @@
 
                 // translate to the defined anchor point
                 renderer.translate(xpos + ax, ypos + ay);
+                if (angle !== 0) {
+                    renderer.rotate(angle);
+                }
                 // scale
                 if (this.scaleFlag) {
                     renderer.scale(this._scale.x, this._scale.y);
-                }
-                if (angle !== 0) {
-                    renderer.rotate(angle);
                 }
 
                 if (this._sourceAngle !== 0) {
