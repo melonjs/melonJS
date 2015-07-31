@@ -11,7 +11,6 @@
  * Note: Make sure this plugin runs before the debugPanel plugin.
  */
 
-console.log('asdfasfsfs');
 (function() {
     
     me.plugin = me.plugin || {};
