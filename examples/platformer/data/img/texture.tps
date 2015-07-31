@@ -6,7 +6,7 @@
         <key>texturePackerVersion</key>
         <string>3.9.2</string>
         <key>fileName</key>
-        <string>/media/matt/15bfbf1f-0592-4aa2-a931-3743b93563c81/www/OfPhantasmicDescent/melonJS/examples/platformer/data/img/texture.tps</string>
+        <string></string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
