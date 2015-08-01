@@ -19,7 +19,7 @@
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
-     * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx} object
+     * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
      * @class
      * @extends Object
      * @memberOf me.CanvasRenderer
@@ -35,9 +35,9 @@
      *     me.loader.getImage("texture")
      * );
      *
-     * // create a texture atlas for a spritesheet
+     * // create a texture atlas for a spritesheet, with (optional) an anchorPoint in the center of each frame
      * texture = new me.video.renderer.Texture(
-     *     { framewidth : 32, frameheight : 32 },
+     *     { framewidth : 32, frameheight : 32, anchorPoint : new me.Vector2d(0.5, 0.5) },
      *     me.loader.getImage("spritesheet")
      * );
      */
@@ -140,12 +140,21 @@
                     // Source coordinates
                     var s = frame.frame;
 
+                    var originX, originY;
+                    // Pixel-based offset origin from the top-left of the source frame
+                    var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
+                    if (hasTextureAnchorPoint) {
+                        originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
+                        originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
+                    }
+                    
                     atlas[frame.filename] = {
-                        name    : name, // frame name
-                        offset  : new me.Vector2d(s.x, s.y),
-                        width   : s.w,
-                        height  : s.h,
-                        angle   : (frame.rotated === true) ? nhPI : 0
+                        name         : name, // frame name
+                        offset       : new me.Vector2d(s.x, s.y),
+                        anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
+                        width        : s.w,
+                        height       : s.h,
+                        angle        : (frame.rotated === true) ? nhPI : 0
                     };
                 }
             });
@@ -194,6 +203,7 @@
                         margin + (spacing + data.framewidth) * (frame % spritecount.x),
                         margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                     ),
+                    anchorPoint: (data.anchorPoint || null),
                     width: data.framewidth,
                     height: data.frameheight,
                     angle: 0

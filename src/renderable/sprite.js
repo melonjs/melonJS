@@ -262,20 +262,23 @@
             var w = this.width, h = this.height;
             var angle = this.angle + this._sourceAngle;
 
+            // save context
+            renderer.save();
+            
+            // calculate pixel pos of the anchor point
+            var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
+            renderer.translate(-ax, -ay);
+            
             if ((this.scaleFlag) || (angle !== 0)) {
-                // save context
-                renderer.save();
 
-                // calculate pixel pos of the anchor point
-                var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
                 // translate to the defined anchor point
                 renderer.translate(xpos + ax, ypos + ay);
+                if (angle !== 0) {
+                    renderer.rotate(angle);
+                }
                 // scale
                 if (this.scaleFlag) {
                     renderer.scale(this._scale.x, this._scale.y);
-                }
-                if (angle !== 0) {
-                    renderer.rotate(angle);
                 }
 
                 if (this._sourceAngle !== 0) {
@@ -301,10 +304,9 @@
                 w, h                            // dw,dh
             );
 
-            if ((this.scaleFlag) || (angle !== 0)) {
-                // restore context
-                renderer.restore();
-            }
+            // restore context
+            renderer.restore();
+                
             // restore global alpha
             renderer.setGlobalAlpha(alpha);
         },

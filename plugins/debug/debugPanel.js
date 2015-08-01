@@ -195,8 +195,12 @@
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
+                    var x = -this.anchorPoint.x * this.width;
+                    var y = -this.anchorPoint.y * this.height;
+                    
                     renderer.save();
                     renderer.setColor("green");
+                    renderer.translate(x, y);
                     renderer.strokeRect(this.left, this.top, this.width, this.height);
                     _this.counters.inc("sprites");
                     renderer.restore();
