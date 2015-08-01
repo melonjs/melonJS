@@ -188,14 +188,14 @@
          * @ignore
          */
         function _renderFrame(time) {
-            // update all game objects
-            me.game.update(time);
-            // render all game objects
-            me.game.draw();
             // schedule the next frame update
             if (_animFrameId !== -1) {
                 _animFrameId = window.requestAnimationFrame(_renderFrame);
             }
+            // update all game objects
+            me.game.update(time);
+            // render all game objects
+            me.game.draw();
         }
 
         /**

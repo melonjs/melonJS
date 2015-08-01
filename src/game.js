@@ -27,6 +27,9 @@
 
         // to know when we have to refresh the display
         var isDirty = true;
+        
+        // always refresh the display when updatesPerSecond are lower than fps
+        var isAlwaysDirty = false;
 
         // frame counter for frameSkipping
         // reset the frame counter
@@ -216,9 +219,13 @@
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
             
-            // set step size based in minimum fps
-            stepSize = (1000 / me.sys.fps);
+            // set step size based on the updatesPerSecond
+            stepSize = (1000 / Math.min(me.sys.updatesPerSecond, me.sys.fps));
             accumulator = 0.0;
+            
+            // display should always re-draw when update speed doesn't match fps
+            // this means the user intends to write position prediction drawing logic
+            isAlwaysDirty = (me.sys.fps > me.sys.updatesPerSecond);
         };
 
         /**
@@ -282,6 +289,7 @@
                     // update the camera/viewport
                     isDirty = api.viewport.update(updateDelta) || isDirty;
                     
+                    me.timer.lastUpdate = time;
                     accumulator -= stepSize;
                     if (me.sys.interpolation) {
                         break;
@@ -299,7 +307,7 @@
          * @function
          */
         api.draw = function () {
-            if (isDirty) {
+            if (isDirty || isAlwaysDirty) {
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)
                 var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;
