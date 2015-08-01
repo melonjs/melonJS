@@ -6,6 +6,7 @@ Version History
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
+* Entity : renderables are now positioned relativily to the coordinates it's drawn at (@Giwayume)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
 * Geometry : removed `reverse` method from Vector classes; use `negateSelf` instead
@@ -17,6 +18,9 @@ Version History
 * Input : fixed last standing mouse event related object or constant names : `me.input.mouse` to `me.input.pointer`, `me.event.MOVEMOVE` to `me.event.POINTERMOVE`
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Renderable : renderables are now using a 3d Vector for position, and using the z axis for layer ordering.
+* Renderable : fixed an distorition issue when scaling and rotating sprites (@Giwayume)
+* Renderable : fixed frame position when using cropping in TexturePacker (@Giwayume)
+* Renderable : `anchorPoints` now defines the renderable position, scaling and rotation default origin point (@Giwayume)
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
