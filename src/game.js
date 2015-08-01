@@ -32,6 +32,12 @@
         // reset the frame counter
         var frameCounter = 0;
         var frameRate = 1;
+        
+        // time accumulation for multiple update calls
+        var accumulator = 0.0;
+        
+        // min update step size
+        var stepSize = 1000 / 60;
 
         // reference to the renderer object
         var renderer = null;
@@ -209,6 +215,10 @@
             // reset the frame counter
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
+            
+            // set step size based in minimum fps
+            stepSize = (1000 / me.sys.fps);
+            accumulator = 0.0;
         };
 
         /**
@@ -246,6 +256,7 @@
          * @param {Number} time current timestamp as provided by the RAF callback
          */
         api.update = function (time) {
+            var updateDelta;
             // handle frame skipping if required
             if ((++frameCounter % frameRate) === 0) {
                 // reset the frame counter
@@ -253,18 +264,29 @@
 
                 // update the timer
                 me.timer.update(time);
+                
+                accumulator += me.timer.getDelta();
+                
+                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
+    
+                while (accumulator >= stepSize || me.sys.interpolation) {
+                    // clear the quadtree
+                    me.collision.quadTree.clear();
 
-                // clear the quadtree
-                me.collision.quadTree.clear();
+                    // insert the world container (children) into the quadtree
+                    me.collision.quadTree.insertContainer(api.world);
 
-                // insert the world container (children) into the quadtree
-                me.collision.quadTree.insertContainer(api.world);
+                    // update all objects (and pass the elapsed time since last frame)
+                    isDirty = api.world.update(updateDelta) || isDirty;
 
-                // update all objects (and pass the elapsed time since last frame)
-                isDirty = api.world.update(me.timer.getDelta()) || isDirty;
-
-                // update the camera/viewport
-                isDirty = api.viewport.update(me.timer.getDelta()) || isDirty;
+                    // update the camera/viewport
+                    isDirty = api.viewport.update(updateDelta) || isDirty;
+                    
+                    accumulator -= stepSize;
+                    if (me.sys.interpolation) {
+                        break;
+                    }
+                }
             }
         };
 
