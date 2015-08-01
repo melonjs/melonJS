@@ -6,7 +6,7 @@ Version History
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
-* Entity : renderables are now positioned relativily to the coordinates it's drawn at (@Giwayume)
+* Entity : new positioning method, where the renderable is positioned according to its anchor is and the Entity's body anchor (@Giwayume)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
 * Geometry : removed `reverse` method from Vector classes; use `negateSelf` instead
@@ -24,6 +24,7 @@ Version History
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
+* Texture : added support for frame-by-frame pivot points (@Giwayume)
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
 * TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
