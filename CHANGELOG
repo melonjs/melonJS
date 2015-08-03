@@ -5,6 +5,7 @@ Version History
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
+* Core : replaced the proprietary Number.sign function by a safe ES6 Math.sign Polyfill equivalent
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
 * Entity : new positioning method, where the renderable is positioned according to its anchor is and the Entity's body anchor (@Giwayume)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"

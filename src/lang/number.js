@@ -122,16 +122,6 @@ Number.prototype.toHex = function () {
 };
 
 /**
- * Returns a value indicating the sign of a number<br>
- * @memberof! external:Number#
- * @alias sign
- * @return {number} sign of a the number
- */
-Number.prototype.sign = function () {
-    return this < 0 ? -1 : (this > 0 ? 1 : 0);
-};
-
-/**
  * Converts an angle in degrees to an angle in radians
  * @memberof! external:Number#
  * @alias degToRad

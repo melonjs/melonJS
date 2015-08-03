@@ -40,5 +40,17 @@ describe("ES5/ES6 Shim", function () {
         });
 
     });
+    
+     describe("math functions :", function () {
+        it("123 is positive", function () {
+            expect(Math.sign(123)).toEqual(1);
+        });
+        it("-123 is negative", function () {
+            expect(Math.sign(-123)).toEqual(-1);
+        });
+        it("0 is 0", function () {
+            expect(Math.sign(0)).toEqual(0);
+        });
+    });
 
 });

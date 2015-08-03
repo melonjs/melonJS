@@ -4,6 +4,7 @@
   "src/lang/function.js",
   "src/lang/object.js",
   "src/lang/error.js",
+  "src/lang/math.js",
   "src/lang/number.js",
   "src/lang/string.js",
   "src/lang/array.js",
