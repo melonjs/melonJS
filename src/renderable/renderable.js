@@ -268,7 +268,7 @@
          * @memberOf me.Renderable
          * @function
          * @protected
-         * @param {me.CanvasRenderer|me.WebGLRenderer} a renderer object
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         draw : function (/*renderer*/) {
             // empty one !

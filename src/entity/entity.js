@@ -271,7 +271,7 @@
          * @memberOf me.Entity
          * @function
          * @protected
-         * @param {Context2d} context 2d Context on which draw our object
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         draw : function (renderer) {
             // draw the sprite if defined

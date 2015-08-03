@@ -241,7 +241,7 @@
          * @memberOf me.Sprite
          * @function
          * @protected
-         * @param {me.CanvasRenderer|me.WebGLRenderer} a renderer object
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         draw : function (renderer) {
             // do nothing if we are flickering
