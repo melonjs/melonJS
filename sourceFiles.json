@@ -56,7 +56,6 @@
   "src/utils/utils.js",
   "src/utils/color.js",
   "src/system/save.js",
-  "src/level/TMXConstants.js",
   "src/level/TMXUtils.js",
   "src/level/TMXObjectGroup.js",
   "src/level/TMXTile.js",

@@ -9,6 +9,9 @@
  */
 (function () {
 
+    // constant to identify the collision object layer
+    var COLLISION_GROUP = "collision";
+
     /**
      * set a compatible renderer object
      * for the specified map
@@ -390,7 +393,7 @@
                 var group = this.objectGroups[g];
 
                 // check if this is the collision shape group
-                isCollisionGroup = group.name.toLowerCase().includes(me.TMXConstants.COLLISION_GROUP);
+                isCollisionGroup = group.name.toLowerCase().includes(COLLISION_GROUP);
 
                 if (flatten === false) {
                     // create a new container

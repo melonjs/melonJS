@@ -7,7 +7,13 @@
  * http://www.mapeditor.org/
  *
  */
-(function (TMXConstants) {
+(function () {
+
+    // bitmask constants to check for flipped & rotated tiles
+    var TMX_FLIP_H          = 0x80000000,
+        TMX_FLIP_V          = 0x40000000,
+        TMX_FLIP_AD         = 0x20000000,
+        TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
 
     /**
      * a basic tile object
@@ -56,21 +62,21 @@
              * @type Boolean
              * @name me.Tile#flipX
              */
-            this.flippedX  = (this.tileId & TMXConstants.TMX_FLIP_H) !== 0;
+            this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
             /**
              * True if the tile is flipped vertically<br>
              * @public
              * @type Boolean
              * @name me.Tile#flippedY
              */
-            this.flippedY  = (this.tileId & TMXConstants.TMX_FLIP_V) !== 0;
+            this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
             /**
              * True if the tile is flipped anti-diagonally<br>
              * @public
              * @type Boolean
              * @name me.Tile#flippedAD
              */
-            this.flippedAD = (this.tileId & TMXConstants.TMX_FLIP_AD) !== 0;
+            this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
 
             /**
              * Global flag that indicates if the tile is flipped<br>
@@ -85,7 +91,7 @@
             }
 
             // clear out the flags and set the tileId
-            this.tileId &= TMXConstants.TMX_CLEAR_BIT_MASK;
+            this.tileId &= TMX_CLEAR_BIT_MASK;
         },
 
         /**
@@ -183,4 +189,4 @@
             return renderable;
         },
     });
-})(me.TMXConstants);
+})();

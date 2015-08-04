@@ -554,7 +554,7 @@
         setTile : function (x, y, tileId) {
             if (!this.tileset.contains(tileId)) {
                 // look for the corresponding tileset
-                this.tileset = this.tilesets.getTilesetByGid(tileId & me.TMXConstants.TMX_CLEAR_BIT_MASK);
+                this.tileset = this.tilesets.getTilesetByGid(tileId);
             }
             var tile = this.layerData[x][y] = new me.Tile(x, y, tileId, this.tileset);
             // draw the corresponding tile

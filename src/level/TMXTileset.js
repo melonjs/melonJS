@@ -9,6 +9,9 @@
  */
 (function () {
 
+    // bitmask constants to check for flipped & rotated tiles
+    var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+
     /**
      * a TMX Tile Set Object
      * @class
@@ -248,6 +251,10 @@
          */
         getTilesetByGid : function (gid) {
             var invalidRange = -1;
+
+            // clear the gid of all flip/rotation flags
+            gid &= TMX_CLEAR_BIT_MASK;
+            
             // cycle through all tilesets
             for (var i = 0, len = this.tilesets.length; i < len; i++) {
                 // return the corresponding tileset if matching

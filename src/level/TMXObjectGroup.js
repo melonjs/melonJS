@@ -316,7 +316,7 @@
          */
         setTile : function (tilesets) {
             // get the corresponding tileset
-            var tileset = tilesets.getTilesetByGid(this.gid & me.TMXConstants.TMX_CLEAR_BIT_MASK);
+            var tileset = tilesets.getTilesetByGid(this.gid);
 
             // set width and height equal to tile size
             this.width = this.framewidth = tileset.tilewidth;
