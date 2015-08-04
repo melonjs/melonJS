@@ -38,6 +38,7 @@
         
         // time accumulation for multiple update calls
         var accumulator = 0.0;
+        var accumulatorMax = 0.0;
         
         // min update step size
         var stepSize = 1000 / 60;
@@ -222,6 +223,7 @@
             // set step size based on the updatesPerSecond
             stepSize = (1000 / me.sys.updatesPerSecond);
             accumulator = 0.0;
+            accumulatorMax = stepSize * 4;
             
             // display should always re-draw when update speed doesn't match fps
             // this means the user intends to write position prediction drawing logic
@@ -273,6 +275,7 @@
                 me.timer.update(time);
                 
                 accumulator += me.timer.getDelta();
+                accumulator = Math.min(accumulator, accumulatorMax);
                 
                 updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
     
