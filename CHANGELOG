@@ -22,6 +22,7 @@ Version History
 * Renderable : fixed an distorition issue when scaling and rotating sprites (@Giwayume)
 * Renderable : fixed frame position when using cropping in TexturePacker (@Giwayume)
 * Renderable : `anchorPoints` now defines the renderable position, scaling and rotation default origin point (@Giwayume)
+* Renderable : better animation definition, allowing to set the animation delay on a per-frame basis
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
