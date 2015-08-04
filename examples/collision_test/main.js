@@ -110,10 +110,10 @@ var Smilie = me.Entity.extend({
 
         this.pos.sub(response.overlapN);
         if (response.overlapN.x !== 0) {
-            this.body.vel.x = (-4).randomFloat(4) * -this.body.vel.x.sign();
+            this.body.vel.x = (-4).randomFloat(4) * -Math.sign(this.body.vel.x);
         }
         if (response.overlapN.y !== 0) {
-            this.body.vel.y = (-4).randomFloat(4) * -this.body.vel.y.sign();
+            this.body.vel.y = (-4).randomFloat(4) * -Math.sign(this.body.vel.y);
         }
 
         return false;
