@@ -32,6 +32,7 @@ Version History
 * TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
 * TMX : internally normalizes XML into the same JSON format supported by Tiled; cleans up many compatibility functions and removes several fallback cases
 * TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
+* TMX : added support for "per animation frame delay" to Tiled Objects (when using tileset animations)
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
