@@ -220,7 +220,7 @@
             frameRate = ~~(0.5 + 60 / me.sys.fps);
             
             // set step size based on the updatesPerSecond
-            stepSize = (1000 / Math.min(me.sys.updatesPerSecond, me.sys.fps));
+            stepSize = (1000 / me.sys.updatesPerSecond);
             accumulator = 0.0;
             
             // display should always re-draw when update speed doesn't match fps
