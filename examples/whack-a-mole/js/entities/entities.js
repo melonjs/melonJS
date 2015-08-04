@@ -18,6 +18,9 @@ game.MoleEntity = me.AnimationSheet.extend(
         // set default one
         this.setCurrentAnimation("idle");
 
+        // use top left coordinates for positioning
+        this.anchorPoint.set(0, 0);
+
         // means fully hidden in the hole
         this.isVisible = false;
         this.isOut = false;

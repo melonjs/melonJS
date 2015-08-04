@@ -4,12 +4,12 @@ game.PlayScreen = me.ScreenObject.extend({
      */
     onResetEvent: function() {
 
-          me.game.reset();
+        me.game.reset();
 
         // add the background & foreground
         // add the foreground
         var background_sprite10 = new me.Sprite (0, 0,   {image: me.loader.getImage("background")});
-        var grass_upper_1        = new me.Sprite (0, 0,   {image: me.loader.getImage("grass_upper")});
+        var grass_upper_1       = new me.Sprite (0, 0,   {image: me.loader.getImage("grass_upper")});
 
         var background_sprite11 = new me.Sprite (0, 127, {image: me.loader.getImage("background")});
         var grass_lower_1       = new me.Sprite (0, 127, {image: me.loader.getImage("grass_lower")});
@@ -25,6 +25,26 @@ game.PlayScreen = me.ScreenObject.extend({
 
         var background_sprite31 = new me.Sprite (0, 639, {image: me.loader.getImage("background")});
         var grass_lower_3       = new me.Sprite (0, 639, {image: me.loader.getImage("grass_lower")});
+
+
+        // use top left coordinates for positioning
+        background_sprite10.anchorPoint.set(0, 0);
+        grass_upper_1.anchorPoint.set(0, 0);
+
+        background_sprite11.anchorPoint.set(0, 0);
+        grass_lower_1.anchorPoint.set(0, 0);
+
+        background_sprite20.anchorPoint.set(0, 0);
+        grass_upper_2.anchorPoint.set(0, 0);
+
+        background_sprite21.anchorPoint.set(0, 0);
+        grass_lower_2.anchorPoint.set(0, 0);
+
+        background_sprite30.anchorPoint.set(0, 0);
+        grass_upper_3.anchorPoint.set(0, 0);
+
+        background_sprite31.anchorPoint.set(0, 0);
+        grass_lower_3.anchorPoint.set(0, 0);
 
         // instantiate teh mole Manager
         var moleManager = new game.MoleManager(0, 0);
