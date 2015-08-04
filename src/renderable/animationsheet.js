@@ -117,6 +117,8 @@
          * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
          * // can do this with atlas values as well:
          * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
+         * // define an dying animation that stop on the last frame
+         * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
          */
         addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {
