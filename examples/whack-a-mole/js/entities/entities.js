@@ -28,9 +28,6 @@ game.MoleEntity = me.AnimationSheet.extend(
         // tween to display/hide the moles
         this.displayTween = null;
         this.hideTween = null;
-        
-        // anchorpoint defaults to center; set to top-left
-        this.anchorPoint.set(0,0);
 
         // register on mouse event
         me.input.registerPointerEvent("pointerdown", this, this.onMouseDown.bind(this));
