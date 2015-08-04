@@ -42,6 +42,7 @@
         
         // min update step size
         var stepSize = 1000 / 60;
+        var updateDelta = 0;
 
         // reference to the renderer object
         var renderer = null;
@@ -265,7 +266,6 @@
          * @param {Number} time current timestamp as provided by the RAF callback
          */
         api.update = function (time) {
-            var updateDelta;
             // handle frame skipping if required
             if ((++frameCounter % frameRate) === 0) {
                 // reset the frame counter
@@ -275,7 +275,7 @@
                 me.timer.update(time);
                 
                 accumulator += me.timer.getDelta();
-                accumulator = Math.min(accumulator, accumulatorMax);
+                accumulator = Math.min(accumulator, accumulatorMax/* Math.max(accumulator * ~~(stepSize / lastUpdateDelta), accumulator) */);
                 
                 updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
     
@@ -292,9 +292,11 @@
                     // update the camera/viewport
                     isDirty = api.viewport.update(updateDelta) || isDirty;
                     
-                    me.timer.lastUpdate = time;
+                    me.timer.lastUpdate = window.performance.now();
+                    
                     accumulator -= stepSize;
-                    if (me.sys.interpolation) {
+                    if (me.sys.interpolation /*|| me.timer.lastUpdate - updateStartTime > stepSize*/) {
+                        accumulator = 0;
                         break;
                     }
                 }

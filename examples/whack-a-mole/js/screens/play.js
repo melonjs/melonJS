@@ -9,22 +9,34 @@ game.PlayScreen = me.ScreenObject.extend({
         // add the background & foreground
         // add the foreground
         var background_sprite10 = new me.Sprite (0, 0,   {image: me.loader.getImage("background")});
+        background_sprite10.anchorPoint.set(0,0);
         var grass_upper_1        = new me.Sprite (0, 0,   {image: me.loader.getImage("grass_upper")});
+        grass_upper_1.anchorPoint.set(0,0);
 
         var background_sprite11 = new me.Sprite (0, 127, {image: me.loader.getImage("background")});
+        background_sprite11.anchorPoint.set(0,0);
         var grass_lower_1       = new me.Sprite (0, 127, {image: me.loader.getImage("grass_lower")});
-
+        grass_lower_1.anchorPoint.set(0,0);
+        
         var background_sprite20 = new me.Sprite (0, 255, {image: me.loader.getImage("background")});
+        background_sprite20.anchorPoint.set(0,0);
         var grass_upper_2       = new me.Sprite (0, 255, {image: me.loader.getImage("grass_upper")});
+        grass_upper_2.anchorPoint.set(0,0);
 
         var background_sprite21 = new me.Sprite (0, 383, {image: me.loader.getImage("background")});
+        background_sprite21.anchorPoint.set(0,0);
         var grass_lower_2       = new me.Sprite (0, 383, {image: me.loader.getImage("grass_lower")});
+        grass_lower_2.anchorPoint.set(0,0);
 
         var background_sprite30 = new me.Sprite (0, 511, {image: me.loader.getImage("background")});
+        background_sprite30.anchorPoint.set(0,0);
         var grass_upper_3       = new me.Sprite (0, 511, {image: me.loader.getImage("grass_upper")});
+        grass_upper_3.anchorPoint.set(0,0);
 
         var background_sprite31 = new me.Sprite (0, 639, {image: me.loader.getImage("background")});
+        background_sprite31.anchorPoint.set(0,0);
         var grass_lower_3       = new me.Sprite (0, 639, {image: me.loader.getImage("grass_lower")});
+        grass_lower_3.anchorPoint.set(0,0);
 
         // instantiate teh mole Manager
         var moleManager = new game.MoleManager(0, 0);
