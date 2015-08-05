@@ -555,8 +555,9 @@
          * return the pixel position corresponding of the specified tile
          * @ignore
          */
-        tileToPixelCoords : function (q, r) {
+        tileToPixelCoords : function (q, r, v) {
             var x, y;
+            var ret = v || new me.Vector2d();
             if (this.staggeraxis === "x") {
                 //flat top
                 x = q * this.columnwidth;
@@ -581,7 +582,7 @@
                     x = x + (this.columnwidth * (1 - (r & 1)));
                 }
             }
-            return new me.Vector2d(x, y);
+            return ret.set(x, y);
         },
 
         /**
