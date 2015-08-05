@@ -43,6 +43,7 @@
         // min update step size
         var stepSize = 1000 / 60;
         var updateDelta = 0;
+        var updateAverageDelta = 0;
 
         // reference to the renderer object
         var renderer = null;
@@ -266,6 +267,7 @@
          * @param {Number} time current timestamp as provided by the RAF callback
          */
         api.update = function (time) {
+            var lastUpdateStart = null;
             // handle frame skipping if required
             if ((++frameCounter % frameRate) === 0) {
                 // reset the frame counter
@@ -275,11 +277,13 @@
                 me.timer.update(time);
                 
                 accumulator += me.timer.getDelta();
-                accumulator = Math.min(accumulator, accumulatorMax/* Math.max(accumulator * ~~(stepSize / lastUpdateDelta), accumulator) */);
+                accumulator = Math.min(accumulator, accumulatorMax);
                 
-                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
+                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : Math.max(stepSize, updateAverageDelta);
     
                 while (accumulator >= stepSize || me.sys.interpolation) {
+                    lastUpdateStart = window.performance.now();
+                    
                     // clear the quadtree
                     me.collision.quadTree.clear();
 
@@ -293,9 +297,10 @@
                     isDirty = api.viewport.update(updateDelta) || isDirty;
                     
                     me.timer.lastUpdate = window.performance.now();
+                    updateAverageDelta = (updateAverageDelta * 2/3) + ( (me.timer.lastUpdate - lastUpdateStart) * 1/3 );
                     
-                    accumulator -= stepSize;
-                    if (me.sys.interpolation /*|| me.timer.lastUpdate - updateStartTime > stepSize*/) {
+                    accumulator -= updateDelta;
+                    if (me.sys.interpolation) {
                         accumulator = 0;
                         break;
                     }
