@@ -39,10 +39,12 @@
         // time accumulation for multiple update calls
         var accumulator = 0.0;
         var accumulatorMax = 0.0;
+        var accumulatorUpdateDelta = 0;
         
         // min update step size
         var stepSize = 1000 / 60;
         var updateDelta = 0;
+        var lastUpdateStart = null;
         var updateAverageDelta = 0;
 
         // reference to the renderer object
@@ -225,7 +227,7 @@
             // set step size based on the updatesPerSecond
             stepSize = (1000 / me.sys.updatesPerSecond);
             accumulator = 0.0;
-            accumulatorMax = stepSize * 4;
+            accumulatorMax = stepSize * 10;
             
             // display should always re-draw when update speed doesn't match fps
             // this means the user intends to write position prediction drawing logic
@@ -267,7 +269,6 @@
          * @param {Number} time current timestamp as provided by the RAF callback
          */
         api.update = function (time) {
-            var lastUpdateStart = null;
             // handle frame skipping if required
             if ((++frameCounter % frameRate) === 0) {
                 // reset the frame counter
@@ -279,9 +280,10 @@
                 accumulator += me.timer.getDelta();
                 accumulator = Math.min(accumulator, accumulatorMax);
                 
-                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : Math.max(stepSize, updateAverageDelta);
+                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
+                accumulatorUpdateDelta = (me.sys.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
     
-                while (accumulator >= stepSize || me.sys.interpolation) {
+                while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
                     lastUpdateStart = window.performance.now();
                     
                     // clear the quadtree
@@ -299,7 +301,7 @@
                     me.timer.lastUpdate = window.performance.now();
                     updateAverageDelta = (updateAverageDelta * 2/3) + ( (me.timer.lastUpdate - lastUpdateStart) * 1/3 );
                     
-                    accumulator -= updateDelta;
+                    accumulator -= accumulatorUpdateDelta;
                     if (me.sys.interpolation) {
                         accumulator = 0;
                         break;
