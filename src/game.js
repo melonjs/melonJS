@@ -299,7 +299,7 @@
                     isDirty = api.viewport.update(updateDelta) || isDirty;
                     
                     me.timer.lastUpdate = window.performance.now();
-                    updateAverageDelta = (updateAverageDelta * 2/3) + ( (me.timer.lastUpdate - lastUpdateStart) * 1/3 );
+                    updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
                     
                     accumulator -= accumulatorUpdateDelta;
                     if (me.sys.interpolation) {
