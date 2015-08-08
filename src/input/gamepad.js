@@ -160,8 +160,8 @@
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
-     * // map the lower action button on the first gamepad to the X key
-     * me.input.bindGamepad(0, me.input.GAMEPAD.ACTION_0, me.input.KEY.X);
+     * // map the lower face button on the first gamepad to the X key
+     * me.input.bindGamepad(0, me.input.GAMEPAD.FACE_1, me.input.KEY.X);
      */
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
@@ -190,7 +190,7 @@
      * @param {Number} index Gamepad index
      * @param {me.input.GAMEPAD} button
      * @example
-     * me.input.unbindGamepad(0, me.input.GAMEPAD.ACTION_0);
+     * me.input.unbindGamepad(0, me.input.GAMEPAD.FACE_1);
      */
     api.unbindGamepad = function (index, button) {
         if (!bindings[index]) {
