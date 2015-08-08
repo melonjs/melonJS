@@ -54,6 +54,7 @@
         var _onStartCallbackFired = false;
         var _onUpdateCallback = null;
         var _onCompleteCallback = null;
+        var _tweenTimeTracker = me.timer.lastUpdate;
 
 
         // Set all starting values present on the target object
@@ -304,12 +305,13 @@
 
         };
 
-        /** @ignore*/
+        /** @ignore */
         this.update = function ( dt ) {
 
             // the original Tween implementation expect
             // a timestamp and not a time delta
-            var time = me.timer.getTime();
+            _tweenTimeTracker = (me.timer.lastUpdate > _tweenTimeTracker) ? me.timer.lastUpdate : _tweenTimeTracker + dt;
+            var time = _tweenTimeTracker;
 
             var property;
 
