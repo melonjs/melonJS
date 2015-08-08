@@ -132,7 +132,7 @@
     };
 
     /**
-     * Associate a gamepad event to an action
+     * Associate a gamepad event to a keycode
      * @name bindGamepad
      * @memberOf me.input
      * @public
