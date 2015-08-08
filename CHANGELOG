@@ -7,6 +7,7 @@ Version History
 * Core : replaced String.contains by its ES6 equivalent (String.includes)
 * Core : replaced the proprietary Number.sign function by a safe ES6 Math.sign Polyfill equivalent
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
+* Core : added `me.sys.updatesPerSecond` to configure updating less often than drawing (@Giwayume)
 * Entity : new positioning method, where the renderable is positioned according to its anchor is and the Entity's body anchor (@Giwayume)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
@@ -18,15 +19,15 @@ Version History
 * LevelDirector : added an `options` argument to the loading method; for specifying a target container, callback, and whether to merge (flatten) object groups
 * Input : fixed last standing mouse event related object or constant names : `me.input.mouse` to `me.input.pointer`, `me.event.MOVEMOVE` to `me.event.POINTERMOVE`
 * Renderable : prevent position vector re-allocation when pooling renderable objects
-* Renderable : renderables are now using a 3d Vector for position, and using the z axis for layer ordering.
-* Renderable : fixed an distorition issue when scaling and rotating sprites (@Giwayume)
+* Renderable : renderables are now using a 3d Vector for position, using the z axis for layer ordering.
+* Renderable : fixed a distortion issue when scaling and rotating sprites (@Giwayume)
 * Renderable : fixed frame position when using cropping in TexturePacker (@Giwayume)
 * Renderable : `anchorPoints` now defines the renderable position, scaling and rotation default origin point (@Giwayume)
 * Renderable : better animation definition, allowing to set the animation delay on a per-frame basis
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
-* Texture : added support for frame-by-frame pivot points (@Giwayume)
+* Texture : added support for frame-by-frame pivot points in animations (@Giwayume)
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
 * TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
