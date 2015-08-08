@@ -19,22 +19,22 @@
         [
             "45e-28e-Xbox 360 Wired Controller",
             {
-                "axes" : [ 0, 1, 4, 2, 3, 5 ],
-                "buttons" : [ 12, 13, 14, 15, 9, 8, 10, 11, 4, 5, 16, 0, 1, 3, 4 ]
+                "axes" : [ 0, 1, 3, 4, 2, 5 ],
+                "buttons" : [ 11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10 ]
             }
         ],
         [
             "54c-268-PLAYSTATION(R)3 Controller",
             {
-                "axes" : [ 0, 1, 2, 3, 4, 5 ],
-                "buttons" : [ 8, 10, 11, 9, 12, 15, 13, 14, 6, 7, 4, 5, 3, 1, 0, 2, 16 ]
+                "axes" : [ 0, 1, 2, 3, -1, -1 ],
+                "buttons" : [ 14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16 ]
             }
         ],
         [
             "2836-1-OUYA Game Controller",
             {
-                "axes" : [ 0, -1, 1, -1, -1, 4, -1, 2, -1, 3, -1, 5 ],
-                "buttons" : [ -1, -1, -1, 0, 2, 3, 1, 4, 5, 10, 11, 12, 13, 14, 15, 6, 7 ]
+                "axes" : [ 0, 3, 7, 9, 5, 11 ],
+                "buttons" : [ 3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1 ]
             }
         ],
 
@@ -42,8 +42,8 @@
         [
             "OUYA Game Controller (Vendor: 2836 Product: 0001)",
             {
-                "axes" : [ 0, 1, 4, 2, 3, 5 ],
-                "buttons" : [ 0, 2, 3, 1, 4, 5, 10, 11, 12, 13, 14, 15, 6, 7 ]
+                "axes" : [ 0, 1, 3, 4, 2, 5 ],
+                "buttons" : [ 0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1 ]
             }
         ]
     ]);
@@ -56,26 +56,30 @@
         var gamepads = navigator.getGamepads();
         var e = {};
 
-        // Trigger bound keycodes
+        // Trigger button bindings
         Object.keys(bindings).forEach(function (index) {
             if (!gamepads[index]) {
                 return;
             }
 
-            gamepads[index].buttons.forEach(function (current, button) {
+            var mapping = gamepads[index].mapping;
+
+            Object.keys(bindings[index].buttons).forEach(function (button) {
+                var last = bindings[index].buttons[button];
+
                 // Remap buttons if necessary
-                if (gamepads[index].mapping !== "standard") {
-                    var mapping = remap.get(gamepads[index].id);
-                    if (mapping) {
-                        button = mapping.buttons[button];
+                if (mapping !== "standard") {
+                    var mapped = remap.get(gamepads[index].id);
+                    if (mapped) {
+                        button = mapped.buttons[button];
+                        if (button < 0) {
+                            return;
+                        }
                     }
                 }
 
                 // Get mapped button
-                var last = bindings[index][button];
-                if (!last) {
-                    return;
-                }
+                var current = gamepads[index].buttons[button];
 
                 // Edge detection
                 if (!last.pressed && current.pressed) {
@@ -171,11 +175,14 @@
 
         // Allocate bindings if not defined
         if (!bindings[index]) {
-            bindings[index] = {};
+            bindings[index] = {
+                "axes" : {},
+                "buttons" : {}
+            };
         }
 
         // Map the gamepad button to the keycode
-        bindings[index][button] = {
+        bindings[index].buttons[button] = {
             "keyCode" : keyCode,
             "pressed" : false
         };
@@ -197,6 +204,6 @@
             throw new me.Error("no bindings for gamepad " + index);
         }
 
-        bindings[index][button] = {};
+        bindings[index].buttons[button] = {};
     };
 })();
