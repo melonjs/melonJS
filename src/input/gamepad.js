@@ -96,11 +96,19 @@
 
     /**
      * Standard gamepad mapping information<br>
+     * Axes:<br>
+     * <ul>
+     *   <li>Left control stick: <code>LX</code>, <code>LY</code></li>
+     *   <li>Right control stick: <code>RX</code>, <code>RY</code></li>
+     *   <li>Left trigger: <code>LT</code></li>
+     *   <li>Right trigger: <code>RT</code></li>
+     * </ul>
+     * Buttons:<br>
      * <ul>
      *   <li>Face buttons: <code>FACE_1</code>, <code>FACE_2</code>, <code>FACE_3</code>, <code>FACE_4</code></li>
      *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
      *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
-     *   <li>Analog stick (clicks): <code>L_STICK</code>, <code>R_STICK</code></li>
+     *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
      *   <li>Others: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
      * </ul>
      * @public
@@ -110,6 +118,15 @@
      * @see https://w3c.github.io/gamepad/#remapping
      */
     api.GAMEPAD = {
+        // Axes
+        "LX"        : 0,
+        "LY"        : 1,
+        "RX"        : 2,
+        "RY"        : 3,
+        "LT"        : 4,
+        "RT"        : 5,
+
+        // Buttons
         "FACE_1"    : 0,
         "FACE_2"    : 1,
         "FACE_3"    : 2,
@@ -122,8 +139,8 @@
         "BACK"      : 8,
         "START"     : 9,
         "FORWARD"   : 9,
-        "L_STICK"   : 10,
-        "R_STICK"   : 11,
+        "L3"        : 10,
+        "R3"        : 11,
         "UP"        : 12,
         "DOWN"      : 13,
         "LEFT"      : 14,
