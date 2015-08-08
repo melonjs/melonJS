@@ -224,7 +224,7 @@
          * @name me.Tween#easing
          * @public
          * @function
-         * @param {me.Tween.Easing} easing easing function
+         * @param {me.Tween.Easing} fn easing function
          */
         this.easing = function ( easing ) {
             if (typeof easing !== 'function') {
@@ -240,7 +240,7 @@
          * @name me.Tween#interpolation
          * @public
          * @function
-         * @param {me.Tween.Interpolation} easing easing function
+         * @param {me.Tween.Interpolation} fn interpolation function
          */
         this.interpolation = function ( interpolation ) {
 
@@ -467,7 +467,8 @@
      * @public
      * @constant
      * @type enum
-     * @name me.Tween#Easing
+     * @name Easing
+     * @memberOf me.Tween
      */
     me.Tween.Easing = {
 
@@ -758,7 +759,8 @@
      * @public
      * @constant
      * @type enum
-     * @name me.Tween#Interpolation
+     * @name Interpolation
+     * @memberOf me.Tween
      */
     me.Tween.Interpolation = {
         /** @ignore */
