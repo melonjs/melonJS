@@ -224,7 +224,7 @@
          * @name me.Tween#easing
          * @public
          * @function
-         * @param {me.Tween#Easing} easing easing function
+         * @param {me.Tween.Easing} easing easing function
          */
         this.easing = function ( easing ) {
             if (typeof easing !== 'function') {
@@ -240,7 +240,7 @@
          * @name me.Tween#interpolation
          * @public
          * @function
-         * @param {me.Tween#Interpolation} easing easing function
+         * @param {me.Tween.Interpolation} easing easing function
          */
         this.interpolation = function ( interpolation ) {
 
@@ -392,11 +392,11 @@
                         _valuesStart[ property ] = _valuesStartRepeat[ property ];
 
                     }
-                    
+
                     if (_yoyo) {
                         _reversed = !_reversed;
                     }
-                    
+
                     _startTime = time + _delayTime;
 
                     return true;
@@ -748,11 +748,12 @@
 
     };
 
-    /* Interpolation Function :<br>
+    /**
+     * Interpolation Function :<br>
      * <p>
      * me.Tween.Interpolation.Linear<br>
      * me.Tween.Interpolation.Bezier<br>
-     * me.Tween.Interpolation.CatmullRom<br>
+     * me.Tween.Interpolation.CatmullRom
      * </p>
      * @public
      * @constant

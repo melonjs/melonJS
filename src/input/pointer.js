@@ -562,7 +562,7 @@
      * @public
      * @function
      * @param {Number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
-     * @param {me.input#KEY} keyCode
+     * @param {me.input.KEY} keyCode
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
