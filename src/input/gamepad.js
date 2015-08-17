@@ -57,45 +57,47 @@
      * @ignore
      */
     api._updateGamepads = function () {
-        var gamepads = navigator.getGamepads();
-        var e = {};
+        if (navigator.getGamepads) {
+            var gamepads = navigator.getGamepads();
+            var e = {};
 
-        // Trigger button bindings
-        Object.keys(bindings).forEach(function (index) {
-            if (!gamepads[index]) {
-                return;
-            }
+            // Trigger button bindings
+            Object.keys(bindings).forEach(function (index) {
+                if (!gamepads[index]) {
+                    return;
+                }
 
-            var mapping = gamepads[index].mapping;
+                var mapping = gamepads[index].mapping;
 
-            Object.keys(bindings[index].buttons).forEach(function (button) {
-                var last = bindings[index].buttons[button];
+                Object.keys(bindings[index].buttons).forEach(function (button) {
+                    var last = bindings[index].buttons[button];
 
-                // Remap buttons if necessary
-                if (mapping !== "standard") {
-                    var mapped = remap.get(gamepads[index].id);
-                    if (mapped) {
-                        button = mapped.buttons[button];
-                        if (button < 0) {
-                            return;
+                    // Remap buttons if necessary
+                    if (mapping !== "standard") {
+                        var mapped = remap.get(gamepads[index].id);
+                        if (mapped) {
+                            button = mapped.buttons[button];
+                            if (button < 0) {
+                                return;
+                            }
                         }
                     }
-                }
 
-                // Get mapped button
-                var current = gamepads[index].buttons[button];
+                    // Get mapped button
+                    var current = gamepads[index].buttons[button];
 
-                // Edge detection
-                if (!last.pressed && current.pressed) {
-                    last.pressed = true;
-                    api._keydown(e, last.keyCode, button + 256);
-                }
-                else if (last.pressed && !current.pressed) {
-                    last.pressed = false;
-                    api._keyup(e, last.keyCode, button + 256);
-                }
+                    // Edge detection
+                    if (!last.pressed && current.pressed) {
+                        last.pressed = true;
+                        api._keydown(e, last.keyCode, button + 256);
+                    }
+                    else if (last.pressed && !current.pressed) {
+                        last.pressed = false;
+                        api._keyup(e, last.keyCode, button + 256);
+                    }
+                });
             });
-        });
+        }
     };
 
     /*
