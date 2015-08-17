@@ -14,7 +14,9 @@
 
     var bindings = {};
 
-    var remap = new Map([
+    var remap = new Map();
+
+    [
         // Firefox mappings
         [
             "45e-28e-Xbox 360 Wired Controller",
@@ -46,7 +48,9 @@
                 "buttons" : [ 0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1 ]
             }
         ]
-    ]);
+    ].forEach(function (value) {
+        remap.set(value[0], value[1]);
+    });
 
     /**
      * Update gamepad status
