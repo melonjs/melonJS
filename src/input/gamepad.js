@@ -40,6 +40,13 @@
             }
         ],
         [
+            "054c-05c4-Wireless Controller", // PS4 Controller
+            {
+                "axes" : [ 0, 1, 2, 3, -1, -1 ],
+                "buttons" : [ 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 13]
+            }
+        ],
+        [
             "2836-1-OUYA Game Controller",
             {
                 "axes" : [ 0, 3, 7, 9, 5, 11 ],
