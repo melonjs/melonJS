@@ -131,7 +131,8 @@
      *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
      *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
      *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
-     *   <li>Others: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
+     *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
+     *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
      * </ul>
      * @public
      * @name GAMEPAD
@@ -167,7 +168,11 @@
         "DOWN"      : 13,
         "LEFT"      : 14,
         "RIGHT"     : 15,
-        "HOME"      : 16
+        "HOME"      : 16,
+        "EXTRA_1"   : 17,
+        "EXTRA_2"   : 18,
+        "EXTRA_3"   : 19,
+        "EXTRA_4"   : 20
     };
 
     /**
