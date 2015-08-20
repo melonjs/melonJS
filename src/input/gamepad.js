@@ -4,18 +4,53 @@
  * http://www.melonjs.org/
  *
  */
-(function () {
+(function (api) {
     /*
      * PRIVATE STUFF
      */
 
-    // Reference to base class
-    var api = me.input;
+    // Match vendor and product codes for Firefox
+    var vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
 
+    // Match leading zeros
+    var leadingZeroRE = /^0+/;
+
+    /**
+     * Firefox reports different ids for gamepads depending on the platform:
+     * - Windows: vendor and product codes contain leading zeroes
+     * - Mac: vendor and product codes are sparse (no leading zeroes)
+     *
+     * This function normalizes the id to support both formats
+     * @ignore
+     */
+    function addMapping(id, mapping) {
+        var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
+            return (
+                "000".substr(a.length - 1) + a + "-" +
+                "000".substr(b.length - 1) + b + "-"
+            );
+        });
+        var sparse_id = id.replace(vendorProductRE, function (_, a, b) {
+            return (
+                a.replace(leadingZeroRE, "") + "-" +
+                b.replace(leadingZeroRE, "") + "-"
+            );
+        });
+
+        remap.set(expanded_id, mapping);
+        remap.set(sparse_id, mapping);
+    }
+
+    // binding list
     var bindings = {};
 
     // mapping list
     var remap = new Map();
+
+    /**
+     * Default gamepad mappings
+     * @ignore
+     */
     [
         // Firefox mappings
         [
@@ -40,13 +75,6 @@
             }
         ],
         [
-            "054c-05c4-Wireless Controller", // PS4 Controller
-            {
-                "axes" : [ 0, 1, 2, 3, -1, -1 ],
-                "buttons" : [ 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13]
-            }
-        ],
-        [
             "2836-1-OUYA Game Controller",
             {
                 "axes" : [ 0, 3, 7, 9, 5, 11 ],
@@ -63,7 +91,7 @@
             }
         ]
     ].forEach(function (value) {
-        remap.set(value[0], value[1]);
+        addMapping(value[0], value[1]);
     });
 
     /**
@@ -261,12 +289,13 @@
      * @param {Number[]} buttons an array of mapping
      * @param {Function} normalize_fn (RFU)
      */
-    api.setGamepadMapping = function (index, axes, buttons, normalize_fn) {
-        remap.set(index, {
+    api.setGamepadMapping = function (id, axes, buttons, normalize_fn) {
+        addMapping(id, {
             axes : axes,
             buttons : buttons,
             normalize_fn : normalize_fn //?
-        });
+            }
+        );
     };
 
-})();
+})(me.input);
