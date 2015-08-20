@@ -164,62 +164,77 @@
      */
 
     /**
-     * Standard gamepad mapping information<br>
-     * Axes:<br>
-     * <ul>
-     *   <li>Left control stick: <code>LX</code>, <code>LY</code></li>
-     *   <li>Right control stick: <code>RX</code>, <code>RY</code></li>
-     *   <li>Left trigger: <code>LT</code></li>
-     *   <li>Right trigger: <code>RT</code></li>
-     * </ul>
-     * Buttons:<br>
-     * <ul>
-     *   <li>Face buttons: <code>FACE_1</code>, <code>FACE_2</code>, <code>FACE_3</code>, <code>FACE_4</code></li>
-     *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
-     *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
-     *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
-     *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
-     *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
-     * </ul>
+     * Namespace for standard gamepad mapping constants
      * @public
-     * @name GAMEPAD
-     * @enum {Number}
+     * @namespace GAMEPAD
      * @memberOf me.input
-     * @see https://w3c.github.io/gamepad/#remapping
      */
     api.GAMEPAD = {
-        // Axes
-        "LX"        : 0,
-        "LY"        : 1,
-        "RX"        : 2,
-        "RY"        : 3,
-        "LT"        : 4,
-        "RT"        : 5,
+        /**
+         * Standard gamepad mapping information for axes<br>
+         * <ul>
+         *   <li>Left control stick: <code>LX</code> (horizontal), <code>LY</code> (vertical)</li>
+         *   <li>Right control stick: <code>RX</code> (horizontal), <code>RY</code> (vertical)</li>
+         *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
+         * </ul>
+         * @public
+         * @name AXES
+         * @enum {Number}
+         * @memberOf me.input.GAMEPAD
+         * @see https://w3c.github.io/gamepad/#remapping
+         */
+        "AXES" : {
+            "LX"        : 0,
+            "LY"        : 1,
+            "RX"        : 2,
+            "RY"        : 3,
+            "EXTRA_1"   : 4,
+            "EXTRA_2"   : 5,
+            "EXTRA_3"   : 6,
+            "EXTRA_4"   : 7
+        },
 
-        // Buttons
-        "FACE_1"    : 0,
-        "FACE_2"    : 1,
-        "FACE_3"    : 2,
-        "FACE_4"    : 3,
-        "L1"        : 4,
-        "L2"        : 5,
-        "R1"        : 6,
-        "R2"        : 7,
-        "SELECT"    : 8,
-        "BACK"      : 8,
-        "START"     : 9,
-        "FORWARD"   : 9,
-        "L3"        : 10,
-        "R3"        : 11,
-        "UP"        : 12,
-        "DOWN"      : 13,
-        "LEFT"      : 14,
-        "RIGHT"     : 15,
-        "HOME"      : 16,
-        "EXTRA_1"   : 17,
-        "EXTRA_2"   : 18,
-        "EXTRA_3"   : 19,
-        "EXTRA_4"   : 20
+        /**
+         * Standard gamepad mapping information for buttons<br>
+         * <ul>
+         *   <li>Face buttons: <code>FACE_1</code>, <code>FACE_2</code>, <code>FACE_3</code>, <code>FACE_4</code></li>
+         *   <li>D-Pad: <code>UP</code>, <code>DOWN</code>, <code>LEFT</code>, <code>RIGHT</code></li>
+         *   <li>Shoulder buttons: <code>L1</code>, <code>L2</code>, <code>R1</code>, <code>R2</code></li>
+         *   <li>Analog stick (clicks): <code>L3</code>, <code>R3</code></li>
+         *   <li>Navigation: <code>SELECT</code> (<code>BACK</code>), <code>START</code> (<code>FORWARD</code>), <code>HOME</code></li>
+         *   <li>Extras: <code>EXTRA_1</code>, <code>EXTRA_2</code>, <code>EXTRA_3</code>, <code>EXTRA_4</code></li>
+         * </ul>
+         * @public
+         * @name BUTTONS
+         * @enum {Number}
+         * @memberOf me.input.GAMEPAD
+         * @see https://w3c.github.io/gamepad/#remapping
+         */
+        "BUTTONS" : {
+            "FACE_1"    : 0,
+            "FACE_2"    : 1,
+            "FACE_3"    : 2,
+            "FACE_4"    : 3,
+            "L1"        : 4,
+            "L2"        : 5,
+            "R1"        : 6,
+            "R2"        : 7,
+            "SELECT"    : 8,
+            "BACK"      : 8,
+            "START"     : 9,
+            "FORWARD"   : 9,
+            "L3"        : 10,
+            "R3"        : 11,
+            "UP"        : 12,
+            "DOWN"      : 13,
+            "LEFT"      : 14,
+            "RIGHT"     : 15,
+            "HOME"      : 16,
+            "EXTRA_1"   : 17,
+            "EXTRA_2"   : 18,
+            "EXTRA_3"   : 19,
+            "EXTRA_4"   : 20
+        }
     };
 
     /**
@@ -229,13 +244,13 @@
      * @public
      * @function
      * @param {Number} index Gamepad index
-     * @param {me.input.GAMEPAD} button
+     * @param {me.input.GAMEPAD.BUTTONS} button
      * @param {me.input.KEY} keyCode
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
      * // map the lower face button on the first gamepad to the X key
-     * me.input.bindGamepad(0, me.input.GAMEPAD.FACE_1, me.input.KEY.X);
+     * me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1, me.input.KEY.X);
      */
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
@@ -265,9 +280,9 @@
      * @public
      * @function
      * @param {Number} index Gamepad index
-     * @param {me.input.GAMEPAD} button
+     * @param {me.input.GAMEPAD.BUTTONS} button
      * @example
-     * me.input.unbindGamepad(0, me.input.GAMEPAD.FACE_1);
+     * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
      */
     api.unbindGamepad = function (index, button) {
         if (!bindings[index]) {
