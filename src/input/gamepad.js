@@ -285,14 +285,16 @@
      * @public
      * @function
      * @param {String} id gamepad id string
-     * @param {Number[]} axes an array of mapping
-     * @param {Number[]} buttons an array of mapping
-     * @param {Function} normalize_fn (RFU)
+     * @param {Object} mapping a hash table
+     * @param {Number[]} mapping.axes standard analog control stick axis locations
+     * @param {Number[]} mapping.buttons standard digital button locations
+     * @param {Number[]} mapping.analog analog axis locations for buttons
+     * @param {Function} normalize_fn a function that return a normalized value in range [-1.0..1.0], or 0.0 if the button or axis is unknown.
      */
-    api.setGamepadMapping = function (id, axes, buttons, normalize_fn) {
+    api.setGamepadMapping = function (id, mapping, normalize_fn) {
         addMapping(id, {
-            axes : axes,
-            buttons : buttons,
+            axes : mapping.axes,
+            buttons : mapping.buttons,
             normalize_fn : normalize_fn //?
             }
         );
