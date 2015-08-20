@@ -14,9 +14,6 @@
 
     var bindings = {};
 
-    // index of gamepad with active remap
-    var mapped = [];
-
     // mapping list
     var remap = new Map();
     [
@@ -69,35 +66,12 @@
         remap.set(value[0], value[1]);
     });
 
-    // create an array of the given length and fill it with [0, 1, 2, 3, ... ]
-    var _range = function (length) {
-        return Array.apply(0, new Array(length)).map(function (x, y) { return y; });
-    };
-
     /**
      * gamepad connected callback
      * @ignore
      */
      api._onGamepadConnected = function (event) {
-        var gamepad = event.gamepad;
-
-        // Remap buttons if necessary
-        if (gamepad.mapping !== "standard") {
-            var mapping = remap.get(gamepad.id);
-            // todo what remap does not return anything ?
-            api.setGamepadMapping(
-                gamepad.index,
-                mapping.axes,
-                mapping.buttons
-            );
-        } else {
-            // map to default
-            api.setGamepadMapping(
-                gamepad.index,
-                _range(gamepad.axes.length),
-                _range(gamepad.buttons.length)
-            );
-        }
+        me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
      };
 
     /**
@@ -105,8 +79,7 @@
      * @ignore
      */
      api._onGamepadDisconnected = function (event) {
-        var gamepad = event.gamepad;
-        mapped[gamepad.index] = undefined;
+        me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
      };
 
     window.addEventListener("gamepadconnected", api._onGamepadConnected.bind(api), false);
@@ -118,6 +91,7 @@
      */
     api._updateGamepads = navigator.getGamepads ? function () {
         var gamepads = navigator.getGamepads();
+        var mapping;
         var e = {};
 
         // Trigger button bindings
@@ -126,12 +100,16 @@
                 return;
             }
 
+            if (gamepads[index].mapping !== "standard") {
+                mapping = remap.get(gamepads[index].id);
+            }
+
             Object.keys(bindings[index].buttons).forEach(function (button) {
                 var last = bindings[index].buttons[button];
 
                 // Remap buttons if necessary
-                if (mapped[index]) {
-                    button = mapped[index].buttons[button];
+                if (mapping) {
+                    button = mapping.buttons[button];
                     if (button < 0) {
                         return;
                     }
@@ -267,29 +245,28 @@
         if (!bindings[index]) {
             throw new me.Error("no bindings for gamepad " + index);
         }
-
         bindings[index].buttons[button] = {};
     };
 
     /**
-     * change the mapping for the specified gamepad, <br>
+     * specify a custom mapping for a specific gamepad id<br>
      * see below for the default mapping : <br>
      * <center><img src="images/gamepad_diagram.png"/></center><br>
      * @name setGamepadMapping
      * @memberOf me.input
      * @public
      * @function
-     * @param {Number} index Gamepad index
-     * @param {Array} axes an array of mapping
-     * @param {Array} buttons an array of mapping
+     * @param {String} id gamepad id string
+     * @param {Number[]} axes an array of mapping
+     * @param {Number[]} buttons an array of mapping
      * @param {Function} normalize_fn (RFU)
      */
     api.setGamepadMapping = function (index, axes, buttons, normalize_fn) {
-        mapped[index] = {
-            "axes" : axes,
-            "buttons" : buttons,
-            "normalize_fn" : normalize_fn
-        };
+        remap.set(index, {
+            axes : axes,
+            buttons : buttons,
+            normalize_fn : normalize_fn //?
+        });
     };
 
 })();

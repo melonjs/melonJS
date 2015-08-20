@@ -244,6 +244,26 @@
         api.VIEWPORT_ONCHANGE = "viewport.onchange";
 
         /**
+         * Channel Constant for when a gamepad is connected <br>
+         * Data passed : {Object} gamepad object
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAMEPAD_CONNECTED
+         */
+        api.GAMEPAD_CONNECTED = "gamepad.connected";
+
+        /**
+         * Channel Constant for when a gamepad is disconnected <br>
+         * Data passed : {Object} gamepad object
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAMEPAD_DISCONNECTED
+         */
+        api.GAMEPAD_DISCONNECTED = "gamepad.disconnected";
+
+        /**
          * Publish some data on a channel
          * @name me.event#publish
          * @public
