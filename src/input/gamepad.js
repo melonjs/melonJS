@@ -9,6 +9,9 @@
      * PRIVATE STUFF
      */
 
+    // Analog deadzone
+    var deadzone = 0.1;
+
     // Match vendor and product codes for Firefox
     var vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
 
@@ -98,20 +101,17 @@
      * gamepad connected callback
      * @ignore
      */
-     api._onGamepadConnected = function (event) {
+    window.addEventListener("gamepadconnected", function (event) {
         me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
-     };
+    }, false);
 
     /**
      * gamepad disconnected callback
      * @ignore
      */
-     api._onGamepadDisconnected = function (event) {
+    window.addEventListener("gamepaddisconnected", function (event) {
         me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
-     };
-
-    window.addEventListener("gamepadconnected", api._onGamepadConnected.bind(api), false);
-    window.addEventListener("gamepaddisconnected", api._onGamepadDisconnected.bind(api), false);
+    }, false);
 
     /**
      * Update gamepad status
@@ -274,6 +274,19 @@
             throw new me.Error("no bindings for gamepad " + index);
         }
         bindings[index].buttons[button] = {};
+    };
+
+    /**
+     * Set deadzone for analog gamepad inputs<br>
+     * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
+     * @name setGamepadDeadzone
+     * @memberOf me.input
+     * @public
+     * @function
+     * @param {Number} value Deadzone value
+     */
+    api.setGamepadDeadzone = function (value) {
+        deadzone = value;
     };
 
     /**
