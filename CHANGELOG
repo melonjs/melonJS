@@ -4,11 +4,11 @@ Version History
 * Container : added `autoDepth` feature that auto-increments a child's z-coordinate when inserted
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
-* Core : replaced String.contains by its ES6 equivalent (String.includes)
-* Core : replaced the proprietary Number.sign function by a safe ES6 Math.sign Polyfill equivalent
+* Core : replaced `String.contains` by its ES6 equivalent: `String.includes`
+* Core : replaced `Number.sign` by its ES6 equivalentL `Math.sign`
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
 * Core : added `me.sys.updatesPerSecond` to configure updating less often than drawing (@Giwayume)
-* Entity : new positioning method, where the renderable is positioned according to its anchor is and the Entity's body anchor (@Giwayume)
+* Entity : new positioning method, where the renderable is positioned according to its anchor and the Entity's body anchor (@Giwayume)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
 * Geometry : removed `reverse` method from Vector classes; use `negateSelf` instead
@@ -17,7 +17,7 @@ Version History
 * Geometry : fixed `angle` method on Vector classes
 * LevelDirector : level loading is now asynchronous; for sequential behavior, use the LEVEL_LOADED event or new `onLoaded` callback
 * LevelDirector : added an `options` argument to the loading method; for specifying a target container, callback, and whether to merge (flatten) object groups
-* Input : fixed last standing mouse event related object or constant names : `me.input.mouse` to `me.input.pointer`, `me.event.MOVEMOVE` to `me.event.POINTERMOVE`
+* Input : renamed last remaining mouse-related objects : `me.input.mouse` => `me.input.pointer`, `me.event.MOVEMOVE` => `me.event.POINTERMOVE`
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Renderable : renderables are now using a 3d Vector for position, using the z axis for layer ordering.
 * Renderable : fixed a distortion issue when scaling and rotating sprites (@Giwayume)
@@ -25,16 +25,16 @@ Version History
 * Renderable : `anchorPoints` now defines the renderable position, scaling and rotation default origin point (@Giwayume)
 * Renderable : better animation definition, allowing to set the animation delay on a per-frame basis
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
-* Shapes : added support for the free Physic Body Editor tool (on top of the existing PhysicsEditor support)
+* Shapes : added support for the free Physic Body Editor tool (in addition to the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
-* Texture : added support for frame-by-frame pivot points in animations (@Giwayume)
+* Texture : added support for per-frame pivot points in animations (@Giwayume)
 * TMX : added hexagonal map support (@matthewmmorrow)
 * TMX : optimized all renderers to be more GC friendly (using the pooling system for temporary objects)
-* TMX : refactored the me.TMXTileMap object, so that it can be used to easily add level into a container object
-* TMX : ImageLayer is now drawn relative to the viewport boundary, and can be anchored appropriately
+* TMX : refactored the `me.TMXTileMap` object, so that it can be used to easily add level into a container object
+* TMX : `me.ImageLayer` is now drawn relative to the viewport boundary, and can be anchored appropriately
 * TMX : internally normalizes XML into the same JSON format supported by Tiled; cleans up many compatibility functions and removes several fallback cases
 * TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
-* TMX : added support for "per animation frame delay" to Tiled Objects (when using tileset animations)
+* TMX : added support for per-frame animation delay to Tiled Objects (for tileset animations)
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
