@@ -281,10 +281,9 @@
                 }
                 // remove image's TexturePacker/ShoeBox rotation
                 if (this._sourceAngle !== 0) {
-                    renderer.translate((this.height/2)-(xpos+ax), (this.width/2)-(ypos+ay));
+                    renderer.translate(-(xpos+ax), -(ypos+ay));
                     renderer.rotate(this._sourceAngle);
-                    xpos -= this.height/2;
-                    ypos -= this.width/2;
+                    xpos -= this.height;
                     w = this.height;
                     h = this.width;
                 } else {
