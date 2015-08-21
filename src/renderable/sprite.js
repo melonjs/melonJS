@@ -260,37 +260,36 @@
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
 
             var w = this.width, h = this.height;
-            var angle = this.angle + this._sourceAngle;
 
             // save context
             renderer.save();
             
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-            renderer.translate(-ax, -ay);
+            xpos -= ax;
+            ypos -= ay;
             
-            if ((this.scaleFlag) || (angle !== 0)) {
-
+            if ((this.scaleFlag) || (this.angle !== 0) || (this._sourceAngle !== 0)) {
                 // translate to the defined anchor point
-                renderer.translate(xpos + ax, ypos + ay);
-                if (angle !== 0) {
-                    renderer.rotate(angle);
+                xpos += ax;
+                ypos += ay;
+                renderer.translate(xpos, ypos);
+                // rotate
+                if (this.angle !== 0) {
+                    renderer.rotate(this.angle);
                 }
                 // scale
                 if (this.scaleFlag) {
                     renderer.scale(this._scale.x, this._scale.y);
                 }
-
+                // remove image's TexturePacker/ShoeBox rotation
                 if (this._sourceAngle !== 0) {
-                    // swap w and h for rotated source images
+                    renderer.translate(-(xpos+ax), -(ypos+ay));
+                    renderer.rotate(this._sourceAngle);
+                    xpos -= this.height;
                     w = this.height;
                     h = this.width;
-
-                    xpos = -ay;
-                    ypos = -ax;
-                }
-                else {
-                    // reset coordinates back to upper left coordinates
+                } else {
                     xpos = -ax;
                     ypos = -ay;
                 }
