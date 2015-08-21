@@ -266,7 +266,8 @@
             
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-            renderer.translate(-ax, -ay);
+            xpos -= ax;
+            ypos -= ay;
             
             if ((this.scaleFlag) || (this.angle !== 0) || (this._sourceAngle !== 0)) {
                 // translate to the defined anchor point
