@@ -150,14 +150,6 @@
                 }
             }
 
-            // default value for repeat
-            this._repeat = "repeat";
-
-            this.repeatX = true;
-            this.repeatY = true;
-
-            this.createPattern();
-
             /**
              * Define if and how an Image Layer should be repeated.<br>
              * By default, an Image Layer is repeated both vertically and horizontally.<br>
@@ -198,6 +190,8 @@
                     this.createPattern();
                 }
             });
+
+            this.repeat = settings.repeat || "repeat";
         },
 
         // called when the layer is added to the game world or a container

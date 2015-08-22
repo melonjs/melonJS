@@ -27,6 +27,7 @@
          * @ignore
          */
         function setTMXValue(name, value) {
+            value = "" + value;
             if (!value || value.isBoolean()) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
@@ -68,10 +69,10 @@
                     var attribute = elt.attributes.item(j);
                     if (typeof(attribute.name) !== "undefined") {
                         // DOM4 (Attr no longer inherit from Node)
-                        obj[attribute.name] = setTMXValue(attribute.name, attribute.value);
+                        obj[attribute.name] = attribute.value;
                     } else {
                         // else use the deprecated ones
-                        obj[attribute.nodeName] = setTMXValue(attribute.nodeName, attribute.nodeValue);
+                        obj[attribute.nodeName] = attribute.nodeValue;
                     }
                 }
             }
@@ -174,7 +175,7 @@
 
                 case "property":
                     var property = api.parse(item);
-                    obj[property.name] = "" + property.value;
+                    obj[property.name] = setTMXValue(property.name, property.value);
                     break;
 
                 default:

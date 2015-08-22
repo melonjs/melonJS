@@ -99,33 +99,20 @@
      * @ignore
      */
     function readImageLayer(map, data, z) {
-        // extract layer information
-        var ilx = +data.x || 0;
-        var ily = +data.y || 0;
-        var iln = data.name;
-        var ilsrc = data.image;
-
         // create the layer
         var imageLayer = new me.ImageLayer(
-            ilx, ily, {
-                name: iln,
-                image: ilsrc,
-                z : z
-            }
+            +data.x || 0,
+            +data.y || 0,
+            Object.assign({
+                name: data.name,
+                image: data.image,
+                z: z
+            }, data.properties)
         );
 
         // set some additional flags
         var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
         imageLayer.setOpacity(visible ? +data.opacity : 0);
-
-        // check if we have any additional properties
-        me.TMXUtils.applyTMXProperties(imageLayer, data);
-
-        // make sure ratio is a vector (backward compatibility)
-        if (typeof(imageLayer.ratio) === "number") {
-            var ratio = imageLayer.ratio;
-            imageLayer.ratio = new me.Vector2d(ratio, ratio);
-        }
 
         return imageLayer;
     }
