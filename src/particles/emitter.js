@@ -325,7 +325,6 @@
      * // At the end, remove emitter from the game world
      * // call this in onDestroyEvent function
      * me.game.world.removeChild(emitter);
-     * me.game.world.removeChild(emitter.container);
      *
      */
     me.ParticleEmitter = me.Rect.extend(
@@ -369,14 +368,11 @@
             this.container = new me.ParticleContainer(this);
 
             /**
-             * Z-order for particles, value is forwarded to the particle container <br>
-             * @type Number
-             * @name z
-             * @memberOf me.ParticleEmitter
+             * @ignore
              */
-            Object.defineProperty(this, "z", {
-                get : function () { return this.container.pos.z; },
-                set : function (value) { this.container.pos.z = value; },
+            Object.defineProperty(this.pos, "z", {
+                get : (function () { return this.container.pos.z; }).bind(this),
+                set : (function (value) { this.container.pos.z = value; }).bind(this),
                 enumerable : true,
                 configurable : true
             });
@@ -396,6 +392,18 @@
 
             // Reset the emitter to defaults
             this.reset(settings);
+        },
+        
+        onActivateEvent: function() {
+            this.ancestor.addChild(this.container);
+            this.container.pos.z = this.pos.z;
+            if (!this.ancestor.autoSort) {
+                this.ancestor.sort();
+            }
+        },
+        
+        onDeactivateEvent: function() {
+            this.container.ancestor.removeChild(this.container);
         },
 
         destroy: function () {
