@@ -12,6 +12,52 @@
     // Analog deadzone
     var deadzone = 0.1;
 
+    /**
+     * A function that returns a normalized value in range [-1.0..1.0], or 0.0 if the axis is unknown.
+     * @callback me.input~normalize_fn
+     * @param {Number} value The raw value read from the gamepad driver
+     * @param {Number} axis The axis index from the standard mapping, or -1 if not an axis
+     * @param {Number} button The button index from the standard mapping, or -1 if not a button
+     */
+    function defaultNormalizeFn(value) {
+        return value;
+    }
+
+    /**
+     * Normalize axis values for wired Xbox 360
+     * @ignore
+     */
+    function wiredXbox360NormalizeFn(value, axis, button) {
+        if (button === api.GAMEPAD.BUTTONS.L2 || button === api.GAMEPAD.BUTTONS.R2) {
+            return (value + 1) / 2;
+        }
+        return value;
+    }
+
+    /**
+     * Normalize axis values for OUYA
+     * @ignore
+     */
+    function ouyaNormalizeFn(value, axis, button) {
+        if (value > 0) {
+            if (button === api.GAMEPAD.BUTTONS.L2) {
+                // L2 is wonky; seems like the deadzone is around 20000
+                // (That's over 15% of the total range!)
+                value = Math.max(0, value - 20000) / 111070;
+            }
+            else {
+                // Normalize [1..65536] => [0.0..0.5]
+                value = (value - 1) / 131070;
+            }
+        }
+        else {
+            // Normalize [-65536..-1] => [0.5..1.0]
+            value = (65536 + value) / 131070 + 0.5;
+        }
+
+        return value;
+    }
+
     // Match vendor and product codes for Firefox
     var vendorProductRE = /^([0-9a-f]{1,4})-([0-9a-f]{1,4})-/i;
 
@@ -40,6 +86,12 @@
             );
         });
 
+        // Normalize optional parameters
+        mapping.analog = mapping.analog || mapping.buttons.map(function () {
+            return -1;
+        });
+        mapping.normalize_fn = mapping.normalize_fn || defaultNormalizeFn;
+
         remap.set(expanded_id, mapping);
         remap.set(sparse_id, mapping);
     }
@@ -59,29 +111,33 @@
         [
             "45e-28e-Xbox 360 Wired Controller",
             {
-                "axes" : [ 0, 1, 3, 4, 2, 5 ],
-                "buttons" : [ 11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10 ]
+                "axes" : [ 0, 1, 3, 4 ],
+                "buttons" : [ 11, 12, 13, 14, 8, 9, -1, -1, 5, 4, 6, 7, 0, 1, 2, 3, 10 ],
+                "analog" : [ -1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
+                "normalize_fn" : wiredXbox360NormalizeFn
             }
         ],
         [
             "54c-268-PLAYSTATION(R)3 Controller",
             {
-                "axes" : [ 0, 1, 2, 3, -1, -1 ],
+                "axes" : [ 0, 1, 2, 3 ],
                 "buttons" : [ 14, 13, 15, 12, 10, 11, 8, 9, 0, 3, 1, 2, 4, 6, 7, 5, 16 ]
             }
         ],
         [
             "54c-5c4-Wireless Controller", // PS4 Controller
             {
-                "axes" : [ 0, 1, 2, 3, -1, -1 ],
-                "buttons" : [ 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13]
+                "axes" : [ 0, 1, 2, 3 ],
+                "buttons" : [ 1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 12, 13 ]
             }
         ],
         [
             "2836-1-OUYA Game Controller",
             {
-                "axes" : [ 0, 3, 7, 9, 5, 11 ],
-                "buttons" : [ 3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1 ]
+                "axes" : [ 0, 3, 7, 9 ],
+                "buttons" : [ 3, 6, 4, 5, 7, 8, 15, 16, -1, -1, 9, 10, 11, 12, 13, 14, -1 ],
+                "analog" : [ -1, -1, -1, -1, -1, -1, 5, 11, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
+                "normalize_fn" : ouyaNormalizeFn
             }
         ],
 
@@ -89,8 +145,10 @@
         [
             "OUYA Game Controller (Vendor: 2836 Product: 0001)",
             {
-                "axes" : [ 0, 1, 3, 4, 2, 5 ],
-                "buttons" : [ 0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1 ]
+                "axes" : [ 0, 1, 3, 4 ],
+                "buttons" : [ 0, 3, 1, 2, 4, 5, 12, 13, -1, -1, 6, 7, 8, 9, 10, 11, -1 ],
+                "analog" : [ -1, -1, -1, -1, -1, -1, 2, 5, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
+                "normalize_fn" : ouyaNormalizeFn
             }
         ]
     ].forEach(function (value) {
@@ -119,7 +177,6 @@
      */
     api._updateGamepads = navigator.getGamepads ? function () {
         var gamepads = navigator.getGamepads();
-        var mapping;
         var e = {};
 
         // Trigger button bindings
@@ -128,33 +185,56 @@
                 return;
             }
 
+            var mapping = null;
             if (gamepads[index].mapping !== "standard") {
                 mapping = remap.get(gamepads[index].id);
             }
 
+            // Iterate all buttons that have active bindings
             Object.keys(bindings[index].buttons).forEach(function (button) {
                 var last = bindings[index].buttons[button];
+                var mapped_button = button;
+                var mapped_axis = -1;
 
                 // Remap buttons if necessary
                 if (mapping) {
-                    button = mapping.buttons[button];
-                    if (button < 0) {
+                    mapped_button = mapping.buttons[button];
+                    mapped_axis = mapping.analog[button];
+                    if (mapped_button < 0 && mapped_axis < 0) {
+                        // Button is not mapped
                         return;
                     }
                 }
 
                 // Get mapped button
-                var current = gamepads[index].buttons[button];
+                var current = gamepads[index].buttons[mapped_button] || {};
+
+                // Remap an axis to an analog button
+                if (mapping) {
+                    if (mapped_axis >= 0) {
+                        var value = mapping.normalize_fn(gamepads[index].axes[mapped_axis], -1, +button);
+
+                        // Create a new object, because GamepadButton is read-only
+                        current = {
+                            "value" : value,
+                            "pressed" : current.pressed || (Math.abs(value) >= deadzone)
+                        };
+                    }
+                }
+
+                me.event.publish(me.event.GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
 
                 // Edge detection
                 if (!last.pressed && current.pressed) {
-                    last.pressed = true;
-                    api._keydown(e, last.keyCode, button + 256);
+                    api._keydown(e, last.keyCode, mapped_button + 256);
                 }
                 else if (last.pressed && !current.pressed) {
-                    last.pressed = false;
-                    api._keyup(e, last.keyCode, button + 256);
+                    api._keyup(e, last.keyCode, mapped_button + 256);
                 }
+
+                // Update last button state
+                last.value = current.value;
+                last.pressed = current.pressed;
             });
         });
     } : function () {};
@@ -269,6 +349,7 @@
         // Map the gamepad button to the keycode
         bindings[index].buttons[button] = {
             "keyCode" : keyCode,
+            "value" : 0,
             "pressed" : false
         };
     };
@@ -312,20 +393,36 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {String} id gamepad id string
-     * @param {Object} mapping a hash table
-     * @param {Number[]} mapping.axes standard analog control stick axis locations
-     * @param {Number[]} mapping.buttons standard digital button locations
-     * @param {Number[]} mapping.analog analog axis locations for buttons
-     * @param {Function} normalize_fn a function that return a normalized value in range [-1.0..1.0], or 0.0 if the button or axis is unknown.
+     * @param {String} id Gamepad id string
+     * @param {Object} mapping A hash table
+     * @param {Number[]} mapping.axes Standard analog control stick axis locations
+     * @param {Number[]} mapping.buttons Standard digital button locations
+     * @param {Number[]} [mapping.analog] Analog axis locations for buttons
+     * @param {me.input~normalize_fn} [mapping.normalize_fn] Axis normalization function
+     * @example
+     * // A weird controller that has its axis mappings reversed
+     * me.input.setGamepadMapping("Generic USB Controller", {
+     *   "axes" : [ 3, 2, 1, 0 ],
+     *   "buttons" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ]
+     * });
+     *
+     * // Mapping extra axes to analog buttons
+     * me.input.setGamepadMapping("Generic Analog Controller", {
+     *   "axes" : [ 0, 1, 2, 3 ],
+     *   "buttons" : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 ],
+     *
+     *   // Raw axis 4 is mapped to GAMEPAD.BUTTONS.FACE_1
+     *   // Raw axis 5 is mapped to GAMEPAD.BUTTONS.FACE_2
+     *   // etc...
+     *   // Also maps left and right triggers
+     *   "analog" : [ 4, 5, 6, 7, -1, -1, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1 ],
+     *
+     *   // Normalize the value of button L2: [-1.0..1.0] => [0.0..1.0]
+     *   "normalize_fn" : function (value, axis, button) {
+     *     return ((button === me.input.GAMEPAD.BUTTONS.L2) ? ((value + 1) / 2) : value) || 0;
+     *   }
+     * });
      */
-    api.setGamepadMapping = function (id, mapping, normalize_fn) {
-        addMapping(id, {
-            axes : mapping.axes,
-            buttons : mapping.buttons,
-            normalize_fn : normalize_fn //?
-            }
-        );
-    };
+    api.setGamepadMapping = addMapping;
 
 })(me.input);

@@ -158,6 +158,40 @@
         api.KEYUP = "me.input.keyup";
 
         /**
+         * Channel Constant for when a gamepad is connected <br>
+         * Data passed : {Object} gamepad object
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAMEPAD_CONNECTED
+         */
+        api.GAMEPAD_CONNECTED = "gamepad.connected";
+
+        /**
+         * Channel Constant for when a gamepad is disconnected <br>
+         * Data passed : {Object} gamepad object
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAMEPAD_DISCONNECTED
+         */
+        api.GAMEPAD_DISCONNECTED = "gamepad.disconnected";
+
+        /**
+         * Channel Constant for when gamepad button/axis state is updated <br>
+         * Data passed : {Number} index <br>
+         * Data passed : {String} type : "axes" or "buttons" <br>
+         * Data passed : {Number} button <br>
+         * Data passed : {Number} current.value <br>
+         * Data passed : {Boolean} current.pressed <br>
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAMEPAD_UPDATE
+         */
+        api.GAMEPAD_UPDATE = "gamepad.update";
+
+        /**
          * Channel Constant for pointermove events on the viewport area <br>
          * Data passed : {Object} the Event object <br>
          * @public
@@ -242,26 +276,6 @@
          * @name me.event#VIEWPORT_ONCHANGE
          */
         api.VIEWPORT_ONCHANGE = "viewport.onchange";
-
-        /**
-         * Channel Constant for when a gamepad is connected <br>
-         * Data passed : {Object} gamepad object
-         * @public
-         * @constant
-         * @type String
-         * @name me.event#GAMEPAD_CONNECTED
-         */
-        api.GAMEPAD_CONNECTED = "gamepad.connected";
-
-        /**
-         * Channel Constant for when a gamepad is disconnected <br>
-         * Data passed : {Object} gamepad object
-         * @public
-         * @constant
-         * @type String
-         * @name me.event#GAMEPAD_DISCONNECTED
-         */
-        api.GAMEPAD_DISCONNECTED = "gamepad.disconnected";
 
         /**
          * Publish some data on a channel
