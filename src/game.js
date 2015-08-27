@@ -27,7 +27,7 @@
 
         // to know when we have to refresh the display
         var isDirty = true;
-        
+
         // always refresh the display when updatesPerSecond are lower than fps
         var isAlwaysDirty = false;
 
@@ -35,12 +35,12 @@
         // reset the frame counter
         var frameCounter = 0;
         var frameRate = 1;
-        
+
         // time accumulation for multiple update calls
         var accumulator = 0.0;
         var accumulatorMax = 0.0;
         var accumulatorUpdateDelta = 0;
-        
+
         // min update step size
         var stepSize = 1000 / 60;
         var updateDelta = 0;
@@ -223,12 +223,12 @@
             // reset the frame counter
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
-            
+
             // set step size based on the updatesPerSecond
             stepSize = (1000 / me.sys.updatesPerSecond);
             accumulator = 0.0;
             accumulatorMax = stepSize * 10;
-            
+
             // display should always re-draw when update speed doesn't match fps
             // this means the user intends to write position prediction drawing logic
             isAlwaysDirty = (me.sys.fps > me.sys.updatesPerSecond);
@@ -276,16 +276,19 @@
 
                 // update the timer
                 me.timer.update(time);
-                
+
+                // update the gamepads
+                me.input._updateGamepads();
+
                 accumulator += me.timer.getDelta();
                 accumulator = Math.min(accumulator, accumulatorMax);
-                
+
                 updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
                 accumulatorUpdateDelta = (me.sys.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
-    
+
                 while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
                     lastUpdateStart = window.performance.now();
-                    
+
                     // clear the quadtree
                     me.collision.quadTree.clear();
 
@@ -297,10 +300,10 @@
 
                     // update the camera/viewport
                     isDirty = api.viewport.update(updateDelta) || isDirty;
-                    
+
                     me.timer.lastUpdate = window.performance.now();
                     updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
-                    
+
                     accumulator -= accumulatorUpdateDelta;
                     if (me.sys.interpolation) {
                         accumulator = 0;

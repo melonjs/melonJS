@@ -34,6 +34,13 @@ game.PlayerEntity = me.Entity.extend({
         me.input.bindKey(me.input.KEY.W,     "jump", true);
         me.input.bindKey(me.input.KEY.S,     "down");
 
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1, me.input.KEY.UP);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_2, me.input.KEY.UP);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.DOWN, me.input.KEY.DOWN);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_3, me.input.KEY.DOWN);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_4, me.input.KEY.DOWN);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.LEFT, me.input.KEY.LEFT);
+        me.input.bindGamepad(0, me.input.GAMEPAD.BUTTONS.RIGHT, me.input.KEY.RIGHT);
 
         // set a renderable
         this.renderable = game.texture.createAnimationFromName([
