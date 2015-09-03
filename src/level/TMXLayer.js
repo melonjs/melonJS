@@ -196,9 +196,14 @@
 
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
+            var _updateLayerFn = this.updateLayer.bind(this);
             // register to the viewport change notification
-            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
+            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, _updateLayerFn);
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+            this.vpLoadedHdlr = me.event.subscribe(me.event.LEVEL_LOADED, function() {
+                // force a first refresh when the level is loaded
+                _updateLayerFn(me.game.viewport.pos);
+            });
         },
 
         /**
@@ -325,15 +330,10 @@
 
         // called when the layer is removed from the game world or a container
         onDeactivateEvent : function () {
-            // cancel the event subscription
-            if (this.vpChangeHdlr)  {
-                me.event.unsubscribe(this.vpChangeHdlr);
-                this.vpChangeHdlr = null;
-            }
-            if (this.vpResizeHdlr)  {
-                me.event.unsubscribe(this.vpResizeHdlr);
-                this.vpResizeHdlr = null;
-            }
+            // cancel all event subscriptions
+            me.event.unsubscribe(this.vpChangeHdlr);
+            me.event.unsubscribe(this.vpResizeHdlr);
+            me.event.unsubscribe(this.vpLoadedHdlr);
         }
 
     });
