@@ -145,6 +145,16 @@ game.PlayerEntity = me.Entity.extend({
                     // Do not respond to the platform (pass through)
                     return false;
                 }
+
+                // Custom collision response for slopes
+                else if (other.type === "slope") {
+                    // Always adjust the collision response upward
+                    response.overlapV.y = Math.abs(response.overlap);
+                    response.overlapV.x = 0;
+
+                    // Respond to the slope (it is solid)
+                    return true;
+                }
                 break;
 
             case me.collision.types.ENEMY_OBJECT:
