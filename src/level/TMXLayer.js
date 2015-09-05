@@ -139,7 +139,10 @@
                  * @default <0.0,0.0>
                  * @name me.ImageLayer#anchorPoint
                  */
-                this.anchorPoint.set(0, 0);
+                this.anchorPoint.set(
+                    x / (me.game.viewport.bounds.width - this.imagewidth) || 0,
+                    y / (me.game.viewport.bounds.height - this.imageheight) || 0
+                );
             }
             else {
                 if (typeof(settings.anchorPoint) === "number") {
