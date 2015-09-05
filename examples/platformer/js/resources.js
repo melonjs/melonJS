@@ -4,9 +4,10 @@ game.resources = [
      * @example
      * { name: "example", type:"image", src: "data/img/example.png" },
      */
-    { name: "tileset",         type:"image",   src: "data/img/tileset.png" },
-    { name: "atascii",         type:"image",   src: "data/img/atascii_24px.png" },
-    { name: "background",      type:"image",   src: "data/img/background.png" },
+    { name: "tileset",            type:"image",   src: "data/img/tileset.png" },
+    { name: "atascii",            type:"image",   src: "data/img/atascii_24px.png" },
+    { name: "background",         type:"image",   src: "data/img/background.png" },
+    { name: "background_clouds",  type:"image",   src: "data/img/background_clouds.png" },
 
 
     /* Maps.
