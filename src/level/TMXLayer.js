@@ -378,7 +378,19 @@
             this.tilesets = tilesets;
 
             // the default tileset
+            // XXX: Is this even used?
             this.tileset = (this.tilesets ? this.tilesets.getTilesetByIndex(0) : null);
+
+            // Biggest tile size to draw
+            this.maxTileSize = {
+                "width" : 0,
+                "height" : 0
+            };
+            for (var i = 0; i < this.tilesets.length; i++) {
+                var tileset = this.tilesets.getTilesetByIndex(i);
+                this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
+                this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
+            }
 
             /**
              * All animated tilesets in this layer

@@ -234,11 +234,13 @@
         // constructor
         init: function () {
             this.tilesets = [];
+            this.length = 0;
         },
 
         //add a tileset to the tileset group
         add : function (tileset) {
             this.tilesets.push(tileset);
+            this.length++;
         },
 
         //return the tileset at the specified index
@@ -260,7 +262,7 @@
 
             // clear the gid of all flip/rotation flags
             gid &= TMX_CLEAR_BIT_MASK;
-            
+
             // cycle through all tilesets
             for (var i = 0, len = this.tilesets.length; i < len; i++) {
                 // return the corresponding tileset if matching

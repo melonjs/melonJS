@@ -148,8 +148,8 @@
         drawTileLayer : function (renderer, layer, rect) {
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(
-                rect.pos.x,
-                rect.pos.y,
+                Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
+                Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
                 me.pool.pull("me.Vector2d")
             ).floorSelf();
 
