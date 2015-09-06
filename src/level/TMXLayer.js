@@ -121,7 +121,6 @@
                     this.ratio.setV(settings.ratio);
                 }
             }
-            console.log(settings.anchorPoint);
 
             if (typeof(settings.anchorPoint) === "undefined") {
                 /**
