@@ -139,7 +139,10 @@
                  * @default <0.0,0.0>
                  * @name me.ImageLayer#anchorPoint
                  */
-                this.anchorPoint.set(0, 0);
+                this.anchorPoint.set(
+                    x / (me.game.viewport.bounds.width - this.imagewidth) || 0,
+                    y / (me.game.viewport.bounds.height - this.imageheight) || 0
+                );
             }
             else {
                 if (typeof(settings.anchorPoint) === "number") {
@@ -251,8 +254,6 @@
                 bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
-                vx = vpos.x,
-                vy = vpos.y,
 
                 /*
                  * Automatic positioning
@@ -273,8 +274,8 @@
                  * direction when anchored to the bottom or right sides of the
                  * viewport boundary.
                  */
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
+                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
+                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
 
 
             // Repeat horizontally; start drawing from left boundary
