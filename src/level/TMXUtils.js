@@ -27,7 +27,11 @@
          * @ignore
          */
         function setTMXValue(name, value) {
-            value = "" + value;
+            if (typeof(value) !== "string") {
+                // Value is already normalized
+                return value;
+            }
+
             if (!value || value.isBoolean()) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;

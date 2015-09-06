@@ -107,10 +107,16 @@
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-            var vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+            var hTileCount = ~~(this.image.width / (this.tilewidth + this.spacing));
+            var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
+            if (this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
+                console.warn(
+                    "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
+                    ") does not match expected tilecount (" + tileset.tilecount + ")"
+                );
+            }
         },
 
         /**
@@ -228,11 +234,13 @@
         // constructor
         init: function () {
             this.tilesets = [];
+            this.length = 0;
         },
 
         //add a tileset to the tileset group
         add : function (tileset) {
             this.tilesets.push(tileset);
+            this.length++;
         },
 
         //return the tileset at the specified index
@@ -254,7 +262,7 @@
 
             // clear the gid of all flip/rotation flags
             gid &= TMX_CLEAR_BIT_MASK;
-            
+
             // cycle through all tilesets
             for (var i = 0, len = this.tilesets.length; i < len; i++) {
                 // return the corresponding tileset if matching

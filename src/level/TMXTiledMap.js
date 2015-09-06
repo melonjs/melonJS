@@ -99,6 +99,9 @@
      * @ignore
      */
     function readImageLayer(map, data, z) {
+        // Normalize properties
+        me.TMXUtils.applyTMXProperties(data.properties, data);
+
         // create the layer
         var imageLayer = new me.ImageLayer(
             +data.x || 0,

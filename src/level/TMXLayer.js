@@ -123,6 +123,9 @@
             }
 
             if (typeof(settings.anchorPoint) === "undefined") {
+                var aw = me.game.viewport.bounds.width - this.imagewidth,
+                    ah = me.game.viewport.bounds.height - this.imageheight;
+
                 /**
                  * Define how the image is anchored to the viewport bounds<br>
                  * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
@@ -140,8 +143,8 @@
                  * @name me.ImageLayer#anchorPoint
                  */
                 this.anchorPoint.set(
-                    x / (me.game.viewport.bounds.width - this.imagewidth) || 0,
-                    y / (me.game.viewport.bounds.height - this.imageheight) || 0
+                    aw ? x / aw : 0,
+                    ah ? y / ah : 0
                 );
             }
             else {
@@ -274,8 +277,8 @@
                  * direction when anchored to the bottom or right sides of the
                  * viewport boundary.
                  */
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
+                x = ~~(-ax * (1 - rx) * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
+                y = ~~(-ay * (1 - ry) * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -375,7 +378,19 @@
             this.tilesets = tilesets;
 
             // the default tileset
+            // XXX: Is this even used?
             this.tileset = (this.tilesets ? this.tilesets.getTilesetByIndex(0) : null);
+
+            // Biggest tile size to draw
+            this.maxTileSize = {
+                "width" : 0,
+                "height" : 0
+            };
+            for (var i = 0; i < this.tilesets.length; i++) {
+                var tileset = this.tilesets.getTilesetByIndex(i);
+                this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
+                this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
+            }
 
             /**
              * All animated tilesets in this layer

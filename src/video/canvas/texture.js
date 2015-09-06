@@ -147,7 +147,7 @@
                         originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
                         originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
                     }
-                    
+
                     atlas[frame.filename] = {
                         name         : name, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
@@ -181,11 +181,11 @@
             );
 
             // verifying the texture size
-            if (((width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
-                (height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
+            if ((width % (data.framewidth + spacing)) !== 0 ||
+                (height % (data.frameheight + spacing)) !== 0) {
                 // "truncate size"
-                width = margin + spritecount.x * (data.framewidth + spacing);
-                height = margin + spritecount.y * (data.frameheight + spacing);
+                width = spritecount.x * (data.framewidth + spacing);
+                height = spritecount.y * (data.frameheight + spacing);
                 // warning message
                 console.warn(
                     "Spritesheet Texture for image: " + image.src +
