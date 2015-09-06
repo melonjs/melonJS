@@ -150,9 +150,6 @@
                     this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
                 }
                 else /* vector */ {
-                    if (typeof settings.anchorPoint === "string") {
-                        settings.anchorPoint = JSON.parse(settings.anchorPoint);
-                    }
                     this.anchorPoint.setV(settings.anchorPoint);
                 }
             }

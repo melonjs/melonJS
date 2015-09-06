@@ -11,7 +11,7 @@
  <imagelayer name="cloud_background">
   <image source="../img/background_clouds.png"/>
   <properties>
-   <property name="anchorPoint" value="{&quot;x&quot;:0,&quot;y&quot;:0.5}"/>
+   <property name="anchorPoint" value="json:{&quot;x&quot;:0,&quot;y&quot;:0.3}"/>
    <property name="ratio" value="0.5"/>
    <property name="repeat" value="repeat-x"/>
   </properties>
