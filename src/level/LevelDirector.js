@@ -77,9 +77,6 @@
             container.autoSort = false;
 
             if (setViewportBounds) {
-                // ensure container position is aligned with viewport bounds
-                container.pos.set(0, 0, 0);
-
                 // update the viewport bounds
                 me.game.viewport.setBounds(
                     0, 0,
