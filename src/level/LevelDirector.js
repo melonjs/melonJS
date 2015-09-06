@@ -43,7 +43,7 @@
             currentLevelIdx = levelIdx.indexOf(levelId);
 
             // add the specified level to the game world
-            loadTMXLevel(levelId, options.container, options.flatten);
+            loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds);
 
             // publish the corresponding message
             me.event.publish(me.event.LEVEL_LOADED, [ levelId ]);
@@ -65,17 +65,20 @@
          * @param {String} level level id
          * @param {me.Container} target container
          * @param {boolean} flatten if true, flatten all objects into the given container
+         * @param {boolean} setViewportBounds if true, set the viewport bounds to the map size
          * @ignore
          * @function
          */
-        function loadTMXLevel(levelId, container, flatten) {
+        function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
             var level = levels[levelId];
 
             // disable auto-sort for the given container
             var autoSort = container.autoSort;
             container.autoSort = false;
 
-            if (container === me.game.world) {
+            if (setViewportBounds) {
+                // ensure container position is aligned with viewport bounds
+                container.pos.set(0, 0, 0);
 
                 // update the viewport bounds
                 me.game.viewport.setBounds(
@@ -98,7 +101,7 @@
 
             container.resize(level.width, level.height);
 
-            if (container === me.game.world) {
+            if (setViewportBounds) {
 
                 // center the map if smaller than the current viewport
                 container.pos.set(
@@ -168,6 +171,7 @@
          * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
          * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
          * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+         * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
          * @example
          * // the game defined ressources
          * // to be preloaded by the loader
@@ -186,9 +190,10 @@
          */
         api.loadLevel = function (levelId, options) {
             options = Object.assign({
-                "container" : me.game.world,
-                "onLoaded"  : me.game.onLevelLoaded,
-                "flatten"   : me.game.mergeGroup
+                "container"         : me.game.world,
+                "onLoaded"          : me.game.onLevelLoaded,
+                "flatten"           : me.game.mergeGroup,
+                "setViewportBounds" : true
             }, options || {});
 
             // throw an exception if not existing
