@@ -316,7 +316,7 @@
                 y = ~~(y + ay * (bh - height));
             }
 
-            renderer.globalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
             renderer.translate(x, y);
             renderer.drawPattern(
                 this._pattern,
@@ -326,7 +326,7 @@
                 viewport.height - y
             );
             renderer.translate(-x, -y);
-            renderer.globalAlpha(alpha);
+            renderer.setGlobalAlpha(alpha);
         },
 
         // called when the layer is removed from the game world or a container
