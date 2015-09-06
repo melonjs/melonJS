@@ -123,6 +123,9 @@
             }
 
             if (typeof(settings.anchorPoint) === "undefined") {
+                var aw = me.game.viewport.bounds.width - this.imagewidth,
+                    ah = me.game.viewport.bounds.height - this.imageheight;
+
                 /**
                  * Define how the image is anchored to the viewport bounds<br>
                  * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
@@ -140,8 +143,8 @@
                  * @name me.ImageLayer#anchorPoint
                  */
                 this.anchorPoint.set(
-                    x / (me.game.viewport.bounds.width - this.imagewidth) || 0,
-                    y / (me.game.viewport.bounds.height - this.imageheight) || 0
+                    aw ? x / aw : 0,
+                    ah ? y / ah : 0
                 );
             }
             else {
