@@ -107,10 +107,16 @@
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = ~~((this.image.width - this.margin) / (this.tilewidth + this.spacing));
-            var vTileCount = ~~((this.image.height - this.margin) / (this.tileheight + this.spacing));
+            var hTileCount = ~~(this.image.width / (this.tilewidth + this.spacing));
+            var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
+            if (this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
+                console.warn(
+                    "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
+                    ") does not match expected tilecount (" + tileset.tilecount + ")"
+                );
+            }
         },
 
         /**
