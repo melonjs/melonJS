@@ -277,8 +277,8 @@
                  * direction when anchored to the bottom or right sides of the
                  * viewport boundary.
                  */
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
+                x = ~~(-ax * (1 - rx) * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
+                y = ~~(-ay * (1 - ry) * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
 
 
             // Repeat horizontally; start drawing from left boundary
