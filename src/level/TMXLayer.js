@@ -254,8 +254,6 @@
                 bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
-                vx = vpos.x,
-                vy = vpos.y,
 
                 /*
                  * Automatic positioning
@@ -276,8 +274,8 @@
                  * direction when anchored to the bottom or right sides of the
                  * viewport boundary.
                  */
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
+                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
+                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -318,7 +316,7 @@
                 y = ~~(y + ay * (bh - height));
             }
 
-            renderer.globalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
             renderer.translate(x, y);
             renderer.drawPattern(
                 this._pattern,
@@ -328,7 +326,7 @@
                 viewport.height - y
             );
             renderer.translate(-x, -y);
-            renderer.globalAlpha(alpha);
+            renderer.setGlobalAlpha(alpha);
         },
 
         // called when the layer is removed from the game world or a container
