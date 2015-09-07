@@ -10,7 +10,7 @@ game.changeEmitter = function() {
 
     // create a new emitter
     var emitter = game.EmitterList.createEmitter();
-    emitter.z = 11;
+    emitter.pos.z = 11;
 
     // check the emitter type
     switch (type) {
@@ -209,7 +209,7 @@ game.changeEmitter = function() {
 
         // set emitter params
         emitter.name = "smoke";
-        emitter.z = 10;
+        emitter.pos.z = 10;
         emitter.image = me.loader.getImage("smoke");
         emitter.resize(20, 0);
         emitter.totalParticles = 250;

@@ -43,7 +43,7 @@
             var y = me.game.viewport.getHeight() / 2;
             var emitter = new me.ParticleEmitter(x, y, params);
             emitter.name = "emitter" + me.utils.createGUID();
-            emitter.z = 10;
+            emitter.pos.z = 10;
             me.game.world.addChild(emitter);
             emitter.streamParticles();
             this.addEmitter(emitter);
@@ -467,7 +467,7 @@
                     code.push("var emitter = new me.ParticleEmitter(x, y);");
                 }
                 code.push("emitter.name = '" + emitter.name + "';");
-                code.push("emitter.z = " + emitter.z + ";");
+                code.push("emitter.pos.z = " + emitter.pos.z + ";");
                 code.push("me.game.world.addChild(emitter);");
                 code.push("emitter.streamParticles();");
                 this.output.value = code.join("\n");
