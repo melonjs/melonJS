@@ -36,6 +36,7 @@ Version History
 * TMX : internally normalizes XML into the same JSON format supported by Tiled; cleans up many compatibility functions and removes several fallback cases
 * TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
 * TMX : added support for per-frame animation delay to Tiled Objects (for tileset animations)
+* TMX : added support for layer data encoding in JSON map format (Tiled 0.13)
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
