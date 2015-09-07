@@ -81,7 +81,35 @@
                 }
             }
         }
+    
+       /**
+        * Decode the given data
+        * @ignore
+        */
+        api.decode = function (data, encoding, compression) {
+            compression = compression || "none";
+            encoding = encoding || "none";
+            
+            switch (encoding) {
+                case "csv":
+                    return me.utils.decodeCSV(data);
 
+                case "base64":
+                    var decoded = me.utils.decodeBase64AsArray(data, 4);
+                    return (
+                        (compression === "none") ?
+                        decoded :
+                        me.utils.decompress(decoded, compression)
+                    );
+                
+                case "none":
+                    return data;
+
+                default:
+                    throw new me.Error("Unknown layer encoding: " + encoding);
+            }
+        };
+        
         /**
          * Normalize TMX format to Tiled JSON format
          * @ignore
@@ -92,27 +120,10 @@
             switch (nodeName) {
                 case "data":
                     var data = api.parse(item);
-                    var compression = data.compression || "none";
-
-                    switch (data.encoding) {
-                        case "csv":
-                            obj.data = me.utils.decodeCSV(data.text);
-                            break;
-
-                        case "base64":
-                            var decoded = me.utils.decodeBase64AsArray(data.text, 4);
-                            obj.data = (
-                                (compression === "none") ?
-                                decoded :
-                                me.utils.decompress(decoded, compression)
-                            );
-                            break;
-
-                        default:
-                            throw new me.Error("Unknown layer encoding: " + data.encoding);
-                    }
+                    obj.data = api.decode(data.text, data.encoding, data.compression);
+                    obj.encoding = "none";
                     break;
-
+                    
                 case "imagelayer":
                 case "layer":
                 case "objectgroup":

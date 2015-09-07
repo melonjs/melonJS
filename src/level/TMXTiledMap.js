@@ -88,9 +88,14 @@
             // use the default one
             layer.setRenderer(me.game.tmxRenderer);
         }
-
         // parse the layer data
-        setLayerData(layer, data.data);
+        setLayerData(layer, 
+            me.TMXUtils.decode(
+                data.data,
+                data.encoding,
+                data.compression
+            )
+        );
         return layer;
     }
 
