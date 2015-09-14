@@ -114,7 +114,7 @@
          * @ignore
          */
         this.onDeactivateEvent = function () {
-          me.event.unsubscribe(me.event.STATE_RESUME, _resumeCallback);
+            me.event.unsubscribe(me.event.STATE_RESUME, _resumeCallback);
         };
 
         /**
