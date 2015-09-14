@@ -111,9 +111,6 @@
         "afterEach"             : false,
         "spyOn"                 : false,
         "xdescribe"             : false,
-        "xit"                   : false,
-
-        // objects
-        "Map"                   : false
+        "xit"                   : false
     }
 }
