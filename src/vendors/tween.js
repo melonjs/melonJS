@@ -56,7 +56,11 @@
         var _onCompleteCallback = null;
         var _tweenTimeTracker = null;
 
-        var _resumeCallback = null;
+        this._resumeCallback = function (elapsed) {
+            if (_startTime) {
+                _startTime += elapsed;
+            }
+        };
 
         function init (object) {
             _object = object;
@@ -78,12 +82,6 @@
             _onCompleteCallback = null;
             _tweenTimeTracker = me.timer.lastUpdate;
 
-            _resumeCallback = function (elapsed) {
-                if (_startTime) {
-                    _startTime += elapsed;
-                }
-            };
-
 
             // Set all starting values present on the target object
             for ( var field in object ) {
@@ -96,17 +94,17 @@
              * Calculate delta to resume the tween
              * @ignore
              */
-            me.event.subscribe(me.event.STATE_RESUME, _resumeCallback);
+            me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
         }
 
-        init(object);
+        init.call(this, object);
 
         /**
          * reset the tween object to default value
          * @ignore
          */
         this.onResetEvent = function ( object ) {
-            init(object);
+            init.call(this, object);
         };
 
         /**
@@ -114,7 +112,7 @@
          * @ignore
          */
         this.onDeactivateEvent = function () {
-            me.event.unsubscribe(me.event.STATE_RESUME, _resumeCallback);
+            me.event.unsubscribe(me.event.STATE_RESUME, this._resumeCallback);
         };
 
         /**
