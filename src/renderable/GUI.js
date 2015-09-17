@@ -101,13 +101,6 @@
 
             // GUI items use screen coordinates
             this.floating = true;
-
-            // register on mouse event
-            me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-            me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
-            me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
-            me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
-            me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
         },
 
         /**
@@ -245,6 +238,31 @@
         onHold : function () {},
 
         /**
+         * function called when added to the game world or a container
+         */
+        onActivateEvent : function () {
+            // register pointer events
+            me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
+            me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
+            me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
+            me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
+            me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
+            
+        },
+
+        /**
+         * function called when removed from the game world or a container
+         */
+        onDeactivateEvent : function () {
+            // release pointer events
+            me.input.releasePointerEvent("pointerdown", this);
+            me.input.releasePointerEvent("pointerup", this);
+            me.input.releasePointerEvent("pointercancel", this);
+            me.input.releasePointerEvent("pointerenter", this);
+            me.input.releasePointerEvent("pointerleave", this);
+        },
+
+        /**
          * OnDestroy notification function<br>
          * Called by engine before deleting the object<br>
          * be sure to call the parent function if overwritten
@@ -254,11 +272,6 @@
          * @function
          */
         onDestroyEvent : function () {
-            me.input.releasePointerEvent("pointerdown", this);
-            me.input.releasePointerEvent("pointerup", this);
-            me.input.releasePointerEvent("pointercancel", this);
-            me.input.releasePointerEvent("pointerenter", this);
-            me.input.releasePointerEvent("pointerleave", this);
             me.timer.clearTimeout(this.holdTimeout);
         }
     });
