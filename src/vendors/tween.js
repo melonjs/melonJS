@@ -62,7 +62,7 @@
             }
         };
 
-        function init (object) {
+        this.setProperties = function (object) {
             _object = object;
             _valuesStart = {};
             _valuesEnd = {};
@@ -95,16 +95,16 @@
              * @ignore
              */
             me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
-        }
+        };
 
-        init.call(this, object);
+        this.setProperties(object);
 
         /**
          * reset the tween object to default value
          * @ignore
          */
         this.onResetEvent = function ( object ) {
-            init.call(this, object);
+            this.setProperties(object);
         };
 
         /**
