@@ -27,14 +27,113 @@ game.HUD.Container = me.Container.extend({
 
         // add our child score object at position
         this.addChild(new game.HUD.ScoreItem(-10, -40));
+        
+        // add our fullscreen control object
+        this.addChild(new game.HUD.FSControl(10, 10));
+        
+        // add our audio control object
+        this.addChild(new game.HUD.AudioControl(10 + 48 + 10, 10));
     }
 });
 
+/**
+ * a basic control to toggle fullscreen on/off
+ */
+game.HUD.FSControl = me.GUI_Object.extend({
+    /**
+     * constructor
+     */
+    init: function(x, y) {
+        this._super(me.GUI_Object, "init", [ x, y, {
+            image:"fullscreen",
+            width : 48,
+            height : 48
+        } ]);
+        this.setOpacity(0.5);
+    },
+    
+    /**
+     * function called when the pointer is over the object
+     */
+    onOver : function (/* event */) {
+        this.setOpacity(1.0);
+    },
+    
+    /**
+     * function called when the pointer is leaving the object area
+     */
+    onOut : function (/* event */) {
+        this.setOpacity(0.5);
+    },
+    
+    /**
+     * function called when the object is clicked on
+     */
+    onClick : function (/* event */) {
+        if (!me.device.isFullscreen) {
+            me.device.requestFullscreen();
+        } else {
+            me.device.exitFullscreen();
+        }
+        return false;
+    }
+});
+
+/**
+ * a basic control to toggle fullscreen on/off
+ */
+game.HUD.AudioControl = me.GUI_Object.extend({
+    /**
+     * constructor
+     */
+    init: function(x, y) {
+        this.image_on = me.loader.getImage("sound_on");
+        this.image_off = me.loader.getImage("sound_off");
+        
+        this._super(me.GUI_Object, "init", [ x, y, {
+            image:this.image_on, // sound on by default
+            width : 48,
+            height : 48
+        } ]);
+        this.setOpacity(0.5);
+        this.isMute = false;
+    },
+    
+    /**
+     * function called when the pointer is over the object
+     */
+    onOver : function (/* event */) {
+        this.setOpacity(1.0);
+    },
+    
+    /**
+     * function called when the pointer is leaving the object area
+     */
+    onOut : function (/* event */) {
+        this.setOpacity(0.5);
+    },
+    
+    /**
+     * function called when the object is clicked on
+     */
+    onClick : function (/* event */) {
+        if (this.isMute) {
+            me.audio.unmuteAll();
+            this.image = this.image_on;
+            this.isMute = false;
+        } else {
+            me.audio.muteAll();
+            this.image = this.image_off;
+            this.isMute = true;
+        }
+        return false;
+    },
+});
 
 /**
  * a basic HUD item to display score
  */
-game.HUD.ScoreItem = me.Renderable.extend( {
+game.HUD.ScoreItem = me.Renderable.extend({
     /**
      * constructor
      */
