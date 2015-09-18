@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="left-down" width="50" height="30" tilewidth="35" tileheight="35" backgroundcolor="#d0f4f7" nextobjectid="30">
- <tileset firstgid="1" name="tileset2" tilewidth="70" tileheight="70" spacing="10" margin="5" tilecount="252">
+ <tileset firstgid="1" name="tileset2" tilewidth="70" tileheight="70" spacing="10" margin="5">
   <image source="../img/tileset.png" width="1440" height="1120"/>
   <tile id="216">
    <animation>
@@ -35,7 +35,7 @@
  </layer>
  <objectgroup color="#00ff00" name="Player">
   <object id="16" name="mainPlayer" x="105" y="892" width="35" height="88"/>
-  <object id="17" name="me.LevelEntity" x="1715" y="630" width="35" height="280">
+  <object id="17" name="me.LevelEntity" x="1690" y="810" width="50" height="100">
    <properties>
     <property name="duration" value="150"/>
     <property name="fade" value="#fff"/>
