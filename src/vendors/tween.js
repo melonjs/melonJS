@@ -37,52 +37,82 @@
      */
     me.Tween = function ( object ) {
 
-        var _object = object;
-        var _valuesStart = {};
-        var _valuesEnd = {};
-        var _valuesStartRepeat = {};
-        var _duration = 1000;
-        var _repeat = 0;
-        var _yoyo = false;
-        var _reversed = false;
-        var _delayTime = 0;
+        var _object = null;
+        var _valuesStart = null;
+        var _valuesEnd = null;
+        var _valuesStartRepeat = null;
+        var _duration = null;
+        var _repeat = null;
+        var _yoyo = null;
+        var _reversed = null;
+        var _delayTime = null;
         var _startTime = null;
-        var _easingFunction = me.Tween.Easing.Linear.None;
-        var _interpolationFunction = me.Tween.Interpolation.Linear;
-        var _chainedTweens = [];
+        var _easingFunction = null;
+        var _interpolationFunction = null;
+        var _chainedTweens = null;
         var _onStartCallback = null;
-        var _onStartCallbackFired = false;
+        var _onStartCallbackFired = null;
         var _onUpdateCallback = null;
         var _onCompleteCallback = null;
+        var _tweenTimeTracker = null;
+
+        this._resumeCallback = function (elapsed) {
+            if (_startTime) {
+                _startTime += elapsed;
+            }
+        };
+
+        this.setProperties = function (object) {
+            _object = object;
+            _valuesStart = {};
+            _valuesEnd = {};
+            _valuesStartRepeat = {};
+            _duration = 1000;
+            _repeat = 0;
+            _yoyo = false;
+            _reversed = false;
+            _delayTime = 0;
+            _startTime = null;
+            _easingFunction = me.Tween.Easing.Linear.None;
+            _interpolationFunction = me.Tween.Interpolation.Linear;
+            _chainedTweens = [];
+            _onStartCallback = null;
+            _onStartCallbackFired = false;
+            _onUpdateCallback = null;
+            _onCompleteCallback = null;
+            _tweenTimeTracker = me.timer.lastUpdate;
 
 
-        // Set all starting values present on the target object
-        for ( var field in object ) {
-            if(typeof object !== 'object') {
-                _valuesStart[ field ] = parseFloat(object[field], 10);
+            // Set all starting values present on the target object
+            for ( var field in object ) {
+                if(typeof object !== 'object') {
+                    _valuesStart[ field ] = parseFloat(object[field], 10);
+                }
             }
 
-        }
+            /**
+             * Calculate delta to resume the tween
+             * @ignore
+             */
+            me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
+        };
+
+        this.setProperties(object);
 
         /**
          * reset the tween object to default value
          * @ignore
          */
         this.onResetEvent = function ( object ) {
-            _object = object;
-            _valuesStart = {};
-            _valuesEnd = {};
-            _valuesStartRepeat = {};
-            _easingFunction = me.Tween.Easing.Linear.None;
-            _interpolationFunction = me.Tween.Interpolation.Linear;
-            _yoyo = false;
-            _reversed = false;
-            _duration = 1000;
-            _delayTime = 0;
-            _onStartCallback = null;
-            _onStartCallbackFired = false;
-            _onUpdateCallback = null;
-            _onCompleteCallback = null;
+            this.setProperties(object);
+        };
+
+        /**
+         * Unsubscribe when tween is removed
+         * @ignore
+         */
+        this.onDeactivateEvent = function () {
+            me.event.unsubscribe(me.event.STATE_RESUME, this._resumeCallback);
         };
 
         /**
@@ -179,16 +209,6 @@
             return this;
 
         };
-
-        /**
-         * Calculate delta to resume the tween
-         * @ignore
-         */
-        me.event.subscribe(me.event.STATE_RESUME, function onResume(elapsed) {
-            if (_startTime) {
-                _startTime += elapsed;
-            }
-        });
 
         /**
          * Repeat the tween
@@ -390,11 +410,11 @@
                         _valuesStart[ property ] = _valuesStartRepeat[ property ];
 
                     }
-                    
+
                     if (_yoyo) {
                         _reversed = !_reversed;
                     }
-                    
+
                     _startTime = time + _delayTime;
 
                     return true;
