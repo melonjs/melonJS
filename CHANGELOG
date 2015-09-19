@@ -42,6 +42,10 @@ Version History
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
 
+2.1.4
+* Audio : fixed the audio-enable workaround on iOS9
+* Tween : fixed potential re-initialization issues when recycling tween objects.
+
 2.1.3
 * Audio : fixed an issue with decoding audio data on Opera
 * Audio : updated to the latest 2.0 Howler beta (fixes a loop issue on Chrome mobile, and touch event for iOS playback)
