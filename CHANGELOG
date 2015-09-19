@@ -1,6 +1,8 @@
 Version History
 ---------------
 2.1.4
+* Audio : fixed the audio-enable workaround on iOS9
+* Tween : fixed potential re-initialization issues when recycling tween objects.
 
 2.1.3
 * Audio : fixed an issue with decoding audio data on Opera
