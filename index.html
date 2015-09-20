@@ -4,6 +4,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>melonJS Examples</title>
   <style>
 * {
@@ -42,12 +44,11 @@ h3 {
   font-size: 18px;
 }
 h1.logo {
-  width: 190px;
-  height: 34px;
   background-color: #5a0;
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
+  font-weight: normal;
 }
 h1.logo img {
   float: left;
@@ -58,8 +59,6 @@ h1.logo span {
   display: inline-block;
   margin: 7px 0 0 2px;
   color: #fff;
-  font-weight: normal;
-  font-size: 16px;
 }
 ul li {
   list-style: none;
@@ -91,10 +90,6 @@ a:hover {
 }
 #stacktrace {
   margin-top: 15px;
-}
-.directory h1 {
-  margin-bottom: 15px;
-  font-size: 18px;
 }
 ul#files {
   width: 100%;
@@ -209,7 +204,17 @@ ul#files.view-details li.header {
   direction: rtl;
 }
 
-/*mobile*/
+/* Desktop */
+@media (min-width: 768px) {
+  h1.logo {
+    width: 190px;
+    height: 34px;
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
   body {
     font-size: 13px;
@@ -232,11 +237,9 @@ ul#files.view-details li.header {
     border: 0;
     opacity: 1;
   }
-  .directory h1 {
+  h1.logo {
+    height: 34px;
     font-size: 2em;
-    line-height: 1.5em;
-    color: #fff;
-    background: #000;
     padding: 15px 10px;
     margin: 0;
   }
@@ -346,7 +349,7 @@ function search() {
 }
 
 $(window).on('content loaded', function(){
-  $('search').on('keyup', search);
+  $('search').on('input', search);
 });
   </script>
 </head>
