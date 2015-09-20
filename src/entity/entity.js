@@ -372,12 +372,19 @@
      * @param {Number} x the x coordinates of the object
      * @param {Number} y the y coordinates of the object
      * @param {Object} settings See {@link me.Entity}
+     * @param {String} [settings.duration] Fade duration (in ms)
+     * @param {String|me.Color} [settings.color] Fade color
+     * @param {String} [settings.to] TMX level to load
+     * @param {String|me.Container} [settings.container] Target container. See {@link me.levelDirector.loadLevel}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.levelDirector.loadLevel}
+     * @param {Boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.levelDirector.loadLevel}
+     * @param {Boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.levelDirector.loadLevel}
      * @example
      * me.game.world.addChild(new me.LevelEntity(
      *     x, y, {
-     *         "duration" : 250, // Fade duration (in ms)
-     *         "color" : "#000", // Fade color
-     *         "to" : "mymap2"   // TMX level to load
+     *         "duration" : 250,
+     *         "color" : "#000",
+     *         "to" : "mymap2"
      *     }
      * ));
      */
@@ -401,15 +408,15 @@
 
             // Collect the defined level settings
             this.loadLevelSettings = {};
-            [ "onLoaded", "flatten", "setViewportBounds" ].forEach(function (v) {
+            [ "container", "onLoaded", "flatten", "setViewportBounds" ].forEach(function (v) {
                 if (typeof(settings[v]) !== "undefined") {
                     this.loadLevelSettings[v] = settings[v];
                 }
             }.bind(this));
 
             // Lookup container name
-            if (typeof(settings.containerName) !== "undefined") {
-                this.loadLevelSettings.container = me.game.world.getChildByName(settings.containerName)[0];
+            if (typeof(this.loadLevelSettings.container) === "string") {
+                this.loadLevelSettings.container = me.game.world.getChildByName(this.loadLevelSettings.container)[0];
             }
 
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
