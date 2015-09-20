@@ -45,28 +45,25 @@ game.HUD.FSControl = me.GUI_Object.extend({
      */
     init: function(x, y) {
         this._super(me.GUI_Object, "init", [ x, y, {
-            image: undefined, // dummy one
-            framewidth : 48,
-            frameheight : 48
+            image:"fullscreen",
+            width : 48,
+            height : 48
         } ]);
-        // a renderable component
-        this.renderable = game.texture.createSpriteFromName("shadedDark30.png")
-        this.renderable.pos.setV(this.pos);
-        this.renderable.setOpacity(0.5);
+        this.setOpacity(0.5);
     },
     
     /**
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
-        this.renderable.setOpacity(1.0);
+        this.setOpacity(1.0);
     },
     
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
-        this.renderable.setOpacity(0.5);
+        this.setOpacity(0.5);
     },
     
     /**
@@ -79,10 +76,6 @@ game.HUD.FSControl = me.GUI_Object.extend({
             me.device.exitFullscreen();
         }
         return false;
-    },
-
-    draw : function (renderer) {
-        this.renderable.draw(renderer);
     }
 });
 
@@ -93,19 +86,16 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     /**
      * constructor
      */
-    init: function(x, y) {        
+    init: function(x, y) {
+        this.image_on = me.loader.getImage("sound_on");
+        this.image_off = me.loader.getImage("sound_off");
+        
         this._super(me.GUI_Object, "init", [ x, y, {
-            image: undefined, // dummy one
-            framewidth : 48,
-            frameheight : 48
+            image:this.image_on, // sound on by default
+            width : 48,
+            height : 48
         } ]);
-        // a renderable component
-        this.image_on = game.texture.createSpriteFromName("shadedDark13.png")
-        this.image_off = game.texture.createSpriteFromName("shadedDark15.png")
-        this.image_on.pos.setV(this.pos);
-        this.image_off.pos.setV(this.pos);
-        this.renderable = this.image_on;
-        this.renderable.setOpacity(0.5);
+        this.setOpacity(0.5);
         this.isMute = false;
     },
     
@@ -113,14 +103,14 @@ game.HUD.AudioControl = me.GUI_Object.extend({
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
-        this.renderable.setOpacity(1.0);
+        this.setOpacity(1.0);
     },
     
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
-        this.renderable.setOpacity(0.5);
+        this.setOpacity(0.5);
     },
     
     /**
@@ -129,19 +119,15 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     onClick : function (/* event */) {
         if (this.isMute) {
             me.audio.unmuteAll();
-            this.renderable = this.image_on;
+            this.image = this.image_on;
             this.isMute = false;
         } else {
             me.audio.muteAll();
-            this.renderable = this.image_off;
+            this.image = this.image_off;
             this.isMute = true;
         }
         return false;
     },
-
-    draw : function (renderer) {
-        this.renderable.draw(renderer);
-    }
 });
 
 /**

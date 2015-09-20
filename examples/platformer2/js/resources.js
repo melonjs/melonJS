@@ -9,6 +9,10 @@ game.resources = [
     { name: "atascii",         type:"image",   src: "data/img/atascii_24px.png" },
     { name: "background",      type:"image",   src: "data/img/background.png" },
     { name: "clouds",          type:"image",   src: "data/img/clouds.png" },
+    { name: "sound_on",        type:"image",   src: "data/img/UI/shadedDark13.png" },
+    { name: "sound_off",       type:"image",   src: "data/img/UI/shadedDark15.png" },
+    { name: "fullscreen",      type:"image",   src: "data/img/UI/shadedDark30.png" },
+
 
     /* Maps.
      * @example
