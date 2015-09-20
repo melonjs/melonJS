@@ -399,6 +399,19 @@
             // a temp variable
             this.gotolevel = settings.to;
 
+            // Collect the defined level settings
+            this.loadLevelSettings = {};
+            [ "onLoaded", "flatten", "setViewportBounds" ].forEach(function (v) {
+                if (typeof(settings[v]) !== "undefined") {
+                    this.loadLevelSettings[v] = settings[v];
+                }
+            }.bind(this));
+
+            // Lookup container name
+            if (typeof(settings.containerName) !== "undefined") {
+                this.loadLevelSettings.container = me.game.world.getChildByName(settings.containerName)[0];
+            }
+
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
         },
 
@@ -406,7 +419,7 @@
          * @ignore
          */
         onFadeComplete : function () {
-            me.levelDirector.loadLevel(this.gotolevel);
+            me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
             me.game.viewport.fadeOut(this.fade, this.duration);
         },
 
@@ -429,7 +442,7 @@
                             this.onFadeComplete.bind(this));
                 }
             } else {
-                me.levelDirector.loadLevel(this.gotolevel);
+                me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
             }
         },
 
