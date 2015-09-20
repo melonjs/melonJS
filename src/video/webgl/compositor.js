@@ -186,7 +186,8 @@
             // Initialize clear color and blend function
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
             gl.enable(gl.BLEND);
-            gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
         },
 
         /**
