@@ -325,8 +325,8 @@
                 this._pattern,
                 0,
                 0,
-                viewport.width - x,
-                viewport.height - y
+                viewport.width * 2,
+                viewport.height * 2
             );
             renderer.translate(-x, -y);
             renderer.setGlobalAlpha(alpha);
