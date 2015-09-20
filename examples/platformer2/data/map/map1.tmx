@@ -13,7 +13,7 @@
   <image source="../img/background.png"/>
   <properties>
    <property name="anchorPoint" value="json:{&quot;x&quot;:0,&quot;y&quot;:1}"/>
-   <property name="ratio" value="1"/>
+   <property name="ratio" value="0.25"/>
    <property name="repeat" value="repeat-x"/>
   </properties>
  </imagelayer>
