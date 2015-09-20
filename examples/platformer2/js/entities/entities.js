@@ -57,7 +57,6 @@ game.PlayerEntity = me.Entity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
-        this.renderable.anchorPoint.set(0.5, 1.0);
     },
 
     /* -----
@@ -219,7 +218,6 @@ game.CoinEntity = me.CollectableEntity.extend({
 
         // set the renderable position to center
         this.anchorPoint.set(0.5, 0.5);
-        this.renderable.anchorPoint.set(0.5, 0.5);
     },
 
     /**
@@ -375,7 +373,7 @@ game.SlimeEnemyEntity = game.PathEnemyEntity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
-        this.renderable.anchorPoint.set(0.5, 1.0);
+
     }
 });
 
@@ -411,6 +409,5 @@ game.FlyEnemyEntity = game.PathEnemyEntity.extend({
 
         // set the renderable position to bottom center
         this.anchorPoint.set(0.5, 1.0);
-        this.renderable.anchorPoint.set(0.5, 1.0);
     }
 });
