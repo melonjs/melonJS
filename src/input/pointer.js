@@ -710,7 +710,6 @@
         // and convert them to a system event by default
         obj.registerPointerEvent("pointermove", me.game.viewport, function (e) {
             me.event.publish(me.event.POINTERMOVE, [e]);
-            return false;
         });
     };
 })();
