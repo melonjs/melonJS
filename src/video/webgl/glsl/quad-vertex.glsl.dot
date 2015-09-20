@@ -71,7 +71,7 @@ void main(void) {
     gl_Position = vec4((uMatrix * vec3(aVertex, 1)).xy, 0, 1);
 
     // Pass the remaining attributes to the fragment shader
-    vColor = aColor;
+    vColor = vec4(aColor.rgb * aColor.a, aColor.a);
     vTexture = aTexture;
     vRegion = aRegion;
 }
