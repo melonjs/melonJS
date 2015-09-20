@@ -25,6 +25,7 @@ Version History
 * Renderable : fixed frame position when using cropping in TexturePacker (@Giwayume)
 * Renderable : `anchorPoints` now defines the renderable position, scaling and rotation default origin point (@Giwayume)
 * Renderable : better animation definition, allowing to set the animation delay on a per-frame basis
+* Renderable : added `anchorPoint` setting to the constructor
 * Renderer : added `renderer.createPattern()` and `renderer.drawPattern()`
 * Shapes : added support for the free Physic Body Editor tool (in addition to the existing PhysicsEditor support)
 * Shapes : refactored `me.Rect` to inherit from `me.Polygon`
@@ -37,10 +38,15 @@ Version History
 * TMX : removed `me.TMXTileMap.moveToCenter` and `me.TMXTileMap.reset` methods
 * TMX : added support for per-frame animation delay to Tiled Objects (for tileset animations)
 * TMX : added support for layer data encoding in JSON map format (Tiled 0.13)
+* TMX : added support for evaluations in TMX data; see spike entities in platformer 2 for a useful example
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
 * WebGLRenderer : added `repeat` parameter to `createTexture` method
+
+2.1.4
+* Audio : fixed the audio-enable workaround on iOS9
+* Tween : fixed potential re-initialization issues when recycling tween objects.
 
 2.1.3
 * Audio : fixed an issue with decoding audio data on Opera

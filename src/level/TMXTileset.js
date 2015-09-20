@@ -111,7 +111,7 @@
             var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
-            if (this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
+            if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
                 console.warn(
                     "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
                     ") does not match expected tilecount (" + tileset.tilecount + ")"

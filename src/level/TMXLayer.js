@@ -99,6 +99,8 @@
             // displaying order
             this.pos.z = settings.z || 0;
 
+            this.offset = new me.Vector2d(x, y);
+
             /**
              * Define the image scrolling ratio<br>
              * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
@@ -123,9 +125,6 @@
             }
 
             if (typeof(settings.anchorPoint) === "undefined") {
-                var aw = me.game.viewport.bounds.width - this.imagewidth,
-                    ah = me.game.viewport.bounds.height - this.imageheight;
-
                 /**
                  * Define how the image is anchored to the viewport bounds<br>
                  * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
@@ -142,10 +141,7 @@
                  * @default <0.0,0.0>
                  * @name me.ImageLayer#anchorPoint
                  */
-                this.anchorPoint.set(
-                    aw ? x / aw : 0,
-                    ah ? y / ah : 0
-                );
+                this.anchorPoint.set(0, 0);
             }
             else {
                 if (typeof(settings.anchorPoint) === "number") {
@@ -261,24 +257,11 @@
                 /*
                  * Automatic positioning
                  *
-                 * The math for scrolling was worked out with the following intentions;
-                 * - `anchorPoint` positions the image relative to the boundary edges
-                 * - `ratio` scales the total image movement by the viewport position
-                 * - The image and viewport position are clamped to the viewport bounds
-                 * - Image position is cycled full-left/top to handle repeat modes
-                 *
-                 * The completed algorithm was then simplified with the help of
-                 * Wolfram Alpha!
-                 *
-                 * It's a bit unreadable, but it works by computing the viewport
-                 * extents (the clamped range of the viewport position) scaled by
-                 * the scrolling ratio. The scaled extents are placed inside a
-                 * "sliding window", allowing the image to move in the opposite
-                 * direction when anchored to the bottom or right sides of the
-                 * viewport boundary.
+                 * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
+                 * for a thorough description of how this works.
                  */
-                x = ~~(-ax * (1 - rx) * (bw - viewport.width) + ax * (bw - width) - vpos.x * rx),
-                y = ~~(-ay * (1 - ry) * (bh - viewport.height) + ay * (bh - height) - vpos.y * ry);
+                x = ~~(ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x),
+                y = ~~(ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y);
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -325,8 +308,8 @@
                 this._pattern,
                 0,
                 0,
-                viewport.width - x,
-                viewport.height - y
+                viewport.width * 2,
+                viewport.height * 2
             );
             renderer.translate(-x, -y);
             renderer.setGlobalAlpha(alpha);

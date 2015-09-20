@@ -20,6 +20,7 @@
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
      * @param {Boolean} [settings.flipX] Initial flip for X-axis.
      * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
+     * @param {me.Vector2d} [settings.anchorPoint] Anchor point.
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, {
@@ -98,6 +99,11 @@
 
             // cache image reference
             this.image = image;
+
+            // Update anchorPoint
+            if (settings.anchorPoint) {
+                this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            }
         },
 
         /**
@@ -263,12 +269,12 @@
 
             // save context
             renderer.save();
-            
+
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
             xpos -= ax;
             ypos -= ay;
-            
+
             if ((this.scaleFlag) || (this.angle !== 0) || (this._sourceAngle !== 0)) {
                 // translate to the defined anchor point
                 xpos += ax;
@@ -305,7 +311,7 @@
 
             // restore context
             renderer.restore();
-                
+
             // restore global alpha
             renderer.setGlobalAlpha(alpha);
         },

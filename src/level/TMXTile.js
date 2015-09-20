@@ -145,16 +145,16 @@
                 (tileset.animations.get(this.tileId).frames).forEach(function (frame) {
                     frameId.push(frame.tileid);
                     frames.push({
-                        name : ""+frame.tileid, 
+                        name : ""+frame.tileid,
                         delay : frame.duration
                     });
                 });
-                renderable = tileset.texture.createAnimationFromName(frameId);
+                renderable = tileset.texture.createAnimationFromName(frameId, settings);
                 renderable.addAnimation(this.tileId - tileset.firstgid, frames);
                 renderable.setCurrentAnimation(this.tileId - tileset.firstgid);
-                
+
             } else {
-                renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid);
+                renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
             }
 
             // AD flag is never set for Tile Object, use the given rotation instead

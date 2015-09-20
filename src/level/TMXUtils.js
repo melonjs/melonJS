@@ -27,6 +27,8 @@
          * @ignore
          */
         function setTMXValue(name, value) {
+            var match;
+
             if (typeof(value) !== "string") {
                 // Value is already normalized
                 return value;
@@ -42,12 +44,22 @@
             }
             else if (value.match(/^json:/i)) {
                 // try to parse it
-                var match = value.split(/^json:/i)[1];
+                match = value.split(/^json:/i)[1];
                 try {
                     value = JSON.parse(match);
                 }
                 catch (e) {
                     throw new me.Error("Unable to parse JSON: " + match);
+                }
+            }
+            else if (value.match(/^eval:/i)) {
+                // try to evaluate it
+                match = value.split(/^eval:/i)[1];
+                try {
+                    value = eval(match);
+                }
+                catch (e) {
+                    throw new me.Error("Unable to evaluate: " + match);
                 }
             }
 
@@ -81,7 +93,7 @@
                 }
             }
         }
-    
+
        /**
         * Decode the given data
         * @ignore
@@ -89,7 +101,7 @@
         api.decode = function (data, encoding, compression) {
             compression = compression || "none";
             encoding = encoding || "none";
-            
+
             switch (encoding) {
                 case "csv":
                     return me.utils.decodeCSV(data);
@@ -101,7 +113,7 @@
                         decoded :
                         me.utils.decompress(decoded, compression)
                     );
-                
+
                 case "none":
                     return data;
 
@@ -109,7 +121,7 @@
                     throw new me.Error("Unknown layer encoding: " + encoding);
             }
         };
-        
+
         /**
          * Normalize TMX format to Tiled JSON format
          * @ignore
@@ -123,7 +135,7 @@
                     obj.data = api.decode(data.text, data.encoding, data.compression);
                     obj.encoding = "none";
                     break;
-                    
+
                 case "imagelayer":
                 case "layer":
                 case "objectgroup":
