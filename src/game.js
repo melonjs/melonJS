@@ -160,23 +160,6 @@
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
 
-                me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function () {
-                    var level = me.levelDirector.getCurrentLevel();
-
-                    if (typeof(level) !== "undefined") {
-                        // Center the map if smaller than the current viewport
-                        me.game.world.pos.set(
-                            Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
-                            Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
-                            0
-                        );
-
-                        // Translate the display if required
-                        api.world.transform.identity();
-                        api.world.transform.translateV(me.game.world.pos);
-                    }
-                });
-
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 

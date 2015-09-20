@@ -26,6 +26,8 @@
         var levelIdx = [];
         // current level index
         var currentLevelIdx = 0;
+        // onresize handler
+        var onresize_handler = null;
 
         function safeLoadLevel(levelId, options, restart) {
             // clean the destination container
@@ -98,8 +100,7 @@
 
             container.resize(level.width, level.height);
 
-            if (setViewportBounds) {
-
+            function resize_container() {
                 // center the map if smaller than the current viewport
                 container.pos.set(
                     Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
@@ -110,6 +111,16 @@
                 // translate the display if required
                 container.transform.identity();
                 container.transform.translateV(container.pos);
+            }
+
+            if (setViewportBounds) {
+                resize_container();
+
+                // Replace the resize handler
+                if (onresize_handler) {
+                    me.event.unsubscribe(onresize_handler);
+                }
+                onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, resize_container);
             }
         }
 
