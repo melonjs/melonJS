@@ -105,7 +105,7 @@
              * @name anchorPoint
              * @memberOf me.Renderable
              */
-            this.anchorPoint = new me.Vector2d();
+            this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
             /**
              * Define the renderable opacity<br>
@@ -159,9 +159,6 @@
             this._height = height;
 
             this.shapeType = "Rectangle";
-
-            // set the default anchor point (middle of the renderable)
-            this.anchorPoint.set(0.5, 0.5);
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);

@@ -40,7 +40,7 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
-            
+
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
@@ -57,8 +57,14 @@
                     "framewidth" : ~~(settings.framewidth || settings.width),
                     "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
-                    "margin" : ~~settings.margin
+                    "margin" : ~~settings.margin,
+                    "anchorPoint" : settings.anchorPoint,
                 });
+            }
+
+            // Update anchorPoint
+            if (settings.anchorPoint) {
+                this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
             }
 
             /**
@@ -276,14 +282,14 @@
         draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
-                
+
                 // draw the renderable's anchorPoint at the entity's anchor point
                 // the entity's anchor point is a scale from body position to body width/height
                 var x = ~~( 0.5 + this.pos.x + this.body.pos.x +
                     (this.anchorPoint.x * this.body.width));
                 var y = ~~( 0.5 + this.pos.y + this.body.pos.y +
                     (this.anchorPoint.y * this.body.height));
-                
+
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
                 renderer.translate(-x, -y);

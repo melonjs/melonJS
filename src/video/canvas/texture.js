@@ -253,6 +253,7 @@
          * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
+         * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
          * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
@@ -267,18 +268,18 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createSpriteFromName : function (name) {
+        createSpriteFromName : function (name, settings) {
             var region = this.getRegion(name);
             if (region) {
                 // instantiate a new sprite object
                 var sprite = me.pool.pull(
                     "me.Sprite",
                     0, 0,
-                    {
+                    Object.assign({
                         image: this.getTexture(),
                         framewidth: region.width,
                         frameheight: region.height
-                    }
+                    }, settings || {})
                 );
                 // set the sprite offset within the texture
                 sprite.offset.setV(region.offset);
@@ -299,6 +300,7 @@
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
+         * @param {Object} [settings] Additional settings passed to the {@link me.AnimationSheet} contructor
          * @return {me.AnimationSheet}
          * @example
          * // create a new texture atlas object under the `game` namespace
@@ -324,7 +326,7 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createAnimationFromName : function (names) {
+        createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};
             // iterate through the given names
             // and create a "normalized" atlas
@@ -337,7 +339,7 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0, 0, {
+            return new me.AnimationSheet(0, 0, Object.assign({
                 image: this.texture,
                 framewidth: 0,
                 frameheight: 0,
@@ -345,7 +347,7 @@
                 spacing: 0,
                 atlas: tpAtlas,
                 atlasIndices: indices
-            });
+            }, settings || {}));
         }
     });
 
