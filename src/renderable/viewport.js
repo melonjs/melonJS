@@ -205,6 +205,7 @@
         setBounds : function (x, y, w, h) {
             this.bounds.pos.set(x, y);
             this.bounds.resize(w, h);
+            this.moveTo(this.pos.x, this.pos.y);
         },
 
         /**
