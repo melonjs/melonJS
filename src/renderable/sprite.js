@@ -99,8 +99,8 @@
                     this.offset.setV(region.offset);
                     // set angle if defined
                     this._sourceAngle = region.angle;
-                    settings.framewidth = region.width;
-                    settings.frameheight = region.height;
+                    settings.framewidth = settings.framewidth || region.width;
+                    settings.frameheight = settings.frameheight || region.height;
                 } else {
                     // throw an error
                     throw new me.Sprite.Error("Texture - region for " + settings.region + " not found");
