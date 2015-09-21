@@ -274,7 +274,7 @@
                 "me.Sprite",
                 0, 0,
                 Object.assign({
-                    texture: this,
+                    image: this,
                     region : name
                 }, settings || {})
             );

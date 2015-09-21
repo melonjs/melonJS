@@ -47,7 +47,7 @@ game.HUD.FSControl = me.GUI_Object.extend({
      */
     init: function(x, y) {
         this._super(me.GUI_Object, "init", [ x, y, {
-            texture: game.texture,
+            image: game.texture,
             region : "shadedDark30.png"
         } ]);
         this.setOpacity(0.5);
@@ -90,7 +90,7 @@ game.HUD.AudioControl = me.GUI_Object.extend({
      */
     init: function(x, y) {        
         this._super(me.GUI_Object, "init", [ x, y, {
-            texture: game.texture,
+            image: game.texture,
             region : "shadedDark13.png" // ON by default
         } ]);
         

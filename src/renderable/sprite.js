@@ -14,9 +14,8 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the sprite
-     * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader.getImage}
-     * @param {me.video.renderer.Texture} [settings.texture] a texture atlas object (when specified, the image parameter will be ignored)
-     * @param {String} [settings.region] the region name containing the sprite within the specified texture
+     * @param {me.video.renderer.Texture|Image|String} settings.image reference to a sprite image or to a texture atlas.
+     * @param {String} [settings.region] the region name containing the sprite within a specified texture atlas
      * @param {Number} [settings.framewidth=settings.image.width] Image source width.
      * @param {Number} [settings.frameheight=settings.image.height] Image source height.
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
@@ -90,31 +89,38 @@
             // sprite moves in and out of the viewport
             this.isSprite = true;
             
-            if (typeof (settings.texture) !== "undefined") {
-                // use a texture atlas
-                var region = settings.texture.getRegion(settings.region);
-                if (region) {
-                    this.image = settings.texture.getTexture();
-                    // set the sprite offset within the texture
-                    this.offset.setV(region.offset);
-                    // set angle if defined
-                    this._sourceAngle = region.angle;
-                    settings.framewidth = settings.framewidth || region.width;
-                    settings.frameheight = settings.frameheight || region.height;
+            var image = settings.image;
+            
+            if (typeof (settings.region) !== "undefined") {
+                if ((typeof (image) === "object") && image.getRegion) {
+                    // use a texture atlas
+                    var region = image.getRegion(settings.region);
+                    if (region) {
+                        this.image = image.getTexture();
+                        // set the sprite offset within the texture
+                        this.offset.setV(region.offset);
+                        // set angle if defined
+                        this._sourceAngle = region.angle;
+                        settings.framewidth = settings.framewidth || region.width;
+                        settings.frameheight = settings.frameheight || region.height;
+                    } else {
+                        // throw an error
+                        throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
+                    }
                 } else {
                     // throw an error
-                    throw new me.Sprite.Error("Texture - region for " + settings.region + " not found");
+                    throw new me.Renderable.Error("Texture - invalid texture atlas : " + image);
                 }
             } else {
                // use a standard image
-               this.image = me.utils.getImage(settings.image);
+               this.image = me.utils.getImage(image);
             }
 
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth  || this.image.width,
-                settings.frameheight || this.image.height
+                settings.framewidth  || image.width,
+                settings.frameheight || image.height
             ]);
             
             // update anchorPoint
