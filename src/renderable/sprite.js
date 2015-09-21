@@ -15,6 +15,8 @@
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the sprite
      * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader.getImage}
+     * @param {me.video.renderer.Texture} [settings.texture] a texture atlas object (when specified, the image parameter will be ignored)
+     * @param {String} [settings.region] the region name containing the sprite within the specified texture
      * @param {Number} [settings.framewidth=settings.image.width] Image source width.
      * @param {Number} [settings.frameheight=settings.image.height] Image source height.
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
@@ -87,23 +89,39 @@
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
-
-            var image = me.utils.getImage(settings.image);
+            
+            if (typeof (settings.texture) !== "undefined") {
+                // use a texture atlas
+                var region = settings.texture.getRegion(settings.region);
+                if (region) {
+                    this.image = settings.texture.getTexture();
+                    // set the sprite offset within the texture
+                    this.offset.setV(region.offset);
+                    // set angle if defined
+                    this._sourceAngle = region.angle;
+                    settings.framewidth = region.width;
+                    settings.frameheight = region.height;
+                } else {
+                    // throw an error
+                    throw new me.Sprite.Error("Texture - region for " + settings.region + " not found");
+                }
+            } else {
+               // use a standard image
+               this.image = me.utils.getImage(settings.image);
+            }
 
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth  || image.width,
-                settings.frameheight || image.height
+                settings.framewidth  || this.image.width,
+                settings.frameheight || this.image.height
             ]);
-
-            // cache image reference
-            this.image = image;
-
-            // Update anchorPoint
+            
+            // update anchorPoint
             if (settings.anchorPoint) {
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
             }
+
         },
 
         /**
