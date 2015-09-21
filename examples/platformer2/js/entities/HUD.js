@@ -28,11 +28,13 @@ game.HUD.Container = me.Container.extend({
         // add our child score object at position
         this.addChild(new game.HUD.ScoreItem(-10, -40));
         
-        // add our fullscreen control object
-        this.addChild(new game.HUD.FSControl(10, 10));
-        
         // add our audio control object
-        this.addChild(new game.HUD.AudioControl(10 + 48 + 10, 10));
+        this.addChild(new game.HUD.AudioControl(10, 10));
+        
+        if (!me.device.isMobile) {
+            // add our fullscreen control object
+            this.addChild(new game.HUD.FSControl(10 + 48 + 10, 10));
+        }   
     }
 });
 
