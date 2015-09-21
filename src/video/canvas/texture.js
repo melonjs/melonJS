@@ -269,28 +269,15 @@
          * this.anchorPoint.set(0.5, 1.0);
          */
         createSpriteFromName : function (name, settings) {
-            var region = this.getRegion(name);
-            if (region) {
-                // instantiate a new sprite object
-                var sprite = me.pool.pull(
-                    "me.Sprite",
-                    0, 0,
-                    Object.assign({
-                        image: this.getTexture(),
-                        framewidth: region.width,
-                        frameheight: region.height
-                    }, settings || {})
-                );
-                // set the sprite offset within the texture
-                sprite.offset.setV(region.offset);
-                // set angle if defined
-                sprite._sourceAngle = region.angle;
-
-                // return our object
-                return sprite;
-            }
-            // throw an error
-            throw new me.video.renderer.Texture.Error("Texture - region for " + name + " not found");
+            // instantiate a new sprite object
+            return me.pool.pull(
+                "me.Sprite",
+                0, 0,
+                Object.assign({
+                    image: this,
+                    region : name
+                }, settings || {})
+            );
         },
 
         /**

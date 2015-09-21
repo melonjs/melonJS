@@ -36,7 +36,7 @@
  </layer>
  <objectgroup color="#00ff00" name="Player">
   <object id="16" name="mainPlayer" x="105" y="892" width="35" height="88"/>
-  <object id="17" name="me.LevelEntity" x="1715" y="630" width="35" height="280">
+  <object id="17" name="me.LevelEntity" x="1690" y="810" width="50" height="100">
    <properties>
     <property name="duration" value="150"/>
     <property name="fade" value="#fff"/>

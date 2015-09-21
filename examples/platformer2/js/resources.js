@@ -10,7 +10,6 @@ game.resources = [
     { name: "background",      type:"image",   src: "data/img/background.png" },
     { name: "clouds",          type:"image",   src: "data/img/clouds.png" },
 
-
     /* Maps.
      * @example
      * { name: "example01", type: "tmx", src: "data/map/example01.tmx" },

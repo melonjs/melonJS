@@ -4,9 +4,9 @@
         <key>fileFormatVersion</key>
         <int>3</int>
         <key>texturePackerVersion</key>
-        <string>3.9.2</string>
+        <string>3.9.4</string>
         <key>fileName</key>
-        <string></string>
+        <string>/Users/obiot/Documents/GitHub/melonJS/examples/platformer2/data/img/texture.tps</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -198,6 +198,7 @@
             <filename>character</filename>
             <filename>enemies</filename>
             <filename>coin.png</filename>
+            <filename>UI</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
