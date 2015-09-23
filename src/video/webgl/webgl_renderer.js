@@ -323,7 +323,7 @@
          * @see me.WebGLRenderer#createPattern
          */
         drawPattern : function (pattern, x, y, width, height) {
-            var key = "0,0," + pattern.texture.width + "," + pattern.texture.height;
+            var key = "0,0," + width + "," + height;
             this.compositor.addQuad(pattern, key, x, y, width, height);
         },
 

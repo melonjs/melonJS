@@ -14,12 +14,14 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the sprite
-     * @param {Image|String} settings.image reference to the Sprite Image. See {@link me.loader.getImage}
+     * @param {me.video.renderer.Texture|Image|String} settings.image reference to a sprite image or to a texture atlas.
+     * @param {String} [settings.region] the region name containing the sprite within a specified texture atlas
      * @param {Number} [settings.framewidth=settings.image.width] Image source width.
      * @param {Number} [settings.frameheight=settings.image.height] Image source height.
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
      * @param {Boolean} [settings.flipX] Initial flip for X-axis.
      * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
+     * @param {me.Vector2d} [settings.anchorPoint] Anchor point.
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, {
@@ -86,8 +88,33 @@
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
-
-            var image = me.utils.getImage(settings.image);
+            
+            var image = settings.image;
+            
+            if (typeof (settings.region) !== "undefined") {
+                if ((typeof (image) === "object") && image.getRegion) {
+                    // use a texture atlas
+                    var region = image.getRegion(settings.region);
+                    if (region) {
+                        this.image = image.getTexture();
+                        // set the sprite offset within the texture
+                        this.offset.setV(region.offset);
+                        // set angle if defined
+                        this._sourceAngle = region.angle;
+                        settings.framewidth = settings.framewidth || region.width;
+                        settings.frameheight = settings.frameheight || region.height;
+                    } else {
+                        // throw an error
+                        throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
+                    }
+                } else {
+                    // throw an error
+                    throw new me.Renderable.Error("Texture - invalid texture atlas : " + image);
+                }
+            } else {
+               // use a standard image
+               this.image = me.utils.getImage(image);
+            }
 
             // call the super constructor
             this._super(me.Renderable, "init", [
@@ -95,9 +122,12 @@
                 settings.framewidth  || image.width,
                 settings.frameheight || image.height
             ]);
+            
+            // update anchorPoint
+            if (settings.anchorPoint) {
+                this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            }
 
-            // cache image reference
-            this.image = image;
         },
 
         /**
@@ -260,37 +290,36 @@
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
 
             var w = this.width, h = this.height;
-            var angle = this.angle + this._sourceAngle;
 
             // save context
             renderer.save();
-            
+
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-            renderer.translate(-ax, -ay);
-            
-            if ((this.scaleFlag) || (angle !== 0)) {
+            xpos -= ax;
+            ypos -= ay;
 
+            if ((this.scaleFlag) || (this.angle !== 0) || (this._sourceAngle !== 0)) {
                 // translate to the defined anchor point
-                renderer.translate(xpos + ax, ypos + ay);
-                if (angle !== 0) {
-                    renderer.rotate(angle);
+                xpos += ax;
+                ypos += ay;
+                renderer.translate(xpos, ypos);
+                // rotate
+                if (this.angle !== 0) {
+                    renderer.rotate(this.angle);
                 }
                 // scale
                 if (this.scaleFlag) {
                     renderer.scale(this._scale.x, this._scale.y);
                 }
-
+                // remove image's TexturePacker/ShoeBox rotation
                 if (this._sourceAngle !== 0) {
-                    // swap w and h for rotated source images
+                    renderer.translate(-(xpos+ax), -(ypos+ay));
+                    renderer.rotate(this._sourceAngle);
+                    xpos -= this.height;
                     w = this.height;
                     h = this.width;
-
-                    xpos = -ay;
-                    ypos = -ax;
-                }
-                else {
-                    // reset coordinates back to upper left coordinates
+                } else {
                     xpos = -ax;
                     ypos = -ay;
                 }
@@ -306,7 +335,7 @@
 
             // restore context
             renderer.restore();
-                
+
             // restore global alpha
             renderer.setGlobalAlpha(alpha);
         },

@@ -30,6 +30,16 @@
          * @memberOf me.sys
          */
         fps : 60,
+ 
+        /**
+         * Rate at which the game updates;<br>
+         * must be equal to or lower than the fps
+         * @see me.timer.tick
+         * @type {Number}
+         * @default 60
+         * @memberOf me.sys
+         */
+        updatesPerSecond : 60,
 
         /**
          * Enable/disable frame interpolation

@@ -27,6 +27,13 @@
          * @ignore
          */
         function setTMXValue(name, value) {
+            var match;
+
+            if (typeof(value) !== "string") {
+                // Value is already normalized
+                return value;
+            }
+
             if (!value || value.isBoolean()) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
@@ -37,12 +44,22 @@
             }
             else if (value.match(/^json:/i)) {
                 // try to parse it
-                var match = value.split(/^json:/i)[1];
+                match = value.split(/^json:/i)[1];
                 try {
                     value = JSON.parse(match);
                 }
                 catch (e) {
                     throw new me.Error("Unable to parse JSON: " + match);
+                }
+            }
+            else if (value.match(/^eval:/i)) {
+                // try to evaluate it
+                match = value.split(/^eval:/i)[1];
+                try {
+                    value = eval(match);
+                }
+                catch (e) {
+                    throw new me.Error("Unable to evaluate: " + match);
                 }
             }
 
@@ -68,14 +85,42 @@
                     var attribute = elt.attributes.item(j);
                     if (typeof(attribute.name) !== "undefined") {
                         // DOM4 (Attr no longer inherit from Node)
-                        obj[attribute.name] = setTMXValue(attribute.name, attribute.value);
+                        obj[attribute.name] = attribute.value;
                     } else {
                         // else use the deprecated ones
-                        obj[attribute.nodeName] = setTMXValue(attribute.nodeName, attribute.nodeValue);
+                        obj[attribute.nodeName] = attribute.nodeValue;
                     }
                 }
             }
         }
+
+       /**
+        * Decode the given data
+        * @ignore
+        */
+        api.decode = function (data, encoding, compression) {
+            compression = compression || "none";
+            encoding = encoding || "none";
+
+            switch (encoding) {
+                case "csv":
+                    return me.utils.decodeCSV(data);
+
+                case "base64":
+                    var decoded = me.utils.decodeBase64AsArray(data, 4);
+                    return (
+                        (compression === "none") ?
+                        decoded :
+                        me.utils.decompress(decoded, compression)
+                    );
+
+                case "none":
+                    return data;
+
+                default:
+                    throw new me.Error("Unknown layer encoding: " + encoding);
+            }
+        };
 
         /**
          * Normalize TMX format to Tiled JSON format
@@ -87,25 +132,8 @@
             switch (nodeName) {
                 case "data":
                     var data = api.parse(item);
-                    var compression = data.compression || "none";
-
-                    switch (data.encoding) {
-                        case "csv":
-                            obj.data = me.utils.decodeCSV(data.text);
-                            break;
-
-                        case "base64":
-                            var decoded = me.utils.decodeBase64AsArray(data.text, 4);
-                            obj.data = (
-                                (compression === "none") ?
-                                decoded :
-                                me.utils.decompress(decoded, compression)
-                            );
-                            break;
-
-                        default:
-                            throw new me.Error("Unknown layer encoding: " + data.encoding);
-                    }
+                    obj.data = api.decode(data.text, data.encoding, data.compression);
+                    obj.encoding = "none";
                     break;
 
                 case "imagelayer":
@@ -174,7 +202,7 @@
 
                 case "property":
                     var property = api.parse(item);
-                    obj[property.name] = "" + property.value;
+                    obj[property.name] = setTMXValue(property.name, property.value);
                     break;
 
                 default:

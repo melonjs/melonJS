@@ -14,7 +14,7 @@
      * @memberOf me
      * @constructor
      * @param {me.Entity} entity the parent entity
-     * @param {me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
+     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */

@@ -96,6 +96,18 @@
          * @memberOf me.timer
          */
         api.fps = 0;
+        
+        /**
+         * Last update time.<br/>
+         * Use this value to implement frame prediction in drawing events,
+         * for creating smooth motion while running game update logic at
+         * a lower fps.
+         * @public
+         * @type Date
+         * @name lastUpdate
+         * @memberOf me.timer
+         */
+        api.lastUpdate = window.performance.now();
 
         /**
          * init the timer

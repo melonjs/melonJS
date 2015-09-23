@@ -75,10 +75,12 @@
 
             // parse all objects
             var _objects = tmxObjGroup.objects;
-            var self = this;
-            _objects.forEach(function (tmxObj) {
-                self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
-            });
+            if (_objects) {
+                var self = this;
+                _objects.forEach(function (tmxObj) {
+                    self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
+                });
+            }
         },
 
         /**

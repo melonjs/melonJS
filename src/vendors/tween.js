@@ -37,52 +37,83 @@
      */
     me.Tween = function ( object ) {
 
-        var _object = object;
-        var _valuesStart = {};
-        var _valuesEnd = {};
-        var _valuesStartRepeat = {};
-        var _duration = 1000;
-        var _repeat = 0;
-        var _yoyo = false;
-        var _reversed = false;
-        var _delayTime = 0;
+        var _object = null;
+        var _valuesStart = null;
+        var _valuesEnd = null;
+        var _valuesStartRepeat = null;
+        var _duration = null;
+        var _repeat = null;
+        var _yoyo = null;
+        var _reversed = null;
+        var _delayTime = null;
         var _startTime = null;
-        var _easingFunction = me.Tween.Easing.Linear.None;
-        var _interpolationFunction = me.Tween.Interpolation.Linear;
-        var _chainedTweens = [];
+        var _easingFunction = null;
+        var _interpolationFunction = null;
+        var _chainedTweens = null;
         var _onStartCallback = null;
-        var _onStartCallbackFired = false;
+        var _onStartCallbackFired = null;
         var _onUpdateCallback = null;
         var _onCompleteCallback = null;
+        var _tweenTimeTracker = null;
 
 
-        // Set all starting values present on the target object
-        for ( var field in object ) {
-            if(typeof object !== 'object') {
-                _valuesStart[ field ] = parseFloat(object[field], 10);
+        this._resumeCallback = function (elapsed) {
+            if (_startTime) {
+                _startTime += elapsed;
+            }
+        };
+
+        this.setProperties = function (object) {
+            _object = object;
+            _valuesStart = {};
+            _valuesEnd = {};
+            _valuesStartRepeat = {};
+            _duration = 1000;
+            _repeat = 0;
+            _yoyo = false;
+            _reversed = false;
+            _delayTime = 0;
+            _startTime = null;
+            _easingFunction = me.Tween.Easing.Linear.None;
+            _interpolationFunction = me.Tween.Interpolation.Linear;
+            _chainedTweens = [];
+            _onStartCallback = null;
+            _onStartCallbackFired = false;
+            _onUpdateCallback = null;
+            _onCompleteCallback = null;
+            _tweenTimeTracker = me.timer.lastUpdate;
+
+
+            // Set all starting values present on the target object
+            for ( var field in object ) {
+                if(typeof object !== 'object') {
+                    _valuesStart[ field ] = parseFloat(object[field], 10);
+                }
             }
 
-        }
+            /**
+             * Calculate delta to resume the tween
+             * @ignore
+             */
+            me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
+        };
+
+        this.setProperties(object);
 
         /**
          * reset the tween object to default value
          * @ignore
          */
         this.onResetEvent = function ( object ) {
-            _object = object;
-            _valuesStart = {};
-            _valuesEnd = {};
-            _valuesStartRepeat = {};
-            _easingFunction = me.Tween.Easing.Linear.None;
-            _interpolationFunction = me.Tween.Interpolation.Linear;
-            _yoyo = false;
-            _reversed = false;
-            _duration = 1000;
-            _delayTime = 0;
-            _onStartCallback = null;
-            _onStartCallbackFired = false;
-            _onUpdateCallback = null;
-            _onCompleteCallback = null;
+            this.setProperties(object);
+        };
+
+        /**
+         * Unsubscribe when tween is removed
+         * @ignore
+         */
+        this.onDeactivateEvent = function () {
+            me.event.unsubscribe(me.event.STATE_RESUME, this._resumeCallback);
         };
 
         /**
@@ -181,16 +212,6 @@
         };
 
         /**
-         * Calculate delta to resume the tween
-         * @ignore
-         */
-        me.event.subscribe(me.event.STATE_RESUME, function onResume(elapsed) {
-            if (_startTime) {
-                _startTime += elapsed;
-            }
-        });
-
-        /**
          * Repeat the tween
          * @name me.Tween#repeat
          * @public
@@ -223,7 +244,7 @@
          * @name me.Tween#easing
          * @public
          * @function
-         * @param {me.Tween#Easing} easing easing function
+         * @param {me.Tween.Easing} fn easing function
          */
         this.easing = function ( easing ) {
             if (typeof easing !== 'function') {
@@ -239,7 +260,7 @@
          * @name me.Tween#interpolation
          * @public
          * @function
-         * @param {me.Tween#Interpolation} easing easing function
+         * @param {me.Tween.Interpolation} fn interpolation function
          */
         this.interpolation = function ( interpolation ) {
 
@@ -304,12 +325,13 @@
 
         };
 
-        /** @ignore*/
+        /** @ignore */
         this.update = function ( dt ) {
 
             // the original Tween implementation expect
             // a timestamp and not a time delta
-            var time = me.timer.getTime();
+            _tweenTimeTracker = (me.timer.lastUpdate > _tweenTimeTracker) ? me.timer.lastUpdate : _tweenTimeTracker + dt;
+            var time = _tweenTimeTracker;
 
             var property;
 
@@ -390,11 +412,11 @@
                         _valuesStart[ property ] = _valuesStartRepeat[ property ];
 
                     }
-                    
+
                     if (_yoyo) {
                         _reversed = !_reversed;
                     }
-                    
+
                     _startTime = time + _delayTime;
 
                     return true;
@@ -465,7 +487,8 @@
      * @public
      * @constant
      * @type enum
-     * @name me.Tween#Easing
+     * @name Easing
+     * @memberOf me.Tween
      */
     me.Tween.Easing = {
 
@@ -746,16 +769,18 @@
 
     };
 
-    /* Interpolation Function :<br>
+    /**
+     * Interpolation Function :<br>
      * <p>
      * me.Tween.Interpolation.Linear<br>
      * me.Tween.Interpolation.Bezier<br>
-     * me.Tween.Interpolation.CatmullRom<br>
+     * me.Tween.Interpolation.CatmullRom
      * </p>
      * @public
      * @constant
      * @type enum
-     * @name me.Tween#Interpolation
+     * @name Interpolation
+     * @memberOf me.Tween
      */
     me.Tween.Interpolation = {
         /** @ignore */

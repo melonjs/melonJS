@@ -124,7 +124,10 @@ module.exports = function (grunt) {
     uglify : {
       options : {
         report : "min",
-        preserveComments : "some"
+        preserveComments : "some",
+        mangle: {
+          eval: true
+        }
       },
       dist : {
         files : {

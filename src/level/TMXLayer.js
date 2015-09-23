@@ -99,6 +99,8 @@
             // displaying order
             this.pos.z = settings.z || 0;
 
+            this.offset = new me.Vector2d(x, y);
+
             /**
              * Define the image scrolling ratio<br>
              * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
@@ -150,14 +152,6 @@
                 }
             }
 
-            // default value for repeat
-            this._repeat = "repeat";
-
-            this.repeatX = true;
-            this.repeatY = true;
-
-            this.createPattern();
-
             /**
              * Define if and how an Image Layer should be repeated.<br>
              * By default, an Image Layer is repeated both vertically and horizontally.<br>
@@ -198,13 +192,20 @@
                     this.createPattern();
                 }
             });
+
+            this.repeat = settings.repeat || "repeat";
         },
 
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
+            var _updateLayerFn = this.updateLayer.bind(this);
             // register to the viewport change notification
-            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.updateLayer.bind(this));
+            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, _updateLayerFn);
             this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+            this.vpLoadedHdlr = me.event.subscribe(me.event.LEVEL_LOADED, function() {
+                // force a first refresh when the level is loaded
+                _updateLayerFn(me.game.viewport.pos);
+            });
         },
 
         /**
@@ -252,30 +253,15 @@
                 bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
-                vx = vpos.x,
-                vy = vpos.y,
 
                 /*
                  * Automatic positioning
                  *
-                 * The math for scrolling was worked out with the following intentions;
-                 * - `anchorPoint` positions the image relative to the boundary edges
-                 * - `ratio` scales the total image movement by the viewport position
-                 * - The image and viewport position are clamped to the viewport bounds
-                 * - Image position is cycled full-left/top to handle repeat modes
-                 *
-                 * The completed algorithm was then simplified with the help of
-                 * Wolfram Alpha!
-                 *
-                 * It's a bit unreadable, but it works by computing the viewport
-                 * extents (the clamped range of the viewport position) scaled by
-                 * the scrolling ratio. The scaled extents are placed inside a
-                 * "sliding window", allowing the image to move in the opposite
-                 * direction when anchored to the bottom or right sides of the
-                 * viewport boundary.
+                 * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
+                 * for a thorough description of how this works.
                  */
-                x = ~~(-ax * rx * (bw - viewport.width) + ax * (bw - width) - vx * (1 - rx)),
-                y = ~~(-ay * ry * (bh - viewport.height) + ay * (bh - height) - vy * (1 - ry));
+                x = ~~(ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x),
+                y = ~~(ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y);
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -316,30 +302,25 @@
                 y = ~~(y + ay * (bh - height));
             }
 
-            renderer.globalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
             renderer.translate(x, y);
             renderer.drawPattern(
                 this._pattern,
                 0,
                 0,
-                viewport.width - x,
-                viewport.height - y
+                viewport.width * 2,
+                viewport.height * 2
             );
             renderer.translate(-x, -y);
-            renderer.globalAlpha(alpha);
+            renderer.setGlobalAlpha(alpha);
         },
 
         // called when the layer is removed from the game world or a container
         onDeactivateEvent : function () {
-            // cancel the event subscription
-            if (this.vpChangeHdlr)  {
-                me.event.unsubscribe(this.vpChangeHdlr);
-                this.vpChangeHdlr = null;
-            }
-            if (this.vpResizeHdlr)  {
-                me.event.unsubscribe(this.vpResizeHdlr);
-                this.vpResizeHdlr = null;
-            }
+            // cancel all event subscriptions
+            me.event.unsubscribe(this.vpChangeHdlr);
+            me.event.unsubscribe(this.vpResizeHdlr);
+            me.event.unsubscribe(this.vpLoadedHdlr);
         }
 
     });
@@ -380,7 +361,19 @@
             this.tilesets = tilesets;
 
             // the default tileset
+            // XXX: Is this even used?
             this.tileset = (this.tilesets ? this.tilesets.getTilesetByIndex(0) : null);
+
+            // Biggest tile size to draw
+            this.maxTileSize = {
+                "width" : 0,
+                "height" : 0
+            };
+            for (var i = 0; i < this.tilesets.length; i++) {
+                var tileset = this.tilesets.getTilesetByIndex(i);
+                this.maxTileSize.width = Math.max(this.maxTileSize.width, tileset.tilewidth);
+                this.maxTileSize.height = Math.max(this.maxTileSize.height, tileset.tileheight);
+            }
 
             /**
              * All animated tilesets in this layer

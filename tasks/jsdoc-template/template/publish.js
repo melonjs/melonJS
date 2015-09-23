@@ -17,7 +17,9 @@ var template = require( 'jsdoc/template' ),
 // jsdoc node support is still a bit odd
 	moment = require( "./moment" ),
 	htmlsafe = helper.htmlsafe,
-	linkto = helper.linkto,
+	linkto = function () {
+		return helper.linkto.apply(helper, arguments).replace(/#\./, "#");
+	},
 	resolveAuthorLinks = helper.resolveAuthorLinks,
 	scopeToPunc = helper.scopeToPunc,
 	hasOwnProp = Object.prototype.hasOwnProperty,

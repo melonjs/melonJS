@@ -40,7 +40,7 @@
              * @memberOf me.Entity
              */
             this.renderable = null;
-            
+
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
                 throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
@@ -57,8 +57,14 @@
                     "framewidth" : ~~(settings.framewidth || settings.width),
                     "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
-                    "margin" : ~~settings.margin
+                    "margin" : ~~settings.margin,
+                    "anchorPoint" : settings.anchorPoint,
                 });
+            }
+
+            // Update anchorPoint
+            if (settings.anchorPoint) {
+                this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
             }
 
             /**
@@ -276,14 +282,14 @@
         draw : function (renderer) {
             // draw the sprite if defined
             if (this.renderable) {
-                
+
                 // draw the renderable's anchorPoint at the entity's anchor point
                 // the entity's anchor point is a scale from body position to body width/height
                 var x = ~~( 0.5 + this.pos.x + this.body.pos.x +
                     (this.anchorPoint.x * this.body.width));
                 var y = ~~( 0.5 + this.pos.y + this.body.pos.y +
                     (this.anchorPoint.y * this.body.height));
-                
+
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
                 renderer.translate(-x, -y);
@@ -366,12 +372,19 @@
      * @param {Number} x the x coordinates of the object
      * @param {Number} y the y coordinates of the object
      * @param {Object} settings See {@link me.Entity}
+     * @param {String} [settings.duration] Fade duration (in ms)
+     * @param {String|me.Color} [settings.color] Fade color
+     * @param {String} [settings.to] TMX level to load
+     * @param {String|me.Container} [settings.container] Target container. See {@link me.levelDirector.loadLevel}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.levelDirector.loadLevel}
+     * @param {Boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.levelDirector.loadLevel}
+     * @param {Boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.levelDirector.loadLevel}
      * @example
      * me.game.world.addChild(new me.LevelEntity(
      *     x, y, {
-     *         "duration" : 250, // Fade duration (in ms)
-     *         "color" : "#000", // Fade color
-     *         "to" : "mymap2"   // TMX level to load
+     *         "duration" : 250,
+     *         "color" : "#000",
+     *         "to" : "mymap2"
      *     }
      * ));
      */
@@ -393,6 +406,19 @@
             // a temp variable
             this.gotolevel = settings.to;
 
+            // Collect the defined level settings
+            this.loadLevelSettings = {};
+            [ "container", "onLoaded", "flatten", "setViewportBounds" ].forEach(function (v) {
+                if (typeof(settings[v]) !== "undefined") {
+                    this.loadLevelSettings[v] = settings[v];
+                }
+            }.bind(this));
+
+            // Lookup container name
+            if (typeof(this.loadLevelSettings.container) === "string") {
+                this.loadLevelSettings.container = me.game.world.getChildByName(this.loadLevelSettings.container)[0];
+            }
+
             this.body.collisionType = me.collision.types.ACTION_OBJECT;
         },
 
@@ -400,7 +426,7 @@
          * @ignore
          */
         onFadeComplete : function () {
-            me.levelDirector.loadLevel(this.gotolevel);
+            me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
             me.game.viewport.fadeOut(this.fade, this.duration);
         },
 
@@ -423,7 +449,7 @@
                             this.onFadeComplete.bind(this));
                 }
             } else {
-                me.levelDirector.loadLevel(this.gotolevel);
+                me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
             }
         },
 

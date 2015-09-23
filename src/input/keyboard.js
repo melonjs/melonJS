@@ -278,7 +278,7 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {me.input#KEY} keycode
+     * @param {me.input.KEY} keycode
      * @param {Boolean} true to trigger a key press, or false for key release
      * @example
      * // trigger a key press
@@ -301,7 +301,7 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {me.input#KEY} keycode
+     * @param {me.input.KEY} keycode
      * @param {String} action user defined corresponding action
      * @param {Boolean} [lock=false] cancel the keypress event once read
      * @param {Boolean} [preventDefault=me.input.preventDefault] prevent default browser action
@@ -352,7 +352,7 @@
      * @memberOf me.input
      * @public
      * @function
-     * @param {me.input#KEY} keycode
+     * @param {me.input.KEY} keycode
      * @example
      * me.input.unbindKey(me.input.KEY.LEFT);
      */

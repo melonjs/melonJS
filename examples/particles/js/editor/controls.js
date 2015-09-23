@@ -32,7 +32,6 @@
 
         clear : function() {
             for ( var emitters = this.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {
-                me.game.world.removeChild(obj.container);
                 me.game.world.removeChild(obj);
             }
             this.emitters.length = 0;
@@ -44,9 +43,8 @@
             var y = me.game.viewport.getHeight() / 2;
             var emitter = new me.ParticleEmitter(x, y, params);
             emitter.name = "emitter" + me.utils.createGUID();
-            emitter.z = 10;
+            emitter.pos.z = 10;
             me.game.world.addChild(emitter);
-            me.game.world.addChild(emitter.container);
             emitter.streamParticles();
             this.addEmitter(emitter);
             this.selectEmitter(emitter);
@@ -57,7 +55,6 @@
             var emitter = this.emitters[this.emitterList.selectedIndex];
             if (emitter) {
                 this.removeEmitter(emitter);
-                me.game.world.removeChild(emitter.container);
                 me.game.world.removeChild(emitter);
                 return emitter;
             }
@@ -470,9 +467,8 @@
                     code.push("var emitter = new me.ParticleEmitter(x, y);");
                 }
                 code.push("emitter.name = '" + emitter.name + "';");
-                code.push("emitter.z = " + emitter.z + ";");
+                code.push("emitter.pos.z = " + emitter.pos.z + ";");
                 code.push("me.game.world.addChild(emitter);");
-                code.push("me.game.world.addChild(emitter.container);");
                 code.push("emitter.streamParticles();");
                 this.output.value = code.join("\n");
             } else {

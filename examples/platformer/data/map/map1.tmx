@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff" nextobjectid="21">
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="50" height="17" tilewidth="35" tileheight="35" backgroundcolor="#cc66ff" nextobjectid="22">
  <tileset firstgid="1" source="tileset.tsx"/>
  <imagelayer name="gradient_background">
   <image source="../img/background.png"/>
@@ -72,8 +72,8 @@
   <object id="14" x="490" y="525" width="280" height="70"/>
   <object id="15" x="840" y="525" width="70" height="70"/>
   <object id="16" x="980" y="525" width="245" height="70"/>
-  <object id="17" x="1225" y="595">
-   <polygon points="0,0 0,-70 70,-140 525,-140 525,0"/>
+  <object id="17" type="slope" x="1225" y="595">
+   <polygon points="0,0 0,-70 70,-140 70,0"/>
   </object>
   <object id="18" type="platform" x="560" y="455">
    <properties>
@@ -90,5 +90,6 @@
   <object id="20" x="1" y="35">
    <polyline points="0,0 0,490"/>
   </object>
+  <object id="21" x="1295" y="455" width="455" height="140"/>
  </objectgroup>
 </map>

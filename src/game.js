@@ -28,10 +28,24 @@
         // to know when we have to refresh the display
         var isDirty = true;
 
+        // always refresh the display when updatesPerSecond are lower than fps
+        var isAlwaysDirty = false;
+
         // frame counter for frameSkipping
         // reset the frame counter
         var frameCounter = 0;
         var frameRate = 1;
+
+        // time accumulation for multiple update calls
+        var accumulator = 0.0;
+        var accumulatorMax = 0.0;
+        var accumulatorUpdateDelta = 0;
+
+        // min update step size
+        var stepSize = 1000 / 60;
+        var updateDelta = 0;
+        var lastUpdateStart = null;
+        var updateAverageDelta = 0;
 
         // reference to the renderer object
         var renderer = null;
@@ -146,23 +160,6 @@
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
 
-                me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function () {
-                    var level = me.levelDirector.getCurrentLevel();
-
-                    if (typeof(level) !== "undefined") {
-                        // Center the map if smaller than the current viewport
-                        me.game.world.pos.set(
-                            Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
-                            Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
-                            0
-                        );
-
-                        // Translate the display if required
-                        api.world.transform.identity();
-                        api.world.transform.translateV(me.game.world.pos);
-                    }
-                });
-
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
@@ -209,6 +206,15 @@
             // reset the frame counter
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
+
+            // set step size based on the updatesPerSecond
+            stepSize = (1000 / me.sys.updatesPerSecond);
+            accumulator = 0.0;
+            accumulatorMax = stepSize * 10;
+
+            // display should always re-draw when update speed doesn't match fps
+            // this means the user intends to write position prediction drawing logic
+            isAlwaysDirty = (me.sys.fps > me.sys.updatesPerSecond);
         };
 
         /**
@@ -254,17 +260,39 @@
                 // update the timer
                 me.timer.update(time);
 
-                // clear the quadtree
-                me.collision.quadTree.clear();
+                // update the gamepads
+                me.input._updateGamepads();
 
-                // insert the world container (children) into the quadtree
-                me.collision.quadTree.insertContainer(api.world);
+                accumulator += me.timer.getDelta();
+                accumulator = Math.min(accumulator, accumulatorMax);
 
-                // update all objects (and pass the elapsed time since last frame)
-                isDirty = api.world.update(me.timer.getDelta()) || isDirty;
+                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
+                accumulatorUpdateDelta = (me.sys.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-                // update the camera/viewport
-                isDirty = api.viewport.update(me.timer.getDelta()) || isDirty;
+                while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
+                    lastUpdateStart = window.performance.now();
+
+                    // clear the quadtree
+                    me.collision.quadTree.clear();
+
+                    // insert the world container (children) into the quadtree
+                    me.collision.quadTree.insertContainer(api.world);
+
+                    // update all objects (and pass the elapsed time since last frame)
+                    isDirty = api.world.update(updateDelta) || isDirty;
+
+                    // update the camera/viewport
+                    isDirty = api.viewport.update(updateDelta) || isDirty;
+
+                    me.timer.lastUpdate = window.performance.now();
+                    updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
+
+                    accumulator -= accumulatorUpdateDelta;
+                    if (me.sys.interpolation) {
+                        accumulator = 0;
+                        break;
+                    }
+                }
             }
         };
 
@@ -277,7 +305,7 @@
          * @function
          */
         api.draw = function () {
-            if (isDirty) {
+            if (isDirty || isAlwaysDirty) {
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)
                 var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;

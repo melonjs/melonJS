@@ -147,7 +147,7 @@
                         originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
                         originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
                     }
-                    
+
                     atlas[frame.filename] = {
                         name         : name, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
@@ -181,11 +181,11 @@
             );
 
             // verifying the texture size
-            if (((width - margin + spacing) % (data.framewidth + spacing) !== 0 ||
-                (height - margin + spacing) % (data.frameheight + spacing) !== 0)) {
+            if ((width % (data.framewidth + spacing)) !== 0 ||
+                (height % (data.frameheight + spacing)) !== 0) {
                 // "truncate size"
-                width = margin + spritecount.x * (data.framewidth + spacing);
-                height = margin + spritecount.y * (data.frameheight + spacing);
+                width = spritecount.x * (data.framewidth + spacing);
+                height = spritecount.y * (data.frameheight + spacing);
                 // warning message
                 console.warn(
                     "Spritesheet Texture for image: " + image.src +
@@ -253,6 +253,7 @@
          * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
+         * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
          * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
@@ -267,29 +268,16 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createSpriteFromName : function (name) {
-            var region = this.getRegion(name);
-            if (region) {
-                // instantiate a new sprite object
-                var sprite = me.pool.pull(
-                    "me.Sprite",
-                    0, 0,
-                    {
-                        image: this.getTexture(),
-                        framewidth: region.width,
-                        frameheight: region.height
-                    }
-                );
-                // set the sprite offset within the texture
-                sprite.offset.setV(region.offset);
-                // set angle if defined
-                sprite._sourceAngle = region.angle;
-
-                // return our object
-                return sprite;
-            }
-            // throw an error
-            throw new me.video.renderer.Texture.Error("Texture - region for " + name + " not found");
+        createSpriteFromName : function (name, settings) {
+            // instantiate a new sprite object
+            return me.pool.pull(
+                "me.Sprite",
+                0, 0,
+                Object.assign({
+                    image: this,
+                    region : name
+                }, settings || {})
+            );
         },
 
         /**
@@ -299,6 +287,7 @@
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
+         * @param {Object} [settings] Additional settings passed to the {@link me.AnimationSheet} contructor
          * @return {me.AnimationSheet}
          * @example
          * // create a new texture atlas object under the `game` namespace
@@ -324,7 +313,7 @@
          * // set the renderable position to bottom center
          * this.anchorPoint.set(0.5, 1.0);
          */
-        createAnimationFromName : function (names) {
+        createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};
             // iterate through the given names
             // and create a "normalized" atlas
@@ -337,7 +326,7 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0, 0, {
+            return new me.AnimationSheet(0, 0, Object.assign({
                 image: this.texture,
                 framewidth: 0,
                 frameheight: 0,
@@ -345,7 +334,7 @@
                 spacing: 0,
                 atlas: tpAtlas,
                 atlasIndices: indices
-            });
+            }, settings || {}));
         }
     });
 
