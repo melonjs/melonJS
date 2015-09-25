@@ -3,22 +3,21 @@ game.PlayScreen = me.ScreenObject.extend({
      *  action to perform on state change
      */
     onResetEvent: function() {
-        me.game.world.addChild(new me.ColorLayer("background", "#330000", 0));
-        me.game.world.addChild(game.texture.createSpriteFromName("backdrop.png"), 1);
-        var animationSheet = game.texture.createAnimationFromName([
-            "slice04_04.png", "slice05_05.png", "slice12_12.png", "slice13_13.png"
-        ]);
-
-        animationSheet.pos.x = 200;
-        animationSheet.pos.y = 200;
-        me.game.world.addChild(animationSheet, 2);
-    },
-
-    /**
-     *  action to perform when leaving this screen (state change)
-     */
-    onDestroyEvent: function() {
-        me.device.unwatchDeviceOrientation();
-        me.device.unwatchAccelerometer();
+        // viewport width and height
+        var w = me.game.viewport.width;
+        var h = me.game.viewport.height;
+        
+        // add the Background
+        var background = game.texture.createSpriteFromName("background");
+        // set position to the middle of the viewport
+        // (as the sprite anchorPoint is (0.5, 0.5)
+        background.pos.set(w / 2, h / 2, 1);
+        // add to the scene
+        me.game.world.addChild(background, 1);
+        
+        // add the Cap Guy
+        var CapGuyEntity = new game.CapGuyEntity();
+        // add it to the scene
+        me.game.world.addChild(CapGuyEntity, 2);
     }
 });
