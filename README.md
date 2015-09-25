@@ -56,6 +56,10 @@ and currently features :
 
 Using melonJS
 -------------------------------------------------------------------------------
+
+* [API Documentation](http://melonjs.github.io/melonJS/docs/)
+* [Examples](http://melonjs.github.io/melonJS/)
+
 For your first time using melonJS, follow these tutorials :
 
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
