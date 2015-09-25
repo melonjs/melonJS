@@ -52,6 +52,7 @@ h1.logo {
 }
 h1.logo img {
   float: left;
+  clear: both;
   height: 30px;
   margin-left: 5px;
 }
@@ -59,6 +60,9 @@ h1.logo span {
   display: inline-block;
   margin: 7px 0 0 2px;
   color: #fff;
+}
+h1.docs {
+  background-color: #360;
 }
 ul li {
   list-style: none;
@@ -355,6 +359,9 @@ $(window).on('content loaded', function(){
 </head>
 <body class="directory">
   <input id="search" type="text" placeholder="Search" autocomplete="off">
+  <div id="docs">
+    <h1 class="logo docs"><a href="docs"><img src="media/logo.png" alt="melonJS"></img><span>melon.js API Docs</span></a></h1>
+  </div>
   <div id="wrapper">
     <h1 class="logo"><a href="http://melonjs.org/"><img src="media/logo.png" alt="melonJS"></img><span>melon.js Examples</span></a></h1>
     <ul id="files" class="view-tiles">
