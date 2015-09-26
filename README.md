@@ -25,6 +25,7 @@ and currently features :
 - Lightweight physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
+- 3rd party tools support for physic body definition (PhysicEditor, Physic Body Editor)
 - Advanced math API for Vector and Matrix
 - Tween Effects
 - Transition effects
