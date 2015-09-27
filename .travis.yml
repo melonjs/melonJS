@@ -8,7 +8,8 @@ before_install:
   - "npm install -g grunt-cli"
 
 before_script:
-  - "rvm 2.2 do gem install travis-artifacts"
+  - "gem install net-ssh -v 2.9.2"
+  - "gem install travis-artifacts"
 
 after_success:
   - "./scripts/travis-upload.sh"
