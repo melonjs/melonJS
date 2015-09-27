@@ -4,6 +4,9 @@ node_js:
   - 0.10
   - 0.12
 
+rvm:
+  - 2.2.x
+
 before_install:
   - "npm install -g grunt-cli"
 
