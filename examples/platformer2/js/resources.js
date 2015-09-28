@@ -49,8 +49,4 @@ game.resources = [
     // texturePacker
     { name: "texture",         type: "json",   src: "data/img/texture.json" },
     { name: "texture",         type: "image",  src: "data/img/texture.png" }
-    // ShoeBox
-    //{ name: "texture",         type: "json",   src: "data/gfx/shoebox.json" },
-    //{ name: "texture",         type: "image",  src: "data/gfx/shoebox.png" }
-
 ];
