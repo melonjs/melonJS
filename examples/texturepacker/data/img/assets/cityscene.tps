@@ -6,7 +6,7 @@
         <key>texturePackerVersion</key>
         <string>3.9.4</string>
         <key>fileName</key>
-        <string>C:/Users/olivier.biot/Documents/GitHub/melonJS/examples/platformer2/data/img/texture.tps</string>
+        <string>C:/Users/olivier.biot/Documents/GitHub/melonJS/examples/texturepacker/data/img/assets/cityscene.tps</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -28,7 +28,7 @@
             </struct>
         </array>
         <key>allowRotation</key>
-        <false/>
+        <true/>
         <key>premultiplyAlpha</key>
         <false/>
         <key>shapeDebug</key>
@@ -38,7 +38,7 @@
         <key>dataFormat</key>
         <string>json-array</string>
         <key>textureFileName</key>
-        <filename>texture.png</filename>
+        <filename>../cityscene.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrCompressionQuality</key>
@@ -58,7 +58,7 @@
         <key>jxrCompressionLevel</key>
         <uint>0</uint>
         <key>ditherType</key>
-        <enum type="SettingsBase::DitherType">PngQuantHigh</enum>
+        <enum type="SettingsBase::DitherType">NearestNeighbour</enum>
         <key>backgroundColor</key>
         <uint>0</uint>
         <key>libGdx</key>
@@ -76,7 +76,7 @@
         <key>jpgQuality</key>
         <uint>80</uint>
         <key>pngOptimizationLevel</key>
-        <uint>0</uint>
+        <uint>1</uint>
         <key>webpQualityLevel</key>
         <uint>101</uint>
         <key>textureSubPath</key>
@@ -95,9 +95,9 @@
         <key>fixedTextureSize</key>
         <QSize>
             <key>width</key>
-            <int>512</int>
+            <int>-1</int>
             <key>height</key>
-            <int>256</int>
+            <int>-1</int>
         </QSize>
         <key>reduceBorderArtifacts</key>
         <false/>
@@ -112,7 +112,7 @@
             <key>forceSquared</key>
             <false/>
             <key>forceWordAligned</key>
-            <true/>
+            <false/>
             <key>maxRects</key>
             <struct type="AlgorithmMaxRectsSettings">
                 <key>heuristic</key>
@@ -147,12 +147,7 @@
             <key>data</key>
             <struct type="DataFile">
                 <key>name</key>
-                <filename>texture.json</filename>
-            </struct>
-            <key>java</key>
-            <struct type="DataFile">
-                <key>name</key>
-                <filename>texture.java</filename>
+                <filename>../cityscene.json</filename>
             </struct>
         </map>
         <key>multiPack</key>
@@ -160,7 +155,7 @@
         <key>forceIdenticalLayout</key>
         <false/>
         <key>outputFormat</key>
-        <enum type="SettingsBase::OutputFormat">INDEXED</enum>
+        <enum type="SettingsBase::OutputFormat">RGBA8888</enum>
         <key>contentProtection</key>
         <struct type="ContentProtection">
             <key>key</key>
@@ -169,7 +164,7 @@
         <key>autoAliasEnabled</key>
         <true/>
         <key>trimSpriteNames</key>
-        <false/>
+        <true/>
         <key>prependSmartFolderName</key>
         <false/>
         <key>cleanTransparentPixels</key>
@@ -191,14 +186,11 @@
             <key>heuristicMask</key>
             <false/>
             <key>pivotPoint</key>
-            <enum type="SpriteSettings::PivotPoint">BottomCenter</enum>
+            <enum type="SpriteSettings::PivotPoint">Center</enum>
         </struct>
         <key>fileList</key>
         <array>
-            <filename>assets/collectables</filename>
-            <filename>assets/enemies</filename>
-            <filename>assets/UI</filename>
-            <filename>assets/character</filename>
+            <filename>cityscene</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>

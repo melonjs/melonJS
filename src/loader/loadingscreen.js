@@ -24,7 +24,7 @@
             this.progress = ~~(progress * this.width);
             this.invalidate = true;
         },
-       
+
         // make sure the screen is refreshed every frame
         update : function () {
             if (this.invalidate === true) {
@@ -127,8 +127,6 @@
     me.DefaultLoadingScreen = me.ScreenObject.extend({
         // call when the loader is resetted
         onResetEvent : function () {
-            me.game.reset();
-
             // background color
             me.game.world.addChild(new me.ColorLayer("background", "#202020", 0));
 
@@ -138,17 +136,17 @@
                 me.video.renderer.getWidth(),
                 me.video.renderer.getHeight()
             );
-            
+
             this.loaderHdlr = me.event.subscribe(
                 me.event.LOADER_PROGRESS,
                 progressBar.onProgressUpdate.bind(progressBar)
             );
-            
+
             this.resizeHdlr = me.event.subscribe(
                 me.event.VIEWPORT_ONRESIZE,
                 progressBar.resize.bind(progressBar)
             );
-            
+
             me.game.world.addChild(progressBar, 1);
             this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
             // melonJS text & logo

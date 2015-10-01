@@ -23,5 +23,6 @@ add-on/
 bower_components/
 node_modules/
 build/*
+dist/*
 docs/*
 !.placeholder

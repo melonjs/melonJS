@@ -115,7 +115,6 @@
                 }]
             }, img);
 
-            this.cache.put(img, this.fillTexture);
             this.compositor.uploadTexture(
                 this.fillTexture,
                 1,
@@ -161,7 +160,6 @@
                 }]
             }, img);
 
-            this.cache.put(img, this.fontTexture);
             this.compositor.uploadTexture(this.fontTexture);
         },
 
@@ -195,7 +193,6 @@
             }, image);
 
             // FIXME: Remove old cache entry and texture when changing the repeat mode
-            this.cache.put(image, texture);
             this.compositor.uploadTexture(texture);
 
             return texture;

@@ -193,9 +193,9 @@
 	"app": "http://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "texture.png",
-	"format": "RGBA8888",
+	"format": "INDEXED",
 	"size": {"w":512,"h":256},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:90acc9b6c18064b613226018eaf999a9:1a7034033c0b7c083f7ecc6b932413fa:88db1022cd6b660616541d2788fcd4f7$"
+	"smartupdate": "$TexturePacker:SmartUpdate:10d1772d5197ea7781dbff0019d8fbaf:1a7034033c0b7c083f7ecc6b932413fa:88db1022cd6b660616541d2788fcd4f7$"
 }
 }

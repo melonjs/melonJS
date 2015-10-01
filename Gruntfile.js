@@ -213,16 +213,44 @@ module.exports = function (grunt) {
         }
       }
     },
+
+    copy : {
+      dist : {
+        expand : true,
+        src : [
+          "index.html",
+          "build/melonJS.js",
+          "docs/**",
+          "examples/**",
+          "media/logo.png",
+          "plugins/**",
+        ],
+        dest : "dist/",
+      }
+    },
+
+    buildGhPages : {
+      dist : {
+        options : {
+          dist : "dist",
+          build_branch : "gh-pages",
+          exclude : [ "node_modules/" ],
+          pull : true,
+        },
+      },
+    },
   });
 
-  grunt.loadNpmTasks("grunt-contrib-uglify");
-  grunt.loadNpmTasks("grunt-contrib-jshint");
-  grunt.loadNpmTasks("grunt-contrib-concat");
   grunt.loadNpmTasks("grunt-contrib-clean");
+  grunt.loadNpmTasks("grunt-contrib-concat");
+  grunt.loadNpmTasks("grunt-contrib-connect");
+  grunt.loadNpmTasks("grunt-contrib-copy");
+  grunt.loadNpmTasks("grunt-contrib-jasmine");
+  grunt.loadNpmTasks("grunt-contrib-jshint");
+  grunt.loadNpmTasks("grunt-contrib-uglify");
+  grunt.loadNpmTasks("grunt-build-gh-pages");
   grunt.loadNpmTasks("grunt-jsdoc");
   grunt.loadNpmTasks("grunt-replace");
-  grunt.loadNpmTasks("grunt-contrib-jasmine");
-  grunt.loadNpmTasks("grunt-contrib-connect");
 
   // Custom Tasks
   grunt.loadTasks("tasks");
@@ -236,10 +264,17 @@ module.exports = function (grunt) {
     "glsl",
     "concat",
     "replace:dist",
-    "jshint:afterConcat"
+    "jshint:afterConcat",
   ]);
   grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
   grunt.registerTask("serve", [ "connect:keepalive" ]);
-  grunt.registerTask("release", [ "build", "dorelease" ]);
+  grunt.registerTask("gh-pages", [
+    "test",
+    "build",
+    "doc",
+    "copy:dist",
+    "buildGhPages:dist",
+  ]);
+  grunt.registerTask("release", [ "gh-pages", "dorelease" ]);
 };

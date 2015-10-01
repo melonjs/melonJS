@@ -45,7 +45,7 @@
         set : function (x, y, z) {
             if (x !== +x || y !== +y || z !== +z) {
                 throw new me.Vector3d.Error(
-                    "invalid x,y parameters (not a number)"
+                    "invalid x, y, z parameters (not a number)"
                 );
             }
 

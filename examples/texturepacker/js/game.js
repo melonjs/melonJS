@@ -1,19 +1,27 @@
 
 /* Game namespace */
 var game = {
-  // Run on page load.
-  onload: function () {
-    // init the video
-    if (!me.video.init(960, 640, {wrapper : "screen", scale : "auto"})) {
+
+    // an object where to store game information
+    data : {
+        // score
+        score : 0
+    },
+
+
+    // Run on page load.
+    "onload" : function () {
+    // Initialize the video.
+    if (!me.video.init(800, 400, {wrapper : "screen", scale : "auto"})) {
         alert("Your browser does not support HTML5 canvas.");
         return;
     }
 
     // add "#debug" to the URL to enable the debug Panel
     if (me.game.HASH.debug === true) {
-      window.onReady(function () {
-      me.plugin.register.defer(this, me.debug.Panel, "debug");
-      });
+        window.onReady(function () {
+            me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
+        });
     }
 
     // Initialize the audio.
@@ -27,19 +35,20 @@ var game = {
 
     // Initialize melonJS and display a loading screen.
     me.state.change(me.state.LOADING);
-  },
+},
 
+    // Run on game resources loaded.
+    "loaded" : function () {
+    
+        // load the texture atlas file
+        game.texture = new me.video.renderer.Texture(
+            me.loader.getJSON("texture"),
+            me.loader.getImage("texture")
+        );
+    
+        me.state.set(me.state.PLAY, new game.PlayScreen());
 
-
-  // Run on game resources loaded.
-  loaded : function () {
-    this.texture = new me.video.renderer.Texture(
-      me.loader.getJSON("texture"),
-      me.loader.getImage("texture")
-    );
-    me.state.set(me.state.PLAY, new game.PlayScreen());
-
-    // Start the game.
-    me.state.change(me.state.PLAY);
-  }
+        // Start the game.
+        me.state.change(me.state.PLAY);
+    }
 };
