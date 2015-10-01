@@ -5,7 +5,6 @@ game.resources = [
      * { name: "example", type:"image", src: "data/img/example.png" },
      */
     { name: "tileset",         type:"image",   src: "data/img/tileset.png" },
-    { name: "tileset_old",     type:"image",   src: "data/img/tileset_old.png" },
     { name: "atascii",         type:"image",   src: "data/img/atascii_24px.png" },
     { name: "background",      type:"image",   src: "data/img/background.png" },
     { name: "clouds",          type:"image",   src: "data/img/clouds.png" },
