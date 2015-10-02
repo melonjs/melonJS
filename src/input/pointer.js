@@ -74,6 +74,9 @@
     // list of registered Event handlers
     var evtHandlers = new Map();
 
+    // current pointer
+    var currentPointer = new me.Rect(0, 0, 1, 1);
+
     // some useful flags
     var pointerInitialized = false;
 
@@ -287,15 +290,23 @@
             e.gameScreenY = changedTouches[t].y;
             e.gameWorldX = e.gameScreenX + viewportOffset.x;
             e.gameWorldY = e.gameScreenY + viewportOffset.y;
+
+            currentPointer.setShape(
+                e.gameWorldX, 
+                e.gameWorldY, 
+                e.width || 1, 
+                e.height || 1
+            );
             
-            var candidates = me.collision.quadTree.retrieve(new me.Rect(e.gameScreenX, e.gameScreenX, 1, 1));
+            var candidates = me.collision.quadTree.retrieve(currentPointer);
+            
+            // add the viewport to the list of candidates
+            candidates.push ( me.game.viewport );
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             
                 if (evtHandlers.has(candidate)) {
-                    
-                    var handlers = evtHandlers.get(candidate);            
-                                    
+                    var handlers = evtHandlers.get(candidate);                        
                     var region = handlers.region;
                     var bounds = region.getBounds();
                     
