@@ -7,7 +7,7 @@ game.resources = [
     { name: "tileset",         type:"image",   src: "data/img/tileset.png" },
     { name: "atascii",         type:"image",   src: "data/img/atascii_24px.png" },
     { name: "background",      type:"image",   src: "data/img/background.png" },
-
+    { name: "clouds",          type:"image",   src: "data/img/clouds.png" },
 
     /* Maps.
      * @example
@@ -48,8 +48,4 @@ game.resources = [
     // texturePacker
     { name: "texture",         type: "json",   src: "data/img/texture.json" },
     { name: "texture",         type: "image",  src: "data/img/texture.png" }
-    // ShoeBox
-    //{ name: "texture",         type: "json",   src: "data/gfx/shoebox.json" },
-    //{ name: "texture",         type: "image",  src: "data/gfx/shoebox.png" }
-
 ];

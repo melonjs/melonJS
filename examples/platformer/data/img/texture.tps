@@ -4,9 +4,9 @@
         <key>fileFormatVersion</key>
         <int>3</int>
         <key>texturePackerVersion</key>
-        <string>3.9.2</string>
+        <string>3.9.4</string>
         <key>fileName</key>
-        <string></string>
+        <string>C:/Users/olivier.biot/Documents/GitHub/melonJS/examples/platformer2/data/img/texture.tps</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -58,7 +58,7 @@
         <key>jxrCompressionLevel</key>
         <uint>0</uint>
         <key>ditherType</key>
-        <enum type="SettingsBase::DitherType">NearestNeighbour</enum>
+        <enum type="SettingsBase::DitherType">PngQuantHigh</enum>
         <key>backgroundColor</key>
         <uint>0</uint>
         <key>libGdx</key>
@@ -160,7 +160,7 @@
         <key>forceIdenticalLayout</key>
         <false/>
         <key>outputFormat</key>
-        <enum type="SettingsBase::OutputFormat">RGBA8888</enum>
+        <enum type="SettingsBase::OutputFormat">INDEXED</enum>
         <key>contentProtection</key>
         <struct type="ContentProtection">
             <key>key</key>
@@ -195,9 +195,10 @@
         </struct>
         <key>fileList</key>
         <array>
-            <filename>character</filename>
-            <filename>enemies</filename>
-            <filename>coin.png</filename>
+            <filename>assets/collectables</filename>
+            <filename>assets/enemies</filename>
+            <filename>assets/UI</filename>
+            <filename>assets/character</filename>
         </array>
         <key>ignoreFileList</key>
         <array/>
