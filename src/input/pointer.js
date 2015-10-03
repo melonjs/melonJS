@@ -182,9 +182,6 @@
      */
     function enablePointerEvent() {
         if (!pointerInitialized) {
-            // initialize mouse pos (0,0)
-            changedTouches.push({ x: 0, y: 0 });
-            api.pointer.pos.set(0, 0);
             // get relative canvas position in the page
             api._offset = me.video.getPos();
             // Automatically update relative canvas position on scroll
