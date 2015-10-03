@@ -4,16 +4,13 @@
  * http://www.melonjs.org/
  *
  */
-(function () {
+(function (api) {
     /*
      * PRIVATE STUFF
      */
 
-    // Reference to base class
-    var obj = me.input;
-
     // list of binded keys
-    obj._KeyBinding = {};
+    api._KeyBinding = {};
 
     // corresponding actions
     var keyStatus = {};
@@ -36,10 +33,10 @@
      * enable keyboard event
      * @ignore
      */
-    obj._enableKeyboardEvent = function () {
+    api._enableKeyboardEvent = function () {
         if (!keyboardInitialized) {
-            window.addEventListener("keydown", obj._keydown, false);
-            window.addEventListener("keyup", obj._keyup, false);
+            window.addEventListener("keydown", api._keydown, false);
+            window.addEventListener("keyup", api._keyup, false);
             keyboardInitialized = true;
         }
     };
@@ -48,10 +45,10 @@
      * key down event
      * @ignore
      */
-    obj._keydown = function (e, keyCode, mouseButton) {
+    api._keydown = function (e, keyCode, mouseButton) {
 
         keyCode = keyCode || e.keyCode || e.which;
-        var action = obj._KeyBinding[keyCode];
+        var action = api._KeyBinding[keyCode];
 
         // publish a message for keydown event
         me.event.publish(me.event.KEYDOWN, [
@@ -70,7 +67,7 @@
             }
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return obj._preventDefault(e);
+                return api._preventDefault(e);
             }
             else {
                 return true;
@@ -85,9 +82,9 @@
      * key up event
      * @ignore
      */
-    obj._keyup = function (e, keyCode, mouseButton) {
+    api._keyup = function (e, keyCode, mouseButton) {
         keyCode = keyCode || e.keyCode || e.which;
-        var action = obj._KeyBinding[keyCode];
+        var action = api._KeyBinding[keyCode];
 
         // publish a message for keydown event
         me.event.publish(me.event.KEYUP, [ action, keyCode ]);
@@ -104,7 +101,7 @@
 
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return obj._preventDefault(e);
+                return api._preventDefault(e);
             }
             else {
                 return true;
@@ -128,7 +125,7 @@
      * @name KEY
      * @memberOf me.input
      */
-    obj.KEY = {
+    api.KEY = {
         "BACKSPACE" : 8,
         "TAB" : 9,
         "ENTER" : 13,
@@ -248,7 +245,7 @@
      * }
      *
      */
-    obj.isKeyPressed = function (action) {
+    api.isKeyPressed = function (action) {
         if (keyStatus[action] && !keyLocked[action]) {
             if (keyLock[action]) {
                 keyLocked[action] = true;
@@ -267,7 +264,7 @@
      * @param {String} action user defined corresponding action
      * @return {Boolean} down (true) or up(false)
      */
-    obj.keyStatus = function (action) {
+    api.keyStatus = function (action) {
         return (keyStatus[action] > 0);
     };
 
@@ -285,12 +282,12 @@
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
      */
 
-    obj.triggerKeyEvent = function (keycode, status) {
+    api.triggerKeyEvent = function (keycode, status) {
         if (status) {
-            obj._keydown({}, keycode);
+            api._keydown({}, keycode);
         }
         else {
-            obj._keyup({}, keycode);
+            api._keyup({}, keycode);
         }
     };
 
@@ -312,15 +309,15 @@
      * me.input.bindKey(me.input.KEY.X,     "jump", true);
      * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
      */
-    obj.bindKey = function (keycode, action, lock, preventDefault) {
+    api.bindKey = function (keycode, action, lock, preventDefault) {
         // make sure the keyboard is enable
-        obj._enableKeyboardEvent();
+        api._enableKeyboardEvent();
 
         if (typeof preventDefault !== "boolean") {
-            preventDefault = obj.preventDefault;
+            preventDefault = api.preventDefault;
         }
 
-        obj._KeyBinding[keycode] = action;
+        api._KeyBinding[keycode] = action;
         preventDefaultForKeys[keycode] = preventDefault;
 
         keyStatus[action] = 0;
@@ -342,7 +339,7 @@
      *     me.input.unlockKey("jump");
      * }
      */
-    obj.unlockKey = function (action) {
+    api.unlockKey = function (action) {
         keyLocked[action] = false;
     };
 
@@ -356,14 +353,14 @@
      * @example
      * me.input.unbindKey(me.input.KEY.LEFT);
      */
-    obj.unbindKey = function (keycode) {
+    api.unbindKey = function (keycode) {
         // clear the event status
-        var keybinding = obj._KeyBinding[keycode];
+        var keybinding = api._KeyBinding[keycode];
         keyStatus[keybinding] = 0;
         keyLock[keybinding] = false;
         keyRefs[keybinding] = {};
         // remove the key binding
-        obj._KeyBinding[keycode] = null;
+        api._KeyBinding[keycode] = null;
         preventDefaultForKeys[keycode] = null;
     };
-})();
+})(me.input);

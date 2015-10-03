@@ -4,7 +4,7 @@
  * http://www.melonjs.org/
  *
  */
-(function () {
+(function (api) {
     /**
      * The built in Event Object
      * @external Event
@@ -67,9 +67,6 @@
     /*
      * PRIVATE STUFF
      */
-
-    // Reference to base class
-    var obj = me.input;
 
     /**
      * A pool of `Vector` objects to cache pointer/touch event coordinates.
@@ -165,7 +162,7 @@
      * cache value for the offset of the canvas position within the page
      * @ignore
      */
-    obj._offset = null;
+    api._offset = null;
 
     /**
      * addEventListerner for the specified event list and callback
@@ -187,13 +184,13 @@
         if (!pointerInitialized) {
             // initialize mouse pos (0,0)
             changedTouches.push({ x: 0, y: 0 });
-            obj.pointer.pos.set(0, 0);
+            api.pointer.pos.set(0, 0);
             // get relative canvas position in the page
-            obj._offset = me.video.getPos();
+            api._offset = me.video.getPos();
             // Automatically update relative canvas position on scroll
             window.addEventListener("scroll", throttle(100, false,
                 function (e) {
-                    obj._offset = me.video.getPos();
+                    api._offset = me.video.getPos();
                     me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
                 }
             ), false);
@@ -220,12 +217,12 @@
             window.addEventListener(wheeltype, onMouseWheel, false);
 
             // set the PointerMove/touchMove/MouseMove event
-            if (typeof(obj.throttlingInterval) === "undefined") {
+            if (typeof(api.throttlingInterval) === "undefined") {
                 // set the default value
-                obj.throttlingInterval = ~~(1000 / me.sys.fps);
+                api.throttlingInterval = ~~(1000 / me.sys.fps);
             }
             // if time interval <= 16, disable the feature
-            if (obj.throttlingInterval < 17) {
+            if (api.throttlingInterval < 17) {
                 me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[POINTER_MOVE],
                     onMoveEvent,
@@ -236,7 +233,7 @@
                 me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[POINTER_MOVE],
                     throttle(
-                        obj.throttlingInterval,
+                        api.throttlingInterval,
                         false,
                         function (e) {
                             onMoveEvent(e);
@@ -407,7 +404,7 @@
 
         // PointerEvent or standard Mouse event
         if (!event.touches) {
-            obj.globalToLocal(event.clientX, event.clientY, local);
+            api.globalToLocal(event.clientX, event.clientY, local);
             local.id = event.pointerId || 1;
             changedTouches.push(local);
         }
@@ -415,7 +412,7 @@
         else {
             for (var i = 0, l = event.changedTouches.length; i < l; i++) {
                 var t = event.changedTouches[i];
-                obj.globalToLocal(t.clientX, t.clientY, local);
+                api.globalToLocal(t.clientX, t.clientY, local);
                 local.id = t.identifier;
                 changedTouches.push(local);
             }
@@ -426,15 +423,15 @@
         }
 
         // Else use the first entry to simulate mouse event
-        obj.pointer.pos.set(
+        api.pointer.pos.set(
             changedTouches[0].x,
             changedTouches[0].y
         );
 
         if (typeof(event.width) === "number") {
             // resize the pointer object if necessary
-            if (event.width !== obj.pointer.width || event.height !== obj.pointer.height) {
-                obj.pointer.resize(event.width || 1, event.height || 1);
+            if (event.width !== api.pointer.width || event.height !== api.pointer.height) {
+                api.pointer.resize(event.width || 1, event.height || 1);
             }
         }
     }
@@ -463,7 +460,7 @@
             // dispatch mouse event to registered object
             if (dispatchEvent(_event)) {
                 // prevent default action
-                return obj._preventDefault(e);
+                return api._preventDefault(e);
             }
         }
         return true;
@@ -480,7 +477,7 @@
         // dispatch mouse event to registered object
         if (dispatchEvent(e)) {
             // prevent default action
-            return obj._preventDefault(e);
+            return api._preventDefault(e);
         }
         return true;
     }
@@ -496,20 +493,20 @@
         // dispatch event to registered objects
         if (dispatchEvent(e)) {
             // prevent default action
-            return obj._preventDefault(e);
+            return api._preventDefault(e);
         }
 
         // in case of touch event button is undefined
         var button = e.button || 0;
-        var keycode = obj.pointer.bind[button];
+        var keycode = api.pointer.bind[button];
 
         // check if mapped to a key
         if (keycode) {
             if (e.type === activeEventList[POINTER_DOWN]) {
-                return obj._keydown(e, keycode, button + 1);
+                return api._keydown(e, keycode, button + 1);
             }
             else { // 'mouseup' or 'touchend'
-                return obj._keyup(e, keycode, button + 1);
+                return api._keyup(e, keycode, button + 1);
             }
         }
 
@@ -531,15 +528,15 @@
      * @name pointer
      * @memberOf me.input
      */
-    obj.pointer = new me.Rect(0, 0, 1, 1);
+    api.pointer = new me.Rect(0, 0, 1, 1);
     
     // bind list for mouse buttons
-    obj.pointer.bind = [ 0, 0, 0 ];
+    api.pointer.bind = [ 0, 0, 0 ];
 
     // W3C button constants
-    obj.pointer.LEFT = 0;
-    obj.pointer.MIDDLE = 1;
-    obj.pointer.RIGHT = 2;
+    api.pointer.LEFT = 0;
+    api.pointer.MIDDLE = 1;
+    api.pointer.RIGHT = 2;
 
     /**
      * time interval for event throttling in milliseconds<br>
@@ -550,7 +547,7 @@
      * @name throttlingInterval
      * @memberOf me.input
      */
-    obj.throttlingInterval = undefined;
+    api.throttlingInterval = undefined;
 
     /**
      * Translate the specified x and y values from the global (absolute)
@@ -570,9 +567,9 @@
      *    // do something with pos !
      * };
      */
-    obj.globalToLocal = function (x, y, v) {
+    api.globalToLocal = function (x, y, v) {
         v = v || new me.Vector2d();
-        var offset = obj._offset;
+        var offset = api._offset;
         var pixelRatio = me.device.getPixelRatio();
         x -= offset.left;
         y -= offset.top;
@@ -603,19 +600,19 @@
      * // map the right button click on the X key
      * me.input.bindPointer(me.input.pointer.RIGHT, me.input.KEY.X);
      */
-    obj.bindPointer = function () {
-        var button = (arguments.length < 2) ? obj.pointer.LEFT : arguments[0];
+    api.bindPointer = function () {
+        var button = (arguments.length < 2) ? api.pointer.LEFT : arguments[0];
         var keyCode = (arguments.length < 2) ? arguments[0] : arguments[1];
 
         // make sure the mouse is initialized
         enablePointerEvent();
 
         // throw an exception if no action is defined for the specified keycode
-        if (!obj._KeyBinding[keyCode]) {
+        if (!api._KeyBinding[keyCode]) {
             throw new me.Error("no action defined for keycode " + keyCode);
         }
         // map the mouse button to the keycode
-        obj.pointer.bind[button] = keyCode;
+        api.pointer.bind[button] = keyCode;
     };
     /**
      * unbind the defined keycode
@@ -627,11 +624,11 @@
      * @example
      * me.input.unbindPointer(me.input.pointer.LEFT);
      */
-    obj.unbindPointer = function (button) {
+    api.unbindPointer = function (button) {
         // clear the event status
-        obj.pointer.bind[
+        api.pointer.bind[
             typeof(button) === "undefined" ?
-            obj.pointer.LEFT : button
+            api.pointer.LEFT : button
         ] = null;
     };
 
@@ -662,7 +659,7 @@
      * // register on the 'pointerdown' event
      * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
      */
-    obj.registerPointerEvent = function (eventType, region, callback) {
+    api.registerPointerEvent = function (eventType, region, callback) {
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
@@ -708,7 +705,7 @@
      * // release the registered region on the 'pointerdown' event
      * me.input.releasePointerEvent('pointerdown', this);
      */
-    obj.releasePointerEvent = function (eventType, region, callback) {
+    api.releasePointerEvent = function (eventType, region, callback) {
         if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
@@ -737,11 +734,11 @@
      * @ignore
      * @function
      */
-    obj._translatePointerEvents = function () {
+    api._translatePointerEvents = function () {
         // listen to mouse move (and touch move) events on the viewport
         // and convert them to a system event by default
-        obj.registerPointerEvent("pointermove", me.game.viewport, function (e) {
+        api.registerPointerEvent("pointermove", me.game.viewport, function (e) {
             me.event.publish(me.event.POINTERMOVE, [e]);
         });
     };
-})();
+})(me.input);
