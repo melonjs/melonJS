@@ -172,8 +172,8 @@
                 // recursivly insert childs
                 this.insertContainer(child);
             } else {
-                // only insert object with a "physic body"
-                if (typeof (child.body) !== "undefined") {
+                // only insert object with a bounding box
+                if (typeof (child.getBounds) === "function") {
                     this.insert(child);
                 }
             }
@@ -268,7 +268,7 @@
      */
     Quadtree.prototype.clear = function (bounds) {
 
-        this.objects = [];
+        this.objects.length = 0;
 
         for (var i = 0; i < this.nodes.length; i = i + 1) {
             this.nodes[i].clear();

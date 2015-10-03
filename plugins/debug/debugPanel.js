@@ -294,7 +294,7 @@
         show : function () {
             if (!this.visible) {
                 // register a mouse event for the checkboxes
-                me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this), true);
+                me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this));
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible

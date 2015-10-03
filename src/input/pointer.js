@@ -74,6 +74,9 @@
     // list of registered Event handlers
     var evtHandlers = new Map();
 
+    // current pointer
+    var currentPointer = new me.Rect(0, 0, 1, 1);
+
     // some useful flags
     var pointerInitialized = false;
 
@@ -262,105 +265,125 @@
      */
     function dispatchEvent(e) {
         var handled = false;
+        
+        // get the current screen to world offset
+        me.game.viewport.localToWorld(0, 0, viewportOffset);
+        
+        for (var t = 0, tl = changedTouches.length; t < tl; t++) {
+            
+            // Do not fire older events
+            if (typeof(e.timeStamp) !== "undefined") {
+                if (e.timeStamp < lastTimeStamp) {
+                    continue;
+                }
+                lastTimeStamp = e.timeStamp;
+            }
 
-        evtHandlers.forEach(function (handlers) {
-            // get the current screen to world offset
-            me.game.viewport.localToWorld(0, 0, viewportOffset);
-            for (var t = 0, tl = changedTouches.length; t < tl; t++) {
-                // Do not fire older events
-                if (typeof(e.timeStamp) !== "undefined") {
-                    if (e.timeStamp < lastTimeStamp) {
-                        continue;
+            // if PointerEvent is not supported
+            if (!me.device.pointerEnabled) {
+                // -> define pointerId to simulate the PointerEvent standard
+                e.pointerId = changedTouches[t].id;
+            }
+
+            /* Initialize the two coordinate space properties. */
+            e.gameScreenX = changedTouches[t].x;
+            e.gameScreenY = changedTouches[t].y;
+            e.gameWorldX = e.gameScreenX + viewportOffset.x;
+            e.gameWorldY = e.gameScreenY + viewportOffset.y;
+
+            currentPointer.setShape(
+                e.gameWorldX, 
+                e.gameWorldY, 
+                e.width || 1, 
+                e.height || 1
+            );
+            
+            var candidates = me.collision.quadTree.retrieve(currentPointer);
+            
+            // add the viewport to the list of candidates
+            candidates.push ( me.game.viewport );
+
+            for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
+            
+                if (evtHandlers.has(candidate)) {
+                    var handlers = evtHandlers.get(candidate);                        
+                    var region = handlers.region;
+                    var bounds = region.getBounds();
+                    
+                    if (region.floating === true) {
+                        e.gameX = e.gameScreenX;
+                        e.gameY = e.gameScreenY;
+                    } else {
+                        e.gameX = e.gameWorldX;
+                        e.gameY = e.gameWorldY;
                     }
-                    lastTimeStamp = e.timeStamp;
-                }
 
-                // if PointerEvent is not supported
-                if (!me.device.pointerEnabled) {
-                    // -> define pointerId to simulate the PointerEvent standard
-                    e.pointerId = changedTouches[t].id;
-                }
+                    var eventInBounds =
+                        // check the shape bounding box first
+                        bounds.containsPoint(e.gameX, e.gameY) &&
+                        // then check more precisely if needed
+                        (bounds === region || region.containsPoint(e.gameX, e.gameY));
 
-                /* Initialize the two coordinate space properties. */
-                e.gameScreenX = changedTouches[t].x;
-                e.gameScreenY = changedTouches[t].y;
-                e.gameWorldX = e.gameScreenX + viewportOffset.x;
-                e.gameWorldY = e.gameScreenY + viewportOffset.y;
-                if (handlers.region.floating === true) {
-                    e.gameX = e.gameScreenX;
-                    e.gameY = e.gameScreenY;
-                } else {
-                    e.gameX = e.gameWorldX;
-                    e.gameY = e.gameWorldY;
-                }
+                    switch (activeEventList.indexOf(e.type)) {
+                        case POINTER_MOVE:
+                            // moved out of bounds: trigger the POINTER_LEAVE callbacks
+                            if (handlers.pointerId === e.pointerId && !eventInBounds) {
+                                if (triggerEvent(handlers, activeEventList[POINTER_LEAVE], e, null)) {
+                                    handled = true;
+                                    break;
+                                }
+                            }
+                            // no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks
+                            else if (handlers.pointerId === null && eventInBounds) {
+                                if (triggerEvent(handlers, activeEventList[POINTER_ENTER], e, e.pointerId)) {
+                                    handled = true;
+                                    break;
+                                }
+                            }
 
-                var region = handlers.region;
-                var bounds = region.getBounds();
-                var eventInBounds =
-                    // check the shape bounding box first
-                    bounds.containsPoint(e.gameX, e.gameY) &&
-                    // then check more precisely if needed
-                    (bounds === region || region.containsPoint(e.gameX, e.gameY));
-
-                switch (activeEventList.indexOf(e.type)) {
-                    case POINTER_MOVE:
-                        // moved out of bounds: trigger the POINTER_LEAVE callbacks
-                        if (handlers.pointerId === e.pointerId && !eventInBounds) {
-                            if (triggerEvent(handlers, activeEventList[POINTER_LEAVE], e, null)) {
+                            // trigger the POINTER_MOVE callbacks
+                            if (eventInBounds && triggerEvent(handlers, e.type, e, e.pointerId)) {
                                 handled = true;
                                 break;
                             }
-                        }
-                        // no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks
-                        else if (handlers.pointerId === null && eventInBounds) {
-                            if (triggerEvent(handlers, activeEventList[POINTER_ENTER], e, e.pointerId)) {
-                                handled = true;
-                                break;
-                            }
-                        }
-
-                        // trigger the POINTER_MOVE callbacks
-                        if (eventInBounds && triggerEvent(handlers, e.type, e, e.pointerId)) {
-                            handled = true;
                             break;
-                        }
-                        break;
 
-                    case POINTER_UP:
-                        // pointer defined & inside of bounds: trigger the POINTER_UP callback
-                        if (handlers.pointerId === e.pointerId && eventInBounds) {
-                            // trigger the corresponding callback
-                            if (triggerEvent(handlers, e.type, e, null)) {
-                                handled = true;
-                                break;
+                        case POINTER_UP:
+                            // pointer defined & inside of bounds: trigger the POINTER_UP callback
+                            if (handlers.pointerId === e.pointerId && eventInBounds) {
+                                // trigger the corresponding callback
+                                if (triggerEvent(handlers, e.type, e, null)) {
+                                    handled = true;
+                                    break;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    case POINTER_CANCEL:
-                        // pointer defined: trigger the POINTER_CANCEL callback
-                        if (handlers.pointerId === e.pointerId) {
-                            // trigger the corresponding callback
-                            if (triggerEvent(handlers, e.type, e, null)) {
-                                handled = true;
-                                break;
+                        case POINTER_CANCEL:
+                            // pointer defined: trigger the POINTER_CANCEL callback
+                            if (handlers.pointerId === e.pointerId) {
+                                // trigger the corresponding callback
+                                if (triggerEvent(handlers, e.type, e, null)) {
+                                    handled = true;
+                                    break;
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                    default:
-                        // event inside of bounds: trigger the POINTER_DOWN or MOUSE_WHEEL callback
-                        if (eventInBounds) {
-                            // trigger the corresponding callback
-                            if (triggerEvent(handlers, e.type, e, e.pointerId)) {
-                                handled = true;
-                                break;
+                        default:
+                            // event inside of bounds: trigger the POINTER_DOWN or MOUSE_WHEEL callback
+                            if (eventInBounds) {
+                                // trigger the corresponding callback
+                                if (triggerEvent(handlers, e.type, e, e.pointerId)) {
+                                    handled = true;
+                                    break;
+                                }
                             }
-                        }
-                        break;
+                            break;
+                    }                    
                 }
             }
-        });
+        }
 
         return handled;
     }
@@ -502,7 +525,7 @@
      * @memberOf me.input
      */
     obj.pointer = new me.Rect(0, 0, 1, 1);
-
+    
     // bind list for mouse buttons
     obj.pointer.bind = [ 0, 0, 0 ];
 

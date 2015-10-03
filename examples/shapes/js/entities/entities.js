@@ -11,9 +11,12 @@ game.ShapeObject = me.Entity.extend({
         // status flags
         this.selected = false;
         this.hover = false;
+        
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
+    },
 
+    onActivateEvent: function () {
         //register on mouse/touch event
         me.input.registerPointerEvent("pointerdown", this, this.onSelect.bind(this));
         me.input.registerPointerEvent("pointerup", this, this.onRelease.bind(this));
@@ -34,6 +37,7 @@ game.ShapeObject = me.Entity.extend({
             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                 if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
                     this.hover = true;
+                    
                     break;
                 }
             }
