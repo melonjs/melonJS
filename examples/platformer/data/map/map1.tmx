@@ -1,20 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="left-down" width="50" height="30" tilewidth="35" tileheight="35" backgroundcolor="#d0f4f7" nextobjectid="36">
- <tileset firstgid="1" name="tileset2" tilewidth="70" tileheight="70" spacing="10" margin="5" tilecount="252">
-  <image source="../img/tileset.png" width="1440" height="1120"/>
-  <tile id="195">
-   <animation>
-    <frame tileid="195" duration="100"/>
-    <frame tileid="196" duration="100"/>
-   </animation>
-  </tile>
-  <tile id="216">
-   <animation>
-    <frame tileid="216" duration="200"/>
-    <frame tileid="217" duration="200"/>
-   </animation>
-  </tile>
- </tileset>
+ <tileset firstgid="1" source="tileset.tsx"/>
  <imagelayer name="Background" y="538">
   <image source="../img/background.png"/>
   <properties>

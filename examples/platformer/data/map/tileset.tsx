@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset name="tileset" tilewidth="35" tileheight="35">
- <image source="../img/tileset.png" width="512" height="512"/>
- <tile id="28">
+<tileset name="tileset" tilewidth="70" tileheight="70" spacing="10" margin="5" tilecount="252">
+ <image source="../img/tileset.png" width="1440" height="1120"/>
+ <tile id="195">
   <animation>
-   <frame tileid="28" duration="400"/>
-   <frame tileid="29" duration="400"/>
+   <frame tileid="195" duration="100"/>
+   <frame tileid="196" duration="100"/>
   </animation>
  </tile>
- <tile id="29">
+ <tile id="216">
   <animation>
-   <frame tileid="29" duration="400"/>
-   <frame tileid="28" duration="400"/>
-  </animation>
- </tile>
- <tile id="42">
-  <animation>
-   <frame tileid="42" duration="400"/>
-   <frame tileid="43" duration="400"/>
-  </animation>
- </tile>
- <tile id="43">
-  <animation>
-   <frame tileid="43" duration="400"/>
-   <frame tileid="42" duration="400"/>
+   <frame tileid="216" duration="200"/>
+   <frame tileid="217" duration="200"/>
   </animation>
  </tile>
 </tileset>
