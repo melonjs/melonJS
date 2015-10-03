@@ -71,6 +71,13 @@
     // Reference to base class
     var obj = me.input;
 
+    /**
+     * A pool of `Vector` objects to cache pointer/touch event coordinates.
+     * @type {Array.<Vector>}
+     */
+    var T_VECTORS = [];
+    for (var v = 0; v < 10; v++) { T_VECTORS.push(new me.Vector2d()); }
+
     // list of registered Event handlers
     var evtHandlers = new Map();
 
@@ -269,7 +276,9 @@
         // get the current screen to world offset
         me.game.viewport.localToWorld(0, 0, viewportOffset);
         
-        for (var t = 0, tl = changedTouches.length; t < tl; t++) {
+        while (changedTouches.length > 0) {
+
+            var t = changedTouches.length - 1;
             
             // Do not fire older events
             if (typeof(e.timeStamp) !== "undefined") {
@@ -383,6 +392,7 @@
                     }                    
                 }
             }
+            T_VECTORS.push(changedTouches.pop());
         }
 
         return handled;
@@ -393,22 +403,19 @@
      * @ignore
      */
     function updateCoordFromEvent(event) {
-        var local;
-
-        // reset the touch array cache
-        changedTouches.length = 0;
+        var local = T_VECTORS.pop();
 
         // PointerEvent or standard Mouse event
         if (!event.touches) {
-            local = obj.globalToLocal(event.clientX, event.clientY);
-            local.id =  event.pointerId || 1;
+            obj.globalToLocal(event.clientX, event.clientY, local);
+            local.id = event.pointerId || 1;
             changedTouches.push(local);
         }
         // iOS/Android like touch event
         else {
             for (var i = 0, l = event.changedTouches.length; i < l; i++) {
                 var t = event.changedTouches[i];
-                local = obj.globalToLocal(t.clientX, t.clientY);
+                obj.globalToLocal(t.clientX, t.clientY, local);
                 local.id = t.identifier;
                 changedTouches.push(local);
             }
@@ -554,6 +561,7 @@
      * @function
      * @param {Number} x the global x coordinate to be translated.
      * @param {Number} y the global y coordinate to be translated.
+     * @param {Number} [v] an optional vector object where to set the
      * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
      * @example
      * onMouseEvent : function (e) {
@@ -562,7 +570,8 @@
      *    // do something with pos !
      * };
      */
-    obj.globalToLocal = function (x, y) {
+    obj.globalToLocal = function (x, y, v) {
+        v = v || new me.Vector2d();
         var offset = obj._offset;
         var pixelRatio = me.device.getPixelRatio();
         x -= offset.left;
@@ -572,7 +581,7 @@
             x /= scale.x;
             y /= scale.y;
         }
-        return new me.Vector2d(x * pixelRatio, y * pixelRatio);
+        return v.set(x * pixelRatio, y * pixelRatio);
     };
 
     /**
