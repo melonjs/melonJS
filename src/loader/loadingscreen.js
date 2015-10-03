@@ -128,7 +128,7 @@
         // call when the loader is resetted
         onResetEvent : function () {
             // background color
-            me.game.world.addChild(new me.ColorLayer("background", "#202020", 0));
+            me.game.world.addChild(new me.ColorLayer("background", "#202020", 0), 0);
 
             // progress bar
             var progressBar = new ProgressBar(
