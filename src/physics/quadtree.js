@@ -268,7 +268,7 @@
      */
     Quadtree.prototype.clear = function (bounds) {
 
-        this.objects = [];
+        this.objects.length = 0;
 
         for (var i = 0; i < this.nodes.length; i = i + 1) {
             this.nodes[i].clear();
