@@ -299,6 +299,8 @@
                 me.game.world.addChild(this, Infinity);
                 // mark it as visible
                 this.visible = true;
+                // force repaint
+                me.game.repaint();
             }
         },
 
@@ -314,6 +316,8 @@
                 me.game.world.removeChild(this);
                 // mark it as invisible
                 this.visible = false;
+                // force repaint
+                me.game.repaint();
             }
         },
 
