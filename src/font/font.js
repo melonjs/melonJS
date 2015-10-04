@@ -200,15 +200,13 @@
          */
 
         draw : function (renderer, text, x, y) {
-            x = ~~x;
-            y = ~~y;
-
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
+
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, false));
+            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, ~~x, ~~y, false));
 
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
@@ -227,15 +225,13 @@
          * @param {Number} y
          */
         drawStroke : function (renderer, text, x, y) {
-            x = ~~x;
-            y = ~~y;
-
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
+            
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, true));
+            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, ~~x, ~~y, true));
 
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
