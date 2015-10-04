@@ -207,8 +207,6 @@
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            // update initial position
-            this.pos.set(x, y, this.pos.z);  // TODO: z ?
             // draw the text
             renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, false));
 
@@ -236,8 +234,6 @@
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            // update initial position
-            this.pos.set(x, y, this.pos.z); // TODO: z ?
             // draw the text
             renderer.drawFont(this._drawFont(renderer.fontContext2D, text, x, y, true));
 
