@@ -140,6 +140,9 @@
                 }
             }
 
+            child.ancestor = this;
+            this.children.push(child);
+
             // set the child z value if required
             if (typeof(child.pos) !== "undefined") {
                 if (typeof(z) === "number") {
@@ -149,8 +152,6 @@
                 }
             }
 
-            child.ancestor = this;
-            this.children.push(child);
             if (this.autoSort === true) {
                 this.sort();
             }
