@@ -265,6 +265,7 @@
             }
 
             // compute bounds
+            // TODO : memoize me !
             var dx = (this.textAlign === "right" ? x - dw : (
                 this.textAlign === "center" ? x - ~~(dw / 2) : x
             ));
@@ -272,12 +273,13 @@
                 this.textBaseline === "middle" ? dy - ~~(lineHeight / 2) : dy - lineHeight
             );
 
-            return {
-                x: ~~dx,
-                y: ~~dy,
-                w: ~~(dw + 0.5),
-                h: ~~(strings.length * lineHeight + 0.5)
-            };
+            // update the renderable bounds
+            return this._bounds.setShape(
+                ~~dx,
+                ~~dy,
+                ~~(dw + 0.5),
+                ~~(strings.length * lineHeight + 0.5)
+            );
         }
     });
 })();

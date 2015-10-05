@@ -207,6 +207,38 @@
                 }
             });
 
+            /*
+            // patch font.js
+            me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
+                // call the original me.Sprite.draw function
+                this._patched(renderer, text, x, y);
+
+                // draw the sprite rectangle
+                if (me.debug.renderHitBox) {
+                    renderer.save();
+                    renderer.setColor("orange");
+                    renderer.drawShape(this.getBounds());
+                    _this.counters.inc("bounds");
+                    renderer.restore();
+                }
+            });
+
+            // patch font.js
+            me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
+                // call the original me.Sprite.draw function
+                this._patched(renderer, text, x, y);
+
+                // draw the sprite rectangle
+                if (me.debug.renderHitBox) {
+                    renderer.save();
+                    renderer.setColor("orange");
+                    renderer.drawShape(this.getBounds());
+                    _this.counters.inc("bounds");
+                    renderer.restore();
+                }
+            });
+            */
+            
             // patch entities.js
             me.plugin.patch(me.Entity, "draw", function (renderer) {
                 // call the original me.Entity.draw function

@@ -246,14 +246,14 @@
             this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
             // Add the new quad
-            var key = bounds.x + "," + bounds.y + "," + bounds.w + "," + bounds.h;
+            var key = bounds.pos.x + "," + bounds.pos.y + "," + bounds.width + "," + bounds.height;
             this.compositor.addQuad(
                 this.fontTexture,
                 key,
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h
+                bounds.pos.x,
+                bounds.pos.y,
+                bounds.width,
+                bounds.height
             );
 
             // Clear font context2D
