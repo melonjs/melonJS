@@ -8,7 +8,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.device.watchAccelerometer();
 
         // clear the background
-        me.game.world.addChild(new me.ColorLayer("background", "#000000", 0));
+        me.game.world.addChild(new me.ColorLayer("background", "#000000"), 0);
 
         var DeviceInfo = me.Renderable.extend({
             init: function() {
