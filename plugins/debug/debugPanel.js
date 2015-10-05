@@ -213,7 +213,7 @@
                 // call the original me.Sprite.draw function
                 this._patched(renderer, text, x, y);
 
-                // draw the sprite rectangle
+                // draw the font rectangle
                 if (me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
@@ -228,7 +228,7 @@
                 // call the original me.Sprite.draw function
                 this._patched(renderer, text, x, y);
 
-                // draw the sprite rectangle
+                // draw the font rectangle
                 if (me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
