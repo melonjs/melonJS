@@ -12,6 +12,10 @@
  * -> first char " " 32d (0x20);
  */
 (function () {
+
+    var runits = ["ex", "em", "pt", "px"];
+    var toPX = [12, 24, 0.75, 1];
+
     /**
      * a generic system font object.
      * @class
@@ -141,13 +145,22 @@
                     !/(^".*"$)|(^'.*'$)/.test(value)
                 ) ? "\"" + value + "\"" : value;
             });
+           
+            if (typeof size === "number") {
+                this.fontSize.y = size;
+                size += "px";
+            } else /* string */ {
+                // extract the numerical value
+                this.fontSize.y = parseFloat(size);
+                // extract the units and convert if necessary
+                var units = runits.indexOf(size.match(/\D+$/)[0]);
+                if (units !== 1) {
+                    this.fontSize.y *= toPX[units];
+                }
+            }
 
-            this.fontSize.y = +size;
             this.height = this.fontSize.y;
 
-            if (typeof size === "number") {
-                size += "px";
-            }
             this.font = size + " " + font_names.join(",");
             if (typeof(fillStyle) !== "undefined") {
                 this.fillStyle.copy(fillStyle);
