@@ -12,6 +12,13 @@ var game = {
             return;
         }
 
+        // add "#debug" to the URL to enable the debug Panel
+        if (me.game.HASH.debug === true) {
+            window.onReady(function () {
+                me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
+            });
+        }
+
         // set all ressources to be loaded
         me.loader.onload = this.loaded.bind(this);
 
@@ -30,7 +37,7 @@ var game = {
             // on reset event function
             onResetEvent : function() {
                 // black background
-                me.game.world.addChild(new me.ColorLayer("background", "#202020", 0));
+                me.game.world.addChild(new me.ColorLayer("background", "#202020"), 0);
                 // the font stuff
                 me.game.world.addChild(new FontTest(), 1);
             }
