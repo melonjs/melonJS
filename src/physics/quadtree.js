@@ -234,9 +234,10 @@
      * @memberOf me.QuadTree
      * @function
      * @param {Object} object object to be checked against
+     * @param {Object} [function] a sorting function for the returned array
      * @return {Object[]} array with all detected objects
      */
-    Quadtree.prototype.retrieve = function (item) {
+    Quadtree.prototype.retrieve = function (item, fn) {
 
         var returnObjects = this.objects;
 
@@ -254,6 +255,10 @@
                     returnObjects = returnObjects.concat(this.nodes[i].retrieve(item));
                 }
             }
+        }
+
+        if (typeof(fn) === "function") {
+            returnObjects.sort(fn);
         }
 
         return returnObjects;

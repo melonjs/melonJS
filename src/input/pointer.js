@@ -277,6 +277,7 @@
             // Do not fire older events
             if (typeof(e.timeStamp) !== "undefined") {
                 if (e.timeStamp < lastTimeStamp) {
+                    T_VECTORS.push(changedTouches.pop());
                     continue;
                 }
                 lastTimeStamp = e.timeStamp;
@@ -301,7 +302,7 @@
                 e.height || 1
             );
             
-            var candidates = me.collision.quadTree.retrieve(currentPointer);
+            var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container._sortZ);
             
             // add the viewport to the list of candidates
             candidates.push ( me.game.viewport );
@@ -376,6 +377,7 @@
                         default:
                             // event inside of bounds: trigger the POINTER_DOWN or MOUSE_WHEEL callback
                             if (eventInBounds) {
+                                
                                 // trigger the corresponding callback
                                 if (triggerEvent(handlers, e.type, e, e.pointerId)) {
                                     handled = true;
@@ -383,7 +385,11 @@
                                 }
                             }
                             break;
-                    }                    
+                    }                
+                }      
+                if (handled === true) {
+                    // stop iterating through this list of candidates
+                    break;
                 }
             }
             T_VECTORS.push(changedTouches.pop());
