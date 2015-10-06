@@ -10,6 +10,8 @@ Version History
 * Core : `me.game.currentLevel` has been removed in favor of accessing objects through `me.game.world` -- added `me.LevelDirector.getCurrentLevel()` as a stop-gap
 * Core : added `me.sys.updatesPerSecond` to configure updating less often than drawing (@Giwayume)
 * Entity : new positioning method, where the renderable is positioned according to its anchor and the Entity's body anchor (@Giwayume)
+* Font : fixed font height not being set when specifying a CSS Unit for the size
+* Font : added basic CSS Unit conversion from ‘pt’,’ex’,’em’ to ‘px’ (these are approximation and not guaranteed accurate)
 * General : the release build files are no longer versioned; this replaces the old style "melonJS-x.x.x.js" file naming convention with just "melonJS.js"
 * Geometry : added a new `me.Vector3d` and `me.ObservableVector3d` class
 * Geometry : removed `reverse` method from Vector classes; use `negateSelf` instead
