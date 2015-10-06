@@ -150,15 +150,16 @@
                 this.fontSize.y = size;
                 size += "px";
             } else /* string */ {
-                // extract the numerical value
-                this.fontSize.y = parseFloat(size);
                 // extract the units and convert if necessary
-                var units = runits.indexOf(size.match(/\D+$/)[0]);
-                if (units !== 1) {
-                    this.fontSize.y *= toPX[units];
+                var CSSval =  size.match(/([-+]?[\d.]*)(.*)/);
+                this.fontSize.y = parseFloat(CSSval[1]);
+                if (CSSval[2]) {
+                    this.fontSize.y *= toPX[runits.indexOf(CSSval[2])];                    
+                } else {
+                    // no unit define, assume px
+                    size += "px";
                 }
             }
-
             this.height = this.fontSize.y;
 
             this.font = size + " " + font_names.join(",");
