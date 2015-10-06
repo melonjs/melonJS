@@ -45,6 +45,9 @@ game.ShapeObject = me.Entity.extend({
             me.game.world.moveUp(this);
             this.pos.set(event.gameX, event.gameY, this.pos.z);
             this.pos.sub(this.grabOffset);
+        }
+        
+        if (this.hover || this.selected) {
             return false;
         }
     },
