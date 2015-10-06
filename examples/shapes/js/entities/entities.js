@@ -33,21 +33,19 @@ game.ShapeObject = me.Entity.extend({
         this.hover = false;
 
         // the pointer event system will use the object bounding rect, check then with with all defined shapes
-        if (this.getBounds().containsPoint(event.gameX, event.gameY)) {
-            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-                    this.hover = true;
-                    
-                    break;
-                }
+        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+            if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
+                this.hover = true;
+                break;
             }
         }
-
+        
         if (this.selected) {
             // follow the pointer
-            me.game.world.moveToTop(this);
+            me.game.world.moveUp(this);
             this.pos.set(event.gameX, event.gameY, this.pos.z);
             this.pos.sub(this.grabOffset);
+            return false;
         }
     },
 
