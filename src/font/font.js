@@ -131,7 +131,7 @@
          * @function
          * @param {String} font a CSS font name
          * @param {Number|String} size size, or size + suffix (px, em, pt)
-         * @param {me.Color|String} fillStyle a CSS color value
+         * @param {me.Color|String} [fillStyle] a CSS color value
          * @param {String} [textAlign="left"] horizontal alignment
          * @example
          * font.setFont("Arial", 20, "white");
