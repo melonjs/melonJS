@@ -272,12 +272,14 @@
         
         while (changedTouches.length > 0) {
 
-            var t = changedTouches.length - 1;
+            // keep a reference to the last item
+            var changedTouch = changedTouches.pop();
+            // and put it back into our cache
+            T_VECTORS.push(changedTouch);
             
             // Do not fire older events
             if (typeof(e.timeStamp) !== "undefined") {
-                if (e.timeStamp < lastTimeStamp) {
-                    T_VECTORS.push(changedTouches.pop());
+                if (e.timeStamp < lastTimeStamp) {   
                     continue;
                 }
                 lastTimeStamp = e.timeStamp;
@@ -286,12 +288,12 @@
             // if PointerEvent is not supported
             if (!me.device.pointerEnabled) {
                 // -> define pointerId to simulate the PointerEvent standard
-                e.pointerId = changedTouches[t].id;
+                e.pointerId = changedTouch.id;
             }
 
             /* Initialize the two coordinate space properties. */
-            e.gameScreenX = changedTouches[t].x;
-            e.gameScreenY = changedTouches[t].y;
+            e.gameScreenX = changedTouch.x;
+            e.gameScreenY = changedTouch.y;
             e.gameWorldX = e.gameScreenX + viewportOffset.x;
             e.gameWorldY = e.gameScreenY + viewportOffset.y;
 
@@ -392,9 +394,7 @@
                     break;
                 }
             }
-            T_VECTORS.push(changedTouches.pop());
         }
-
         return handled;
     }
 
