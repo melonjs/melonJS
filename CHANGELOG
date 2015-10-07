@@ -23,6 +23,7 @@ Version History
 * Input : renamed last remaining mouse-related objects : `me.input.mouse` => `me.input.pointer`, `me.event.MOVEMOVE` => `me.event.POINTERMOVE`
 * Input : added HTML5 Gamepad API support, with button and axis remapping
 * Input : optimised pointer detection using the quadtree
+* Input : now properly respect object z ordering when firing pointer events
 * Renderable : prevent position vector re-allocation when pooling renderable objects
 * Renderable : renderables are now using a 3d Vector for position, using the z axis for layer ordering.
 * Renderable : fixed a distortion issue when scaling and rotating sprites (@Giwayume)
