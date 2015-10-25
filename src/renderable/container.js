@@ -594,6 +594,14 @@
             }
         },
 
+        onDeactivateEvent : function () {
+            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+                if (typeof child.onDeactivateEvent === "function") {
+                    child.onDeactivateEvent();
+                }
+            }
+        },
+
         /**
          * Z Sorting function
          * @ignore
