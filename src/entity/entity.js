@@ -311,14 +311,16 @@
         },
 
         /**
-         * OnDestroy Notification function<br>
+         * onDeactivateEvent Notification function<br>
          * Called by engine before deleting the object
-         * @name onDestroyEvent
+         * @name onDeactivateEvent
          * @memberOf me.Entity
          * @function
          */
-        onDestroyEvent : function () {
-            // to be extended !
+        onDeactivateEvent : function () {
+          if (this.renderable && this.renderable.onDeactivateEvent) {
+              this.renderable.onDeactivateEvent();
+          }
         },
 
         /**
