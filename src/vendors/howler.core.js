@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta
+ *  howler.js v2.0.0-beta3
  *  howlerjs.com
  *
  *  (c) 2013-2015, James Simpson of GoldFire Studios
@@ -145,6 +145,20 @@
             }
           }
         }
+      }
+
+      return self;
+    },
+
+    /**
+     * Unload and destroy all currently loaded Howl objects.
+     * @return {Howler}
+     */
+    unload: function() {
+      var self = this || Howler;
+
+      for (var i=self._howls.length-1; i>=0; i--) {
+        self._howls[i].unload();
       }
 
       return self;
@@ -569,6 +583,9 @@
           sound._seek = self.seek(ids[i]);
           sound._paused = true;
 
+          // Stop currently running fades.
+          self._stopFade(ids[i]);
+
           if (self._webAudio) {
             // make sure the sound has been created
             if (!sound._node.bufferSource) {
@@ -631,6 +648,9 @@
           sound._seek = sound._start || 0;
           sound._paused = true;
           sound._ended = true;
+
+          // Stop currently running fades.
+          self._stopFade(ids[i]);
 
           if (self._webAudio && sound._node) {
             // make sure the sound has been created
@@ -732,7 +752,7 @@
         } else {
           vol = parseFloat(args[0]);
         }
-      } else if (args.length === 2) {
+      } else if (args.length >= 2) {
         vol = parseFloat(args[0]);
         id = parseInt(args[1], 10);
       }
@@ -762,6 +782,11 @@
 
           if (sound) {
             sound._volume = vol;
+
+            // Stop currently running fades.
+            if (!args[2]) {
+              self._stopFade(id[i]);
+            }
 
             if (self._webAudio && sound._node && !sound._muted) {
               sound._node.gain.setValueAtTime(vol * Howler.volume(), ctx.currentTime);
@@ -817,7 +842,8 @@
             sound._node.gain.linearRampToValueAtTime(to, end);
 
             // Fire the event when complete.
-            setTimeout(function(id, sound) {
+            sound._timeout = setTimeout(function(id, sound) {
+              delete sound._timeout;
               setTimeout(function() {
                 sound._volume = to;
                 self._emit('faded', id);
@@ -831,7 +857,7 @@
             
             (function() {
               var vol = from;
-              var interval = setInterval(function(id) {
+              sound._interval = setInterval(function(id, sound) {
                 // Update the volume amount.
                 vol += (dir === 'in' ? 0.01 : -0.01);
 
@@ -843,17 +869,42 @@
                 vol = Math.round(vol * 100) / 100;
 
                 // Change the volume.
-                self.volume(vol, id);
+                self.volume(vol, id, true);
 
                 // When the fade is complete, stop it and fire event.
                 if (vol === to) {
-                  clearInterval(interval);
+                  clearInterval(sound._interval);
+                  delete sound._interval;
                   self._emit('faded', id);
                 }
-              }.bind(self, ids[i]), stepLen);
+              }.bind(self, ids[i], sound), stepLen);
             })();
           }
         }
+      }
+
+      return self;
+    },
+
+    /**
+     * Internal method that stops the currently playing fade when
+     * a new fade starts, volume is changed or the sound is stopped.
+     * @param  {Number} id The sound id.
+     * @return {Howl}
+     */
+    _stopFade: function(id) {
+      var self = this;
+      var sound = self._soundById(id);
+
+      if (sound._interval) {
+        clearInterval(sound._interval);
+        delete sound._interval;
+        self._emit('faded', id);
+      } else if (sound._timeout) {
+        clearTimeout(sound._timeout);
+        delete sound._timeout;
+        sound._node.gain.cancelScheduledValues(ctx.currentTime);
+        self._emit('faded', id);
       }
 
       return self;
@@ -1216,7 +1267,7 @@
 
           // If this event was setup with `once`, remove it.
           if (events[i].once) {
-            self.off(event, events[i].fn, id);
+            self.off(event, events[i].fn, events[i].id);
           }
         }
       }
@@ -1727,6 +1778,17 @@
       } else {
         noAudio = true;
       }
+    }
+
+    // Test to make sure audio isn't disabled in Internet Explorer
+    // CUSTOM FIX FOR MELONJS WITH "HEADLESS" BROSWER (JASMINE TESTUNIT)
+    try {
+        var test = new Audio();
+        if (test.muted) {
+            noAudio = true;
+        }
+    } catch (e) {
+      noAudio = true;
     }
   }
 
