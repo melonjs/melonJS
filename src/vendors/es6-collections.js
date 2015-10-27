@@ -21,9 +21,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* jshint -W003 */
 /* jshint -W013 */
 /* jshint -W015 */
+/* jshint -W030 */
+/* jshint -W035 */
 /* jshint -W040 */
+/* jshint -W058 */
 /* jshint -W108 */
 /* jshint -W116 */
 
@@ -32,6 +36,82 @@ THE SOFTWARE.
   var i;
   //shortcuts
   var defineProperty = Object.defineProperty, is = Object.is;
+
+
+  //Polyfill global objects
+  if (typeof WeakMap == 'undefined') {
+    exports.WeakMap = createCollection({
+      // WeakMap#delete(key:void*):boolean
+      'delete': sharedDelete,
+      // WeakMap#clear():
+      clear: sharedClear,
+      // WeakMap#get(key:void*):void*
+      get: sharedGet,
+      // WeakMap#has(key:void*):boolean
+      has: mapHas,
+      // WeakMap#set(key:void*, value:void*):void
+      set: sharedSet
+    }, true);
+  }
+
+  if (typeof Map == 'undefined' || typeof ((new Map).values) !== 'function' || !(new Map).values().next) {
+    exports.Map = createCollection({
+      // WeakMap#delete(key:void*):boolean
+      'delete': sharedDelete,
+      //:was Map#get(key:void*[, d3fault:void*]):void*
+      // Map#has(key:void*):boolean
+      has: mapHas,
+      // Map#get(key:void*):boolean
+      get: sharedGet,
+      // Map#set(key:void*, value:void*):void
+      set: sharedSet,
+      // Map#keys(void):Iterator
+      keys: sharedKeys,
+      // Map#values(void):Iterator
+      values: sharedValues,
+      // Map#entries(void):Iterator
+      entries: mapEntries,
+      // Map#forEach(callback:Function, context:void*):void ==> callback.call(context, key, value, mapObject) === not in specs`
+      forEach: sharedForEach,
+      // Map#clear():
+      clear: sharedClear
+    });
+  }
+
+  if (typeof Set == 'undefined' || typeof ((new Set).values) !== 'function' || !(new Set).values().next) {
+    exports.Set = createCollection({
+      // Set#has(value:void*):boolean
+      has: setHas,
+      // Set#add(value:void*):boolean
+      add: sharedAdd,
+      // Set#delete(key:void*):boolean
+      'delete': sharedDelete,
+      // Set#clear():
+      clear: sharedClear,
+      // Set#keys(void):Iterator
+      keys: sharedValues, // specs actually say "the same function object as the initial value of the values property"
+      // Set#values(void):Iterator
+      values: sharedValues,
+      // Set#entries(void):Iterator
+      entries: setEntries,
+      // Set#forEach(callback:Function, context:void*):void ==> callback.call(context, value, index) === not in specs
+      forEach: sharedForEach
+    });
+  }
+
+  if (typeof WeakSet == 'undefined') {
+    exports.WeakSet = createCollection({
+      // WeakSet#delete(key:void*):boolean
+      'delete': sharedDelete,
+      // WeakSet#add(value:void*):boolean
+      add: sharedAdd,
+      // WeakSet#clear():
+      clear: sharedClear,
+      // WeakSet#has(value:void*):boolean
+      has: setHas
+    }, true);
+  }
+
 
   /**
    * ES6 collection constructor
@@ -42,7 +122,7 @@ THE SOFTWARE.
       if (!this || this.constructor !== Collection) return new Collection(a);
       this._keys = [];
       this._values = [];
-      this._hash = {};
+      this._itp = []; // iteration pointers
       this.objectOnly = objectOnly;
 
       //parse initial iterable argument passed
@@ -67,47 +147,35 @@ THE SOFTWARE.
   /** parse initial iterable argument passed */
   function init(a){
     //init Set argument, like `[1,2,3,{}]`
-    if (this.add) {
+    if (this.add)
       a.forEach(this.add, this);
-    }
     //init Map argument like `[[1,2], [{}, 4]]`
-    else {
-      a.forEach(function (a) {
-        this.set(a[0], a[1]);
-      }, this);
-    }
+    else
+      a.forEach(function(a){this.set(a[0],a[1]);}, this);
   }
 
 
+  /** delete */
   function sharedDelete(key) {
     if (this.has(key)) {
-      if (typeof(key) === "string" || typeof(key) === "number") {
-        this._hash[key] = undefined;
-        return true;
-      }
-      else {
-        this._keys.splice(i, 1);
-        this._values.splice(i, 1);
-      }
+      this._keys.splice(i, 1);
+      this._values.splice(i, 1);
+      // update iteration pointers
+      this._itp.forEach(function(p) { if (i < p[0]) p[0]--; });
     }
     // Aurora here does it while Canary doesn't
     return -1 < i;
   }
 
   function sharedGet(key) {
-    if (typeof(key) === "string" || typeof(key) === "number")
-      return this._hash[key];
     return this.has(key) ? this._values[i] : undefined;
   }
 
   function has(list, key) {
     if (this.objectOnly && key !== Object(key))
       throw new TypeError("Invalid value used as weak collection key");
-    if (typeof(key) === "string" || typeof(key) === "number") {
-      return this._hash.hasOwnProperty(key);
-    }
-    //NaN passed
-    if (key != key) for (i = list.length; i-- && !is(list[i], key););
+    //NaN or 0 passed
+    if (key != key || key === 0) for (i = list.length; i-- && !is(list[i], key);){}
     else i = list.indexOf(key);
     return -1 < i;
   }
@@ -122,15 +190,11 @@ THE SOFTWARE.
 
   /** @chainable */
   function sharedSet(key, value) {
-    if (typeof(key) === "string" || typeof(key) === "number") {
-      this._hash[key] = value;
-    }
-    else if (this.has(key)) {
-      this._values[i] = value;
-    }
-    else {
-      this._values[this._keys.push(key) - 1] = value;
-    }
+    this.has(key) ?
+      this._values[i] = value
+      :
+      this._values[this._keys.push(key) - 1] = value
+      ;
     return this;
   }
 
@@ -141,20 +205,43 @@ THE SOFTWARE.
   }
 
   function sharedClear() {
+    (this._keys || 0).length =
     this._values.length = 0;
-    this._hash = {};
   }
 
   /** keys, values, and iterate related methods */
-  function sharedValues() {
-    var self = this;
-    return this._values.slice().concat(Object.keys(this._hash).map(function (k) {
-      return self._hash[k];
-    }));
+  function sharedKeys() {
+    return sharedIterator(this._itp, this._keys);
   }
 
-  function sharedKeys() {
-    return this._keys.slice().concat(Object.keys(this._hash));
+  function sharedValues() {
+    return sharedIterator(this._itp, this._values);
+  }
+
+  function mapEntries() {
+    return sharedIterator(this._itp, this._keys, this._values);
+  }
+
+  function setEntries() {
+    return sharedIterator(this._itp, this._values, this._values);
+  }
+
+  function sharedIterator(itp, array, array2) {
+    var p = [0], done = false;
+    itp.push(p);
+    return {
+      next: function() {
+        var v, k = p[0];
+        if (!done && k < array.length) {
+          v = array2 ? [array[k], array2[k]]: array[k];
+          p[0]++;
+        } else {
+          done = true;
+          itp.splice(itp.indexOf(p), 1);
+        }
+        return { done: done, value: v };
+      }
+    };
   }
 
   function sharedSize() {
@@ -162,87 +249,12 @@ THE SOFTWARE.
   }
 
   function sharedForEach(callback, context) {
-    var self = this;
-    var values = self.values();
-    self.keys().forEach(function(key, n){
-      callback.call(context, values[n], key, self);
-    });
+    var it = this.entries();
+    for (;;) {
+      var r = it.next();
+      if (r.done) break;
+      callback.call(context, r.value[1], r.value[0], this);
+    }
   }
 
-  function sharedSetIterate(callback, context) {
-    var self = this;
-    self._values.slice().forEach(function(value){
-      callback.call(context, value, value, self);
-    });
-  }
-
-
-  //Polyfill global objects
-  if (typeof WeakMap == 'undefined') {
-    exports.WeakMap = createCollection({
-      // WeakMap#delete(key:void*):boolean
-      'delete': sharedDelete,
-      // WeakMap#clear():
-      clear: sharedClear,
-      // WeakMap#get(key:void*):void*
-      get: sharedGet,
-      // WeakMap#has(key:void*):boolean
-      has: mapHas,
-      // WeakMap#set(key:void*, value:void*):void
-      set: sharedSet
-    }, true);
-  }
-
-  if (typeof Map == 'undefined') {
-    exports.Map = createCollection({
-      // WeakMap#delete(key:void*):boolean
-      'delete': sharedDelete,
-      //:was Map#get(key:void*[, d3fault:void*]):void*
-      // Map#has(key:void*):boolean
-      has: mapHas,
-      // Map#get(key:void*):boolean
-      get: sharedGet,
-      // Map#set(key:void*, value:void*):void
-      set: sharedSet,
-      // Map#keys(void):Array === not in specs
-      keys: sharedKeys,
-      // Map#values(void):Array === not in specs
-      values: sharedValues,
-      // Map#forEach(callback:Function, context:void*):void ==> callback.call(context, key, value, mapObject) === not in specs`
-      forEach: sharedForEach,
-      // Map#clear():
-      clear: sharedClear
-    });
-  }
-
-  if (typeof Set == 'undefined') {
-    exports.Set = createCollection({
-      // Set#has(value:void*):boolean
-      has: setHas,
-      // Set#add(value:void*):boolean
-      add: sharedAdd,
-      // Set#delete(key:void*):boolean
-      'delete': sharedDelete,
-      // Set#clear():
-      clear: sharedClear,
-      // Set#values(void):Array === not in specs
-      values: sharedValues,
-      // Set#forEach(callback:Function, context:void*):void ==> callback.call(context, value, index) === not in specs
-      forEach: sharedSetIterate
-    });
-  }
-
-  if (typeof WeakSet == 'undefined') {
-    exports.WeakSet = createCollection({
-      // WeakSet#delete(key:void*):boolean
-      'delete': sharedDelete,
-      // WeakSet#add(value:void*):boolean
-      add: sharedAdd,
-      // WeakSet#clear():
-      clear: sharedClear,
-      // WeakSet#has(value:void*):boolean
-      has: setHas
-    }, true);
-  }
-
-})(typeof exports != 'undefined' && typeof global != 'undefined' ? global : window);
+})(typeof exports != 'undefined' && typeof global != 'undefined' ? global : window );
