@@ -52,6 +52,13 @@
              */
             this.transform = new me.Matrix2d();
 
+            /**
+             * whether the container is the root of the scene
+             * @private
+             * @ignore
+             */
+            this._root = false;
+
             // call the _super constructor
             this._super(me.Renderable,
                 "init",
@@ -156,7 +163,7 @@
                 this.sort();
             }
 
-            if (typeof child.onActivateEvent === "function") {
+            if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
             }
 
@@ -190,7 +197,7 @@
 
                 this.children.splice(index, 0, child);
 
-                if (typeof child.onActivateEvent === "function") {
+                if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                     child.onActivateEvent();
                 }
 
@@ -403,6 +410,33 @@
         },
 
         /**
+         * Checks if this container is root or if ti's attached to the root container.
+         * @private
+         * @name isAttachedToRoot
+         * @memberOf me.Container
+         * @function
+         * @returns Boolean
+         */
+        isAttachedToRoot : function () {
+            if (this._root) {
+                return true;
+            } else {
+                var hasRoot = false;
+                var ancestor = this.ancestor;
+                while (ancestor) {
+                    hasRoot = ancestor._root;
+                    if (hasRoot) {
+                        break;
+                    } else {
+                        ancestor = ancestor.ancestor;
+                    }
+                }
+
+                return hasRoot;
+            }
+        },
+
+        /**
          * update the renderable's bounding rect (private)
          * @private
          * @name updateBoundsPos
@@ -426,6 +460,15 @@
             }
 
             return this._bounds;
+        },
+
+        onActivateEvent : function () {
+          for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+              var child = this.children[i];
+              if (typeof child.onActivateEvent === "function") {
+                  child.onActivateEvent();
+              }
+          }
         },
 
         /**

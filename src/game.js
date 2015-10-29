@@ -159,6 +159,7 @@
                 // the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
+                api.world._root = true;
 
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
