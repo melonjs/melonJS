@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta3
+ *  howler.js v2.0.0-beta4
  *  howlerjs.com
  *
  *  (c) 2013-2015, James Simpson of GoldFire Studios
@@ -57,7 +57,7 @@
       self._volume = 1;
 
       // Set to false to disable the auto iOS enabler.
-      self.iOSAutoEnable = true;
+      self.mobileAutoEnable = true;
 
       // No audio is available on this system if this is set to true.
       self.noAudio = noAudio;
@@ -200,24 +200,26 @@
     },
 
     /**
-     * iOS will only allow audio to be played after a user interaction.
+     * Mobile browsers will only allow audio to be played after a user interaction.
      * Attempt to automatically unlock audio on the first user interaction.
      * Concept from: http://paulbakaus.com/tutorials/html5/web-audio-on-ios/
      * @return {Howler}
      */
-    _enableiOSAudio: function() {
+    _enableMobileAudio: function() {
       var self = this || Howler;
 
       // Only run this on iOS if audio isn't already eanbled.
-      if (ctx && (self._iOSEnabled || !/iPhone|iPad|iPod/i.test(navigator.userAgent))) {
+      var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk/i.test(navigator.userAgent);
+      var isTouch = !!(('ontouchend' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+      if (ctx && (self._mobileEnabled || !isMobile || !isTouch)) {
         return;
       }
 
-      self._iOSEnabled = false;
+      self._mobileEnabled = false;
 
       // Call this method on touch start to create and play a buffer,
       // then check if the audio actually played to determine if
-      // audio has now been unlocked on iOS.
+      // audio has now been unlocked on iOS, Android, etc.
       var unlock = function() {
         // Create an empty buffer.
         var buffer = ctx.createBuffer(1, 1, 22050);
@@ -233,20 +235,18 @@
         }
 
         // Setup a timeout to check that we are unlocked on the next event loop.
-        setTimeout(function() {
-          if ((source.playbackState === source.PLAYING_STATE || source.playbackState === source.FINISHED_STATE)) {
-            // Update the unlocked state and prevent this check from happening again.
-            self._iOSEnabled = true;
-            self.iOSAutoEnable = false;
+        source.onended = function() {
+          // Update the unlocked state and prevent this check from happening again.
+          self._mobileEnabled = true;
+          self.mobileAutoEnable = false;
 
-            // Remove the touch start listener.
-            document.removeEventListener('touchend', unlock, false);
-          }
-        }, 0);
+          // Remove the touch start listener.
+          document.removeEventListener('touchend', unlock, true);
+        };
       };
 
       // Setup a touch start listener to attempt an unlock in.
-      document.addEventListener('touchend', unlock, false);
+      document.addEventListener('touchend', unlock, true);
 
       return self;
     }
@@ -314,8 +314,8 @@
       self._webAudio = usingWebAudio && !self._html5;
 
       // Automatically try to enable audio on iOS.
-      if (typeof ctx !== 'undefined' && ctx && Howler.iOSAutoEnable) {
-        Howler._enableiOSAudio();
+      if (typeof ctx !== 'undefined' && ctx && Howler.mobileAutoEnable) {
+        Howler._enableMobileAudio();
       }
 
       // Keep track of this Howl group in the global controller.
@@ -339,7 +339,7 @@
 
       // If no audio is available, quit immediately.
       if (noAudio) {
-        self._emit('loaderror');
+        self._emit('loaderror', null, 'No audio support.');
         return;
       }
 
@@ -376,7 +376,7 @@
       }
 
       if (!url) {
-        self._emit('loaderror');
+        self._emit('loaderror', null, 'No codec support for selected audio sources.');
         return;
       }
 
@@ -1718,7 +1718,7 @@
           loadSound(self, buffer);
         }
       }, function() {
-        self._emit('loaderror');
+        self._emit('loaderror', null, 'Decoding audio data failed.');
       });
     };
 
@@ -1781,15 +1781,12 @@
     }
 
     // Test to make sure audio isn't disabled in Internet Explorer
-    // CUSTOM FIX FOR MELONJS WITH "HEADLESS" BROSWER (JASMINE TESTUNIT)
     try {
-        var test = new Audio();
-        if (test.muted) {
-            noAudio = true;
-        }
-    } catch (e) {
-      noAudio = true;
-    }
+      var test = new Audio();
+      if (test.muted) {
+        noAudio = true;
+      }
+    } catch (e) {}
   }
 
   // Add support for AMD (Asynchronous Module Definition) libraries such as require.js.
