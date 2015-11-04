@@ -434,6 +434,7 @@
          * Draw a line
          * @name drawLine
          * @memberOf me.WebGLRenderer.Compositor
+         * @function
          * @param {me.Vector2d[]} points Line vertices
          * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
          */
