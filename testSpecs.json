@@ -12,6 +12,7 @@
   "tests/spec/ellipse-spec.js",
   "tests/spec/shim-spec.js",
   "tests/spec/inheritance-spec.js",
+  "tests/spec/es6-collections.js",
   "tests/spec/draggable-spec.js",
   "tests/spec/droptarget-spec.js",
   "tests/spec/plugin-spec.js",
