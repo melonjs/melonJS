@@ -28,7 +28,7 @@ game.CapGuyEntity = me.Entity.extend({
     update : function (dt) {
 
         // just manually change the guy position
-        this.pos.x += 5;
+        this.pos.x += 0.3 * dt;
         
         // repeat once leaving the viewport
         if (this.pos.x >= me.game.viewport.width) {
