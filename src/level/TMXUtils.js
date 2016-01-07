@@ -100,7 +100,8 @@
         */
         api.decode = function (data, encoding, compression) {
             compression = compression || "none";
-            encoding = encoding || "none";
+            // When no encoding is given, the tiles are stored as individual XML tile elements.
+            encoding = encoding || "xml";
 
             switch (encoding) {
                 case "csv":
@@ -116,6 +117,9 @@
 
                 case "none":
                     return data;
+
+                case "xml":
+                    throw new me.Error("XML encoding is deprecated, use base64 instead");
 
                 default:
                     throw new me.Error("Unknown layer encoding: " + encoding);
