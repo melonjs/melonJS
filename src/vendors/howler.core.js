@@ -1,8 +1,8 @@
 /*!
- *  howler.js v2.0.0-beta5
+ *  howler.js v2.0.0-beta6
  *  howlerjs.com
  *
- *  (c) 2013-2015, James Simpson of GoldFire Studios
+ *  (c) 2013-2016, James Simpson of GoldFire Studios
  *  goldfirestudios.com
  *
  *  MIT License
@@ -53,7 +53,7 @@
       self._volume = 1;
 
       // Keeps track of the suspend/resume state of the AudioContext.
-      self.state = 'running';
+      self.state = ctx ? ctx.state || 'running' : 'running';
       self.autoSuspend = true;
 
       // Automatically begin the 30-second suspend process
@@ -193,18 +193,20 @@
       var audioTest = new Audio();
       var mpegTest = audioTest.canPlayType('audio/mpeg;').replace(/^no$/, '');
       var isOpera = /OPR\//.test(navigator.userAgent);
-      
+
       self._codecs = {
         mp3: !!(!isOpera && (mpegTest || audioTest.canPlayType('audio/mp3;').replace(/^no$/, ''))),
         mpeg: !!mpegTest,
         opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
         ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
+        oga: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
         wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
         aac: !!audioTest.canPlayType('audio/aac;').replace(/^no$/, ''),
         m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
         mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
         weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
-        webm: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, '')
+        webm: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
+        dolby: !!audioTest.canPlayType('audio/mp4; codecs="ec-3"').replace(/^no$/, '')
       };
 
       return self;
@@ -327,6 +329,11 @@
         ctx.resume().then(function() {
           self.state = 'running';
         });
+
+        if (self._suspendTimer) {
+          clearTimeout(self._suspendTimer);
+          self._suspendTimer = null;
+        }
       } else if (self.state === 'suspending') {
         self._resumeAfterSuspend = true;
       }
@@ -367,7 +374,7 @@
 
       // Setup user-defined default properties.
       self._autoplay = o.autoplay || false;
-      self._ext = o.ext || null;
+      self._format = o.format || null;
       self._html5 = o.html5 || false;
       self._muted = o.mute || false;
       self._loop = o.loop || false;
@@ -435,9 +442,9 @@
       for (var i=0; i<self._src.length; i++) {
         var ext, str;
 
-        if (self._ext && self._ext[i]) {
+        if (self._format && self._format[i]) {
           // If an extension was specified, use that instead.
-          ext = self._ext[i];
+          ext = self._format[i];
         } else {
           // Extract the file extension from the URL or base64 data URI.
           str = self._src[i];
@@ -604,7 +611,7 @@
           playWebAudio();
         } else {
           // Wait for the audio to load and then begin playback.
-          self.once('load', playWebAudio);
+          self.once('load', playWebAudio, sound._id);
 
           // Cancel the end timer.
           self._clearTimer(sound._id);
@@ -957,7 +964,7 @@
             var dir = from > to ? 'out' : 'in';
             var steps = diff / 0.01;
             var stepLen = len / steps;
-            
+
             (function() {
               var vol = from;
               sound._interval = setInterval(function(id, sound) {
@@ -1180,7 +1187,7 @@
 
       // Wait for the sound to load before seeking it.
       if (!self._loaded) {
-        self.once('load', function() {
+        self.once('play', function() {
           self.seek.apply(self, args);
         });
 
@@ -1369,10 +1376,10 @@
     _emit: function(event, id, msg) {
       var self = this;
       var events = self['_on' + event];
-      
+
       // Loop through event store and fire all functions.
-      for (var i=0; i<events.length; i++) {
-        if (!events[i].id || events[i].id === id) {
+      for (var i=events.length-1; i>=0; i--) {
+        if (!events[i].id || events[i].id === id || event === 'load') {
           setTimeout(function(fn) {
             fn.call(this, id, msg);
           }.bind(self, events[i].fn), 0);
@@ -1702,7 +1709,7 @@
 
       // Fire an error event and pass back the code.
       self._parent._emit('loaderror', self._id, self._node.error ? self._node.error.code : 0);
-      
+
       // Clear the event listener.
       self._node.removeEventListener('error', self._errorListener, false);
     },
@@ -1785,7 +1792,7 @@
         for (var i=0; i<data.length; ++i) {
           dataView[i] = data.charCodeAt(i);
         }
-        
+
         decodeAudioData(dataView.buffer, self);
       } else {
         // Load the buffer from the URL.
