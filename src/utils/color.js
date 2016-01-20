@@ -1,12 +1,14 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 (function () {
     var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
     var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+    var hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
     var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+    var hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
     var cssToRGB = new Map();
 
@@ -373,7 +375,7 @@
         },
 
         /**
-         * Parse a Hex color ("#RGB" or "#RRGGBB" format) and set this color to
+         * Parse a Hex color ("#RGB", "#ARGB" or "#RRGGBB", "#AARRGGBB" format) and set this color to
          * the corresponding r,g,b values
          * @name parseHex
          * @memberOf me.Color
@@ -385,14 +387,37 @@
             // TODO : Memoize this function by caching its input
 
             var match;
+            if ((match = hex8Rx.exec(hexColor))) {
+                // #AARRGGBB
+                return this.setColor(
+                    parseInt(match[2], 16),
+                    parseInt(match[3], 16),
+                    parseInt(match[4], 16),
+                    (parseInt(match[1], 16).clamp(0, 255) / 255.0).toFixed(1)
+                );
+            }
+
             if ((match = hex6Rx.exec(hexColor))) {
+                // #RRGGBB
                 return this.setColor(
                     parseInt(match[1], 16),
                     parseInt(match[2], 16),
                     parseInt(match[3], 16)
                 );
             }
+
+            if ((match = hex4Rx.exec(hexColor))) {
+                // #ARGB
+                return this.setColor(
+                    parseInt(match[2] + match[2], 16),
+                    parseInt(match[3] + match[3], 16),
+                    parseInt(match[4] + match[4], 16),
+                    (parseInt(match[1] + match[1], 16).clamp(0, 255) / 255.0).toFixed(1)
+                );
+            }
+
             if ((match = hex3Rx.exec(hexColor))) {
+                // #RGB
                 return this.setColor(
                     parseInt(match[1] + match[1], 16),
                     parseInt(match[2] + match[2], 16),

@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  */
 (function () {
@@ -71,7 +71,7 @@
              *
              * 24 = 2^4 + 2^3
              *
-             * As of July 2015, approximately 1.5% of all WebGL-enabled UAs
+             * As of October 2015, approximately 4.2% of all WebGL-enabled UAs
              * support more than 24 max textures, according to
              * http://webglstats.com/
              */

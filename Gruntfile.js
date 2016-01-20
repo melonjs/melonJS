@@ -125,6 +125,7 @@ module.exports = function (grunt) {
       options : {
         report : "min",
         preserveComments : "some",
+        screwIE8 : "true",
         mangle: {
           eval: true
         }

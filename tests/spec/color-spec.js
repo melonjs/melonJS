@@ -6,6 +6,25 @@ describe("me.Color", function () {
 
     me.video.renderer = me.CanvasRenderer;
 
+    describe("parseHex Function", function () {
+        // #RGB
+        it("#00F value is rgb(0, 0, 255)", function () {
+            expect(blue_color.parseHex("#0000FF").toRGB()).toEqual("rgb(0,0,255)");
+        });
+        // #ARGB
+        it("#80F0 value is rgba(0, 255, 0, 0.5)", function () {
+            expect(blue_color.parseHex("#80F0").toRGBA()).toEqual("rgba(0,255,0,0.5)");
+        });
+        // #RRGGBB
+        it("#FF00FF value is rgb(255, 0, 255)", function () {
+            expect(blue_color.parseHex("#FF00FF").toRGB()).toEqual("rgb(255,0,255)");
+        });
+        // #AARRGGG (finish with the blue color so that the test below passes)
+        it("#800000FF value is rgba(0, 0, 255, 0.5)", function () {
+            expect(blue_color.parseHex("#800000FF").toRGBA()).toEqual("rgba(0,0,255,0.5)");
+        });
+    });
+
     describe("red_color", function () {
         it("is an instance of me.Color", function () {
             expect(red_color).toBeInstanceOf(me.Color);
@@ -30,7 +49,7 @@ describe("me.Color", function () {
         it("red_color hex value is #FF0000", function () {
             expect(red_color.toHex()).toEqual("#FF0000");
         });
-        
+
         it("red_color rgba value is rgba(255,0,0,0.5)", function () {
             expect(red_color.toRGBA()).toEqual("rgba(255,0,0,0.5)");
         });
@@ -61,11 +80,11 @@ describe("me.Color", function () {
         it("(green_color + red_color) hex value is #FF8000", function () {
             expect(red_color.add(green_color).toHex()).toEqual("#FF8000");
         });
-        
+
         it("darken (green_color + red_color) by 0.5 hex value is #7F4000", function () {
             expect(red_color.darken(0.5).toHex()).toEqual("#7F4000");
         });
-        
+
         it("final red_color rgba value is rgba(127,64,0,0.75)", function () {
             expect(red_color.toRGBA()).toEqual("rgba(127,64,0,0.75)");
         });
@@ -81,14 +100,14 @@ describe("me.Color", function () {
             expect(blue_color.toRGB()).toEqual("rgb(0,0,255)");
         });
 
-        it("blue_color rgba value is rgba(0, 0, 255, 1)", function () {
-            expect(blue_color.toRGBA()).toEqual("rgba(0,0,255,1)");
+        it("blue_color rgba value is rgba(0, 0, 255, 0.5)", function () {
+            expect(blue_color.toRGBA()).toEqual("rgba(0,0,255,0.5)");
         });
-        
+
         it("lighten blue_color hex by 0.5 value is #7F7FFF", function () {
             expect(blue_color.lighten(0.5).toHex()).toEqual("#7F7FFF");
         });
 
-        
+
     });
 });

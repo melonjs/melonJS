@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015 Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016 Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * WebGL Fragment shader for quad compositing
@@ -75,7 +75,7 @@ void main(void) {
      * number of texture units supported by the WebGL implementation.
      *
      * The number of available texture units is at least 8, but can be as high
-     * as 32 (as of 2015-01); source: http://webglstats.com/
+     * as 32 (as of 2016-01); source: http://webglstats.com/
      * See: MAX_TEXTURE_IMAGE_UNITS
      *
      * The idea of sampler selection originated from work by Kenneth Russell and
