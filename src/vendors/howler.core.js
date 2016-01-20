@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta6
+ *  howler.js v2.0.0-beta7
  *  howlerjs.com
  *
  *  (c) 2013-2016, James Simpson of GoldFire Studios
@@ -374,7 +374,7 @@
 
       // Setup user-defined default properties.
       self._autoplay = o.autoplay || false;
-      self._format = o.format || null;
+      self._format = (typeof o.format !== 'string') ? o.format : [o.format];
       self._html5 = o.html5 || false;
       self._muted = o.mute || false;
       self._loop = o.loop || false;
@@ -390,15 +390,20 @@
       self._loaded = false;
       self._sounds = [];
       self._endTimers = {};
+      self._queue = [];
 
       // Setup event listeners.
       self._onend = o.onend ? [{fn: o.onend}] : [];
-      self._onfaded = o.onfaded ? [{fn: o.onfaded}] : [];
+      self._onfade = o.onfade ? [{fn: o.onfade}] : [];
       self._onload = o.onload ? [{fn: o.onload}] : [];
       self._onloaderror = o.onloaderror ? [{fn: o.onloaderror}] : [];
       self._onpause = o.onpause ? [{fn: o.onpause}] : [];
       self._onplay = o.onplay ? [{fn: o.onplay}] : [];
       self._onstop = o.onstop ? [{fn: o.onstop}] : [];
+      self._onmute = o.onmute ? [{fn: o.onmute}] : [];
+      self._onvolume = o.onvolume ? [{fn: o.onvolume}] : [];
+      self._onrate = o.onrate ? [{fn: o.onrate}] : [];
+      self._onseek = o.onseek ? [{fn: o.onseek}] : [];
 
       // Web Audio or HTML5 Audio?
       self._webAudio = usingWebAudio && !self._html5;
@@ -541,9 +546,13 @@
       // If we have no sprite and the sound hasn't loaded, we must wait
       // for the sound to load to get our audio's duration.
       if (!self._loaded && !self._sprite[sprite]) {
-        self.once('load', function() {
-          self.play(self._soundById(sound._id) ? sound._id : undefined);
+        self._queue.push({
+          event: 'play',
+          action: function() {
+            self.play(self._soundById(sound._id) ? sound._id : undefined);
+          }
         });
+
         return sound._id;
       }
 
@@ -665,10 +674,13 @@
     pause: function(id) {
       var self = this;
 
-      // Wait for the sound to begin playing before pausing it.
+      // If the sound hasn't loaded, add it to the load queue to pause when capable.
       if (!self._loaded) {
-        self.once('play', function() {
-          self.pause(id);
+        self._queue.push({
+          event: 'pause',
+          action: function() {
+            self.pause(id);
+          }
         });
 
         return self;
@@ -730,11 +742,14 @@
     stop: function(id) {
       var self = this;
 
-      // Wait for the sound to begin playing before stopping it.
+      // If the sound hasn't loaded, add it to the load queue to stop when capable.
       if (!self._loaded) {
         if (typeof self._sounds[0]._sprite !== 'undefined') {
-          self.once('play', function() {
-            self.stop(id);
+          self._queue.push({
+            event: 'stop',
+            action: function() {
+              self.stop(id);
+            }
           });
         }
 
@@ -797,10 +812,13 @@
     mute: function(muted, id) {
       var self = this;
 
-      // Wait for the sound to begin playing before muting it.
+      // If the sound hasn't loaded, add it to the load queue to mute when capable.
       if (!self._loaded) {
-        self.once('play', function() {
-          self.mute(muted, id);
+        self._queue.push({
+          event: 'mute',
+          action: function() {
+            self.mute(muted, id);
+          }
         });
 
         return self;
@@ -830,6 +848,8 @@
           } else if (sound._node) {
             sound._node.muted = Howler._muted ? true : muted;
           }
+
+          self._emit('mute', sound._id);
         }
       }
 
@@ -870,10 +890,13 @@
       // Update the volume or return the current volume.
       var sound;
       if (typeof vol !== 'undefined' && vol >= 0 && vol <= 1) {
-        // Wait for the sound to begin playing before changing the volume.
+        // If the sound hasn't loaded, add it to the load queue to change volume when capable.
         if (!self._loaded) {
-          self.once('play', function() {
-            self.volume.apply(self, args);
+          self._queue.push({
+            event: 'volume',
+            action: function() {
+              self.volume.apply(self, args);
+            }
           });
 
           return self;
@@ -903,6 +926,8 @@
             } else if (sound._node && !sound._muted) {
               sound._node.volume = vol * Howler.volume();
             }
+
+            self._emit('volume', sound._id);
           }
         }
       } else {
@@ -924,10 +949,13 @@
     fade: function(from, to, len, id) {
       var self = this;
 
-      // Wait for the sound to play before fading.
+      // If the sound hasn't loaded, add it to the load queue to fade when capable.
       if (!self._loaded) {
-        self.once('play', function() {
-          self.fade(from, to, len, id);
+        self._queue.push({
+          event: 'fade',
+          action: function() {
+            self.fade(from, to, len, id);
+          }
         });
 
         return self;
@@ -944,6 +972,11 @@
 
         // Create a linear fade or fall back to timeouts with HTML5 Audio.
         if (sound) {
+          // Stop the previous fade if no sprite is being used (otherwise, volume handles this).
+          if (!id) {
+            self._stopFade(ids[i]);
+          }
+
           if (self._webAudio && !sound._muted) {
             var currentTime = ctx.currentTime;
             var end = currentTime + (len / 1000);
@@ -956,7 +989,7 @@
               delete sound._timeout;
               setTimeout(function() {
                 sound._volume = to;
-                self._emit('faded', id);
+                self._emit('fade', id);
               }, end - ctx.currentTime > 0 ? Math.ceil((end - ctx.currentTime) * 1000) : 0);
             }.bind(self, ids[i], sound), len);
           } else {
@@ -985,7 +1018,7 @@
                 if (vol === to) {
                   clearInterval(sound._interval);
                   delete sound._interval;
-                  self._emit('faded', id);
+                  self._emit('fade', id);
                 }
               }.bind(self, ids[i], sound), stepLen);
             })();
@@ -1009,12 +1042,12 @@
       if (sound._interval) {
         clearInterval(sound._interval);
         delete sound._interval;
-        self._emit('faded', id);
+        self._emit('fade', id);
       } else if (sound._timeout) {
         clearTimeout(sound._timeout);
         delete sound._timeout;
         sound._node.gain.cancelScheduledValues(ctx.currentTime);
-        self._emit('faded', id);
+        self._emit('fade', id);
       }
 
       return self;
@@ -1101,10 +1134,13 @@
       // Update the playback rate or return the current value.
       var sound;
       if (typeof rate === 'number') {
-        // Wait for the sound to load before changing the playback rate.
+        // If the sound hasn't loaded, add it to the load queue to change playback rate when capable.
         if (!self._loaded) {
-          self.once('load', function() {
-            self.rate.apply(self, args);
+          self._queue.push({
+            event: 'rate',
+            action: function() {
+              self.rate.apply(self, args);
+            }
           });
 
           return self;
@@ -1138,6 +1174,8 @@
 
             self._clearTimer(id[i]);
             self._endTimers[id[i]] = setTimeout(self._ended.bind(self, sound), timeout);
+
+            self._emit('rate', sound._id);
           }
         }
       } else {
@@ -1185,10 +1223,13 @@
         return self;
       }
 
-      // Wait for the sound to load before seeking it.
+      // If the sound hasn't loaded, add it to the load queue to seek when capable.
       if (!self._loaded) {
-        self.once('play', function() {
-          self.seek.apply(self, args);
+        self._queue.push({
+          event: 'seek',
+          action: function() {
+            self.seek.apply(self, args);
+          }
         });
 
         return self;
@@ -1213,6 +1254,8 @@
           if (playing) {
             self.play(id, true);
           }
+
+          self._emit('seek', id);
         } else {
           if (self._webAudio) {
             return (sound._seek + (self.playing(id) ? ctx.currentTime - sound._playStart : 0));
@@ -1389,6 +1432,30 @@
             self.off(event, events[i].fn, events[i].id);
           }
         }
+      }
+
+      return self;
+    },
+
+    /**
+     * Queue of actions initiated before the sound has loaded.
+     * These will be called in sequence, with the next only firing
+     * after the previous has finished executing (even if async like play).
+     * @return {Howl}
+     */
+    _loadQueue: function() {
+      var self = this;
+
+      if (self._queue.length > 0) {
+        var task = self._queue[0];
+
+        // don't move onto the next task until this one is done
+        self.once(task.event, function() {
+          self._queue.shift();
+          self._loadQueue();
+        });
+
+        task.action();
       }
 
       return self;
@@ -1732,6 +1799,7 @@
       if (!parent._loaded) {
         parent._loaded = true;
         parent._emit('load');
+        parent._loadQueue();
       }
 
       if (parent._autoplay) {
@@ -1865,6 +1933,7 @@
       if (!self._loaded) {
         self._loaded = true;
         self._emit('load');
+        self._loadQueue();
       }
 
       // Begin playback if specified.
@@ -1916,6 +1985,18 @@
       }
     } catch (e) {}
 
+    // Check if a webview is being used on iOS8 or earlier (rather than the browser).
+    // If it is, disable Web Audio as it causes crashing.
+    var iOS = (/iP(hone|od|ad)/.test(navigator.platform));
+    var appVersion = navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
+    var version = appVersion ? parseInt(appVersion[1], 10) : null;
+    if (iOS && version && version < 9) {
+      var safari = /safari/.test(window.navigator.userAgent.toLowerCase());
+      if (window.navigator.standalone && !safari || !window.navigator.standalone && !safari) {
+        usingWebAudio = false;
+      }
+    }
+
     // Create a master gain node.
     if (usingWebAudio) {
       masterGain = (typeof ctx.createGain === 'undefined') ? ctx.createGainNode() : ctx.createGain();
@@ -1946,5 +2027,10 @@
     window.Howler = Howler;
     window.Howl = Howl;
     window.Sound = Sound;
+  } else if (typeof global !== 'undefined') { // Add to global in Node.js (for testing, etc).
+    global.HowlerGlobal = HowlerGlobal;
+    global.Howler = Howler;
+    global.Howl = Howl;
+    global.Sound = Sound;
   }
 })();
