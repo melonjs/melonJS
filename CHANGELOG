@@ -3,6 +3,7 @@ Version History
 3.0.0
 * Audio : updated to the latest Howler v2.0.0 beta version
 * Container : added an `autoDepth` feature that auto-increments a child's z-coordinate when inserted
+* Color : add support for the #ARGB and #AARRGGBB formats
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
 * Core : plugins are now registered to `me.plugins` to prevent collisions within the `me.plugin` namespace
 * Core : replaced `String.contains` by its ES6 equivalent: `String.includes`
@@ -44,6 +45,11 @@ Version History
 * TMX : added support for per-frame animation delay to Tiled Objects (for tileset animations)
 * TMX : added support for layer data encoding in JSON map format (Tiled 0.13)
 * TMX : added support for evaluations in TMX data; see spike entities in the platformer for a useful example
+* TMX : fixed an isometric rendering bug with odd tile heights
+* TMX : throw an error message when using map exported in XML (deprecated in Tiled 0.15)
+* TMX : allow to parse the `backgroundcolor` attribute as formatted in Tiled 0.15 (#AARRGGBB)
+* TMX : use the new `columns` property (if available) when parsing maps (Tiled 0.15)
+* TMX : fixed a regression in AD tile rotation (squares tiles only)
 * Video : optimized ImageLayer repeat modes (repeat modes require power-of-two sized images for WebGL)
 * Video : added `fill-min` and `flex` scaling modes
 * Video : animations are now able to skip frames for low FPS devices and high-speed animations
