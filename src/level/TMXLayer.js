@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
@@ -24,9 +24,20 @@
 
             // apply given parameters
             this.name = name;
-            this.color = color;
             this.pos.z = z;
             this.floating = true;
+
+            // parse the given color
+            if (color instanceof me.Color) {
+                this.color = color.toRGBA();
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                var _col = me.pool.pull("me.Color");
+                this.color = _col.parseCSS(color).toRGBA();
+                me.pool.push(_col);
+            }
+
+
         },
 
         /**

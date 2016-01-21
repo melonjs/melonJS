@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -107,7 +107,7 @@
             this.atlas = this.texture.getAtlas();
 
             // calculate the number of tiles per horizontal line
-            var hTileCount = ~~(this.image.width / (this.tilewidth + this.spacing));
+            var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
             var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
             // compute the last gid value in the tileset
             this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);

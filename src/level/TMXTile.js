@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2015, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Tile QT 0.7.x format
@@ -115,13 +115,18 @@
                 this.transform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
-                this.transform.translate((this.flippedAD ? this.height : this.width), 0);
+                this.transform.translate(
+                    (this.flippedAD ? 0 : this.width),
+                    (this.flippedAD ? this.height : 0)
+                );
                 a[0] *= -1;
                 a[3] *= -1;
-
             }
             if (this.flippedY) {
-                this.transform.translate(0, (this.flippedAD ? this.width : this.height));
+                this.transform.translate(
+                    (this.flippedAD ? this.width : 0),
+                    (this.flippedAD ? 0 : this.height)
+                );
                 a[1] *= -1;
                 a[4] *= -1;
             }
