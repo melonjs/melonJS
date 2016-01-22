@@ -274,6 +274,31 @@
         };
 
         /**
+         * resume the specified sound on all channels<br>
+         * @name resume
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+         * @example
+         * // play a audio clip
+         * var id = me.audio.play("myClip");
+         * ...
+         * // pause it
+         * me.audio.pause("myClip", id);
+         * ...
+         * // resume
+         * me.audio.resume("myClip", id);
+         */
+        api.resume = function (sound_name, instance_id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                sound.play(instance_id);
+            }
+        };
+
+        /**
          * play the specified audio track<br>
          * this function automatically set the loop property to true<br>
          * and keep track of the current sound being played.
