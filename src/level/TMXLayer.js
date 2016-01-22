@@ -521,8 +521,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in world/pixels coordinates)
+         * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {Number} TileId
          */
         getTileId : function (x, y) {
@@ -536,8 +536,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in world/pixels coordinates)
+         * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} Tile Object
          */
         getTile : function (x, y) {
@@ -550,8 +550,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in map coordinates: row/column)
+         * @param {Number} y Y coordinate (in map coordinates: row/column)
          * @param {Number} tileId tileId
          * @return {me.Tile} the corresponding newly created tile object
          */
@@ -574,8 +574,8 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @param {Number} x X coordinate
-         * @param {Number} y Y coordinate
+         * @param {Number} x X coordinate (in map coordinates: row/column)
+         * @param {Number} y Y coordinate (in map coordinates: row/column)
          */
         clearTile : function (x, y) {
             // clearing tile
