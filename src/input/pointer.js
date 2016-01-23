@@ -323,13 +323,13 @@
                     } else {
                         e.gameX = e.gameLocalX = e.gameWorldX;
                         e.gameY = e.gameLocalY = e.gameWorldY;
-                        // adjust gameLocalX to specify coordinates
-                        // within the region ancestor container
-                        if (typeof ancestor !== "undefined") {
-                            var parentPos = ancestor.getBounds().pos;
-                            e.gameLocalX = e.gameX - parentPos.x;
-                            e.gameLocalY = e.gameY - parentPos.y;
-                        }
+                    }
+                    // adjust gameLocalX to specify coordinates
+                    // within the region ancestor container
+                    if (typeof ancestor !== "undefined") {
+                        var parentPos = ancestor.getBounds().pos;
+                        e.gameLocalX = e.gameX - parentPos.x;
+                        e.gameLocalY = e.gameY - parentPos.y;
                     }
 
                     var eventInBounds =
