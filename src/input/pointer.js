@@ -28,32 +28,46 @@
      */
 
     /**
-     * Event X coordinate relative to the viewport<br>
+     * Event X coordinate relative to the viewport
      * @memberof! external:Event#
      * @name external:Event#gameScreenX
      * @type {Number}
      */
 
     /**
-     * Event Y coordinate relative to the viewport<br>
+     * Event Y coordinate relative to the viewport
      * @memberof! external:Event#
      * @name external:Event#gameScreenY
      * @type {Number}
      */
 
     /**
-     * Event X coordinate relative to the map<br>
+     * Event X coordinate relative to the map
      * @memberof! external:Event#
      * @name external:Event#gameWorldX
      * @type {Number}
      */
 
     /**
-     * Event Y coordinate relative to the map<br>
+     * Event Y coordinate relative to the map
      * @memberof! external:Event#
      * @name external:Event#gameWorldY
      * @type {Number}
      */
+
+     /**
+      * Event X coordinate relative to the holding container
+      * @memberof! external:Event#
+      * @name external:Event#gameLocalX
+      * @type {Number}
+      */
+
+     /**
+      * Event Y coordinate relative to the holding container
+      * @memberof! external:Event#
+      * @name external:Event#gameLocalY
+      * @type {Number}
+      */
 
     /**
      * The unique identifier of the contact for a touch, mouse or pen <br>
