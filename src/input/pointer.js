@@ -326,8 +326,9 @@
                         // adjust gameLocalX to specify coordinates
                         // within the region ancestor container
                         if (typeof ancestor !== "undefined") {
-                            e.gameLocalX = e.gameX - ancestor._absPos.x;
-                            e.gameLocalY = e.gameY - ancestor._absPos.y;
+                            var parentPos = ancestor.getBounds().pos;
+                            e.gameLocalX = e.gameX - parentPos.x;
+                            e.gameLocalY = e.gameY - parentPos.y;
                         }
                     }
 

@@ -33,8 +33,9 @@ game.ShapeObject = me.Entity.extend({
         this.hover = false;
 
         // calculate the final coordinates, as the move event is global (viewport);
-        var x = event.gameX - this.pos.x - this.ancestor.pos.x;
-        var y = event.gameY - this.pos.y - this.ancestor.pos.y;
+        var parentPos = this.ancestor.getBounds().pos;
+        var x = event.gameX - this.pos.x - parentPos.x;
+        var y = event.gameY - this.pos.y - parentPos.y;
 
         // the pointer event system will use the object bounding rect, check then with with all defined shapes
         for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
