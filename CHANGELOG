@@ -2,6 +2,7 @@ Version History
 ---------------
 3.0.0
 * Audio : updated to the latest Howler v2.0.0 beta version
+* Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
 * Container : added an `autoDepth` feature that auto-increments a child's z-coordinate when inserted
 * Color : add support for the #ARGB and #AARRGGBB formats
 * Core : renamed `Object.extend` to `me.Object.extend` (fixes conflicts with FaceBook SDK and underscore/lodash) (@jdrorrer)
