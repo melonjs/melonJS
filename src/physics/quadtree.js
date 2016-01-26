@@ -169,7 +169,10 @@
 
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child instanceof me.Container) {
-                // recursivly insert childs
+                if (child.name !== "rootContainer") {
+                    this.insert(child);
+                }
+                // recursivly insert all childs
                 this.insertContainer(child);
             } else {
                 // only insert object with a bounding box
