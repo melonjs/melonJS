@@ -88,9 +88,9 @@
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
-            
+
             var image = settings.image;
-            
+
             if (typeof (settings.region) !== "undefined") {
                 if ((typeof (image) === "object") && image.getRegion) {
                     // use a texture atlas
@@ -122,7 +122,7 @@
                 settings.framewidth  || image.width,
                 settings.frameheight || image.height
             ]);
-            
+
             // update anchorPoint
             if (settings.anchorPoint) {
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
@@ -224,6 +224,9 @@
             }
             // set the scaleFlag
             this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
+
+            // resize the bounding box
+            this.resizeBounds(this.width * x, this.height * y);
 
         },
 
