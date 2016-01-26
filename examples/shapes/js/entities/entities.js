@@ -32,16 +32,19 @@ game.ShapeObject = me.Entity.extend({
     pointerMove: function (event) {
         this.hover = false;
 
-        // calculate the final coordinates, as the move event is global (viewport);
-        var parentPos = this.ancestor.getBounds().pos;
-        var x = event.gameX - this.pos.x - parentPos.x;
-        var y = event.gameY - this.pos.y - parentPos.y;
+        // move event is global (relative to the viewport)
+        if (this.getBounds().containsPoint(event.gameX, event.gameY)) {
+            // calculate the final coordinates
+            var parentPos = this.ancestor.getBounds().pos;
+            var x = event.gameX - this.pos.x - parentPos.x;
+            var y = event.gameY - this.pos.y - parentPos.y;
 
-        // the pointer event system will use the object bounding rect, check then with with all defined shapes
-        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-            if (shape.containsPoint(x, y)) {
-                this.hover = true;
-                break;
+            // the pointer event system will use the object bounding rect, check then with with all defined shapes
+            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                if (shape.containsPoint(x, y)) {
+                    this.hover = true;
+                    break;
+                }
             }
         }
 
