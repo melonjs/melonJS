@@ -71,6 +71,8 @@ game.UI.Container = me.Container.extend({
         me.input.registerPointerEvent("pointerup", this, this.onRelease.bind(this));
         me.input.registerPointerEvent("pointercancel", this, this.onRelease.bind(this));
 
+        // call the parent function
+        this._super(me.Container, "onActivateEvent");
     },
 
     onDeactivateEvent: function () {
@@ -80,6 +82,9 @@ game.UI.Container = me.Container.extend({
         me.input.releasePointerEvent("pointerdown", this);
         me.input.releasePointerEvent("pointerup", this);
         me.input.releasePointerEvent("pointercancel", this);
+
+        // call the parent function
+        this._super(me.Container, "onDeactivateEvent");
     },
 
     /**

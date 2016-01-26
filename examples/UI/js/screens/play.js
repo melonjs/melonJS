@@ -8,12 +8,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
         // add the UI elements
 
-        // main container`
         var panel = new game.UI.Container(150, 100, 450, 325, "OPTIONS");
-
-        // add the panel to word first
-        // (this is required to enable event on sub-items, since else `onActivateEvent` won't be called)
-        me.game.world.addChild(panel, 1);
 
         // add a few checkbox
         panel.addChild(new game.UI.CheckBoxUI(
@@ -43,6 +38,9 @@ game.PlayScreen = me.ScreenObject.extend({
             "yellow",
             "Cancel"
         ));
+
+        // add the panel to word (root) container
+        me.game.world.addChild(panel, 1);
 
         // display the current pointer coordinates on top of the pointer arrow
         me.game.world.addChild(new (me.Renderable.extend({
