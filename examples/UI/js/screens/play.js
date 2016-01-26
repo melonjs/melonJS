@@ -7,17 +7,22 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new me.ColorLayer("background", "rgba(248, 194, 40, 255)"), 0);
 
         // add the UI elements
-
         var panel = new game.UI.Container(150, 100, 450, 325, "OPTIONS");
 
         // add a few checkbox
         panel.addChild(new game.UI.CheckBoxUI(
             125, 75,
+            game.texture,
+            "green_boxCheckmark",
+            "grey_boxCheckmark",
             "Music ON", // default
             "Music OFF"
         ));
         panel.addChild(new game.UI.CheckBoxUI(
             125, 125,
+            game.texture,
+            "green_boxCheckmark",
+            "grey_boxCheckmark",
             "Sound FX ON", // default
             "Sound FX OFF"
         ));
