@@ -5,7 +5,7 @@
 game.UI = game.UI || {};
 
 /**
- * a basic checkbox control
+ * a basic button control
  */
 game.UI.ButtonUI = me.GUI_Object.extend({
     /**
@@ -35,7 +35,7 @@ game.UI.ButtonUI = me.GUI_Object.extend({
     },
 
     /**
-     * function called when the pointer is over the object
+     * function called when the object is clicked on
      */
     onClick : function (/* event */) {
         this.offset.setV(this.clicked_region.offset);
@@ -47,7 +47,7 @@ game.UI.ButtonUI = me.GUI_Object.extend({
     },
 
     /**
-     * function called when the pointer is leaving the object area
+     * function called when the pointer button is released
      */
     onRelease : function (/* event */) {
         this.offset.setV(this.unclicked_region.offset);
