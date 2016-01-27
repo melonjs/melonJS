@@ -148,7 +148,7 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
         renderer.setGlobalAlpha(alpha * this.getOpacity());
 
         this.font.draw(renderer,
-            " " + (this.isChecked ? this.label_on : this.label_off),
+            " " + (this.isSelected ? this.label_on : this.label_off),
             this.pos.x + this.width,
             this.pos.y + this.height / 2
         );
