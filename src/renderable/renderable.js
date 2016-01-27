@@ -120,6 +120,16 @@
             this.alpha = 1.0;
 
             /**
+             * a reference to the Container object that contains this renderable,
+             * or undefined if it has not been added to one.
+             * @public
+             * @type me.Container
+             * @default undefined
+             * @name me.Renderable#ancestor
+             */
+            this.ancestor = undefined;
+
+            /**
              * The bounding rectangle for this renderable
              * @ignore
              * @type {me.Rect}

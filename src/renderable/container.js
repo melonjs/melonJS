@@ -421,18 +421,14 @@
             if (this._root) {
                 return true;
             } else {
-                var hasRoot = false;
                 var ancestor = this.ancestor;
                 while (ancestor) {
-                    hasRoot = ancestor._root;
-                    if (hasRoot) {
-                        break;
-                    } else {
-                        ancestor = ancestor.ancestor;
+                    if (ancestor._root === true) {
+                        return true;
                     }
+                    ancestor = ancestor.ancestor;
                 }
-
-                return hasRoot;
+                return false;
             }
         },
 

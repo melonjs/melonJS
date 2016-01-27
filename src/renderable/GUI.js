@@ -81,7 +81,7 @@
              * @name me.GUI_Object#isHoldable
              */
             this.isHoldable = false;
-            
+
             /**
              * true if the pointer is over the object
              * @public
@@ -126,6 +126,7 @@
             // Check if left mouse button is pressed OR if device has touch
             if ((event.which === 1 || me.device.touch) && this.isClickable) {
                 this.updated = true;
+                this.released = false;
                 if (this.isHoldable) {
                     if (this.holdTimeout !== null) {
                         me.timer.clearTimeout(this.holdTimeout);
@@ -150,7 +151,7 @@
         onClick : function (/* event */) {
             return false;
         },
-        
+
         /**
          * function callback for the pointerEnter event
          * @ignore
@@ -159,7 +160,7 @@
             this.hover = true;
             return this.onOver(event);
         },
-        
+
         /**
          * function called when the pointer is over the object
          * @name onOver
@@ -169,7 +170,7 @@
          * @param {Event} event the event object
          */
         onOver : function (/* event */) {},
-        
+
         /**
          * function callback for the pointerLeave event
          * @ignore
@@ -179,7 +180,7 @@
             this.release.call(this, event);
             return this.onOut(event);
         },
-        
+
         /**
          * function called when the pointer is leaving the object area
          * @name onOut
@@ -189,7 +190,7 @@
          * @param {Event} event the event object
          */
         onOut : function (/* event */) {},
-        
+
         /**
          * function callback for the pointerup event
          * @ignore
@@ -247,7 +248,6 @@
             me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
             me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
             me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
-            
         },
 
         /**

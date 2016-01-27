@@ -28,32 +28,46 @@
      */
 
     /**
-     * Event X coordinate relative to the viewport<br>
+     * Event X coordinate relative to the viewport
      * @memberof! external:Event#
      * @name external:Event#gameScreenX
      * @type {Number}
      */
 
     /**
-     * Event Y coordinate relative to the viewport<br>
+     * Event Y coordinate relative to the viewport
      * @memberof! external:Event#
      * @name external:Event#gameScreenY
      * @type {Number}
      */
 
     /**
-     * Event X coordinate relative to the map<br>
+     * Event X coordinate relative to the map
      * @memberof! external:Event#
      * @name external:Event#gameWorldX
      * @type {Number}
      */
 
     /**
-     * Event Y coordinate relative to the map<br>
+     * Event Y coordinate relative to the map
      * @memberof! external:Event#
      * @name external:Event#gameWorldY
      * @type {Number}
      */
+
+     /**
+      * Event X coordinate relative to the holding container
+      * @memberof! external:Event#
+      * @name external:Event#gameLocalX
+      * @type {Number}
+      */
+
+     /**
+      * Event Y coordinate relative to the holding container
+      * @memberof! external:Event#
+      * @name external:Event#gameLocalY
+      * @type {Number}
+      */
 
     /**
      * The unique identifier of the contact for a touch, mouse or pen <br>
@@ -266,20 +280,20 @@
      */
     function dispatchEvent(e) {
         var handled = false;
-        
+
         // get the current screen to world offset
         me.game.viewport.localToWorld(0, 0, viewportOffset);
-        
+
         while (changedTouches.length > 0) {
 
             // keep a reference to the last item
             var changedTouch = changedTouches.pop();
             // and put it back into our cache
             T_VECTORS.push(changedTouch);
-            
+
             // Do not fire older events
             if (typeof(e.timeStamp) !== "undefined") {
-                if (e.timeStamp < lastTimeStamp) {   
+                if (e.timeStamp < lastTimeStamp) {
                     continue;
                 }
                 lastTimeStamp = e.timeStamp;
@@ -298,37 +312,45 @@
             e.gameWorldY = e.gameScreenY + viewportOffset.y;
 
             currentPointer.setShape(
-                e.gameWorldX, 
-                e.gameWorldY, 
-                e.width || 1, 
+                e.gameWorldX,
+                e.gameWorldY,
+                e.width || 1,
                 e.height || 1
             );
-            
+
             var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container._sortZ);
-            
+
             // add the viewport to the list of candidates
             candidates.push ( me.game.viewport );
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
-            
+
                 if (evtHandlers.has(candidate)) {
-                    var handlers = evtHandlers.get(candidate);                        
+                    var handlers = evtHandlers.get(candidate);
                     var region = handlers.region;
+                    var ancestor = region.ancestor;
                     var bounds = region.getBounds();
-                    
+
                     if (region.floating === true) {
-                        e.gameX = e.gameScreenX;
-                        e.gameY = e.gameScreenY;
+                        e.gameX = e.gameLocalX = e.gameScreenX;
+                        e.gameY = e.gameLocalY = e.gameScreenY;
                     } else {
-                        e.gameX = e.gameWorldX;
-                        e.gameY = e.gameWorldY;
+                        e.gameX = e.gameLocalX = e.gameWorldX;
+                        e.gameY = e.gameLocalY = e.gameWorldY;
+                    }
+                    // adjust gameLocalX to specify coordinates
+                    // within the region ancestor container
+                    if (typeof ancestor !== "undefined") {
+                        var parentPos = ancestor.getBounds().pos;
+                        e.gameLocalX = e.gameX - parentPos.x;
+                        e.gameLocalY = e.gameY - parentPos.y;
                     }
 
                     var eventInBounds =
                         // check the shape bounding box first
                         bounds.containsPoint(e.gameX, e.gameY) &&
                         // then check more precisely if needed
-                        (bounds === region || region.containsPoint(e.gameX, e.gameY));
+                        (bounds === region || region.containsPoint(e.gameLocalX, e.gameLocalY));
 
                     switch (activeEventList.indexOf(e.type)) {
                         case POINTER_MOVE:
@@ -379,7 +401,7 @@
                         default:
                             // event inside of bounds: trigger the POINTER_DOWN or MOUSE_WHEEL callback
                             if (eventInBounds) {
-                                
+
                                 // trigger the corresponding callback
                                 if (triggerEvent(handlers, e.type, e, e.pointerId)) {
                                     handled = true;
@@ -387,8 +409,8 @@
                                 }
                             }
                             break;
-                    }                
-                }      
+                    }
+                }
                 if (handled === true) {
                     // stop iterating through this list of candidates
                     break;
@@ -532,7 +554,7 @@
      * @memberOf me.input
      */
     api.pointer = new me.Rect(0, 0, 1, 1);
-    
+
     // bind list for mouse buttons
     api.pointer.bind = [ 0, 0, 0 ];
 
