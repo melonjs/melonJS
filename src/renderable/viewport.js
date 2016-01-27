@@ -221,7 +221,7 @@
             if (target instanceof me.Entity) {
                 this.target = target.pos;
             }
-            else if (target instanceof me.Vector2d) {
+            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d))  {
                 this.target = target;
             }
             else {
