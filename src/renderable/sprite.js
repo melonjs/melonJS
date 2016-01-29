@@ -21,7 +21,7 @@
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
      * @param {Boolean} [settings.flipX] Initial flip for X-axis.
      * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point (defaults to the center of the sprite).
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, {

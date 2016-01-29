@@ -18,7 +18,7 @@
      * @param {Image|String} settings.image Image to use for the animation
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {me.Vector2d} [settings.anchorPoint] Anchor point to draw the frame at
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // standalone image, with anchor in the center
      * var animationSheet = new me.AnimationSheet(0, 0, {
