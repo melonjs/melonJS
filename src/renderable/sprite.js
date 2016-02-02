@@ -21,7 +21,7 @@
      * @param {Number} [settings.rotation] Initial rotation angle in radians.
      * @param {Boolean} [settings.flipX] Initial flip for X-axis.
      * @param {Boolean} [settings.flipY] Initial flip for Y-axis.
-     * @param {me.Vector2d} [settings.anchorPoint] Anchor point.
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a static Sprite Object
      * mySprite = new me.Sprite (100, 100, {
@@ -88,9 +88,9 @@
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
             this.isSprite = true;
-            
+
             var image = settings.image;
-            
+
             if (typeof (settings.region) !== "undefined") {
                 if ((typeof (image) === "object") && image.getRegion) {
                     // use a texture atlas
@@ -122,7 +122,7 @@
                 settings.framewidth  || image.width,
                 settings.frameheight || image.height
             ]);
-            
+
             // update anchorPoint
             if (settings.anchorPoint) {
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
@@ -224,6 +224,9 @@
             }
             // set the scaleFlag
             this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
+
+            // resize the bounding box
+            this.resizeBounds(this.width * x, this.height * y);
 
         },
 

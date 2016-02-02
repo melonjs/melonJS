@@ -5,8 +5,8 @@ game.PlayScreen = me.ScreenObject.extend({
     onResetEvent: function() {
 
         // background color
-        me.game.world.addChild(new me.ColorLayer("background", "#330000", 0));
-        
+        me.game.world.addChild(new me.ColorLayer("background", "#330000"), 0);
+
         // static background image
         var background = new me.Sprite(480, 320, {
             image: game.texture,

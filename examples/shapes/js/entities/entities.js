@@ -7,11 +7,11 @@ game.ShapeObject = me.Entity.extend({
         settings.shapes = [];
         // call the super constructor
         this._super(me.Entity, "init", [x, y, settings]);
-        
+
         // status flags
         this.selected = false;
         this.hover = false;
-        
+
         // to memorize where we grab the shape
         this.grabOffset = new me.Vector2d(0,0);
     },
@@ -21,7 +21,7 @@ game.ShapeObject = me.Entity.extend({
         me.input.registerPointerEvent("pointerdown", this, this.onSelect.bind(this));
         me.input.registerPointerEvent("pointerup", this, this.onRelease.bind(this));
         me.input.registerPointerEvent("pointercancel", this, this.onRelease.bind(this));
-        
+
         // register on the global pointermove event
         this.handler = me.event.subscribe(me.event.POINTERMOVE, this.pointerMove.bind(this));
     },
@@ -32,21 +32,29 @@ game.ShapeObject = me.Entity.extend({
     pointerMove: function (event) {
         this.hover = false;
 
-        // the pointer event system will use the object bounding rect, check then with with all defined shapes
-        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-            if (shape.containsPoint(event.gameX - this.pos.x, event.gameY - this.pos.y)) {
-                this.hover = true;
-                break;
+        // move event is global (relative to the viewport)
+        if (this.getBounds().containsPoint(event.gameX, event.gameY)) {
+            // calculate the final coordinates
+            var parentPos = this.ancestor.getBounds().pos;
+            var x = event.gameX - this.pos.x - parentPos.x;
+            var y = event.gameY - this.pos.y - parentPos.y;
+
+            // the pointer event system will use the object bounding rect, check then with with all defined shapes
+            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                if (shape.containsPoint(x, y)) {
+                    this.hover = true;
+                    break;
+                }
             }
         }
-        
+
         if (this.selected) {
             // follow the pointer
             me.game.world.moveUp(this);
             this.pos.set(event.gameX, event.gameY, this.pos.z);
             this.pos.sub(this.grabOffset);
         }
-        
+
         if (this.hover || this.selected) {
             return false;
         }

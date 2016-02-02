@@ -460,14 +460,14 @@
 
             // Start with the coordinates of a grid-aligned tile
             var referencePoint = me.pool.pull("me.Vector2d",
-                Math.floor(x / (this.tilewidth + this.sidelengthx)),
-                Math.floor((y / (this.tileheight + this.sidelengthy)))
+                Math.floor(x / (this.columnwidth * 2)),
+                Math.floor((y / (this.rowheight * 2)))
             );
 
             // Relative x and y position on the base square of the grid-aligned tile
             var rel = me.pool.pull("me.Vector2d",
-                x - referencePoint.x * (this.tilewidth + this.sidelengthx),
-                y - referencePoint.y * (this.tileheight + this.sidelengthy)
+                x - referencePoint.x * (this.columnwidth * 2),
+                y - referencePoint.y * (this.rowheight * 2)
             );
 
             // Adjust the reference point to the correct tile coordinates
