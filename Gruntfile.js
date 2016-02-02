@@ -124,7 +124,7 @@ module.exports = function (grunt) {
     uglify : {
       options : {
         report : "min",
-        preserveComments : "some",
+        preserveComments : false,
         screwIE8 : "true",
         mangle: {
           eval: true
