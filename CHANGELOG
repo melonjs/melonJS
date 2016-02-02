@@ -1,5 +1,7 @@
 Version History
 ---------------
+4.0.0
+
 3.0.0
 * Audio : updated to the latest Howler v2.0.0 beta version
 * Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
