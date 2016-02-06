@@ -318,7 +318,7 @@
                 e.height || 1
             );
 
-            var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container._sortZ);
+            var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
             // add the viewport to the list of candidates
             candidates.push ( me.game.viewport );

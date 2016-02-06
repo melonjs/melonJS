@@ -651,6 +651,14 @@
         },
 
         /**
+         * Reverse Z Sorting function
+         * @ignore
+         */
+        _sortReverseZ : function (a, b) {
+            return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
+        },
+
+        /**
          * X Sorting function
          * @ignore
          */
