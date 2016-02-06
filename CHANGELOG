@@ -1,5 +1,8 @@
 Version History
 ---------------
+3.0.1
+* Input : actually really truly fix pointer event z-ordering, finally
+
 3.0.0
 * Audio : updated to the latest Howler v2.0.0 beta version
 * Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
