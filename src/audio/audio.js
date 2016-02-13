@@ -158,17 +158,24 @@
                 src : urls,
                 volume : Howler.volume(),
                 onloaderror : function () {
-                    audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
                 onload : function () {
-                    audioTracks[sound.name] = this;
                     retry_counter = 0;
                     if (onload_cb) {
                         onload_cb();
                     }
                 }
             });
+
+            //  HACK: ejecta does not support/fire the onload callback
+            if (me.device.ejecta) {
+                retry_counter = 0;
+                if (onload_cb) {
+                    onload_cb();
+                }
+                return 1;
+            }
 
             return 1;
         };

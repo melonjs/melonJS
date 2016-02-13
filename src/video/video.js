@@ -205,7 +205,12 @@
             );
 
             // create the main screen canvas
-            canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
+            if (me.device.ejecta === true) {
+                // a main canvas is already automatically created by Ejecta
+                canvas = document.getElementById("canvas");
+            } else {
+                canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
+            }
 
             // add our canvas
             if (options.wrapper) {
@@ -359,9 +364,16 @@
             }
 
             if (settings.autoScale) {
-                var parent = me.video.renderer.getScreenCanvas().parentNode;
-                var _max_width = Math.min(maxWidth, parent.width || window.innerWidth);
-                var _max_height = Math.min(maxHeight, parent.height || window.innerHeight);
+                var parentNodeWidth;
+                var parentNodeHeight;
+                var parentNode = me.video.renderer.getScreenCanvas().parentNode;
+                if (typeof (parentNode) !== "undefined") {
+                    // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
+                    parentNodeWidth = parentNode.width;
+                    parentNodeHeight = parentNode.height;
+                }
+                var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
+                var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
                 var screenRatio = _max_width / _max_height;
                 var sWidth = Infinity;
                 var sHeight = Infinity;

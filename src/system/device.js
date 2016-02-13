@@ -152,7 +152,7 @@
             // Kindle device ?
             me.device.Kindle = me.device.ua.match(/Kindle|Silk.*Mobile Safari/i) || false;
 
-             // Mobile platform
+            // Mobile platform
             me.device.isMobile = me.device.ua.match(/Mobi/i) ||
                                  me.device.iOS ||
                                  me.device.android ||
@@ -160,6 +160,8 @@
                                  me.device.BlackBerry ||
                                  me.device.Kindle ||
                                  me.device.iOS || false;
+            // ejecta
+            me.device.ejecta = (typeof window.ejecta !== "undefined");
         };
 
         /*
@@ -261,7 +263,7 @@
         api.isMobile = false;
 
         /**
-         * equals to true if the device is an iOS platform <br>
+         * equals to true if the device is an iOS platform.
          * @type Boolean
          * @readonly
          * @name iOS
@@ -270,7 +272,7 @@
         api.iOS = false;
 
         /**
-         * equals to true if the device is an Android platform <br>
+         * equals to true if the device is an Android platform.
          * @type Boolean
          * @readonly
          * @name android
@@ -279,7 +281,7 @@
         api.android = false;
 
         /**
-         * equals to true if the device is an Android 2.x platform <br>
+         * equals to true if the device is an Android 2.x platform.
          * @type Boolean
          * @readonly
          * @name android2
@@ -287,8 +289,19 @@
          */
         api.android2 = false;
 
+       /**
+        * equals to true if the game is running under Ejecta.
+        * @type Boolean
+        * @readonly
+        * @see http://impactjs.com/ejecta
+        * @name ejecta
+        * @memberOf me.device
+        */
+        api.ejecta = false;
+
+
          /**
-         * equals to true if the device is a Windows Phone platform <br>
+         * equals to true if the device is a Windows Phone platform.
          * @type Boolean
          * @readonly
          * @name wp
@@ -297,7 +310,7 @@
         api.wp = false;
 
         /**
-         * equals to true if the device is a BlackBerry platform <br>
+         * equals to true if the device is a BlackBerry platform.
          * @type Boolean
          * @readonly
          * @name BlackBerry
@@ -306,7 +319,7 @@
         api.BlackBerry = false;
 
         /**
-         * equals to true if the device is a Kindle platform <br>
+         * equals to true if the device is a Kindle platform.
          * @type Boolean
          * @readonly
          * @name Kindle
