@@ -262,18 +262,6 @@
             me.input.releasePointerEvent("pointercancel", this);
             me.input.releasePointerEvent("pointerenter", this);
             me.input.releasePointerEvent("pointerleave", this);
-        },
-
-        /**
-         * OnDestroy notification function<br>
-         * Called by engine before deleting the object<br>
-         * be sure to call the parent function if overwritten
-         * @name onDestroyEvent
-         * @memberOf me.GUI_Object
-         * @public
-         * @function
-         */
-        onDestroyEvent : function () {
             me.timer.clearTimeout(this.holdTimeout);
         }
     });
