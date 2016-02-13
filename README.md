@@ -50,7 +50,7 @@ and currently features :
     - Shape based Tile collision support
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
-- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/)
+- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/) and [Ejecta](https://github.com/melonjs/melonJS/wiki/How-to-build-your-game-for-tvOS-(or-iOS)-using-Ejecta)
 - Asynchronous messaging support (minPubSub)
 - Basic GUI elements included
 - Customizable loader
