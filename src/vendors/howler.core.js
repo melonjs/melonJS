@@ -1967,7 +1967,7 @@
           var test = new Audio();
 
           // Check if the canplaythrough event is available.
-          if (typeof test.oncanplaythrough === 'undefined') {
+          if (typeof test.oncanplaythrough === 'undefined' && !window.ejecta) {
             canPlayEvent = 'canplay';
           }
         } catch(e) {
