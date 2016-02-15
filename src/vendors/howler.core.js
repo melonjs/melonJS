@@ -71,6 +71,9 @@
       // Expose the AudioContext when using Web Audio.
       self.ctx = ctx;
 
+      // Expose the master GainNode when using Web Audio (useful for plugins or advanced usage).
+      self.masterGain = masterGain;
+
       // Check for supported codecs.
       if (!noAudio) {
         self._setupCodecs();
@@ -559,6 +562,13 @@
 
       // Don't play the sound if an id was passed and it is already playing.
       if (id && !sound._paused) {
+        // Trigger the play event, in order to keep iterating through queue.
+        if (!args[1]) {
+          setTimeout(function() {
+            self._emit('play', sound._id);
+          }, 0);
+        }
+
         return sound._id;
       }
 
@@ -1283,10 +1293,14 @@
 
     /**
      * Get the duration of this sound.
+     * @param  {Number} id The sound id to check. If none is passed, first sound is used.
      * @return {Number} Audio duration.
      */
-    duration: function() {
-      return this._duration;
+    duration: function(id) {
+      var self = this;
+      var sound = self._soundById(id) || self._sounds[0];
+
+      return self._duration / sound._rate;
     },
 
     /**
