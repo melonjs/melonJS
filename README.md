@@ -83,7 +83,7 @@ To build your own version of melonJS you will need to install :
 Once the Node.js package manager has been installed (using the installer from their website),
 you need to install build dependencies and Grunt CLI (Command Line Interface), by doing the following :
 
-Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Commmand Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
+Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Command Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
     $ npm install -g grunt-cli
