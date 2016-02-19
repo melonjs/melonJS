@@ -652,7 +652,7 @@
         };
 
         // Play immediately if ready, or wait for the 'canplaythrough'e vent.
-        if (node.readyState === 4 || !node.readyState && navigator.isCocoonJS) {
+        if (node.readyState === 4 || window.ejecta || !node.readyState && navigator.isCocoonJS) {
           playHtml5();
         } else {
           var listener = function() {
