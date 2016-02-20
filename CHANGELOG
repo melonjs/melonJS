@@ -1,5 +1,8 @@
 Version History
 ---------------
+3.1.0
+* TMX : Added support for JSON-format external tilesets
+
 3.0.1
 * Core : fixed library initialisation when running under Ejecta
 * Input : actually really truly fix pointer event z-ordering, finally

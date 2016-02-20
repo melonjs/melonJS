@@ -28,13 +28,17 @@
             this.TileProperties = [];
 
             this.firstgid = this.lastgid = +tileset.firstgid;
-            var src = tileset.source;
-            if (src && me.utils.getFileExtension(src) === "tsx") {
-                // load TSX
-                tileset = me.loader.getTMX(me.utils.getBasename(src));
 
-                if (!tileset) {
-                    throw new me.Error(src + " TSX tileset not found");
+            // check if an external tileset is defined
+            if (typeof(tileset.source) !== "undefined") {
+                var src = tileset.source;
+                var ext = me.utils.getFileExtension(src);
+                if (ext === "tsx" || ext === "json") {
+                    // load the external tileset (TSX/JSON)
+                    tileset = me.loader.getTMX(me.utils.getBasename(src));
+                    if (!tileset) {
+                        throw new me.Error(src + " external TSX/JSON tileset not found");
+                    }
                 }
             }
 

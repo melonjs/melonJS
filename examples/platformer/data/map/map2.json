@@ -772,46 +772,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "image":"..\/img\/tileset.png",
-         "imageheight":1120,
-         "imagewidth":1440,
-         "margin":5,
-         "name":"tileset",
-         "properties":
-            {
-
-            },
-         "spacing":10,
-         "tilecount":252,
-         "tileheight":70,
-         "tiles":
-            {
-             "191":
-                {
-                 "animation":[
-                        {
-                         "duration":250,
-                         "tileid":191
-                        }, 
-                        {
-                         "duration":250,
-                         "tileid":209
-                        }]
-                },
-             "216":
-                {
-                 "animation":[
-                        {
-                         "duration":250,
-                         "tileid":216
-                        }, 
-                        {
-                         "duration":250,
-                         "tileid":217
-                        }]
-                }
-            },
-         "tilewidth":70
+         "source":"tileset.json"
         }],
  "tilewidth":35,
  "version":1,

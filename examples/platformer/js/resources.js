@@ -21,8 +21,9 @@ game.resources = [
     /* Tilesets.
      * @example
      * { name: "example01", type: "tsx", src: "data/map/example01.tsx" },
+     * { name: "example01", type: "tsx", src: "data/map/example01.json" },
      */
-    { name: "tileset",         type: "tsx",    src: "data/map/tileset.tsx" },
+    { name: "tileset",         type: "tsx",    src: "data/map/tileset.json" },
 
 
     /* Background music.
