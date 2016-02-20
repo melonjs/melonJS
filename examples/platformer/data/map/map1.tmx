@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="left-down" width="50" height="30" tilewidth="35" tileheight="35" backgroundcolor="#d0f4f7" nextobjectid="36">
  <tileset firstgid="1" source="tileset.tsx"/>
- <imagelayer name="Background" y="538">
+ <imagelayer name="Background" y="538" offsetx="0" offsety="538">
   <image source="../img/background.png"/>
   <properties>
    <property name="anchorPoint" value="json:{&quot;x&quot;:0,&quot;y&quot;:1}"/>
@@ -9,7 +9,7 @@
    <property name="repeat" value="repeat-x"/>
   </properties>
  </imagelayer>
- <imagelayer name="Clouds" y="128">
+ <imagelayer name="Clouds" y="128" offsetx="0" offsety="128">
   <image source="../img/clouds.png"/>
   <properties>
    <property name="ratio" value="0.5"/>

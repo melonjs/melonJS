@@ -80,16 +80,17 @@
         });
 
         /**
-         * initialize the audio engine<br>
-         * the melonJS loader will try to load audio files corresponding to the
-         * browser supported audio format<br>
-         * if no compatible audio codecs are found, audio will be disabled
+         * configure and initialize the audio engine<br>
+         * melonJS will try to load audio files corresponding to the browser supported audio format(s)<br>
+         * below is the list of supported file extentions : <br>
+         * <i>"mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby" </i> <br>
+         * keep in mind that not all browsers can play all audio formats, and if no compatible codecs are detected, audio will be disabled.
          * @name init
          * @memberOf me.audio
          * @public
          * @function
          * @param {String}
-         *          audioFormat audio format provided ("mp3, ogg, m4a, wav")
+         *          [audioFormat="mp3"] audio format provided
          * @return {Boolean} Indicates whether audio initialization was successful
          * @example
          * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format
@@ -158,11 +159,9 @@
                 src : urls,
                 volume : Howler.volume(),
                 onloaderror : function () {
-                    audioTracks[sound.name] = this;
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
                 onload : function () {
-                    audioTracks[sound.name] = this;
                     retry_counter = 0;
                     if (onload_cb) {
                         onload_cb();

@@ -149,7 +149,7 @@
                     }
 
                     atlas[frame.filename] = {
-                        name         : name, // frame name
+                        name         : frame.filename, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
                         anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
                         width        : s.w,

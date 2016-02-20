@@ -71,6 +71,9 @@
       // Expose the AudioContext when using Web Audio.
       self.ctx = ctx;
 
+      // Expose the master GainNode when using Web Audio (useful for plugins or advanced usage).
+      self.masterGain = masterGain;
+
       // Check for supported codecs.
       if (!noAudio) {
         self._setupCodecs();
@@ -202,6 +205,7 @@
         oga: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
         wav: !!audioTest.canPlayType('audio/wav; codecs="1"').replace(/^no$/, ''),
         aac: !!audioTest.canPlayType('audio/aac;').replace(/^no$/, ''),
+        caf: !!audioTest.canPlayType('audio/x-caf;').replace(/^no$/, ''),
         m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
         mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
         weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
@@ -558,6 +562,13 @@
 
       // Don't play the sound if an id was passed and it is already playing.
       if (id && !sound._paused) {
+        // Trigger the play event, in order to keep iterating through queue.
+        if (!args[1]) {
+          setTimeout(function() {
+            self._emit('play', sound._id);
+          }, 0);
+        }
+
         return sound._id;
       }
 
@@ -641,7 +652,7 @@
         };
 
         // Play immediately if ready, or wait for the 'canplaythrough'e vent.
-        if (node.readyState === 4 || !node.readyState && navigator.isCocoonJS) {
+        if (node.readyState === 4 || window.ejecta || !node.readyState && navigator.isCocoonJS) {
           playHtml5();
         } else {
           var listener = function() {
@@ -1282,10 +1293,14 @@
 
     /**
      * Get the duration of this sound.
+     * @param  {Number} id The sound id to check. If none is passed, first sound is used.
      * @return {Number} Audio duration.
      */
-    duration: function() {
-      return this._duration;
+    duration: function(id) {
+      var self = this;
+      var sound = self._soundById(id) || self._sounds[0];
+
+      return self._duration / sound._rate;
     },
 
     /**
@@ -1966,7 +1981,7 @@
           var test = new Audio();
 
           // Check if the canplaythrough event is available.
-          if (typeof test.oncanplaythrough === 'undefined') {
+          if (typeof test.oncanplaythrough === 'undefined' && !window.ejecta) {
             canPlayEvent = 'canplay';
           }
         } catch(e) {
