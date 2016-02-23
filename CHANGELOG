@@ -1,7 +1,7 @@
 Version History
 ---------------
 3.0.1
-* Core : fixed library initialisation when running under Ejecta
+* Core : * Core : fixed/improved compatibility with Ejecta (e.g. initialization, CAFF support)
 * Input : actually really truly fix pointer event z-ordering, finally
 
 3.0.0
