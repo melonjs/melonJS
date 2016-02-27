@@ -1,6 +1,7 @@
 Version History
 ---------------
 3.1.0
+* Core : Added a `me.game.updateFrameRate` function to change the renderer framerate at runtime
 * TMX : Added support for JSON-format external tilesets
 
 3.0.1

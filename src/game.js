@@ -181,7 +181,7 @@
         };
 
         /**
-         * reset the game Object manager<p>
+         * reset the game Object manager<br>
          * destroy all current objects
          * @name reset
          * @memberOf me.game
@@ -204,6 +204,20 @@
             // reset the renderer
             renderer.reset();
 
+            // Refresh internal variables for framerate  limiting
+            api.updateFrameRate();
+        };
+
+        /**
+         * Update the renderer framerate using the system config variables.
+         * @name updateFrameRate
+         * @memberOf me.game
+         * @public
+         * @function
+         * @see me.sys.fps
+         * @see me.sys.updatesPerSecond
+         */
+        api.updateFrameRate = function () {
             // reset the frame counter
             frameCounter = 0;
             frameRate = ~~(0.5 + 60 / me.sys.fps);
