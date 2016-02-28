@@ -111,7 +111,7 @@
          * Additionnaly the level id will also be passed
          * to the called function.
          * @public
-         * @callback
+         * @function
          * @name onLevelLoaded
          * @memberOf me.game
          * @example

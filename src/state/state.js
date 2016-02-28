@@ -334,7 +334,7 @@
 
         /**
          * onPause callback
-         * @callback
+         * @function
          * @name onPause
          * @memberOf me.state
          */
@@ -342,7 +342,7 @@
 
         /**
          * onResume callback
-         * @callback
+         * @function
          * @name onResume
          * @memberOf me.state
          */
@@ -350,7 +350,7 @@
 
         /**
          * onStop callback
-         * @callback
+         * @function
          * @name onStop
          * @memberOf me.state
          */
@@ -358,7 +358,7 @@
 
         /**
          * onRestart callback
-         * @callback
+         * @function
          * @name onRestart
          * @memberOf me.state
          */
