@@ -248,7 +248,7 @@
         /**
          * onload callback
          * @public
-         * @callback
+         * @function
          * @name onload
          * @memberOf me.loader
          * @example
@@ -262,7 +262,7 @@
          * each time a resource is loaded, the loader will fire the specified function,
          * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
          * @public
-         * @callback
+         * @function
          * @name onProgress
          * @memberOf me.loader
          * @example
