@@ -78,7 +78,8 @@
 
         // directly call domReady if document is already "ready"
         if (document.readyState === "complete") {
-            return domReady();
+            // defer the fn call to ensure our script is fully loaded
+            return window.setTimeout(domReady, 0);
         }
         else {
             if (document.addEventListener) {
