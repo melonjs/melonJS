@@ -258,6 +258,9 @@
                 }
                 // normalize value into a [-1, 1] range value (treat 0 as positive)
                 var range = Math.sign(value) || 1;
+                if (!last[range]) {
+                    return;
+                }
                 var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
                 me.event.publish(me.event.GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
@@ -266,7 +269,7 @@
                 if (!last[range].pressed && pressed) {
                     api._keydown(e, last[range].keyCode, mapped_axis + 256);
                 }
-                else if ((last[range].pressed || last[-range].pressed) && !pressed) {
+                else if ((last[range].pressed || (last[-range] && last[-range].pressed)) && !pressed) {
                     range = last[range].pressed ? range : -range;
                     api._keyup(e, last[range].keyCode, mapped_axis + 256);
                 }
@@ -397,7 +400,7 @@
         // Allocate bindings if not defined
         if (!bindings[index]) {
             bindings[index] = {
-                "axes" : [{}],
+                "axes" : {},
                 "buttons" : {}
             };
         }
@@ -414,6 +417,9 @@
             // normalize threshold into a value that can represent both side of the axis
             var range = (Math.sign(button.threshold) || 1);
             // axes are defined using a double []
+            if (!bindings[index][button.type][button.code]) {
+                bindings[index][button.type][button.code] = {};
+            }
             bindings[index][button.type][button.code][range] = {
                 "keyCode" : keyCode,
                 "value" : 0,
