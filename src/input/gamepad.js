@@ -405,27 +405,26 @@
             };
         }
 
+        var mapping = {
+            "keyCode" : keyCode,
+            "value" : 0,
+            "pressed" : false,
+            "threshold" : button.threshold // can be undefined
+        };
+        var binding = bindings[index][button.type];
+
         // Map the gamepad button or axis to the keycode
         if (button.type === "buttons") {
             // buttons are defined by a `gamePadButton` object
-            bindings[index][button.type][button.code] = {
-                "keyCode" : keyCode,
-                "value" : 0,
-                "pressed" : false,
-            };
+            binding[button.code] = mapping;
         } else if (button.type === "axes") {
             // normalize threshold into a value that can represent both side of the axis
             var range = (Math.sign(button.threshold) || 1);
             // axes are defined using a double []
-            if (!bindings[index][button.type][button.code]) {
-                bindings[index][button.type][button.code] = {};
+            if (!binding[button.code]) {
+                binding[button.code] = {};
             }
-            bindings[index][button.type][button.code][range] = {
-                "keyCode" : keyCode,
-                "value" : 0,
-                "pressed" : false,
-                "threshold" : button.threshold
-            };
+            binding[button.code][range] = mapping;
         }
     };
 
