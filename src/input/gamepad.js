@@ -181,18 +181,21 @@
 
         // Trigger button bindings
         Object.keys(bindings).forEach(function (index) {
-            if (!gamepads[index]) {
+            var gamepad = gamepads[index];
+            if (!gamepad) {
                 return;
             }
 
             var mapping = null;
-            if (gamepads[index].mapping !== "standard") {
-                mapping = remap.get(gamepads[index].id);
+            if (gamepad.mapping !== "standard") {
+                mapping = remap.get(gamepads.id);
             }
 
+            var binding = bindings[index];
+
             // Iterate all buttons that have active bindings
-            Object.keys(bindings[index].buttons).forEach(function (button) {
-                var last = bindings[index].buttons[button];
+            Object.keys(binding.buttons).forEach(function (button) {
+                var last = binding.buttons[button];
                 var mapped_button = button;
                 var mapped_axis = -1;
 
@@ -207,12 +210,12 @@
                 }
 
                 // Get mapped button
-                var current = gamepads[index].buttons[mapped_button] || {};
+                var current = gamepad.buttons[mapped_button] || {};
 
                 // Remap an axis to an analog button
                 if (mapping) {
                     if (mapped_axis >= 0) {
-                        var value = mapping.normalize_fn(gamepads[index].axes[mapped_axis], -1, +button);
+                        var value = mapping.normalize_fn(gamepad.axes[mapped_axis], -1, +button);
 
                         // Create a new object, because GamepadButton is read-only
                         current = {
@@ -238,8 +241,8 @@
             });
 
             // Iterate all axes that have active bindings
-            Object.keys(bindings[index].axes).forEach(function (axis) {
-                var last = bindings[index].axes[axis];
+            Object.keys(binding.axes).forEach(function (axis) {
+                var last = binding.axes[axis];
                 var mapped_axis = axis;
 
                 if (typeof(last) === "undefined") {
@@ -258,7 +261,7 @@
                 }
 
                 // retrieve the current value and normalize if necessary
-                var value = gamepads[index].axes[mapped_axis];
+                var value = gamepad.axes[mapped_axis];
                 if (mapping) {
                     value = mapping.normalize_fn(value, +axis, -1);
                 }
