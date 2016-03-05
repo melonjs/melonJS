@@ -242,6 +242,12 @@
                 var last = bindings[index].axes[axis];
                 var mapped_axis = axis;
 
+                if (typeof(last) === "undefined") {
+                    // gamepad has no analogue stick
+                    return;
+                }
+
+
                 // Remap buttons if necessary
                 if (mapping) {
                     mapped_axis = mapping.axes[axis];
