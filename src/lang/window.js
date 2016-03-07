@@ -44,18 +44,16 @@
                     false
                 );
             }
-            else {
-                window.removeEventListener("load", domReady, false);
+            // remove the event on window.onload (always added in `onReady`)
+            window.removeEventListener("load", domReady, false);
+
+            // execute all callbacks
+            while (readyList.length){
+                readyList.shift().call(window, []);
             }
 
             // Remember that the DOM is ready
             isReady = true;
-
-            // execute the defined callback
-            for (var fn = 0; fn < readyList.length; fn++) {
-                readyList[fn].call(window, []);
-            }
-            readyList.length = 0;
 
             /*
              * Add support for AMD (Asynchronous Module Definition) libraries
@@ -66,28 +64,6 @@
                     return me;
                 });
             }
-        }
-    }
-
-    // bind ready
-    function bindReady() {
-        if (readyBound) {
-            return;
-        }
-        readyBound = true;
-
-        // directly call domReady if document is already "ready"
-        if (document.readyState === "complete") {
-            // defer the fn call to ensure our script is fully loaded
-            return window.setTimeout(domReady, 0);
-        }
-        else {
-            if (document.addEventListener) {
-                // Use the handy event callback
-                document.addEventListener("DOMContentLoaded", domReady, false);
-            }
-            // A fallback to window.onload, that will always work
-            window.addEventListener("load", domReady, false);
         }
     }
 
@@ -137,9 +113,6 @@
      * });
      */
     window.onReady = function (fn) {
-        // Attach the listeners
-        bindReady();
-
         // If the DOM is already ready
         if (isReady) {
             // Execute the function immediately
@@ -150,8 +123,25 @@
             readyList.push(function () {
                 return fn.call(window, []);
             });
+
+            // attach listeners if not yet done
+            if (!readyBound) {
+                // directly call domReady if document is already "ready"
+                if (document.readyState === "complete") {
+                    // defer the fn call to ensure our script is fully loaded
+                    return window.setTimeout(domReady, 0);
+                }
+                else {
+                    if (document.addEventListener) {
+                        // Use the handy event callback
+                        document.addEventListener("DOMContentLoaded", domReady, false);
+                    }
+                    // A fallback to window.onload, that will always work
+                    window.addEventListener("load", domReady, false);
+                }
+                readyBound = true;
+            }
         }
-        return this;
     };
 
     // call the library init function when ready
