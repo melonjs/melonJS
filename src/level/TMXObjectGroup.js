@@ -15,7 +15,7 @@
      * note : object group definition is translated into the virtual `me.game.world` using `me.Container`.
      * @see me.Container
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      */

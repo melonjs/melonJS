@@ -8,7 +8,7 @@
     /**
      * an ellipse Object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Number} x the center x coordinate of the ellipse

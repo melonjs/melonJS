@@ -13,7 +13,7 @@
      * every "screen" object (title screen, credits, ingame, etc...) to be managed <br>
      * through the state manager must inherit from this base class.
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @see me.state

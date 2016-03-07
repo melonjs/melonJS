@@ -10,7 +10,7 @@
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from

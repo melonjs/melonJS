@@ -158,7 +158,7 @@ if (!Object.assign) {
  * Extend a class prototype with the provided mixin descriptors.
  * Designed as a faster replacement for John Resig's Simple Inheritance.
  * @name extend
- * @memberOf me#Object
+ * @memberOf me.Object
  * @function
  * @param {Object[]} mixins... Each mixin is a dictionary of functions, or a
  * previously extended class whose methods will be applied to the target class
@@ -313,7 +313,8 @@ if (!Object.assign) {
     /**
      * The base class from which all melonJS objects inherit.
      * See: {@link https://github.com/parasyte/jay-extend}
-     * @name Object
+     * @class
+     * @extends external:Object#
      * @memberOf me
      */
     me.Object = Jay;

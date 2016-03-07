@@ -10,7 +10,7 @@
     /**
      * a base renderer object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Canvas} canvas The html canvas tag to draw to on screen.

@@ -15,8 +15,10 @@
     /**
      * a TMX Tile Set Object
      * @class
+     * @extends me.Object
      * @memberOf me
      * @constructor
+     * @param {Object} tileset tileset JSON definition
      */
     me.TMXTileset = me.Object.extend({
         // constructor

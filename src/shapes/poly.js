@@ -13,7 +13,7 @@
      * <center><img src="images/convex_polygon.png"/></center><br>
      * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Number} x origin point of the Polygon

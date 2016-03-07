@@ -8,7 +8,7 @@
     /**
      * a generic 3D Vector Object
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      * @param {Number} [x=0] x value of the vector
@@ -22,8 +22,8 @@
         init : function (x, y, z) {
             return this.set(x || 0, y || 0, z || 0);
         },
-        
-        /** 
+
+        /**
          * @ignore */
         _set : function (x, y, z) {
             this.x = x;
@@ -75,7 +75,7 @@
              * @memberOf me.Vector3d
              */
             //this.z = z;
-            
+
             return this._set(x, y, z);
         },
 

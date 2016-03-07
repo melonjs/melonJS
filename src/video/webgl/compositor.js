@@ -32,7 +32,7 @@
     /**
      * A WebGL texture Compositor object. This class handles all of the WebGL state<br>
      * Pushes texture regions into WebGL buffers, automatically flushes to GPU
-     * @extends Object
+     * @extends me.Object
      * @namespace me.WebGLRenderer.Compositor
      * @memberOf me
      * @constructor

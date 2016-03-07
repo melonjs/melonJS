@@ -8,7 +8,7 @@
     /**
      * a line segment Object.<br>
      * @class
-     * @extends Object
+     * @extends me.Polygon
      * @memberOf me
      * @constructor
      * @param {Number} x origin point of the Line
@@ -81,7 +81,7 @@
 
             return this;
         },
-        
+
         /**
          * clone this line segment
          * @name clone
