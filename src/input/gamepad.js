@@ -256,6 +256,9 @@
 
                 // retrieve the current value and normalize if necessary
                 var value = gamepad.axes[mapped_axis];
+                if (typeof(value) === "undefined") {
+                    return;
+                }
                 if (mapping) {
                     value = mapping.normalize_fn(value, +axis, -1);
                 }
