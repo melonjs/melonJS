@@ -188,7 +188,7 @@
 
             var mapping = null;
             if (gamepad.mapping !== "standard") {
-                mapping = remap.get(gamepads.id);
+                mapping = remap.get(gamepad.id);
             }
 
             var binding = bindings[index];
