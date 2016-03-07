@@ -340,8 +340,9 @@
          * @public
          * @function
          * @param {Object[]} resources
+         * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
          * @example
-         * var g_resources = [
+         * game_resources = [
          *   // PNG tileset
          *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
          *   // PNG packed texture
@@ -361,11 +362,11 @@
          *   // JSON file (used for texturePacker)
          *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
          * ];
-         *
+         * ...
          * // set all resources to be loaded
-         * me.loader.preload(g_resources);
+         * me.loader.preload(game.resources, this.loaded.bind(this));
          */
-        api.preload = function (res) {
+        api.preload = function (res, onload) {
             // parse the resources
             for (var i = 0; i < res.length; i++) {
                 resourceCount += api.load(
@@ -373,6 +374,10 @@
                     api.onResourceLoaded.bind(api, res[i]),
                     api.onLoadingError.bind(api, res[i])
                 );
+            }
+            // set the onload callback if defined
+            if (typeof(onload) !== "undefined") {
+                api.onload = onload;
             }
             // check load status
             checkLoadStatus();

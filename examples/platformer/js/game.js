@@ -37,10 +37,7 @@ var game = {
         me.audio.init("mp3,ogg");
 
         // set all ressources to be loaded
-        me.loader.onload = this.loaded.bind(this);
-
-        // set all ressources to be loaded
-        me.loader.preload(game.resources);
+        me.loader.preload(game.resources, this.loaded.bind(this));
 
         // load everything & display a loading screen
         me.state.change(me.state.LOADING);
