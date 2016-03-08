@@ -631,6 +631,11 @@
                 throw new me.Error("Undefined ScreenObject for state '" + state + "'");
             }
 
+            if (api.isCurrent(state)) {
+                // do nothing if already the current state
+                return;
+            }
+
             _extraArgs = null;
             if (arguments.length > 1) {
                 // store extra arguments if any

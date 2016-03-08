@@ -38,9 +38,6 @@ var game = {
 
         // set all ressources to be loaded
         me.loader.preload(game.resources, this.loaded.bind(this));
-
-        // load everything & display a loading screen
-        me.state.change(me.state.LOADING);
     },
 
 

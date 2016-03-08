@@ -341,6 +341,7 @@
          * @function
          * @param {Object[]} resources
          * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
+         * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
          * @example
          * game_resources = [
          *   // PNG tileset
@@ -366,7 +367,7 @@
          * // set all resources to be loaded
          * me.loader.preload(game.resources, this.loaded.bind(this));
          */
-        api.preload = function (res, onload) {
+        api.preload = function (res, onload, switchToLoadState) {
             // parse the resources
             for (var i = 0; i < res.length; i++) {
                 resourceCount += api.load(
@@ -379,6 +380,12 @@
             if (typeof(onload) !== "undefined") {
                 api.onload = onload;
             }
+
+            if (switchToLoadState !== false) {
+                // swith to the loading screen
+                me.state.change(me.state.LOADING);
+            }
+
             // check load status
             checkLoadStatus();
         };

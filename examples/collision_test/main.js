@@ -22,13 +22,7 @@ var game = {
         me.debug.renderQuadTree = true;
 
         // set all resources to be loaded
-        me.loader.onload = this.loaded.bind(this);
-
-        // set all resources to be loaded
-        me.loader.preload(game.assets);
-
-        // load everything & display a loading screen
-        me.state.change(me.state.LOADING);
+        me.loader.preload(game.assets, this.loaded.bind(this));
     },
 
     loaded: function () {
