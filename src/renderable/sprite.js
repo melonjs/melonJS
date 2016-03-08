@@ -341,25 +341,6 @@
 
             // restore global alpha
             renderer.setGlobalAlpha(alpha);
-        },
-
-        /**
-         * Destroy function<br>
-         * @ignore
-         */
-        destroy : function () {
-            this.onDestroyEvent.apply(this, arguments);
-        },
-
-        /**
-         * OnDestroy Notification function<br>
-         * Called by engine before deleting the object
-         * @name onDestroyEvent
-         * @memberOf me.Sprite
-         * @function
-         */
-        onDestroyEvent : function () {
-            // to be extended !
         }
     });
 

@@ -279,6 +279,25 @@
          **/
         draw : function (/*renderer*/) {
             // empty one !
+        },
+
+        /**
+         * Destroy function<br>
+         * @ignore
+         */
+        destroy : function () {
+            this.onDestroyEvent.apply(this, arguments);
+        },
+
+        /**
+         * OnDestroy Notification function<br>
+         * Called by engine before deleting the object
+         * @name onDestroyEvent
+         * @memberOf me.Renderable
+         * @function
+         */
+        onDestroyEvent : function () {
+            // to be extended !
         }
     });
 
