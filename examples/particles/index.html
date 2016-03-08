@@ -66,21 +66,11 @@
   <script type="text/javascript" src="js/editor/widgets.js"></script>
   <script type="text/javascript" src="js/editor/controls.js"></script>
 
-  <!-- Bootstrap & Mobile optimization tricks -->
+  <!-- Bootstrap -->
   <script type="text/javascript">
     document.addEventListener("animationend", game.clearPanelAnimation, false);
     window.onReady(function onReady() {
-    game.onload();
-
-    // Mobile browser hacks
-    if (me.device.isMobile && !navigator.isCocoonJS) {
-      // Prevent the webview from moving on a swipe
-      window.document.addEventListener("touchmove", function (e) {
-        e.preventDefault();
-        window.scroll(0, 0);
-        return false;
-      }, false);
-    }
+        game.onload();
     });
   </script>
 </body>

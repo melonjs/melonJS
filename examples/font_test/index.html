@@ -16,22 +16,12 @@
 
   <!-- Game Scripts -->
   <script type="text/javascript" src="main.js"></script>
-  
-  <!-- Bootstrap & Mobile optimization tricks -->
-  <script type="text/javascript">
-    window.onReady(function onReady() {
-      game.onload();
 
-      // Mobile browser hacks
-      if (me.device.isMobile && !navigator.isCocoonJS) {
-        // Prevent the webview from moving on a swipe
-        window.document.addEventListener("touchmove", function (e) {
-          e.preventDefault();
-          window.scroll(0, 0);
-          return false;
-        }, false);
-      }
-    });
+  <!-- Bootstrap -->
+  <script type="text/javascript">
+      window.onReady(function onReady() {
+          game.onload();
+      });
   </script>
 </body>
 </html>
