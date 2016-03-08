@@ -17,10 +17,6 @@ var game = {
             return;
         }
 
-        // install the debug panel plugin
-        me.plugin.register(me.debug.Panel, "debug");
-        me.debug.renderQuadTree = true;
-
         // set all resources to be loaded
         me.loader.preload(game.assets, this.loaded.bind(this));
     },

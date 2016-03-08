@@ -9,15 +9,6 @@ var game = {
             return;
         }
 
-        // add "#debug" to the URL to enable the debug Panel
-        if (me.game.HASH.debug === true) {
-            window.onReady(function () {
-                me.plugin.register.defer(this, me.debug.Panel, "debug");
-            });
-        }
-
-        me.plugin.register.defer(this, me.debug.ParticlePanel, "particledebug");
-
         // Initialize the audio.
         me.audio.init("mp3,ogg");
 

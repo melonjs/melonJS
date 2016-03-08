@@ -197,7 +197,7 @@
                 if (me.debug.renderHitBox) {
                     var x = -this.anchorPoint.x * this.width;
                     var y = -this.anchorPoint.y * this.height;
-                    
+
                     renderer.save();
                     renderer.setColor("green");
                     renderer.translate(x, y);
@@ -238,7 +238,7 @@
                 }
             });
             */
-            
+
             // patch entities.js
             me.plugin.patch(me.Entity, "draw", function (renderer) {
                 // call the original me.Entity.draw function
@@ -531,15 +531,32 @@
     me.debug.Panel = me.plugin.Base.extend(
     /** @scope me.debug.Panel.prototype */
     {
-
         /** @private */
         init : function (showKey, hideKey) {
             // call the super constructor
             this._super(me.plugin.Base, "init");
+            this.panel = new DebugPanel(showKey, hideKey);
 
-            var panel = new DebugPanel(showKey, hideKey);
-            panel.show();
+            // if "#debug" is present in the URL
+            if (me.game.HASH.debug === true) {
+                this.show();
+            } // else keep it hidden
+        },
+
+        /** @private */
+        show : function () {
+            this.panel.show();
+        },
+
+        /** @private */
+        hide : function () {
+            this.panel.hide();
         }
+    });
+
+    // automatically register the debug panel
+    window.onReady(function () {
+        me.plugin.register.defer(this, me.debug.Panel, "debugPanel");
     });
 
     /*---------------------------------------------------------*/

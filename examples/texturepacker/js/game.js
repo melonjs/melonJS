@@ -17,13 +17,6 @@ var game = {
         return;
     }
 
-    // add "#debug" to the URL to enable the debug Panel
-    if (me.game.HASH.debug === true) {
-        window.onReady(function () {
-            me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
-        });
-    }
-
     // Initialize the audio.
     me.audio.init("mp3,ogg");
 
@@ -39,13 +32,13 @@ var game = {
 
     // Run on game resources loaded.
     "loaded" : function () {
-    
+
         // load the texture atlas file
         game.texture = new me.video.renderer.Texture(
             me.loader.getJSON("texture"),
             me.loader.getImage("texture")
         );
-    
+
         me.state.set(me.state.PLAY, new game.PlayScreen());
 
         // Start the game.

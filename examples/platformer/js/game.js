@@ -23,16 +23,6 @@ var game = {
             return;
         }
 
-        // Set some default debug flags
-        me.debug.renderHitBox = true;
-
-        // add "#debug" to the URL to enable the debug Panel
-        if (me.game.HASH.debug === true) {
-            window.onReady(function () {
-                me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
-            });
-        }
-
         // initialize the "sound engine"
         me.audio.init("mp3,ogg");
 

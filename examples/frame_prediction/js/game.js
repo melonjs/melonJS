@@ -19,17 +19,7 @@ var game = {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
-
-        // Set some default debug flags
-        me.debug.renderHitBox = true;
-
-        // add "#debug" to the URL to enable the debug Panel
-        if (me.game.HASH.debug === true) {
-            window.onReady(function () {
-                me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
-            });
-        }
-
+        
         // set all ressources to be loaded
         me.loader.preload(game.resources, this.loaded.bind(this));
     },

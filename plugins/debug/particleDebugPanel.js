@@ -290,6 +290,11 @@
         }
     });
 
+    // automatically register the debug panel
+    window.onReady(function () {
+        me.plugin.register.defer(this, me.debug.ParticlePanel, "particleDebugPanel");
+    });
+
     /*---------------------------------------------------------*/
     // END END END
     /*---------------------------------------------------------*/

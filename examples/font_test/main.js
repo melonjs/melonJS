@@ -12,13 +12,6 @@ var game = {
             return;
         }
 
-        // add "#debug" to the URL to enable the debug Panel
-        if (me.game.HASH.debug === true) {
-            window.onReady(function () {
-                me.plugin.register.defer(this, me.debug.Panel, "debug", me.input.KEY.V);
-            });
-        }
-
         // set all ressources to be loaded
         me.loader.preload([{name: "atascii", type:"image", src: "atascii_8px.png"}], this.loaded.bind(this));
     },
