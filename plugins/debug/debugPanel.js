@@ -244,6 +244,9 @@
                 // call the original me.Entity.draw function
                 this._patched(renderer);
 
+                // increment the bounds counter
+                _this.counters.inc("bounds");
+
                 // check if debug mode is enabled
                 if (me.debug.renderHitBox) {
                     renderer.save();
@@ -254,16 +257,19 @@
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     renderer.drawShape(bounds);
-                    _this.counters.inc("bounds");
 
                     // draw all defined shapes
                     renderer.setColor("red");
                     renderer.translate(this.pos.x, this.pos.y);
-                    for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                }
+                for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                    if (me.debug.renderHitBox) {
                         renderer.drawShape(shape);
-                        _this.counters.inc("shapes");
                     }
+                    _this.counters.inc("shapes");
+                }
 
+                if (me.debug.renderHitBox) {
                     renderer.restore();
                 }
 
