@@ -320,8 +320,8 @@
 
             var _canvas = document.createElement("canvas");
 
-            if ((screencanvas === true) && (navigator.isCocoonJS) && (me.device.android2 !== true)) {
-                // enable ScreenCanvas on cocoonJS
+            if ((screencanvas === true) && (me.device.cocoon) && (me.device.android2 !== true)) {
+                // http://docs.cocoon.io/article/screencanvas/
                 _canvas.screencanvas = true;
             }
 

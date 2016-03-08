@@ -182,7 +182,7 @@
             }
 
             var _context;
-            if (navigator.isCocoonJS) {
+            if (me.device.cocoon) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : this.antiAlias,

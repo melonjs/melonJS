@@ -28,7 +28,7 @@
             me.device._detectDevice();
 
             // Mobile browser hacks
-            if (me.device.isMobile && !navigator.isCocoonJS) {
+            if (me.device.isMobile && !me.device.cocoon) {
                 // Prevent the webview from moving on a swipe
                 window.document.addEventListener("touchmove", function (e) {
                     e.preventDefault();
@@ -44,7 +44,7 @@
 
             // detect touch capabilities
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (navigator.isCocoonJS) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
+                              (me.device.cocoon) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
 
             // accelerometer detection
             me.device.hasAccelerometer = (
@@ -172,6 +172,11 @@
                                  me.device.iOS || false;
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
+
+            // cocoon/cocoonJS
+            me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
+                               (typeof window.Cocoon !== "undefined"); // new cocoon
+
         };
 
         /*
@@ -309,6 +314,15 @@
         */
         api.ejecta = false;
 
+        /**
+         * equals to true if the game is running under cocoon/cocoonJS.
+         * @type Boolean
+         * @readonly
+         * @see https://cocoon.io
+         * @name cocoon
+         * @memberOf me.device
+         */
+         api.cocoon = false;
 
          /**
          * equals to true if the device is a Windows Phone platform.
