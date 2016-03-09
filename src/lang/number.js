@@ -23,7 +23,7 @@ Number.prototype.clamp = function (low, high) {
 };
 
 /**
- * return a random integer between min, max (exclusive)
+ * return a random integer between min (included) and max (excluded)
  * @memberof! external:Number#
  * @alias random
  * @param {number} [min=this] minimum value.
