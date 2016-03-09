@@ -182,6 +182,7 @@
                 var frameDrawStartTime = window.performance.now();
 
                 _this.counters.reset();
+
                 this._patched();
 
                 // calculate the drawing time
@@ -193,6 +194,14 @@
                 // call the original me.Sprite.draw function
                 this._patched(renderer);
 
+                if (!_this.visible) {
+                    // don't do anything else if the panel is hidden
+                    return;
+                }
+
+                // increment the sprites counter
+                _this.counters.inc("sprites");
+
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
                     var x = -this.anchorPoint.x * this.width;
@@ -202,7 +211,6 @@
                     renderer.setColor("green");
                     renderer.translate(x, y);
                     renderer.strokeRect(this.left, this.top, this.width, this.height);
-                    _this.counters.inc("sprites");
                     renderer.restore();
                 }
             });
@@ -243,6 +251,11 @@
             me.plugin.patch(me.Entity, "draw", function (renderer) {
                 // call the original me.Entity.draw function
                 this._patched(renderer);
+
+                if (!_this.visible) {
+                    // don't do anything else if the panel is hidden
+                    return;
+                }
 
                 // increment the bounds counter
                 _this.counters.inc("bounds");
@@ -298,6 +311,14 @@
                 this._patched(renderer, rect);
 
                 // check if debug mode is enabled
+                if (!_this.visible) {
+                    // don't do anything else if the panel is hidden
+                    return;
+                }
+
+                // increment counters
+                _this.counters.inc("bounds");
+                _this.counters.inc("children");
 
                 if (me.debug.renderHitBox) {
                     renderer.save();
@@ -310,7 +331,6 @@
                         bounds.pos.sub(this.ancestor._absPos);
                     }
                     renderer.drawShape(bounds);
-                    _this.counters.inc("bounds");
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
@@ -319,7 +339,6 @@
                         bounds.pos.sub(this.ancestor._absPos);
                     }
                     renderer.drawShape(bounds);
-                    _this.counters.inc("children");
 
                     renderer.restore();
                 }
