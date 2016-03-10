@@ -375,8 +375,8 @@
         },
 
         /**
-         * Parse a Hex color ("#RGB", "#ARGB" or "#RRGGBB", "#AARRGGBB" format) and set this color to
-         * the corresponding r,g,b values
+         * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
+         * the corresponding r,g,b,a values
          * @name parseHex
          * @memberOf me.Color
          * @function
@@ -390,10 +390,10 @@
             if ((match = hex8Rx.exec(hexColor))) {
                 // #AARRGGBB
                 return this.setColor(
+                    parseInt(match[1], 16),
                     parseInt(match[2], 16),
                     parseInt(match[3], 16),
-                    parseInt(match[4], 16),
-                    (parseInt(match[1], 16).clamp(0, 255) / 255.0).toFixed(1)
+                    (parseInt(match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
                 );
             }
 
@@ -409,10 +409,10 @@
             if ((match = hex4Rx.exec(hexColor))) {
                 // #ARGB
                 return this.setColor(
+                    parseInt(match[1] + match[1], 16),
                     parseInt(match[2] + match[2], 16),
                     parseInt(match[3] + match[3], 16),
-                    parseInt(match[4] + match[4], 16),
-                    (parseInt(match[1] + match[1], 16).clamp(0, 255) / 255.0).toFixed(1)
+                    (parseInt(match[4] + match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
                 );
             }
 
@@ -450,6 +450,20 @@
             // the r,g,b,a values are changed
 
             return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
+        },
+
+        /**
+         * Get the color in "#RRGGBBAA" format
+         * @name toHex8
+         * @memberOf me.Color
+         * @function
+         * @return {String}
+         */
+        toHex8 : function () {
+            // TODO : Memoize this function by caching its result until any of
+            // the r,g,b,a values are changed
+
+            return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex() + this.alpha.toHex();
         },
 
         /**

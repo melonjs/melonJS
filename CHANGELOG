@@ -1,6 +1,7 @@
 Version History
 ---------------
 3.1.0
+* Color : added support for #RGBA and #RRGGBBAA formats
 * Core : added a `me.game.updateFrameRate` function to change the renderer framerate at runtime
 * Input : added support for axis binding
 * TMX : Added support for JSON-format external tilesets

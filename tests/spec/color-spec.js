@@ -11,17 +11,17 @@ describe("me.Color", function () {
         it("#00F value is rgb(0, 0, 255)", function () {
             expect(blue_color.parseHex("#0000FF").toRGB()).toEqual("rgb(0,0,255)");
         });
-        // #ARGB
-        it("#80F0 value is rgba(0, 255, 0, 0.5)", function () {
-            expect(blue_color.parseHex("#80F0").toRGBA()).toEqual("rgba(0,255,0,0.5)");
+        // #RGBA
+        it("#0F08 value is rgba(0, 255, 0, 0.5)", function () {
+            expect(blue_color.parseHex("#0F08").toRGBA()).toEqual("rgba(0,255,0,0.5)");
         });
         // #RRGGBB
         it("#FF00FF value is rgb(255, 0, 255)", function () {
             expect(blue_color.parseHex("#FF00FF").toRGB()).toEqual("rgb(255,0,255)");
         });
-        // #AARRGGG (finish with the blue color so that the test below passes)
-        it("#800000FF value is rgba(0, 0, 255, 0.5)", function () {
-            expect(blue_color.parseHex("#800000FF").toRGBA()).toEqual("rgba(0,0,255,0.5)");
+        // #RRGGBBAA (finish with the blue color so that the test below passes)
+        it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
+            expect(blue_color.parseHex("#0000FF80").toRGBA()).toEqual("rgba(0,0,255,0.5)");
         });
     });
 

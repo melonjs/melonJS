@@ -42,7 +42,7 @@
                 // check if numeric
                 value = Number(value);
             }
-            else if (value.match(/^json:/i)) {
+            else if (value.search(/^json:/i) === 0) {
                 // try to parse it
                 match = value.split(/^json:/i)[1];
                 try {
@@ -52,7 +52,7 @@
                     throw new me.Error("Unable to parse JSON: " + match);
                 }
             }
-            else if (value.match(/^eval:/i)) {
+            else if (value.search(/^eval:/i) === 0) {
                 // try to evaluate it
                 match = value.split(/^eval:/i)[1];
                 try {
@@ -61,6 +61,12 @@
                 catch (e) {
                     throw new me.Error("Unable to evaluate: " + match);
                 }
+            }
+            else if (
+                ((match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/))) ||
+                ((match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/)))
+            ) {
+                value = "#" + match[2] + match[1];
             }
 
             // normalize values
