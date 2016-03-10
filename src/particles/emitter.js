@@ -396,14 +396,17 @@
         
         onActivateEvent: function() {
             this.ancestor.addChild(this.container);
+            // keep a cache reference to the container ancestor
+            this._ancestor = this.container.ancestor;
             this.container.pos.z = this.pos.z;
             if (!this.ancestor.autoSort) {
                 this.ancestor.sort();
             }
         },
-        
+
         onDeactivateEvent: function() {
-            this.container.ancestor.removeChild(this.container);
+            this._ancestor.removeChild(this.container);
+            this._ancestor = undefined;
         },
 
         destroy: function () {
