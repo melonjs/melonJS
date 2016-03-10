@@ -477,8 +477,11 @@
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
         removeChild : function (child, keepalive) {
-            if (child.ancestor) {
+            if (this.hasChild(child)) {
                 deferredRemove.defer(this, child, keepalive);
+            }
+            else {
+                throw new me.Container.Error("Child is not mine.");
             }
         },
 
@@ -494,10 +497,7 @@
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
         removeChildNow : function (child, keepalive) {
-            var childIndex = -1;
-            if (this.hasChild(child) && ((childIndex = this.getChildIndex(child)) >= 0)) {
-                child.ancestor = undefined;
-
+            if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }
@@ -510,10 +510,13 @@
                     me.pool.push(child);
                 }
 
-                this.children.splice(childIndex, 1);
-            }
-            else {
-                throw new me.Container.Error(child + " The supplied child must be a child of the caller " + this);
+                // Don't cache the child index; another element might have been removed
+                // by the child's `onDeactivateEvent` or `destroy` methods
+                var childIndex = this.getChildIndex(child);
+                if (childIndex >= 0) {
+                    this.children.splice(childIndex, 1);
+                    child.ancestor = undefined;
+                }
             }
         },
 
@@ -694,9 +697,9 @@
             }
 
             // delete all children
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+            for (var i = this.children.length, obj; i >= 0; (obj = this.children[--i])) {
                 // don't remove it if a persistent object
-                if (!obj.isPersistent) {
+                if (obj && !obj.isPersistent) {
                     this.removeChildNow(obj);
                 }
             }
