@@ -314,7 +314,6 @@
      *
      * // Add the emitter to the game world
      * me.game.world.addChild(emitter);
-     * me.game.world.addChild(emitter.container);
      *
      * // Launch all particles one time and stop, like a explosion
      * emitter.burstParticles();
@@ -393,7 +392,7 @@
             // Reset the emitter to defaults
             this.reset(settings);
         },
-        
+
         onActivateEvent: function() {
             this.ancestor.addChild(this.container);
             // keep a cache reference to the container ancestor
