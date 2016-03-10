@@ -120,9 +120,7 @@
         }
         else {
             // Add the function to the wait list
-            readyList.push(function () {
-                return fn.call(window, []);
-            });
+            readyList.push(fn);
 
             // attach listeners if not yet done
             if (!readyBound) {
