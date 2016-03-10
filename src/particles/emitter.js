@@ -393,17 +393,20 @@
             // Reset the emitter to defaults
             this.reset(settings);
         },
-        
+
         onActivateEvent: function() {
+            // keep a cache reference to the ancestor
+            this._ancestor = this.ancestor;
             this.ancestor.addChild(this.container);
             this.container.pos.z = this.pos.z;
             if (!this.ancestor.autoSort) {
                 this.ancestor.sort();
             }
         },
-        
+
         onDeactivateEvent: function() {
-            this.container.ancestor.removeChild(this.container);
+            this._ancestor.removeChild(this.container);
+            this.ancestor = undefined;
         },
 
         destroy: function () {
