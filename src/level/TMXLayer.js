@@ -443,7 +443,7 @@
                 this.canvasRenderer = new me.CanvasRenderer(
                     me.video.createCanvas(this.width, this.height),
                     this.width, this.height,
-                    {/* use default values*/}
+                    { transparent : true }
                 );
             }
 
