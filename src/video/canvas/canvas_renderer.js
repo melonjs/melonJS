@@ -114,6 +114,21 @@
         },
 
         /**
+         * Sets all pixels in the given rectangle to transparent black, <br>
+         * erasing any previously drawn content.
+         * @name clearRect
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x x axis of the coordinate for the rectangle starting point.
+         * @param {Number} y y axis of the coordinate for the rectangle starting point.
+         * @param {Number} width The rectangle's width.
+         * @param {Number} height The rectangle's height.
+         */
+        clearRect : function (x, y, width, height) {
+            this.backBufferContext2D.clearRect(x, y, width, height);
+        },
+
+        /**
          * Create a pattern with the specified repition
          * @name createPattern
          * @memberOf me.CanvasRenderer

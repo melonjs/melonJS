@@ -576,6 +576,11 @@
          * @function
          * @param {Number} x X coordinate (in map coordinates: row/column)
          * @param {Number} y Y coordinate (in map coordinates: row/column)
+         * @example
+         * me.game.world.getChildByType(me.TMXLayer).forEach(function(layer) {
+         *     // clear all tiles at the given x,y coordinates
+         *     layer.clearTile(x, y);
+         * });
          */
         clearTile : function (x, y) {
             // clearing tile
