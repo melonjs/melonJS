@@ -69,6 +69,14 @@
              */
             this.animations = new Map();
 
+            /**
+             * Remember the last update timestamp to prevent too many animation updates
+             * @private
+             * @type Map
+             * @name me.TMXTileset#_lastUpdate
+             */
+            this._lastUpdate = 0;
+
             var tiles = tileset.tiles;
             for (i in tiles) {
                 if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
@@ -183,19 +191,24 @@
         // update tile animations
         update : function (dt) {
             var duration = 0,
+                now = me.timer.getTime(),
                 result = false;
 
-            this.animations.forEach(function (anim) {
-                anim.dt += dt;
-                duration = anim.cur.duration;
-                while (anim.dt >= duration) {
-                    anim.dt -= duration;
-                    anim.idx = (anim.idx + 1) % anim.frames.length;
-                    anim.cur = anim.frames[anim.idx];
+            if (this._lastUpdate !== now) {
+                this._lastUpdate = now;
+
+                this.animations.forEach(function (anim) {
+                    anim.dt += dt;
                     duration = anim.cur.duration;
-                    result = true;
-                }
-            });
+                    while (anim.dt >= duration) {
+                        anim.dt -= duration;
+                        anim.idx = (anim.idx + 1) % anim.frames.length;
+                        anim.cur = anim.frames[anim.idx];
+                        duration = anim.cur.duration;
+                        result = true;
+                    }
+                });
+            }
 
             return result;
         },
