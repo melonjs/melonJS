@@ -129,7 +129,7 @@
          *       }
          *
          *       // Make character fall slower when holding the jump key
-         *       this.vel.y = this.gravity;
+         *       this.vel.y = this.body.gravity;
          *   }
          * });
          */
