@@ -384,7 +384,6 @@
          */
         fadeOut : function (color, duration, onComplete) {
             this._fadeOut.color = me.pool.pull("me.Color").copy(color);
-            this._fadeOut.color.alpha = 1.0;
             this._fadeOut.duration = duration || 1000; // convert to ms
             this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color)
                 .to({ alpha: 0.0 }, this._fadeOut.duration)
@@ -405,10 +404,11 @@
          */
         fadeIn : function (color, duration, onComplete) {
             this._fadeIn.color = me.pool.pull("me.Color").copy(color);
+            var _alpha = this._fadeIn.color.alpha;
             this._fadeIn.color.alpha = 0.0;
             this._fadeIn.duration = duration || 1000; //convert to ms
             this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color)
-                .to({ alpha: 1.0 }, this._fadeIn.duration)
+                .to({ alpha: _alpha }, this._fadeIn.duration)
                 .onComplete(onComplete || null);
             this._fadeIn.tween.isPersistent = true;
             this._fadeIn.tween.start();
