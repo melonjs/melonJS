@@ -101,7 +101,7 @@
             if (tileInfo) {
                 for (i in tileInfo) {
                     if (tileInfo.hasOwnProperty(i)) {
-                        this.setTileProperty(i + this.firstgid, tileInfo[i]);
+                        this.setTileProperty(+i + this.firstgid, tileInfo[i]);
                     }
                 }
             }
