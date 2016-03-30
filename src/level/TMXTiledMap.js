@@ -89,7 +89,7 @@
             layer.setRenderer(me.game.tmxRenderer);
         }
         // parse the layer data
-        setLayerData(layer, 
+        setLayerData(layer,
             me.TMXUtils.decode(
                 data.data,
                 data.encoding,
@@ -276,11 +276,13 @@
             }
 
             // parse all tileset objects
-            var tilesets = data.tilesets;
-            tilesets.forEach(function (tileset) {
-                // add the new tileset
-                self.tilesets.add(readTileset(tileset));
-            });
+            if (typeof (data.tilesets) !== "undefined") {
+                var tilesets = data.tilesets;
+                tilesets.forEach(function (tileset) {
+                    // add the new tileset
+                    self.tilesets.add(readTileset(tileset));
+                });
+            }
 
             // check if a user-defined background color is defined
             if (this.backgroundcolor) {
