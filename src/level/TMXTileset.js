@@ -79,14 +79,20 @@
 
             var tiles = tileset.tiles;
             for (i in tiles) {
-                if (tiles.hasOwnProperty(i) && ("animation" in tiles[i])) {
-                    this.isAnimated = true;
-                    this.animations.set(+i + this.firstgid, {
-                        dt      : 0,
-                        idx     : 0,
-                        frames  : tiles[i].animation,
-                        cur     : tiles[i].animation[0]
-                    });
+                if (tiles.hasOwnProperty(i)) {
+                    if ("animation" in tiles[i]) {
+                        this.isAnimated = true;
+                        this.animations.set(+i + this.firstgid, {
+                            dt      : 0,
+                            idx     : 0,
+                            frames  : tiles[i].animation,
+                            cur     : tiles[i].animation[0]
+                        });
+                    }
+                    // set tile properties, if any (XML format)
+                    if ("properties" in tiles[i]) {
+                        this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+                    }
                 }
             }
 
@@ -96,7 +102,7 @@
                 this.tileoffset.y = +offset.y;
             }
 
-            // set tile properties, if any
+            // set tile properties, if any (JSON format)
             var tileInfo = tileset.tileproperties;
             if (tileInfo) {
                 for (i in tileInfo) {
