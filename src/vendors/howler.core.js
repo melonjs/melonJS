@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta8
+ *  howler.js v2.0.0-beta10
  *  howlerjs.com
  *
  *  (c) 2013-2016, James Simpson of GoldFire Studios
@@ -21,6 +21,7 @@
   'use strict';
 
   // Setup our audio context.
+  var navigator = (window && window.navigator) ? window.navigator : null;
   var ctx = null;
   var usingWebAudio = true;
   var noAudio = false;
@@ -195,10 +196,13 @@
       var self = this || Howler;
       var audioTest = new Audio();
       var mpegTest = audioTest.canPlayType('audio/mpeg;').replace(/^no$/, '');
-      var isOpera = /OPR\//.test(navigator.userAgent);
+
+      // Opera version <33 has mixed MP3 support, so we need to check for and block it.
+      var checkOpera = navigator && navigator.userAgent.match(/OPR\/([0-6].)/g);
+      var isOldOpera = (checkOpera && parseInt(checkOpera[0].split('/')[1], 10) < 33);
 
       self._codecs = {
-        mp3: !!(!isOpera && (mpegTest || audioTest.canPlayType('audio/mp3;').replace(/^no$/, ''))),
+        mp3: !!(!isOldOpera && (mpegTest || audioTest.canPlayType('audio/mp3;').replace(/^no$/, ''))),
         mpeg: !!mpegTest,
         opus: !!audioTest.canPlayType('audio/ogg; codecs="opus"').replace(/^no$/, ''),
         ogg: !!audioTest.canPlayType('audio/ogg; codecs="vorbis"').replace(/^no$/, ''),
@@ -226,22 +230,32 @@
       var self = this || Howler;
 
       // Only run this on iOS if audio isn't already eanbled.
-      var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk/i.test(navigator.userAgent);
-      var isTouch = !!(('ontouchend' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+      var isMobile = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk|Mobi/i.test(navigator && navigator.userAgent);
+      var isTouch = !!(('ontouchend' in window) || (navigator && navigator.maxTouchPoints > 0) || (navigator && navigator.msMaxTouchPoints > 0));
       if (ctx && (self._mobileEnabled || !isMobile || !isTouch)) {
         return;
       }
 
       self._mobileEnabled = false;
 
+      // Some mobile devices/platforms have distortion issues when opening/closing tabs and/or web views.
+      // Bugs in the browser (especially Mobile Safari) can cause the sampleRate to change from 44100 to 48000.
+      // By calling Howler.unload(), we create a new AudioContext with the correct sampleRate.
+      if (ctx.sampleRate !== 44100) {
+        Howler.unload();
+      }
+
+      // Scratch buffer for enabling iOS to dispose of web audio buffers correctly, as per:
+      // http://stackoverflow.com/questions/24119684
+      self._scratchBuffer = ctx.createBuffer(1, 1, 22050);
+
       // Call this method on touch start to create and play a buffer,
       // then check if the audio actually played to determine if
       // audio has now been unlocked on iOS, Android, etc.
       var unlock = function() {
         // Create an empty buffer.
-        var buffer = ctx.createBuffer(1, 1, 22050);
         var source = ctx.createBufferSource();
-        source.buffer = buffer;
+        source.buffer = self._scratchBuffer;
         source.connect(ctx.destination);
 
         // Play the empty buffer.
@@ -653,7 +667,8 @@
         };
 
         // Play immediately if ready, or wait for the 'canplaythrough'e vent.
-        if (self._state === 'loaded') {
+        var loadedNoReadyState = (self._state === 'loaded' && (window && window.ejecta || !node.readyState && navigator.isCocoonJS));
+        if (node.readyState === 4 || loadedNoReadyState) {
           playHtml5();
         } else {
           var listener = function() {
@@ -730,7 +745,7 @@
               }
 
               // Clean up the buffer source.
-              sound._node.bufferSource = null;
+              self._cleanBuffer(sound._node);
             } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
               sound._node.pause();
             }
@@ -756,14 +771,12 @@
 
       // If the sound hasn't loaded, add it to the load queue to stop when capable.
       if (self._state !== 'loaded') {
-        if (typeof self._sounds[0]._sprite !== 'undefined') {
-          self._queue.push({
-            event: 'stop',
-            action: function() {
-              self.stop(id);
-            }
-          });
-        }
+        self._queue.push({
+          event: 'stop',
+          action: function() {
+            self.stop(id);
+          }
+        });
 
         return self;
       }
@@ -801,13 +814,15 @@
               }
 
               // Clean up the buffer source.
-              sound._node.bufferSource = null;
+              self._cleanBuffer(sound._node);
             } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
               sound._node.pause();
               sound._node.currentTime = sound._start || 0;
             }
           }
+        }
 
+        if (sound) {
           self._emit('stop', sound._id);
         }
       }
@@ -1524,7 +1539,7 @@
         self._clearTimer(sound._id);
 
         // Clean up the buffer source.
-        sound._node.bufferSource = null;
+        self._cleanBuffer(sound._node);
 
         // Attempt to auto-suspend AudioContext if no sounds are still playing.
         Howler._autoSuspend();
@@ -1678,6 +1693,24 @@
         sound._node.bufferSource.loopEnd = sound._stop;
       }
       sound._node.bufferSource.playbackRate.value = self._rate;
+
+      return self;
+    },
+
+    /**
+     * Prevent memory leaks by cleaning up the buffer source after playback.
+     * @param  {Object} node Sound's audio node containing the buffer source.
+     * @return {Howl}
+     */
+    _cleanBuffer: function(node) {
+      var self = this;
+
+      if (self._scratchBuffer) {
+        node.bufferSource.onended = null;
+        node.bufferSource.disconnect(0);
+        try { node.bufferSource.buffer = self._scratchBuffer; } catch(e) {}
+      }
+      node.bufferSource = null;
 
       return self;
     }
@@ -1895,7 +1928,7 @@
         xhr.onload = function() {
           // Make sure we get a successful response back.
           var code = (xhr.status + '')[0];
-          if (code !== '2' && code !== '3' && code !== '0') {
+          if (code !== '0' && code !== '2' && code !== '3') {
             self._emit('loaderror', null, 'Failed loading audio file with status: ' + xhr.status + '.');
             return;
           }
@@ -2019,12 +2052,12 @@
 
     // Check if a webview is being used on iOS8 or earlier (rather than the browser).
     // If it is, disable Web Audio as it causes crashing.
-    var iOS = (/iP(hone|od|ad)/.test(navigator.platform));
-    var appVersion = navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
+    var iOS = (/iP(hone|od|ad)/.test(navigator && navigator.platform));
+    var appVersion = navigator && navigator.appVersion.match(/OS (\d+)_(\d+)_?(\d+)?/);
     var version = appVersion ? parseInt(appVersion[1], 10) : null;
     if (iOS && version && version < 9) {
-      var safari = /safari/.test(window.navigator.userAgent.toLowerCase());
-      if (window.navigator.standalone && !safari || !window.navigator.standalone && !safari) {
+      var safari = /safari/.test(navigator && navigator.userAgent.toLowerCase());
+      if (navigator && navigator.standalone && !safari || navigator && !navigator.standalone && !safari) {
         usingWebAudio = false;
       }
     }
