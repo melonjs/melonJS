@@ -125,11 +125,19 @@
      * @param {me.Rect} rect bounds of the area to be checked
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
-    Quadtree.prototype.getIndex = function (rect) {
-
+    Quadtree.prototype.getIndex = function (item) {
+        
+        var rect = item.getBounds(),
+            pos = rect.pos;
+            
+        // use world coordinates for floating items
+        if (item.floating) {
+            pos = me.game.viewport.localToWorld(rect.pos.x, rect.pos.y);
+        }
+        
         var index = -1,
-            rx = rect.pos.x,
-            ry = rect.pos.y,
+            rx = pos.x,
+            ry = pos.y,
             rw = rect.width,
             rh = rect.height,
             verticalMidpoint = this.bounds.pos.x + (this.bounds.width / 2),
@@ -198,7 +206,7 @@
 
         //if we have subnodes ...
         if (this.nodes.length > 0) {
-            index = this.getIndex(item.getBounds());
+            index = this.getIndex(item);
 
             if (index !== -1) {
                 this.nodes[index].insert(item);
@@ -220,7 +228,7 @@
             //add all objects to there corresponding subnodes
             while (i < this.objects.length) {
 
-                index = this.getIndex(this.objects[i].getBounds());
+                index = this.getIndex(this.objects[i]);
 
                 if (index !== -1) {
                     this.nodes[index].insert(this.objects.splice(i, 1)[0]);
@@ -247,7 +255,7 @@
         //if we have subnodes ...
         if (this.nodes.length > 0) {
 
-            var index = this.getIndex(item.getBounds());
+            var index = this.getIndex(item);
 
             //if rect fits into a subnode ..
             if (index !== -1) {
