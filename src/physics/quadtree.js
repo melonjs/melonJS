@@ -122,7 +122,7 @@
 
     /*
      * Determine which node the object belongs to
-     * @param {me.Rect} rect bounds of the area to be checked
+     * @param {Object} item object to be checked
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     Quadtree.prototype.getIndex = function (item) {
