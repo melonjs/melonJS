@@ -19,7 +19,9 @@ body {
 
 @font-face {
   font-family: 'kenpixel';
-  src: url('data/font/kenpixel_square.ttf');
+  src: url('data/font/kenpixel_square.woff2') format('woff2'),
+       url('data/font/kenpixel_square.woff') format('woff'),
+       url('data/font/kenpixel_square.ttf') format('truetype');
 }
 
 #screen canvas {
