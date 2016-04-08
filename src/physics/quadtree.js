@@ -40,6 +40,11 @@
         QT_ARRAY.push(qt);
     };
 
+    /**
+     * a temporary vector object to be reused
+     */
+    var QT_VECTOR = new me.Vector2d();
+
 
     /**
      * Quadtree Constructor <br>
@@ -126,15 +131,15 @@
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     Quadtree.prototype.getIndex = function (item) {
-        
+
         var rect = item.getBounds(),
             pos = rect.pos;
-            
+
         // use world coordinates for floating items
         if (item.floating) {
-            pos = me.game.viewport.localToWorld(rect.pos.x, rect.pos.y);
+            pos = me.game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
         }
-        
+
         var index = -1,
             rx = pos.x,
             ry = pos.y,
