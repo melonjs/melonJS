@@ -9,6 +9,7 @@ Version History
 * Documentation : various fixes and missing items added (e.g me.Object that was missing)
 * Debug : debug panel(s) now automatically register themselves upon loading (see boilerplate)
 * Input : added support for gamepad analogue axis binding
+* Input : fixed a regression with pointer events not firing with "floating" regions
 * Particles : fixed a crash when removing a particle emmiter during a level change/reset
 * Renderable : fixed missing `onDestroyEvent` function when adding basic renderables to the game world.
 * TMX : added support for JSON-format external tilesets
