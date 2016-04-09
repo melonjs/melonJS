@@ -115,5 +115,10 @@ game.UI.Container = me.Container.extend({
     // mouse up function
     onRelease : function (/*event*/) {
         this.selected = false;
+    },
+
+    // update function
+    update : function(dt) {
+        return this._super(me.Container, "update", [ dt ]) || this.hover;
     }
 });

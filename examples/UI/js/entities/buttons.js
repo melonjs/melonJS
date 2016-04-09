@@ -120,15 +120,15 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
     /**
      * change the checkbox state
      */
-     setSelected : function (selected) {
-         if (selected) {
-             this.offset.setV(this.on_offset);
-             this.isSelected = true;
-         } else {
-             this.offset.setV(this.off_offset);
-             this.isSelected = false;
-         }
-     },
+    setSelected : function (selected) {
+        if (selected) {
+            this.offset.setV(this.on_offset);
+            this.isSelected = true;
+        } else {
+            this.offset.setV(this.off_offset);
+            this.isSelected = false;
+        }
+    },
 
     /**
      * function called when the object is clicked on
