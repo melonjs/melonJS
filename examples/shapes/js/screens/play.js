@@ -33,7 +33,10 @@ game.PlayScreen = me.ScreenObject.extend({
                 this.font.textAlign = "center";
                 this.fontHeight = this.font.measureText(me.video.renderer, "DUMMY").height;
             },
-            draw: function(renderer){
+            update : function (dt) {
+                return true;
+            },
+            draw: function(renderer) {
                 var x = Math.round(me.input.pointer.pos.x);
                 var y = Math.round(me.input.pointer.pos.y);
                 this.font.draw (
