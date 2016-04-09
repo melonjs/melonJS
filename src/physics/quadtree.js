@@ -136,7 +136,7 @@
             pos = rect.pos;
 
         // use world coordinates for floating items
-        if (item.floating) {
+        if (item.floating || (item.ancestor && item.ancestor.floating)) {
             pos = me.game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
         }
 
