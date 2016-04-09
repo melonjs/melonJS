@@ -204,6 +204,9 @@
             // reset the renderer
             renderer.reset();
 
+            // publish reset notification
+            me.event.publish(me.event.GAME_RESET);
+
             // Refresh internal variables for framerate  limiting
             api.updateFrameRate();
         };

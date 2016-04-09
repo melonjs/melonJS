@@ -77,6 +77,16 @@
         api.GAME_INIT = "me.game.onInit";
 
         /**
+         * Channel Constant for when the game manager is resetted <br>
+         * Data passed : none <br>
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#GAME_RESET
+         */
+        api.GAME_RESET = "me.game.onReset";
+
+        /**
          * Channel Constant for when a level is loaded <br>
          * Data passed : {String} Level Name
          * @public
