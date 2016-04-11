@@ -18,6 +18,7 @@ Version History
 * TMX : disabled animated tiles when using the `prerender` mode (these two are not compatible)
 * TMX : fixed a regression with Tile property parsing
 * TMX : fixed a regression with level loading when no tilesets are defined.
+* TMX : fixed decoding of maps using CSV data format (in Tiled) and exported to JSON  
 * WebGLRenderer : added a workaround for Safari resetting WebGL attributes bindings (see #783)
 
 3.0.1

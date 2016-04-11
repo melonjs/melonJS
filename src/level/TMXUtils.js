@@ -106,8 +106,7 @@
         */
         api.decode = function (data, encoding, compression) {
             compression = compression || "none";
-            // When no encoding is given, the tiles are stored as individual XML tile elements.
-            encoding = encoding || "xml";
+            encoding = encoding || "none";
 
             switch (encoding) {
                 case "csv":
@@ -142,6 +141,8 @@
             switch (nodeName) {
                 case "data":
                     var data = api.parse(item);
+                    // When no encoding is given, the tiles are stored as individual XML tile elements.
+                    data.encoding = data.encoding || "xml";
                     obj.data = api.decode(data.text, data.encoding, data.compression);
                     obj.encoding = "none";
                     break;
