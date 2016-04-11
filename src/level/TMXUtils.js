@@ -26,60 +26,73 @@
          * set and interpret a TMX property value
          * @ignore
          */
-        function setTMXValue(name, value) {
+        function setTMXValue(name, type, value) {
             var match;
 
             if (typeof(value) !== "string") {
-                // Value is already normalized
+                // Value is already normalized (e.g. with JSON maps)
                 return value;
             }
 
-            if (!value || value.isBoolean()) {
-                // if value not defined or boolean
-                value = value ? (value === "true") : true;
-            }
-            else if (value.isNumeric()) {
-                // check if numeric
-                value = Number(value);
-            }
-            else if (value.search(/^json:/i) === 0) {
-                // try to parse it
-                match = value.split(/^json:/i)[1];
-                try {
-                    value = JSON.parse(match);
-                }
-                catch (e) {
-                    throw new me.Error("Unable to parse JSON: " + match);
-                }
-            }
-            else if (value.search(/^eval:/i) === 0) {
-                // try to evaluate it
-                match = value.split(/^eval:/i)[1];
-                try {
-                    value = eval(match);
-                }
-                catch (e) {
-                    throw new me.Error("Unable to evaluate: " + match);
-                }
-            }
-            else if (
-                ((match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/))) ||
-                ((match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/)))
-            ) {
-                value = "#" + match[2] + match[1];
-            }
+            switch (type) {
 
-            // normalize values
-            if (name.search(/^(ratio|anchorPoint)$/) === 0) {
-                // convert number to vector
-                if (typeof(value) === "number") {
-                    value = {
-                        "x" : value,
-                        "y" : value
-                    };
-                }
-            }
+                case "int" :
+                case "float" :
+                    value = Number(value);
+                    break;
 
+                case "bool" :
+                    value = (value === "true");
+                    break;
+
+                default :
+                    // try to parse it anyway
+                    if (!value || value.isBoolean()) {
+                        // if value not defined or boolean
+                        value = value ? (value === "true") : true;
+                    }
+                    else if (value.isNumeric()) {
+                        // check if numeric
+                        value = Number(value);
+                    }
+                    else if (value.search(/^json:/i) === 0) {
+                        // try to parse it
+                        match = value.split(/^json:/i)[1];
+                        try {
+                            value = JSON.parse(match);
+                        }
+                        catch (e) {
+                            throw new me.Error("Unable to parse JSON: " + match);
+                        }
+                    }
+                    else if (value.search(/^eval:/i) === 0) {
+                        // try to evaluate it
+                        match = value.split(/^eval:/i)[1];
+                        try {
+                            value = eval(match);
+                        }
+                        catch (e) {
+                            throw new me.Error("Unable to evaluate: " + match);
+                        }
+                    }
+                    else if (
+                        ((match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/))) ||
+                        ((match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/)))
+                    ) {
+                        value = "#" + match[2] + match[1];
+                    }
+
+                    // normalize values
+                    if (name.search(/^(ratio|anchorPoint)$/) === 0) {
+                        // convert number to vector
+                        if (typeof(value) === "number") {
+                            value = {
+                                "x" : value,
+                                "y" : value
+                            };
+                        }
+                    }
+            }
             // return the interpreted value
             return value;
         }
@@ -213,7 +226,12 @@
 
                 case "property":
                     var property = api.parse(item);
-                    obj[property.name] = setTMXValue(property.name, property.value);
+                    obj[property.name] = setTMXValue(
+                        property.name,
+                        // in XML type is undefined for "string" values
+                        property.type || "string",
+                        property.value
+                    );
                     break;
 
                 default:
@@ -267,11 +285,16 @@
          */
         api.applyTMXProperties = function (obj, data) {
             var properties = data.properties;
+            var types = data.propertytypes;
             if (typeof(properties) !== "undefined") {
                 for (var name in properties) {
                     if (properties.hasOwnProperty(name)) {
+                        var type = "string";
+                        if (typeof(types) !== "undefined") {
+                            type = types[name];
+                        }
                         // set the value
-                        obj[name] = setTMXValue(name, properties[name]);
+                        obj[name] = setTMXValue(name, type, properties[name]);
                     }
                 }
             }
