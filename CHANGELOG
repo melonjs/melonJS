@@ -9,8 +9,10 @@ Version History
 * Documentation : various fixes and missing items added (e.g me.Object that was missing)
 * Debug : debug panel(s) now automatically register themselves upon loading (see boilerplate)
 * Input : added support for gamepad analogue axis binding
+* Input : fixed a regression with pointer events not firing with "floating" regions (@thedrumchannell)
 * Particles : fixed a crash when removing a particle emmiter during a level change/reset
 * Renderable : fixed missing `onDestroyEvent` function when adding basic renderables to the game world.
+* Renderable : fixed Sprite objects initialization when using a string argument for "image" (@trevorjwilliams)
 * TMX : added support for JSON-format external tilesets
 * TMX : fixed the clearTile function when using `preRender` and the WebGL renderer
 * TMX : fixed `prerender` on browsers that support Canvas2DContextAttributes.alpha
