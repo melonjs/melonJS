@@ -119,8 +119,8 @@
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth  || image.width,
-                settings.frameheight || image.height
+                settings.framewidth  || this.image.width,
+                settings.frameheight || this.image.height
             ]);
 
             // update anchorPoint
