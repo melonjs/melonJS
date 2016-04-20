@@ -10,6 +10,7 @@
   "src/lang/array.js",
   "src/lang/performance.js",
   "src/vendors/es6-collections.js",
+  "src/vendors/es6-promise.js",
   "src/config.js",
   "src/game.js",
   "src/system/agent.js",
