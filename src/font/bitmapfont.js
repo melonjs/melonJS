@@ -14,6 +14,11 @@
 (function () {
     /**
      * a bitpmap font object
+     * Use me.loader.preload or me.loader.load to load assets
+     * me.loader.preload([
+     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     * { name: "arial", type: "image" src: "data/font/arial.png" },
+     * ])
      * @class
      * @extends me.Font
      * @memberOf me
@@ -26,10 +31,21 @@
     me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
-        init : function (font, size, scale, firstChar) {
+        init : function (fontName, size, scale, firstChar) {
             /** @ignore */
             // scaled font size;
             this.sSize = new me.Vector2d();
+
+            this.fontData = me.loader.getBinary(fontName);
+            this.fontImage = me.loader.getImage(fontName);
+
+            if (!this.fontData) {
+                throw "Font data for font name: " + fontName + " not found";
+            }
+
+            if (!this.fontImage) {
+                throw "Font image for font name: " + fontName + " not found";
+            }
 
             // #char per row
             this.charCount = 0;
@@ -177,6 +193,13 @@
         }
     });
 
+    /**
+     * a glyph representing a single character in a font
+     * @class
+     * @extends me.Glyph
+     * @memberOf me
+     * @constructor
+     */
     me.Glyph = me.Object.extend({
         init: function() {
             this.id = 0;
