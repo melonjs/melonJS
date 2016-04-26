@@ -23,7 +23,7 @@
      * @param {Number} [scale=1.0]
      * @param {Number} [firstChar=0x20] charcode for the first character in the font sheet. Default is the space character.
      */
-    me.BitmapFont = me.Font.extend(
+    me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
         init : function (font, size, scale, firstChar) {
@@ -34,12 +34,9 @@
             // #char per row
             this.charCount = 0;
             // font name and type
-            this._super(me.Font, "init", [font, size.x || size, "#000000"]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0, 0, 0]);
             // first char in the ascii table
             this.firstChar = firstChar || 0x20;
-
-            // load the font metrics
-            this.loadFontMetrics(font, size);
 
             // set a default alignement
             this.textAlign = "left";
@@ -48,23 +45,6 @@
             if (scale) {
                 this.resize(scale);
             }
-        },
-
-        /**
-         * Load the font metrics
-         * @ignore
-         */
-        loadFontMetrics : function (font, size) {
-            this.font = me.loader.getImage(font);
-
-            // some cheap metrics
-            this.fontSize.x = size.x || size;
-            this.fontSize.y = size.y || this.font.height;
-            this.sSize.copy(this.fontSize);
-            this.height = this.sSize.y;
-
-            // #char per row
-            this.charCount = ~~(this.font.width / this.fontSize.x);
         },
 
         /**
@@ -194,6 +174,23 @@
             }
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
+        }
+    });
+
+    me.Glyph = me.Object.extend({
+        init: function() {
+            this.id = 0;
+            this.src = new me.Vector2d();
+            this.width = 0;
+            this.height = 0;
+            this.u = 0;
+            this.v = 0;
+            this.u2 = 0;
+            this.v2 = 0;
+            this.offset = new me.Vector2d();
+            this.xadvance = 0;
+            this.kerning = [];
+            this.fixedWidth = false;
         }
     });
 })();
