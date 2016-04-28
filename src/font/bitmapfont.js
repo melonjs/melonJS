@@ -216,4 +216,55 @@
             this.fixedWidth = false;
         }
     });
+
+    /**
+     * Class for storing relevant data from the font file.
+     * @private
+     * @class me.BitmapFontData
+     * @memberOf me
+     * @constructor
+     */
+    me.BitmapFontData = me.Object.extend({
+        init: function (flipped) {
+            this.flipped = flipped;
+            this.padTop = 0;
+            this.padRight = 0;
+            this.padBottom = 0;
+            this.padLeft = 0;
+            // The distance from one line of text to the next. To set this value, use {@link #setLineHeight(float)}.
+            this.lineHeight = 0;
+            // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
+            // the first line, the cap height can be used to get the location of the baseline.
+            this.capHeight = 1;
+            // The distance from the cap height to the top of the tallest glyph.
+            this.ascent = 0;
+            // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
+            this.descent = 0;
+            this.down = 0;
+            this.scale = new me.Vector2d();
+            // The amount to add to the glyph X position when drawing a cursor between glyphs. This field is not set by the BMFont
+            // file, it needs to be set manually depending on how the glyphs are rendered on the backing textures.
+            this.cursorX = 0;
+
+            this.glyphs = [];
+            // The glyph to display for characters not in the font. May be null.
+            this.missingGlyph = null;
+
+            // The width of the space character.
+            this.spaceWidth = 0;
+            // The x-height, which is the distance from the top of most lowercase characters to the baseline.
+            this.xHeight = 1;
+
+            this.xChars = ['x', 'e', 'a', 'o', 'n', 's', 'r', 'c', 'u', 'm', 'v', 'w', 'z'];
+            this.capChars = ['M', 'N', 'B', 'D', 'C', 'E', 'F', 'K', 'A', 'G', 'H', 'I', 'J', 'L', 'O', 'P', 'Q', 'R', 'S',
+                'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+       },
+
+       parse: function (fontData) {
+           var lines = fontData.split(/\r\n|\n/);
+           for (var i = 0; i < lines.length; i++) {
+               var line = lines[i];
+           }
+       }
+    });
 })();
