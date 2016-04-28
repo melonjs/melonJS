@@ -260,10 +260,44 @@
                 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
        },
 
+       _getValueFromPair: function (string, pattern) {
+           var value = string.match(pattern);
+           if (!value) {
+               throw "Could not find pattern " + pattern + " in string: " + string;
+           }
+
+           return value[0].split('=')[1];
+       },
+
        parse: function (fontData) {
+           if (!fontData) {
+               throw "File containing font data was empty, cannot load the bitmap font.";
+           }
            var lines = fontData.split(/\r\n|\n/);
-           for (var i = 0; i < lines.length; i++) {
+           var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+           if (!padding) {
+               throw "Padding not found in first line";
+           }
+           var paddingValues = padding.split('=')[1].split(',');
+           this.padTop = parseFloat(paddingValues[0]);
+           this.padLeft = parseFloat(paddingValues[1]);
+           this.padBottom = parseFloat(paddingValues[2]);
+           this.padRight = parseFloat(paddingValues[3]);
+
+           this.lineHeight = parseFloat(this._getValueFromPair(lines[1], /lineHeight\=\d+/g));
+
+           var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
+
+
+           for (var i = 4; i < lines.length; i++) {
                var line = lines[i];
+               if (/^kernings/.test(line)) {
+                   continue;
+               }
+
+               var glyph = new me.Glyph();
+
+               var characterValues = line.split('=');
            }
        }
     });
