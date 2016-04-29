@@ -201,19 +201,21 @@
      */
     me.Glyph = me.Object.extend({
         init: function () {
+            this.src = new me.Vector2d();
+            this.offset = new me.Vector2d();
             this.onResetEvent();
         },
 
         onResetEvent: function () {
             this.id = 0;
-            this.src = new me.Vector2d();
+            this.src.set(0, 0);
             this.width = 0;
             this.height = 0;
             this.u = 0;
             this.v = 0;
             this.u2 = 0;
             this.v2 = 0;
-            this.offset = new me.Vector2d();
+            this.offset.set(0, 0);
             this.xadvance = 0;
             this.kerning = [];
             this.fixedWidth = false;
