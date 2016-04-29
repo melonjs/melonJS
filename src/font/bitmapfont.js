@@ -5,10 +5,6 @@
  *
  * Font / Bitmap font
  *
- * ASCII Table
- * http://www.asciitable.com/
- * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
- *
  * -> first char " " 32d (0x20);
  */
 (function () {
@@ -255,9 +251,9 @@
             // The x-height, which is the distance from the top of most lowercase characters to the baseline.
             this.xHeight = 1;
 
-            this.xChars = ['x', 'e', 'a', 'o', 'n', 's', 'r', 'c', 'u', 'm', 'v', 'w', 'z'];
-            this.capChars = ['M', 'N', 'B', 'D', 'C', 'E', 'F', 'K', 'A', 'G', 'H', 'I', 'J', 'L', 'O', 'P', 'Q', 'R', 'S',
-                'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+            this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
+            this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
+                "T", "U", "V", "W", "X", "Y", "Z"];
        },
 
        _getValueFromPair: function (string, pattern) {
@@ -266,7 +262,7 @@
                throw "Could not find pattern " + pattern + " in string: " + string;
            }
 
-           return value[0].split('=')[1];
+           return value[0].split("=")[1];
        },
 
        parse: function (fontData) {
@@ -278,7 +274,7 @@
            if (!padding) {
                throw "Padding not found in first line";
            }
-           var paddingValues = padding.split('=')[1].split(',');
+           var paddingValues = padding.split("=")[1].split(",");
            this.padTop = parseFloat(paddingValues[0]);
            this.padLeft = parseFloat(paddingValues[1]);
            this.padBottom = parseFloat(paddingValues[2]);
@@ -296,7 +292,7 @@
 
                var glyph = new me.Glyph();
 
-               var characterValues = line.split('=');
+               var characterValues = line.split("=");
 
                glyph.id = parseFloat(characterValues[2]);
                glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
