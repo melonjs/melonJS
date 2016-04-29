@@ -278,7 +278,7 @@
             if (!this.glyphs[spaceCharCode]) {
                 var glyph = me.pool.pull("me.Glyph");
                 glyph.id = spaceCharCode;
-                glyph.xadvance = this.glyphs[Object.keys(this.glyphs)[0]].xadvance;
+                glyph.xadvance = this._getFirstGlyph().xadvance;
                 this.glyphs[spaceCharCode] = glyph;
 
                 if (glyph.width === 0) {
@@ -288,6 +288,10 @@
 
                 this.spaceWidth = glyph.width;
             }
+        },
+
+        _getFirstGlyph: function () {
+            return this.glyphs[Object.keys(this.glyphs)[0]];
         },
 
         _getValueFromPair: function (string, pattern) {
@@ -318,6 +322,10 @@
 
             var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
 
+            var padY = this.padTop + this.padBottom;
+
+            var glyph = null;
+
             for (var i = 4; i < lines.length; i++) {
                 var line = lines[i];
                 var characterValues = line.split("=");
@@ -326,15 +334,15 @@
                     var second = parseFloat(characterValues[4]);
                     var amount = parseFloat(characterValues[6]);
 
-                    var glyph = this.glyphs[first];
+                    glyph = this.glyphs[first];
                     if (glyph !== null) {
                         glyph.setKerning(second, amount);
                     }
                 } else {
-                    var glyph = me.pool.pull("me.Glyph");
+                    glyph = me.pool.pull("me.Glyph");
 
                     var ch = parseFloat(characterValues[2]);
-                    glyph.id = ch
+                    glyph.id = ch;
                     glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
                     glyph.width = parseFloat(characterValues[8]);
                     glyph.height = parseFloat(characterValues[10]);
@@ -355,6 +363,52 @@
             }
 
             this.descent += this.padBottom;
+
+            this._createSpaceGlyph();
+
+            var xGlyph = null;
+            for (i = 0; i < this.xChars.length; i++) {
+                var xChar = this.xChars[i];
+                xGlyph = this.glyphs[xChar.charCodeAt(0)];
+                if (xGlyph) {
+                    break;
+                }
+            }
+            if (!xGlyph) {
+                xGlyph = this._getFirstGlyph();
+            }
+
+            var capGlyph = null;
+            for (i = 0; i < this.capChars.length; i++) {
+                var capChar = this.capChars[i];
+                capGlyph = this.glyphs[capChar.charCodeAt(0)];
+                if (capGlyph) {
+                    break;
+                }
+            }
+            if (!capGlyph) {
+                for (var charCode in this.glyphs) {
+                    if (this.glyphs.hasOwnProperty(charCode)) {
+                        glyph = this.glyphs[charCode];
+                        if (glyph.height === 0 || glyph.width === 0) {
+                            continue;
+                        }
+                        this.capHeight = Math.max(this.capHeight, glyph.height);
+                    }
+                }
+            } else {
+                this.capHeight = capGlyph.height;
+            }
+
+            this.capHeight -= padY;
+
+            this.ascent = this.baseLine - this.capHeight;
+            this.down = -this.lineHeight;
+
+            if (this.flipped) {
+                this.ascent = -this.ascent;
+                this.down = -this.down;
+            }
         }
     });
 })();
