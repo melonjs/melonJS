@@ -197,7 +197,11 @@
      * @constructor
      */
     me.Glyph = me.Object.extend({
-        init: function() {
+        init: function () {
+            this.onResetEvent();
+        },
+
+        onResetEvent: function () {
             this.id = 0;
             this.src = new me.Vector2d();
             this.width = 0;
@@ -290,7 +294,7 @@
                    continue;
                }
 
-               var glyph = new me.Glyph();
+               var glyph = me.pool.pull("me.Glyph");
 
                var characterValues = line.split("=");
 
