@@ -8,6 +8,9 @@
  * -> first char " " 32d (0x20);
  */
 (function () {
+    var LOG2_PAGE_SIZE = 9;
+    var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
+
     /**
      * a bitpmap font object
      * Use me.loader.preload or me.loader.load to load assets
@@ -214,6 +217,14 @@
             this.xadvance = 0;
             this.kerning = [];
             this.fixedWidth = false;
+        },
+
+        setKerning: function (ch, value) {
+           var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+           if (page === null) {
+               this.kerning[ch >>> LOG2_PAGE_SIZE] = page = [];
+           }
+           page[ch & PAGE_SIZE - 1] = value;
         }
     });
 
@@ -246,7 +257,7 @@
             // file, it needs to be set manually depending on how the glyphs are rendered on the backing textures.
             this.cursorX = 0;
 
-            this.glyphs = [];
+            this.glyphs = {};
             // The glyph to display for characters not in the font. May be null.
             this.missingGlyph = null;
 
@@ -258,64 +269,90 @@
             this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
             this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
                 "T", "U", "V", "W", "X", "Y", "Z"];
-       },
+        },
 
-       _getValueFromPair: function (string, pattern) {
-           var value = string.match(pattern);
-           if (!value) {
-               throw "Could not find pattern " + pattern + " in string: " + string;
-           }
+        _createSpaceGlyph: function () {
+            var spaceCharCode = " ".charCodeAt(0);
+            if (!this.glyphs[spaceCharCode]) {
+                var glyph = me.pool.pull("me.Glyph");
+                glyph.id = spaceCharCode;
+                glyph.xadvance = this.glyphs[Object.keys(this.glyphs)[0]].xadvance;
+                this.glyphs[spaceCharCode] = glyph;
 
-           return value[0].split("=")[1];
-       },
+                if (glyph.width === 0) {
+                    glyph.width = ~~(this.padLeft + glyph.xadvance + this.padRight);
+                    glyph.offset.set(-this.padLeft, 0);
+                }
 
-       parse: function (fontData) {
-           if (!fontData) {
-               throw "File containing font data was empty, cannot load the bitmap font.";
-           }
-           var lines = fontData.split(/\r\n|\n/);
-           var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
-           if (!padding) {
-               throw "Padding not found in first line";
-           }
-           var paddingValues = padding.split("=")[1].split(",");
-           this.padTop = parseFloat(paddingValues[0]);
-           this.padLeft = parseFloat(paddingValues[1]);
-           this.padBottom = parseFloat(paddingValues[2]);
-           this.padRight = parseFloat(paddingValues[3]);
+                this.spaceWidth = glyph.width;
+            }
+        },
 
-           this.lineHeight = parseFloat(this._getValueFromPair(lines[1], /lineHeight\=\d+/g));
+        _getValueFromPair: function (string, pattern) {
+            var value = string.match(pattern);
+            if (!value) {
+                throw "Could not find pattern " + pattern + " in string: " + string;
+            }
 
-           var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
+            return value[0].split("=")[1];
+        },
 
-           for (var i = 4; i < lines.length; i++) {
-               var line = lines[i];
-               if (/^kernings/.test(line)) {
-                   continue;
-               }
+        parse: function (fontData) {
+            if (!fontData) {
+                throw "File containing font data was empty, cannot load the bitmap font.";
+            }
+            var lines = fontData.split(/\r\n|\n/);
+            var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+            if (!padding) {
+                throw "Padding not found in first line";
+            }
+            var paddingValues = padding.split("=")[1].split(",");
+            this.padTop = parseFloat(paddingValues[0]);
+            this.padLeft = parseFloat(paddingValues[1]);
+            this.padBottom = parseFloat(paddingValues[2]);
+            this.padRight = parseFloat(paddingValues[3]);
 
-               var glyph = me.pool.pull("me.Glyph");
+            this.lineHeight = parseFloat(this._getValueFromPair(lines[1], /lineHeight\=\d+/g));
 
-               var characterValues = line.split("=");
+            var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
 
-               glyph.id = parseFloat(characterValues[2]);
-               glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
-               glyph.width = parseFloat(characterValues[8]);
-               glyph.height = parseFloat(characterValues[10]);
-               var y = parseFloat(characterValues[14]);
-               if (this.flipped) {
-                   y = -(glyph.height + parseFloat(characterValues[14]));
-               }
-               glyph.offset.set(parseFloat(characterValues[12]), y);
+            for (var i = 4; i < lines.length; i++) {
+                var line = lines[i];
+                var characterValues = line.split("=");
+                if (/^kernings/.test(line)) {
+                    var first = parseFloat(characterValues[2]);
+                    var second = parseFloat(characterValues[4]);
+                    var amount = parseFloat(characterValues[6]);
 
-               glyph.xadvance = parseFloat(characterValues[16]);
+                    var glyph = this.glyphs[first];
+                    if (glyph !== null) {
+                        glyph.setKerning(second, amount);
+                    }
+                } else {
+                    var glyph = me.pool.pull("me.Glyph");
 
-               if (glyph.width > 0 && glyph.height > 0) {
-                   this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
-               }
-           }
+                    var ch = parseFloat(characterValues[2]);
+                    glyph.id = ch
+                    glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
+                    glyph.width = parseFloat(characterValues[8]);
+                    glyph.height = parseFloat(characterValues[10]);
+                    var y = parseFloat(characterValues[14]);
+                    if (this.flipped) {
+                        y = -(glyph.height + parseFloat(characterValues[14]));
+                    }
+                    glyph.offset.set(parseFloat(characterValues[12]), y);
 
-           this.descent += this.padBottom;
-       }
+                    glyph.xadvance = parseFloat(characterValues[16]);
+
+                    if (glyph.width > 0 && glyph.height > 0) {
+                        this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
+                    }
+
+                    this.glyphs[ch] = glyph;
+                }
+            }
+
+            this.descent += this.padBottom;
+        }
     });
 })();
