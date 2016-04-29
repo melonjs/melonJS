@@ -288,7 +288,6 @@
 
            var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
 
-
            for (var i = 4; i < lines.length; i++) {
                var line = lines[i];
                if (/^kernings/.test(line)) {
@@ -298,7 +297,25 @@
                var glyph = new me.Glyph();
 
                var characterValues = line.split('=');
+
+               glyph.id = parseFloat(characterValues[2]);
+               glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
+               glyph.width = parseFloat(characterValues[8]);
+               glyph.height = parseFloat(characterValues[10]);
+               var y = parseFloat(characterValues[14]);
+               if (this.flipped) {
+                   y = -(glyph.height + parseFloat(characterValues[14]));
+               }
+               glyph.offset.set(parseFloat(characterValues[12]), y);
+
+               glyph.xadvance = parseFloat(characterValues[16]);
+
+               if (glyph.width > 0 && glyph.height > 0) {
+                   this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
+               }
            }
+
+           this.descent += this.padBottom;
        }
     });
 })();
