@@ -13,7 +13,12 @@ var game = {
         }
 
         // set all ressources to be loaded
-        me.loader.preload([{name: "atascii", type:"image", src: "atascii_8px.png"}], this.loaded.bind(this));
+        me.loader.preload([{
+            name: "xolo12", type:"image", src: "xolo12.png"
+        }, {
+            name: "xolo12", type:"binary", src: "xolo12.fnt"
+        }],
+        this.loaded.bind(this));
     },
 
     /**
@@ -62,7 +67,8 @@ var FontTest = me.Renderable.extend ({
         // arial font
         this.font = new me.Font("Arial", 8, this.color);
         // bitmap font
-        this.bFont = new me.BitmapFont("atascii", {x:8});
+        this.bFont = new me.BitmapFont("xolo12");
+        this.name = "FontTest";
     },
 
     // draw function
