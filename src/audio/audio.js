@@ -234,6 +234,35 @@
         };
 
         /**
+         * change the playback rate of a sound.
+         * @name rate
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+         * @return current playback rate.
+         * @example
+         * // speed up the playback of the background music
+         * me.audio.rate("dst-gameforest", 2.0);
+         *
+         */
+        api.rate = function (sound_name, rate, instance_id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                var _args = [];
+                if (typeof rate !== "undefined") {
+                    _args[_args.length] = rate;
+                }
+                if (typeof instance_id !== "undefined") {
+                    _args[_args.length] = instance_id;
+                }
+                return sound.rate.apply(sound, _args);
+            }
+        };
+
+        /**
          * stop the specified sound on all channels
          * @name stop
          * @memberOf me.audio
