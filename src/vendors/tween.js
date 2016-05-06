@@ -90,12 +90,6 @@
                     _valuesStart[ field ] = parseFloat(object[field], 10);
                 }
             }
-
-            /**
-             * Calculate delta to resume the tween
-             * @ignore
-             */
-            me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
         };
 
         this.setProperties(object);
@@ -106,6 +100,14 @@
          */
         this.onResetEvent = function ( object ) {
             this.setProperties(object);
+        };
+
+        /**
+         * subscribe to the resume event when added
+         * @ignore
+         */
+        this.onActivateEvent = function () {
+            me.event.subscribe(me.event.STATE_RESUME, this._resumeCallback);
         };
 
         /**
@@ -190,10 +192,8 @@
          * @function
          */
         this.stop = function () {
-            // ensure the tween has not been removed previously
-            if (me.game.world.hasChild(this)) {
-                me.game.world.removeChildNow(this);
-            }
+            // remove the tween from the world container
+            me.game.world.removeChildNow(this);
             return this;
         };
 
@@ -422,7 +422,7 @@
                     return true;
 
                 } else {
-                    // remove the tween from the object pool
+                    // remove the tween from the world container
                     me.game.world.removeChildNow(this);
 
                     if ( _onCompleteCallback !== null ) {
