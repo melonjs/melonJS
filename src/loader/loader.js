@@ -396,6 +396,7 @@
          * - name    : internal name of the resource<br>
          * - type    : "audio", binary", "image", "json", "tmx", "tsx"<br>
          * each resource except type "tmx" must contain the following field :<br>
+         * - stream     : an optional boolean flag for large audio files, so that you don't have to wait for the file to be fully downloaded<br>
          * - src     : path and file name of the resource<br>
          * (!) for tmx :<br>
          * - src     : path and file name of the resource<br>
@@ -447,7 +448,7 @@
                     return 1;
 
                 case "audio":
-                    me.audio.load(res, onload, onerror);
+                    me.audio.load(res, !!res.stream, onload, onerror);
                     return 1;
 
                 default:

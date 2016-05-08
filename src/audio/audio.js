@@ -147,7 +147,7 @@
          * - src     : source path<br>
          * @ignore
          */
-        api.load = function (sound, onload_cb, onerror_cb) {
+        api.load = function (sound, html5, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
                 throw new api.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
@@ -158,6 +158,7 @@
             audioTracks[sound.name] = new Howl({
                 src : urls,
                 volume : Howler.volume(),
+                html5 : html5 === true,
                 onloaderror : function () {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
