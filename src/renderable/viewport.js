@@ -364,12 +364,10 @@
                 return;
             }
 
-            this._shake = {
-                intensity : intensity,
-                duration : duration,
-                axis : axis || this.AXIS.BOTH,
-                onComplete : onComplete
-            };
+            this._shake.intensity = intensity;
+            this._shake.duration = duration;
+            this._shake.axis = axis || this.AXIS.BOTH;
+            this._shake.onComplete = onComplete;
         },
 
         /**
