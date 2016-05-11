@@ -75,13 +75,11 @@
             // flash variables
             this._fadeOut = {
                 color : null,
-                duration : 0,
                 tween : null
             };
             // fade variables
             this._fadeIn = {
                 color : null,
-                duration : 0,
                 tween : null
             };
 
@@ -355,19 +353,18 @@
          * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
          *   want the shake effect
          * @param {Function} [onComplete] callback once shaking effect is over
+         * @param {Boolean} [force] if true this will override the current effect
          * @example
          * // shake it baby !
          * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
          */
-        shake : function (intensity, duration, axis, onComplete) {
-            if (this._shake.duration > 0) {
-                return;
+        shake : function (intensity, duration, axis, onComplete, force) {
+            if (this._shake.duration === 0 || force === true) {
+                this._shake.intensity = intensity;
+                this._shake.duration = duration;
+                this._shake.axis = axis || this.AXIS.BOTH;
+                this._shake.onComplete = typeof (onComplete) === "function" ? onComplete : undefined;
             }
-
-            this._shake.intensity = intensity;
-            this._shake.duration = duration;
-            this._shake.axis = axis || this.AXIS.BOTH;
-            this._shake.onComplete = onComplete;
         },
 
         /**
@@ -382,9 +379,8 @@
          */
         fadeOut : function (color, duration, onComplete) {
             this._fadeOut.color = me.pool.pull("me.Color").copy(color);
-            this._fadeOut.duration = duration || 1000; // convert to ms
             this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color)
-                .to({ alpha: 0.0 }, this._fadeOut.duration)
+                .to({ alpha: 0.0 }, duration || 1000)
                 .onComplete(onComplete || null);
             this._fadeOut.tween.isPersistent = true;
             this._fadeOut.tween.start();
@@ -404,9 +400,8 @@
             this._fadeIn.color = me.pool.pull("me.Color").copy(color);
             var _alpha = this._fadeIn.color.alpha;
             this._fadeIn.color.alpha = 0.0;
-            this._fadeIn.duration = duration || 1000; //convert to ms
             this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color)
-                .to({ alpha: _alpha }, this._fadeIn.duration)
+                .to({ alpha: _alpha }, duration || 1000)
                 .onComplete(onComplete || null);
             this._fadeIn.tween.isPersistent = true;
             this._fadeIn.tween.start();
