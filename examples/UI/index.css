@@ -22,6 +22,8 @@ body {
         src: url('data/font/kenvector_future.woff2') format('woff2'),
              url('data/font/kenvector_future.woff') format('woff'),
              url('data/font/kenvector_future.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
 }
 
 #screen canvas {
