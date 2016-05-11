@@ -83,6 +83,8 @@
             _onCompleteCallback = null;
             _tweenTimeTracker = me.timer.lastUpdate;
 
+            // reset the persistent flag to default value
+            this.isPersistent = false;
 
             // Set all starting values present on the target object
             for ( var field in object ) {
