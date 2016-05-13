@@ -321,25 +321,18 @@
 
 
         /**
-         * set all the specified game resources to be preloaded.<br>
-         * each resource item must contain the following fields :<br>
-         * - name    : internal name of the resource<br>
-         * - type    : "binary", "image", "tmx", "tsx", "audio"<br>
-         * each resource except type "tmx" must contain the following field :<br>
-         * - src     : path and file name of the resource<br>
-         * (!) for tmx :<br>
-         * - src     : path and file name of the resource<br>
-         * or<br>
-         * - data    : the json or xml object representation of the tmx file<br>
-         * - format  : "xml" or "json"<br>
-         * (!) for audio :<br>
-         * - src     : path (only) where resources are located<br>
-         * <br>
+         * set all the specified game resources to be preloaded.
          * @name preload
          * @memberOf me.loader
          * @public
          * @function
          * @param {Object[]} resources
+         * @param {String} resources.name internal name of the resource
+         * @param {String} resources.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resources.stream] set to true if you don't have to wait for the audio file to be fully downloaded
+         * @param {Function} onload function to be called when the resource is loaded
+         * @param {Function} onerror function to be called in case of error
          * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
          * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
          * @example
@@ -391,25 +384,16 @@
         };
 
         /**
-         * Load a single resource (to be used if you need to load additional resource during the game)<br>
-         * Given parameter must contain the following fields :<br>
-         * - name    : internal name of the resource<br>
-         * - type    : "audio", binary", "image", "json", "tmx", "tsx"<br>
-         * each resource except type "tmx" must contain the following field :<br>
-         * - stream     : an optional boolean flag for large audio files, so that you don't have to wait for the file to be fully downloaded<br>
-         * - src     : path and file name of the resource<br>
-         * (!) for tmx :<br>
-         * - src     : path and file name of the resource<br>
-         * or<br>
-         * - data    : the json or xml object representation of the tmx file<br>
-         * - format  : "xml" or "json"<br>
-         * (!) for audio :<br>
-         * - src     : path (only) where resources are located<br>
+         * Load a single resource (to be used if you need to load additional resource during the game)
          * @name load
          * @memberOf me.loader
          * @public
          * @function
          * @param {Object} resource
+         * @param {String} resource.name internal name of the resource
+         * @param {String} resource.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resource.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resource.stream] set to true if you don't have to wait for the audio file to be fully downloaded
          * @param {Function} onload function to be called when the resource is loaded
          * @param {Function} onerror function to be called in case of error
          * @example
