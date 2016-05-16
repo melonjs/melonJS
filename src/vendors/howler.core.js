@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta12
+ *  howler.js v2.0.0-beta13
  *  howlerjs.com
  *
  *  (c) 2013-2016, James Simpson of GoldFire Studios
@@ -69,12 +69,17 @@
       var self = this || Howler;
       vol = parseFloat(vol);
 
+      // If we don't have an AudioContext created yet, run the setup.
+      if (!self.ctx) {
+        setupAudioContext();
+      }
+
       if (typeof vol !== 'undefined' && vol >= 0 && vol <= 1) {
         self._volume = vol;
 
         // When using Web Audio, we just need to adjust the master gain.
-        if (Howler.usingWebAudio) {
-          Howler.masterGain.gain.value = vol;
+        if (self.usingWebAudio) {
+          self.masterGain.gain.value = vol;
         }
 
         // Loop through and change volume for all HTML5 audio nodes.
@@ -107,11 +112,16 @@
     mute: function(muted) {
       var self = this || Howler;
 
+      // If we don't have an AudioContext created yet, run the setup.
+      if (!self.ctx) {
+        setupAudioContext();
+      }
+
       self._muted = muted;
 
       // With Web Audio, we just need to mute the master gain.
-      if (Howler.usingWebAudio) {
-        Howler.masterGain.gain.value = muted ? 0 : self._volume;
+      if (self.usingWebAudio) {
+        self.masterGain.gain.value = muted ? 0 : self._volume;
       }
 
       // Loop through and mute all HTML5 Audio nodes.
@@ -613,12 +623,7 @@
       // Determine how long to play for and where to start playing.
       var seek = sound._seek > 0 ? sound._seek : self._sprite[sprite][0] / 1000;
       var duration = ((self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000) - seek;
-
-      // Create a timer to fire at the end of playback or the start of a new loop.
       var timeout = (duration * 1000) / Math.abs(sound._rate);
-      if (timeout !== Infinity) {
-        self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
-      }
 
       // Update the parameters of the sound
       sound._paused = false;
@@ -649,7 +654,7 @@
           }
 
           // Start a new timer if none is present.
-          if (!self._endTimers[sound._id] && timeout !== Infinity) {
+          if (timeout !== Infinity) {
             self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
           }
 
@@ -676,8 +681,15 @@
           node.muted = sound._muted || self._muted || Howler._muted || node.muted;
           node.volume = sound._volume * Howler.volume();
           node.playbackRate = sound._rate;
+
           setTimeout(function() {
             node.play();
+
+            // Setup the new end timer.
+            if (timeout !== Infinity) {
+              self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
+            }
+
             if (!args[1]) {
               self._emit('play', sound._id);
             }
@@ -690,11 +702,6 @@
           playHtml5();
         } else {
           var listener = function() {
-            // Setup the new end timer.
-            if (timeout !== Infinity) {
-              self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
-            }
-
             // Begin playback.
             playHtml5();
 
@@ -1033,8 +1040,8 @@
             var currentTime = Howler.ctx.currentTime;
             var end = currentTime + (len / 1000);
             sound._volume = from;
-            sound._node.gain.setValueAtTime(from, currentTime);
-            sound._node.gain.linearRampToValueAtTime(to, end);
+            sound._node.gain.setValueAtTime(from * Howler.volume(), currentTime);
+            sound._node.gain.linearRampToValueAtTime(to * Howler.volume(), end);
           }
 
           var vol = from;
@@ -1287,7 +1294,7 @@
       var sound = self._soundById(id);
 
       if (sound) {
-        if (seek >= 0) {
+        if (typeof seek === 'number' && seek >= 0) {
           // Pause the sound and update position for restarting playback.
           var playing = self.playing(id);
           if (playing) {
