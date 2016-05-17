@@ -12,14 +12,14 @@
     var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 
     /**
-     * a bitpmap font object
+     * a bitmap font object
      * Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
      * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
      * { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * @class
-     * @extends me.Font
+     * @extends me.Renderable
      * @memberOf me
      * @constructor
      * @param {String} font font name
@@ -194,8 +194,6 @@
             this.cursorX = 0;
 
             this.glyphs = {};
-            // The glyph to display for characters not in the font. May be null.
-            this.missingGlyph = null;
 
             // The width of the space character.
             this.spaceWidth = 0;
@@ -346,6 +344,61 @@
                 this.ascent = -this.ascent;
                 this.down = -this.down;
             }
-        }
+        },
+
+        setGlyphRegion: function (glyph, image) {
+            var imageWidth = image.width;
+            var imageHeight = image.width;
+            var invertImageWidth = 1 / image.width;
+            var invertImageHeight = 1 / image.height;
+            var offsetX = 0, offsetY = 0;
+            var x = glyph.srcX;
+            var x2 = glyph.srcX + glyph.width;
+            var y = glyph.srcY;
+            var y2 = glyph.srcY + glyph.height;
+
+            if (offsetX > 0) {
+                x -= offsetX;
+                if (x < 0) {
+                    glyph.width += x;
+                    glyph.xoffset -= x;
+                    x = 0;
+                }
+                x2 -= offsetX;
+                if (x2 > imageWidth) {
+                    glyph.width -= x2 - imageWidth;
+                    x2 = imageWidth;
+                }
+            }
+            if (offsetY > 0) {
+                y -= offsetY;
+                if (y < 0) {
+                    glyph.height += y;
+                    y = 0;
+                }
+                y2 -= offsetY;
+                if (y2 > imageHeight) {
+                    var amount = y2 - imageHeight;
+                    glyph.height -= amount;
+                    glyph.yoffset += amount;
+                    y2 = imageHeight;
+                }
+            }
+
+            glyph.u = x * invertImageWidth;
+            glyph.u2 = x2 * invertImageWidth;
+            if (this.flipped) {
+                glyph.v = y * invertImageHeight;
+                glyph.v2 = y2 * invertImageHeight;
+            } else {
+                glyph.v2 = y * invertImageHeight;
+                glyph.v = y2 * invertImageHeight;
+            }
+        },
+
+        setLineHeight: function (height) {
+            this.lineHeight = height * this.scale.y;
+            this.down = this.flipped ? this.lineHeight : -this.lineHeight;
+        },
     });
 })();
