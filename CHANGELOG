@@ -2,6 +2,8 @@ Version History
 ---------------
 4.0.0
 
+* Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
+
 3.1.0
 * Audio : exposed a `me.audio.rate` function to allow modifying the playback rate of the specified audio clip.
 * Audio : added back the possibility to stream audio elements (through the `stream` flag when defining audio assets)

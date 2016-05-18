@@ -113,7 +113,7 @@
         /**
          * @ignore
          */
-        prepareSurface : function () {},
+        clear : function () {},
 
         /**
          * @ignore

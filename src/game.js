@@ -333,7 +333,7 @@
                 api.world.transform.translate(-translateX, -translateY);
 
                 // prepare renderer to draw a new frame
-                me.video.renderer.prepareSurface();
+                me.video.renderer.clear();
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
@@ -348,8 +348,8 @@
 
             isDirty = false;
 
-            // blit our frame
-            me.video.renderer.blitSurface();
+            // flush/render our frame
+            me.video.renderer.flush();
         };
 
         // return our object

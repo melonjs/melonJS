@@ -200,24 +200,23 @@
 
         /**
          * Flush the compositor to the frame buffer
-         * @name blitSurface
+         * @name flush
          * @memberOf me.WebGLRenderer
          * @function
          */
-        blitSurface : function () {
+        flush : function () {
             this.compositor.flush();
         },
 
         /**
-         * Clears the gl context. Accepts a gl context or defaults to stored gl renderer.
-         * @name clearSurface
+         * Clears the gl context with the given color.
+         * @name clearColor
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {WebGLContext} [ctx=null] For compatibility only.
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        clearSurface : function (ctx, col, opaque) {
+        clearColor : function (col, opaque) {
             var color = this.globalColor.clone();
             var matrix = this.globalMatrix.clone();
             this.globalColor.copy(col);
