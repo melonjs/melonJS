@@ -308,56 +308,6 @@
             }
         },
 
-        setGlyphRegion: function (glyph, image) {
-            var imageWidth = image.width;
-            var imageHeight = image.width;
-            var invertImageWidth = 1 / image.width;
-            var invertImageHeight = 1 / image.height;
-            var offsetX = 0, offsetY = 0;
-            var x = glyph.srcX;
-            var x2 = glyph.srcX + glyph.width;
-            var y = glyph.srcY;
-            var y2 = glyph.srcY + glyph.height;
-
-            if (offsetX > 0) {
-                x -= offsetX;
-                if (x < 0) {
-                    glyph.width += x;
-                    glyph.xoffset -= x;
-                    x = 0;
-                }
-                x2 -= offsetX;
-                if (x2 > imageWidth) {
-                    glyph.width -= x2 - imageWidth;
-                    x2 = imageWidth;
-                }
-            }
-            if (offsetY > 0) {
-                y -= offsetY;
-                if (y < 0) {
-                    glyph.height += y;
-                    y = 0;
-                }
-                y2 -= offsetY;
-                if (y2 > imageHeight) {
-                    var amount = y2 - imageHeight;
-                    glyph.height -= amount;
-                    glyph.yoffset += amount;
-                    y2 = imageHeight;
-                }
-            }
-
-            glyph.u = x * invertImageWidth;
-            glyph.u2 = x2 * invertImageWidth;
-            if (this.flipped) {
-                glyph.v = y * invertImageHeight;
-                glyph.v2 = y2 * invertImageHeight;
-            } else {
-                glyph.v2 = y * invertImageHeight;
-                glyph.v = y2 * invertImageHeight;
-            }
-        },
-
         setLineHeight: function (height) {
             this.lineHeight = height * this.scale.y;
             this.down = this.flipped ? this.lineHeight : -this.lineHeight;
