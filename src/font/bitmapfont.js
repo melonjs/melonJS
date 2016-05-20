@@ -8,9 +8,6 @@
  * -> first char " " 32d (0x20);
  */
 (function () {
-    var LOG2_PAGE_SIZE = 9;
-    var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
-
     /**
      * a bitmap font object
      * Use me.loader.preload or me.loader.load to load assets
