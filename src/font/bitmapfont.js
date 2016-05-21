@@ -89,15 +89,35 @@
         },
 
         /**
+         * Does not account for \n
+         * @name measureTextLineWidth
+         * @memberOf me.BitmapFont
+         * @function
+         * @param {String} text
+         * @return {Number} the calculated width
+         */
+        measureTextWidth : function(text) {
+            var characters = text.split("");
+            var width = 0;
+            var lastGlyph = null;
+            for (var i = 0; i < characters.length; i++) {
+                var ch = characters[i].charCodeAt(0);
+                var glyph = this.bitmapFontData.glyphs[ch];
+                width += glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0);
+            }
+
+            return width;
+        },
+
+        /**
          * measure the given text size in pixels
          * @name measureText
          * @memberOf me.BitmapFont
          * @function
-         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
          * @return {Object} an object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (renderer, text) {
+        measureText : function (text) {
             var strings = ("" + text).split("\n");
 
             this.height = this.width = 0;
@@ -118,8 +138,73 @@
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
+         * @param {Number} width [optional] - the width at which to wrap the text
          */
-        draw : function () { // renderer, text, x, y
+        draw : function (renderer, text, x, y, width) {
+            var strings = ("" + text).split("\n");
+            var lX = x;
+            var height = this.sSize.y * this.lineHeight;
+
+            // save the previous global alpha value
+            var _alpha = renderer.globalAlpha();
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
+
+            // update initial position
+            this.pos.set(x, y, this.pos.z); // TODO : z ?
+            for (var i = 0; i < strings.length; i++) {
+                x = lX;
+                var string = strings[i].trimRight();
+                // adjust x pos based on alignment value
+                var width = this.measureTextWidth(string);
+                switch (this.textAlign) {
+                    case "right":
+                        x -= width;
+                        break;
+
+                    case "center":
+                        x -= width * 0.5;
+                        break;
+
+                    default :
+                        break;
+                }
+
+                // adjust y pos based on alignment value
+                switch (this.textBaseline) {
+                    case "middle":
+                        y -= height * 0.5;
+                        break;
+
+                    case "ideographic":
+                    case "alphabetic":
+                    case "bottom":
+                        y -= height;
+                        break;
+
+                    default :
+                        break;
+                }
+
+                // draw the string
+                for (var c = 0, len = string.length; c < len; c++) {
+                    // calculate the char index
+                    var idx = string.charCodeAt(c) - this.firstChar;
+                    if (idx >= 0) {
+                        // draw it
+                        renderer.drawImage(this.font,
+                            this.fontSize.x * (idx % this.charCount),
+                            this.fontSize.y * ~~(idx / this.charCount),
+                            this.fontSize.x, this.fontSize.y,
+                            ~~x, ~~y,
+                            this.sSize.x, this.sSize.y);
+                    }
+                    x += this.sSize.x;
+                }
+                // increment line
+                y += height;
+            }
+            // restore the previous global alpha value
+            renderer.setGlobalAlpha(_alpha);
         }
     });
 
@@ -152,6 +237,12 @@
             // file, it needs to be set manually depending on how the glyphs are rendered on the backing textures.
             this.cursorX = 0;
 
+            /**
+             * The map of glyphs, each key is a char code.
+             * @name glyphs
+             * @property
+             * @memberOf me.BitmapFontData
+             */
             this.glyphs = {};
 
             // The width of the space character.
@@ -194,6 +285,13 @@
             return value[0].split("=")[1];
         },
 
+        /**
+         * This parses the font data text and builds a map of glyphs containing the data for each character
+         * @name parse
+         * @memberOf me.BitmapFontData
+         * @function
+         * @param {String} fontData
+         */
         parse: function (fontData) {
             if (!fontData) {
                 throw "File containing font data was empty, cannot load the bitmap font.";

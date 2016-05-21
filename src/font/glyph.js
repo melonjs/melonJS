@@ -37,6 +37,16 @@
             this.fixedWidth = false;
         },
 
+        getKerning: function (ch, value) {
+           if (this.kerning) {
+               var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+               if (page) {
+                   return page[ch & PAGE_SIZE - 1];
+               }
+           }
+           return 0;
+        },
+
         setKerning: function (ch, value) {
             var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
             if (page === null) {
