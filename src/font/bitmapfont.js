@@ -35,7 +35,7 @@
             var fontData = me.loader.getBinary(fontName);
             this.fontImage = me.loader.getImage(fontName);
 
-            this.bitmapFontData = new me.BitmapFontData(false);
+            this.bitmapFontData = new me.BitmapFontData();
             this.bitmapFontData.parse(fontData);
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
 
@@ -55,6 +55,7 @@
             // set a default alignement
             this.textAlign = textAlign || "left";
             this.textBaseline = textBaseline || "top";
+            this.lineHeight = 1;
             // resize if necessary
             if (scale) {
                 this.resize(scale);
@@ -89,7 +90,7 @@
         },
 
         /**
-         * Does not account for \n
+         * Measures a single line of text, does not account for \n
          * @name measureTextLineWidth
          * @memberOf me.BitmapFont
          * @function
@@ -119,14 +120,15 @@
          */
         measureText : function (text) {
             var strings = ("" + text).split("\n");
-
-            this.height = this.width = 0;
-
+            var width = 0;
+            var height = 0;
+            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                this.width = Math.max((strings[i].trimRight().length * this.sSize.x), this.width);
-                this.height += this.sSize.y * this.lineHeight;
+                width = Math.max(this.measureTextWidth(strings[i]), width);
+                height += stringHeight;
             }
-            return {width: this.width, height: this.height};
+
+            return {width: width, height: height};
         },
 
         /**
@@ -138,12 +140,11 @@
          * @param {String} text
          * @param {Number} x
          * @param {Number} y
-         * @param {Number} width [optional] - the width at which to wrap the text
          */
-        draw : function (renderer, text, x, y, width) {
+        draw : function (renderer, text, x, y) {
             var strings = ("" + text).split("\n");
             var lX = x;
-            var height = this.sSize.y * this.lineHeight;
+            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
 
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
@@ -155,14 +156,14 @@
                 x = lX;
                 var string = strings[i].trimRight();
                 // adjust x pos based on alignment value
-                var width = this.measureTextWidth(string);
+                var stringWidth = this.measureTextWidth(string);
                 switch (this.textAlign) {
                     case "right":
-                        x -= width;
+                        x -= stringWidth;
                         break;
 
                     case "center":
-                        x -= width * 0.5;
+                        x -= stringWidth * 0.5;
                         break;
 
                     default :
@@ -172,13 +173,13 @@
                 // adjust y pos based on alignment value
                 switch (this.textBaseline) {
                     case "middle":
-                        y -= height * 0.5;
+                        y -= stringHeight * 0.5;
                         break;
 
                     case "ideographic":
                     case "alphabetic":
                     case "bottom":
-                        y -= height;
+                        y -= stringHeight;
                         break;
 
                     default :
@@ -186,226 +187,26 @@
                 }
 
                 // draw the string
+                var lastGlyph = null;
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
-                    var idx = string.charCodeAt(c) - this.firstChar;
-                    if (idx >= 0) {
-                        // draw it
-                        renderer.drawImage(this.font,
-                            this.fontSize.x * (idx % this.charCount),
-                            this.fontSize.y * ~~(idx / this.charCount),
-                            this.fontSize.x, this.fontSize.y,
-                            ~~x, ~~y,
-                            this.sSize.x, this.sSize.y);
-                    }
-                    x += this.sSize.x;
+                    var ch = string.charCodeAt(c);
+                    var glyph = this.bitmapFontData.glyphs[ch];
+
+                    // draw it
+                    renderer.drawImage(this.fontImage,
+                        glyph.src.x, glyph.src.y,
+                        glyph.width, glyph.height,
+                        ~~x, ~~y + glyph.offset.y,
+                        glyph.width, glyph.height);
+                    x += glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0);
+                    lastGlyph = glyph;
                 }
                 // increment line
-                y += height;
+                y += stringHeight;
             }
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
         }
-    });
-
-    /**
-     * Class for storing relevant data from the font file.
-     * @private
-     * @class me.BitmapFontData
-     * @memberOf me
-     * @constructor
-     */
-    me.BitmapFontData = me.Object.extend({
-        init: function (flipped) {
-            this.flipped = flipped;
-            this.padTop = 0;
-            this.padRight = 0;
-            this.padBottom = 0;
-            this.padLeft = 0;
-            // The distance from one line of text to the next. To set this value, use {@link #setLineHeight(float)}.
-            this.lineHeight = 0;
-            // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
-            // the first line, the cap height can be used to get the location of the baseline.
-            this.capHeight = 1;
-            // The distance from the cap height to the top of the tallest glyph.
-            this.ascent = 0;
-            // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
-            this.descent = 0;
-            this.down = 0;
-            this.scale = new me.Vector2d();
-            // The amount to add to the glyph X position when drawing a cursor between glyphs. This field is not set by the BMFont
-            // file, it needs to be set manually depending on how the glyphs are rendered on the backing textures.
-            this.cursorX = 0;
-
-            /**
-             * The map of glyphs, each key is a char code.
-             * @name glyphs
-             * @property
-             * @memberOf me.BitmapFontData
-             */
-            this.glyphs = {};
-
-            // The width of the space character.
-            this.spaceWidth = 0;
-            // The x-height, which is the distance from the top of most lowercase characters to the baseline.
-            this.xHeight = 1;
-
-            this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
-            this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
-                "T", "U", "V", "W", "X", "Y", "Z"];
-        },
-
-        _createSpaceGlyph: function () {
-            var spaceCharCode = " ".charCodeAt(0);
-            if (!this.glyphs[spaceCharCode]) {
-                var glyph = me.pool.pull("me.Glyph");
-                glyph.id = spaceCharCode;
-                glyph.xadvance = this._getFirstGlyph().xadvance;
-                this.glyphs[spaceCharCode] = glyph;
-
-                if (glyph.width === 0) {
-                    glyph.width = ~~(this.padLeft + glyph.xadvance + this.padRight);
-                    glyph.offset.set(-this.padLeft, 0);
-                }
-
-                this.spaceWidth = glyph.width;
-            }
-        },
-
-        _getFirstGlyph: function () {
-            return this.glyphs[Object.keys(this.glyphs)[0]];
-        },
-
-        _getValueFromPair: function (string, pattern) {
-            var value = string.match(pattern);
-            if (!value) {
-                throw "Could not find pattern " + pattern + " in string: " + string;
-            }
-
-            return value[0].split("=")[1];
-        },
-
-        /**
-         * This parses the font data text and builds a map of glyphs containing the data for each character
-         * @name parse
-         * @memberOf me.BitmapFontData
-         * @function
-         * @param {String} fontData
-         */
-        parse: function (fontData) {
-            if (!fontData) {
-                throw "File containing font data was empty, cannot load the bitmap font.";
-            }
-            var lines = fontData.split(/\r\n|\n/);
-            var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
-            if (!padding) {
-                throw "Padding not found in first line";
-            }
-            var paddingValues = padding[0].split("=")[1].split(",");
-            this.padTop = parseFloat(paddingValues[0]);
-            this.padLeft = parseFloat(paddingValues[1]);
-            this.padBottom = parseFloat(paddingValues[2]);
-            this.padRight = parseFloat(paddingValues[3]);
-
-            this.lineHeight = parseFloat(this._getValueFromPair(lines[1], /lineHeight\=\d+/g));
-
-            var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
-
-            var padY = this.padTop + this.padBottom;
-
-            var glyph = null;
-
-            for (var i = 4; i < lines.length; i++) {
-                var line = lines[i];
-                var characterValues = line.split(/=|\s/);
-                if (!line || /^kernings/.test(line)) {
-                    continue;
-                }
-                if (/^kerning\s/.test(line)) {
-                    var first = parseFloat(characterValues[2]);
-                    var second = parseFloat(characterValues[4]);
-                    var amount = parseFloat(characterValues[6]);
-
-                    glyph = this.glyphs[first];
-                    if (glyph !== null && typeof glyph !== "undefined") {
-                        glyph.setKerning(second, amount);
-                    }
-                } else {
-                    glyph = me.pool.pull("me.Glyph");
-
-                    var ch = parseFloat(characterValues[2]);
-                    glyph.id = ch;
-                    glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
-                    glyph.width = parseFloat(characterValues[8]);
-                    glyph.height = parseFloat(characterValues[10]);
-                    var y = parseFloat(characterValues[14]);
-                    if (this.flipped) {
-                        y = -(glyph.height + parseFloat(characterValues[14]));
-                    }
-                    glyph.offset.set(parseFloat(characterValues[12]), y);
-
-                    glyph.xadvance = parseFloat(characterValues[16]);
-
-                    if (glyph.width > 0 && glyph.height > 0) {
-                        this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
-                    }
-
-                    this.glyphs[ch] = glyph;
-                }
-            }
-
-            this.descent += this.padBottom;
-
-            this._createSpaceGlyph();
-
-            var xGlyph = null;
-            for (i = 0; i < this.xChars.length; i++) {
-                var xChar = this.xChars[i];
-                xGlyph = this.glyphs[xChar.charCodeAt(0)];
-                if (xGlyph) {
-                    break;
-                }
-            }
-            if (!xGlyph) {
-                xGlyph = this._getFirstGlyph();
-            }
-
-            var capGlyph = null;
-            for (i = 0; i < this.capChars.length; i++) {
-                var capChar = this.capChars[i];
-                capGlyph = this.glyphs[capChar.charCodeAt(0)];
-                if (capGlyph) {
-                    break;
-                }
-            }
-            if (!capGlyph) {
-                for (var charCode in this.glyphs) {
-                    if (this.glyphs.hasOwnProperty(charCode)) {
-                        glyph = this.glyphs[charCode];
-                        if (glyph.height === 0 || glyph.width === 0) {
-                            continue;
-                        }
-                        this.capHeight = Math.max(this.capHeight, glyph.height);
-                    }
-                }
-            } else {
-                this.capHeight = capGlyph.height;
-            }
-
-            this.capHeight -= padY;
-
-            this.ascent = this.baseLine - this.capHeight;
-            this.down = -this.lineHeight;
-
-            if (this.flipped) {
-                this.ascent = -this.ascent;
-                this.down = -this.down;
-            }
-        },
-
-        setLineHeight: function (height) {
-            this.lineHeight = height * this.scale.y;
-            this.down = this.flipped ? this.lineHeight : -this.lineHeight;
-        },
     });
 })();

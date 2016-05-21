@@ -33,24 +33,27 @@
             this.v2 = 0;
             this.offset.set(0, 0);
             this.xadvance = 0;
-            this.kerning = [];
             this.fixedWidth = false;
         },
 
-        getKerning: function (ch, value) {
-           if (this.kerning) {
-               var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
-               if (page) {
-                   return page[ch & PAGE_SIZE - 1];
-               }
-           }
-           return 0;
+        getKerning: function (ch) {
+            if (this.kerning) {
+                var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+                if (page) {
+                    return page[ch & PAGE_SIZE - 1] || 0;
+                }
+            }
+            return 0;
         },
 
         setKerning: function (ch, value) {
+            if (!this.kerning) {
+                this.kerning = {};
+            }
             var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
-            if (page === null) {
-                this.kerning[ch >>> LOG2_PAGE_SIZE] = page = [];
+            if (typeof page === "undefined") {
+                this.kerning[ch >>> LOG2_PAGE_SIZE] = {};
+                page = this.kerning[ch >>> LOG2_PAGE_SIZE];
             }
             page[ch & PAGE_SIZE - 1] = value;
         }

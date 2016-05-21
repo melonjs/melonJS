@@ -8,7 +8,7 @@ char id=34 x=96 y=84 width=8 height=6 xoffset=1 yoffset=2 xadvance=7 page=0 chnl
 char id=35 x=98 y=40 width=12 height=10 xoffset=1 yoffset=3 xadvance=12 page=0 chnl=0
 char id=36 x=86 y=2 width=12 height=12 xoffset=1 yoffset=2 xadvance=12 page=0 chnl=0
 char id=37 x=40 y=2 width=16 height=10 xoffset=1 yoffset=3 xadvance=15 page=0 chnl=0
-char id=38 x=84 y=40 width=12 height=10 xoffset=1 yoffset=3 xadvance=12 page=0 chnl=0
+char id=38 x=84 y=4a0 width=12 height=10 xoffset=1 yoffset=3 xadvance=12 page=0 chnl=0
 char id=39 x=88 y=106 width=4 height=6 xoffset=1 yoffset=2 xadvance=4 page=0 chnl=0
 char id=40 x=58 y=96 width=6 height=14 xoffset=1 yoffset=1 xadvance=6 page=0 chnl=0
 char id=41 x=58 y=80 width=6 height=14 xoffset=1 yoffset=1 xadvance=6 page=0 chnl=0
