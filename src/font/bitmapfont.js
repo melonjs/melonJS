@@ -10,11 +10,6 @@
 (function () {
     /**
      * a bitmap font object
-     * Use me.loader.preload or me.loader.load to load assets
-     * me.loader.preload([
-     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
-     * { name: "arial", type: "image" src: "data/font/arial.png" },
-     * ])
      * @class
      * @extends me.Renderable
      * @memberOf me
@@ -23,6 +18,16 @@
      * @param {Number} [scale=1.0]
      * @param {String} [textAlign=left]
      * @param {String} [textBaseline=top]
+     * @example
+     * // Use me.loader.preload or me.loader.load to load assets
+     * me.loader.preload([
+     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     * { name: "arial", type: "image" src: "data/font/arial.png" },
+     * ])
+     * // Then create an instance of your bitmap font:
+     * var myFont = new me.BitmapFont("arial");
+     * // And draw it inside your Renderable, just like me.Font
+     * myFont.draw(renderer, "Hello!", 0, 0);
      */
     me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
