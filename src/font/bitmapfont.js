@@ -104,7 +104,7 @@
             for (var i = 0; i < characters.length; i++) {
                 var ch = characters[i].charCodeAt(0);
                 var glyph = this.bitmapFontData.glyphs[ch];
-                width += glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0);
+                width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0) * this.fontScale.x);
             }
 
             return width;
@@ -128,7 +128,7 @@
                 height += stringHeight;
             }
 
-            return {width: width, height: height};
+            return {width: width, height: height * this.fontScale.y};
         },
 
         /**
@@ -144,7 +144,7 @@
         draw : function (renderer, text, x, y) {
             var strings = ("" + text).split("\n");
             var lX = x;
-            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
+            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight * this.fontScale.y;
 
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
@@ -186,6 +186,9 @@
                         break;
                 }
 
+                // x *= this.fontScale.x;
+                // y *= this.fontScale.y;
+
                 // draw the string
                 var lastGlyph = null;
                 for (var c = 0, len = string.length; c < len; c++) {
@@ -197,9 +200,9 @@
                     renderer.drawImage(this.fontImage,
                         glyph.src.x, glyph.src.y,
                         glyph.width, glyph.height,
-                        ~~x, ~~y + glyph.offset.y,
-                        glyph.width, glyph.height);
-                    x += glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0);
+                        ~~x, ~~y + glyph.offset.y * this.fontScale.y,
+                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
+                    x += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
                     lastGlyph = glyph;
                 }
                 // increment line

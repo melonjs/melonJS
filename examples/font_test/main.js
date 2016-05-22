@@ -155,8 +155,8 @@ var FontTest = me.Renderable.extend ({
         this.font.textAlign = "right";
         this.font.draw(renderer, text, 200, 300);
 
-        this.drawBitmapFont(renderer, this.bFont, 0, baselines);
-        this.drawBitmapFont(renderer, this.fancyBFont, 300, baselines);
+        this.drawBitmapFont(renderer, this.bFont, 0, baselines, 1.0);
+        this.drawBitmapFont(renderer, this.fancyBFont, 300, baselines, 1.2);
 
         // restore default alignement/baseline
         this.font.textAlign = "left";
@@ -167,11 +167,11 @@ var FontTest = me.Renderable.extend ({
         this.fancyBFont.textBaseline = "top";
     },
 
-    drawBitmapFont: function (renderer, font, yOffset, baselines) {
+    drawBitmapFont: function (renderer, font, yOffset, baselines, scale) {
         // bFont  test
         font.textAlign = "center";
         var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
-        font.resize(2);
+        font.resize(scale);
         font.draw(renderer, text + "\n" + text, 400, 230 + yOffset);
 
         // bFont  test
