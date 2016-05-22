@@ -16,15 +16,10 @@ me.BitmapFontData = me.Object.extend({
         // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
         // the first line, the cap height can be used to get the location of the baseline.
         this.capHeight = 1;
-        // The distance from the cap height to the top of the tallest glyph.
-        this.ascent = 0;
         // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
         this.descent = 0;
         this.down = 0;
         this.scale = new me.Vector2d();
-        // The amount to add to the glyph X position when drawing a cursor between glyphs. This field is not set by the BMFont
-        // file, it needs to be set manually depending on how the glyphs are rendered on the backing textures.
-        this.cursorX = 0;
 
         /**
          * The map of glyphs, each key is a char code.
@@ -34,10 +29,13 @@ me.BitmapFontData = me.Object.extend({
          */
         this.glyphs = {};
 
-        // The width of the space character.
+        /**
+         * The width of the space glyph
+         * @name spaceWidth
+         * @property
+         * @memberOf me.BitmapFontData
+         */
         this.spaceWidth = 0;
-        // The x-height, which is the distance from the top of most lowercase characters to the baseline.
-        this.xHeight = 1;
 
         this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
         this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
@@ -180,7 +178,6 @@ me.BitmapFontData = me.Object.extend({
 
         this.capHeight -= padY;
 
-        this.ascent = this.baseLine - this.capHeight;
         this.down = -this.lineHeight;
     },
 
