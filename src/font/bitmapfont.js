@@ -35,6 +35,12 @@
             var fontData = me.loader.getBinary(fontName);
             this.fontImage = me.loader.getImage(fontName);
 
+            /**
+             * The instance of me.BitmapFontData
+             * @type {me.BitmapFontData}
+             * @name bitmapFontData
+             * @memberOf me.BitmapFont
+             */
             this.bitmapFontData = new me.BitmapFontData();
             this.bitmapFontData.parse(fontData);
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
@@ -47,9 +53,7 @@
                 throw "Font image for font name: " + fontName + " not found";
             }
 
-            // #char per row
             this.charCount = 0;
-            // font name and type
             this._super(me.Renderable, "init", [0, 0, 0, 0, 0, 0]);
 
             // set a default alignement
@@ -95,7 +99,7 @@
          * @memberOf me.BitmapFont
          * @function
          * @param {String} text
-         * @return {Number} the calculated width
+         * @returns {Number} the calculated width
          */
         measureTextWidth : function(text) {
             var characters = text.split("");
@@ -116,7 +120,7 @@
          * @memberOf me.BitmapFont
          * @function
          * @param {String} text
-         * @return {Object} an object with two properties: `width` and `height`, defining the output dimensions
+         * @returns {Object} an object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (text) {
             var strings = ("" + text).split("\n");

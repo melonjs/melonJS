@@ -1,6 +1,5 @@
 /**
  * Class for storing relevant data from the font file.
- * @private
  * @class me.BitmapFontData
  * @memberOf me
  * @constructor
@@ -11,7 +10,6 @@ me.BitmapFontData = me.Object.extend({
         this.padRight = 0;
         this.padBottom = 0;
         this.padLeft = 0;
-        // The distance from one line of text to the next. To set this value, use {@link #setLineHeight(float)}.
         this.lineHeight = 0;
         // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
         // the first line, the cap height can be used to get the location of the baseline.
@@ -24,7 +22,7 @@ me.BitmapFontData = me.Object.extend({
         /**
          * The map of glyphs, each key is a char code.
          * @name glyphs
-         * @property
+         * @type {Object}
          * @memberOf me.BitmapFontData
          */
         this.glyphs = {};
@@ -32,7 +30,7 @@ me.BitmapFontData = me.Object.extend({
         /**
          * The width of the space glyph
          * @name spaceWidth
-         * @property
+         * @type {Number}
          * @memberOf me.BitmapFontData
          */
         this.spaceWidth = 0;
@@ -42,6 +40,13 @@ me.BitmapFontData = me.Object.extend({
             "T", "U", "V", "W", "X", "Y", "Z"];
     },
 
+    /**
+     * Creates a glyph to use for the space character
+     * @private
+     * @name _createSpaceGlyph
+     * @memberOf me.BitmapFontData
+     * @function
+     */
     _createSpaceGlyph: function () {
         var spaceCharCode = " ".charCodeAt(0);
         if (!this.glyphs[spaceCharCode]) {
@@ -59,10 +64,27 @@ me.BitmapFontData = me.Object.extend({
         }
     },
 
+    /**
+     * Gets the first glyph in the map
+     * @private
+     * @name _getFirstGlyph
+     * @memberOf me.BitmapFontData
+     * @function
+     * @returns {me.Glyph}
+     */
     _getFirstGlyph: function () {
         return this.glyphs[Object.keys(this.glyphs)[0]];
     },
 
+    /**
+     * Gets the value from a string of pairs. For example: one=1 two=2 something=hi. Can accept the regex of /one={d}/
+     * and returns the value of d
+     * @private
+     * @name _getValueFromPair
+     * @memberOf me.BitmapFontData
+     * @function
+     * @returns {String}
+     */
     _getValueFromPair: function (string, pattern) {
         var value = string.match(pattern);
         if (!value) {
@@ -179,10 +201,5 @@ me.BitmapFontData = me.Object.extend({
         this.capHeight -= padY;
 
         this.down = -this.lineHeight;
-    },
-
-    setLineHeight: function (height) {
-        this.lineHeight = height * this.scale.y;
-        this.down = -this.lineHeight;
-    },
+    }
 });
