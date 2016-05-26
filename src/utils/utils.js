@@ -121,8 +121,8 @@
         var GUID_index = 0;
 
         // regexp to deal with file name & path
-        var removepath = /^.*(\\|\/|\:)/;
-        var removeext = /\.[^\.]*$/;
+        var REMOVE_PATH = /^.*(\\|\/|\:)/;
+        var REMOVE_EXT = /\.[^\.]*$/;
 
         /*
          * PUBLIC STUFF
@@ -222,7 +222,7 @@
          * @return {String} the base name without path information.
          */
         api.getBasename = function (path) {
-            return path.replace(removepath, "").replace(removeext, "");
+            return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
         };
 
         /**
