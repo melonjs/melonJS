@@ -44,15 +44,6 @@
             // ADD child container child one by one to the quadtree?
 
             /**
-             * the container default transformation matrix
-             * @public
-             * @type me.Matrix2d
-             * @name transform
-             * @memberOf me.Container
-             */
-            this.transform = new me.Matrix2d();
-
-            /**
              * whether the container is the root of the scene
              * @private
              * @ignore

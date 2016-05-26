@@ -30,6 +30,15 @@
              */
             this.isRenderable = true;
 
+            /**
+             * the renderable default transformation matrix
+             * @public
+             * @type me.Matrix2d
+             * @name transform
+             * @memberOf me.Renderable
+             */
+            this.transform = undefined;
+
            /**
             * (G)ame (U)nique (Id)entifier" <br>
             * a GUID will be allocated for any renderable object added <br>
@@ -163,6 +172,13 @@
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
                 this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
+            }
+
+            // create or reset the transformation matrix
+            if (this.transform) {
+                this.transform.identity();
+            } else {
+                this.transform = new me.Matrix2d();
             }
 
             this._width = width;
