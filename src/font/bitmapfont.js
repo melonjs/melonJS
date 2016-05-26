@@ -14,7 +14,7 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {String} font font name
+     * @param {Image} the image object for the font. Should be retrieved from the loader
      * @param {Number} [scale=1.0]
      * @param {String} [textAlign=left]
      * @param {String} [textBaseline=top]
@@ -25,20 +25,19 @@
      * { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapFont("arial");
+     * var myFont = new me.BitmapFont(new me.BitmapFontData(me.loader.getBinary("arial")), me.loader.getImage("arial"));
      * // And draw it inside your Renderable, just like me.Font
      * myFont.draw(renderer, "Hello!", 0, 0);
      */
     me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
-        init : function (fontName, scale, textAlign, textBaseline) {
+        init : function (data, fontImage, scale, textAlign, textBaseline) {
             /** @ignore */
             // scaled font size;
             this.sSize = me.pool.pull("me.Vector2d", 0, 0);
 
-            var fontData = me.loader.getBinary(fontName);
-            this.fontImage = me.loader.getImage(fontName);
+            this.fontImage = fontImage;
 
             /**
              * The instance of me.BitmapFontData
@@ -46,17 +45,8 @@
              * @name bitmapFontData
              * @memberOf me.BitmapFont
              */
-            this.bitmapFontData = new me.BitmapFontData();
-            this.bitmapFontData.parse(fontData);
+            this.bitmapFontData = data;
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
-
-            if (!fontData) {
-                throw "Font data for font name: " + fontName + " not found";
-            }
-
-            if (!this.fontImage) {
-                throw "Font image for font name: " + fontName + " not found";
-            }
 
             this.charCount = 0;
             this._super(me.Renderable, "init", [0, 0, 0, 0, 0, 0]);

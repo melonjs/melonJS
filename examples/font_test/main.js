@@ -71,11 +71,11 @@ var FontTest = me.Renderable.extend ({
         // arial font
         this.font = new me.Font("Arial", 8, this.color);
         // bitmap font
-        this.bFont = new me.BitmapFont("xolo12");
+        this.bFont = new me.BitmapFont(new me.BitmapFontData(me.loader.getBinary('xolo12')), me.loader.getImage('xolo12'));
         this.bFont.name = 'xolo';
         this.name = "FontTest";
 
-        this.fancyBFont = new me.BitmapFont("arialfancy");
+        this.fancyBFont = new me.BitmapFont(new me.BitmapFontData(me.loader.getBinary('arialfancy')), me.loader.getImage('arialfancy'));
         this.fancyBFont.name = 'arial';
     },
 

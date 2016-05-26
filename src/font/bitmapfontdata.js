@@ -2,10 +2,11 @@
  * Class for storing relevant data from the font file.
  * @class me.BitmapFontData
  * @memberOf me
+ * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  * @constructor
  */
 me.BitmapFontData = me.Object.extend({
-    init: function () {
+    init: function (data) {
         this.padTop = 0;
         this.padRight = 0;
         this.padBottom = 0;
@@ -38,6 +39,7 @@ me.BitmapFontData = me.Object.extend({
         this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
         this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
             "T", "U", "V", "W", "X", "Y", "Z"];
+        this.parse(data);
     },
 
     /**

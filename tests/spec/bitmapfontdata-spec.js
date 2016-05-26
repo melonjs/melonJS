@@ -141,16 +141,14 @@ describe("me.BitmapFontData", function () {
     describe("parse", function () {
         var bitmapFontData = null;
         beforeEach(function () {
-            bitmapFontData = new me.BitmapFontData();
+            bitmapFontData = new me.BitmapFontData(bitmapFontDataFixture);
         });
 
         it("should have 95 glyphs", function () {
-            bitmapFontData.parse(bitmapFontDataFixture);
             expect(Object.keys(bitmapFontData.glyphs).length).toEqual(95);
         });
 
         it("glyph by character 33 should have set data", function () {
-            bitmapFontData.parse(bitmapFontDataFixture);
             var glyph = bitmapFontData.glyphs[33];
             expect(glyph.src.x).toEqual(192);
             expect(glyph.src.y).toEqual(38);
@@ -162,7 +160,6 @@ describe("me.BitmapFontData", function () {
         });
 
         it("glyph by character 70 should have kerning data", function () {
-            bitmapFontData.parse(bitmapFontDataFixture);
             var glyph = bitmapFontData.glyphs[70];
             expect(glyph.getKerning(44)).toEqual(-1);
         });
