@@ -19,5 +19,6 @@
   "tests/spec/plugin-spec.js",
   "tests/spec/entity-spec.js",
   "tests/spec/renderable-spec.js",
-  "tests/spec/font-spec.js"
+  "tests/spec/font-spec.js",
+  "tests/spec/bitmapfontdata-spec.js"
 ]

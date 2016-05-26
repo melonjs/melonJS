@@ -5,66 +5,60 @@
  *
  * Font / Bitmap font
  *
- * ASCII Table
- * http://www.asciitable.com/
- * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
- *
  * -> first char " " 32d (0x20);
  */
 (function () {
     /**
-     * a bitpmap font object
+     * a bitmap font object
      * @class
-     * @extends me.Font
+     * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {String} font font name
-     * @param {Number|Object} size either a number value, or an object like { x : 16, y : 16 }
+     * @param {Image} the image object for the font. Should be retrieved from the loader
      * @param {Number} [scale=1.0]
-     * @param {Number} [firstChar=0x20] charcode for the first character in the font sheet. Default is the space character.
+     * @param {String} [textAlign=left]
+     * @param {String} [textBaseline=top]
+     * @example
+     * // Use me.loader.preload or me.loader.load to load assets
+     * me.loader.preload([
+     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     * { name: "arial", type: "image" src: "data/font/arial.png" },
+     * ])
+     * // Then create an instance of your bitmap font:
+     * var myFont = new me.BitmapFont(new me.BitmapFontData(me.loader.getBinary("arial")), me.loader.getImage("arial"));
+     * // And draw it inside your Renderable, just like me.Font
+     * myFont.draw(renderer, "Hello!", 0, 0);
      */
-    me.BitmapFont = me.Font.extend(
+    me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
-        init : function (font, size, scale, firstChar) {
+        init : function (data, fontImage, scale, textAlign, textBaseline) {
             /** @ignore */
             // scaled font size;
-            this.sSize = new me.Vector2d();
+            this.sSize = me.pool.pull("me.Vector2d", 0, 0);
 
-            // #char per row
+            this.fontImage = fontImage;
+
+            /**
+             * The instance of me.BitmapFontData
+             * @type {me.BitmapFontData}
+             * @name bitmapFontData
+             * @memberOf me.BitmapFont
+             */
+            this.bitmapFontData = data;
+            this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
+
             this.charCount = 0;
-            // font name and type
-            this._super(me.Font, "init", [font, size.x || size, "#000000"]);
-            // first char in the ascii table
-            this.firstChar = firstChar || 0x20;
-
-            // load the font metrics
-            this.loadFontMetrics(font, size);
+            this._super(me.Renderable, "init", [0, 0, 0, 0, 0, 0]);
 
             // set a default alignement
-            this.textAlign = "left";
-            this.textBaseline = "top";
+            this.textAlign = textAlign || "left";
+            this.textBaseline = textBaseline || "top";
+            this.lineHeight = 1;
             // resize if necessary
             if (scale) {
                 this.resize(scale);
             }
-        },
-
-        /**
-         * Load the font metrics
-         * @ignore
-         */
-        loadFontMetrics : function (font, size) {
-            this.font = me.loader.getImage(font);
-
-            // some cheap metrics
-            this.fontSize.x = size.x || size;
-            this.fontSize.y = size.y || this.font.height;
-            this.sSize.copy(this.fontSize);
-            this.height = this.sSize.y;
-
-            // #char per row
-            this.charCount = ~~(this.font.width / this.fontSize.x);
         },
 
         /**
@@ -91,11 +85,28 @@
          * @param {Number} scale ratio
          */
         resize : function (scale) {
-            // updated scaled Size
-            this.sSize.setV(this.fontSize);
-            this.sSize.x *= scale;
-            this.sSize.y *= scale;
-            this.height = this.sSize.y;
+            this.fontScale.set(scale, scale);
+        },
+
+        /**
+         * Measures a single line of text, does not account for \n
+         * @name measureTextLineWidth
+         * @memberOf me.BitmapFont
+         * @function
+         * @param {String} text
+         * @returns {Number} the calculated width
+         */
+        measureTextWidth : function(text) {
+            var characters = text.split("");
+            var width = 0;
+            var lastGlyph = null;
+            for (var i = 0; i < characters.length; i++) {
+                var ch = characters[i].charCodeAt(0);
+                var glyph = this.bitmapFontData.glyphs[ch];
+                width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0) * this.fontScale.x);
+            }
+
+            return width;
         },
 
         /**
@@ -103,20 +114,20 @@
          * @name measureText
          * @memberOf me.BitmapFont
          * @function
-         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
-         * @return {Object} an object with two properties: `width` and `height`, defining the output dimensions
+         * @returns {Object} an object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (renderer, text) {
+        measureText : function (text) {
             var strings = ("" + text).split("\n");
-
-            this.height = this.width = 0;
-
+            var width = 0;
+            var height = 0;
+            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                this.width = Math.max((strings[i].trimRight().length * this.sSize.x), this.width);
-                this.height += this.sSize.y * this.lineHeight;
+                width = Math.max(this.measureTextWidth(strings[i]), width);
+                height += stringHeight;
             }
-            return {width: this.width, height: this.height};
+
+            return {width: width, height: height * this.fontScale.y};
         },
 
         /**
@@ -132,7 +143,7 @@
         draw : function (renderer, text, x, y) {
             var strings = ("" + text).split("\n");
             var lX = x;
-            var height = this.sSize.y * this.lineHeight;
+            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight * this.fontScale.y;
 
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
@@ -144,14 +155,14 @@
                 x = lX;
                 var string = strings[i].trimRight();
                 // adjust x pos based on alignment value
-                var width = string.length * this.sSize.x;
+                var stringWidth = this.measureTextWidth(string);
                 switch (this.textAlign) {
                     case "right":
-                        x -= width;
+                        x -= stringWidth;
                         break;
 
                     case "center":
-                        x -= width * 0.5;
+                        x -= stringWidth * 0.5;
                         break;
 
                     default :
@@ -161,36 +172,40 @@
                 // adjust y pos based on alignment value
                 switch (this.textBaseline) {
                     case "middle":
-                        y -= height * 0.5;
+                        y -= stringHeight * 0.5;
                         break;
 
                     case "ideographic":
                     case "alphabetic":
                     case "bottom":
-                        y -= height;
+                        y -= stringHeight;
                         break;
 
                     default :
                         break;
                 }
 
+                // x *= this.fontScale.x;
+                // y *= this.fontScale.y;
+
                 // draw the string
+                var lastGlyph = null;
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
-                    var idx = string.charCodeAt(c) - this.firstChar;
-                    if (idx >= 0) {
-                        // draw it
-                        renderer.drawImage(this.font,
-                            this.fontSize.x * (idx % this.charCount),
-                            this.fontSize.y * ~~(idx / this.charCount),
-                            this.fontSize.x, this.fontSize.y,
-                            ~~x, ~~y,
-                            this.sSize.x, this.sSize.y);
-                    }
-                    x += this.sSize.x;
+                    var ch = string.charCodeAt(c);
+                    var glyph = this.bitmapFontData.glyphs[ch];
+
+                    // draw it
+                    renderer.drawImage(this.fontImage,
+                        glyph.src.x, glyph.src.y,
+                        glyph.width, glyph.height,
+                        ~~x, ~~y + glyph.offset.y * this.fontScale.y,
+                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
+                    x += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
+                    lastGlyph = glyph;
                 }
                 // increment line
-                y += height;
+                y += stringHeight;
             }
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
