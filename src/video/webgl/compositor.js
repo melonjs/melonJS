@@ -201,7 +201,7 @@
         setProjection : function (w, h) {
             this.flush();
             this.gl.viewport(0, 0, w, h);
-            this.uMatrix.set(
+            this.uMatrix.setTransform(
                 2 / w,  0,      0,
                 0,      -2 / h, 0,
                 -1,     1,      1
@@ -331,10 +331,10 @@
                 v3 = this.v[3].set(x + w, y + h);
 
             if (!m.isIdentity()) {
-                m.vectorMultiply(v0);
-                m.vectorMultiply(v1);
-                m.vectorMultiply(v2);
-                m.vectorMultiply(v3);
+                m.transformVector(v0);
+                m.transformVector(v1);
+                m.transformVector(v2);
+                m.transformVector(v3);
             }
 
             // Array index computation
@@ -445,7 +445,7 @@
             var j = 0;
             for (var i = 0; i < points.length; i++) {
                 if (!this.matrix.isIdentity()) {
-                    this.matrix.vectorMultiply(points[i]);
+                    this.matrix.transformVector(points[i]);
                 }
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;

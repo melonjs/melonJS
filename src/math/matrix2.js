@@ -26,7 +26,7 @@
                 this.copy(a);
             }
             else if (arguments.length === 9) {
-                this.set(a, b, c, d, e, f, g, h, i);
+                this.setTransform(a, b, c, d, e, f, g, h, i);
             }
             else {
                 this.identity();
@@ -43,7 +43,7 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         identity : function () {
-            this.set(
+            this.setTransform(
                 1, 0, 0,
                 0, 1, 0,
                 0, 0, 1
@@ -54,7 +54,7 @@
 
         /**
          * set the matrix to the specified value
-         * @name set
+         * @name setTransform
          * @memberOf me.Matrix2d
          * @function
          * @param {Number} aX
@@ -68,7 +68,7 @@
          * @param {Number} cW
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
-        set : function () {
+        setTransform : function () {
             var a = this.val;
 
             a[0] = arguments[0];
@@ -89,11 +89,11 @@
          * @name copy
          * @memberOf me.Matrix2d
          * @function
-         * @param {me.Matrix2d} b the matrix object to copy from
+         * @param {me.Matrix2d} m the matrix object to copy from
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         copy : function (b) {
-            this.val.set(b.val);
+            this.val.setTransform(b.val);
             return this;
         },
 
@@ -129,11 +129,16 @@
             return this;
         },
 
-        /**
-         * Multiply this matrix into a vector
-         * @ignore
-         */
-        vectorMultiply : function (v) {
+
+       /**
+        * Transforms the given vector according to this matrix.
+        * @name transformVector
+        * @memberOf me.Matrix2d
+        * @function
+        * @param {me.Vector2d} vector the vector object to be transformed
+        * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+        **/
+        transformVector : function (v) {
             var a = this.val,
                 x = v.x,
                 y = v.y;
@@ -154,14 +159,52 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
-            var a = this.val;
+            var a = this.val,
+               _x = x,
+               _y = typeof(y) === "undefined" ? _x : y;
 
-            a[0] *= x;
-            a[1] *= x;
-            a[3] *= y;
-            a[4] *= y;
+            a[0] *= _x;
+            a[1] *= _x;
+            a[3] *= _y;
+            a[4] *= _y;
 
             return this;
+        },
+
+        /**
+         * adds a 2D scaling transformation.
+         * @name scaleV
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Vector2d} vector scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleV : function (v) {
+            return this.scale(v.x, v.y);
+        },
+
+        /**
+         * specifies a 2D scale operation using the [sx, 1] scaling vector
+         * @name scaleX
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {Number} x x scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleX : function (x) {
+            return this.scale(x, 1);
+        },
+
+        /**
+         * specifies a 2D scale operation using the [1,sy] scaling vector
+         * @name scaleY
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {Number} y y scaling vector
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        scaleY : function (y) {
+            return this.scale(1, y);
         },
 
         /**
