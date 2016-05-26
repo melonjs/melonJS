@@ -124,7 +124,7 @@
             this.pos.y += this.vel.y * skew;
 
             // Update particle transform
-            this.transform.set(
+            this.transform.setTransform(
                 scale, 0, 0,
                 0, scale, 0,
                 ~~this.pos.x, ~~this.pos.y, 1
