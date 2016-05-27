@@ -25,7 +25,7 @@
      * { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapFont(new me.BitmapFontData(me.loader.getBinary("arial")), me.loader.getImage("arial"));
+     * var myFont = new me.BitmapFont(me.loader.getBinary("arial"), me.loader.getImage("arial"));
      * // And draw it inside your Renderable, just like me.Font
      * myFont.draw(renderer, "Hello!", 0, 0);
      */
@@ -45,7 +45,7 @@
              * @name bitmapFontData
              * @memberOf me.BitmapFont
              */
-            this.bitmapFontData = data;
+            this.bitmapFontData = new me.BitmapFontData(data);
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
 
             this.charCount = 0;
