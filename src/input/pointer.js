@@ -749,6 +749,9 @@
         } else {
             handlers.callbacks[eventType].remove(callback);
         }
+        if (Object.keys(handlers.callbacks).length === 0) {
+            evtHandlers.delete(region);
+        }
     };
 
     /**
