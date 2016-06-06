@@ -39,8 +39,12 @@
             this.lastflipX = false;
             this.lastflipY = false;
 
-            this.flipX(!!settings.flipX);
-            this.flipY(!!settings.flipY);
+            if (typeof (settings.flipX) !== "undefined") {
+                this.flipX(!!settings.flipX);
+            }
+            if (typeof (settings.flipY) !== "undefined") {
+                this.flipY(!!settings.flipY);
+            }
 
             // current frame texture offset
             /**
