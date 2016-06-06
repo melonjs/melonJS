@@ -89,14 +89,17 @@
             // sprite moves in and out of the viewport
             this.isSprite = true;
 
+            // set the proper image/texture to use
             var image = settings.image;
 
-            if (typeof (settings.region) !== "undefined") {
-                if ((typeof (image) === "object") && image.getRegion) {
+            if (image instanceof me.CanvasRenderer.prototype.Texture) {
+                // use the texture from the texture Atlas
+                this.image = image.getTexture();
+                // check for defined region
+                if (typeof (settings.region) !== "undefined") {
                     // use a texture atlas
                     var region = image.getRegion(settings.region);
                     if (region) {
-                        this.image = image.getTexture();
                         // set the sprite offset within the texture
                         this.offset.setV(region.offset);
                         // set angle if defined
@@ -107,12 +110,9 @@
                         // throw an error
                         throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
                     }
-                } else {
-                    // throw an error
-                    throw new me.Renderable.Error("Texture - invalid texture atlas : " + image);
                 }
             } else {
-               // use a standard image
+               // standard image
                this.image = me.utils.getImage(image);
             }
 
