@@ -93,7 +93,7 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         copy : function (b) {
-            this.val.setTransform(b.val);
+            this.val.set(b.val);
             return this;
         },
 
