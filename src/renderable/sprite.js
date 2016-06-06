@@ -260,41 +260,47 @@
                     return;
                 }
             }
-
             // save global alpha
             var alpha = renderer.globalAlpha();
+            // sprite alpha value
+            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
+
             var w = this.width, h = this.height;
-
-            // calculate pixel pos of the anchor point
-            var ax = ~~( 0.5 + w * this.anchorPoint.x),
-                ay = ~~( 0.5 + h * this.anchorPoint.y);
-
-            var _hasTransform = !this.transform.isIdentity();
-
-            // sprite alpha value
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // save context
             renderer.save();
 
-            // translate to the defined anchor point
-            renderer.translate(-ax, -ay);
+            // calculate pixel pos of the anchor point
+            var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
+            xpos -= ax;
+            ypos -= ay;
 
-            if (_hasTransform || this._sourceAngle !== 0) {
-                // apply any defined transformation
-                if (_hasTransform) {
-                  renderer.transform(this.transform);
+            var _isTransformed = !this.transform.isIdentity();
+
+            if (_isTransformed || (this._sourceAngle !== 0)) {
+
+                // translate to the defined anchor point
+                xpos += ax;
+                ypos += ay;
+                renderer.translate(xpos, ypos);
+
+                if (_isTransformed) {
+                    renderer.transform(this.transform);
                 }
 
                 // remove image's TexturePacker/ShoeBox rotation
                 if (this._sourceAngle !== 0) {
+                    renderer.translate(-(xpos+ax), -(ypos+ay));
                     renderer.rotate(this._sourceAngle);
-                    renderer.translate(-h, 0);
-                    w = h;
+                    xpos -= this.height;
+                    w = this.height;
                     h = this.width;
+                } else {
+                    xpos = -ax;
+                    ypos = -ay;
                 }
             }
 
