@@ -16,8 +16,8 @@
      * @constructor
      * @param {Image} the image object for the font. Should be retrieved from the loader
      * @param {Number} [scale=1.0]
-     * @param {String} [textAlign=left]
-     * @param {String} [textBaseline=top]
+     * @param {String} [textAlign="left"]
+     * @param {String} [textBaseline="top"]
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
@@ -103,7 +103,7 @@
             for (var i = 0; i < characters.length; i++) {
                 var ch = characters[i].charCodeAt(0);
                 var glyph = this.bitmapFontData.glyphs[ch];
-                width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0) * this.fontScale.x);
+                width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
             }
 
             return width;
@@ -199,7 +199,7 @@
                     renderer.drawImage(this.fontImage,
                         glyph.src.x, glyph.src.y,
                         glyph.width, glyph.height,
-                        ~~x, ~~y + glyph.offset.y * this.fontScale.y,
+                        ~~x, ~~(y + glyph.offset.y * this.fontScale.y),
                         glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
                     x += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
                     lastGlyph = glyph;
