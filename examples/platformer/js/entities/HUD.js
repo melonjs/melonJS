@@ -26,15 +26,15 @@ game.HUD.Container = me.Container.extend({
         this.name = "HUD";
 
         // add our child score object at position
-        this.addChild(new game.HUD.ScoreItem(-10, -40));
-        
+        this.addChild(new game.HUD.ScoreItem(-10, -20));
+
         // add our audio control object
         this.addChild(new game.HUD.AudioControl(10, 10));
-        
+
         if (!me.device.isMobile) {
             // add our fullscreen control object
             this.addChild(new game.HUD.FSControl(10 + 48 + 10, 10));
-        }   
+        }
     }
 });
 
@@ -53,21 +53,21 @@ game.HUD.FSControl = me.GUI_Object.extend({
         this.setOpacity(0.5);
         this.anchorPoint.set(0, 0);
     },
-    
+
     /**
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
         this.setOpacity(1.0);
     },
-    
+
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
         this.setOpacity(0.5);
     },
-    
+
     /**
      * function called when the object is clicked on
      */
@@ -88,36 +88,36 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     /**
      * constructor
      */
-    init: function(x, y) {        
+    init: function(x, y) {
         this._super(me.GUI_Object, "init", [ x, y, {
             image: game.texture,
             region : "shadedDark13.png" // ON by default
         } ]);
-        
+
         // offset of the two used images
         this.offset_on = game.texture.getRegion("shadedDark13.png").offset;
         this.offset_off = game.texture.getRegion("shadedDark15.png").offset;
-        
+
         this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
-        
+
         this.isMute = false;
     },
-    
+
     /**
      * function called when the pointer is over the object
      */
     onOver : function (/* event */) {
         this.setOpacity(1.0);
     },
-    
+
     /**
      * function called when the pointer is leaving the object area
      */
     onOut : function (/* event */) {
         this.setOpacity(0.5);
     },
-    
+
     /**
      * function called when the object is clicked on
      */
@@ -155,9 +155,7 @@ game.HUD.ScoreItem = me.Renderable.extend({
         ]);
 
         // create a font
-        this.font = new me.BitmapFont("atascii", {x:24});
-        this.font.alignText = "bottom";
-        this.font.set("right", 1.6);
+        this.font = new me.BitmapFont(me.loader.getBinary('xolo12'), me.loader.getImage('xolo12'), 4.0, "right", "bottom");
 
         // local copy of the global score
         this.score = -1;

@@ -48,5 +48,13 @@ game.resources = [
      */
     // texturePacker
     { name: "texture",         type: "json",   src: "data/img/texture.json" },
-    { name: "texture",         type: "image",  src: "data/img/texture.png" }
+    { name: "texture",         type: "image",  src: "data/img/texture.png" },
+
+    /* Bitmap Font
+    * @example
+    * { name: "example_fnt", type: "image", src: "data/img/example_fnt.png" },
+    * { name: "example_fnt", type: "binary", src: "data/img/example_fnt.fnt" },
+    */
+    { name: "xolo12", type:"image", src: "data/img/xolo12.png" },
+    { name: "xolo12", type:"binary", src: "data/img/xolo12.fnt"}
 ];
