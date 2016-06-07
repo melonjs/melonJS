@@ -128,7 +128,7 @@ me.BitmapFontData = me.Object.extend({
 
         for (var i = 4; i < lines.length; i++) {
             var line = lines[i];
-            var characterValues = line.split(/=|\s/);
+            var characterValues = line.split(/=|\s+/);
             if (!line || /^kernings/.test(line)) {
                 continue;
             }
