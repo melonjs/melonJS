@@ -7,7 +7,7 @@ var game = {
      onload: function() {
 
         // Initialize the video.
-        if (!me.video.init(640, 700, {wrapper : "screen", scale : "auto"})) {
+        if (!me.video.init(640, 480, {wrapper : "screen", scale : "auto"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -105,7 +105,7 @@ var FontTest = me.Renderable.extend ({
         this.bFont.textAlign = "right";
         for (i = 1; i < 5; i++) {
             this.bFont.setOpacity (0.2 * i);
-            this.bFont.resize(i);
+            this.bFont.resize(i * 0.75);
             this.bFont.draw(renderer, "BITMAP TEST", me.video.renderer.getWidth(), yPos );
             yPos += this.bFont.measureText("DUMMY").height;
         }
@@ -153,8 +153,42 @@ var FontTest = me.Renderable.extend ({
         this.font.textAlign = "right";
         this.font.draw(renderer, text, 200, 300);
 
-        this.drawBitmapFont(renderer, this.bFont, 0, baselines, 1.0);
-        this.drawBitmapFont(renderer, this.fancyBFont, 300, baselines, 1.2);
+        // bitmapfonts
+        // bFont  test
+        this.fancyBFont.textAlign = "right";
+        text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+        this.fancyBFont.lineHeight = 1.2;
+        this.fancyBFont.resize(1.5);
+        this.fancyBFont.draw(renderer, text, 640, 230);
+        this.fancyBFont.lineHeight = 1.0;
+
+        this.bFont.textAlign = "center";
+        var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
+        this.bFont.resize(2.5);
+        this.bFont.draw(renderer, text,  me.video.renderer.getWidth() / 2, 400);
+
+        // baseline test with bitmap font
+        var xPos = 0;
+        this.fancyBFont.textAlign = "left";
+        var baseline = 375;
+
+        // Draw the baseline
+        me.video.renderer.setColor("red");
+        me.video.renderer.strokeLine(
+            0, baseline + 0.5,
+            me.video.renderer.getWidth(), baseline + 0.5
+        );
+
+        // font baseline test
+        me.video.renderer.setColor("white");
+        this.fancyBFont.resize(1.275);
+        for (var i = 0; i < baselines.length; i++) {
+            text = baselines[i];
+            this.fancyBFont.textBaseline = baselines[i];
+            this.fancyBFont.draw(renderer, text, xPos, baseline);
+            xPos += this.fancyBFont.measureText(text+"@").width;
+        }
+
 
         // restore default alignement/baseline
         this.font.textAlign = "left";
@@ -167,38 +201,7 @@ var FontTest = me.Renderable.extend ({
 
     drawBitmapFont: function (renderer, font, yOffset, baselines, scale) {
         // bFont  test
-        font.textAlign = "center";
-        var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
-        font.resize(scale);
-        font.draw(renderer, text + "\n" + text, 400, 230 + yOffset);
 
-        // bFont  test
-        font.textAlign = "right";
-        text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
-        font.lineHeight = 1.2;
-        font.draw(renderer, text, 640, 400 + yOffset);
-        font.lineHeight = 1.0;
-
-        // baseline test with bitmap font
-        var xPos = 0;
-        font.textAlign = "left";
-        var baseline = 375 + yOffset;
-
-        // Draw the baseline
-        me.video.renderer.setColor("red");
-        me.video.renderer.strokeLine(
-            0, baseline + 0.5,
-            me.video.renderer.getWidth(), baseline + 0.5
-        );
-
-        // font baseline test
-        me.video.renderer.setColor("white");
-        for (var i = 0; i < baselines.length; i++) {
-            text = baselines[i];
-            font.textBaseline = baselines[i];
-            font.draw(renderer, text, xPos, baseline);
-            xPos += font.measureText(text + "@@@").width;
-        }
     },
 
     onDeactivateEvent: function() {

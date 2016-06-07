@@ -8,6 +8,24 @@
  * -> first char " " 32d (0x20);
  */
 (function () {
+
+    /**
+     * Measures a single line of text, does not account for \n
+     * @ignore
+     */
+    var measureTextWidth = function(font, text) {
+        var characters = text.split("");
+        var width = 0;
+        var lastGlyph = null;
+        for (var i = 0; i < characters.length; i++) {
+            var ch = characters[i].charCodeAt(0);
+            var glyph = font.bitmapFontData.glyphs[ch];
+            width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * font.fontScale.x;
+        }
+
+        return width;
+    };
+
     /**
      * a bitmap font object
      * @class
@@ -88,26 +106,6 @@
             this.fontScale.set(scale, scale);
         },
 
-        /**
-         * Measures a single line of text, does not account for \n
-         * @name measureTextLineWidth
-         * @memberOf me.BitmapFont
-         * @function
-         * @param {String} text
-         * @returns {Number} the calculated width
-         */
-        measureTextWidth : function(text) {
-            var characters = text.split("");
-            var width = 0;
-            var lastGlyph = null;
-            for (var i = 0; i < characters.length; i++) {
-                var ch = characters[i].charCodeAt(0);
-                var glyph = this.bitmapFontData.glyphs[ch];
-                width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
-            }
-
-            return width;
-        },
 
         /**
          * measure the given text size in pixels
@@ -123,7 +121,7 @@
             var height = 0;
             var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                width = Math.max(this.measureTextWidth(strings[i]), width);
+                width = Math.max(measureTextWidth(this, strings[i]), width);
                 height += stringHeight;
             }
 
@@ -155,7 +153,7 @@
                 x = lX;
                 var string = strings[i].trimRight();
                 // adjust x pos based on alignment value
-                var stringWidth = this.measureTextWidth(string);
+                var stringWidth = measureTextWidth(this, string);
                 switch (this.textAlign) {
                     case "right":
                         x -= stringWidth;
