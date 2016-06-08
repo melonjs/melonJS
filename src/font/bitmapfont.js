@@ -200,7 +200,8 @@
                     renderer.drawImage(this.fontImage,
                         glyph.src.x, glyph.src.y,
                         glyph.width, glyph.height,
-                        ~~x, ~~(y + glyph.offset.y * this.fontScale.y),
+                        ~~(x + glyph.offset.x),
+                        ~~(y + glyph.offset.y * this.fontScale.y),
                         glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
                     x += (glyph.xadvance + kerning) * this.fontScale.x;
                     lastGlyph = glyph;
