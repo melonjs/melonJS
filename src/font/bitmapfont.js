@@ -20,7 +20,9 @@
         for (var i = 0; i < characters.length; i++) {
             var ch = characters[i].charCodeAt(0);
             var glyph = font.bitmapFontData.glyphs[ch];
-            width += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * font.fontScale.x;
+            var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+            width += (glyph.xadvance + kerning) * font.fontScale.x;
+            lastGlyph = glyph;
         }
 
         return width;
@@ -192,14 +194,16 @@
                     // calculate the char index
                     var ch = string.charCodeAt(c);
                     var glyph = this.bitmapFontData.glyphs[ch];
+                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
 
                     // draw it
                     renderer.drawImage(this.fontImage,
                         glyph.src.x, glyph.src.y,
                         glyph.width, glyph.height,
-                        ~~x, ~~(y + glyph.offset.y * this.fontScale.y),
+                        ~~(x + glyph.offset.x),
+                        ~~(y + glyph.offset.y * this.fontScale.y),
                         glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
-                    x += (glyph.xadvance + (lastGlyph ? lastGlyph.getKerning(ch) : 0)) * this.fontScale.x;
+                    x += (glyph.xadvance + kerning) * this.fontScale.x;
                     lastGlyph = glyph;
                 }
                 // increment line

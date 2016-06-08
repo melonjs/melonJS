@@ -5,7 +5,6 @@ game.resources = [
      * { name: "example", type:"image", src: "data/img/example.png" },
      */
     { name: "tileset",         type:"image",   src: "data/img/tileset.png" },
-    { name: "atascii",         type:"image",   src: "data/img/atascii_24px.png" },
     { name: "background",      type:"image",   src: "data/img/background.png" },
     { name: "clouds",          type:"image",   src: "data/img/clouds.png" },
 
@@ -55,6 +54,6 @@ game.resources = [
     * { name: "example_fnt", type: "image", src: "data/img/example_fnt.png" },
     * { name: "example_fnt", type: "binary", src: "data/img/example_fnt.fnt" },
     */
-    { name: "xolo12", type:"image", src: "data/img/xolo12.png" },
-    { name: "xolo12", type:"binary", src: "data/img/xolo12.fnt"}
+    { name: "PressStart2P", type:"image", src: "data/fnt/PressStart2P.png" },
+    { name: "PressStart2P", type:"binary", src: "data/fnt/PressStart2P.fnt"}
 ];
