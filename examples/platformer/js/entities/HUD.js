@@ -26,7 +26,7 @@ game.HUD.Container = me.Container.extend({
         this.name = "HUD";
 
         // add our child score object at position
-        this.addChild(new game.HUD.ScoreItem(-10, -20));
+        this.addChild(new game.HUD.ScoreItem(-10, -10));
 
         // add our audio control object
         this.addChild(new game.HUD.AudioControl(10, 10));
@@ -155,7 +155,7 @@ game.HUD.ScoreItem = me.Renderable.extend({
         ]);
 
         // create a font
-        this.font = new me.BitmapFont(me.loader.getBinary('xolo12'), me.loader.getImage('xolo12'), 4.0, "right", "bottom");
+        this.font = new me.BitmapFont(me.loader.getBinary('PressStart2P'), me.loader.getImage('PressStart2P'), 1.0, "right", "bottom");
 
         // local copy of the global score
         this.score = -1;
