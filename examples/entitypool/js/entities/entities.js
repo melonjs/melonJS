@@ -4,7 +4,7 @@ game.Background = me.Renderable.extend({
         this.z = 1;
     },
     draw : function(renderer) {
-        renderer.clearSurface(renderer.getContext(), "#000");
+        renderer.clearColor("#000");
     }
 });
 
