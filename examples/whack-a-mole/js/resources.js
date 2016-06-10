@@ -17,8 +17,9 @@ game.resources = [
     // more sprites
     { name: "mole", type: "image", src: "data/img/sprites/mole.png" },
 
-    // a basic ASCII font
-    { name: "atascii", type:"image", src: "data/img/sprites/atascii_24px.png" },
+    // bitmap font
+    { name: "PressStart2P", type:"image", src: "data/fnt/PressStart2P.png" },
+    { name: "PressStart2P", type:"binary", src: "data/fnt/PressStart2P.fnt"},
 
     // main music track
     { name: "whack", type: "audio", src: "data/bgm/" },

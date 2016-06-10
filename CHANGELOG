@@ -2,6 +2,7 @@ Version History
 ---------------
 4.0.0
 
+* Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
 * Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
 
 3.1.0
