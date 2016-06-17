@@ -25,7 +25,7 @@
             if (a instanceof me.Matrix2d) {
                 this.copy(a);
             }
-            else if (arguments.length === 9) {
+            else if (arguments.length >= 6) {
                 this.setTransform(a, b, c, d, e, f, g, h, i);
             }
             else {
@@ -57,29 +57,41 @@
          * @name setTransform
          * @memberOf me.Matrix2d
          * @function
-         * @param {Number} aX
-         * @param {Number} aY
-         * @param {Number} aW
-         * @param {Number} bX
-         * @param {Number} bY
-         * @param {Number} bW
-         * @param {Number} cX
-         * @param {Number} cY
-         * @param {Number} cW
+         * @param {Number} a
+         * @param {Number} b
+         * @param {Number} c
+         * @param {Number} d
+         * @param {Number} e
+         * @param {Number} f
+         * @param {Number} [g=0]
+         * @param {Number} [h=0]
+         * @param {Number} [i=1]
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         setTransform : function () {
             var a = this.val;
 
-            a[0] = arguments[0];
-            a[1] = arguments[1];
-            a[2] = arguments[2];
-            a[3] = arguments[3];
-            a[4] = arguments[4];
-            a[5] = arguments[5];
-            a[6] = arguments[6];
-            a[7] = arguments[7];
-            a[8] = arguments[8];
+            if (arguments.length === 9) {
+                a[0] = arguments[0]; // a
+                a[1] = arguments[1]; // b
+                a[2] = arguments[2]; // c
+                a[3] = arguments[3]; // d
+                a[4] = arguments[4]; // e
+                a[5] = arguments[5]; // f
+                a[6] = arguments[6]; // g
+                a[7] = arguments[7]; // h
+                a[8] = arguments[8]; // i
+            } else if (arguments.length === 6) {
+                a[0] = arguments[0]; // a
+                a[1] = arguments[2]; // c
+                a[2] = arguments[4]; // e
+                a[3] = arguments[1]; // b
+                a[4] = arguments[3]; // d
+                a[5] = arguments[5]; // f
+                a[6] = 0; // g
+                a[7] = 0; // h
+                a[8] = 1; // i
+            }
 
             return this;
         },
