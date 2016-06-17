@@ -284,10 +284,6 @@
                     return;
                 }
             }
-            // save global alpha
-            var alpha = renderer.globalAlpha();
-            // sprite alpha value
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
 
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
@@ -296,6 +292,9 @@
 
             // save context
             renderer.save();
+
+            // sprite alpha value
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             // calculate pixel pos of the anchor point
             var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
@@ -338,9 +337,6 @@
 
             // restore context
             renderer.restore();
-
-            // restore global alpha
-            renderer.setGlobalAlpha(alpha);
         }
     });
 
