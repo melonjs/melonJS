@@ -285,10 +285,8 @@
 
                 // draw the renderable's anchorPoint at the entity's anchor point
                 // the entity's anchor point is a scale from body position to body width/height
-                var x = ~~( 0.5 + this.pos.x + this.body.pos.x +
-                    (this.anchorPoint.x * this.body.width));
-                var y = ~~( 0.5 + this.pos.y + this.body.pos.y +
-                    (this.anchorPoint.y * this.body.height));
+                var x = ~~( 0.5 + this._bounds.pos.x + (this.anchorPoint.x * this._bounds.width));
+                var y = ~~( 0.5 + this._bounds.pos.y + (this.anchorPoint.y * this._bounds.height));
 
                 renderer.translate(x, y);
                 this.renderable.draw(renderer);
