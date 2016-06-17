@@ -266,9 +266,11 @@
             }
 
             // clamp position vector to pixel grid
-            var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
+            var xpos = ~~this.pos.x,
+                ypos = ~~this.pos.y;
 
-            var w = this.width, h = this.height;
+            var w = this.width,
+                h = this.height;
 
             // save context
             renderer.save();
@@ -276,35 +278,24 @@
             // sprite alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-            // calculate pixel pos of the anchor point
-            var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-            xpos -= ax;
-            ypos -= ay;
+            // apply the renderable transformation matrix
+            if (!this.transform.isIdentity()) {
+                renderer.transform(this.transform);
+            }
 
-            var _isTransformed = !this.transform.isIdentity();
+            // translate to the defined anchor point
+            renderer.translate(
+                - ( w * this.anchorPoint.x ),
+                - ( h * this.anchorPoint.y )
+            );
 
-            if (_isTransformed || (this._sourceAngle !== 0)) {
-
-                // translate to the defined anchor point
-                xpos += ax;
-                ypos += ay;
-                renderer.translate(xpos, ypos);
-
-                if (_isTransformed) {
-                    renderer.transform(this.transform);
-                }
-
-                // remove image's TexturePacker/ShoeBox rotation
-                if (this._sourceAngle !== 0) {
-                    renderer.translate(-(xpos+ax), -(ypos+ay));
-                    renderer.rotate(this._sourceAngle);
-                    xpos -= this.height;
-                    w = this.height;
-                    h = this.width;
-                } else {
-                    xpos = -ax;
-                    ypos = -ay;
-                }
+            // remove image's TexturePacker/ShoeBox rotation
+            if (this._sourceAngle !== 0) {
+                renderer.translate(-xpos, -ypos);
+                renderer.rotate(this._sourceAngle);
+                xpos -= this.height;
+                w = this.height;
+                h = this.width;
             }
 
             renderer.drawImage(
@@ -319,5 +310,4 @@
             renderer.restore();
         }
     });
-
 })();
