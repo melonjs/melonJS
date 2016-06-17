@@ -213,7 +213,7 @@
             else if (navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
-            else if (me.device.touch) { //  `touch****` events for iOS/Android devices
+            else if (me.device.touch && me.device.isMobile) { //  `touch****` events for iOS/Android devices
                 activeEventList = touchEventList;
             }
             else { // Regular Mouse events
