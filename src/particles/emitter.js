@@ -412,17 +412,25 @@
         },
 
         /**
-         * returns a random point inside the bounds for this emitter
-         * @name getRandomPoint
+         * returns a random point inside the bounds x axis of this emitter
+         * @name getRandomPointX
          * @memberOf me.ParticleEmitter
          * @function
-         * @return {me.Vector2d} new vector
+         * @return {Number}
          */
-        getRandomPoint: function () {
-            var vector = this.pos.clone();
-            vector.x += (0).randomFloat(this.width);
-            vector.y += (0).randomFloat(this.height);
-            return vector;
+        getRandomPointX: function () {
+            return this.pos.x + (0).randomFloat(this.width);
+        },
+
+        /**
+         * returns a random point inside the bounds y axis of this emitter
+         * @name getRandomPointY
+         * @memberOf me.ParticleEmitter
+         * @function
+         * @return {Number}
+         */
+        getRandomPointY: function () {
+            return this.pos.y + (0).randomFloat(this.height);
         },
 
         /**

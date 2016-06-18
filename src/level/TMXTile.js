@@ -43,6 +43,8 @@
              * @ignore
              */
             this.transform = null;
+
+            // call the parent constructor
             this._super(me.Rect, "init", [x * tileset.tilewidth, y * tileset.tileheight, tileset.tilewidth, tileset.tileheight]);
 
             // Tile col / row pos
@@ -101,13 +103,14 @@
         createTransform : function () {
             if (this.transform === null) {
                 this.transform = new me.Matrix2d();
+            } else {
+                // reset the matrix
+                this.transform.identity();
             }
-            // reset the matrix (in case it was already defined)
-            this.transform.identity();
-            var a = this.transform.val;
+
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.set(
+                this.transform.setTransform(
                     0, 1, 0,
                     1, 0, 0,
                     0, 0, 1
@@ -119,16 +122,14 @@
                     (this.flippedAD ? 0 : this.width),
                     (this.flippedAD ? this.height : 0)
                 );
-                a[0] *= -1;
-                a[3] *= -1;
+                this.transform.scaleX(-1);
             }
             if (this.flippedY) {
                 this.transform.translate(
                     (this.flippedAD ? this.width : 0),
                     (this.flippedAD ? 0 : this.height)
                 );
-                a[1] *= -1;
-                a[4] *= -1;
+                this.transform.scaleY(-1);
             }
         },
 
