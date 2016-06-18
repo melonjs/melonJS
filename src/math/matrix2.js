@@ -20,13 +20,13 @@
     /** @scope me.Matrix2d.prototype */    {
 
         /** @ignore */
-        init : function (a, b, c, d, e, f, g, h, i) {
+        init : function () {
             this.val = new Float32Array(9);
-            if (a instanceof me.Matrix2d) {
-                this.copy(a);
+            if (arguments.length && arguments[0] instanceof me.Matrix2d) {
+                this.copy(arguments[0]);
             }
             else if (arguments.length >= 6) {
-                this.setTransform(a, b, c, d, e, f, g, h, i);
+                this.setTransform.apply(this, arguments);
             }
             else {
                 this.identity();
