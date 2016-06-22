@@ -163,33 +163,12 @@
                 renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
             }
 
-            // AD flag is never set for Tile Object, use the given rotation instead
-            if (typeof(settings) !== "undefined") {
-                var angle = settings.rotation || 0;
-                if (angle !== 0) {
-                    renderable._sourceAngle += angle;
-                    // translate accordingly
-                    switch (angle) {
-                        case Math.PI:
-                            renderable.translate(0, this.height * 2);
-                            break;
-                        case Math.PI / 2 :
-                            renderable.translate(this.width, this.height);
-                            break;
-                        case -(Math.PI / 2) :
-                            renderable.translate(-this.width, this.height);
-                            break;
-                        default :
-                            // this should not happen
-                            break;
-                    }
-                }
-            }
-
             // any H/V flipping to apply?
-            if (this.flipped === true) {
-                renderable.flipX(this.flippedX);
-                renderable.flipY(this.flippedY);
+            if (this.flippedX) {
+                renderable.transform.scaleX(-1);
+            }
+            if (this.flippedY) {
+                renderable.transform.scaleY(-1);
             }
 
             return renderable;
