@@ -680,9 +680,21 @@
      * </ul>
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
+     * Returning `false` from the defined callback will prevent the event to be propagated to other objects
      * @example
-     * // register on the 'pointerdown' event
-     * me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
+     *  // onActivate function
+     *  onActivateEvent: function () {
+     *     // register on the 'pointerdown' event
+     *     me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
+     *  },
+     *
+     *  // pointerDown event callback
+     *  pointerDown: function (event) {
+     *    // do something
+     *    ....
+     *    // don"t propagate the event to other objects
+     *    return false;
+     *  },
      */
     api.registerPointerEvent = function (eventType, region, callback) {
         // make sure the mouse/touch events are initialized
