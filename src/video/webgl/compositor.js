@@ -331,10 +331,10 @@
                 v3 = this.v[3].set(x + w, y + h);
 
             if (!m.isIdentity()) {
-                m.transformVector(v0);
-                m.transformVector(v1);
-                m.transformVector(v2);
-                m.transformVector(v3);
+                m.multiplyVector(v0);
+                m.multiplyVector(v1);
+                m.multiplyVector(v2);
+                m.multiplyVector(v3);
             }
 
             // Array index computation
@@ -445,7 +445,7 @@
             var j = 0;
             for (var i = 0; i < points.length; i++) {
                 if (!this.matrix.isIdentity()) {
-                    this.matrix.transformVector(points[i]);
+                    this.matrix.multiplyVector(points[i]);
                 }
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;
