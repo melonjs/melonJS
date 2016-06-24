@@ -61,19 +61,19 @@
             ];
 
             /**
-             * The global matrix. Used for transformations on the overall scene
-             * @name globalMatrix
-             * @type me.Matrix3d
+             * The current transformation matrix used for transformations on the overall scene
+             * @name currentTransform
+             * @type me.Matrix2d
              * @memberOf me.WebGLRenderer
              */
-            this.globalMatrix = new me.Matrix2d();
+            this.currentTransform = new me.Matrix2d();
 
             // Create a compositor
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
             this.compositor = new Compositor(
                 gl,
-                this.globalMatrix,
-                this.globalColor
+                this.currentTransform,
+                this.currentColor
             );
 
             // Create a texture cache
@@ -217,10 +217,10 @@
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearColor : function (col, opaque) {
-            var color = this.globalColor.clone();
-            var matrix = this.globalMatrix.clone();
-            this.globalColor.copy(col);
-            this.globalMatrix.identity();
+            var color = this.currentColor.clone();
+            var matrix = this.currentTransform.clone();
+            this.currentColor.copy(col);
+            this.currentTransform.identity();
 
             if (opaque) {
                 this.compositor.clear();
@@ -229,8 +229,8 @@
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
 
-            this.globalMatrix.copy(matrix);
-            this.globalColor.copy(color);
+            this.currentTransform.copy(matrix);
+            this.currentColor.copy(color);
             me.pool.push(color);
         },
 
@@ -246,10 +246,10 @@
          * @param {Number} height The rectangle's height.
          */
         clearRect : function (x, y, width, height) {
-            var color = this.globalColor.clone();
-            this.globalColor.copy("#0000");
+            var color = this.currentColor.clone();
+            this.currentColor.copy("#0000");
             this.fillRect(x, y, width, height);
-            this.globalColor.copy(color);
+            this.currentColor.copy(color);
             me.pool.push(color);
         },
 
@@ -419,7 +419,7 @@
          * @function
          */
         resetTransform : function () {
-            this.globalMatrix.identity();
+            this.currentTransform.identity();
         },
 
         /**
@@ -429,7 +429,7 @@
          * @function
          */
         reset : function () {
-            this.globalMatrix.identity();
+            this.resetTransform();
             this.cache.reset();
             this.compositor.reset();
             this.createFillTexture();
@@ -468,8 +468,8 @@
         restore : function () {
             var color = this.colorStack.pop();
             me.pool.push(color);
-            this.globalColor.copy(color);
-            this.globalMatrix.copy(this._matrixStack.pop());
+            this.currentColor.copy(color);
+            this.currentTransform.copy(this._matrixStack.pop());
         },
 
         /**
@@ -480,7 +480,7 @@
          * @param {Number} angle in radians
          */
         rotate : function (angle) {
-            this.globalMatrix.rotate(angle);
+            this.currentTransform.rotate(angle);
         },
 
         /**
@@ -490,8 +490,8 @@
          * @function
          */
         save : function () {
-            this.colorStack.push(this.globalColor.clone());
-            this._matrixStack.push(this.globalMatrix.clone());
+            this.colorStack.push(this.currentColor.clone());
+            this._matrixStack.push(this.currentTransform.clone());
         },
 
         /**
@@ -503,7 +503,7 @@
          * @param {Number} y
          */
         scale : function (x, y) {
-            this.globalMatrix.scale(x, y);
+            this.currentTransform.scale(x, y);
         },
 
         /**
@@ -523,7 +523,7 @@
          * @return {Number}
          */
         setGlobalAlpha : function (a) {
-            this.globalColor.glArray[3] = a;
+            this.currentColor.glArray[3] = a;
         },
 
         /**
@@ -534,7 +534,7 @@
          * @param {me.Color|String} color css color string.
          */
         setColor : function (color) {
-            this.globalColor.copy(color);
+            this.currentColor.copy(color);
         },
 
         /**
@@ -684,14 +684,27 @@
         },
 
         /**
+         * Resets (overrides) the renderer transformation matrix to the
+         * identity one, and then apply the given transformation matrix.
+         * @name setTransform
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Matrix2d} mat2d Matrix to transform by
+         */
+        setTransform : function (mat2d) {
+            this.resetTransform();
+            this.transform(mat2d);
+        },
+
+        /**
          * Multiply given matrix into the renderer tranformation matrix
-         * @name multiplyMatrix
+         * @name transform
          * @memberOf me.WebGLRenderer
          * @function
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            this.globalMatrix.multiply(mat2d);
+            this.currentTransform.multiply(mat2d);
         },
 
         /**
@@ -703,7 +716,7 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            this.globalMatrix.translate(x, y);
+            this.currentTransform.translate(x, y);
         }
     });
 

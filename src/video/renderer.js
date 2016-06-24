@@ -45,7 +45,7 @@
             this.context = null;
 
             // global color
-            this.globalColor = new me.Color(255, 255, 255, 1.0);
+            this.currentColor = new me.Color(255, 255, 255, 1.0);
 
             return this;
         },
@@ -231,7 +231,7 @@
          * @return {Number}
          */
         globalAlpha : function () {
-            return this.globalColor.glArray[3];
+            return this.currentColor.glArray[3];
         },
 
         /**
