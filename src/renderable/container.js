@@ -109,9 +109,6 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
-
-            // reset the transformation matrix
-            this.transform.identity();
         },
 
 
