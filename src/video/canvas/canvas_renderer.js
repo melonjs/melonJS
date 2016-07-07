@@ -54,7 +54,7 @@
             this.fontContext2D = this.backBufferContext2D;
 
             // apply the default color to the 2d context
-            this.setColor(this.globalColor);
+            this.setColor(this.currentColor);
 
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
@@ -304,7 +304,7 @@
          */
         restore : function () {
             this.backBufferContext2D.restore();
-            this.globalColor.glArray[3] = this.backBufferContext2D.globalAlpha;
+            this.currentColor.glArray[3] = this.backBufferContext2D.globalAlpha;
         },
 
         /**
@@ -354,7 +354,7 @@
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha : function (a) {
-            this.backBufferContext2D.globalAlpha = this.globalColor.glArray[3] = a;
+            this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = a;
         },
 
         /**
@@ -538,8 +538,21 @@
         },
 
         /**
+         * Resets (overrides) the renderer transformation matrix to the
+         * identity one, and then apply the given transformation matrix.
+         * @name setTransform
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Matrix2d} mat2d Matrix to transform by
+         */
+        setTransform : function (mat2d) {
+            this.resetTransform();
+            this.transform(mat2d);
+        },
+
+        /**
          * Multiply given matrix into the renderer tranformation matrix
-         * @name multiplyMatrix
+         * @name transform
          * @memberOf me.CanvasRenderer
          * @function
          * @param {me.Matrix2d} mat2d Matrix to transform by

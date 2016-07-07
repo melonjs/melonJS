@@ -217,6 +217,12 @@
                 // force a first refresh when the level is loaded
                 _updateLayerFn(me.game.viewport.pos);
             });
+            // in case the level is not added to the root container,
+            // the onActivateEvent call happens after the LEVEL_LOADED event
+            // so we need to force a first update
+            if (this.ancestor._root !== true) {
+                this.updateLayer(me.game.viewport.pos);
+            }
         },
 
         /**

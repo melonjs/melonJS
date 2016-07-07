@@ -144,13 +144,13 @@
 
        /**
         * Transforms the given vector according to this matrix.
-        * @name transformVector
+        * @name multiplyVector
         * @memberOf me.Matrix2d
         * @function
         * @param {me.Vector2d} vector the vector object to be transformed
         * @return {me.Vector2d} result vector object. Useful for chaining method calls.
         **/
-        transformVector : function (v) {
+        multiplyVector : function (v) {
             var a = this.val,
                 x = v.x,
                 y = v.y;
