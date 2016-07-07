@@ -59,19 +59,26 @@ me.LevelEntity = me.Entity.extend(
             }
         }.bind(this));
 
-        // Lookup container name
-        if (typeof(this.loadLevelSettings.container) === "string") {
-            this.loadLevelSettings.container = me.game.world.getChildByName(this.loadLevelSettings.container)[0];
-        }
-
         this.body.collisionType = me.collision.types.ACTION_OBJECT;
     },
 
     /**
      * @ignore
      */
+     getlevelSettings : function () {
+         // Lookup for the container instance
+         if (typeof(this.loadLevelSettings.container) === "string") {
+             this.loadLevelSettings.container = me.game.world.getChildByName(this.loadLevelSettings.container)[0];
+         }
+         return this.loadLevelSettings;
+     },
+
+    /**
+     * @ignore
+     */
     onFadeComplete : function () {
-        me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
+
+        me.levelDirector.loadLevel(this.gotolevel, this.getlevelSettings());
         me.game.viewport.fadeOut(this.fade, this.duration);
     },
 
@@ -94,14 +101,14 @@ me.LevelEntity = me.Entity.extend(
                         this.onFadeComplete.bind(this));
             }
         } else {
-            me.levelDirector.loadLevel(this.gotolevel, this.loadLevelSettings);
+            me.levelDirector.loadLevel(this.gotolevel, this.getlevelSettings());
         }
     },
 
     /** @ignore */
     onCollision : function () {
         if (this.name === "levelEntity") {
-            this.goTo();
+            this.goTo.apply(this);
         }
         return false;
     }
