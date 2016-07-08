@@ -107,10 +107,6 @@
                     Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
                     0
                 );
-
-                // translate the display if required
-                container.transform.identity();
-                container.transform.translateV(container.pos);
             }
 
             if (setViewportBounds) {

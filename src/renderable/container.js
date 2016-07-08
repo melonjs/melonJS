@@ -749,23 +749,22 @@
          * @ignore
          */
         draw : function (renderer, rect) {
-            var isFloating = false,
-                restore = false,
-                alpha = renderer.globalAlpha();
+            var isFloating = false;
 
             this.drawCount = 0;
 
-            if (this.transform.isIdentity()) {
-                renderer.translate(this.pos.x, this.pos.y);
-            }
-            else {
-                restore = true;
-                renderer.save();
+            // save the global context
+            renderer.save();
+
+            // adjust position if required (e.g. canvas/window centering)
+            renderer.translate(this.pos.x, this.pos.y);
+
+            if (!this.transform.isIdentity()) {
                 renderer.transform(this.transform);
             }
 
             // apply the group opacity
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 isFloating = obj.floating;
@@ -786,14 +785,8 @@
                     this.drawCount++;
                 }
             }
-
-            if (restore) {
-                renderer.restore();
-            }
-            else {
-                renderer.translate(-this.pos.x, -this.pos.y);
-                renderer.setGlobalAlpha(alpha);
-            }
+            // restore the global context
+            renderer.restore();
         }
     });
 
