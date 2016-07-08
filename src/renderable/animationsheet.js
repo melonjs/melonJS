@@ -64,9 +64,6 @@
             // animation frame delta
             this.dt = 0;
 
-            // default animation speed (ms)
-            this.animationspeed = 100;
-
             // call the constructor
             this._super(me.Sprite, "init", [ x, y, settings ]);
 
