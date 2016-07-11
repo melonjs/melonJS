@@ -239,7 +239,7 @@
                 offset.x, offset.y,
                 this.tilewidth, this.tileheight,
                 dx, dy,
-                this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
+                this.tilewidth, this.tileheight
             );
 
             if (tmxTile.flipped)  {
