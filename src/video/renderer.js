@@ -44,6 +44,10 @@
             this.canvas = this.backBufferCanvas = c;
             this.context = null;
 
+            // default uvOffset
+            this.uvOffset = 0;
+
+
             // global color
             this.currentColor = new me.Color(255, 255, 255, 1.0);
 
