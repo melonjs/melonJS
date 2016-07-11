@@ -47,6 +47,9 @@
             // global color
             this.currentColor = new me.Color(255, 255, 255, 1.0);
 
+            // default uvOffset
+            this.uvOffset = 0;
+
             return this;
         },
 
