@@ -177,8 +177,7 @@
          * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
          * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
          * @example
-         * // the game defined ressources
-         * // to be preloaded by the loader
+         * // the game assets to be be preloaded
          * // TMX maps
          * var resources = [
          *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
@@ -189,8 +188,19 @@
          *
          * // ...
          *
-         * // load a level
+         * // load a level into the game world
          * me.levelDirector.loadLevel("a4_level1");
+         * ...
+         * ...
+         * // load a level into a specific container
+         * var levelContainer = new me.Container();
+         * me.levelDirector.loadLevel("a4_level2", {container:levelContainer});
+         * // add a simple transformation
+         * levelContainer.transform.translate(levelContainer.width / 2, levelContainer.height / 2 );
+         * levelContainer.transform.rotate(0.05);
+         * levelContainer.transform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
+         * // add it to the game world
+         * me.game.world.addChild(levelContainer);
          */
         api.loadLevel = function (levelId, options) {
             options = Object.assign({
