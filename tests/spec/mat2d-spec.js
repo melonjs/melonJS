@@ -44,7 +44,7 @@ describe("me.Matrix2d", function () {
 
     it("should translate all values properly", function () {
         var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
-        var result = "me.Matrix2d(1, 2, 0, 3, 4, 0, 16, 22, 1)";
+        var result = "me.Matrix2d(1, 2, 0, 3, 4, 0, 7, 9, 1)";
 
         matA.translate(2, 3);
 
