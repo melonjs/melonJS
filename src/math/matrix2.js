@@ -72,15 +72,15 @@
             var a = this.val;
 
             if (arguments.length === 9) {
-                a[0] = arguments[0]; // a
-                a[1] = arguments[1]; // b
-                a[2] = arguments[2]; // c
-                a[3] = arguments[3]; // d
-                a[4] = arguments[4]; // e
-                a[5] = arguments[5]; // f
-                a[6] = arguments[6]; // g
-                a[7] = arguments[7]; // h
-                a[8] = arguments[8]; // i
+                a[0] = arguments[0]; // a - m00
+                a[1] = arguments[1]; // b - m10
+                a[2] = arguments[2]; // c - m20
+                a[3] = arguments[3]; // d - m01
+                a[4] = arguments[4]; // e - m11
+                a[5] = arguments[5]; // f - m21
+                a[6] = arguments[6]; // g - m02
+                a[7] = arguments[7]; // h - m12
+                a[8] = arguments[8]; // i - m22
             } else if (arguments.length === 6) {
                 a[0] = arguments[0]; // a
                 a[1] = arguments[2]; // c
@@ -246,7 +246,7 @@
         },
 
         /**
-         * translate the matrix
+         * translate the matrix position on the horizontal and vertical axis
          * @name translate
          * @memberOf me.Matrix2d
          * @function
@@ -257,14 +257,14 @@
         translate : function (x, y) {
             var a = this.val;
 
-            a[6] += x * a[0] + y * a[3];
-            a[7] += x * a[1] + y * a[4];
+            a[6] += x;
+            a[7] += y;
 
             return this;
         },
 
         /**
-         * translate the matrix by a vector
+         * translate the matrix by a vector on the horizontal and vertical axis
          * @name translateV
          * @memberOf me.Matrix2d
          * @function
