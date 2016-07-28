@@ -368,7 +368,7 @@
                 var parentNodeHeight;
                 var parentNode = me.video.renderer.getScreenCanvas().parentNode;
                 if (typeof (parentNode) !== "undefined") {
-                    if (typeof parentNode.getBoundingClientRect === 'function') {
+                    if (typeof parentNode.getBoundingClientRect === "function") {
                         var rect = parentNode.getBoundingClientRect();
                         parentNodeWidth = rect.width || (rect.right - rect.left);
                         parentNodeHeight = rect.height || (rect.bottom - rect.top);
