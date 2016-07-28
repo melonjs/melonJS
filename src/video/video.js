@@ -369,8 +369,9 @@
                 var parentNode = me.video.renderer.getScreenCanvas().parentNode;
                 if (typeof (parentNode) !== "undefined") {
                     // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
-                    parentNodeWidth = parentNode.width;
-                    parentNodeHeight = parentNode.height;
+                    var rect = parentNode.getBoundingClientRect();
+                    parentNodeWidth = rect.width || (rect.right - rect.left);
+                    parentNodeHeight = rect.height || (rect.bottom - rect.top);
                 }
                 var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
