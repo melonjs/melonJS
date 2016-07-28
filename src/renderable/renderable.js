@@ -121,6 +121,17 @@
             this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
             /**
+             * when enabled, an object container will automatically apply any defined
+             * transformation before calling the child draw method
+             * @public
+             * @type Boolean
+             * @default false
+             * @name autoTransform
+             * @memberOf me.Renderable
+             */
+            this.autoTransform = false;
+
+            /**
              * Define the renderable opacity<br>
              * Set to zero if you do not wish an object to be drawn
              * @see me.Renderable#setOpacity

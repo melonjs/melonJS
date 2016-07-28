@@ -410,6 +410,9 @@
 
             // for displaying order
             this.pos.z = z;
+
+            // tiled default coordinates are top-left
+            this.anchorPoint.set(0, 0);
         },
 
         /** @ignore */

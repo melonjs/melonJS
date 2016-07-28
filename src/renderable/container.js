@@ -109,6 +109,9 @@
              * @memberOf me.Container
              */
             this.childBounds = this.getBounds().clone();
+
+            // container self apply any defined transformation
+            this.autoTransform = false;
         },
 
 
@@ -749,7 +752,10 @@
          * @ignore
          */
         draw : function (renderer, rect) {
-            var isFloating = false;
+            var isFloating = false,
+                hasTransform = false,
+                x = 0,
+                y = 0;
 
             this.drawCount = 0;
 
@@ -759,6 +765,7 @@
             // adjust position if required (e.g. canvas/window centering)
             renderer.translate(this.pos.x, this.pos.y);
 
+            // apply the renderable transformation matrix
             if (!this.transform.isIdentity()) {
                 renderer.transform(this.transform);
             }
@@ -767,19 +774,49 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = obj.floating;
+                isFloating = obj.floating === true;
+
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
+
+                    hasTransform = !obj.transform.isIdentity();
+
                     if (isFloating) {
                         // translate to screen coordinates
                         renderer.save();
                         renderer.resetTransform();
+                    } else if (obj.autoTransform === true) {
+
+                        // calculate the anchor point
+                        var bounds = obj.getBounds();
+                        var anchor = obj.anchorPoint;
+                        x = ~~(0.5 + (bounds.width * anchor.x ));
+                        y = ~~(0.5 + (bounds.height * anchor.y ));
+
+                        if (hasTransform) {
+                            renderer.save();
+                            obj.transform.translate(x, y);
+                            // apply the object transformation
+                            renderer.transform(obj.transform);
+                        } else {
+                            renderer.translate(x, y);
+                        }
                     }
 
                     // draw the object
                     obj.draw(renderer, rect);
 
+                    // restore the previous "state"
                     if (isFloating) {
                         renderer.restore();
+                    } else  if (obj.autoTransform === true) {
+                        if (hasTransform) {
+                            // restore the save context/global matric
+                            obj.transform.translate(-x, -y);
+                            renderer.restore();
+                        } else {
+                            // translate back
+                            renderer.translate(-x, -y);
+                        }
                     }
 
                     this.drawCount++;
