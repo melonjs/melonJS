@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.0.0-beta13
+ *  howler.js v2.0.0
  *  howlerjs.com
  *
  *  (c) 2013-2016, James Simpson of GoldFire Studios
@@ -76,6 +76,11 @@
 
       if (typeof vol !== 'undefined' && vol >= 0 && vol <= 1) {
         self._volume = vol;
+
+        // Don't update any of the nodes if we are muted.
+        if (self._muted) {
+          return self;
+        }
 
         // When using Web Audio, we just need to adjust the master gain.
         if (self.usingWebAudio) {
@@ -544,18 +549,21 @@
 
     /**
      * Play a sound or resume previous playback.
-     * @param  {String/Number} sprite Sprite name for sprite playback or sound id to continue previous.
-     * @return {Number}        Sound ID.
+     * @param  {String/Number} sprite   Sprite name for sprite playback or sound id to continue previous.
+     * @param  {Boolean} internal Internal Use: true prevents event firing.
+     * @return {Number}          Sound ID.
      */
-    play: function(sprite) {
+    play: function(sprite, internal) {
       var self = this;
-      var args = arguments;
       var id = null;
 
       // Determine if a sprite, sound id or nothing was passed
       if (typeof sprite === 'number') {
         id = sprite;
         sprite = null;
+      } else if (typeof sprite === 'string' && self._state === 'loaded' && !self._sprite[sprite]) {
+        // If the passed sprite doesn't exist, do nothing.
+        return null;
       } else if (typeof sprite === 'undefined') {
         // Use the default sound sprite (plays the full audio length).
         sprite = '__default';
@@ -606,7 +614,7 @@
       // Don't play the sound if an id was passed and it is already playing.
       if (id && !sound._paused) {
         // Trigger the play event, in order to keep iterating through queue.
-        if (!args[1]) {
+        if (!internal) {
           setTimeout(function() {
             self._emit('play', sound._id);
           }, 0);
@@ -642,7 +650,7 @@
           self._refreshBuffer(sound);
 
           // Setup the playback params.
-          var vol = (sound._muted || self._muted) ? 0 : sound._volume * Howler.volume();
+          var vol = (sound._muted || self._muted) ? 0 : sound._volume;
           node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
           sound._playStart = Howler.ctx.currentTime;
 
@@ -658,7 +666,7 @@
             self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
           }
 
-          if (!args[1]) {
+          if (!internal) {
             setTimeout(function() {
               self._emit('play', sound._id);
             }, 0);
@@ -690,7 +698,7 @@
               self._endTimers[sound._id] = setTimeout(self._ended.bind(self, sound), timeout);
             }
 
-            if (!args[1]) {
+            if (!internal) {
               self._emit('play', sound._id);
             }
           }, 0);
@@ -790,9 +798,10 @@
     /**
      * Stop playback and reset to start.
      * @param  {Number} id The sound ID (empty to stop all in group).
+     * @param  {Boolean} internal Internal Use: true prevents event firing.
      * @return {Howl}
      */
-    stop: function(id) {
+    stop: function(id, internal) {
       var self = this;
 
       // If the sound hasn't loaded, add it to the load queue to stop when capable.
@@ -843,13 +852,13 @@
               // Clean up the buffer source.
               self._cleanBuffer(sound._node);
             } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
-              sound._node.pause();
               sound._node.currentTime = sound._start || 0;
+              sound._node.pause();
             }
           }
         }
 
-        if (sound) {
+        if (sound && !internal) {
           self._emit('stop', sound._id);
         }
       }
@@ -898,7 +907,7 @@
           sound._muted = muted;
 
           if (self._webAudio && sound._node) {
-            sound._node.gain.setValueAtTime(muted ? 0 : sound._volume * Howler.volume(), Howler.ctx.currentTime);
+            sound._node.gain.setValueAtTime(muted ? 0 : sound._volume, Howler.ctx.currentTime);
           } else if (sound._node) {
             sound._node.muted = Howler._muted ? true : muted;
           }
@@ -976,7 +985,7 @@
             }
 
             if (self._webAudio && sound._node && !sound._muted) {
-              sound._node.gain.setValueAtTime(vol * Howler.volume(), Howler.ctx.currentTime);
+              sound._node.gain.setValueAtTime(vol, Howler.ctx.currentTime);
             } else if (sound._node && !sound._muted) {
               sound._node.volume = vol * Howler.volume();
             }
@@ -1040,8 +1049,8 @@
             var currentTime = Howler.ctx.currentTime;
             var end = currentTime + (len / 1000);
             sound._volume = from;
-            sound._node.gain.setValueAtTime(from * Howler.volume(), currentTime);
-            sound._node.gain.linearRampToValueAtTime(to * Howler.volume(), end);
+            sound._node.gain.setValueAtTime(from, currentTime);
+            sound._node.gain.linearRampToValueAtTime(to, end);
           }
 
           var vol = from;
@@ -1227,8 +1236,11 @@
             var duration = ((self._sprite[sound._sprite][0] + self._sprite[sound._sprite][1]) / 1000) - seek;
             var timeout = (duration * 1000) / Math.abs(sound._rate);
 
-            self._clearTimer(id[i]);
-            self._endTimers[id[i]] = setTimeout(self._ended.bind(self, sound), timeout);
+            // Start a new end timer if sound is already playing.
+            if (self._endTimers[id[i]] || !sound._paused) {
+              self._clearTimer(id[i]);
+              self._endTimers[id[i]] = setTimeout(self._ended.bind(self, sound), timeout);
+            }
 
             self._emit('rate', sound._id);
           }
@@ -1309,6 +1321,11 @@
           // Restart the playback if the sound was playing.
           if (playing) {
             self.play(id, true);
+          }
+
+          // Update the seek position for HTML5 Audio.
+          if (!self._webAudio && sound._node) {
+            sound._node.currentTime = seek;
           }
 
           self._emit('seek', id);
@@ -1415,8 +1432,16 @@
         }
       }
 
-      // Delete this sound from the cache.
-      if (cache) {
+      // Delete this sound from the cache (if no other Howl is using it).
+      var remCache = true;
+      for (i=0; i<Howler._howls.length; i++) {
+        if (Howler._howls[i]._src === self._src) {
+          remCache = false;
+          break;
+        }
+      }
+
+      if (cache && remCache) {
         delete cache[self._src];
       }
 
@@ -1568,7 +1593,7 @@
 
       // Restart the playback for HTML5 Audio loop.
       if (!self._webAudio && loop) {
-        self.stop(sound._id).play(sound._id);
+        self.stop(sound._id, true).play(sound._id);
       }
 
       // Restart this timer if on a Web Audio loop.
@@ -1818,7 +1843,7 @@
     create: function() {
       var self = this;
       var parent = self._parent;
-      var volume = (Howler._muted || self._muted || self._parent._muted) ? 0 : self._volume * Howler.volume();
+      var volume = (Howler._muted || self._muted || self._parent._muted) ? 0 : self._volume;
 
       if (parent._webAudio) {
         // Create the gain node for controlling volume (the source will connect to this).
@@ -1840,7 +1865,7 @@
         // Setup the new audio node.
         self._node.src = parent._src;
         self._node.preload = 'auto';
-        self._node.volume = volume;
+        self._node.volume = volume * Howler.volume();
 
         // Begin loading the source.
         self._node.load();
