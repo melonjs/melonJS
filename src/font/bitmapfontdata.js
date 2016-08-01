@@ -52,7 +52,7 @@ me.BitmapFontData = me.Object.extend({
     _createSpaceGlyph: function () {
         var spaceCharCode = " ".charCodeAt(0);
         var glyph = this.glyphs[spaceCharCode];
-        if (!this.glyphs[spaceCharCode]) {
+        if (!glyph) {
             glyph = me.pool.pull("me.Glyph");
             glyph.id = spaceCharCode;
             glyph.xadvance = this._getFirstGlyph().xadvance;
