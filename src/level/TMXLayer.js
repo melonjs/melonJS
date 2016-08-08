@@ -425,7 +425,7 @@
             this.staggerindex = layer.staggerindex;
 
             // layer opacity
-            var visible = typeof(layer.visible) !== "undefined" ? layer.visible : true;
+            var visible = typeof(layer.visible) !== "undefined" ? +layer.visible : 1;
             this.setOpacity(visible ? +layer.opacity : 0);
 
             // layer "real" size
