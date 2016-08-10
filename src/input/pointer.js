@@ -403,7 +403,11 @@
                             if (eventInBounds) {
 
                                 // trigger the corresponding callback
-                                if (triggerEvent(handlers, e.type, e, e.pointerId)) {
+                                var type = e.type;
+                                if (type === "wheel") {
+                                    type = "mousewheel";
+                                }
+                                if (triggerEvent(handlers, type, e, e.pointerId)) {
                                     handled = true;
                                     break;
                                 }
@@ -470,20 +474,15 @@
         /* jshint expr:true */
         if (e.target === me.video.renderer.getScreenCanvas()) {
             // create a (fake) normalized event object
-            var _event = {
-                deltaMode : 1,
-                type : "mousewheel",
-                deltaX: e.deltaX,
-                deltaY: e.deltaY,
-                deltaZ: e.deltaZ
-            };
+            updateCoordFromEvent(e);
+            e.deltaMode = 1;
             if (wheeltype === "mousewheel") {
-                _event.deltaY = - 1 / 40 * e.wheelDelta;
+                e.deltaY = - 1 / 40 * e.wheelDelta;
                 // Webkit also support wheelDeltaX
-                e.wheelDeltaX && (_event.deltaX = - 1 / 40 * e.wheelDeltaX);
+                e.wheelDeltaX && (e.deltaX = - 1 / 40 * e.wheelDeltaX);
             }
             // dispatch mouse event to registered object
-            if (dispatchEvent(_event)) {
+            if (dispatchEvent(e)) {
                 // prevent default action
                 return api._preventDefault(e);
             }
