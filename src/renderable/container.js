@@ -455,7 +455,7 @@
                 }
             }
 
-            return this._bounds;
+            return this.getBounds();
         },
 
         onActivateEvent : function () {

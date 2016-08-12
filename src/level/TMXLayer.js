@@ -486,7 +486,7 @@
             }
 
             // Resize the bounding rect
-            this.resizeBounds(this.width, this.height);
+            this.getBounds().resize(this.width, this.height);
         },
 
         // called when the layer is removed from the game world or a container

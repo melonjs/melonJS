@@ -226,8 +226,7 @@
             this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
 
             // resize the bounding box
-            this.resizeBounds(this.width * x, this.height * y);
-
+            this.getBounds().resize(this.width * x, this.height * y);
         },
 
         /**

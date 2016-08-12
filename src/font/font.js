@@ -145,7 +145,7 @@
                     !/(^".*"$)|(^'.*'$)/.test(value)
                 ) ? "\"" + value + "\"" : value;
             });
-           
+
             if (typeof size === "number") {
                 this.fontSize.y = size;
                 size += "px";
@@ -154,7 +154,7 @@
                 var CSSval =  size.match(/([-+]?[\d.]*)(.*)/);
                 this.fontSize.y = parseFloat(CSSval[1]);
                 if (CSSval[2]) {
-                    this.fontSize.y *= toPX[runits.indexOf(CSSval[2])];                    
+                    this.fontSize.y *= toPX[runits.indexOf(CSSval[2])];
                 } else {
                     // no unit define, assume px
                     size += "px";
@@ -241,7 +241,7 @@
         drawStroke : function (renderer, text, x, y) {
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
-            
+
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // draw the text
@@ -288,7 +288,7 @@
             );
 
             // update the renderable bounds
-            return this._bounds.setShape(
+            return this.getBounds().setShape(
                 ~~dx,
                 ~~dy,
                 ~~(dw + 0.5),
