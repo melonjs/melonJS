@@ -17,11 +17,11 @@ game.CapGuyEntity = me.Entity.extend({
             "capguy/walk/0005", "capguy/walk/0006",
             "capguy/walk/0007", "capguy/walk/0008"
         ]);
-        
+
         // enable this, since the entity starts off the viewport
         this.alwaysUpdate = true;
     },
-    
+
     /**
      * manage the enemy movement
      */
@@ -29,7 +29,7 @@ game.CapGuyEntity = me.Entity.extend({
 
         // just manually change the guy position
         this.pos.x += 0.3 * dt;
-        
+
         // repeat once leaving the viewport
         if (this.pos.x >= me.game.viewport.width) {
             this.pos.x = 0;
@@ -37,7 +37,7 @@ game.CapGuyEntity = me.Entity.extend({
 
         // call the parent function
         this._super(me.Entity, "update", [dt]);
-        
+
         return true;
     }
 });

@@ -206,7 +206,7 @@
             this.transform.scale(x, y);
 
             // resize the bounding box
-            this.resizeBounds(this.width * x, this.height * y);
+            this.getBounds().resize(this.width * x, this.height * y);
         },
 
         /**

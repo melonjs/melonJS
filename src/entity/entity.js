@@ -221,17 +221,6 @@
             return Math.atan2(ay, ax);
         },
 
-        /**
-         * update the bounding rect dimensions
-         * @private
-         * @name resizeBounds
-         * @memberOf me.Entity
-         * @function
-         */
-        resizeBounds : function (width, height) {
-            this._bounds.resize(width, height);
-        },
-
         /** @ignore */
         update : function (dt) {
             if (this.renderable) {
@@ -253,7 +242,7 @@
                 x + _pos.x,
                 y + _pos.y
             ]);
-            return this._bounds;
+            return this.getBounds();
         },
 
         /**
@@ -264,12 +253,13 @@
          * @function
          */
         onBodyUpdate : function (pos, w, h) {
-            this._bounds.pos.setV(this.pos).add(pos);
+            var bounds = this.getBounds();
+            bounds.pos.setV(this.pos).add(pos);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
-                this._bounds.pos.add(this.ancestor._absPos);
+                bounds.pos.add(this.ancestor._absPos);
             }
-            this._bounds.resize(w, h);
+            bounds.resize(w, h);
         },
 
         /**

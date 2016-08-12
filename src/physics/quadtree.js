@@ -280,6 +280,75 @@
         return returnObjects;
     };
 
+    /**
+     * Remove the given item from the quadtree.
+     * (this function won't recalculate the impacted node)
+     * @name remove
+     * @memberOf me.QuadTree
+     * @function
+     * @param {Object} object object to be removed
+     * @return true if the item was found and removed.
+     */
+     Quadtree.prototype.remove = function (item) {
+        var found = false;
+
+        if (typeof (item.getBounds) === "undefined") {
+            // ignore object that cannot be added in the first place
+            return false;
+        }
+
+        //if we have subnodes ...
+        if (this.nodes.length > 0) {
+            // determine to which node the item belongs to
+            var index = this.getIndex(item);
+
+            if (index !== -1) {
+                found = this.nodes[index].remove(item);
+                // trim node if empty
+                if (found && this.nodes[index].isPrunable()) {
+                    this.nodes.splice(index, 1);
+                }
+            }
+        }
+
+        if (found === false) {
+            // try and remove the item from the list of items in this node
+            if (this.objects.indexOf(item) !== -1) {
+                this.objects.remove(item);
+                found = true;
+            }
+        }
+
+        return found;
+    };
+
+    /**
+     * return true if the node is prunable
+     * @name isPrunable
+     * @memberOf me.QuadTree
+     * @function
+     * @return true if the node is prunable
+     */
+    Quadtree.prototype.isPrunable = function () {
+        return !(this.hasChildren() || (this.objects.length > 0));
+    };
+
+    /**
+     * return true if the node has any children
+     * @name hasChildren
+     * @memberOf me.QuadTree
+     * @function
+     * @return true if the node has any children
+     */
+    Quadtree.prototype.hasChildren = function () {
+        for (var i = 0; i < this.nodes.length; i = i + 1) {
+            var subnode = this.nodes[i];
+            if (subnode.length > 0 || subnode.objects.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    };
 
     /**
      * clear the quadtree

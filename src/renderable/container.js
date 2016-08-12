@@ -126,7 +126,7 @@
          * @return {me.Renderable} the added child
          */
         addChild : function (child, z) {
-            if (typeof(child.ancestor) !== "undefined") {
+            if (child.ancestor instanceof me.Container) {
                 child.ancestor.removeChildNow(child);
             }
             else {
@@ -173,7 +173,7 @@
          */
         addChildAt : function (child, index) {
             if (index >= 0 && index < this.children.length) {
-                if (typeof(child.ancestor) !== "undefined") {
+                if (child.ancestor instanceof me.Container) {
                     child.ancestor.removeChildNow(child);
                 }
                 else {
@@ -446,7 +446,7 @@
                 }
             }
 
-            return this._bounds;
+            return this.getBounds();
         },
 
         onActivateEvent : function () {

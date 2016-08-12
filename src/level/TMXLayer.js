@@ -428,7 +428,7 @@
             this.staggerindex = layer.staggerindex;
 
             // layer opacity
-            var visible = typeof(layer.visible) !== "undefined" ? layer.visible : true;
+            var visible = typeof(layer.visible) !== "undefined" ? +layer.visible : 1;
             this.setOpacity(visible ? +layer.opacity : 0);
 
             // layer "real" size
@@ -489,7 +489,7 @@
             }
 
             // Resize the bounding rect
-            this.resizeBounds(this.width, this.height);
+            this.getBounds().resize(this.width, this.height);
         },
 
         // called when the layer is removed from the game world or a container

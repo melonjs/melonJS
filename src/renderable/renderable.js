@@ -239,18 +239,6 @@
         },
 
         /**
-         * update the renderable's bounding rect dimensions
-         * @private
-         * @name resizeBounds
-         * @memberOf me.Renderable
-         * @function
-         */
-        resizeBounds : function (width, height) {
-            this._bounds.resize(width, height);
-            return this._bounds;
-        },
-
-        /**
          * set the renderable alpha channel value<br>
          * @name setOpacity
          * @memberOf me.Renderable
@@ -355,7 +343,7 @@
             return this._width;
         },
         set : function (value) {
-            this.resizeBounds(value, this._height);
+            this.getBounds().resize(value, this._height);
             this._width = value;
         },
         configurable : true
@@ -373,7 +361,7 @@
             return this._height;
         },
         set : function (value) {
-            this.resizeBounds(this._width, value);
+            this.getBounds().resize(this._width, value);
             this._height = value;
         },
         configurable : true

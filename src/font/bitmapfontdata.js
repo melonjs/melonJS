@@ -51,23 +51,28 @@ me.BitmapFontData = me.Object.extend({
      */
     _createSpaceGlyph: function () {
         var spaceCharCode = " ".charCodeAt(0);
-        if (!this.glyphs[spaceCharCode]) {
-            var glyph = me.pool.pull("me.Glyph");
+        var glyph = this.glyphs[spaceCharCode];
+        if (!glyph) {
+            glyph = me.pool.pull("me.Glyph");
             glyph.id = spaceCharCode;
             glyph.xadvance = this._getFirstGlyph().xadvance;
             this.glyphs[spaceCharCode] = glyph;
-
-            if (glyph.width === 0) {
-                glyph.width = ~~(this.padLeft + glyph.xadvance + this.padRight);
-                glyph.offset.set(-this.padLeft, 0);
-            }
-
-            this.spaceWidth = glyph.width;
         }
+
+        if (glyph.width === 0) {
+            glyph.width = ~~(this.padLeft + glyph.xadvance + this.padRight);
+            glyph.offset.set(-this.padLeft, 0);
+        }
+
+        if (glyph.height === 0) {
+            glyph.height = this._getFirstGlyph().height;
+        }
+
+        this.spaceWidth = glyph.width;
     },
 
     /**
-     * Gets the first glyph in the map
+     * Gets the first glyph in the map that is not a space character
      * @private
      * @name _getFirstGlyph
      * @memberOf me.BitmapFontData
@@ -75,7 +80,13 @@ me.BitmapFontData = me.Object.extend({
      * @returns {me.Glyph}
      */
     _getFirstGlyph: function () {
-        return this.glyphs[Object.keys(this.glyphs)[0]];
+        var keys = Object.keys(this.glyphs);
+        for (var i = 0; i < keys.length; i++) {
+            if (keys[i] > 32) {
+                return this.glyphs[keys[i]];
+            }
+        }
+        return null;
     },
 
     /**
