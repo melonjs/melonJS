@@ -11,7 +11,7 @@ declare namespace me {
     }
 
     interface ObjectStatic {
-        extend(...mixins: Array<Object|FunctionDictionary>): Object;
+        extend(...mixins: Array<Object|FunctionDictionary>): ObjectStatic;
     }
 
     interface ErrorClass {
@@ -21,6 +21,8 @@ declare namespace me {
 
     interface ErrorStatic extends ObjectStatic {
         new (message: string): ErrorClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): ErrorStatic;
     }
 
     interface ScreenObjectClass {
@@ -30,6 +32,8 @@ declare namespace me {
 
     interface ScreenObjectStatic extends ObjectStatic {
         new (): ScreenObjectClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): ScreenObjectStatic;
     }
 
     interface Vector2dErrorClass extends ErrorClass {
@@ -37,6 +41,8 @@ declare namespace me {
 
     interface Vector2dErrorStatic extends ErrorStatic {
         new (msg: string): Vector2dErrorClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): Vector2dErrorStatic;
     }
 
     interface Vector2dClass {
@@ -222,6 +228,8 @@ declare namespace me {
 
     interface ColorErrorStatic extends ErrorStatic {
         new (msg: string): ColorErrorClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): ColorErrorStatic;
     }
 
     interface ColorClass {
@@ -315,6 +323,8 @@ declare namespace me {
 
     interface ColorStatic extends ObjectStatic {
         new (r?: number|Float32Array, g?: number, b?: number, alpha?: number): ColorClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): ColorStatic;
     }
 
     interface TMXPropertiesXml {
@@ -468,6 +478,7 @@ declare namespace me {
 
     interface TileStatic extends RectStatic {
         new (x: number, y: number, gid: number, tileset: TMXTilesetClass): TileClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): TileStatic;
     }
 
     interface TMXTilesetErrorClass extends ErrorClass {
@@ -515,6 +526,7 @@ declare namespace me {
         Error: TMXTilesetErrorStatic;
 
         new (tileset: Object): TMXTilesetClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): TMXTilesetStatic;
     }
 
     interface TMXTilesetGroupClass {
@@ -571,6 +583,7 @@ declare namespace me {
 
     interface  TMXLayerStatic extends  RenderableStatic {
         new (tilewidth: number, tileheight: number, orientation: 'isometric'|'orthogonal', tilesets: TMXTilesetGroupClass, z: number): TMXLayerClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): TMXLayerStatic;
     }
 
     interface TMXTileMapClass {
@@ -607,6 +620,7 @@ declare namespace me {
 
     interface TMXTileMapStatic extends ObjectStatic {
         new (levelId: string, data: TMXXml): TMXTileMapClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): TMXTileMapStatic;
     }
 
     interface Resource {
@@ -713,6 +727,7 @@ declare namespace me {
     interface Matrix2dStatic extends ObjectStatic {
         new (mat2d?: Matrix2dClass): Matrix2dClass;
         new (values: number[]): Matrix2dClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): Matrix2dStatic;
     }
 
     interface RendererOptions {
@@ -775,6 +790,7 @@ declare namespace me {
 
     interface  RendererStatic extends ObjectStatic {
         new (canvas: HTMLCanvasElement, width: number, height: number, options: RendererOptions): RendererClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): RendererStatic;
     }
 
     interface SpriteOptions {
@@ -843,6 +859,7 @@ declare namespace me {
 
     interface SpriteStatic extends RenderableStatic {
         new (x: number, y: number, settings: AnimationSheetOptions): SpriteClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): SpriteStatic;
     }
 
     interface AnimationSheetOptions {
@@ -892,6 +909,7 @@ declare namespace me {
 
     interface AnimationSheetStatic extends SpriteStatic {
         new (x: number, y: number, settings: AnimationSheetOptions): AnimationSheetClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): AnimationSheetStatic;
     }
 
     interface CanvasRendererTextureErrorClass extends ErrorClass {
@@ -1151,6 +1169,7 @@ declare namespace me {
         Texture: CanvasRendererTextureStatic;
 
         new (canvas: HTMLCanvasElement, width: number, height: number, options: RendererOptions): CanvasRendererClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): CanvasRendererStatic;
     }
 
     interface WebGLRendererTextureErrorClass extends ErrorClass {
@@ -1222,6 +1241,7 @@ declare namespace me {
 
     interface WebGLRendererCompositorStatic extends ObjectStatic {
         new (gl: WebGLRenderingContext, matrix: Matrix2dClass, color: ColorClass): WebGLRendererCompositorClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): WebGLRendererCompositorStatic;
     }
 
     interface WebGLRendererOptions extends RendererOptions {
@@ -1440,6 +1460,7 @@ declare namespace me {
         Texture: WebGLRendererTextureClassStatic;
 
         new (canvas: HTMLCanvasElement, width: number, height: number, options: WebGLRendererOptions): WebGLRendererClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): WebGLRendererStatic;
     }
 
     interface PolygonErrorClass extends ErrorClass {
@@ -1535,6 +1556,7 @@ declare namespace me {
         Error: PolygonErrorStatic;
 
         new (x: number, y: number, points: Vector2dClass[]): PolygonClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): PolygonStatic;
     }
 
     interface LineErrorClass extends ErrorClass {
@@ -1555,6 +1577,7 @@ declare namespace me {
         Error: LineErrorStatic;
 
         new (x: number, y: number, points: Vector2dClass[]): LineClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): LineStatic;
     }
 
     interface EllipseClass {
@@ -1632,6 +1655,7 @@ declare namespace me {
 
     interface EllipseStatic extends ObjectStatic {
         new (x: number, y: number, w: number, h: number): EllipseClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): EllipseStatic;
     }
 
     interface RectClass extends PolygonClass {
@@ -1704,6 +1728,7 @@ declare namespace me {
 
     interface RectStatic extends PolygonStatic {
         new (x?: number, y?: number, width?: number, height?: number): RectClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): RectStatic;
     }
 
     interface RenderableClass extends RectClass {
@@ -1750,6 +1775,7 @@ declare namespace me {
 
     interface RenderableStatic extends RectStatic {
         new (x?: number, y?: number, width?: number, height?: number): RenderableClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): RenderableStatic;
     }
 
     interface ContainerErrorClass extends ErrorClass {
@@ -1885,6 +1911,7 @@ declare namespace me {
         Error: ContainerErrorStatic;
 
         new (x?: number, y?: number, width?: number, height?: number): ContainerClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): ContainerStatic;
     }
 
     interface LevelLoadedCallback {
@@ -1954,6 +1981,7 @@ declare namespace me {
 
     interface BodyStatic extends RectStatic {
         new (entity: EntityClass, shapes?: Array<RectClass|PolygonClass|LineClass|EllipseClass>): BodyClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): BodyStatic;
     }
 
     interface EntityOptions {
@@ -2018,6 +2046,7 @@ declare namespace me {
         Error: EntityErrorStatic;
 
         new (x: number, y: number, settings: EntityOptions): EntityClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): EntityStatic;
     }
 
     enum AXISType {
@@ -2150,6 +2179,7 @@ declare namespace me {
         };
 
         new (minX: number, minY: number, maxX: number, maxY: number): ViewportClass;
+        extend(...mixins: Array<Object|FunctionDictionary>): ViewportStatic;
     }
 
     interface HashParameters {
