@@ -792,7 +792,7 @@
         // something went wrong
       });
       ```
-
+      @ignore
       @method then
       @param {Function} onFulfilled
       @param {Function} onRejected
@@ -822,7 +822,7 @@
         // something went wrong
       });
       ```
-
+      @ignore
       @method catch
       @param {Function} onRejection
       Useful for tooling.

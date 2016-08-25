@@ -34,7 +34,8 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Image} the image object for the font. Should be retrieved from the loader
+     * @param {Object} font the font object data. Should be retrieved from the loader
+     * @param {Image} image the font image itself Should be retrieved from the loader
      * @param {Number} [scale=1.0]
      * @param {String} [textAlign="left"]
      * @param {String} [textBaseline="top"]
