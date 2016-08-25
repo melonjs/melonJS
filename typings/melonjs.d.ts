@@ -1952,12 +1952,12 @@ declare namespace me {
         /**
          * return the collision shape at the given index
          */
-        getShape(index: number):  RectClass|PolygonClass|LineClass|EllipseClass;
+        getShape(index: number):  PolygonClass|LineClass|EllipseClass;
 
         /**
          * remove the specified shape from the body shape list
          */
-        removeShape(shape: RectClass|PolygonClass|LineClass|EllipseClass): number;
+        removeShape(shape: PolygonClass|LineClass|EllipseClass): number;
 
         /**
          * remove the shape at the given index from the body shape list
