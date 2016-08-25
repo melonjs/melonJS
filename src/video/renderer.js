@@ -238,13 +238,14 @@
         },
 
         /**
-         * resizes the canvas
+         * resizes the system canvas
          * @name resize
          * @memberOf me.Renderer
          * @function
+         * @param {Number} width new width of the canvas
+         * @param {Number} height new height of the canvas
          */
-        resize : function (width, height)
-        {
+        resize : function (width, height) {
             this.backBufferCanvas.width = width;
             this.backBufferCanvas.height = height;
         },
@@ -252,7 +253,7 @@
         /**
          * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
          * (!) this might not be supported by all browsers <br>
-         * @name setImageSmoothing
+         * @name setAntiAlias
          * @memberOf me.Renderer
          * @function
          * @param {Context2d} context

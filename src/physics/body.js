@@ -282,7 +282,7 @@
          * @public
          * @function
          * @param {Number} [index=0] the shape object at the specified index
-         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
          */
         getShape : function (index) {
             return this.shapes[index || 0];
