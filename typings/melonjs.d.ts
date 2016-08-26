@@ -1993,6 +1993,8 @@ declare namespace me {
         type?: string;
         collisionMask?: number;
         shapes?: Object;
+        width: number;
+        height: number;
     }
 
     interface EntityErrorClass extends ErrorClass {
