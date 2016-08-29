@@ -2286,7 +2286,7 @@ declare namespace me {
          * @param onload function to be called when the resource is loaded
          * @param switchToLoadState automatically switch to the loading screen
          */
-        function preload(resources: Resource[], onload?: OnLoadCallback, switchToLoadState?: boolean): void;
+        function preload(resources: Resource[], onload: OnLoadCallback, switchToLoadState?: boolean): void;
 
         /**
          * unload specified resource to free memory
