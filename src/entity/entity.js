@@ -17,6 +17,8 @@
      * @param {Number} y the y coordinates of the entity object
      * @param {Object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
      * <img src="images/object_properties.png"/>
+     * @param {Number} settings.width the physical width the entity takes up in game
+     * @param {Number} settings.height the physical height the entity takes up in game
      * @param {String} [settings.name] object entity name
      * @param {String} [settings.id] object unique IDs
      * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
