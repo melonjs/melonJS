@@ -20,6 +20,7 @@
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
@@ -58,6 +59,11 @@
 
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
+
+            if (options.textureSeamFix !== false  && !this.antiAlias) {
+                // enable the tile texture seam fix with the canvas renderer
+                this.uvOffset = 1;
+            }
 
             return this;
         },

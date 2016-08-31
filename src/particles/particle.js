@@ -75,8 +75,6 @@
             // cache inverse of the expected delta time
             this._deltaInv = me.sys.fps / 1000;
 
-            this.transform = new me.Matrix2d();
-
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {

@@ -44,15 +44,6 @@
             // ADD child container child one by one to the quadtree?
 
             /**
-             * the container default transformation matrix
-             * @public
-             * @type me.Matrix2d
-             * @name transform
-             * @memberOf me.Container
-             */
-            this.transform = new me.Matrix2d();
-
-            /**
              * whether the container is the root of the scene
              * @private
              * @ignore
@@ -119,8 +110,8 @@
              */
             this.childBounds = this.getBounds().clone();
 
-            // reset the transformation matrix
-            this.transform.identity();
+            // container self apply any defined transformation
+            this.autoTransform = false;
         },
 
 
@@ -762,50 +753,77 @@
          */
         draw : function (renderer, rect) {
             var isFloating = false,
-                restore = false,
-                alpha = renderer.globalAlpha();
+                hasTransform = false,
+                x = 0,
+                y = 0;
 
             this.drawCount = 0;
 
-            if (this.transform.isIdentity()) {
-                renderer.translate(this.pos.x, this.pos.y);
-            }
-            else {
-                restore = true;
-                renderer.save();
+            // save the global context
+            renderer.save();
+
+            // adjust position if required (e.g. canvas/window centering)
+            renderer.translate(this.pos.x, this.pos.y);
+
+            // apply the renderable transformation matrix
+            if (!this.transform.isIdentity()) {
                 renderer.transform(this.transform);
             }
 
             // apply the group opacity
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = obj.floating;
+                isFloating = obj.floating === true;
+
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
+
+                    hasTransform = !obj.transform.isIdentity();
+
                     if (isFloating) {
                         // translate to screen coordinates
                         renderer.save();
                         renderer.resetTransform();
+                    } else if (obj.autoTransform === true) {
+
+                        // calculate the anchor point
+                        var bounds = obj.getBounds();
+                        var anchor = obj.anchorPoint;
+                        x = ~~(0.5 + (bounds.width * anchor.x ));
+                        y = ~~(0.5 + (bounds.height * anchor.y ));
+
+                        if (hasTransform) {
+                            renderer.save();
+                            obj.transform.translate(x, y);
+                            // apply the object transformation
+                            renderer.transform(obj.transform);
+                        } else {
+                            renderer.translate(x, y);
+                        }
                     }
 
                     // draw the object
                     obj.draw(renderer, rect);
 
+                    // restore the previous "state"
                     if (isFloating) {
                         renderer.restore();
+                    } else  if (obj.autoTransform === true) {
+                        if (hasTransform) {
+                            // restore the save context/global matric
+                            obj.transform.translate(-x, -y);
+                            renderer.restore();
+                        } else {
+                            // translate back
+                            renderer.translate(-x, -y);
+                        }
                     }
 
                     this.drawCount++;
                 }
             }
-
-            if (restore) {
-                renderer.restore();
-            }
-            else {
-                renderer.translate(-this.pos.x, -this.pos.y);
-                renderer.setGlobalAlpha(alpha);
-            }
+            // restore the global context
+            renderer.restore();
         }
     });
 

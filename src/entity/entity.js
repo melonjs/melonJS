@@ -148,6 +148,9 @@
                     throw new me.Entity.Error("Invalid value for the collisionType property");
                 }
             }
+
+            // disable for entities
+            this.autoTransform = false;
         },
 
         /**
@@ -272,18 +275,44 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         draw : function (renderer) {
-            // draw the sprite if defined
-            if (this.renderable) {
+            // draw the child renderable if defined
+            var child = this.renderable;
+            if (child instanceof me.Renderable) {
+                // draw the child renderable's anchorPoint at the entity's
+                // anchor point.  the entity's anchor point is a scale from
+                // body position to body width/height
+                var ax = this.anchorPoint.x * this.body.width,
+                    ay = this.anchorPoint.y * this.body.height;
 
-                // draw the renderable's anchorPoint at the entity's anchor point
-                // the entity's anchor point is a scale from body position to body width/height
-                var x = ~~( 0.5 + this.pos.x + this.body.pos.x +
-                    (this.anchorPoint.x * this.body.width));
-                var y = ~~( 0.5 + this.pos.y + this.body.pos.y +
-                    (this.anchorPoint.y * this.body.height));
+                var x = ~~(0.5 + this.pos.x + this.body.pos.x + ax),
+                    y = ~~(0.5 + this.pos.y + this.body.pos.y + ay);
 
                 renderer.translate(x, y);
-                this.renderable.draw(renderer);
+
+                // apply the child transform, if any
+                if (child.autoTransform === true && !child.transform.isIdentity()) {
+                    // calculate the anchor point
+                    var bounds = child.getBounds();
+                    var cx = ~~(0.5 + (bounds.width * child.anchorPoint.x));
+                    var cy = ~~(0.5 + (bounds.height * child.anchorPoint.y));
+
+                    renderer.save();
+
+                    // translate to the anchor point
+                    renderer.translate(cx, cy);
+                    // apply the object transformation
+                    renderer.transform(child.transform);
+                    // translate back
+                    renderer.translate(-cx, -cy);
+
+                    // draw the object
+                    child.draw(renderer);
+
+                    renderer.restore();
+
+                } else {
+                    child.draw(renderer);
+                }
                 renderer.translate(-x, -y);
             }
         },

@@ -35,22 +35,16 @@
          * @ignore
          */
         init : function (x, y, settings) {
-
-            /**
-             * private/internal scale factor
-             * @ignore
-             */
-            this._scale = new me.Vector2d(1, 1);
-
-            // if true, image flipping/scaling is needed
-            this.scaleFlag = false;
-
             // just to keep track of when we flip
             this.lastflipX = false;
             this.lastflipY = false;
 
-            this.flipX(!!settings.flipX);
-            this.flipY(!!settings.flipY);
+            if (typeof (settings.flipX) !== "undefined") {
+                this.flipX(!!settings.flipX);
+            }
+            if (typeof (settings.flipY) !== "undefined") {
+                this.flipY(!!settings.flipY);
+            }
 
             // current frame texture offset
             /**
@@ -61,16 +55,6 @@
              * @memberOf me.Vector2d
              */
             this.offset = new me.Vector2d();
-
-            /**
-             * Set the angle (in Radians) of a sprite to rotate it <br>
-             * WARNING: rotating sprites decreases performance with Canvas Renderer
-             * @public
-             * @type Number
-             * @default 0
-             * @name me.Sprite#angle
-             */
-            this.angle = settings.rotation || 0;
 
             /**
              * Source rotation angle for pre-rotating the source image<br>
@@ -122,6 +106,12 @@
                 settings.framewidth  || this.image.width,
                 settings.frameheight || this.image.height
             ]);
+
+            // set the default rotation angle is defined in the settings
+            // * WARNING: rotating sprites decreases performance with Canvas Renderer
+            if (typeof (settings.rotation) !== "undefined") {
+                this.transform.rotate(settings.rotation);
+            }
 
             // update anchorPoint
             if (settings.anchorPoint) {
@@ -175,14 +165,13 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipX : function (flip) {
+            console.warn("Deprecated: me.Sprite.flipX");
             if (flip !== this.lastflipX) {
                 this.lastflipX = flip;
-
                 // invert the scale.x value
-                this._scale.x = -this._scale.x;
+                this.transform.scaleX(-1);
 
-                // set the scaleFlag
-                this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
+                //console.log(this.transform._scale.x);
             }
         },
 
@@ -194,14 +183,11 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipY : function (flip) {
+            console.warn("Deprecated: me.Sprite.flipY");
             if (flip !== this.lastflipY) {
                 this.lastflipY = flip;
-
                 // invert the scale.x value
-                this._scale.y = -this._scale.y;
-
-                // set the scaleFlag
-                this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
+                this.transform.scaleY(-1);
             }
         },
 
@@ -210,20 +196,14 @@
          * @name scale
          * @memberOf me.Sprite
          * @function
-         * @param {Number} ratioX x scaling ratio
-         * @param {Number} ratioY y scaling ratio
+         * @param {Number} x x scaling ratio
+         * @param {Number} y y scaling ratio
          */
-        scale : function (ratioX, ratioY) {
-            var x = ratioX;
-            var y = typeof(ratioY) === "undefined" ? ratioX : ratioY;
-            if (x > 0) {
-                this._scale.x = this._scale.x < 0.0 ? -x : x;
-            }
-            if (y > 0) {
-                this._scale.y = this._scale.y < 0.0 ? -y : y;
-            }
+        scale : function (x, y) {
+            console.warn("Deprecated: me.Sprite.scale");
+
             // set the scaleFlag
-            this.scaleFlag = this._scale.x !== 1.0 || this._scale.y !== 1.0;
+            this.transform.scale(x, y);
 
             // resize the bounding box
             this.getBounds().resize(this.width * x, this.height * y);
@@ -237,6 +217,7 @@
          * @param {me.Vector2d} vector ratio
          */
         scaleV : function (ratio) {
+            console.warn("Deprecated: me.Sprite.scaleV");
             this.scale(ratio.x, ratio.y);
         },
 
@@ -285,9 +266,11 @@
             }
 
             // clamp position vector to pixel grid
-            var xpos = ~~this.pos.x, ypos = ~~this.pos.y;
+            var xpos = ~~this.pos.x,
+                ypos = ~~this.pos.y;
 
-            var w = this.width, h = this.height;
+            var w = this.width,
+                h = this.height;
 
             // save context
             renderer.save();
@@ -295,35 +278,24 @@
             // sprite alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-            // calculate pixel pos of the anchor point
-            var ax = w * this.anchorPoint.x, ay = h * this.anchorPoint.y;
-            xpos -= ax;
-            ypos -= ay;
+            // apply the renderable transformation matrix
+            if (!this.transform.isIdentity()) {
+                renderer.transform(this.transform);
+            }
 
-            if ((this.scaleFlag) || (this.angle !== 0) || (this._sourceAngle !== 0)) {
-                // translate to the defined anchor point
-                xpos += ax;
-                ypos += ay;
-                renderer.translate(xpos, ypos);
-                // rotate
-                if (this.angle !== 0) {
-                    renderer.rotate(this.angle);
-                }
-                // scale
-                if (this.scaleFlag) {
-                    renderer.scale(this._scale.x, this._scale.y);
-                }
-                // remove image's TexturePacker/ShoeBox rotation
-                if (this._sourceAngle !== 0) {
-                    renderer.translate(-(xpos+ax), -(ypos+ay));
-                    renderer.rotate(this._sourceAngle);
-                    xpos -= this.height;
-                    w = this.height;
-                    h = this.width;
-                } else {
-                    xpos = -ax;
-                    ypos = -ay;
-                }
+            // translate to the defined anchor point
+            renderer.translate(
+                - ( w * this.anchorPoint.x ),
+                - ( h * this.anchorPoint.y )
+            );
+
+            // remove image's TexturePacker/ShoeBox rotation
+            if (this._sourceAngle !== 0) {
+                renderer.translate(-xpos, -ypos);
+                renderer.rotate(this._sourceAngle);
+                xpos -= this.height;
+                w = this.height;
+                h = this.width;
             }
 
             renderer.drawImage(
@@ -338,5 +310,4 @@
             renderer.restore();
         }
     });
-
 })();

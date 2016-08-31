@@ -30,6 +30,19 @@
              */
             this.isRenderable = true;
 
+            /**
+             * the renderable default transformation matrix
+             * @public
+             * @type me.Matrix2d
+             * @name transform
+             * @memberOf me.Renderable
+             */
+             if (typeof this.transform !== "undefined") {
+                 this.transform.identity();
+             } else {
+                 this.transform = new me.Matrix2d();
+             }
+
            /**
             * (G)ame (U)nique (Id)entifier" <br>
             * a GUID will be allocated for any renderable object added <br>
@@ -106,6 +119,35 @@
              * @memberOf me.Renderable
              */
             this.anchorPoint = new me.Vector2d(0.5, 0.5);
+
+            /**
+             * [EXPERIMENTAL] when enabled, an object container will automatically
+             * apply any defined transformation before calling the child draw method.
+             * @public
+             * @type Boolean
+             * @default false
+             * @name autoTransform
+             * @memberOf me.Renderable
+             * @example
+             * // enable "automatic" transformation when the object is activated
+             * onActivateEvent: function () {
+             *     // reset the transformation matrix
+             *     this.renderable.transform.identity();
+             *     // ensure the anchor point is the renderable center
+             *     this.renderable.anchorPoint.set(0.5, 0.5);
+             *     // enable auto transform
+             *     this.renderable.autoTransform = true;
+             *     ....
+             * },
+             * // add a rotation effect when updating the entity
+             * update : function (dt) {
+             *     ....
+             *     this.renderable.transform.rotate(0.025);
+             *     ....
+             *     return this._super(me.Entity, 'update', [dt]);
+             * },
+             */
+            this.autoTransform = false;
 
             /**
              * Define the renderable opacity<br>
