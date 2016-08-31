@@ -277,12 +277,13 @@
          * @function
          */
         updateBoundsPos : function (newX, newY) {
-            this._bounds.pos.set(newX, newY);
+            var bounds = this.getBounds();
+            bounds.pos.set(newX, newY);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
-                this._bounds.pos.add(this.ancestor._absPos);
+                bounds.pos.add(this.ancestor._absPos);
             }
-            return this._bounds;
+            return bounds;
         },
 
         /**
