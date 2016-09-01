@@ -34,13 +34,13 @@
              * the renderable default transformation matrix
              * @public
              * @type me.Matrix2d
-             * @name transform
+             * @name currentTransform
              * @memberOf me.Renderable
              */
-             if (typeof this.transform !== "undefined") {
-                 this.transform.identity();
+             if (typeof this.currentTransform !== "undefined") {
+                 this.currentTransform.identity();
              } else {
-                 this.transform = new me.Matrix2d();
+                 this.currentTransform = new me.Matrix2d();
              }
 
            /**
@@ -132,7 +132,7 @@
              * // enable "automatic" transformation when the object is activated
              * onActivateEvent: function () {
              *     // reset the transformation matrix
-             *     this.renderable.transform.identity();
+             *     this.renderable.currentTransform.identity();
              *     // ensure the anchor point is the renderable center
              *     this.renderable.anchorPoint.set(0.5, 0.5);
              *     // enable auto transform
@@ -142,7 +142,7 @@
              * // add a rotation effect when updating the entity
              * update : function (dt) {
              *     ....
-             *     this.renderable.transform.rotate(0.025);
+             *     this.renderable.currentTransform.rotate(0.025);
              *     ....
              *     return this._super(me.Entity, 'update', [dt]);
              * },

@@ -196,9 +196,9 @@
          * var levelContainer = new me.Container();
          * me.levelDirector.loadLevel("a4_level2", {container:levelContainer});
          * // add a simple transformation
-         * levelContainer.transform.translate(levelContainer.width / 2, levelContainer.height / 2 );
-         * levelContainer.transform.rotate(0.05);
-         * levelContainer.transform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
+         * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
+         * levelContainer.currentTransform.rotate(0.05);
+         * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
          * // add it to the game world
          * me.game.world.addChild(levelContainer);
          */

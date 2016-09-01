@@ -290,7 +290,7 @@
                 renderer.translate(x, y);
 
                 // apply the child transform, if any
-                if (child.autoTransform === true && !child.transform.isIdentity()) {
+                if (child.autoTransform === true && !child.currentTransform.isIdentity()) {
                     // calculate the anchor point
                     var bounds = child.getBounds();
                     var cx = ~~(0.5 + (bounds.width * child.anchorPoint.x));
@@ -301,7 +301,7 @@
                     // translate to the anchor point
                     renderer.translate(cx, cy);
                     // apply the object transformation
-                    renderer.transform(child.transform);
+                    renderer.transform(child.currentTransform);
                     // translate back
                     renderer.translate(-cx, -cy);
 

@@ -126,7 +126,7 @@
             this.pos.y += this.vel.y * skew;
 
             // Update particle transform
-            this.transform.setTransform(
+            this.currentTransform.setTransform(
                 scale, 0, 0,
                 0, scale, 0,
                 ~~this.pos.x, ~~this.pos.y, 1
@@ -143,7 +143,7 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
-            renderer.transform(this.transform);
+            renderer.transform(this.currentTransform);
 
             var w = this.width, h = this.height;
             renderer.drawImage(

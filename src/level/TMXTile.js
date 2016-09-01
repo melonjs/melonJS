@@ -42,7 +42,7 @@
              * the tile transformation matrix (if defined)
              * @ignore
              */
-            this.transform = null;
+            this.currentTransform = null;
 
             // call the parent constructor
             this._super(me.Rect, "init", [x * tileset.tilewidth, y * tileset.tileheight, tileset.tilewidth, tileset.tileheight]);
@@ -101,35 +101,35 @@
          * @ignore
          */
         createTransform : function () {
-            if (this.transform === null) {
-                this.transform = new me.Matrix2d();
+            if (this.currentTransform === null) {
+                this.currentTransform = new me.Matrix2d();
             } else {
                 // reset the matrix
-                this.transform.identity();
+                this.currentTransform.identity();
             }
 
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.setTransform(
+                this.currentTransform.setTransform(
                     0, 1, 0,
                     1, 0, 0,
                     0, 0, 1
                 );
-                this.transform.translate(0, this.height - this.width);
+                this.currentTransform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
-                this.transform.translate(
+                this.currentTransform.translate(
                     (this.flippedAD ? 0 : this.width),
                     (this.flippedAD ? this.height : 0)
                 );
-                this.transform.scaleX(-1);
+                this.currentTransform.scaleX(-1);
             }
             if (this.flippedY) {
-                this.transform.translate(
+                this.currentTransform.translate(
                     (this.flippedAD ? this.width : 0),
                     (this.flippedAD ? 0 : this.height)
                 );
-                this.transform.scaleY(-1);
+                this.currentTransform.scaleY(-1);
             }
         },
 
@@ -165,10 +165,10 @@
 
             // any H/V flipping to apply?
             if (this.flippedX) {
-                renderable.transform.scaleX(-1);
+                renderable.currentTransform.scaleX(-1);
             }
             if (this.flippedY) {
-                renderable.transform.scaleY(-1);
+                renderable.currentTransform.scaleY(-1);
             }
 
             return renderable;

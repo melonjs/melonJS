@@ -696,7 +696,7 @@
             }
 
             // reset the transformation matrix
-            this.transform.identity();
+            this.currentTransform.identity();
         },
 
         /**
@@ -766,8 +766,8 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             // apply the renderable transformation matrix
-            if (!this.transform.isIdentity()) {
-                renderer.transform(this.transform);
+            if (!this.currentTransform.isIdentity()) {
+                renderer.transform(this.currentTransform);
             }
 
             // apply the group opacity
@@ -778,7 +778,7 @@
 
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
 
-                    hasTransform = !obj.transform.isIdentity();
+                    hasTransform = !obj.currentTransform.isIdentity();
 
                     if (isFloating) {
                         // translate to screen coordinates
@@ -794,9 +794,9 @@
 
                         if (hasTransform) {
                             renderer.save();
-                            obj.transform.translate(x, y);
+                            obj.currentTransform.translate(x, y);
                             // apply the object transformation
-                            renderer.transform(obj.transform);
+                            renderer.transform(obj.currentTransform);
                         } else {
                             renderer.translate(x, y);
                         }
@@ -811,7 +811,7 @@
                     } else  if (obj.autoTransform === true) {
                         if (hasTransform) {
                             // restore the save context/global matric
-                            obj.transform.translate(-x, -y);
+                            obj.currentTransform.translate(-x, -y);
                             renderer.restore();
                         } else {
                             // translate back

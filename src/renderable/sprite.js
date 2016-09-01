@@ -110,7 +110,7 @@
             // set the default rotation angle is defined in the settings
             // * WARNING: rotating sprites decreases performance with Canvas Renderer
             if (typeof (settings.rotation) !== "undefined") {
-                this.transform.rotate(settings.rotation);
+                this.currentTransform.rotate(settings.rotation);
             }
 
             // update anchorPoint
@@ -169,9 +169,7 @@
             if (flip !== this.lastflipX) {
                 this.lastflipX = flip;
                 // invert the scale.x value
-                this.transform.scaleX(-1);
-
-                //console.log(this.transform._scale.x);
+                this.currentTransform.scaleX(-1);
             }
         },
 
@@ -187,7 +185,7 @@
             if (flip !== this.lastflipY) {
                 this.lastflipY = flip;
                 // invert the scale.x value
-                this.transform.scaleY(-1);
+                this.currentTransform.scaleY(-1);
             }
         },
 
@@ -203,7 +201,7 @@
             console.warn("Deprecated: me.Sprite.scale");
 
             // set the scaleFlag
-            this.transform.scale(x, y);
+            this.currentTransform.scale(x, y);
 
             // resize the bounding box
             this.getBounds().resize(this.width * x, this.height * y);
@@ -279,8 +277,8 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             // apply the renderable transformation matrix
-            if (!this.transform.isIdentity()) {
-                renderer.transform(this.transform);
+            if (!this.currentTransform.isIdentity()) {
+                renderer.transform(this.currentTransform);
             }
 
             // translate to the defined anchor point
