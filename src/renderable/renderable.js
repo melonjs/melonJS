@@ -278,7 +278,7 @@
          */
         updateBoundsPos : function (newX, newY) {
             var bounds = this.getBounds();
-            bounds.pos.set(newX, newY);
+            bounds.pos.set(newX, newY, bounds.pos.z);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
                 bounds.pos.add(this.ancestor._absPos);
