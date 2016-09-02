@@ -34,6 +34,7 @@
     "grunt-jsdoc": "^1.1.0",
     "grunt-replace": "^0.11.0",
     "grunt-shell": "^1.1.2",
+    "jasmine-core": "2.4.1",
     "q": "^1.4.1",
     "shelljs": "^0.5.3"
   },
