@@ -2560,6 +2560,8 @@ declare namespace me {
         let WEBGL: number;
         let AUTO: number;
 
+        let renderer: me.RendererClass;
+
         /**
          * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer).
          * melonJS support various scaling mode :
