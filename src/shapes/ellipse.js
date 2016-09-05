@@ -155,7 +155,7 @@
          * @param {me.Matrix2d} matrix the transformation matrix
          * @return {me.Polygon} Reference to this object for method chaining
          */
-        transform : function (m) {
+        transform : function (/* m */) {
             // TODO
             return this;
         },
