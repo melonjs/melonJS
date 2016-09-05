@@ -148,6 +148,19 @@
         },
 
         /**
+         * apply the given transformation matrix to this ellipse
+         * @name transform
+         * @memberOf me.Ellipse
+         * @function
+         * @param {me.Matrix2d} matrix the transformation matrix
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        transform : function (m) {
+            // TODO
+            return this;
+        },
+
+        /**
          * translate the circle/ellipse by the specified offset
          * @name translate
          * @memberOf me.Ellipse

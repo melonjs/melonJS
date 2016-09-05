@@ -256,6 +256,20 @@
         },
 
         /**
+         * multiply the renderable currentTransform with the given matrix
+         * @name transform
+         * @memberOf me.Renderable
+         * @see me.Renderable#currentTransform
+         * @function
+         * @param {me.Matrix2d} matrix the transformation matrix
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        transform : function (m) {
+            this.currentTransform.multiply(m);
+            return this;
+        },
+
+        /**
          * update function
          * called by the game manager on each game loop
          * @name update

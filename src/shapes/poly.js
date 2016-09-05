@@ -76,6 +76,25 @@
         },
 
         /**
+         * apply the given transformation matrix to this Polygon
+         * @name transform
+         * @memberOf me.Polygon
+         * @function
+         * @param {me.Matrix2d} matrix the transformation matrix
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        transform : function (m) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                m.multiplyVector(points[i]);
+            }
+            this.recalc();
+            this.updateBounds();
+            return this;
+        },
+
+        /**
          * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberOf me.Polygon
