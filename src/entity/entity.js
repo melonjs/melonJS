@@ -329,6 +329,9 @@
             }
             this.body.destroy.apply(this.body, arguments);
             this.body = null;
+
+            // call the parent destroy method
+            this._super(me.Renderable, "destroy", arguments);
         },
 
         /**

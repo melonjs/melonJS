@@ -46,6 +46,7 @@
             api.register("me.Sprite", me.Sprite);
             api.register("me.Vector2d", me.Vector2d, true);
             api.register("me.Glyph", me.Glyph, true);
+            api.register("me.Matrix2d", me.Matrix2d, true);
         };
 
         /**

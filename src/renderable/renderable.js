@@ -40,7 +40,7 @@
              if (typeof this.currentTransform !== "undefined") {
                  this.currentTransform.identity();
              } else {
-                 this.currentTransform = new me.Matrix2d();
+                 this.currentTransform = me.pool.pull("me.Matrix2d");
              }
 
            /**
@@ -331,6 +331,8 @@
          * @ignore
          */
         destroy : function () {
+            me.pool.push(this.currentTransform);
+            this.currentTransform = undefined;
             this.onDestroyEvent.apply(this, arguments);
         },
 

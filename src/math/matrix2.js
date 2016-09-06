@@ -21,7 +21,9 @@
 
         /** @ignore */
         init : function () {
-            this.val = new Float32Array(9);
+            if (typeof(this.val) === "undefined") {
+                this.val = new Float32Array(9);
+            }
             if (arguments.length && arguments[0] instanceof me.Matrix2d) {
                 this.copy(arguments[0]);
             }
@@ -29,8 +31,13 @@
                 this.setTransform.apply(this, arguments);
             }
             else {
-                this.identity();
+                this.onResetEvent();
             }
+        },
+
+        /** @ignore */
+        onResetEvent : function() {
+            this.identity();
         },
 
         /**
@@ -48,7 +55,6 @@
                 0, 1, 0,
                 0, 0, 1
             );
-
             return this;
         },
 
@@ -306,7 +312,7 @@
          * @return {me.Matrix2d}
          */
         clone : function () {
-            return new me.Matrix2d(this);
+            return me.pool.pull("me.Matrix2d").copy(this);
         },
 
         /**
