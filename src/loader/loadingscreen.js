@@ -17,8 +17,6 @@
 
             // current progress
             this.progress = 0;
-
-            this.autoTransform = false;
         },
 
         // make sure the screen is refreshed every frame
@@ -88,8 +86,6 @@
             context.lineJoin = "miter";
             context.miterLimit = 4.0;
             context.stroke();
-
-            this.autoTransform = false;
         },
 
         draw : function (renderer) {
@@ -106,8 +102,6 @@
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
-
-            this.autoTransform = false;
         },
 
         draw : function (renderer) {
