@@ -107,7 +107,12 @@ describe("me.Color", function () {
         it("lighten blue_color hex by 0.5 value is #7F7FFF", function () {
             expect(blue_color.lighten(0.5).toHex()).toEqual("#7F7FFF");
         });
+    });
 
-
+    describe("color clone function", function () {
+        var clone = blue_color.clone();
+        it("clone color hex value is #0000FF", function () {
+            expect(clone.toHex()).toEqual("#0000FF");
+        });
     });
 });
