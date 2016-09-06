@@ -2,11 +2,11 @@ describe("Shape : me.Ellipse", function () {
 
     // define a ellipse object
     var circle = new me.Ellipse(50, 50, 100, 100);
-    var renderableA = new me.Renderable(0, 0, 100, 100);
-    var renderableB = new me.Renderable(0, 50, 100, 100);
+    var circleA = new me.Ellipse(0, 0, 100, 100);
+    var circleB = new me.Ellipse(0, 50, 100, 100);
 
     // mock ancestor
-    circle.ancestor = renderableA.ancestor = renderableB.ancestor =  {
+    circle.ancestor = circleA.ancestor = circleB.ancestor =  {
         "_absPos" : {
             "x" : 0,
             "y" : 0
@@ -44,8 +44,8 @@ describe("Shape : me.Ellipse", function () {
 
         it("collision response is correct", function () {
             expect(me.collision.testEllipseEllipse(
-                renderableA, circle,
-                renderableB, circle,
+                circleA, circle,
+                circleB, circle,
                 me.collision.response.clear()
             )).toEqual(true);
             expect(me.collision.response.overlap).toEqual(50);
