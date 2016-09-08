@@ -4,8 +4,6 @@ describe("me.Color", function () {
     var green_color = new me.Color().parseCSS("green");
     var blue_color = new me.Color().parseHex("#0000FF");
 
-    me.video.renderer = me.CanvasRenderer;
-
     describe("parseHex Function", function () {
         // #RGB
         it("#00F value is rgb(0, 0, 255)", function () {
