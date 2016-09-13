@@ -2162,6 +2162,22 @@ declare namespace me {
         setCollisionMask(bitmask: number): void;
 
         /**
+         * set the entity default friction
+         */
+        setFriction(x: number, y: number): void;
+
+        /**
+         * cap the entity velocity to the specified value
+         */
+        setMaxVelocity(x: number, y: number): void;
+
+        /**
+         * set the entity default velocity
+         * note : velocity is by default limited to the same value, see setMaxVelocity if needed
+         */
+        setVelocity(x: number, y: number): void;
+
+        /**
          * update the body position
          */
         update(): boolean;
