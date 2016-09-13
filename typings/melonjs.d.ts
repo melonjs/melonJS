@@ -223,6 +223,194 @@ declare namespace me {
         new (x?: number, y?: number): Vector2dClass;
     }
 
+    interface Vector3dErrorClass extends ErrorClass {
+    }
+
+    interface Vector3dErrorStatic extends ErrorStatic {
+        new (msg: string): Vector3dErrorClass;
+
+        extend(...mixins: Array<Object|FunctionDictionary>): Vector3dErrorStatic;
+    }
+
+    interface Vector3dClass {
+        x: number;
+        y: number;
+        z: number;
+
+        /**
+         * Update this vector values to absolute values 
+         */
+        abs(): Vector3dClass;
+
+        /**
+         * set the Vector x and y properties to the given values
+         */
+        set(x: number, y: number, z: number): Vector3dClass;
+
+        /**
+         * set the Vector x and y properties to 0
+         */
+        setZero(): Vector3dClass;
+
+        /**
+         * set the Vector x and y properties using the passed vector
+         */
+        setV(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Add the passed vector to this vector
+         */
+        add(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Substract the passed vector to this vector
+         */
+        sub(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Multiply this vector values by the given scalar
+         */
+        scale(x: number, y?: number, z?: number): Vector3dClass;
+
+        /**
+         * Multiply this vector values by the passed vector
+         */
+        scaleV(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Divide this vector values by the passed value
+         */
+        div(n: number): Vector3dClass;
+
+        /**
+         * Clamp the vector value within the specified value range
+         */
+        clamp(low: number, high: number): Vector3dClass;
+
+        /**
+         * Clamp this vector value within the specified value range
+         */
+        clampSelf(low: number, high: number): Vector3dClass;
+
+        /**
+         * Update this vector with the minimum value between this and the passed vector
+         */
+        minV(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Update this vector with the maximum value between this and the passed vector
+         */
+        maxV(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Floor the vector values
+         */
+        floor(): Vector3dClass;
+
+        /**
+         * Floor this vector values
+         */
+        floorSelf(): Vector3dClass;
+
+        /**
+         * Ceil the vector values
+         */
+        ceil(): Vector3dClass;
+
+        /**
+         * Ceil this vector values
+         */
+        ceilSelf(): Vector3dClass;
+
+        /**
+         * Negate the vector values
+         */
+        negate(): Vector3dClass;
+
+        /**
+         * Negate this vector values
+         */
+        negateSelf(): Vector3dClass;
+
+        /**
+         * Copy the x,y values of the passed vector to this one
+         */
+        copy(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * return true if the two vectors are the same
+         */
+        equals(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * normalize this vector (scale the vector so that its magnitude is 1)
+         */
+        normalize(): Vector3dClass;
+
+        /**
+         * Change this vector to be perpendicular to what it was before.
+         * (Effectively rotates it 90 degrees in a clockwise direction)
+         */
+        perp(): Vector3dClass;
+
+        /**
+         * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+         */
+        rotate(angle: number): Vector3dClass;
+
+        /**
+         * return the dot product of this vector and the passed one
+         */
+        dotProduct(v: Vector3dClass): number;
+
+        /**
+         * return the square length of this vector
+         */
+        length2(): number;
+
+        /**
+         * return the length (magnitude) of this vector
+         */
+        length(): number;
+
+        /**
+         * return the distance between this vector and the passed one
+         */
+        distance(v: Vector3dClass): number;
+
+        /**
+         * return the angle between this vector and the passed one
+         */
+        angle(v: Vector3dClass): number;
+
+        /**
+         * Project this vector on to another vector.
+         */
+        project(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * Project this vector onto a vector of unit length.
+         * This is slightly more efficient than `project` when dealing with unit vectors.
+         */
+        projectN(v: Vector3dClass): Vector3dClass;
+
+        /**
+         * return a clone copy of this vector
+         */
+        clone(): Vector3dClass;
+
+        /**
+         * convert the object to a string representation
+         */
+        toString(): string;
+    }
+
+    interface Vector3dStatic {
+        Error: Vector3dErrorStatic;
+
+        new (x?: number, y?: number, z?: number): Vector3dClass;
+    }
+
     interface ColorErrorClass extends ErrorClass {
     }
 
@@ -2010,6 +2198,7 @@ declare namespace me {
         id: number;
         name: string;
         type: string;
+        pos: Vector3dClass;
 
         /**
          * return the distance to the specified entity
