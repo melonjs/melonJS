@@ -1660,7 +1660,7 @@ declare namespace me {
 
     interface PolygonClass {
         points: Vector2dClass[];
-        pos: Vector2dClass;
+        pos: Vector2dClass|Vector3dClass;
 
         /**
          * set new value to the Polygon
@@ -2198,7 +2198,6 @@ declare namespace me {
         id: number;
         name: string;
         type: string;
-        pos: Vector3dClass;
 
         /**
          * return the distance to the specified entity
