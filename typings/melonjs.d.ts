@@ -2889,6 +2889,55 @@ declare namespace me {
         function isCurrent(state: number): boolean;
     }
 
+    namespace timer {
+        let fps: number;
+        let lastUpdate: Date;
+        let tick: number;
+
+        /**
+         * Clears the Interval set by me.timer.setInterval(). 
+         * 
+         * @param intervalID ID of the interval to be cleared
+         */
+        function clearInterval(intervalID: number): void;
+
+        /**
+         * Clears the delay set by me.timer.setTimeout(). 
+         * 
+         * @param intervalID ID of the timeout to be cleared
+         */
+        function clearTimeout(intervalID: number): void;
+
+        /**
+         * Return elapsed time in milliseconds since the last update
+         */
+        function getDelta(): number;
+
+        /**
+         * Return the current timestamp in milliseconds
+         * since the game has started or since linux epoch (based on browser support for High Resolution Timer) 
+         */
+        function getTime(): number;
+
+        /**
+         * Calls a function at specified interval. 
+         * 
+         * @param fn the function to execute
+         * @param delay the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param pauseable respects the pause state of the engine.
+         */
+        function setInterval(fn: Function, delay: number, pauseable: boolean): number;
+
+        /**
+         * Calls a function once after a specified delay.
+         * 
+         * @param fn the function to execute
+         * @param delay the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param pauseable respects the pause state of the engine.
+         */
+        function setTimeout(fn: Function, delay: number, pauseable: boolean): number;
+    } 
+
     var Object: ObjectStatic;
     var ScreenObject: ScreenObjectStatic;
     var Vector2d: Vector2dStatic;
