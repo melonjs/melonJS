@@ -2959,6 +2959,7 @@ declare namespace me {
     var Object: ObjectStatic;
     var ScreenObject: ScreenObjectStatic;
     var Vector2d: Vector2dStatic;
+    var Vector3d: Vector3dStatic;
     var Color: ColorStatic;
     var TMXTileset: TMXTilesetStatic;
     var TMXTilesetGroup: TMXTilesetGroupStatic;
