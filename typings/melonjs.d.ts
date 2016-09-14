@@ -1944,7 +1944,7 @@ declare namespace me {
          * update function
          * called by the game manager on each game loop
          */
-        update(): boolean;
+        update(dt: number): boolean;
 
         /**
          * object draw
