@@ -2936,7 +2936,25 @@ declare namespace me {
          * @param pauseable respects the pause state of the engine.
          */
         function setTimeout(fn: Function, delay: number, pauseable: boolean): number;
-    } 
+    }
+
+    namespace sys {
+        let fps: number;
+        let gravity: number;
+        let interpolation: boolean;
+        let pauseOnBlur: boolean;
+        let preRender: boolean;
+        let resumeOnFocus: boolean;
+        let scale: Vector2dClass;
+        let stopOnAudioError: boolean;
+        let stopOnBlur: boolean;
+        let updatesPerSecond: number;
+
+        /**
+         * Compare two version strings 
+         */
+        function checkVersion(first: string, second?: string): number;
+    }
 
     var Object: ObjectStatic;
     var ScreenObject: ScreenObjectStatic;
