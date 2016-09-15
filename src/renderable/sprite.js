@@ -7,7 +7,7 @@
 (function () {
 
     /**
-     * A  object to display a fixed or animated sprite on screen.
+     * An object to display a fixed or animated sprite on screen.
      * @class
      * @extends me.Sprite
      * @memberOf me
@@ -20,7 +20,7 @@
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
-     * // standalone image, with anchor in the center
+     * // create a standalone sprite, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
      *     image : "PlayerTexture",
      *     framewidth : 64,
