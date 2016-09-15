@@ -199,9 +199,14 @@
                 this._absPos = new me.Vector2d(x, y);
             }
 
-            // set position to observable. Can use updateBounds, as _bounds using a regular vector.
-            // will not lead to stack too deep.
-            if (this.pos) {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {me.ObservableVector3d}
+             * @name pos
+             * @memberOf me.Renderable
+             */
+            if (this.pos instanceof me.ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
                 this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
