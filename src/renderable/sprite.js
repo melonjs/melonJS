@@ -81,15 +81,17 @@
             // animation frame delta
             this.dt = 0;
 
-            // just to keep track of when we flip
-            this.lastflipX = false;
-            this.lastflipY = false;
+            // keep track of when we flip
+            this._flip = {
+                lastX : false,
+                lastY : false
+            };
 
             if (typeof (settings.flipX) !== "undefined") {
-                this.flipX(!!settings.flipX);
+                this._flip.lastX(!!settings.flipX);
             }
             if (typeof (settings.flipY) !== "undefined") {
-                this.flipY(!!settings.flipY);
+                this._flip.lastY(!!settings.flipY);
             }
 
             // flicker settings
@@ -211,9 +213,9 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipX : function (flip) {
-            console.warn("Deprecated: me.Sprite.flipX");
-            if (flip !== this.lastflipX) {
-                this.lastflipX = flip;
+            if (flip !== this._flip.lastX) {
+                console.warn("Deprecated: me.Sprite.flipX");
+                this._flip.lastX = flip;
                 // invert the scale.x value
                 this.currentTransform.scaleX(-1);
             }
@@ -227,42 +229,12 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipY : function (flip) {
-            console.warn("Deprecated: me.Sprite.flipY");
-            if (flip !== this.lastflipY) {
-                this.lastflipY = flip;
+            if (flip !== this._flip.lastY) {
+                console.warn("Deprecated: me.Sprite.flipY");
+                this._flip.lastY = flip;
                 // invert the scale.x value
                 this.currentTransform.scaleY(-1);
             }
-        },
-
-        /**
-         * scale the sprite around his center<br>
-         * @name scale
-         * @memberOf me.Sprite
-         * @function
-         * @param {Number} x x scaling ratio
-         * @param {Number} y y scaling ratio
-         */
-        scale : function (x, y) {
-            console.warn("Deprecated: me.Sprite.scale");
-
-            // set the scaleFlag
-            this.currentTransform.scale(x, y);
-
-            // resize the bounding box
-            this.getBounds().resize(this.width * x, this.height * y);
-        },
-
-        /**
-         * scale the sprite around his center<br>
-         * @name scaleV
-         * @memberOf me.Sprite
-         * @function
-         * @param {me.Vector2d} vector ratio
-         */
-        scaleV : function (ratio) {
-            console.warn("Deprecated: me.Sprite.scaleV");
-            this.scale(ratio.x, ratio.y);
         },
 
         /**

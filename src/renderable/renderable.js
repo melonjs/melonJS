@@ -267,10 +267,40 @@
          * @see me.Renderable#currentTransform
          * @function
          * @param {me.Matrix2d} matrix the transformation matrix
-         * @return {me.Polygon} Reference to this object for method chaining
+         * @return {me.Renderable} Reference to this object for method chaining
          */
         transform : function (m) {
             this.currentTransform.multiply(m);
+            return this;
+        },
+
+        /**
+         * scale the sprite around his anchor point
+         * @name scale
+         * @memberOf me.Renderable
+         * @function
+         * @param {Number} x x scaling ratio
+         * @param {Number} y y scaling ratio
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        scale : function (x, y) {
+            // set the scaleFlag
+            this.currentTransform.scale(x, y);
+            // resize the bounding box
+            this.getBounds().resize(this.width * x, this.height * y);
+            return this;
+        },
+
+        /**
+         * scale the sprite around his anchor point
+         * @name scaleV
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Vector2d} vector ratio
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        scaleV : function (ratio) {
+            this.scale(ratio.x, ratio.y);
             return this;
         },
 
