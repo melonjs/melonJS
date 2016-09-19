@@ -29,7 +29,7 @@
                 new me.Vector2d(), new me.Vector2d(),
                 new me.Vector2d(), new me.Vector2d()
             ];
-            
+
             this.shapeType = "Polygon";
             this.setShape(x, y, w, h);
         },
@@ -47,7 +47,7 @@
          */
         setShape : function (x, y, w, h) {
 
-            this.points[0].set(0, 0); // 0, 0 
+            this.points[0].set(0, 0); // 0, 0
             this.points[1].set(w, 0); // 1, 0
             this.points[2].set(w, h); // 1, 1
             this.points[3].set(0, h); // 0, 1
@@ -84,6 +84,21 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
+            return this;
+        },
+
+        /**
+         * Computes the calculated collision polygon.
+         * This **must** be called if the `points` array is modified manually.
+         * @ignore
+         * @name recalc
+         * @memberOf me.Rect
+         * @function
+         */
+        recalc : function () {
+            this._super(me.Polygon, "recalc");
+            this._width = this.points[2].x;
+            this._height = this.points[2].y;
             return this;
         },
 
@@ -237,7 +252,7 @@
     });
 
     // redefine some properties to ease our life when getting the rectangle coordinates
-    
+
     /**
      * left coordinate of the Rectangle
      * @public
@@ -295,7 +310,7 @@
         },
         configurable : true
     });
-    
+
     /**
      * width of the Rectangle
      * @public
@@ -308,8 +323,8 @@
             return this._width;
         },
         set : function (value) {
-            this._width = value;
             this.points[1].x = this.points[2].x = value;
+            // _height updated in recalc
             this.recalc();
         },
         configurable : true
@@ -327,11 +342,11 @@
             return this._height;
         },
         set : function (value) {
-            this._height = value;
             this.points[2].y = this.points[3].y = value;
+            // _height updated in recalc
             this.recalc();
         },
         configurable : true
     });
-    
+
 })();
