@@ -324,7 +324,7 @@
         },
         set : function (value) {
             this.points[1].x = this.points[2].x = value;
-            // _height updated in recalc
+            // _width updated in recalc
             this.recalc();
         },
         configurable : true

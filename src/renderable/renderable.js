@@ -384,7 +384,7 @@
     });
 
     /**
-     * width of the Renderable bounding box<br>
+     * width of the Renderable bounding box
      * @public
      * @type {Number}
      * @name width
@@ -395,14 +395,14 @@
             return this._width;
         },
         set : function (value) {
-            this.getBounds().resize(value, this._height);
+            this.getBounds().width = value;
             this._width = value;
         },
         configurable : true
     });
 
     /**
-     * height of the Renderable bounding box <br>
+     * height of the Renderable bounding box
      * @public
      * @type {Number}
      * @name height
@@ -413,7 +413,7 @@
             return this._height;
         },
         set : function (value) {
-            this.getBounds().resize(this._width, value);
+            this.getBounds().height = value;
             this._height = value;
         },
         configurable : true
