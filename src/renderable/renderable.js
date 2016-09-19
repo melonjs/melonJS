@@ -271,6 +271,7 @@
          */
         transform : function (m) {
             this.currentTransform.multiply(m);
+            this.getBounds().transform(m);
             return this;
         },
 
