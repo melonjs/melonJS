@@ -54,7 +54,7 @@
                         settings.height]);
 
             if (settings.image) {
-                this.renderable = new me.AnimationSheet(0, 0, {
+                this.renderable = new me.Sprite(0, 0, {
                     "image" : settings.image,
                     "framewidth" : ~~(settings.framewidth || settings.width),
                     "frameheight" : ~~(settings.frameheight || settings.height),

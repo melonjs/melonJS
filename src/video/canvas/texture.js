@@ -287,8 +287,8 @@
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-         * @param {Object} [settings] Additional settings passed to the {@link me.AnimationSheet} contructor
-         * @return {me.AnimationSheet}
+         * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
+         * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
          * game.texture = new me.video.renderer.Texture(
@@ -296,7 +296,7 @@
          *     me.loader.getImage("texture")
          * );
          *
-         * // create a new animationSheet as renderable for the entity
+         * // create a new Sprite as renderable for the entity
          * this.renderable = game.texture.createAnimationFromName([
          *     "walk0001.png", "walk0002.png", "walk0003.png",
          *     "walk0004.png", "walk0005.png", "walk0006.png",
@@ -326,7 +326,7 @@
                 }
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0, 0, Object.assign({
+            return new me.Sprite(0, 0, Object.assign({
                 image: this,
                 framewidth: 0,
                 frameheight: 0,

@@ -139,7 +139,7 @@
          * @public
          * @function
          * @param {Object} [settings] see {@link me.Sprite}
-         * @return {me.Renderable} either a me.Sprite object or a me.AnimationSheet (for animated tiles)
+         * @return {me.Renderable} a me.Sprite object
          */
         getRenderable : function (settings) {
             var renderable;
