@@ -275,12 +275,12 @@
         },
 
         /**
-         * scale the sprite around his anchor point
+         * scale the renderable around his anchor point
          * @name scale
          * @memberOf me.Renderable
          * @function
-         * @param {Number} x x scaling ratio
-         * @param {Number} y y scaling ratio
+         * @param {Number} x a number representing the abscissa of the scaling vector.
+         * @param {Number} y a number representing the ordinate of the scaling vector.
          * @return {me.Renderable} Reference to this object for method chaining
          */
         scale : function (x, y) {
@@ -292,15 +292,15 @@
         },
 
         /**
-         * scale the sprite around his anchor point
+         * scale the renderable around his anchor point
          * @name scaleV
          * @memberOf me.Renderable
          * @function
-         * @param {me.Vector2d} vector ratio
+         * @param {me.Vector2d} vector scaling vector
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        scaleV : function (ratio) {
-            this.scale(ratio.x, ratio.y);
+        scaleV : function (v) {
+            this.scale(v.x, v.y);
             return this;
         },
 
