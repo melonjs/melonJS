@@ -1,6 +1,6 @@
 describe("Shape : me.Rect", function () {
 
-    var rect1 = new me.Rect(0, 0, 50, 50);
+    var rect1 = new me.Rect(0, 0, 25, 50);
     // rect 2 overlap rect 1
     var rect2 = new me.Rect(50, 50, 100, 100);
     // rect 3 contains rect 1 and rect 2
@@ -12,7 +12,7 @@ describe("Shape : me.Rect", function () {
 
     describe("rect1", function () {
         it("scale rect1", function () {
-            rect1.scale(2, 2);
+            rect1.scale(4, 2);
             expect(rect1.width).toEqual(100);
             expect(rect1.height).toEqual(100);
         });
