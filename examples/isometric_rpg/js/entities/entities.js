@@ -31,7 +31,7 @@ game.PlayerEntity = me.Entity.extend({
             me.loader.getImage("Blank_Sprite_Sheet_4_2_by_KnightYamato")
         );
 
-        // create a new animationSheet object
+        // create a new sprite object
         this.renderable = texture.createAnimationFromName([0, 1, 2, 3, 4, 5, 6, 7, 8]);
         // define an additional basic walking animation
         this.renderable.addAnimation ("simple_walk", [0,1,2]);
