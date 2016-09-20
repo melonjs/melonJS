@@ -52,16 +52,6 @@
              */
             this.animationspeed = 100;
 
-            // current frame texture offset
-            /**
-             * The position to draw from on the source image.
-             * @public
-             * @type me.Vector2d
-             * @name offset
-             * @memberOf me.Vector2d
-             */
-            this.offset = new me.Vector2d();
-
             /**
              * Source rotation angle for pre-rotating the source image<br>
              * Commonly used for TexturePacker
@@ -75,8 +65,15 @@
             // a flag to reset animation
             this.resetAnim = null;
 
-            // default animation sequence
-            this.current = null;
+            // current frame information
+            // (reusing current, any better/cleaner place?)
+            this.current = {
+                //current frame texture offset
+                offset : new me.Vector2d(),
+                // current frame size
+                width : 0,
+                height : 0
+            };
 
             // animation frame delta
             this.dt = 0;
@@ -117,7 +114,7 @@
                     var region = settings.image.getRegion(settings.region);
                     if (region) {
                         // set the sprite offset within the texture
-                        this.offset.setV(region.offset);
+                        this.current.offset.setV(region.offset);
                         // set angle if defined
                         this._sourceAngle = region.angle;
                         settings.framewidth = settings.framewidth || region.width;
@@ -134,6 +131,9 @@
                settings.frameheight = settings.frameheight || this.image.height;
                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
             }
+            // update the default "current" size
+            this.current.width = settings.framewidth;
+            this.current.height = settings.frameheight;
 
             // store/reset the current atlas information if specified
             if (typeof(settings.atlas) !== "undefined") {
@@ -146,8 +146,8 @@
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth  || this.image.width,
-                settings.frameheight || this.image.height
+                this.current.width,
+                this.current.height
             ]);
 
             // set the default rotation angle is defined in the settings
@@ -417,9 +417,9 @@
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
             var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
-            this.offset = frame.offset;
-            this.width = frame.width;
-            this.height = frame.height;
+            this.current.offset = frame.offset;
+            this.current.width = frame.width;
+            this.current.height = frame.height;
             this._sourceAngle = frame.angle;
             if (frame.anchorPoint) {
                 this.anchorPoint = frame.anchorPoint;
@@ -528,8 +528,10 @@
             var xpos = ~~this.pos.x,
                 ypos = ~~this.pos.y;
 
-            var w = this.width,
-                h = this.height;
+            var w = this.current.width,
+                h = this.current.height;
+
+            var offset = this.current.offset;
 
             // save context
             renderer.save();
@@ -552,22 +554,40 @@
             if (this._sourceAngle !== 0) {
                 renderer.translate(-xpos, -ypos);
                 renderer.rotate(this._sourceAngle);
-                xpos -= this.height;
-                w = this.height;
-                h = this.width;
+                xpos -= h;
+                w = this.current.height;
+                h = this.current.width;
             }
 
             renderer.drawImage(
                 this.image,
-                this.offset.x, this.offset.y,   // sx,sy
-                w, h,                           // sw,sh
-                xpos, ypos,                     // dx,dy
-                w, h                            // dw,dh
+                offset.x, offset.y,   // sx,sy
+                w, h,                 // sw,sh
+                xpos, ypos,           // dx,dy
+                w, h                  // dw,dh
             );
 
             // restore context
             renderer.restore();
         }
+    });
+
+    /**
+     * The position to draw from on the source image.
+     * @public
+     * @type {me.Vector2d}
+     * @name offset
+     * @memberOf me.Sprite
+     */
+    Object.defineProperty(me.Sprite.prototype, "offset", {
+        /* for backward compatiblity */
+        get : function () {
+            return this.current.offset;
+        },
+        set : function (value) {
+            this.current.offset.setV(value);
+        },
+        configurable : true
     });
 
     // for backward compatiblity

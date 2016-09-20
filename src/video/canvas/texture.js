@@ -315,21 +315,28 @@
          */
         createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};
+            var width = 0, height = 0;
+            var region;
             // iterate through the given names
             // and create a "normalized" atlas
             for (var i = 0; i < names.length;++i) {
-                tpAtlas[i] = this.getRegion(names[i]);
-                indices[names[i]] = i;
-                if (tpAtlas[i] == null) {
+                region = this.getRegion(names[i]);
+                if (region == null) {
                     // throw an error
                     throw new me.video.renderer.Texture.Error("Texture - region for " + names[i] + " not found");
                 }
+                tpAtlas[i] = region;
+                // save the corresponding index
+                indices[names[i]] = i;
+                // calculate the max size of a frame
+                width = Math.max(region.width, width);
+                height = Math.max(region.height, height);
             }
             // instantiate a new animation sheet object
             return new me.Sprite(0, 0, Object.assign({
                 image: this,
-                framewidth: 0,
-                frameheight: 0,
+                framewidth: width,
+                frameheight: height,
                 margin: 0,
                 spacing: 0,
                 atlas: tpAtlas,

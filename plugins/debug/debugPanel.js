@@ -210,7 +210,7 @@
                     renderer.save();
                     renderer.setColor("green");
                     renderer.translate(x, y);
-                    renderer.strokeRect(this.left, this.top, this.width, this.height);
+                    renderer.drawShape(this.getBounds());
                     renderer.restore();
                 }
             });
