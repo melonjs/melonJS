@@ -270,8 +270,10 @@
          * @return {me.Renderable} Reference to this object for method chaining
          */
         transform : function (m) {
+            var bounds = this.getBounds();
             this.currentTransform.multiply(m);
-            this.getBounds().transform(m);
+            bounds.setPoints(bounds.transform(m).points);
+            bounds.pos.setV(this.pos);
             return this;
         },
 
