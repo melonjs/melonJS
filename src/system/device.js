@@ -38,13 +38,13 @@
             }
 
             // future proofing (MS) feature detection
-            me.device.pointerEnabled = me.agent.prefixed("pointerEnabled", navigator);
+            me.device.pointerEvent = me.agent.prefixed("PointerEvent", window);
             me.device.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (me.device.cocoon) || (me.device.pointerEnabled && (me.device.maxTouchPoints > 0));
+                              (me.device.cocoon) || (me.device.pointerEvent && (me.device.maxTouchPoints > 0));
 
             // accelerometer detection
             me.device.hasAccelerometer = (
