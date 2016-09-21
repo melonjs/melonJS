@@ -30,7 +30,7 @@
                 new me.Vector2d(), new me.Vector2d()
             ];
 
-            this.shapeType = "Polygon";
+            this.shapeType = "Rectangle";
             this.setShape(x, y, w, h);
         },
 
