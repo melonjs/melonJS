@@ -52,13 +52,6 @@
              */
             this.animationspeed = 100;
 
-            /**
-             * Source rotation angle for pre-rotating the source image<br>
-             * Commonly used for TexturePacker
-             * @ignore
-             */
-            this._sourceAngle = 0;
-
             // hold all defined animation
             this.anim = {};
 
@@ -72,7 +65,9 @@
                 offset : new me.Vector2d(),
                 // current frame size
                 width : 0,
-                height : 0
+                height : 0,
+                // Source rotation angle for pre-rotating the source image
+                angle : 0
             };
 
             // animation frame delta
@@ -116,7 +111,7 @@
                         // set the sprite offset within the texture
                         this.current.offset.setV(region.offset);
                         // set angle if defined
-                        this._sourceAngle = region.angle;
+                        this.current.angle = region.angle;
                         settings.framewidth = settings.framewidth || region.width;
                         settings.frameheight = settings.frameheight || region.height;
                     } else {
@@ -417,12 +412,11 @@
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
             var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
-            this.current.offset = frame.offset;
-            this.current.width = frame.width;
-            this.current.height = frame.height;
-            this._sourceAngle = frame.angle;
+            // copy all properties of the current frame into current
+            Object.assign(this.current, frame);
+            // set global anchortPoint if defined
             if (frame.anchorPoint) {
-                this.anchorPoint = frame.anchorPoint;
+                this.anchorPoint.setV(frame.anchorPoint);
             }
         },
 
@@ -524,14 +518,17 @@
                 }
             }
 
+            // the frame to draw
+            var frame = this.current;
+
             // clamp position vector to pixel grid
             var xpos = ~~this.pos.x,
                 ypos = ~~this.pos.y;
 
-            var w = this.current.width,
-                h = this.current.height;
+            var w = frame.width,
+                h = frame.height;
 
-            var offset = this.current.offset;
+            var offset = frame.offset;
 
             // save context
             renderer.save();
@@ -551,12 +548,12 @@
             );
 
             // remove image's TexturePacker/ShoeBox rotation
-            if (this._sourceAngle !== 0) {
+            if (frame.angle !== 0) {
                 renderer.translate(-xpos, -ypos);
-                renderer.rotate(this._sourceAngle);
+                renderer.rotate(frame.angle);
                 xpos -= h;
-                w = this.current.height;
-                h = this.current.width;
+                w = frame.height;
+                h = frame.width;
             }
 
             renderer.drawImage(
