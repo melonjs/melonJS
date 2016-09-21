@@ -517,7 +517,7 @@
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         drawShape : function (shape) {
-            if (shape instanceof me.Rect) {
+            if (shape.shapeType === "Rectangle") {
                 this.strokeRect(shape.left, shape.top, shape.width, shape.height);
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
                 this.strokePolygon(shape);
