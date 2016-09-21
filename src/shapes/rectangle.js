@@ -88,6 +88,25 @@
         },
 
         /**
+         * resize the rectangle to contain all the given points coordinates.
+         * @name setPoints
+         * @memberOf me.Rect
+         * @function
+         * @param {me.Vector2d[]} points array of vector defining a shape
+         * @return {me.Rect} this shape bounding box Rectangle object
+         */
+        setPoints : function (points) {
+            var x = Infinity, y = Infinity, right = -Infinity, bottom = -Infinity;
+            points.forEach(function (point) {
+                x = Math.min(x, point.x);
+                y = Math.min(y, point.y);
+                right = Math.max(right, point.x);
+                bottom = Math.max(bottom, point.y);
+            });
+            this.setShape(x, y, right - x, bottom - y);
+        },
+
+        /**
          * Computes the calculated collision polygon.
          * This **must** be called if the `points` array is modified manually.
          * @ignore

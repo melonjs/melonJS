@@ -272,21 +272,13 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
-            var x = Infinity, y = Infinity, right = -Infinity, bottom = -Infinity;
-            this.points.forEach(function (point) {
-                x = Math.min(x, point.x);
-                y = Math.min(y, point.y);
-                right = Math.max(right, point.x);
-                bottom = Math.max(bottom, point.y);
-            });
-
             if (!this._bounds) {
-                this._bounds = new me.Rect(x, y, right - x, bottom - y);
-            } else {
-                this._bounds.setShape(x, y, right - x, bottom - y);
+                this._bounds = new me.Rect(0, 0, 0, 0);
             }
+            this._bounds.setPoints(this.points);
+            this._bounds.translateV(this.pos);
 
-            return this._bounds.translateV(this.pos);
+            return this._bounds;
         },
 
         /**
