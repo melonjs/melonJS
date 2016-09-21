@@ -104,6 +104,7 @@
                 bottom = Math.max(bottom, point.y);
             });
             this.setShape(x, y, right - x, bottom - y);
+            return this;
         },
 
         /**
