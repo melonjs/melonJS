@@ -204,13 +204,14 @@
 
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
-                    var x = -this.anchorPoint.x * this.width;
-                    var y = -this.anchorPoint.y * this.height;
+                    var bounds = this.getBounds();
+                    var x = - (this.anchorPoint.x * this.width) - ((bounds.width - this.width) / 2);
+                    var y = - (this.anchorPoint.y * this.height) - ((bounds.height - this.height) / 2);
 
                     renderer.save();
                     renderer.setColor("green");
                     renderer.translate(x, y);
-                    renderer.drawShape(this.getBounds());
+                    renderer.drawShape(bounds);
                     renderer.restore();
                 }
             });
