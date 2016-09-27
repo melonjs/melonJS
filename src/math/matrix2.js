@@ -263,9 +263,9 @@
         translate : function (x, y) {
             var a = this.val;
 
-            a[6] += x;
-            a[7] += y;
-
+            a[6] += a[0] * x + a[3] * y;
+            a[7] += a[1] * x + a[4] * y;
+            
             return this;
         },
 
