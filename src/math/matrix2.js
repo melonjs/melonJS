@@ -147,6 +147,63 @@
             return this;
         },
 
+        /**
+         * Transpose the value of this matrix.
+         * @name transpose
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        transpose : function () {
+            var tmp, a = this.val;
+
+            tmp = a[1];
+            a[1] = a[3];
+            a[3] = tmp;
+            tmp = a[2];
+            a[2] = a[6];
+            a[6] = tmp;
+            tmp = a[5];
+            a[5] = a[7];
+            a[7] = tmp;
+
+            return this;
+        },
+
+        /**
+         * invert this matrix, causing it to apply the opposite transformation.
+         * @name invert
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        invert : function () {
+            var val = this.val;
+
+            var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+                d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
+                g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
+
+            var ta = i * e - f * h,
+                td = f * g - i * d,
+                tg = h * d - e * g;
+
+            var n = a * ta + b * td + c * tg;
+
+            val[ 0 ] = ta / n;
+            val[ 1 ] = ( c * h - i * b ) / n;
+            val[ 2 ] = ( f * b - c * e ) / n;
+
+            val[ 3 ] = td / n;
+            val[ 4 ] = ( i * a - c * g ) / n;
+            val[ 5 ] = ( c * d - f * a ) / n;
+
+            val[ 6 ] = tg / n;
+            val[ 7 ] = ( b * g - h * a ) / n;
+            val[ 8 ] = ( e * a - b * d ) / n;
+
+            return this;
+        },
 
        /**
         * Transforms the given vector according to this matrix.
@@ -265,7 +322,7 @@
 
             a[6] += a[0] * x + a[3] * y;
             a[7] += a[1] * x + a[4] * y;
-            
+
             return this;
         },
 
