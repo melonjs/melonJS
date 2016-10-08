@@ -37,7 +37,7 @@
             /**
              * The entity renderable object (if defined)
              * @public
-             * @type me.Renderable
+             * @type me.Sprite
              * @name renderable
              * @memberOf me.Entity
              */
