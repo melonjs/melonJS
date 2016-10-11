@@ -93,10 +93,10 @@
         _followH : function (target) {
             var _x = this.pos.x;
             if ((target.x - this.pos.x) > (this.deadzone.right)) {
-                this.pos.x = ~~MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
+                this.pos.x = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
             }
             else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
-                this.pos.x = ~~MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
+                this.pos.x = MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
             }
             return (_x !== this.pos.x);
         },
@@ -105,10 +105,10 @@
         _followV : function (target) {
             var _y = this.pos.y;
             if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
-                this.pos.y = ~~MIN((target.y) - (this.deadzone.bottom),    this.bounds.height - this.height);
+                this.pos.y = MIN((target.y) - (this.deadzone.bottom),    this.bounds.height - this.height);
             }
             else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
-                this.pos.y = ~~MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
+                this.pos.y = MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
             }
             return (_y !== this.pos.y);
         },
@@ -247,7 +247,7 @@
          * me.game.viewport.move(0, -4);
          */
         move : function (x, y) {
-            this.moveTo(~~(this.pos.x + x), ~~(this.pos.y + y));
+            this.moveTo(this.pos.x + x, this.pos.y + y);
         },
 
         /**
@@ -261,11 +261,11 @@
          */
 
         moveTo : function (x, y) {
-            this.pos.x = (~~x).clamp(
+            this.pos.x = x.clamp(
                 this.bounds.pos.x,
                 this.bounds.width - this.width
             );
-            this.pos.y = (~~y).clamp(
+            this.pos.y = y.clamp(
                 this.bounds.pos.y,
                 this.bounds.height - this.height
             );

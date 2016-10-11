@@ -789,8 +789,8 @@
                         // calculate the anchor point
                         var bounds = obj.getBounds();
                         var anchor = obj.anchorPoint;
-                        x = ~~(0.5 + (bounds.width * anchor.x ));
-                        y = ~~(0.5 + (bounds.height * anchor.y ));
+                        x = bounds.width * anchor.x;
+                        y = bounds.height * anchor.y;
 
                         if (hasTransform) {
                             renderer.save();

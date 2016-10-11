@@ -284,8 +284,8 @@
                 var ax = this.anchorPoint.x * this.body.width,
                     ay = this.anchorPoint.y * this.body.height;
 
-                var x = ~~(0.5 + this.pos.x + this.body.pos.x + ax),
-                    y = ~~(0.5 + this.pos.y + this.body.pos.y + ay);
+                var x = this.pos.x + this.body.pos.x + ax,
+                    y = this.pos.y + this.body.pos.y + ay;
 
                 renderer.translate(x, y);
 
@@ -293,8 +293,8 @@
                 if (child.autoTransform === true && !child.currentTransform.isIdentity()) {
                     // calculate the anchor point
                     var bounds = child.getBounds();
-                    var cx = ~~(0.5 + (bounds.width * child.anchorPoint.x));
-                    var cy = ~~(0.5 + (bounds.height * child.anchorPoint.y));
+                    var cx = bounds.width * child.anchorPoint.x;
+                    var cy = bounds.height * child.anchorPoint.y;
 
                     renderer.save();
 

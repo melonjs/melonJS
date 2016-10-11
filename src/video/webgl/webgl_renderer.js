@@ -19,6 +19,7 @@
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
@@ -319,6 +320,12 @@
                 sh = image.height;
                 sx = 0;
                 sy = 0;
+            }
+
+            if (this.subPixel === false) {
+                // clamp to pixel grid
+                dx = ~~dx;
+                dy = ~~dy;
             }
 
             var key = sx + "," + sy + "," + sw + "," + sh;
@@ -705,6 +712,12 @@
          */
         transform : function (mat2d) {
             this.currentTransform.multiply(mat2d);
+            if (this.subPixel === false) {
+                // snap position values to pixel grid
+                var a = this.currentTransform.val;
+                a[6] = ~~a[6];
+                a[7] = ~~a[7];
+            }
         },
 
         /**
@@ -716,7 +729,11 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            this.currentTransform.translate(x, y);
+            if (this.subPixel === false) {
+                this.currentTransform.translate(~~x, ~~y);
+            } else {
+                this.currentTransform.translate(x, y);
+            }
         }
     });
 

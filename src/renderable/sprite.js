@@ -521,9 +521,9 @@
             // the frame to draw
             var frame = this.current;
 
-            // clamp position vector to pixel grid
-            var xpos = ~~this.pos.x,
-                ypos = ~~this.pos.y;
+            // cache the current position and size
+            var xpos = this.pos.x,
+                ypos = this.pos.y;
 
             var w = frame.width,
                 h = frame.height;

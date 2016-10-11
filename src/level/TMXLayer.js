@@ -277,8 +277,8 @@
                  * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
                  * for a thorough description of how this works.
                  */
-                x = ~~(ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x),
-                y = ~~(ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y);
+                x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
+                y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y;
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -315,8 +315,8 @@
                 alpha = renderer.globalAlpha();
 
             if (this.ratio.x === this.ratio.y === 0) {
-                x = ~~(x + ax * (bw - width));
-                y = ~~(y + ay * (bh - height));
+                x = x + ax * (bw - width);
+                y = y + ay * (bh - height);
             }
 
             renderer.setGlobalAlpha(alpha * this.getOpacity());

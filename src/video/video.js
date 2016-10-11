@@ -38,6 +38,7 @@
             scaleMethod : "fit",
             transparent : false,
             antiAlias : false,
+            subPixel : false
         };
 
 

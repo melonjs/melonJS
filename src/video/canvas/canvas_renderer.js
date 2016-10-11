@@ -20,6 +20,7 @@
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {Boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
@@ -172,12 +173,39 @@
          * renderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
          * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
          */
-        drawImage : function () {
+        drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (this.backBufferContext2D.globalAlpha < 1 / 255) {
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
+
+            if (typeof sw === "undefined") {
+                sw = dw = image.width;
+                sh = dh = image.height;
+                dx = sx;
+                dy = sy;
+                sx = 0;
+                sy = 0;
+            }
+            else if (typeof dx === "undefined") {
+                dx = sx;
+                dy = sy;
+                dw = sw;
+                dh = sh;
+                sw = image.width;
+                sh = image.height;
+                sx = 0;
+                sy = 0;
+            }
+
+            if (this.subPixel === false) {
+                // clamp to pixel grid
+                dx = ~~dx;
+                dy = ~~dy;
+            }
+
+            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+            //this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
         },
 
         /**
@@ -222,7 +250,7 @@
             }
             this.backBufferContext2D.save();
             this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.translate(x + radius, y + radius);
+            this.translate(x + radius, y + radius);
             this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             this.backBufferContext2D.fill();
             this.backBufferContext2D.closePath();
@@ -393,7 +421,7 @@
             }
             this.save();
             this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.translate(x + radius, y + radius);
+            this.translate(x + radius, y + radius);
             this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
@@ -476,7 +504,7 @@
                 return;
             }
             this.save();
-            this.backBufferContext2D.translate(poly.pos.x, poly.pos.y);
+            this.translate(poly.pos.x, poly.pos.y);
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
             var point;
@@ -487,7 +515,6 @@
             this.backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
-            this.backBufferContext2D.translate(-poly.pos.x, -poly.pos.y);
             this.restore();
         },
 
@@ -565,13 +592,21 @@
          */
         transform : function (mat2d) {
             var a = mat2d.val;
+            var tx = a[6],
+                ty = a[7];
+
+            if (this.subPixel === false) {
+                tx = ~~tx;
+                ty = ~~ty;
+            }
+
             this.backBufferContext2D.transform(
                 a[0],
                 a[1],
                 a[3],
                 a[4],
-                a[6],
-                a[7]
+                tx,
+                ty
             );
         },
 
@@ -584,7 +619,11 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            this.backBufferContext2D.translate(x, y);
+            if (this.subPixel === false) {
+                this.backBufferContext2D.translate(~~x, ~~y);
+            } else {
+                this.backBufferContext2D.translate(x, y);
+            }
         }
 
     });
