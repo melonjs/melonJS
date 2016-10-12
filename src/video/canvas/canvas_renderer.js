@@ -179,33 +179,29 @@
                 return;
             }
 
-            if (typeof sw === "undefined") {
-                sw = dw = image.width;
-                sh = dh = image.height;
-                dx = sx;
-                dy = sy;
-                sx = 0;
-                sy = 0;
-            }
-            else if (typeof dx === "undefined") {
-                dx = sx;
-                dy = sy;
-                dw = sw;
-                dh = sh;
-                sw = image.width;
-                sh = image.height;
-                sx = 0;
-                sy = 0;
-            }
-
             if (this.subPixel === false) {
-                // clamp to pixel grid
-                dx = ~~dx;
-                dy = ~~dy;
+                if (typeof sw === "undefined") {
+                    sw = dw = image.width;
+                    sh = dh = image.height;
+                    dx = sx;
+                    dy = sy;
+                    sx = 0;
+                    sy = 0;
+                }
+                else if (typeof dx === "undefined") {
+                    dx = sx;
+                    dy = sy;
+                    dw = sw;
+                    dh = sh;
+                    sw = image.width;
+                    sh = image.height;
+                    sx = 0;
+                    sy = 0;
+                }
+                this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, ~~dx, ~~dy, dw, dh);
+            } else {
+                this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
             }
-
-            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
-            //this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
         },
 
         /**
