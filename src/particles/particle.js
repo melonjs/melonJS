@@ -129,7 +129,7 @@
             this.currentTransform.setTransform(
                 scale, 0, 0,
                 0, scale, 0,
-                ~~this.pos.x, ~~this.pos.y, 1
+                this.pos.x, this.pos.y, 1
             ).rotate(angle);
 
             // Return true if the particle is not dead yet
