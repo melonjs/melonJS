@@ -6,6 +6,7 @@ Version History
 * Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
 * Renderable : transformations are now directly defined under me.Renderable and can be automatically applied through the `autoTransform` flag
 * Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
+* Renderer : added a subPixel rendering option (off by default)
 * Pointer : fixed bug with Chrome on Windows touch devices where touch input would register, but mouse input would not. (credit to BrianRosamilia)
 * TMX : scaling and rotation can now be applied to a tilemap (see me.levelDirector.loadLevel() for example)
 
