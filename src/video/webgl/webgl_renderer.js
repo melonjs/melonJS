@@ -663,11 +663,8 @@
             if (shape.shapeType === "Rectangle") {
                 this.strokeRect(shape.left, shape.top, shape.width, shape.height);
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.save();
                 this.strokePolygon(shape);
-                this.restore();
             } else if (shape instanceof me.Ellipse) {
-                this.save();
                 if (shape.radiusV.x === shape.radiusV.y) {
                     // it's a circle
                     this.strokeArc(
@@ -686,7 +683,6 @@
                         shape.radiusV.y
                     );
                 }
-                this.restore();
             }
         },
 

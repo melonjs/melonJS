@@ -244,13 +244,13 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.backBufferContext2D.save();
-            this.backBufferContext2D.beginPath();
+
             this.translate(x + radius, y + radius);
+            this.backBufferContext2D.beginPath();
             this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             this.backBufferContext2D.fill();
             this.backBufferContext2D.closePath();
-            this.backBufferContext2D.restore();
+            this.translate(- (x + radius), -(y + radius));
         },
 
         /**
@@ -415,13 +415,12 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.save();
-            this.backBufferContext2D.beginPath();
             this.translate(x + radius, y + radius);
+            this.backBufferContext2D.beginPath();
             this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
-            this.restore();
+            this.translate(-(x + radius), -(y + radius));
         },
 
         /**
@@ -439,8 +438,7 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.save();
-            this.context.beginPath();
+
             var hw = w,
                 hh = h,
                 lx = x - hw,
@@ -455,13 +453,13 @@
                 ymin = y - ymagic,
                 ymax = y + ymagic;
 
+            this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(x, ty);
             this.backBufferContext2D.bezierCurveTo(xmax, ty, rx, ymin, rx, y);
             this.backBufferContext2D.bezierCurveTo(rx, ymax, xmax, by, x, by);
             this.backBufferContext2D.bezierCurveTo(xmin, by, lx, ymax, lx, y);
             this.backBufferContext2D.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
             this.backBufferContext2D.stroke();
-            this.restore();
         },
 
         /**
@@ -479,12 +477,11 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.save();
+
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(startX, startY);
             this.backBufferContext2D.lineTo(endX, endY);
             this.backBufferContext2D.stroke();
-            this.restore();
         },
 
         /**
@@ -499,7 +496,7 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.save();
+
             this.translate(poly.pos.x, poly.pos.y);
             this.backBufferContext2D.beginPath();
             this.backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
@@ -511,7 +508,7 @@
             this.backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
             this.backBufferContext2D.stroke();
             this.backBufferContext2D.closePath();
-            this.restore();
+            this.translate(-poly.pos.x, -poly.pos.y);
         },
 
         /**
