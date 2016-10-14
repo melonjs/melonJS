@@ -35,7 +35,7 @@
         init : function (x, y, settings) {
 
             /**
-             * The entity renderable object (if defined)
+             * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
              * @public
              * @type me.Renderable
              * @name renderable
