@@ -2,7 +2,7 @@ Version History
 ---------------
 4.0.0
 
-* Audio : updated to Howler final 2.0.0 version
+* Audio : updated to the latest Howler 2.0.1 version
 * Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
 * Renderable : transformations are now directly defined under me.Renderable and can be automatically applied through the `autoTransform` flag
 * Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
@@ -39,8 +39,7 @@ Version History
 * Core : fixed/improved compatibility with Ejecta (e.g. initialization, CAFF support)
 * Input : actually really truly fix pointer event z-ordering, finally
 
-3.0.0
-* Audio : updated to the latest Howler v2.0.0 beta version
+3.0.0* Audio : updated to the latest Howler v2.0.0 beta version
 * Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
 * Container : added an `autoDepth` feature that auto-increments a child's z-coordinate when inserted
 * Color : add support for the #ARGB and #AARRGGBB formats
