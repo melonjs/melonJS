@@ -230,7 +230,7 @@
          * @memberOf me.Matrix2d
          * @function
          * @param {Number} x a number representing the abscissa of the scaling vector.
-         * @param {Number} y a number representing the ordinate of the scaling vector.
+         * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         scale : function (x, y) {

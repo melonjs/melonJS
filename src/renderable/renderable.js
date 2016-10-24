@@ -283,14 +283,17 @@
          * @memberOf me.Renderable
          * @function
          * @param {Number} x a number representing the abscissa of the scaling vector.
-         * @param {Number} y a number representing the ordinate of the scaling vector.
+         * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
          * @return {me.Renderable} Reference to this object for method chaining
          */
         scale : function (x, y) {
+            var _x = x,
+                _y = typeof(y) === "undefined" ? _x : y;
+
             // set the scaleFlag
-            this.currentTransform.scale(x, y);
+            this.currentTransform.scale(_x, _y);
             // resize the bounding box
-            this.getBounds().resize(this.width * x, this.height * y);
+            this.getBounds().resize(this.width * _x, this.height * _y);
             return this;
         },
 
