@@ -28,6 +28,21 @@ describe("me.Sprite", function () {
         expect(sprite.isCurrentAnimation("test")).toEqual(false);
     });
 
-    // TODO: add bounds testing when transformation are added
+    it("me.Sprite bounds should be updated when the sprite is scaled", function () {
+        var bounds = sprite.getBounds();
+        // scale the sprite
+        sprite.scale(2.0); // w & h -> 64, 64
+        expect(bounds.width).toEqual(64);
+        expect(bounds.height).toEqual(64);
+    });
 
+    /* TODO: add proper bounds testing when transformation are added
+    it("me.Sprite bounds should be updated when the sprite is scaled or rotated", function () {
+        var bounds = sprite.getBounds();
+        // further scale the sprite (-> 128) and rotate it by 45deg
+        sprite.transform((new me.Matrix2d()).scale(2.0).rotate(45 * Math.PI/180));
+        expect(Math.round(bounds.width)).toEqual(128 + (128 / 2));
+        expect(Math.round(bounds.height)).toEqual(128 + (128 / 2));
+    });
+    */
 });
