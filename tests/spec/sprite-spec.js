@@ -21,14 +21,6 @@ describe("me.Sprite", function () {
         expect(sprite.addAnimation("test", [ 0, 1 ])).toEqual(2);
     });
 
-    it("me.Sprite isCurrentAnimation allows to verify which animation is set", function () {
-        expect(sprite.addAnimation("reverse_test", [ 1, 0 ])).toEqual(2);
-        sprite.setCurrentAnimation("reverse_test");
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        expect(sprite.isCurrentAnimation("test")).toEqual(false);
-    });
-
-
     // TODO: add bounds testing when transformation are added
 
 });
