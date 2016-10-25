@@ -203,7 +203,10 @@
                         glyph.width, glyph.height,
                         x + glyph.offset.x,
                         y + glyph.offset.y * this.fontScale.y,
-                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
+                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y
+                    );
+
+                    // increment position
                     x += (glyph.xadvance + kerning) * this.fontScale.x;
                     lastGlyph = glyph;
                 }
