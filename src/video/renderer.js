@@ -229,6 +229,17 @@
         },
 
         /**
+         * get the current fill & stroke style color.
+         * @name getColor
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Color} current global color
+         */
+        getColor : function () {
+            return this.currentColor;
+        },
+
+        /**
          * return the current global alpha
          * @name globalAlpha
          * @memberOf me.Renderer
