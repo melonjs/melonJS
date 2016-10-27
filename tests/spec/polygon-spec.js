@@ -15,9 +15,6 @@ describe("Shape : me.Polygon", function () {
         {x: -28, y: 60}
     ]);
 
-    // get the polygon bounding rect
-    var boundingRect = stars.getBounds();
-
     describe("Polygon", function () {
         it("requires at least 3 points", function () {
             function badPolygon() {
@@ -40,6 +37,9 @@ describe("Shape : me.Polygon", function () {
     });
 
     describe("Polygon Bounding Rect", function () {
+        // get the polygon bounding rect
+        var boundingRect = stars.getBounds();
+
         it("width is 188", function () {
             expect(boundingRect.width).toEqual(188);
         });
@@ -53,4 +53,21 @@ describe("Shape : me.Polygon", function () {
         });
     });
 
+    describe("Polygon transformation", function () {
+        var rect = new me.Polygon(0, 0, [
+            // draw a star
+            {x: 0, y: 0},
+            {x: 32, y: 0},
+            {x: 32, y: 32},
+            {x: 0, y: 32}
+        ]);
+        var boundingRect = rect.getBounds();
+
+        it("Bounds should be updated when scaled or rotated", function () {
+            // scale the polygon and rotate it by 45deg
+            rect.transform((new me.Matrix2d()).scale(2.0).rotate(Math.PI/4));
+            expect(Math.floor(boundingRect.width)).toEqual(90);
+            expect(Math.floor(boundingRect.height)).toEqual(90);
+        });
+    });
 });
