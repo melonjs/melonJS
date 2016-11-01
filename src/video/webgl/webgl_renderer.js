@@ -99,22 +99,15 @@
          */
         createFillTexture : function () {
             // Create a 1x1 white texture for fill operations
-            var img = new Uint8Array([255, 255, 255, 255]);
+            var image = new Uint8Array([255, 255, 255, 255]);
 
             /**
              * @ignore
              */
-            this.fillTexture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : { "w" : 1, "h" : 1 }
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : { "x" : 0, "y" : 0, "w" : 1, "h" : 1 }
-                }]
-            }, img);
+            this.fillTexture = new this.Texture(
+                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(this, 1, 1, "fillTexture"),
+                image
+            );
 
             this.compositor.uploadTexture(
                 this.fillTexture,
@@ -128,7 +121,7 @@
          * @ignore
          */
         createFontTexture : function () {
-            var img = me.video.createCanvas(
+            var image = me.video.createCanvas(
                 this.backBufferCanvas.width,
                 this.backBufferCanvas.height
             );
@@ -136,30 +129,20 @@
             /**
              * @ignore
              */
-            this.fontContext2D = this.getContext2d(img);
+            this.fontContext2D = this.getContext2d(image);
 
             /**
              * @ignore
              */
-            this.fontTexture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : {
-                        "w" : this.backBufferCanvas.width,
-                        "h" : this.backBufferCanvas.height
-                    }
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : {
-                        "x" : 0,
-                        "y" : 0,
-                        "w" : this.backBufferCanvas.width,
-                        "h" : this.backBufferCanvas.height
-                    }
-                }]
-            }, img);
+            this.fontTexture = new this.Texture(
+                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
+                    this,
+                    this.backBufferCanvas.width,
+                    this.backBufferCanvas.height,
+                    "fontTexture"
+                ),
+                image
+            );
 
             this.compositor.uploadTexture(this.fontTexture);
         },
@@ -180,18 +163,12 @@
          * var basic      = renderer.createPattern(image, "no-repeat");
          */
         createPattern : function (image, repeat) {
-            var texture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : { "w" : image.width, "h" : image.height },
-                    "repeat" : repeat
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : { "x" : 0, "y" : 0, "w" : image.width, "h" : image.height }
-                }]
-            }, image);
+            var texture = new this.Texture(
+                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
+                    this, image.width, image.height, "pattern", repeat
+                ),
+                image
+            );
 
             // FIXME: Remove old cache entry and texture when changing the repeat mode
             this.compositor.uploadTexture(texture);

@@ -130,6 +130,7 @@
         },
 
         /**
+         * build an atlas from the given data
          * @ignore
          */
         build : function (data) {
@@ -159,6 +160,24 @@
                 }
             });
             return atlas;
+        },
+
+        /**
+         * build an simple 1 frame atlas from the given data
+         * @ignore
+         */
+        buildFromFrame : function (width, height, name, repeat) {
+            return {
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : { "w" : width, "h" : height },
+                    "repeat" : repeat || "no-repeat"
+                },
+                "frames" : [{
+                    "filename" : name || "default",
+                    "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+                }]
+            };
         },
 
         /**
