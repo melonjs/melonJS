@@ -39,7 +39,6 @@
              * @memberOf me.WebGLRenderer
              */
             this.gl = this.getContextGL(c, !this.transparent);
-            var gl = this.gl;
 
             /**
              * @ignore
@@ -71,22 +70,15 @@
 
             // Create a compositor
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
-            this.compositor = new Compositor(
-                gl,
-                this.currentTransform,
-                this.currentColor
-            );
+            this.compositor = new Compositor(this);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
                 this.compositor.maxTextures
             );
 
-            // FIXME: Cannot reference me.video.renderer yet
-            me.video.renderer = this;
-
-            this.createFillTexture();
-            this.createFontTexture();
+            this.createFillTexture(this.cache);
+            this.createFontTexture(this.cache);
 
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
@@ -97,7 +89,7 @@
         /**
          * @ignore
          */
-        createFillTexture : function () {
+        createFillTexture : function (cache) {
             // Create a 1x1 white texture for fill operations
             var image = new Uint8Array([255, 255, 255, 255]);
 
@@ -106,7 +98,8 @@
              */
             this.fillTexture = new this.Texture(
                 me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(this, 1, 1, "fillTexture"),
-                image
+                image,
+                cache
             );
 
             this.compositor.uploadTexture(
@@ -120,7 +113,7 @@
         /**
          * @ignore
          */
-        createFontTexture : function () {
+        createFontTexture : function (cache) {
             var image = me.video.createCanvas(
                 this.backBufferCanvas.width,
                 this.backBufferCanvas.height
@@ -141,7 +134,8 @@
                     this.backBufferCanvas.height,
                     "fontTexture"
                 ),
-                image
+                image,
+                cache
             );
 
             this.compositor.uploadTexture(this.fontTexture);

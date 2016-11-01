@@ -46,8 +46,6 @@
          */
         get : function (image, atlas) {
             if (!this.cache.has(image)) {
-                this.validate();
-
                 if (!atlas) {
                     atlas = me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
                         this,
@@ -56,10 +54,7 @@
                         image.src ? me.utils.getBasename(image.src) : undefined
                     );
                 }
-
-                var texture = new me.video.renderer.Texture(atlas, image, true);
-                this.cache.set(image, texture);
-                this.units.set(texture, this.length++);
+                this.put(image, new me.video.renderer.Texture(atlas, image, false));
             }
             return this.cache.get(image);
         },

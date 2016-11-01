@@ -165,17 +165,17 @@
          * @param {WebGLContext} gl WebGL Context
          * @param {Number} unit Destination texture unit
          * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
+         * @param {Number} filter gl.LINEAR or gl.NEAREST
          * @param {String} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
          * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @return {WebGLTexture} A texture object
          */
-        api.createTexture = function (gl, unit, image, repeat, w, h, b) {
+        api.createTexture = function (gl, unit, image, filter, repeat, w, h, b) {
             repeat = repeat || "no-repeat";
 
             var texture = gl.createTexture(),
-                filter = me.video.renderer.antiAlias ? gl.LINEAR : gl.NEAREST,
                 rs = (repeat.search(/^repeat(-x)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE,
                 rt = (repeat.search(/^repeat(-y)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 

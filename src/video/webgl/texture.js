@@ -52,6 +52,15 @@
         /**
          * @ignore
          */
+        buildFromFrame : function (width, height, name, repeat) {
+            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "buildFromFrame", [ width, height, name, repeat ]);
+
+            return this._addStMap(atlas, width, height);
+        },
+
+        /**
+         * @ignore
+         */
         buildFromSpriteSheet : function (data) {
             var w = data.image.width;
             var h = data.image.height;

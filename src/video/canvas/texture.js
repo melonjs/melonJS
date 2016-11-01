@@ -47,7 +47,7 @@
         /**
          * @ignore
          */
-        init : function (atlas, texture, cached) {
+        init : function (atlas, texture, cache) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore
@@ -123,9 +123,13 @@
                 throw new me.video.renderer.Texture.Error("texture atlas format not supported");
             }
 
-            // Add self to TextureCache
-            if (!cached) {
-                me.video.renderer.cache.put(this.texture, this);
+            // Add self to TextureCache if cache !== false
+            if (cache !== false) {
+                if (cache instanceof me.Renderer.TextureCache) {
+                    cache.put(this.texture, this);
+                } else {
+                    me.video.renderer.cache.put(this.texture, this);
+                }
             }
         },
 
