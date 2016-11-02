@@ -47,11 +47,9 @@
         get : function (image, atlas) {
             if (!this.cache.has(image)) {
                 if (!atlas) {
-                    atlas = me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
-                        this,
-                        image.width,
-                        image.height,
-                        image.src ? me.utils.getBasename(image.src) : undefined
+                    atlas = me.video.renderer.Texture.prototype.buildFromFrame.apply(
+                        me.video.renderer.Texture.prototype,
+                        [image.width, image.height, image.src ? me.utils.getBasename(image.src) : undefined]
                     );
                 }
                 this.put(image, new me.video.renderer.Texture(atlas, image, false));

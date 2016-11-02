@@ -53,9 +53,8 @@
          * @ignore
          */
         buildFromFrame : function (width, height, name, repeat) {
-            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "buildFromFrame", [ width, height, name, repeat ]);
-
-            return this._addStMap(atlas, width, height);
+            return this._super(me.CanvasRenderer.prototype.Texture, "buildFromFrame", [ width, height, name, repeat ]);
+            // _addSTMap will be called through build()
         },
 
         /**

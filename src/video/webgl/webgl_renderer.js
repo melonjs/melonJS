@@ -97,7 +97,10 @@
              * @ignore
              */
             this.fillTexture = new this.Texture(
-                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(this, 1, 1, "fillTexture"),
+                this.Texture.prototype.buildFromFrame.apply(
+                    this.Texture.prototype,
+                    [ 1, 1, "fillTexture"]
+                ),
                 image,
                 cache
             );
@@ -128,11 +131,9 @@
              * @ignore
              */
             this.fontTexture = new this.Texture(
-                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
-                    this,
-                    this.backBufferCanvas.width,
-                    this.backBufferCanvas.height,
-                    "fontTexture"
+                this.Texture.prototype.buildFromFrame.apply(
+                    this.Texture.prototype,
+                    [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
                 ),
                 image,
                 cache
@@ -158,8 +159,9 @@
          */
         createPattern : function (image, repeat) {
             var texture = new this.Texture(
-                me.CanvasRenderer.prototype.Texture.prototype.buildFromFrame.call(
-                    this, image.width, image.height, "pattern", repeat
+                this.Texture.prototype.buildFromFrame.apply(
+                    this.Texture.prototype,
+                    [ image.width, image.height, "pattern", repeat]
                 ),
                 image
             );
