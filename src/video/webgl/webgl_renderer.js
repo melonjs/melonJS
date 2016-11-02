@@ -97,7 +97,7 @@
              * @ignore
              */
             this.fillTexture = new this.Texture(
-                this.Texture.prototype.buildFromFrame.apply(
+                this.Texture.prototype.createAtlas.apply(
                     this.Texture.prototype,
                     [ 1, 1, "fillTexture"]
                 ),
@@ -131,7 +131,7 @@
              * @ignore
              */
             this.fontTexture = new this.Texture(
-                this.Texture.prototype.buildFromFrame.apply(
+                this.Texture.prototype.createAtlas.apply(
                     this.Texture.prototype,
                     [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
                 ),
@@ -159,7 +159,7 @@
          */
         createPattern : function (image, repeat) {
             var texture = new this.Texture(
-                this.Texture.prototype.buildFromFrame.apply(
+                this.Texture.prototype.createAtlas.apply(
                     this.Texture.prototype,
                     [ image.width, image.height, "pattern", repeat]
                 ),

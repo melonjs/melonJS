@@ -101,7 +101,7 @@
                         this.repeat = atlas.meta.repeat || "no-repeat";
                     }
                     // initialize the atlas
-                    this.atlas = this.build(atlas);
+                    this.atlas = this.parse(atlas);
 
                 } else {
                     // a regular spritesheet ?
@@ -113,7 +113,7 @@
                             atlas.image = texture;
                         }
                         // initialize the atlas
-                        this.atlas = this.buildFromSpriteSheet(atlas);
+                        this.atlas = this.parseFromSpriteSheet(atlas);
                         this.repeat = "no-repeat";
                     }
                 }
@@ -134,10 +134,28 @@
         },
 
         /**
+         * create a simple 1 frame texture atlas based on the given parameters
+         * @ignore
+         */
+        createAtlas : function (width, height, name, repeat) {
+            return {
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : { "w" : width, "h" : height },
+                    "repeat" : repeat || "no-repeat"
+                },
+                "frames" : [{
+                    "filename" : name || "default",
+                    "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+                }]
+            };
+        },
+
+        /**
          * build an atlas from the given data
          * @ignore
          */
-        build : function (data) {
+        parse : function (data) {
             var atlas = {};
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
@@ -167,28 +185,10 @@
         },
 
         /**
-         * build an simple 1 frame atlas from the given data
-         * @ignore
-         */
-        buildFromFrame : function (width, height, name, repeat) {
-            return {
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : { "w" : width, "h" : height },
-                    "repeat" : repeat || "no-repeat"
-                },
-                "frames" : [{
-                    "filename" : name || "default",
-                    "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
-                }]
-            };
-        },
-
-        /**
          * build an atlas from the given spritesheet
          * @ignore
          */
-        buildFromSpriteSheet : function (data) {
+        parseFromSpriteSheet : function (data) {
             var atlas = {};
             var image = data.image;
             var spacing = data.spacing || 0;

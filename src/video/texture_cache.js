@@ -47,7 +47,7 @@
         get : function (image, atlas) {
             if (!this.cache.has(image)) {
                 if (!atlas) {
-                    atlas = me.video.renderer.Texture.prototype.buildFromFrame.apply(
+                    atlas = me.video.renderer.Texture.prototype.createAtlas.apply(
                         me.video.renderer.Texture.prototype,
                         [image.width, image.height, image.src ? me.utils.getBasename(image.src) : undefined]
                     );
