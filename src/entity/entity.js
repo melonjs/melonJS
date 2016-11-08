@@ -60,7 +60,7 @@
                     "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin,
-                    "anchorPoint" : settings.anchorPoint,
+                    "anchorPoint" : settings.anchorPoint
                 });
             }
 

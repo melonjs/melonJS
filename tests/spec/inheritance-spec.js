@@ -136,7 +136,7 @@ describe("Jay Inheritance", function () {
             },
             "reset" : function () {
                 this._data = [];
-            },
+            }
         };
 
         beforeEach(function () {
@@ -188,7 +188,7 @@ describe("Jay Inheritance", function () {
                     [ "B.foo" ],
                     [ "D.bar" ],
                     [ "C.bar" ],
-                    [ "A.bar" ],
+                    [ "A.bar" ]
                 ]);
             });
         });
@@ -231,7 +231,7 @@ describe("Jay Inheritance", function () {
                 expect(stepper.steps()).toEqual([
                     [ "Z.foo" ],
                     [ "Y.foo" ],
-                    [ "Y.bar" ],
+                    [ "Y.bar" ]
                 ]);
             });
         });

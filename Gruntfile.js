@@ -1,5 +1,7 @@
+// eslint-disable-next-line
 module.exports = function (grunt) {
   "use strict";
+
 
   var sourceFiles = grunt.file.readJSON("sourceFiles.json");
   var testSpecs = grunt.file.readJSON("testSpecs.json");
@@ -32,7 +34,7 @@ module.exports = function (grunt) {
             "__QUAD_FRAGMENT__" : quadFragment,
             "__QUAD_VERTEX__"   : quadVertex,
             "__LINE_FRAGMENT__" : lineFragment,
-            "__LINE_VERTEX__"   : lineVertex,
+            "__LINE_VERTEX__"   : lineVertex
           },
           usePrefix : false,
           force : true,
@@ -40,8 +42,8 @@ module.exports = function (grunt) {
             {
               match : /this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g,
               replacement : "$1.prototype.$2.apply(this$3"
-            },
-          ],
+            }
+          ]
         },
         files : [
           {
@@ -93,8 +95,8 @@ module.exports = function (grunt) {
               // Remove unnecessary whitespace
               match : /\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g,
               replacement : "$1"
-            },
-          ],
+            }
+          ]
         },
         files : [
           {
@@ -110,7 +112,7 @@ module.exports = function (grunt) {
     dot : {
       glsl : {
         options : {
-          strip : false,
+          strip : false
         },
         files : [
           {
@@ -139,21 +141,21 @@ module.exports = function (grunt) {
       }
     },
 
-    jshint : {
-      options : {
-        jshintrc : ".jshintrc"
-      },
+    eslint : {
+        options : {
+          configFile : ".eslintrc.json"
+        },
 
-      beforeConcat : {
-        files : {
-          src : [
-            testSpecs,
-            sourceFiles,
-            "Gruntfile.js",
-            "plugins/**/*"
-          ]
-        }
-      },
+        beforeConcat : {
+          files : {
+            src : [
+              testSpecs,
+              sourceFiles,
+              "Gruntfile.js",
+              "plugins/**/*"
+            ]
+          }
+        },
 
       afterConcat : {
         files : {
@@ -224,9 +226,9 @@ module.exports = function (grunt) {
           "docs/**",
           "examples/**",
           "media/logo.png",
-          "plugins/**",
+          "plugins/**"
         ],
-        dest : "dist/",
+        dest : "dist/"
       }
     },
 
@@ -236,10 +238,10 @@ module.exports = function (grunt) {
           dist : "dist",
           build_branch : "gh-pages",
           exclude : [ "node_modules/" ],
-          pull : true,
-        },
-      },
-    },
+          pull : true
+        }
+      }
+    }
   });
 
   grunt.loadNpmTasks("grunt-contrib-clean");
@@ -247,7 +249,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-connect");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-contrib-jasmine");
-  grunt.loadNpmTasks("grunt-contrib-jshint");
+  grunt.loadNpmTasks("grunt-eslint");
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-build-gh-pages");
   grunt.loadNpmTasks("grunt-jsdoc");
@@ -261,11 +263,11 @@ module.exports = function (grunt) {
   grunt.registerTask("build", [ "lint", "uglify" ]);
   grunt.registerTask("glsl", [ "dot:glsl", "replace:glsl" ]);
   grunt.registerTask("lint", [
-    "jshint:beforeConcat",
+    "eslint:beforeConcat",
     "glsl",
     "concat",
     "replace:dist",
-    "jshint:afterConcat",
+    "eslint:afterConcat"
   ]);
   grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
@@ -275,7 +277,7 @@ module.exports = function (grunt) {
     "build",
     "doc",
     "copy:dist",
-    "buildGhPages:dist",
+    "buildGhPages:dist"
   ]);
   grunt.registerTask("release", [ "gh-pages", "dorelease" ]);
 };

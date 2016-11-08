@@ -132,8 +132,7 @@
             this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action) {
                 if (action === "show") {
                     self.show();
-                }
-                else if (action === "hide") {
+                } else if (action === "hide") {
                     self.hide();
                 }
             });
@@ -384,8 +383,7 @@
         update : function () {
             if (me.input.isKeyPressed("show")) {
                 this.show();
-            }
-            else if (me.input.isKeyPressed("hide")) {
+            } else if (me.input.isKeyPressed("hide")) {
                 this.hide();
             }
             return true;
@@ -396,13 +394,11 @@
             // check the clickable areas
             if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
-            }
-            else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
-            }
-            else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
                 me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
@@ -423,8 +419,7 @@
                     renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
                     renderer.restore();
                 }
-            }
-            else {
+            } else {
                 //has subnodes? drawQuadtree them!
                 for (var i = 0; i < node.nodes.length; i++) {
                     this.drawQuadTreeNode(renderer, node.nodes[i]);
@@ -462,8 +457,7 @@
                 renderer.fillRect(this.memoryPositionX + 1, 1, len - 1, 17);
 
                 this.font.draw(renderer, "Heap : " + usedHeap + "/" + totalHeap + " MB", this.memoryPositionX + 5, 5 * this.mod);
-            }
-            else {
+            } else {
                 // Heap Memory information not available
                 this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 5 * this.mod);
             }

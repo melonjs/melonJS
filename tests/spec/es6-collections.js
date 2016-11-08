@@ -21,8 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
-describe("ES6 Collections test", function(){
+describe("ES6 Collections test", function() {
   it("WeakMap existence", function () {
     expect(WeakMap).toBeDefined();
   });
@@ -32,7 +31,7 @@ describe("ES6 Collections test", function(){
     var a = {};
     var b = {};
     var c = new WeakMap();
-    var m = new WeakMap([[a,1], [b,2], [c, 3]]);
+    var m = new WeakMap([[a, 1], [b, 2], [c, 3]]);
     expect(m.has(a)).toEqual(true);
     expect(m.has(b)).toEqual(true);
     expect(m.has(c)).toEqual(true);
@@ -106,7 +105,7 @@ describe("ES6 Collections test", function(){
     var a = 1;
     var b = {};
     var c = new Map();
-    var m = new Map([[1,1], [b,2], [c, 3]]);
+    var m = new Map([[1, 1], [b, 2], [c, 3]]);
     expect(m.has(a)).toEqual(true);
     expect(m.has(b)).toEqual(true);
     expect(m.has(c)).toEqual(true);
@@ -261,7 +260,7 @@ describe("ES6 Collections test", function(){
     expect(JSON.stringify(o._values)).toEqual(JSON.stringify([1, 3, 0]));
   });
 
-  it("Map#clear", function(){
+  it("Map#clear", function() {
     var o = new Map();
     o.set(1, "1");
     o.set(2, "2");

@@ -10,12 +10,14 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/String|String}
  */
 
+/* eslint-disable no-extend-native, yoda */
+
 if (!String.prototype.trim) {
     /**
      * removes whitespace from both ends of a string. Whitespace in this context is all the whitespace characters (space, tab, no-break space, etc.) and all the line terminator characters (LF, CR, etc.).
      * @memberof! external:String#
      * @alias trim
-     * @return {string} the string stripped of whitespace from both ends. 
+     * @return {string} the string stripped of whitespace from both ends.
      */
     if (!String.prototype.trim) {
       (function() {
@@ -101,3 +103,4 @@ String.prototype.toHex = function () {
     }
     return res;
 };
+/* eslint-enable no-extend-native */

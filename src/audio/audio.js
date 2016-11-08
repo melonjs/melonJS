@@ -511,7 +511,6 @@
          * me.audio.unload("awesome_music");
          */
         api.unload = function (sound_name) {
-            sound_name = sound_name;
             if (!(sound_name in audioTracks)) {
                 return false;
             }

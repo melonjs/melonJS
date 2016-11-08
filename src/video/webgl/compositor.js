@@ -113,6 +113,7 @@
             ).precision < 16) ? "mediump" : "highp";
 
             // Load and create shader programs
+            /* eslint-disable */
             this.lineShader = me.video.shader.createShader(
                 this.gl,
                 (__LINE_VERTEX__)(),
@@ -128,6 +129,7 @@
                     "maxTextures"   : this.maxTextures
                 })
             );
+            /* eslint-enable */
 
             this.shader = this.quadShader.handle;
 

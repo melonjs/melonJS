@@ -321,7 +321,7 @@
             var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
             // add the viewport to the list of candidates
-            candidates.push ( me.game.viewport );
+            candidates.push( me.game.viewport );
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
 
@@ -713,7 +713,7 @@
             evtHandlers.set(region, {
                 region : region,
                 callbacks : {},
-                pointerId : null,
+                pointerId : null
             });
         }
 

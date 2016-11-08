@@ -8,11 +8,7 @@
  *  MIT License
  */
 
-/* jshint -W004 */
-/* jshint -W030 */
-/* jshint -W031 */
-/* jshint -W083 */
-/* jshint -W108 */
+/* eslint-disable quotes, space-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new*/
 
 (function() {
 
@@ -2179,3 +2175,4 @@
     global.Sound = Sound;
   }
 })();
+/* eslint-enable quotes, space-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new */

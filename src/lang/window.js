@@ -4,6 +4,8 @@
  * http://www.melonjs.org
  */
 
+/* eslint-disable space-before-blocks, no-global-assign, no-native-reassign */
+
 (function () {
 
     /**
@@ -207,3 +209,4 @@
     }
 
 })();
+/* eslint-enable space-before-blocks, no-global-assign, no-native-reassign */

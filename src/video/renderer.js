@@ -292,7 +292,7 @@
         /**
          * @ignore
          */
-        drawFont : function (/*bounds*/) {},
+        drawFont : function (/*bounds*/) {}
 
     });
 

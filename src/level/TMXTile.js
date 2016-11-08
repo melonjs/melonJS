@@ -151,7 +151,7 @@
                 (tileset.animations.get(this.tileId).frames).forEach(function (frame) {
                     frameId.push(frame.tileid);
                     frames.push({
-                        name : ""+frame.tileid,
+                        name : "" + frame.tileid,
                         delay : frame.duration
                     });
                 });
@@ -172,6 +172,6 @@
             }
 
             return renderable;
-        },
+        }
     });
 })();

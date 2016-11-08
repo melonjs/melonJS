@@ -243,7 +243,7 @@
             // draw the panel
             renderer.setGlobalAlpha(0.5);
             renderer.setColor("black");
-            renderer.fillRect(this._bounds.left,  this._bounds.top,
+            renderer.fillRect(this._bounds.left, this._bounds.top,
                               this._bounds.width, this._bounds.height);
             renderer.setGlobalAlpha(1.0);
             renderer.translate(this._bounds.left, this._bounds.top);
@@ -267,7 +267,7 @@
             this.drawGraph(renderer);
 
             renderer.restore();
-        },
+        }
     });
 
     /**

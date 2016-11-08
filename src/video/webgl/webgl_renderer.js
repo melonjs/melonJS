@@ -372,7 +372,7 @@
 
             var attr = {
                 antialias : this.antiAlias,
-                alpha : !opaque,
+                alpha : !opaque
             };
             return (
                 c.getContext("webgl", attr) ||

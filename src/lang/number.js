@@ -10,6 +10,8 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number|Number}
  */
 
+/* eslint-disable no-extend-native */
+
 /**
  * add a clamp fn to the Number object
  * @memberof! external:Number#
@@ -154,3 +156,4 @@ Number.prototype.degToRad = function (angle) {
 Number.prototype.radToDeg = function (angle) {
     return (angle || this) * (180.0 / Math.PI);
 };
+/* eslint-enable no-extend-native */

@@ -10,6 +10,8 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array|Array}
  */
 
+/* eslint-disable no-extend-native */
+
 /**
  * Remove the specified object from the Array<br>
  * @memberof! external:Array#
@@ -141,3 +143,4 @@ window.Uint16Array = window.Uint16Array || me.TypedArray;
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}
  */
 window.Uint32Array = window.Uint32Array || me.TypedArray;
+/* eslint-enable no-extend-native */

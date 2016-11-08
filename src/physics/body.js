@@ -386,7 +386,7 @@
                 this.pos.setV(_bounds.pos);
                 this.resize(_bounds.width, _bounds.height);
 
-                for (var i = 1 ; i < this.shapes.length; i++) {
+                for (var i = 1; i < this.shapes.length; i++) {
                     this.union(this.shapes[i].getBounds());
                 }
             }

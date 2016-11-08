@@ -4,6 +4,8 @@
  * http://www.melonjs.org
  */
 
+/* eslint-disable no-extend-native */
+
 /**
  * The built in Function Object
  * @external Function
@@ -73,3 +75,4 @@ if (!Function.prototype.bind) {
 Function.prototype.defer = function () {
     return setTimeout(this.bind.apply(this, arguments), 0.01);
 };
+/* eslint-enable no-extend-native */

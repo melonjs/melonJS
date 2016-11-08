@@ -450,8 +450,7 @@
         },
 
         onActivateEvent : function () {
-          for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-              var child = this.children[i];
+          for (var i = this.children.length, child; i--, (child = this.children[i]);) {
               if (typeof child.onActivateEvent === "function") {
                   child.onActivateEvent();
               }
@@ -628,8 +627,7 @@
         },
 
         onDeactivateEvent : function () {
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                var child = this.children[i];
+            for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }
