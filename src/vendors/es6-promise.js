@@ -6,17 +6,7 @@
  * @version   3.2.1
  */
 
-/* jshint -W003 */
-/* jshint -W030 */
-/* jshint -W033 */
-/* jshint -W035 */
-/* jshint -W040 */
-/* jshint -W055 */
-/* jshint -W064 */
-/* jshint -W069 */
-/* jshint -W098 */
-/* jshint -W108 */
-/* jshint -W117 */
+/* eslint-disable no-unused-vars, no-new-func, space-before-blocks, quotes, space-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new*/
 
 (function() {
     "use strict";
@@ -792,7 +782,7 @@
         // something went wrong
       });
       ```
-
+      @ignore
       @method then
       @param {Function} onFulfilled
       @param {Function} onRejected
@@ -822,7 +812,7 @@
         // something went wrong
       });
       ```
-
+      @ignore
       @method catch
       @param {Function} onRejection
       Useful for tooling.
@@ -968,3 +958,4 @@
 
     lib$es6$promise$polyfill$$default();
 }).call(this);
+/* eslint-enable no-unused-vars, no-new-func, space-before-blocks, quotes, space-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new */

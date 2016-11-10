@@ -17,6 +17,8 @@
      * @param {Number} y the y coordinates of the entity object
      * @param {Object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
      * <img src="images/object_properties.png"/>
+     * @param {Number} settings.width the physical width the entity takes up in game
+     * @param {Number} settings.height the physical height the entity takes up in game
      * @param {String} [settings.name] object entity name
      * @param {String} [settings.id] object unique IDs
      * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
@@ -33,7 +35,7 @@
         init : function (x, y, settings) {
 
             /**
-             * The entity renderable object (if defined)
+             * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
              * @public
              * @type me.Renderable
              * @name renderable
@@ -52,13 +54,13 @@
                         settings.height]);
 
             if (settings.image) {
-                this.renderable = new me.AnimationSheet(0, 0, {
+                this.renderable = new me.Sprite(0, 0, {
                     "image" : settings.image,
                     "framewidth" : ~~(settings.framewidth || settings.width),
                     "frameheight" : ~~(settings.frameheight || settings.height),
                     "spacing" : ~~settings.spacing,
                     "margin" : ~~settings.margin,
-                    "anchorPoint" : settings.anchorPoint,
+                    "anchorPoint" : settings.anchorPoint
                 });
             }
 
@@ -146,6 +148,9 @@
                     throw new me.Entity.Error("Invalid value for the collisionType property");
                 }
             }
+
+            // disable for entities
+            this.autoTransform = false;
         },
 
         /**
@@ -270,18 +275,44 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         draw : function (renderer) {
-            // draw the sprite if defined
-            if (this.renderable) {
+            // draw the child renderable if defined
+            var child = this.renderable;
+            if (child instanceof me.Renderable) {
+                // draw the child renderable's anchorPoint at the entity's
+                // anchor point.  the entity's anchor point is a scale from
+                // body position to body width/height
+                var ax = this.anchorPoint.x * this.body.width,
+                    ay = this.anchorPoint.y * this.body.height;
 
-                // draw the renderable's anchorPoint at the entity's anchor point
-                // the entity's anchor point is a scale from body position to body width/height
-                var x = ~~( 0.5 + this.pos.x + this.body.pos.x +
-                    (this.anchorPoint.x * this.body.width));
-                var y = ~~( 0.5 + this.pos.y + this.body.pos.y +
-                    (this.anchorPoint.y * this.body.height));
+                var x = this.pos.x + this.body.pos.x + ax,
+                    y = this.pos.y + this.body.pos.y + ay;
 
                 renderer.translate(x, y);
-                this.renderable.draw(renderer);
+
+                // apply the child transform, if any
+                if (child.autoTransform === true && !child.currentTransform.isIdentity()) {
+                    // calculate the anchor point
+                    var bounds = child.getBounds();
+                    var cx = bounds.width * child.anchorPoint.x;
+                    var cy = bounds.height * child.anchorPoint.y;
+
+                    renderer.save();
+
+                    // translate to the anchor point
+                    renderer.translate(cx, cy);
+                    // apply the object transformation
+                    renderer.transform(child.currentTransform);
+                    // translate back
+                    renderer.translate(-cx, -cy);
+
+                    // draw the object
+                    child.draw(renderer);
+
+                    renderer.restore();
+
+                } else {
+                    child.draw(renderer);
+                }
                 renderer.translate(-x, -y);
             }
         },
@@ -298,6 +329,9 @@
             }
             this.body.destroy.apply(this.body, arguments);
             this.body = null;
+
+            // call the parent destroy method
+            this._super(me.Renderable, "destroy", arguments);
         },
 
         /**

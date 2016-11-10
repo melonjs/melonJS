@@ -19,6 +19,7 @@
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
@@ -38,7 +39,6 @@
              * @memberOf me.WebGLRenderer
              */
             this.gl = this.getContextGL(c, !this.transparent);
-            var gl = this.gl;
 
             /**
              * @ignore
@@ -70,22 +70,15 @@
 
             // Create a compositor
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
-            this.compositor = new Compositor(
-                gl,
-                this.currentTransform,
-                this.currentColor
-            );
+            this.compositor = new Compositor(this);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
                 this.compositor.maxTextures
             );
 
-            // FIXME: Cannot reference me.video.renderer yet
-            me.video.renderer = this;
-
-            this.createFillTexture();
-            this.createFontTexture();
+            this.createFillTexture(this.cache);
+            this.createFontTexture(this.cache);
 
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
@@ -96,24 +89,21 @@
         /**
          * @ignore
          */
-        createFillTexture : function () {
+        createFillTexture : function (cache) {
             // Create a 1x1 white texture for fill operations
-            var img = new Uint8Array([255, 255, 255, 255]);
+            var image = new Uint8Array([255, 255, 255, 255]);
 
             /**
              * @ignore
              */
-            this.fillTexture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : { "w" : 1, "h" : 1 }
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : { "x" : 0, "y" : 0, "w" : 1, "h" : 1 }
-                }]
-            }, img);
+            this.fillTexture = new this.Texture(
+                this.Texture.prototype.createAtlas.apply(
+                    this.Texture.prototype,
+                    [ 1, 1, "fillTexture"]
+                ),
+                image,
+                cache
+            );
 
             this.compositor.uploadTexture(
                 this.fillTexture,
@@ -126,8 +116,8 @@
         /**
          * @ignore
          */
-        createFontTexture : function () {
-            var img = me.video.createCanvas(
+        createFontTexture : function (cache) {
+            var image = me.video.createCanvas(
                 this.backBufferCanvas.width,
                 this.backBufferCanvas.height
             );
@@ -135,30 +125,19 @@
             /**
              * @ignore
              */
-            this.fontContext2D = this.getContext2d(img);
+            this.fontContext2D = this.getContext2d(image);
 
             /**
              * @ignore
              */
-            this.fontTexture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : {
-                        "w" : this.backBufferCanvas.width,
-                        "h" : this.backBufferCanvas.height
-                    }
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : {
-                        "x" : 0,
-                        "y" : 0,
-                        "w" : this.backBufferCanvas.width,
-                        "h" : this.backBufferCanvas.height
-                    }
-                }]
-            }, img);
+            this.fontTexture = new this.Texture(
+                this.Texture.prototype.createAtlas.apply(
+                    this.Texture.prototype,
+                    [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
+                ),
+                image,
+                cache
+            );
 
             this.compositor.uploadTexture(this.fontTexture);
         },
@@ -179,18 +158,13 @@
          * var basic      = renderer.createPattern(image, "no-repeat");
          */
         createPattern : function (image, repeat) {
-            var texture = new this.Texture({
-                // FIXME: Create a texture atlas helper function
-                "meta" : {
-                    "app" : "melonJS",
-                    "size" : { "w" : image.width, "h" : image.height },
-                    "repeat" : repeat
-                },
-                "frames" : [{
-                    "filename" : "default",
-                    "frame" : { "x" : 0, "y" : 0, "w" : image.width, "h" : image.height }
-                }]
-            }, image);
+            var texture = new this.Texture(
+                this.Texture.prototype.createAtlas.apply(
+                    this.Texture.prototype,
+                    [ image.width, image.height, "pattern", repeat]
+                ),
+                image
+            );
 
             // FIXME: Remove old cache entry and texture when changing the repeat mode
             this.compositor.uploadTexture(texture);
@@ -321,6 +295,12 @@
                 sy = 0;
             }
 
+            if (this.subPixel === false) {
+                // clamp to pixel grid
+                dx = ~~dx;
+                dy = ~~dy;
+            }
+
             var key = sx + "," + sy + "," + sw + "," + sh;
             this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
         },
@@ -392,7 +372,7 @@
 
             var attr = {
                 antialias : this.antiAlias,
-                alpha : !opaque,
+                alpha : !opaque
             };
             return (
                 c.getContext("webgl", attr) ||
@@ -653,14 +633,11 @@
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
          */
         drawShape : function (shape) {
-            if (shape instanceof me.Rect) {
+            if (shape.shapeType === "Rectangle") {
                 this.strokeRect(shape.left, shape.top, shape.width, shape.height);
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.save();
                 this.strokePolygon(shape);
-                this.restore();
             } else if (shape instanceof me.Ellipse) {
-                this.save();
                 if (shape.radiusV.x === shape.radiusV.y) {
                     // it's a circle
                     this.strokeArc(
@@ -679,7 +656,6 @@
                         shape.radiusV.y
                     );
                 }
-                this.restore();
             }
         },
 
@@ -705,6 +681,12 @@
          */
         transform : function (mat2d) {
             this.currentTransform.multiply(mat2d);
+            if (this.subPixel === false) {
+                // snap position values to pixel grid
+                var a = this.currentTransform.val;
+                a[6] = ~~a[6];
+                a[7] = ~~a[7];
+            }
         },
 
         /**
@@ -716,7 +698,11 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            this.currentTransform.translate(x, y);
+            if (this.subPixel === false) {
+                this.currentTransform.translate(~~x, ~~y);
+            } else {
+                this.currentTransform.translate(x, y);
+            }
         }
     });
 

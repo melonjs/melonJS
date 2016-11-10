@@ -20,6 +20,7 @@
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
@@ -36,6 +37,7 @@
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
+            this.subPixel = !!(options.subPixel);
 
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
@@ -46,6 +48,9 @@
 
             // global color
             this.currentColor = new me.Color(255, 255, 255, 1.0);
+
+            // default uvOffset
+            this.uvOffset = 0;
 
             return this;
         },
@@ -224,6 +229,17 @@
         },
 
         /**
+         * get the current fill & stroke style color.
+         * @name getColor
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Color} current global color
+         */
+        getColor : function () {
+            return this.currentColor;
+        },
+
+        /**
          * return the current global alpha
          * @name globalAlpha
          * @memberOf me.Renderer
@@ -235,13 +251,14 @@
         },
 
         /**
-         * resizes the canvas
+         * resizes the system canvas
          * @name resize
          * @memberOf me.Renderer
          * @function
+         * @param {Number} width new width of the canvas
+         * @param {Number} height new height of the canvas
          */
-        resize : function (width, height)
-        {
+        resize : function (width, height) {
             this.backBufferCanvas.width = width;
             this.backBufferCanvas.height = height;
         },
@@ -249,7 +266,7 @@
         /**
          * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
          * (!) this might not be supported by all browsers <br>
-         * @name setImageSmoothing
+         * @name setAntiAlias
          * @memberOf me.Renderer
          * @function
          * @param {Context2d} context
@@ -275,7 +292,7 @@
         /**
          * @ignore
          */
-        drawFont : function (/*bounds*/) {},
+        drawFont : function (/*bounds*/) {}
 
     });
 

@@ -6,6 +6,8 @@
  * by simulating the system events that would have been triggered by pointer events
  */
 
+/* eslint-disable no-unused-vars, object-property-newline */
+
 (function (DraggableEntity, Event, Video) {
     "use strict";
     describe("entity.draggable", function () {
@@ -27,8 +29,7 @@
                     }
                 });
                 // create a new draggable entity instance
-                draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
-                    dimensions.y});
+                draggable = new Draggable(position.x, position.y, {width: dimensions.x, height: dimensions.y});
                 // add the test draggable entity to the game
                 me.game.world.addChild(draggable, 1);
             },
@@ -64,3 +65,4 @@
         });
     });
 }(me.DraggableEntity, me.event, me.video));
+/* eslint-enable no-unused-vars, object-property-newline */

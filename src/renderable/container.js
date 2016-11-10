@@ -44,15 +44,6 @@
             // ADD child container child one by one to the quadtree?
 
             /**
-             * the container default transformation matrix
-             * @public
-             * @type me.Matrix2d
-             * @name transform
-             * @memberOf me.Container
-             */
-            this.transform = new me.Matrix2d();
-
-            /**
              * whether the container is the root of the scene
              * @private
              * @ignore
@@ -119,8 +110,8 @@
              */
             this.childBounds = this.getBounds().clone();
 
-            // reset the transformation matrix
-            this.transform.identity();
+            // container self apply any defined transformation
+            this.autoTransform = false;
         },
 
 
@@ -205,6 +196,42 @@
             }
             else {
                 throw new me.Container.Error("Index (" + index + ") Out Of Bounds for addChildAt()");
+            }
+        },
+
+        /**
+         * The forEach() method executes a provided function once per child element. <br>
+         * callback is invoked with three arguments: <br>
+         *    - the element value <br>
+         *    - the element index <br>
+         *    - the array being traversed <br>
+         * @name forEach
+         * @memberOf me.Container
+         * @function
+         * @param {Function} callback
+         * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+         * @example
+         * // iterate through all children of the root container
+         * me.game.world.forEach(function (child) {
+         *    // do something with the child
+         * });
+         */
+        forEach : function (callback, thisArg) {
+            var context = this, i = 0;
+
+            var len = this.children.length;
+
+            if (typeof callback !== "function") {
+                throw new me.Container.Error(callback + " is not a function");
+            }
+
+            if (arguments.length > 1) {
+                context = thisArg;
+            }
+
+            while (i < len) {
+                callback.call(context, this.children[i], i, this.children);
+                i++;
             }
         },
 
@@ -459,8 +486,7 @@
         },
 
         onActivateEvent : function () {
-          for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-              var child = this.children[i];
+          for (var i = this.children.length, child; i--, (child = this.children[i]);) {
               if (typeof child.onActivateEvent === "function") {
                   child.onActivateEvent();
               }
@@ -637,8 +663,7 @@
         },
 
         onDeactivateEvent : function () {
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                var child = this.children[i];
+            for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }
@@ -705,7 +730,7 @@
             }
 
             // reset the transformation matrix
-            this.transform.identity();
+            this.currentTransform.identity();
         },
 
         /**
@@ -762,50 +787,77 @@
          */
         draw : function (renderer, rect) {
             var isFloating = false,
-                restore = false,
-                alpha = renderer.globalAlpha();
+                hasTransform = false,
+                x = 0,
+                y = 0;
 
             this.drawCount = 0;
 
-            if (this.transform.isIdentity()) {
-                renderer.translate(this.pos.x, this.pos.y);
-            }
-            else {
-                restore = true;
-                renderer.save();
-                renderer.transform(this.transform);
+            // save the global context
+            renderer.save();
+
+            // adjust position if required (e.g. canvas/window centering)
+            renderer.translate(this.pos.x, this.pos.y);
+
+            // apply the renderable transformation matrix
+            if (!this.currentTransform.isIdentity()) {
+                renderer.transform(this.currentTransform);
             }
 
             // apply the group opacity
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = obj.floating;
+                isFloating = obj.floating === true;
+
                 if ((obj.inViewport || isFloating) && obj.isRenderable) {
+
+                    hasTransform = !obj.currentTransform.isIdentity();
+
                     if (isFloating) {
                         // translate to screen coordinates
                         renderer.save();
                         renderer.resetTransform();
+                    } else if (obj.autoTransform === true) {
+
+                        // calculate the anchor point
+                        var bounds = obj.getBounds();
+                        var anchor = obj.anchorPoint;
+                        x = bounds.width * anchor.x;
+                        y = bounds.height * anchor.y;
+
+                        if (hasTransform) {
+                            renderer.save();
+                            obj.currentTransform.translate(x, y);
+                            // apply the object transformation
+                            renderer.transform(obj.currentTransform);
+                        } else {
+                            renderer.translate(x, y);
+                        }
                     }
 
                     // draw the object
                     obj.draw(renderer, rect);
 
+                    // restore the previous "state"
                     if (isFloating) {
                         renderer.restore();
+                    } else  if (obj.autoTransform === true) {
+                        if (hasTransform) {
+                            // restore the save context/global matric
+                            obj.currentTransform.translate(-x, -y);
+                            renderer.restore();
+                        } else {
+                            // translate back
+                            renderer.translate(-x, -y);
+                        }
                     }
 
                     this.drawCount++;
                 }
             }
-
-            if (restore) {
-                renderer.restore();
-            }
-            else {
-                renderer.translate(-this.pos.x, -this.pos.y);
-                renderer.setGlobalAlpha(alpha);
-            }
+            // restore the global context
+            renderer.restore();
         }
     });
 

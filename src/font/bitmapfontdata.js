@@ -17,7 +17,6 @@ me.BitmapFontData = me.Object.extend({
         this.capHeight = 1;
         // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
         this.descent = 0;
-        this.down = 0;
         this.scale = new me.Vector2d();
 
         /**
@@ -28,17 +27,12 @@ me.BitmapFontData = me.Object.extend({
          */
         this.glyphs = {};
 
-        /**
-         * The width of the space glyph
-         * @name spaceWidth
-         * @type {Number}
-         * @memberOf me.BitmapFontData
-         */
-        this.spaceWidth = 0;
 
         this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
         this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
             "T", "U", "V", "W", "X", "Y", "Z"];
+
+        // parse the data
         this.parse(data);
     },
 
@@ -58,17 +52,6 @@ me.BitmapFontData = me.Object.extend({
             glyph.xadvance = this._getFirstGlyph().xadvance;
             this.glyphs[spaceCharCode] = glyph;
         }
-
-        if (glyph.width === 0) {
-            glyph.width = ~~(this.padLeft + glyph.xadvance + this.padRight);
-            glyph.offset.set(-this.padLeft, 0);
-        }
-
-        if (glyph.height === 0) {
-            glyph.height = this._getFirstGlyph().height;
-        }
-
-        this.spaceWidth = glyph.width;
     },
 
     /**
@@ -212,7 +195,5 @@ me.BitmapFontData = me.Object.extend({
         }
 
         this.capHeight -= padY;
-
-        this.down = -this.lineHeight;
     }
 });

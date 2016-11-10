@@ -191,7 +191,7 @@ game.PlayerEntity = me.Entity.extend({
      * ouch
      */
     hurt : function () {
-        if (!this.renderable.flickering)
+        if (!this.renderable.isFlickering())
         {
             this.renderable.flicker(750);
             // flash the screen

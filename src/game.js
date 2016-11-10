@@ -326,11 +326,11 @@
             if (isDirty || isAlwaysDirty) {
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)
-                var translateX = api.viewport.pos.x + ~~api.viewport.offset.x;
-                var translateY = api.viewport.pos.y + ~~api.viewport.offset.y;
+                var translateX = api.viewport.pos.x + api.viewport.offset.x;
+                var translateY = api.viewport.pos.y + api.viewport.offset.y;
 
                 // translate the world coordinates by default to screen coordinates
-                api.world.transform.translate(-translateX, -translateY);
+                api.world.currentTransform.translate(-translateX, -translateY);
 
                 // prepare renderer to draw a new frame
                 me.video.renderer.clear();
@@ -340,7 +340,7 @@
                 api.world.draw(renderer, api.viewport);
 
                 // translate back
-                api.world.transform.translate(translateX, translateY);
+                api.world.currentTransform.translate(translateX, translateY);
 
                 // draw our camera/viewport
                 api.viewport.draw(renderer);

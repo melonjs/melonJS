@@ -282,7 +282,7 @@
          * @public
          * @function
          * @param {Number} [index=0] the shape object at the specified index
-         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
          */
         getShape : function (index) {
             return this.shapes[index || 0];
@@ -386,7 +386,7 @@
                 this.pos.setV(_bounds.pos);
                 this.resize(_bounds.width, _bounds.height);
 
-                for (var i = 1 ; i < this.shapes.length; i++) {
+                for (var i = 1; i < this.shapes.length; i++) {
                     this.union(this.shapes[i].getBounds());
                 }
             }

@@ -34,7 +34,8 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Image} the image object for the font. Should be retrieved from the loader
+     * @param {Object} font the font object data. Should be retrieved from the loader
+     * @param {Image} image the font image itself Should be retrieved from the loader
      * @param {Number} [scale=1.0]
      * @param {String} [textAlign="left"]
      * @param {String} [textBaseline="top"]
@@ -200,9 +201,12 @@
                     renderer.drawImage(this.fontImage,
                         glyph.src.x, glyph.src.y,
                         glyph.width, glyph.height,
-                        ~~(x + glyph.offset.x),
-                        ~~(y + glyph.offset.y * this.fontScale.y),
-                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y);
+                        x + glyph.offset.x,
+                        y + glyph.offset.y * this.fontScale.y,
+                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y
+                    );
+
+                    // increment position
                     x += (glyph.xadvance + kerning) * this.fontScale.x;
                     lastGlyph = glyph;
                 }

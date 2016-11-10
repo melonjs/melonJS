@@ -207,10 +207,10 @@
             ), false);
 
             // check standard
-            if (navigator.pointerEnabled) {
+            if (window.PointerEvent) {
                 activeEventList = pointerEventList;
             }
-            else if (navigator.msPointerEnabled) { // check for backward compatibility with the 'MS' prefix
+            else if (window.MSPointerEvent) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
             else if (me.device.touch && me.device.isMobile) { //  `touch****` events for iOS/Android devices
@@ -300,7 +300,7 @@
             }
 
             // if PointerEvent is not supported
-            if (!me.device.pointerEnabled) {
+            if (!me.device.pointerEvent) {
                 // -> define pointerId to simulate the PointerEvent standard
                 e.pointerId = changedTouch.id;
             }
@@ -321,7 +321,7 @@
             var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
             // add the viewport to the list of candidates
-            candidates.push ( me.game.viewport );
+            candidates.push( me.game.viewport );
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
 
@@ -713,7 +713,7 @@
             evtHandlers.set(region, {
                 region : region,
                 callbacks : {},
-                pointerId : null,
+                pointerId : null
             });
         }
 

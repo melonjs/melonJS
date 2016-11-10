@@ -47,7 +47,7 @@
         /**
          * @ignore
          */
-        init : function (atlas, texture, cached) {
+        init : function (atlas, texture, cache) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore
@@ -101,7 +101,7 @@
                         this.repeat = atlas.meta.repeat || "no-repeat";
                     }
                     // initialize the atlas
-                    this.atlas = this.build(atlas);
+                    this.atlas = this.parse(atlas);
 
                 } else {
                     // a regular spritesheet ?
@@ -113,7 +113,7 @@
                             atlas.image = texture;
                         }
                         // initialize the atlas
-                        this.atlas = this.buildFromSpriteSheet(atlas);
+                        this.atlas = this.parseFromSpriteSheet(atlas);
                         this.repeat = "no-repeat";
                     }
                 }
@@ -123,16 +123,39 @@
                 throw new me.video.renderer.Texture.Error("texture atlas format not supported");
             }
 
-            // Add self to TextureCache
-            if (!cached) {
-                me.video.renderer.cache.put(this.texture, this);
+            // Add self to TextureCache if cache !== false
+            if (cache !== false) {
+                if (cache instanceof me.Renderer.TextureCache) {
+                    cache.put(this.texture, this);
+                } else {
+                    me.video.renderer.cache.put(this.texture, this);
+                }
             }
         },
 
         /**
+         * create a simple 1 frame texture atlas based on the given parameters
          * @ignore
          */
-        build : function (data) {
+        createAtlas : function (width, height, name, repeat) {
+            return {
+                "meta" : {
+                    "app" : "melonJS",
+                    "size" : { "w" : width, "h" : height },
+                    "repeat" : repeat || "no-repeat"
+                },
+                "frames" : [{
+                    "filename" : name || "default",
+                    "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+                }]
+            };
+        },
+
+        /**
+         * build an atlas from the given data
+         * @ignore
+         */
+        parse : function (data) {
             var atlas = {};
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
@@ -165,7 +188,7 @@
          * build an atlas from the given spritesheet
          * @ignore
          */
-        buildFromSpriteSheet : function (data) {
+        parseFromSpriteSheet : function (data) {
             var atlas = {};
             var image = data.image;
             var spacing = data.spacing || 0;
@@ -196,7 +219,7 @@
             }
 
             // build the local atlas
-            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
                 atlas["" + frame] = {
                     name: "" + frame,
                     offset: new me.Vector2d(
@@ -287,8 +310,8 @@
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-         * @param {Object} [settings] Additional settings passed to the {@link me.AnimationSheet} contructor
-         * @return {me.AnimationSheet}
+         * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
+         * @return {me.Sprite}
          * @example
          * // create a new texture atlas object under the `game` namespace
          * game.texture = new me.video.renderer.Texture(
@@ -296,7 +319,7 @@
          *     me.loader.getImage("texture")
          * );
          *
-         * // create a new animationSheet as renderable for the entity
+         * // create a new Sprite as renderable for the entity
          * this.renderable = game.texture.createAnimationFromName([
          *     "walk0001.png", "walk0002.png", "walk0003.png",
          *     "walk0004.png", "walk0005.png", "walk0006.png",
@@ -315,21 +338,28 @@
          */
         createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};
+            var width = 0, height = 0;
+            var region;
             // iterate through the given names
             // and create a "normalized" atlas
-            for (var i = 0; i < names.length;++i) {
-                tpAtlas[i] = this.getRegion(names[i]);
-                indices[names[i]] = i;
-                if (tpAtlas[i] == null) {
+            for (var i = 0; i < names.length; ++i) {
+                region = this.getRegion(names[i]);
+                if (region == null) {
                     // throw an error
                     throw new me.video.renderer.Texture.Error("Texture - region for " + names[i] + " not found");
                 }
+                tpAtlas[i] = region;
+                // save the corresponding index
+                indices[names[i]] = i;
+                // calculate the max size of a frame
+                width = Math.max(region.width, width);
+                height = Math.max(region.height, height);
             }
             // instantiate a new animation sheet object
-            return new me.AnimationSheet(0, 0, Object.assign({
+            return new me.Sprite(0, 0, Object.assign({
                 image: this,
-                framewidth: 0,
-                frameheight: 0,
+                framewidth: width,
+                frameheight: height,
                 margin: 0,
                 spacing: 0,
                 atlas: tpAtlas,

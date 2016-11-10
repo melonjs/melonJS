@@ -226,7 +226,7 @@
                 renderer.save();
                 // apply the tile current transform
                 renderer.translate(dx, dy);
-                renderer.transform(tmxTile.transform);
+                renderer.transform(tmxTile.currentTransform);
                 // reset both values as managed through transform();
                 dx = dy = 0;
             }
@@ -239,7 +239,7 @@
                 offset.x, offset.y,
                 this.tilewidth, this.tileheight,
                 dx, dy,
-                this.tilewidth, this.tileheight
+                this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
             );
 
             if (tmxTile.flipped)  {

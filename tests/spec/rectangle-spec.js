@@ -1,6 +1,6 @@
 describe("Shape : me.Rect", function () {
 
-    var rect1 = new me.Rect(0, 0, 100, 100);
+    var rect1 = new me.Rect(0, 0, 25, 50);
     // rect 2 overlap rect 1
     var rect2 = new me.Rect(50, 50, 100, 100);
     // rect 3 contains rect 1 and rect 2
@@ -11,6 +11,11 @@ describe("Shape : me.Rect", function () {
     var rect5 = rect2.clone().union(rect4);
 
     describe("rect1", function () {
+        it("scale rect1", function () {
+            rect1.scale(4, 2);
+            expect(rect1.width).toEqual(100);
+            expect(rect1.height).toEqual(100);
+        });
         it("rect 1 overlaps rect2", function () {
             expect(rect1.overlaps(rect2)).toEqual(true);
         });

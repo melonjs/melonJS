@@ -7,6 +7,8 @@
  * pointer events
  */
 
+/* eslint-disable no-unused-vars, object-property-newline */
+
 (function (DraggableEntity, DroptargetEntity, Event, Video) {
     "use strict";
     describe("entity.droptarget", function () {
@@ -150,3 +152,4 @@
         });
     });
 }(me.DraggableEntity, me.DroptargetEntity, me.event, me.video));
+/* eslint-enable no-unused-vars, object-property-newline */

@@ -2,11 +2,11 @@
  * a mole entity
  * note : we don"t use EntityObject, since we wont" use regular collision, etc..
  */
-game.MoleEntity = me.AnimationSheet.extend(
+game.MoleEntity = me.Sprite.extend(
 {
     init:function (x, y) {
         // call the constructor
-        this._super(me.AnimationSheet, "init", [x, y , { image: me.loader.getImage("mole"), framewidth: 178, frameheight: 140}]);
+        this._super(me.Sprite, "init", [x, y , { image: me.loader.getImage("mole"), framewidth: 178, frameheight: 140}]);
 
         // idle animation
         this.addAnimation ("idle",  [0]);

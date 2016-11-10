@@ -21,15 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* jshint -W003 */
-/* jshint -W013 */
-/* jshint -W015 */
-/* jshint -W030 */
-/* jshint -W035 */
-/* jshint -W040 */
-/* jshint -W058 */
-/* jshint -W108 */
-/* jshint -W116 */
+/* eslint-disable space-before-blocks, quotes, block-spacing, new-parens, comma-spacing, yoda, curly, no-self-compare, pace-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new, eqeqeq */
 
 (function (exports) {'use strict';
   //shared pointer
@@ -258,3 +250,4 @@ THE SOFTWARE.
   }
 
 })(typeof exports != 'undefined' && typeof global != 'undefined' ? global : window );
+/* eslint-enable space-before-blocks, quotes, block-spacing, new-parens, comma-spacing, yoda, curly, no-self-compare, pace-infix-ops, new-cap, keyword-spacing, no-redeclare, no-undef, no-new, eqeqeq */

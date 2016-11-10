@@ -4,8 +4,6 @@ describe("me.Color", function () {
     var green_color = new me.Color().parseCSS("green");
     var blue_color = new me.Color().parseHex("#0000FF");
 
-    me.video.renderer = me.CanvasRenderer;
-
     describe("parseHex Function", function () {
         // #RGB
         it("#00F value is rgb(0, 0, 255)", function () {
@@ -107,7 +105,12 @@ describe("me.Color", function () {
         it("lighten blue_color hex by 0.5 value is #7F7FFF", function () {
             expect(blue_color.lighten(0.5).toHex()).toEqual("#7F7FFF");
         });
+    });
 
-
+    describe("color clone function", function () {
+        var clone = blue_color.clone();
+        it("clone color hex value is #0000FF", function () {
+            expect(clone.toHex()).toEqual("#0000FF");
+        });
     });
 });

@@ -331,8 +331,6 @@
          * @param {String} resources.type  "audio", binary", "image", "json", "tmx", "tsx"
          * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
          * @param {Boolean} [resources.stream] set to true if you don't have to wait for the audio file to be fully downloaded
-         * @param {Function} onload function to be called when the resource is loaded
-         * @param {Function} onerror function to be called in case of error
          * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
          * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
          * @example

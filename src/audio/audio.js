@@ -83,7 +83,7 @@
          * configure and initialize the audio engine<br>
          * melonJS will try to load audio files corresponding to the browser supported audio format(s)<br>
          * below is the list of supported file extentions : <br>
-         * <i>"mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby" </i> <br>
+         * <i>"mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac" </i> <br>
          * keep in mind that not all browsers can play all audio formats, and if no compatible codecs are detected, audio will be disabled.
          * @name init
          * @memberOf me.audio
@@ -511,7 +511,6 @@
          * me.audio.unload("awesome_music");
          */
         api.unload = function (sound_name) {
-            sound_name = sound_name;
             if (!(sound_name in audioTracks)) {
                 return false;
             }

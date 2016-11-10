@@ -1,11 +1,25 @@
 Version History
 ---------------
 4.0.0
-
-* Audio : updated to Howler final 2.0.0 version
+* Audio : updated to the latest Howler 2.0.1 version
+* Container : added a 'forEach' function that allows to iterate through all children
+* Core : largely improved and completed the matrix implementation and usage
+* Core : Object.assign polyfill update
+* Core : various improvements and fixes to jasmine test units.
 * Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
-* Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
+* Particles : reduced creation/use of temporary (vector) objects
 * Pointer : fixed bug with Chrome on Windows touch devices where touch input would register, but mouse input would not. (credit to BrianRosamilia)
+* Pointer : PointerEvent detection is now fully W3C compliant
+* Pointer : automaticaly free any defined region if there is no callback left
+* Renderable : added a new `currentTransform` property that defines the renderable transformation matrix
+* Renderable : transformations can now be automatically applied through the `autoTransform` flag (off by default for user-defined objects)
+* Renderable : me.AnimationSheet has been merged into me.Sprite (me.AnimationSheet is now only an alias), and rendering function simplified
+* Renderable : fixed image layer first update, when added to a child container (and not directly the root one)
+* Renderer : simplified/aligned both the Canvas and WebGL renderer API in a more WebGL fashion
+* Renderer : added a subPixel rendering option (off by default)
+* Shapes : polygon based shapes can now be freely transformed, and bounding box will be resized accordingly
+* TMX : scaling and rotation can now be applied to a tilemap (see me.levelDirector.loadLevel() for example)
+* TMX : fixed some issues when loading TMX level into a child container.
 
 3.1.0
 * Audio : exposed a `me.audio.rate` function to allow modifying the playback rate of the specified audio clip.

@@ -21,7 +21,9 @@
 
         /** @ignore */
         init : function () {
-            this.val = new Float32Array(9);
+            if (typeof(this.val) === "undefined") {
+                this.val = new Float32Array(9);
+            }
             if (arguments.length && arguments[0] instanceof me.Matrix2d) {
                 this.copy(arguments[0]);
             }
@@ -29,8 +31,13 @@
                 this.setTransform.apply(this, arguments);
             }
             else {
-                this.identity();
+                this.onResetEvent();
             }
+        },
+
+        /** @ignore */
+        onResetEvent : function() {
+            this.identity();
         },
 
         /**
@@ -48,7 +55,6 @@
                 0, 1, 0,
                 0, 0, 1
             );
-
             return this;
         },
 
@@ -141,6 +147,63 @@
             return this;
         },
 
+        /**
+         * Transpose the value of this matrix.
+         * @name transpose
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        transpose : function () {
+            var tmp, a = this.val;
+
+            tmp = a[1];
+            a[1] = a[3];
+            a[3] = tmp;
+            tmp = a[2];
+            a[2] = a[6];
+            a[6] = tmp;
+            tmp = a[5];
+            a[5] = a[7];
+            a[7] = tmp;
+
+            return this;
+        },
+
+        /**
+         * invert this matrix, causing it to apply the opposite transformation.
+         * @name invert
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        invert : function () {
+            var val = this.val;
+
+            var a = val[ 0 ], b = val[ 1 ], c = val[ 2 ],
+                d = val[ 3 ], e = val[ 4 ], f = val[ 5 ],
+                g = val[ 6 ], h = val[ 7 ], i = val[ 8 ];
+
+            var ta = i * e - f * h,
+                td = f * g - i * d,
+                tg = h * d - e * g;
+
+            var n = a * ta + b * td + c * tg;
+
+            val[ 0 ] = ta / n;
+            val[ 1 ] = ( c * h - i * b ) / n;
+            val[ 2 ] = ( f * b - c * e ) / n;
+
+            val[ 3 ] = td / n;
+            val[ 4 ] = ( i * a - c * g ) / n;
+            val[ 5 ] = ( c * d - f * a ) / n;
+
+            val[ 6 ] = tg / n;
+            val[ 7 ] = ( b * g - h * a ) / n;
+            val[ 8 ] = ( e * a - b * d ) / n;
+
+            return this;
+        },
 
        /**
         * Transforms the given vector according to this matrix.
@@ -167,7 +230,7 @@
          * @memberOf me.Matrix2d
          * @function
          * @param {Number} x a number representing the abscissa of the scaling vector.
-         * @param {Number} y a number representing the ordinate of the scaling vector.
+         * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         scale : function (x, y) {
@@ -257,8 +320,8 @@
         translate : function (x, y) {
             var a = this.val;
 
-            a[6] += x;
-            a[7] += y;
+            a[6] += a[0] * x + a[3] * y;
+            a[7] += a[1] * x + a[4] * y;
 
             return this;
         },
@@ -306,7 +369,7 @@
          * @return {me.Matrix2d}
          */
         clone : function () {
-            return new me.Matrix2d(this);
+            return me.pool.pull("me.Matrix2d").copy(this);
         },
 
         /**

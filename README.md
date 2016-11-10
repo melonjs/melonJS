@@ -18,7 +18,7 @@ and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browser (Chrome, Safari, Firefox, Opera, IE) and mobile devices
+- Compatible with most major browsers (Chrome, Safari, Firefox, Opera, IE) and mobile devices
 - Device motion & accelerometer support
 - High DPI & auto scaling
 - Multi-channel HTML5 audio support and Web Audio on supported devices
@@ -38,7 +38,7 @@ and currently features :
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Perspective tilemap support
-    - Multiple layers (multiple background/Foreground, collision and Image layers)
+    - Multiple layers (multiple background/foreground, collision and Image layers)
     - Multiple Tileset support
     - Tileset Transparency settings
     - Layers Alpha settings

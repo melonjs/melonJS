@@ -46,27 +46,13 @@
          */
         get : function (image, atlas) {
             if (!this.cache.has(image)) {
-                this.validate();
-
                 if (!atlas) {
-                    var w = image.width;
-                    var h = image.height;
-                    atlas = {
-                        // FIXME: Create a texture atlas helper function
-                        "meta" : {
-                            "app" : "melonJS",
-                            "size" : { "w" : w, "h" : h }
-                        },
-                        "frames" : [{
-                            "filename" : "default",
-                            "frame" : { "x" : 0, "y" : 0, "w" : w, "h" : h }
-                        }]
-                    };
+                    atlas = me.video.renderer.Texture.prototype.createAtlas.apply(
+                        me.video.renderer.Texture.prototype,
+                        [image.width, image.height, image.src ? me.utils.getBasename(image.src) : undefined]
+                    );
                 }
-
-                var texture = new me.video.renderer.Texture(atlas, image, true);
-                this.cache.set(image, texture);
-                this.units.set(texture, this.length++);
+                this.put(image, new me.video.renderer.Texture(atlas, image, false));
             }
             return this.cache.get(image);
         },

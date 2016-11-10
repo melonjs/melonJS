@@ -42,7 +42,7 @@
              * the tile transformation matrix (if defined)
              * @ignore
              */
-            this.transform = null;
+            this.currentTransform = null;
 
             // call the parent constructor
             this._super(me.Rect, "init", [x * tileset.tilewidth, y * tileset.tileheight, tileset.tilewidth, tileset.tileheight]);
@@ -101,35 +101,35 @@
          * @ignore
          */
         createTransform : function () {
-            if (this.transform === null) {
-                this.transform = new me.Matrix2d();
+            if (this.currentTransform === null) {
+                this.currentTransform = new me.Matrix2d();
             } else {
                 // reset the matrix
-                this.transform.identity();
+                this.currentTransform.identity();
             }
 
             if (this.flippedAD) {
                 // Use shearing to swap the X/Y axis
-                this.transform.setTransform(
+                this.currentTransform.setTransform(
                     0, 1, 0,
                     1, 0, 0,
                     0, 0, 1
                 );
-                this.transform.translate(0, this.height - this.width);
+                this.currentTransform.translate(0, this.height - this.width);
             }
             if (this.flippedX) {
-                this.transform.translate(
+                this.currentTransform.translate(
                     (this.flippedAD ? 0 : this.width),
                     (this.flippedAD ? this.height : 0)
                 );
-                this.transform.scaleX(-1);
+                this.currentTransform.scaleX(-1);
             }
             if (this.flippedY) {
-                this.transform.translate(
+                this.currentTransform.translate(
                     (this.flippedAD ? this.width : 0),
                     (this.flippedAD ? 0 : this.height)
                 );
-                this.transform.scaleY(-1);
+                this.currentTransform.scaleY(-1);
             }
         },
 
@@ -139,7 +139,7 @@
          * @public
          * @function
          * @param {Object} [settings] see {@link me.Sprite}
-         * @return {me.Renderable} either a me.Sprite object or a me.AnimationSheet (for animated tiles)
+         * @return {me.Renderable} a me.Sprite object
          */
         getRenderable : function (settings) {
             var renderable;
@@ -151,7 +151,7 @@
                 (tileset.animations.get(this.tileId).frames).forEach(function (frame) {
                     frameId.push(frame.tileid);
                     frames.push({
-                        name : ""+frame.tileid,
+                        name : "" + frame.tileid,
                         delay : frame.duration
                     });
                 });
@@ -163,36 +163,15 @@
                 renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
             }
 
-            // AD flag is never set for Tile Object, use the given rotation instead
-            if (typeof(settings) !== "undefined") {
-                var angle = settings.rotation || 0;
-                if (angle !== 0) {
-                    renderable._sourceAngle += angle;
-                    // translate accordingly
-                    switch (angle) {
-                        case Math.PI:
-                            renderable.translate(0, this.height * 2);
-                            break;
-                        case Math.PI / 2 :
-                            renderable.translate(this.width, this.height);
-                            break;
-                        case -(Math.PI / 2) :
-                            renderable.translate(-this.width, this.height);
-                            break;
-                        default :
-                            // this should not happen
-                            break;
-                    }
-                }
-            }
-
             // any H/V flipping to apply?
-            if (this.flipped === true) {
-                renderable.flipX(this.flippedX);
-                renderable.flipY(this.flippedY);
+            if (this.flippedX) {
+                renderable.currentTransform.scaleX(-1);
+            }
+            if (this.flippedY) {
+                renderable.currentTransform.scaleY(-1);
             }
 
             return renderable;
-        },
+        }
     });
 })();

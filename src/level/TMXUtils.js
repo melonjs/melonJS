@@ -69,6 +69,7 @@
                         // try to evaluate it
                         match = value.split(/^eval:/i)[1];
                         try {
+                            // eslint-disable-next-line
                             value = eval(match);
                         }
                         catch (e) {

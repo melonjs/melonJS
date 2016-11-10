@@ -41,10 +41,10 @@
         /**
          * @ignore
          */
-        build : function (data) {
+        parse : function (data) {
             var w = data.meta.size.w;
             var h = data.meta.size.h;
-            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "build", [ data ]);
+            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "parse", [ data ]);
 
             return this._addStMap(atlas, w, h);
         },
@@ -52,10 +52,10 @@
         /**
          * @ignore
          */
-        buildFromSpriteSheet : function (data) {
+        parseFromSpriteSheet : function (data) {
             var w = data.image.width;
             var h = data.image.height;
-            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "buildFromSpriteSheet", [ data ]);
+            var atlas = this._super(me.CanvasRenderer.prototype.Texture, "parseFromSpriteSheet", [ data ]);
 
             return this._addStMap(atlas, w, h);
         },

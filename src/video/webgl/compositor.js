@@ -36,9 +36,7 @@
      * @namespace me.WebGLRenderer.Compositor
      * @memberOf me
      * @constructor
-     * @param {WebGLContext} gl Destination WebGL Context
-     * @param {me.Matrix2d} matrix Global transformation matrix
-     * @param {me.Color} color Global color
+     * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
     me.WebGLRenderer.Compositor = me.Object.extend(
     /** @scope me.WebGLRenderer.Compositor.prototype */
@@ -46,7 +44,10 @@
         /**
          * @ignore
          */
-        init : function (gl, matrix, color) {
+        init : function (renderer) {
+            // local reference
+            var gl = renderer.gl;
+
             /**
              * The number of quads held in the batch
              * @name length
@@ -87,14 +88,20 @@
                 new me.Vector2d()
             ];
 
+            // the associated renderer
+            // TODO : add a set context or whatever function, and split
+            // the constructor accordingly, so that this is easier to restore
+            // the GL context when lost
+            this.renderer = renderer;
+
             // WebGL context
-            this.gl = gl;
+            this.gl = renderer.gl;
 
             // Global transformation matrix
-            this.matrix = matrix;
+            this.matrix = renderer.currentTransform;
 
             // Global color
-            this.color = color;
+            this.color = renderer.currentColor;
 
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
@@ -106,6 +113,7 @@
             ).precision < 16) ? "mediump" : "highp";
 
             // Load and create shader programs
+            /* eslint-disable */
             this.lineShader = me.video.shader.createShader(
                 this.gl,
                 (__LINE_VERTEX__)(),
@@ -121,6 +129,7 @@
                     "maxTextures"   : this.maxTextures
                 })
             );
+            /* eslint-enable */
 
             this.shader = this.quadShader.handle;
 
@@ -214,13 +223,14 @@
          * @ignore
          */
         uploadTexture : function (texture, w, h, b, force) {
-            var unit = me.video.renderer.cache.getUnit(texture);
+            var unit = this.renderer.cache.getUnit(texture);
             if (!this.units[unit] || force) {
                 this.units[unit] = true;
                 me.video.shader.createTexture(
                     this.gl,
                     unit,
                     texture.texture,
+                    this.renderer.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
                     texture.repeat,
                     w,
                     h,

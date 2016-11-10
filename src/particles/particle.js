@@ -75,8 +75,6 @@
             // cache inverse of the expected delta time
             this._deltaInv = me.sys.fps / 1000;
 
-            this.transform = new me.Matrix2d();
-
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {
@@ -128,10 +126,10 @@
             this.pos.y += this.vel.y * skew;
 
             // Update particle transform
-            this.transform.setTransform(
+            this.currentTransform.setTransform(
                 scale, 0, 0,
                 0, scale, 0,
-                ~~this.pos.x, ~~this.pos.y, 1
+                this.pos.x, this.pos.y, 1
             ).rotate(angle);
 
             // Return true if the particle is not dead yet
@@ -145,7 +143,7 @@
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
 
             // translate to the defined anchor point and scale it
-            renderer.transform(this.transform);
+            renderer.transform(this.currentTransform);
 
             var w = this.width, h = this.height;
             renderer.drawImage(

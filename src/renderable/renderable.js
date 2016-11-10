@@ -30,6 +30,19 @@
              */
             this.isRenderable = true;
 
+            /**
+             * the renderable default transformation matrix
+             * @public
+             * @type me.Matrix2d
+             * @name currentTransform
+             * @memberOf me.Renderable
+             */
+             if (typeof this.currentTransform !== "undefined") {
+                 this.currentTransform.identity();
+             } else {
+                 this.currentTransform = me.pool.pull("me.Matrix2d");
+             }
+
            /**
             * (G)ame (U)nique (Id)entifier" <br>
             * a GUID will be allocated for any renderable object added <br>
@@ -108,6 +121,35 @@
             this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
             /**
+             * [EXPERIMENTAL] when enabled, an object container will automatically
+             * apply any defined transformation before calling the child draw method.
+             * @public
+             * @type Boolean
+             * @default false
+             * @name autoTransform
+             * @memberOf me.Renderable
+             * @example
+             * // enable "automatic" transformation when the object is activated
+             * onActivateEvent: function () {
+             *     // reset the transformation matrix
+             *     this.renderable.currentTransform.identity();
+             *     // ensure the anchor point is the renderable center
+             *     this.renderable.anchorPoint.set(0.5, 0.5);
+             *     // enable auto transform
+             *     this.renderable.autoTransform = true;
+             *     ....
+             * },
+             * // add a rotation effect when updating the entity
+             * update : function (dt) {
+             *     ....
+             *     this.renderable.currentTransform.rotate(0.025);
+             *     ....
+             *     return this._super(me.Entity, 'update', [dt]);
+             * },
+             */
+            this.autoTransform = false;
+
+            /**
              * Define the renderable opacity<br>
              * Set to zero if you do not wish an object to be drawn
              * @see me.Renderable#setOpacity
@@ -157,9 +199,14 @@
                 this._absPos = new me.Vector2d(x, y);
             }
 
-            // set position to observable. Can use updateBounds, as _bounds using a regular vector.
-            // will not lead to stack too deep.
-            if (this.pos) {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {me.ObservableVector3d}
+             * @name pos
+             * @memberOf me.Renderable
+             */
+            if (this.pos instanceof me.ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
                 this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
@@ -214,6 +261,56 @@
         },
 
         /**
+         * multiply the renderable currentTransform with the given matrix
+         * @name transform
+         * @memberOf me.Renderable
+         * @see me.Renderable#currentTransform
+         * @function
+         * @param {me.Matrix2d} matrix the transformation matrix
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        transform : function (m) {
+            var bounds = this.getBounds();
+            this.currentTransform.multiply(m);
+            bounds.setPoints(bounds.transform(m).points);
+            bounds.pos.setV(this.pos);
+            return this;
+        },
+
+        /**
+         * scale the renderable around his anchor point
+         * @name scale
+         * @memberOf me.Renderable
+         * @function
+         * @param {Number} x a number representing the abscissa of the scaling vector.
+         * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        scale : function (x, y) {
+            var _x = x,
+                _y = typeof(y) === "undefined" ? _x : y;
+
+            // set the scaleFlag
+            this.currentTransform.scale(_x, _y);
+            // resize the bounding box
+            this.getBounds().resize(this.width * _x, this.height * _y);
+            return this;
+        },
+
+        /**
+         * scale the renderable around his anchor point
+         * @name scaleV
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Vector2d} vector scaling vector
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        scaleV : function (v) {
+            this.scale(v.x, v.y);
+            return this;
+        },
+
+        /**
          * update function
          * called by the game manager on each game loop
          * @name update
@@ -235,12 +332,13 @@
          * @function
          */
         updateBoundsPos : function (newX, newY) {
-            this._bounds.pos.set(newX, newY);
+            var bounds = this.getBounds();
+            bounds.pos.set(newX, newY, bounds.pos.z);
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
-                this._bounds.pos.add(this.ancestor._absPos);
+                bounds.pos.add(this.ancestor._absPos);
             }
-            return this._bounds;
+            return bounds;
         },
 
         /**
@@ -274,6 +372,8 @@
          * @ignore
          */
         destroy : function () {
+            me.pool.push(this.currentTransform);
+            this.currentTransform = undefined;
             this.onDestroyEvent.apply(this, arguments);
         },
 
@@ -290,7 +390,7 @@
     });
 
     /**
-     * width of the Renderable bounding box<br>
+     * width of the Renderable bounding box
      * @public
      * @type {Number}
      * @name width
@@ -301,14 +401,14 @@
             return this._width;
         },
         set : function (value) {
-            this.getBounds().resize(value, this._height);
+            this.getBounds().width = value;
             this._width = value;
         },
         configurable : true
     });
 
     /**
-     * height of the Renderable bounding box <br>
+     * height of the Renderable bounding box
      * @public
      * @type {Number}
      * @name height
@@ -319,7 +419,7 @@
             return this._height;
         },
         set : function (value) {
-            this.getBounds().resize(this._width, value);
+            this.getBounds().height = value;
             this._height = value;
         },
         configurable : true

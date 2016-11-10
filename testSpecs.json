@@ -1,4 +1,5 @@
 [
+  "tests/spec/init.js",
   "tests/spec/color-spec.js",
   "tests/spec/container-spec.js",
   "tests/spec/mat2d-spec.js",

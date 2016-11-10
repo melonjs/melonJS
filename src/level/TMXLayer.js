@@ -277,8 +277,8 @@
                  * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
                  * for a thorough description of how this works.
                  */
-                x = ~~(ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x),
-                y = ~~(ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y);
+                x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
+                y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y;
 
 
             // Repeat horizontally; start drawing from left boundary
@@ -315,8 +315,8 @@
                 alpha = renderer.globalAlpha();
 
             if (this.ratio.x === this.ratio.y === 0) {
-                x = ~~(x + ax * (bw - width));
-                y = ~~(y + ay * (bh - height));
+                x = x + ax * (bw - width);
+                y = y + ay * (bh - height);
             }
 
             renderer.setGlobalAlpha(alpha * this.getOpacity());
@@ -394,7 +394,7 @@
 
             /**
              * All animated tilesets in this layer
-             * @private
+             * @ignore
              * @type Array
              * @name me.TMXLayer#animatedTilesets
              */
@@ -410,6 +410,9 @@
 
             // for displaying order
             this.pos.z = z;
+
+            // tiled default coordinates are top-left
+            this.anchorPoint.set(0, 0);
         },
 
         /** @ignore */
@@ -544,6 +547,11 @@
          * @param {Number} x X coordinate (in world/pixels coordinates)
          * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} Tile Object
+         * @example
+         * // get the TMX Map Layer called "Front layer"
+         * var layer = me.game.world.getChildByName("Front Layer")[0];
+         * // get the tile object corresponding to the latest pointer position
+         * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
          */
         getTile : function (x, y) {
             return this.layerData[~~this.renderer.pixelToTileX(x, y)][~~this.renderer.pixelToTileY(y, x)];

@@ -59,7 +59,7 @@
     function setLayerData(layer, data) {
         var idx = 0;
         // set everything
-        for (var y = 0 ; y < layer.rows; y++) {
+        for (var y = 0; y < layer.rows; y++) {
             for (var x = 0; x < layer.cols; x++) {
                 // get the value of the gid
                 var gid = data[idx++];
@@ -425,6 +425,21 @@
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {
                         obj.renderable = settings.tile.getRenderable(settings);
+                        // adjust position if necessary
+                        switch (settings.rotation) {
+                            case Math.PI:
+                                obj.translate(-obj.renderable.width, obj.renderable.height);
+                                break;
+                            case Math.PI / 2 :
+                                obj.translate(0, obj.renderable.height);
+                                break;
+                            case -(Math.PI / 2) :
+                                obj.translate(-obj.renderable.width, 0);
+                                break;
+                            default :
+                                // this should not happen
+                                break;
+                        }
                     }
 
                     if (isCollisionGroup && !settings.name) {
