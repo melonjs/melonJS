@@ -2,6 +2,7 @@ Version History
 ---------------
 4.0.0
 * Audio : updated to the latest Howler 2.0.1 version
+* Container : added a 'forEach' function that allows to iterate through all children
 * Core : largely improved and completed the matrix implementation and usage
 * Core : Object.assign polyfill update
 * Core : various improvements and fixes to jasmine test units.
