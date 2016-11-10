@@ -394,7 +394,7 @@
 
             /**
              * All animated tilesets in this layer
-             * @private
+             * @ignore
              * @type Array
              * @name me.TMXLayer#animatedTilesets
              */
