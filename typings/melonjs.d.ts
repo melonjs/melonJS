@@ -2093,6 +2093,18 @@ declare namespace me {
          * Manually trigger the sort of all the childs in the container
          */
         sort(recursive: boolean): void;
+
+        /**
+         * he forEach() method executes a provided function once per child element.
+         * callback is invoked with three arguments:
+         *    - the element value
+         *    - the element index
+         *    - the array being traversed
+         *
+         * @param callback callback
+         * @param thisArg value to use as this(i.e reference Object) when executing callback
+         */
+        forEach(callback: (child: me.RenderableClass, index: number, array: me.RenderableClass[]) => any, thisArg?: any): void;
     }
 
     interface  ContainerStatic extends RenderableStatic {
