@@ -2213,6 +2213,7 @@ declare namespace me {
         body: BodyClass;
         id: number;
         name: string;
+        renderable: me.RenderableClass;
         type: string;
 
         /**
