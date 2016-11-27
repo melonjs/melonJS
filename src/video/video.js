@@ -39,7 +39,7 @@
             transparent : false,
             antiAlias : false,
             subPixel : false,
-            debug : false
+            verbose : false
         };
 
 

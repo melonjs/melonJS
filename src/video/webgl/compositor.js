@@ -383,7 +383,7 @@
             var region = texture.getRegion(key);
             if (typeof(region) === "undefined") {
                 // TODO: Require proper atlas regions instead of caching arbitrary region keys
-                if (me.video.renderer.debug === true) {
+                if (me.video.renderer.verbose === true) {
                     console.warn("Adding texture region", key, "for texture", texture);
                 }
 
