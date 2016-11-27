@@ -38,7 +38,8 @@
             scaleMethod : "fit",
             transparent : false,
             antiAlias : false,
-            subPixel : false
+            subPixel : false,
+            debug : false
         };
 
 

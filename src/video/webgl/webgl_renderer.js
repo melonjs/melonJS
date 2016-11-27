@@ -22,6 +22,7 @@
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {Boolean} [options.debug=false] Enable the WebGL renderer debug mode (e.g. display warning messages about improrer usage)
      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
      */
     me.WebGLRenderer = me.Renderer.extend(
@@ -82,6 +83,8 @@
 
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
+
+            this.debug = !!(options.debug);
 
             return this;
         },
