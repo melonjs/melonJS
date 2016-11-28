@@ -6,6 +6,7 @@ Version History
 * Core : largely improved and completed the matrix implementation and usage
 * Core : Object.assign polyfill update
 * Core : various improvements and fixes to jasmine test units
+* Debug : fixed the debug panel display when using the WebGL renderer
 * Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
 * Particles : reduced creation/use of temporary (vector) objects
 * Pointer : fixed bug with Chrome on Windows touch devices where touch input would register, but mouse input would not. (credit to BrianRosamilia)
