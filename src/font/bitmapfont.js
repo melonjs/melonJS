@@ -198,13 +198,16 @@
                     var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
 
                     // draw it
-                    renderer.drawImage(this.fontImage,
-                        glyph.src.x, glyph.src.y,
-                        glyph.width, glyph.height,
-                        x + glyph.offset.x,
-                        y + glyph.offset.y * this.fontScale.y,
-                        glyph.width * this.fontScale.x, glyph.height * this.fontScale.y
-                    );
+                    if (glyph.width !== 0 && glyph.height !== 0) {
+                        // some browser throw an exception when drawing a 0 width or height image
+                        renderer.drawImage(this.fontImage,
+                            glyph.src.x, glyph.src.y,
+                            glyph.width, glyph.height,
+                            x + glyph.offset.x,
+                            y + glyph.offset.y * this.fontScale.y,
+                            glyph.width * this.fontScale.x, glyph.height * this.fontScale.y
+                        );
+                    }
 
                     // increment position
                     x += (glyph.xadvance + kerning) * this.fontScale.x;
