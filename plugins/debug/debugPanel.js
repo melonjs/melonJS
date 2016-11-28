@@ -590,13 +590,14 @@
             }
 
             // draw the panel
-            renderer.setColor("#00000080");
+            renderer.setGlobalAlpha(0.5);
+            renderer.setColor("black");
             renderer.fillRect(
                 this.left,  this.top,
                 this.width, this.height
             );
-
-            renderer.setColor("#FFFFFFFF");
+            renderer.setGlobalAlpha(1.0);
+            renderer.setColor("white");
 
             this.font.textAlign = "left";
 
