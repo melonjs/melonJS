@@ -88,7 +88,7 @@
             this._y = y;
             return this;
         },
-        
+
         /**
          * set the callback to be executed when the vector is changed
          * @name setCallback
@@ -106,7 +106,7 @@
             this.onUpdate = fn;
             return this;
         },
-        
+
         /**
          * Add the passed vector to this vector
          * @name add

@@ -55,7 +55,7 @@
             "mat2"      : "Matrix2fv",
             "mat3"      : "Matrix3fv",
             "mat4"      : "Matrix4fv",
-            "sampler2D" : "1i",
+            "sampler2D" : "1i"
         };
 
         /**
@@ -72,7 +72,7 @@
             var program = {
                     "attributes"    : {},
                     "uniforms"      : {},
-                    "handle"        : null,
+                    "handle"        : null
                 },
                 handle = program.handle = gl.createProgram(),
                 attrRx = /attribute\s+\w+\s+(\w+)/g,
@@ -149,7 +149,7 @@
                                 gl[fnv](locations[name], val);
                             };
                         }
-                    })(name, type, "uniform" + fnHash[type]),
+                    })(name, type, "uniform" + fnHash[type])
                 };
             });
             Object.defineProperties(program.uniforms, descriptor);

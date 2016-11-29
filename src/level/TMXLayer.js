@@ -394,7 +394,7 @@
 
             /**
              * All animated tilesets in this layer
-             * @private
+             * @ignore
              * @type Array
              * @name me.TMXLayer#animatedTilesets
              */
@@ -547,6 +547,11 @@
          * @param {Number} x X coordinate (in world/pixels coordinates)
          * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} Tile Object
+         * @example
+         * // get the TMX Map Layer called "Front layer"
+         * var layer = me.game.world.getChildByName("Front Layer")[0];
+         * // get the tile object corresponding to the latest pointer position
+         * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
          */
         getTile : function (x, y) {
             return this.layerData[~~this.renderer.pixelToTileX(x, y)][~~this.renderer.pixelToTileY(y, x)];

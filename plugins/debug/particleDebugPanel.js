@@ -177,10 +177,9 @@
             var maxTime = 60, scale = height / maxTime, len = updateTimeSamples.length;
             var frameTimeLimit = 1000 / me.sys.fps, where = height - frameTimeLimit * scale;
 
-            renderer.setGlobalAlpha(0.5);
-            renderer.setColor("grey");
+            renderer.setColor("#80808080");
             renderer.strokeLine(0, where, width, where);
-            renderer.setGlobalAlpha(1.0);
+            renderer.setColor("#FFFFFFFF");
 
 
             var updateTimeSum = 0, drawTimeSum = 0, frameUpdateTimeSum = 0, frameDrawTimeSum = 0, update = [], slowUpdate = [], draw = [], slowDraw = [];
@@ -241,12 +240,13 @@
             renderer.save();
 
             // draw the panel
-            renderer.setGlobalAlpha(0.5);
-            renderer.setColor("black");
-            renderer.fillRect(this._bounds.left,  this._bounds.top,
+            renderer.setColor("#00000080");
+
+            renderer.fillRect(this._bounds.left, this._bounds.top,
                               this._bounds.width, this._bounds.height);
-            renderer.setGlobalAlpha(1.0);
             renderer.translate(this._bounds.left, this._bounds.top);
+
+            renderer.setColor("#FFFFFFFF");
 
             // # entities / draw
             this.font.draw(renderer, "emitters : " + this.emitterCount, 5, 5);
@@ -267,7 +267,7 @@
             this.drawGraph(renderer);
 
             renderer.restore();
-        },
+        }
     });
 
     /**

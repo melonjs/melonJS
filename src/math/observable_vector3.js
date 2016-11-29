@@ -95,7 +95,7 @@
             this._z = z;
             return this;
         },
-        
+
         /**
          * set the vector value without triggering the callback
          * @name setMuted
@@ -112,7 +112,7 @@
             this._z = z;
             return this;
         },
-        
+
         /**
          * set the callback to be executed when the vector is changed
          * @name setCallback
@@ -130,7 +130,7 @@
             this.onUpdate = fn;
             return this;
         },
-        
+
         /**
          * Add the passed vector to this vector
          * @name add
@@ -369,7 +369,7 @@
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y,typeof (v.z) !== "undefined" ? v.z : this._z);
+            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this._z);
         },
 
         /**

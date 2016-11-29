@@ -1,10 +1,15 @@
 Version History
 ---------------
+4.0.1
+*
+
 4.0.0
 * Audio : updated to the latest Howler 2.0.1 version
+* Container : added a 'forEach' function that allows to iterate through all children
 * Core : largely improved and completed the matrix implementation and usage
 * Core : Object.assign polyfill update
-* Core : various improvements and fixes to jasmine test units.
+* Core : various improvements and fixes to jasmine test units
+* Debug : fixed the debug panel display when using the WebGL renderer
 * Font : added true support for bitmap font generated out of true type fonts (e.g. Littera, bmfont, bmglypgh, etc...)
 * Particles : reduced creation/use of temporary (vector) objects
 * Pointer : fixed bug with Chrome on Windows touch devices where touch input would register, but mouse input would not. (credit to BrianRosamilia)
@@ -19,6 +24,7 @@ Version History
 * Shapes : polygon based shapes can now be freely transformed, and bounding box will be resized accordingly
 * TMX : scaling and rotation can now be applied to a tilemap (see me.levelDirector.loadLevel() for example)
 * TMX : fixed some issues when loading TMX level into a child container.
+* WebGLRenderer : fixed the currentColor alpha not taking in account the "globalAlpha" (now better match canvas renderer)
 
 3.1.0
 * Audio : exposed a `me.audio.rate` function to allow modifying the playback rate of the specified audio clip.

@@ -113,6 +113,7 @@
             ).precision < 16) ? "mediump" : "highp";
 
             // Load and create shader programs
+            /* eslint-disable */
             this.lineShader = me.video.shader.createShader(
                 this.gl,
                 (__LINE_VERTEX__)(),
@@ -128,6 +129,7 @@
                     "maxTextures"   : this.maxTextures
                 })
             );
+            /* eslint-enable */
 
             this.shader = this.quadShader.handle;
 
@@ -381,7 +383,9 @@
             var region = texture.getRegion(key);
             if (typeof(region) === "undefined") {
                 // TODO: Require proper atlas regions instead of caching arbitrary region keys
-                console.warn("Adding texture region", key, "for texture", texture);
+                if (me.video.renderer.verbose === true) {
+                    console.warn("Adding texture region", key, "for texture", texture);
+                }
 
                 var keys = key.split(","),
                     sx = +keys[0],

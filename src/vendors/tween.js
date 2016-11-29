@@ -3,13 +3,7 @@
  * https://github.com/sole/Tween.js
  */
 
-/* jshint -W011 */
-/* jshint -W013 */
-/* jshint -W089 */
-/* jshint -W093 */
-/* jshint -W098 */
-/* jshint -W108 */
-/* jshint -W116 */
+/* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
 
 (function() {
 
@@ -886,3 +880,4 @@
         }
     });
 })();
+/* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */

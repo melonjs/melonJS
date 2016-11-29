@@ -30,7 +30,7 @@
          * @memberOf me.sys
          */
         fps : 60,
- 
+
         /**
          * Rate at which the game updates;<br>
          * must be equal to or lower than the fps

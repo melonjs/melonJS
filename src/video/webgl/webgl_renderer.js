@@ -372,7 +372,7 @@
 
             var attr = {
                 antialias : this.antiAlias,
-                alpha : !opaque,
+                alpha : !opaque
             };
             return (
                 c.getContext("webgl", attr) ||
@@ -514,7 +514,9 @@
          * @param {me.Color|String} color css color string.
          */
         setColor : function (color) {
+            var alpha = this.currentColor.glArray[3];
             this.currentColor.copy(color);
+            this.currentColor.glArray[3] *= alpha;
         },
 
         /**

@@ -59,7 +59,7 @@
     function setLayerData(layer, data) {
         var idx = 0;
         // set everything
-        for (var y = 0 ; y < layer.rows; y++) {
+        for (var y = 0; y < layer.rows; y++) {
             for (var x = 0; x < layer.cols; x++) {
                 // get the value of the gid
                 var gid = data[idx++];

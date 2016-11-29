@@ -200,6 +200,42 @@
         },
 
         /**
+         * The forEach() method executes a provided function once per child element. <br>
+         * callback is invoked with three arguments: <br>
+         *    - the element value <br>
+         *    - the element index <br>
+         *    - the array being traversed <br>
+         * @name forEach
+         * @memberOf me.Container
+         * @function
+         * @param {Function} callback
+         * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+         * @example
+         * // iterate through all children of the root container
+         * me.game.world.forEach(function (child) {
+         *    // do something with the child
+         * });
+         */
+        forEach : function (callback, thisArg) {
+            var context = this, i = 0;
+
+            var len = this.children.length;
+
+            if (typeof callback !== "function") {
+                throw new me.Container.Error(callback + " is not a function");
+            }
+
+            if (arguments.length > 1) {
+                context = thisArg;
+            }
+
+            while (i < len) {
+                callback.call(context, this.children[i], i, this.children);
+                i++;
+            }
+        },
+
+        /**
          * Swaps the position (z-index) of 2 children
          * @name swapChildren
          * @memberOf me.Container
@@ -450,8 +486,7 @@
         },
 
         onActivateEvent : function () {
-          for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-              var child = this.children[i];
+          for (var i = this.children.length, child; i--, (child = this.children[i]);) {
               if (typeof child.onActivateEvent === "function") {
                   child.onActivateEvent();
               }
@@ -628,8 +663,7 @@
         },
 
         onDeactivateEvent : function () {
-            for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                var child = this.children[i];
+            for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }

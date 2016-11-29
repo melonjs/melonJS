@@ -219,7 +219,7 @@
             }
 
             // build the local atlas
-            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count ; frame++) {
+            for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
                 atlas["" + frame] = {
                     name: "" + frame,
                     offset: new me.Vector2d(
@@ -342,7 +342,7 @@
             var region;
             // iterate through the given names
             // and create a "normalized" atlas
-            for (var i = 0; i < names.length;++i) {
+            for (var i = 0; i < names.length; ++i) {
                 region = this.getRegion(names[i]);
                 if (region == null) {
                     // throw an error

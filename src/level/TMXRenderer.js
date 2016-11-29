@@ -14,13 +14,13 @@
         {x:   0, y:   0},
         {x: + 1, y: - 1},
         {x: + 1, y:   0},
-        {x: + 2, y:   0},
+        {x: + 2, y:   0}
     ];
     var offsetsStaggerY = [
         {x:   0, y:   0},
         {x: - 1, y: + 1},
         {x:   0, y: + 1},
-        {x:   0, y: + 2},
+        {x:   0, y: + 2}
     ];
 
     /**
@@ -336,7 +336,7 @@
             var columnItr = rowItr.clone();
 
             // main drawing loop
-            for (var y = startPos.y * 2 ; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
+            for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
                 columnItr.setV(rowItr);
                 for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
                     //check if it's valid tile, if so render

@@ -524,7 +524,7 @@
             }
 
             // If any of the edge normals of B is a separating axis, no intersection.
-            for (i = 0;i < bLen; i++) {
+            for (i = 0; i < bLen; i++) {
                 if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
                     T_VECTORS.push(posA);
                     T_VECTORS.push(posB);

@@ -375,7 +375,7 @@
                 this.current = this.anim[name];
                 this.resetAnim = resetAnim || null;
                 this.setAnimationFrame(this.current.idx);
-                // XXX this should not be overwritten 
+                // XXX this should not be overwritten
                 this.current.name = name;
                 if (!_preserve_dt) {
                     this.dt = 0;

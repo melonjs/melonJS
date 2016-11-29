@@ -1,7 +1,7 @@
 describe("me.Vector2d", function () {
 
     var x = 1, y = 2;
-    
+
     var a, b, c;
 
     it("should be initialized to a (0, 0) 2d vector", function () {
@@ -15,51 +15,51 @@ describe("me.Vector2d", function () {
     it("a(1, 2) should be copied into b", function () {
         a.set(x, y);
         b.copy(a);
-        
+
         expect(b.equals(a)).toEqual(true);
     });
-    
+
     it("set (1, 2) into a defined vector", function () {
         a.set(x, y);
 
         expect(a.toString()).toEqual("x:"+x+",y:"+y);
     });
-    
+
     it("add (1, 2) to (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
 
         expect(a.add(b).toString()).toEqual("x:0,y:0");
     });
-    
+
     it("sub (1, 2) to (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
 
         expect(a.sub(b).toString()).toEqual("x:"+(x-(-x))+",y:"+(y-(-y)));
     });
-    
+
     it("scale (1, 2) by (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
 
         expect(a.scaleV(b).toString()).toEqual("x:"+x*(-x)+",y:"+y*(-y));
     });
-    
+
     it("negate (1, 2)", function () {
         a.set(x, y);
 
         expect(a.negateSelf().toString()).toEqual("x:"+-x+",y:"+-y);
     });
-    
+
     it("dotProduct (1, 2) and (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
-        
+
         // calculate the dot product
         expect(a.dotProduct(b)).toEqual((-x*x-y*y));
     });
-    
+
     it("length/lengthSqrt functions", function () {
         a.set( x, 0);
         b.set( 0, -y);
@@ -76,7 +76,7 @@ describe("me.Vector2d", function () {
         expect( a.length() ).toEqual(Math.sqrt( x*x + y*y ));
         expect( a.length2() ).toEqual(( x*x + y*y ));
     });
-    
+
     it("normalize function", function () {
         a.set( x, 0 );
         b.set( 0, -y );
@@ -90,7 +90,7 @@ describe("me.Vector2d", function () {
         expect( b.y ).toEqual(-1);
 
     });
-    
+
     it("distance function", function () {
         a.set( x, 0);
         b.set( 0, -y);
@@ -99,7 +99,7 @@ describe("me.Vector2d", function () {
         expect( a.distance( c ) ).toEqual(x);
         expect( b.distance( c ) ).toEqual(y);
     });
-    
+
     it( "min/max/clamp", function() {
         a.set( x, y );
         b.set( -x, -y );
@@ -118,7 +118,7 @@ describe("me.Vector2d", function () {
         expect( c.x ).toEqual(-x);
         expect( c.y ).toEqual(x);
     });
-    
+
     it( "ceil/floor", function() {
         expect( new me.Vector2d( -0.1, 0.1 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
         expect( new me.Vector2d( -0.5, 0.5 ).floorSelf().equals(new me.Vector2d( -1, 0 ))).toEqual(true);
@@ -128,33 +128,33 @@ describe("me.Vector2d", function () {
         expect( new me.Vector2d( -0.5, 0.5 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
         expect( new me.Vector2d( -0.9, 0.9 ).ceilSelf().equals(new me.Vector2d( 0, 1 ))).toEqual(true);
     });
-    
+
     it("project a on b", function () {
         a.set(x, y);
         b.set(-x, -y);
-        
+
         // the following only works with (-)1, (-)2style of values
         expect(a.project(b).equals(b)).toEqual(true);
     });
-    
+
     it("angle between a and b", function () {
         a.set(x, y);
         b.set(-x, -y);
-        
+
         // why is this not perfectly 180 degrees ?
         expect(Math.round(a.angle(b).radToDeg()) ).toEqual(180);
-        
+
         b.set(4*x, -y);
         expect(a.angle(b) ).toEqual(Math.PI / 2);
     });
-    
+
     it("perp and rotate function", function () {
         a.set(x, y);
         b.copy(a).perp();
         // perp rotate the vector by 90 degree clockwise on the z axis
         c.copy(a).rotate(Math.PI/2);
-  
+
         expect(a.angle(b)).toEqual(a.angle(c));
     });
-    
+
 });

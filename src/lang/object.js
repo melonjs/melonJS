@@ -10,6 +10,8 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object|Object}
  */
 
+/* eslint-disable no-self-compare */
+
 if (!Object.defineProperty) {
     /**
      * simple defineProperty function definition (if not supported by the browser)<br>
@@ -314,3 +316,4 @@ if (!Object.assign) {
      */
     me.Object = Jay;
 })();
+/* eslint-enable no-self-compare */
