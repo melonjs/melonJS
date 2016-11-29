@@ -1,5 +1,8 @@
 Version History
 ---------------
+4.0.1
+*
+
 4.0.0
 * Audio : updated to the latest Howler 2.0.1 version
 * Container : added a 'forEach' function that allows to iterate through all children
