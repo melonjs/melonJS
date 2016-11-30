@@ -150,6 +150,7 @@
 
     // iOS style touch event type
     var touchEventList = [
+        POINTER_MOVE[3],
         POINTER_DOWN[3],
         POINTER_UP[3],
         POINTER_CANCEL[3],
