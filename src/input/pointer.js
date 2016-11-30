@@ -190,7 +190,8 @@
      */
     function registerEventListener(eventList, callback) {
         for (var x = 0; x < eventList.length; ++x) {
-            if (eventList[x] !== POINTER_MOVE[0] && eventList[x] !== POINTER_MOVE[1] && eventList[x] !== POINTER_MOVE[2]) {
+            if (eventList[x] !== POINTER_MOVE[0] && eventList[x] !== POINTER_MOVE[1] &&
+                eventList[x] !== POINTER_MOVE[2] && eventList[x] !== POINTER_MOVE[3]) {
                 me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
             }
         }
@@ -399,6 +400,7 @@
                         case POINTER_MOVE[0]:
                         case POINTER_MOVE[1]:
                         case POINTER_MOVE[2]:
+                        case POINTER_MOVE[3]:
                             // moved out of bounds: trigger the POINTER_LEAVE callbacks
                             if (handlers.pointerId === e.pointerId && !eventInBounds) {
                                 if (triggerEvent(handlers, findActiveEvent(activeEventList, POINTER_LEAVE), e, null)) {
@@ -424,6 +426,7 @@
                         case POINTER_UP[0]:
                         case POINTER_UP[1]:
                         case POINTER_UP[2]:
+                        case POINTER_UP[3]:
                             // pointer defined & inside of bounds: trigger the POINTER_UP callback
                             if (handlers.pointerId === e.pointerId && eventInBounds) {
                                 // trigger the corresponding callback
@@ -437,6 +440,7 @@
                         case POINTER_CANCEL[0]:
                         case POINTER_CANCEL[1]:
                         case POINTER_CANCEL[2]:
+                        case POINTER_CANCEL[3]:
                             // pointer defined: trigger the POINTER_CANCEL callback
                             if (handlers.pointerId === e.pointerId) {
                                 // trigger the corresponding callback
