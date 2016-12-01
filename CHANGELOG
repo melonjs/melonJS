@@ -1,7 +1,7 @@
 Version History
 ---------------
 4.0.1
-*
+* Pointer: Fixed bug where a device allowing both mouse & touch events would only emit touch events.
 
 4.0.0
 * Audio : updated to the latest Howler 2.0.1 version
