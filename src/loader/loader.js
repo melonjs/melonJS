@@ -72,6 +72,9 @@
             imgList[img.name] = new Image();
             imgList[img.name].onload = onload;
             imgList[img.name].onerror = onerror;
+            if (typeof (api.crossOrigin) === "string") {
+                imgList[img.name].crossOrigin = api.crossOrigin;
+            }
             imgList[img.name].src = img.src + api.nocache;
         }
 
@@ -273,6 +276,26 @@
          * me.loader.onProgress = this.updateProgress.bind(this);
          */
         api.onProgress = undefined;
+
+
+        /**
+         * crossOrigin attribute to configure the CORS requests for Image data element.<br>
+         * By default (that is, when the attribute is not specified), CORS is not used at all. <br>
+         * The "anonymous" keyword means that there will be no exchange of user credentials via cookies, <br>
+         * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+         * @public
+         * @type String
+         * @name crossOrigin
+         * @memberOf me.loader
+         * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+         * @example
+         *  // allow for cross-origin texture loading in WebGL
+         * me.loader.crossOrigin = "anonymous";
+         *
+         * // set all ressources to be loaded
+         * me.loader.preload(game.resources, this.loaded.bind(this));
+         */
+        api.crossOrigin = undefined;
 
         /**
          * Base class for Loader exception handling.
