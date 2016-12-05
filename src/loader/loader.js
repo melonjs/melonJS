@@ -35,17 +35,17 @@
          * check the loading status
          * @ignore
          */
-        function checkLoadStatus() {
+        function checkLoadStatus(onload) {
             if (loadCount === resourceCount) {
                 // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-                if (api.onload) {
+                if (onload || api.onload) {
                     // make sure we clear the timer
                     clearTimeout(timerId);
                     // trigger the onload callback
-
-                    var onload = api.onload;
+                    // we call either the supplied callback (which takes precedence) or the global one
+                    var callback = onload || api.onload;
                     setTimeout(function () {
-                        onload();
+                        callback();
                         me.event.publish(me.event.LOADER_COMPLETE);
                     }, 300);
                 }
@@ -54,7 +54,9 @@
                 }
             }
             else {
-                timerId = setTimeout(checkLoadStatus, 100);
+                timerId = setTimeout(function() {
+                    checkLoadStatus(onload);
+                }, 100);
             }
         }
 
@@ -435,7 +437,7 @@
             }
 
             // check load status
-            checkLoadStatus();
+            checkLoadStatus(onload);
         };
 
         /**
