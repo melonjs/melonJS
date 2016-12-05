@@ -39,8 +39,10 @@
                     // make sure we clear the timer
                     clearTimeout(timerId);
                     // trigger the onload callback
+
+                    var onload = api.onload;
                     setTimeout(function () {
-                        api.onload();
+                        onload();
                         me.event.publish(me.event.LOADER_COMPLETE);
                     }, 300);
                 }
