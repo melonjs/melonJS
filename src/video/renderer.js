@@ -21,6 +21,7 @@
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
+     * @param {Boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
@@ -38,6 +39,7 @@
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
             this.subPixel = !!(options.subPixel);
+            this.verbose = !!(options.verbose);
 
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;

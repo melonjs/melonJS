@@ -9,6 +9,11 @@ var game = {
             return;
         }
 
+        // configure base URLs
+        me.loader.setBaseURL("image", "data/img/");
+        me.loader.setBaseURL("json", "data/json/");
+        me.loader.setBaseURL("audio", "data/audio/");
+
         // set all ressources to be loaded
         me.loader.preload(game.resources, this.loaded.bind(this));
     },

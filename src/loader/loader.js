@@ -23,6 +23,9 @@
         var binList = {};
         // contains all the JSON files
         var jsonList = {};
+        // baseURL
+        var baseURL = {};
+
         // flag to check loading status
         var resourceCount = 0;
         var loadCount = 0;
@@ -32,15 +35,17 @@
          * check the loading status
          * @ignore
          */
-        function checkLoadStatus() {
+        function checkLoadStatus(onload) {
             if (loadCount === resourceCount) {
                 // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-                if (api.onload) {
+                if (onload || api.onload) {
                     // make sure we clear the timer
                     clearTimeout(timerId);
                     // trigger the onload callback
+                    // we call either the supplied callback (which takes precedence) or the global one
+                    var callback = onload || api.onload;
                     setTimeout(function () {
-                        api.onload();
+                        callback();
                         me.event.publish(me.event.LOADER_COMPLETE);
                     }, 300);
                 }
@@ -49,7 +54,9 @@
                 }
             }
             else {
-                timerId = setTimeout(checkLoadStatus, 100);
+                timerId = setTimeout(function() {
+                    checkLoadStatus(onload);
+                }, 100);
             }
         }
 
@@ -69,6 +76,9 @@
             imgList[img.name] = new Image();
             imgList[img.name].onload = onload;
             imgList[img.name].onerror = onerror;
+            if (typeof (api.crossOrigin) === "string") {
+                imgList[img.name].crossOrigin = api.crossOrigin;
+            }
             imgList[img.name].src = img.src + api.nocache;
         }
 
@@ -271,6 +281,26 @@
          */
         api.onProgress = undefined;
 
+
+        /**
+         * crossOrigin attribute to configure the CORS requests for Image data element.<br>
+         * By default (that is, when the attribute is not specified), CORS is not used at all. <br>
+         * The "anonymous" keyword means that there will be no exchange of user credentials via cookies, <br>
+         * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+         * @public
+         * @type String
+         * @name crossOrigin
+         * @memberOf me.loader
+         * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+         * @example
+         *  // allow for cross-origin texture loading in WebGL
+         * me.loader.crossOrigin = "anonymous";
+         *
+         * // set all ressources to be loaded
+         * me.loader.preload(game.resources, this.loaded.bind(this));
+         */
+        api.crossOrigin = undefined;
+
         /**
          * Base class for Loader exception handling.
          * @name Error
@@ -317,6 +347,35 @@
          */
         api.setNocache = function (enable) {
             api.nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
+        };
+
+        /**
+         * change the default baseURL for the given asset type.<br>
+         * (this will prepend the asset URL and must finish with a '/')
+         * @name setBaseURL
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} type  "*", "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} [url="./"] default base URL
+         * @example
+         * // change the base URL relative address
+         * me.loader.setBaseURL("audio", "data/audio/");
+         * // change the base URL absolute address for all object types
+         * me.loader.setBaseURL("*", "http://myurl.com/")
+         */
+        api.setBaseURL = function (type, url) {
+            if (type !== "*") {
+                baseURL[type] = url;
+            } else {
+                // "wildcards"
+                baseURL["audio"] = url;
+                baseURL["binary"] = url;
+                baseURL["image"] = url;
+                baseURL["json"] = url;
+                baseURL["tmx"] = url;
+                baseURL["tsx"] = url;
+            }
         };
 
 
@@ -378,7 +437,7 @@
             }
 
             // check load status
-            checkLoadStatus();
+            checkLoadStatus(onload);
         };
 
         /**
@@ -408,6 +467,10 @@
          * });
          */
         api.load = function (res, onload, onerror) {
+            // transform the url if necessary
+            if (typeof (baseURL[res.type]) !== "undefined") {
+                res.src = baseURL[res.type] + res.src;
+            }
             // check ressource type
             switch (res.type) {
                 case "binary":

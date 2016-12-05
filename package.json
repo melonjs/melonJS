@@ -1,6 +1,6 @@
 {
   "name": "melonJS",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "repository": {
@@ -34,7 +34,7 @@
     "grunt-jsdoc": "^1.1.0",
     "grunt-replace": "^1.0.1",
     "grunt-shell": "^2.1.0",
-    "jasmine-core": "2.4.1",
+    "jasmine-core": "~2.5.2",
     "q": "^1.4.1",
     "shelljs": "^0.5.3"
   },

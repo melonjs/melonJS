@@ -105,60 +105,67 @@
     var lastTimeStamp = 0;
 
     // "active" list of supported events
-    var activeEventList = null;
+    var activeEventList = [];
+
+    // internal constants
+    var MOUSE_WHEEL = ["mousewheel"];
+    var POINTER_MOVE = ["pointermove", "MSPointerMove", "mousemove", "touchmove"];
+    var POINTER_DOWN = ["pointerdown", "MSPointerDown", "mousedown", "touchstart"];
+    var POINTER_UP = ["pointerup", "MSPointerUp", "mouseup", "touchend"];
+    var POINTER_CANCEL = ["pointercancel", "MSPointerCancel", "mousecancel", "touchcancel"];
+    var POINTER_ENTER = ["pointerenter", "MSPointerEnter", "mouseenter", "touchenter"];
+    var POINTER_LEAVE = ["pointerleave", "MSPointerLeave", "mouseleave", "touchleave"];
 
     // list of standard pointer event type
     var pointerEventList = [
-        "mousewheel",
-        "pointermove",
-        "pointerdown",
-        "pointerup",
-        "pointercancel",
-        "pointerenter",
-        "pointerleave"
+        MOUSE_WHEEL[0],
+        POINTER_MOVE[0],
+        POINTER_DOWN[0],
+        POINTER_UP[0],
+        POINTER_CANCEL[0],
+        POINTER_ENTER[0],
+        POINTER_LEAVE[0]
     ];
 
     // previous MS prefixed pointer event type
     var MSPointerEventList = [
-        "mousewheel",
-        "MSPointerMove",
-        "MSPointerDown",
-        "MSPointerUp",
-        "MSPointerCancel",
-        "MSPointerEnter",
-        "MSPointerLeave"
+        MOUSE_WHEEL[0],
+        POINTER_MOVE[1],
+        POINTER_DOWN[1],
+        POINTER_UP[1],
+        POINTER_CANCEL[1],
+        POINTER_ENTER[1],
+        POINTER_LEAVE[1]
     ];
 
     // legacy mouse event type
     var mouseEventList = [
-        "mousewheel",
-        "mousemove",
-        "mousedown",
-        "mouseup",
-        "mousecancel",
-        "mouseenter",
-        "mouseleave"
+        POINTER_MOVE[2],
+        POINTER_DOWN[2],
+        POINTER_UP[2],
+        POINTER_CANCEL[2],
+        POINTER_ENTER[2],
+        POINTER_LEAVE[2]
     ];
 
     // iOS style touch event type
     var touchEventList = [
-        undefined,
-        "touchmove",
-        "touchstart",
-        "touchend",
-        "touchcancel",
-        "touchenter",
-        "touchleave"
+        POINTER_MOVE[3],
+        POINTER_DOWN[3],
+        POINTER_UP[3],
+        POINTER_CANCEL[3],
+        POINTER_ENTER[3],
+        POINTER_LEAVE[3]
     ];
 
-    // internal constants
-    // var MOUSE_WHEEL   = 0;
-    var POINTER_MOVE    = 1;
-    var POINTER_DOWN    = 2;
-    var POINTER_UP      = 3;
-    var POINTER_CANCEL  = 4;
-    var POINTER_ENTER   = 5;
-    var POINTER_LEAVE   = 6;
+    var pointerEventMap = {
+        pointermove: POINTER_MOVE,
+        pointerdown: POINTER_DOWN,
+        pointerup: POINTER_UP,
+        pointercancel: POINTER_CANCEL,
+        pointerenter: POINTER_ENTER,
+        pointerleave: POINTER_LEAVE
+    };
 
     /**
      * cache value for the offset of the canvas position within the page
@@ -183,8 +190,9 @@
      * @ignore
      */
     function registerEventListener(eventList, callback) {
-        for (var x = 2; x < eventList.length; ++x) {
-            if (typeof(eventList[x]) !== "undefined") {
+        for (var x = 0; x < eventList.length; ++x) {
+            if (eventList[x] !== POINTER_MOVE[0] && eventList[x] !== POINTER_MOVE[1] &&
+                eventList[x] !== POINTER_MOVE[2] && eventList[x] !== POINTER_MOVE[3]) {
                 me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
             }
         }
@@ -213,11 +221,12 @@
             else if (window.MSPointerEvent) { // check for backward compatibility with the 'MS' prefix
                 activeEventList = MSPointerEventList;
             }
-            else if (me.device.touch && me.device.isMobile) { //  `touch****` events for iOS/Android devices
-                activeEventList = touchEventList;
-            }
             else { // Regular Mouse events
                 activeEventList = mouseEventList;
+            }
+
+            if (me.device.touch && me.device.isMobile) { //  `touch****` events for iOS/Android devices
+                activeEventList = activeEventList.concat(touchEventList);
             }
 
             registerEventListener(activeEventList, onPointerEvent);
@@ -233,28 +242,64 @@
                 api.throttlingInterval = ~~(1000 / me.sys.fps);
             }
             // if time interval <= 16, disable the feature
+            var i;
+            var events = findAllActiveEvents(activeEventList, POINTER_MOVE);
             if (api.throttlingInterval < 17) {
-                me.video.renderer.getScreenCanvas().addEventListener(
-                    activeEventList[POINTER_MOVE],
-                    onMoveEvent,
-                    false
-                );
+                for (i = 0; i < events.length; i++) {
+                    if (activeEventList.indexOf(events[i]) !== -1) {
+                        me.video.renderer.getScreenCanvas().addEventListener(
+                            events[i],
+                            onMoveEvent,
+                            false
+                        );
+                    }
+
+                }
             }
             else {
-                me.video.renderer.getScreenCanvas().addEventListener(
-                    activeEventList[POINTER_MOVE],
-                    throttle(
-                        api.throttlingInterval,
-                        false,
-                        function (e) {
-                            onMoveEvent(e);
-                        }
-                    ),
-                    false
-                );
+                for (i = 0; i < events.length; i++) {
+                    if (activeEventList.indexOf(events[i]) !== -1) {
+                        me.video.renderer.getScreenCanvas().addEventListener(
+                            events[i],
+                            throttle(
+                                api.throttlingInterval,
+                                false,
+                                onMoveEvent
+                            ),
+                            false
+                        );
+                    }
+                }
             }
             pointerInitialized = true;
         }
+    }
+
+    /**
+     * @ignore
+     */
+    function findActiveEvent(activeEventList, eventTypes) {
+        for (var i = 0; i < eventTypes.length; i++) {
+            var event = activeEventList.indexOf(eventTypes[i]);
+            if (event !== -1) {
+                return eventTypes[i];
+            }
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    function findAllActiveEvents(activeEventList, eventTypes) {
+        var events = [];
+        for (var i = 0; i < eventTypes.length; i++) {
+            var event = activeEventList.indexOf(eventTypes[i]);
+            if (event !== -1) {
+                events.push(eventTypes[i]);
+            }
+        }
+
+        return events;
     }
 
     /**
@@ -352,18 +397,21 @@
                         // then check more precisely if needed
                         (bounds === region || region.containsPoint(e.gameLocalX, e.gameLocalY));
 
-                    switch (activeEventList.indexOf(e.type)) {
-                        case POINTER_MOVE:
+                    switch (e.type) {
+                        case POINTER_MOVE[0]:
+                        case POINTER_MOVE[1]:
+                        case POINTER_MOVE[2]:
+                        case POINTER_MOVE[3]:
                             // moved out of bounds: trigger the POINTER_LEAVE callbacks
                             if (handlers.pointerId === e.pointerId && !eventInBounds) {
-                                if (triggerEvent(handlers, activeEventList[POINTER_LEAVE], e, null)) {
+                                if (triggerEvent(handlers, findActiveEvent(activeEventList, POINTER_LEAVE), e, null)) {
                                     handled = true;
                                     break;
                                 }
                             }
                             // no pointer & moved inside of bounds: trigger the POINTER_ENTER callbacks
                             else if (handlers.pointerId === null && eventInBounds) {
-                                if (triggerEvent(handlers, activeEventList[POINTER_ENTER], e, e.pointerId)) {
+                                if (triggerEvent(handlers, findActiveEvent(activeEventList, POINTER_ENTER), e, e.pointerId)) {
                                     handled = true;
                                     break;
                                 }
@@ -376,7 +424,10 @@
                             }
                             break;
 
-                        case POINTER_UP:
+                        case POINTER_UP[0]:
+                        case POINTER_UP[1]:
+                        case POINTER_UP[2]:
+                        case POINTER_UP[3]:
                             // pointer defined & inside of bounds: trigger the POINTER_UP callback
                             if (handlers.pointerId === e.pointerId && eventInBounds) {
                                 // trigger the corresponding callback
@@ -387,7 +438,10 @@
                             }
                             break;
 
-                        case POINTER_CANCEL:
+                        case POINTER_CANCEL[0]:
+                        case POINTER_CANCEL[1]:
+                        case POINTER_CANCEL[2]:
+                        case POINTER_CANCEL[3]:
                             // pointer defined: trigger the POINTER_CANCEL callback
                             if (handlers.pointerId === e.pointerId) {
                                 // trigger the corresponding callback
@@ -526,7 +580,7 @@
 
         // check if mapped to a key
         if (keycode) {
-            if (e.type === activeEventList[POINTER_DOWN]) {
+            if (e.type === POINTER_DOWN[0] || e.type === POINTER_DOWN[1] || e.type === POINTER_DOWN[2]) {
                 return api._keydown(e, keycode, button + 1);
             }
             else { // 'mouseup' or 'touchend'
@@ -703,10 +757,7 @@
             throw new me.Error("invalid event type : " + eventType);
         }
 
-        // convert to supported event type if pointerEvent not natively supported
-        if (pointerEventList !== activeEventList) {
-            eventType = activeEventList[pointerEventList.indexOf(eventType)];
-        }
+        var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
         // register the event
         if (!evtHandlers.has(region)) {
@@ -719,12 +770,14 @@
 
         // allocate array if not defined
         var handlers = evtHandlers.get(region);
-        if (!handlers.callbacks[eventType]) {
-            handlers.callbacks[eventType] = [];
+        for (var i = 0; i < eventTypes.length; i++) {
+            eventType = eventTypes[i];
+            if (handlers.callbacks[eventType]) {
+                handlers.callbacks[eventType].push(callback);
+            } else {
+                handlers.callbacks[eventType] = [callback];
+            }
         }
-
-        // initialize the handler
-        handlers.callbacks[eventType].push(callback);
     };
 
     /**
@@ -747,18 +800,18 @@
         }
 
         // convert to supported event type if pointerEvent not natively supported
-        if (pointerEventList !== activeEventList) {
-            eventType = activeEventList[pointerEventList.indexOf(eventType)];
-        }
+        var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
         var handlers = evtHandlers.get(region);
-        if (typeof(callback) === "undefined") {
-            // unregister all callbacks of "eventType" for the given region
-            while (handlers.callbacks[eventType].length > 0) {
-                handlers.callbacks[eventType].pop();
+        for (var i = 0; i < eventTypes.length; i++) {
+            eventType = eventTypes[i];
+            if (handlers.callbacks[eventType]) {
+                handlers.callbacks[eventType].remove(callback);
+            } else {
+                while (handlers.callbacks[eventType].length > 0) {
+                    handlers.callbacks[eventType].pop();
+                }
             }
-        } else {
-            handlers.callbacks[eventType].remove(callback);
         }
         if (Object.keys(handlers.callbacks).length === 0) {
             evtHandlers.delete(region);

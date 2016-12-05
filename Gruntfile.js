@@ -152,7 +152,7 @@ module.exports = function (grunt) {
               testSpecs,
               sourceFiles,
               "Gruntfile.js",
-              "plugins/**/*"
+              "plugins/**/*.js"
             ]
           }
         },
