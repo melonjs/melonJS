@@ -2969,6 +2969,55 @@ declare namespace me {
         function checkVersion(first: string, second?: string): number;
     }
 
+    namespace event {
+        let DRAGEND: string;
+        let DRAGSTART: string;
+        let GAME_INIT: string;
+        let GAME_RESET: string;
+        let GAMEPAD_CONNECTED: string;
+        let GAMEPAD_DISCONNECTED: string;
+        let GAMEPAD_UPDATE: string;
+        let KEYDOWN: string;
+        let KEYUP: string;
+        let LEVEL_LOADED: string;
+        let LOADER_COMPLETE: string;
+        let LOADER_PROGRESS: string;
+        let POINTERMOVE: string;
+        let STATE_PAUSE: string;
+        let STATE_RESTART: string;
+        let STATE_RESUME: string;
+        let STATE_STOP: string;
+        let VIEWPORT_ONCHANGE: string;
+        let VIEWPORT_ONRESIZE: string;
+        let WINDOW_ONORIENTATION_CHANGE: string;
+        let WINDOW_ONRESIZE: string;
+        let WINDOW_ONSCROLL: string;
+
+        /**
+         * Publish some data on a channel 
+         * 
+         * @param channel The channel to publish on
+         * @param arguments The data to publish
+         */
+        function publish(channel: string, arguments?: any[]): void;
+
+        /**
+         * Register a callback on a named channel. 
+         * 
+         * @param channel The channel to subscribe to
+         * @param callback The event handler, any time something is published on a subscribed channel, the callback will be called with the published array as ordered arguments
+         */
+        function subscribe(channel: string, callback: Function): any;
+
+        /**
+         * Disconnect a subscribed function for a channel. 
+         * 
+         * @param handle The return value from a subscribe call or the name of a channel as a String
+         * @param callback The callback to be unsubscribed.
+         */
+        function unsubscribe(handle: any, callback?: Function): void;
+    }
+
     var Object: ObjectStatic;
     var ScreenObject: ScreenObjectStatic;
     var Vector2d: Vector2dStatic;
