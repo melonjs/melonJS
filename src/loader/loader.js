@@ -23,6 +23,9 @@
         var binList = {};
         // contains all the JSON files
         var jsonList = {};
+        // baseURL
+        var baseURL = {};
+
         // flag to check loading status
         var resourceCount = 0;
         var loadCount = 0;
@@ -319,6 +322,35 @@
             api.nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
         };
 
+        /**
+         * change the default baseURL for the given asset type.<br>
+         * (this will prepend the asset URL and must finish with a '/')
+         * @name setBaseURL
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} type  "*", "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} [url="./"] default base URL
+         * @example
+         * // change the base URL relative address
+         * me.loader.setBaseURL("audio", "data/audio/");
+         * // change the base URL absolute address for all object types
+         * me.loader.setBaseURL("*", "http://myurl.com/")
+         */
+        api.setBaseURL = function (type, url) {
+            if (type !== "*") {
+                baseURL[type] = url;
+            } else {
+                // "wildcards"
+                baseURL["audio"] = url;
+                baseURL["binary"] = url;
+                baseURL["image"] = url;
+                baseURL["json"] = url;
+                baseURL["tmx"] = url;
+                baseURL["tsx"] = url;
+            }
+        };
+
 
         /**
          * set all the specified game resources to be preloaded.
@@ -408,6 +440,10 @@
          * });
          */
         api.load = function (res, onload, onerror) {
+            // transform the url if necessary
+            if (typeof (baseURL[res.type]) !== "undefined") {
+                res.src = baseURL[res.type] + res.src;
+            }
             // check ressource type
             switch (res.type) {
                 case "binary":
