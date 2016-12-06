@@ -22,5 +22,6 @@
   "tests/spec/renderable-spec.js",
   "tests/spec/sprite-spec.js",
   "tests/spec/font-spec.js",
-  "tests/spec/bitmapfontdata-spec.js"
+  "tests/spec/bitmapfontdata-spec.js",
+  "tests/spec/input-spec.js"
 ]

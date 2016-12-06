@@ -17,28 +17,6 @@
         });
     });
 
-    var initialized = false;
-    beforeEach(function () {
-        if (!initialized) {
-            initialized = true;
-            window.onReady(function () {
-                me.sys.stopOnAudioError = false;
-
-                // Initialize video
-                if (!me.video.init(1024, 768, {wrapper : "screen"})) {
-                    throw "me.video.init failed";
-                }
-
-                // Hide the screen
-                var scr = document.querySelector("#screen");
-                if (scr) {
-                    scr.style.display = "none";
-                }
-            });
-        }
-    });
-
-
     // Cross-browser helper for triggering events on elements
     /**
      * mouse event parameters:

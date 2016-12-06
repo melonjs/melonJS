@@ -1,48 +1,38 @@
 describe("me.input", function () {
-    var renderable = new me.Sprite(0, 0, {
-                "framewidth" : 32,
-                "frameheight" : 32,
-                "image" : me.video.createCanvas(64, 64)
+    var renderable = new me.Entity(0, 0, {
+        "width" : 32,
+        "height" : 32
     });
-
-    renderable.pointerEventHandler = function (e) {
-        // add a test flag to our renderable
-        this._eventTriggered = true;
-    }
-
-    me.game.world.addChild(renderable);
 
     describe("Pointer Event", function () {
 
-        // reset the flag
-        renderable._eventTriggered = false;
+        it("PointerDown event triggering", function (done) {
 
-        // register on pointer down
-        me.input.registerPointerEvent("pointerdown", renderable, renderable.pointerEventHandler.bind(renderable));
+            // Add renderable to the world
+            me.game.world.addChild(renderable);
 
-        it("PointerDown event triggering", function () {
-            /*
-            var event = new CustomEvent(
-                "customevent", {
-                    type : "pointerdown",
-                    pointerId : 1,
-                    clientX : 10,
-                    clientY : 10,
-                    width : 1,
-                    height : 1,
-                    isPrimary : true,
-                    bubbles: true,
-                    cancelable: true
-                }
-            );
-            */
+            // clear the quadtree
+            me.collision.quadTree.clear();
+
+            // insert the world container (children) into the quadtree
+            me.collision.quadTree.insertContainer(me.game.world);
+
+            // register on pointer down
+            me.input.registerPointerEvent("pointerdown", renderable, function () {
+                // Cleanup
+                me.input.releasePointerEvent("pointerdown", renderable);
+                me.game.world.removeChildNow(renderable);
+                me.collision.quadTree.clear();
+
+                // Assure Jasmine that everything is alright
+                expect(true).toBe(true);
+                done();
+            });
+
             // Create the event.
-            var event = document.createEvent("Event");
+            var event = new CustomEvent("mousedown");
 
-            // Define that the event name is 'build'.
-            event.initEvent("customevent", true, true);
             // configure the event
-            event.type = "pointerdown";
             event.pointerId = 1;
             event.clientX = 10;
             event.clientY = 10;
@@ -53,7 +43,6 @@ describe("me.input", function () {
 
             // dispatch the event
             me.video.renderer.getScreenCanvas().dispatchEvent(event);
-            expect(renderable._eventTriggered).toEqual(true);
         });
     });
 });
