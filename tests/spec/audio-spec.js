@@ -40,7 +40,8 @@ describe("Audio tests", function () {
         );
     });
 
-    it("should load either an mp3 or ogg", function (done) {
+    _it = (Howler.codecs("mp3") || Howler.codecs("ogg") ? it : xit);
+    _it("should load either an mp3 or ogg", function (done) {
         // Initialize audio
         expect(me.audio.init("mp3,ogg")).toEqual(true);
 
@@ -57,7 +58,7 @@ describe("Audio tests", function () {
         );
     });
 
-    it("should run callback on end", function (done) {
+    _it("should run callback on end", function (done) {
         var started = Date.now();
         me.audio.play("silence", false, function () {
             expect(Date.now() - started).toBeCloseTo(1000, -2);
@@ -65,7 +66,7 @@ describe("Audio tests", function () {
         });
     });
 
-    it("should run callback on loop", function (done) {
+    _it("should run callback on loop", function (done) {
         var started = Date.now();
         me.audio.play("silence", true, function () {
             expect(Date.now() - started).toBeCloseTo(1000, -2);
