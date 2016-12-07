@@ -181,7 +181,7 @@
     Quadtree.prototype.insertContainer = function (container) {
 
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
-            if (child instanceof me.Container) {
+            if (child instanceof me.Container && !(child instanceof me.ParticleContainer)) {
                 if (child.name !== "rootContainer") {
                     this.insert(child);
                 }
