@@ -1,6 +1,7 @@
 melonJS
 =======
 [![Build Status](https://travis-ci.org/melonjs/melonJS.svg)](https://travis-ci.org/melonjs/melonJS)
+[![Inline docs](http://inch-ci.org/github/melonjs/melonjs.svg?branch=master)](http://inch-ci.org/github/melonjs/melonjs)
 
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
