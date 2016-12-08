@@ -4,6 +4,7 @@ Version History
 * Audio : Updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
 * Loader : Added the possibility to configure path (baseUrl) by asset types.
 * Loader : Added a 'crossOrigin' option to enable/allow cross-origin image loading for WebGL
+* Particles : Fixed a (huge) performance regression with particle generation / handling
 * Pointer: Fixed bug where a device allowing both mouse & touch events would only emit touch events.
 
 4.0.0
