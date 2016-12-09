@@ -14,8 +14,8 @@ describe("me.Color", function () {
             expect(blue_color.parseHex("#0F08").toRGBA()).toEqual("rgba(0,255,0,0.5)");
         });
         // #RRGGBB
-        it("#FF00FF value is rgb(255, 0, 255)", function () {
-            expect(blue_color.parseHex("#FF00FF").toRGB()).toEqual("rgb(255,0,255)");
+        it("#FF00FF value is rgba(255, 0, 255, 1)", function () {
+            expect(blue_color.parseHex("#FF00FF").toRGBA()).toEqual("rgba(255,0,255,1)");
         });
         // #RRGGBBAA (finish with the blue color so that the test below passes)
         it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
