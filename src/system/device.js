@@ -18,6 +18,15 @@
         var deviceOrientationInitialized = false;
         var devicePixelRatio = null;
 
+        // swipe utility fn & flag
+        var swipeEnabled = true;
+        var disableSwipeFn = function (e) {
+            e.preventDefault();
+            window.scroll(0, 0);
+            return false;
+        };
+
+
         /**
          * check the device capapbilities
          * @ignore
@@ -30,11 +39,7 @@
             // Mobile browser hacks
             if (me.device.isMobile && !me.device.cocoon) {
                 // Prevent the webview from moving on a swipe
-                window.document.addEventListener("touchmove", function (e) {
-                    e.preventDefault();
-                    window.scroll(0, 0);
-                    return false;
-                }, false);
+                api.enableSwipe(false);
             }
 
             // future proofing (MS) feature detection
@@ -436,6 +441,25 @@
          * @memberOf me.device
          */
         api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
+
+        /**
+         * enable/disable swipe on WebView.
+         * @name enableSwipe
+         * @memberOf me.device
+         * @function
+         * @param {boolean} [enable=true] enable or disable swipe.
+         */
+        api.enableSwipe = function (enable) {
+            if (enable !== false) {
+                if (swipeEnabled === false) {
+                    window.document.removeEventListener("touchmove", disableSwipeFn, false);
+                    swipeEnabled = true;
+                }
+            } else if (swipeEnabled === true) {
+                window.document.addEventListener("touchmove", disableSwipeFn, false);
+                swipeEnabled = false;
+            }
+        };
 
         /**
          * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
