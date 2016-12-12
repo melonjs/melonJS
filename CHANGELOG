@@ -2,6 +2,7 @@ Version History
 ---------------
 4.1.0
 * Audio : Updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
+* Core : throw an error message when registering a non valid object in the object pool (i.e. undefined class)
 * Loader : Added the possibility to configure path (baseUrl) by asset types.
 * Loader : Added a 'crossOrigin' option to enable/allow cross-origin image loading for WebGL
 * Particles : Fixed a (huge) performance regression with particle generation / handling

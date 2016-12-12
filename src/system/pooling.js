@@ -69,12 +69,16 @@
          * me.pool.register("heartentity", HeartEntity, true);
          * me.pool.register("starentity", StarEntity, true);
          */
-        api.register = function (className, entityObj, pooling) {
-            entityClass[className] = {
-                "class" : entityObj,
-                "pool" : (pooling ? [] : undefined)
-            };
-        };
+         api.register = function (className, classObj, pooling) {
+             if (typeof (classObj) !== "undefined") {
+                 entityClass[className] = {
+                     "class" : classObj,
+                     "pool" : (pooling ? [] : undefined)
+                 };
+             } else {
+                 throw new me.Error("Cannot register object '" + className + "', invalid class");
+             }
+         };
 
         /**
          * Pull a new instance of the requested object (if added into the object pool)
