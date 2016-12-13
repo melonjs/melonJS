@@ -147,14 +147,14 @@
          * @public
          * @function
          */
-        this.start = function ( time ) {
+        this.start = function ( _time ) {
 
             _onStartCallbackFired = false;
 
             // add the tween to the object pool on start
             me.game.world.addChild(this);
 
-            _startTime = (typeof(time) === 'undefined' ? me.timer.getTime() : time) + _delayTime;
+            _startTime = (typeof(_time) === 'undefined' ? me.timer.getTime() : _time) + _delayTime;
 
             for ( var property in _valuesEnd ) {
 
