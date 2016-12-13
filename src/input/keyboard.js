@@ -371,7 +371,7 @@
      * @public
      * @function
      * @param {me.input.KEY} keycode
-     * @param {Boolean} true to trigger a key press, or false for key release
+     * @param {Boolean} [status=false] true to trigger a key press, or false for key release
      * @example
      * // trigger a key press
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
