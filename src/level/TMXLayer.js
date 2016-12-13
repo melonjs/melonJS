@@ -508,13 +508,28 @@
             this.animatedTilesets = undefined;
         },
 
-
         /**
-         * set the layer renderer
-         * @ignore
+         * Se the TMX renderer for this layer object
+         * @name setRenderer
+         * @memberOf me.TMXLayer
+         * @public
+         * @function
+         * @param {me.TMXRenderer} renderer
          */
         setRenderer : function (renderer) {
             this.renderer = renderer;
+        },
+
+        /**
+         * Return the layer current renderer object
+         * @name getRenderer
+         * @memberOf me.TMXLayer
+         * @public
+         * @function
+         * @return {me.TMXRenderer} renderer
+         */
+        getRenderer : function (renderer) {
+            return this.renderer;
         },
 
         /**
@@ -585,7 +600,7 @@
             var tile = this.layerData[x][y] = new me.Tile(x, y, tileId, this.tileset);
             // draw the corresponding tile
             if (this.preRender) {
-                this.renderer.drawTile(this.canvasRenderer, x, y, tile, tile.tileset);
+                this.renderer.drawTile(this.canvasRenderer, x, y, tile);
             }
             return tile;
         },

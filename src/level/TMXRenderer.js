@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
- * Tile QT 0.7.x format
+ * Tiled (0.7+) format
  * http://www.mapeditor.org/
  *
  */
@@ -24,10 +24,15 @@
     ];
 
     /**
-     * The map renderder base class
+     * The map renderer base class
+     * @class
+     * @extends me.Object
      * @memberOf me
-     * @ignore
      * @constructor
+     * @param {Number} cols width of the tilemap in tiles
+     * @param {Number} rows height of the tilemap in tiles
+     * @param {Number} tilewidth width of each tile in pixels
+     * @param {Number} tileheight height of each tile in pixels
      */
     me.TMXRenderer = me.Object.extend({
         // constructor
@@ -40,7 +45,11 @@
 
         /**
          * return true if the renderer can render the specified layer
-         * @ignore
+         * @name me.TMXRenderer#canRender
+         * @public
+         * @function
+         * @param {me.TMXLayer} layer TMX Layer
+         * @return {boolean}
          */
         canRender : function (layer) {
             return (
@@ -49,17 +58,95 @@
                 (this.tilewidth === layer.tilewidth) &&
                 (this.tileheight === layer.tileheight)
             );
-        }
-    });
+        },
 
+        /**
+         * return the tile position corresponding to the specified pixel
+         * @name me.TMXRenderer#pixelToTileCoords
+         * @public
+         * @function
+         * @param {Number} x X coordinate
+         * @param {Number} y Y coordinate
+         * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+         * @return {me.Vector2d}
+         */
+        pixelToTileCoords : function (x, y, v) {
+            return v;
+        },
+
+        /**
+         * return the pixel position corresponding of the specified tile
+         * @name me.TMXRenderer#tileToPixelCoords
+         * @public
+         * @function
+         * @param {Number} col tile horizontal position
+         * @param {Number} row tile vertical position
+         * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+         * @return {me.Vector2d}
+         */
+        tileToPixelCoords : function (x, y, v) {
+            return v;
+        },
+
+        /**
+         * return the tile position corresponding for the given X coordinate
+         * @name me.TMXRenderer#pixelToTileX
+         * @public
+         * @function
+         * @param {Number} x X coordinate
+         * @return {Number} tile vertical position
+         */
+        pixelToTileX : function (x) {
+        },
+
+        /**
+         * return the tile position corresponding for the given Y coordinates
+         * @name me.TMXRenderer#pixelToTileY
+         * @public
+         * @function
+         * @param {Number} y Y coordinate
+         * @return {Number} tile horizontal position
+         */
+        pixelToTileY : function (y) {
+        },
+
+        /**
+         * draw the given tile at the specified layer
+         * @name me.TMXRenderer#drawTile
+         * @public
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         * @param {Number} x X coordinate where to draw the tile
+         * @param {Number} y Y coordinate where to draw the tile
+         * @param {me.Tile} tile the tile object to draw
+         */
+        drawTile : function (renderer, x, y, tile) {
+        },
+
+        /**
+         * draw the given TMX Layer for the given area
+         * @name me.TMXRenderer#drawTileLayer
+         * @public
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         * @param {me.TMXLayer} layer a TMX Layer object
+         * @param {me.Rect} rect the area of the layer to draw
+         */
+        drawTileLayer : function (renderer, layer, rect) {
+        }
+
+    });
 
     /**
      * an Orthogonal Map Renderder
-     * Tiled QT 0.7.x format
      * @memberOf me
      * @extends me.TMXRenderer
-     * @ignore
+     * @memberOf me
      * @constructor
+     * @param {Number} cols width of the tilemap in tiles
+     * @param {Number} rows height of the tilemap in tiles
+     * @param {Number} tilewidth width of each tile in pixels
+     * @param {Number} tileheight height of each tile in pixels
      */
     me.TMXOrthogonalRenderer = me.TMXRenderer.extend({
         /**
@@ -131,7 +218,8 @@
          * draw the tile map
          * @ignore
          */
-        drawTile : function (renderer, x, y, tmxTile, tileset) {
+        drawTile : function (renderer, x, y, tmxTile) {
+            var tileset = tmxTile.tileset;
             // draw the tile
             tileset.drawTile(
                 renderer,
@@ -168,7 +256,7 @@
                 for (var x = start.x; x < end.x; x++) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
-                        this.drawTile(renderer, x, y, tmxTile, tmxTile.tileset);
+                        this.drawTile(renderer, x, y, tmxTile);
                     }
                 }
             }
@@ -181,11 +269,14 @@
 
     /**
      * an Isometric Map Renderder
-     * Tiled QT 0.7.x format
      * @memberOf me
      * @extends me.TMXRenderer
-     * @ignore
+     * @memberOf me
      * @constructor
+     * @param {Number} cols width of the tilemap in tiles
+     * @param {Number} rows height of the tilemap in tiles
+     * @param {Number} tilewidth width of each tile in pixels
+     * @param {Number} tileheight height of each tile in pixels
      */
     me.TMXIsometricRenderer = me.TMXRenderer.extend({
         // constructor
@@ -271,7 +362,8 @@
          * draw the tile map
          * @ignore
          */
-        drawTile : function (renderer, x, y, tmxTile, tileset) {
+        drawTile : function (renderer, x, y, tmxTile) {
+            var tileset = tmxTile.tileset;
             // draw the tile
             tileset.drawTile(
                 renderer,
@@ -388,11 +480,14 @@
 
     /**
      * an Hexagonal Map Renderder
-     * Tiled QT 0.7.x format
      * @memberOf me
      * @extends me.TMXRenderer
-     * @ignore
+     * @memberOf me
      * @constructor
+     * @param {Number} cols width of the tilemap in tiles
+     * @param {Number} rows height of the tilemap in tiles
+     * @param {Number} tilewidth width of each tile in pixels
+     * @param {Number} tileheight height of each tile in pixels
      */
     me.TMXHexagonalRenderer = me.TMXRenderer.extend({
         // constructor
@@ -603,7 +698,8 @@
          * draw the tile map
          * @ignore
          */
-        drawTile : function (renderer, x, y, tmxTile, tileset) {
+        drawTile : function (renderer, x, y, tmxTile) {
+            var tileset = tmxTile.tileset;
             var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d"));
 
             // draw the tile
@@ -644,7 +740,7 @@
                 for (var x = start.x; x < end.x; x++) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
-                        this.drawTile(renderer, x, y, tmxTile, tmxTile.tileset);
+                        this.drawTile(renderer, x, y, tmxTile);
                     }
                 }
             }
