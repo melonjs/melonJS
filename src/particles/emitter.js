@@ -370,7 +370,13 @@
              * @ignore
              */
             Object.defineProperty(this.pos, "z", {
+                /**
+                 * @ignore
+                 */
                 get : (function () { return this.container.pos.z; }).bind(this),
+                /**
+                 * @ignore
+                 */
                 set : (function (value) { this.container.pos.z = value; }).bind(this),
                 enumerable : true,
                 configurable : true
@@ -383,7 +389,13 @@
              * @memberOf me.ParticleEmitter
              */
             Object.defineProperty(this, "floating", {
+                /**
+                 * @ignore
+                 */
                 get : function () { return this.container.floating; },
+                /**
+                 * @ignore
+                 */
                 set : function (value) { this.container.floating = value; },
                 enumerable : true,
                 configurable : true

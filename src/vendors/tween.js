@@ -879,6 +879,9 @@
      * @param {String} msg Error message.
      */
     me.Tween.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.Tween.Error";

@@ -178,9 +178,15 @@
              * @name me.ImageLayer#repeat
              */
             Object.defineProperty(this, "repeat", {
+                /**
+                 * @ignore
+                 */
                 get : function get() {
                     return this._repeat;
                 },
+                /**
+                 * @ignore
+                 */
                 set : function set(val) {
                     this._repeat = val;
                     switch (this._repeat) {

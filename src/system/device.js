@@ -754,6 +754,9 @@
      * @return {boolean}
      */
     Object.defineProperty(me.device, "isFullscreen", {
+        /**
+         * @ignore
+         */
         get: function () {
             if (me.device.hasFullscreenSupport) {
                 var el = me.agent.prefixed("fullscreenElement", document) ||
@@ -775,6 +778,9 @@
      * @return {boolean}
      */
     Object.defineProperty(me.device, "sound", {
+        /**
+         * @ignore
+         */
         get: function () {
                 return !Howler.noAudio;
             }

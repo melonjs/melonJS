@@ -21,7 +21,10 @@
      * @param {Object} tileset tileset JSON definition
      */
     me.TMXTileset = me.Object.extend({
-        // constructor
+        /**
+         * constructor
+         * @ignore
+         */
         init: function (tileset) {
             var i = 0;
             // first gid
@@ -256,19 +259,35 @@
      * @constructor
      */
     me.TMXTilesetGroup = me.Object.extend({
-        // constructor
+        /**
+         * constructor
+         * @ignore
+         */
         init: function () {
             this.tilesets = [];
             this.length = 0;
         },
 
-        //add a tileset to the tileset group
+        /**
+         * add a tileset to the tileset group
+         * @name me.TMXTilesetGroup#add
+         * @public
+         * @function
+         * @param  {me.TMXTileset} tileset
+         */
         add : function (tileset) {
             this.tilesets.push(tileset);
             this.length++;
         },
 
-        //return the tileset at the specified index
+        /**
+         * return the tileset at the specified index
+         * @name me.TMXTilesetGroup#getTilesetByIndex
+         * @public
+         * @function
+         * @param {Number} i
+         * @return {me.TMXTileset} corresponding tileset
+         */
         getTilesetByIndex : function (i) {
             return this.tilesets[i];
         },

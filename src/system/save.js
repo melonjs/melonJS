@@ -80,9 +80,15 @@
                         Object.defineProperty(api, prop, {
                             configurable : true,
                             enumerable : true,
+                            /**
+                             * @ignore
+                             */
                             get : function () {
                                 return data[prop];
                             },
+                            /**
+                             * @ignore
+                             */
                             set : function (value) {
                                 data[prop] = value;
                                 if (me.device.localStorage === true) {

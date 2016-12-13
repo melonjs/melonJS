@@ -397,9 +397,15 @@
      * @memberOf me.Renderable
      */
     Object.defineProperty(me.Renderable.prototype, "width", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this._width;
         },
+        /**
+         * @ignore
+         */
         set : function (value) {
             this.getBounds().width = value;
             this._width = value;
@@ -415,9 +421,15 @@
      * @memberOf me.Renderable
      */
     Object.defineProperty(me.Renderable.prototype, "height", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this._height;
         },
+        /**
+         * @ignore
+         */
         set : function (value) {
             this.getBounds().height = value;
             this._height = value;

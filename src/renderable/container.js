@@ -876,6 +876,9 @@
      * @param {String} msg Error message.
      */
     me.Container.Error = me.Renderable.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Renderable.Error, "init", [ msg ]);
             this.name = "me.Container.Error";

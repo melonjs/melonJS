@@ -178,15 +178,19 @@
     var me_initialized = false;
 
     Object.defineProperty(me, "initialized", {
+        /**
+         * @ignore
+         */
         get : function get() {
             return me_initialized;
         }
     });
 
-    /*
-     * initial boot function
-     */
 
+    /**
+     * initial boot function
+     * @ignore
+     */
     me.boot = function () {
         // don't do anything if already initialized (should not happen anyway)
         if (me_initialized) {

@@ -62,6 +62,9 @@
 
     // the melonJS Logo
     var IconLogo = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (iconCanvas, x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
@@ -97,7 +100,9 @@
             context.miterLimit = 4.0;
             context.stroke();
         },
-
+        /**
+         * @ignore
+         */
         draw : function (renderer) {
             renderer.drawImage(this.iconCanvas, 0, 0);
         }
@@ -105,7 +110,9 @@
 
     // the melonJS Text Logo
     var TextLogo = me.Renderable.extend({
-        // constructor
+        /**
+         * @ignore
+         */
         init : function (w, h) {
             this._super(me.Renderable, "init", [0, 0, w, h]);
             this.logo1 = new me.Font("century gothic", 32, "white", "middle");
@@ -113,7 +120,9 @@
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
         },
-
+        /**
+         * @ignore
+         */
         draw : function (renderer) {
             // measure the logo size
             var logo1_width = this.logo1.measureText(renderer, "melon").width;
@@ -135,7 +144,10 @@
      * @constructor
      */
     me.DefaultLoadingScreen = me.ScreenObject.extend({
-        // call when the loader is resetted
+        /**
+         * call when the loader is resetted
+         * @ignore
+         */
         onResetEvent : function () {
             // background color
             me.game.world.addChild(new me.ColorLayer("background", "#202020", 0), 0);
@@ -169,7 +181,10 @@
             me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
         },
 
-        // destroy object at end of loading
+        /**
+         * destroy object at end of loading
+         * @ignore
+         */
         onDestroyEvent : function () {
             // cancel the callback
             me.event.unsubscribe(this.loaderHdlr);
