@@ -51,9 +51,15 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         initEvents: function () {
             var self = this;
+            /**
+             * @ignore
+             */
             this.mouseDown = function (e) {
                 this.translatePointerEvent(e, Event.DRAGSTART);
             };
+            /**
+             * @ignore
+             */
             this.mouseUp = function (e) {
                 this.translatePointerEvent(e, Event.DRAGEND);
             };

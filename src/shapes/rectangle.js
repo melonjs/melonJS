@@ -281,6 +281,9 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "left", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this.pos.x;
         },
@@ -295,6 +298,9 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "right", {
+        /**
+         * @ignore
+         */
         get : function () {
             var w = this._width;
             return (this.pos.x + w) || w;
@@ -310,6 +316,9 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "top", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this.pos.y;
         },
@@ -324,6 +333,9 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "bottom", {
+        /**
+         * @ignore
+         */
         get : function () {
             var h = this._height;
             return (this.pos.y + h) || h;
@@ -339,9 +351,15 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "width", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this._width;
         },
+        /**
+         * @ignore
+         */
         set : function (value) {
             this.points[1].x = this.points[2].x = value;
             // _width updated in recalc
@@ -358,9 +376,15 @@
      * @memberOf me.Rect
      */
     Object.defineProperty(me.Rect.prototype, "height", {
+        /**
+         * @ignore
+         */
         get : function () {
             return this._height;
         },
+        /**
+         * @ignore
+         */
         set : function (value) {
             this.points[2].y = this.points[3].y = value;
             // _height updated in recalc

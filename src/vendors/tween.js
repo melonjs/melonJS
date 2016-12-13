@@ -50,13 +50,18 @@
         var _onCompleteCallback = null;
         var _tweenTimeTracker = null;
 
-
+        /**
+         * @ignore
+         */
         this._resumeCallback = function (elapsed) {
             if (_startTime) {
                 _startTime += elapsed;
             }
         };
 
+        /**
+         * @ignore
+         */
         this.setProperties = function (object) {
             _object = object;
             _valuesStart = {};

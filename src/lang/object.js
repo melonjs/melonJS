@@ -43,7 +43,7 @@ if (!Object.create) {
      * @name create
      * @memberOf external:Object#
      * @function
-     * @param {Object} Object
+     * @param {Object} o
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create|Object.create}
      * @example
      * // declare oldObject
@@ -89,45 +89,44 @@ if (!Object.is) {
      * var a = {}, b = a;
      * Object.is(a, b); //> true
      */
-    Object.is = function(x, y) {
+    Object.is = function(a, b) {
         // SameValue algorithm
-        if (x === y) { // Steps 1-5, 7-10
+        if (a === b) { // Steps 1-5, 7-10
             // Steps 6.b-6.e: +0 != -0
-            return x !== 0 || 1 / x === 1 / y;
+            return a !== 0 || 1 / a === 1 / b;
         } else {
             // Step 6.a: NaN == NaN
-            return x !== x && y !== y;
+            return a !== a && b !== b;
         }
   };
 }
 
 if (!Object.assign) {
-    /**
-     * The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object.
-     * The Object.assign method only copies enumerable and own properties from a source object to a target object.
-     * It uses [[Get]] on the source and [[Put]] on the target, so it will invoke getters and setters.
-     * Therefore it assigns properties versus just copying or defining new properties.
-     * This may make it unsuitable for merging new properties into a prototype if the merge sources contain getters.
-     * For copying propertiy definitions, including their enumerability, into prototypes Object.getOwnPropertyDescriptor and Object.defineProperty should be used instead.
-     * @name assign
-     * @memberOf external:Object#
-     * @function
-     * @param {Object} target The target object.
-     * @param {Object[]} sources The source object(s).
-     * @return {Object} The target object gets returned.
-     * @see {@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/assign}
-     * @example
-     * // Merging objects
-     * var o1 = { a: 1 };
-     * var o2 = { b: 2 };
-     * var o3 = { c: 3 };
-     *
-     * var obj = Object.assign(o1, o2, o3);
-     * console.log(obj);
-     * // { a: 1, b: 2, c: 3 }
-     */
-
     (function () {
+        /**
+         * The Object.assign() method is used to copy the values of all enumerable own properties from one or more source objects to a target object.
+         * The Object.assign method only copies enumerable and own properties from a source object to a target object.
+         * It uses [[Get]] on the source and [[Put]] on the target, so it will invoke getters and setters.
+         * Therefore it assigns properties versus just copying or defining new properties.
+         * This may make it unsuitable for merging new properties into a prototype if the merge sources contain getters.
+         * For copying propertiy definitions, including their enumerability, into prototypes Object.getOwnPropertyDescriptor and Object.defineProperty should be used instead.
+         * @name assign
+         * @memberOf external:Object#
+         * @function
+         * @param {Object} target The target object.
+         * @param {Object[]} sources The source object(s).
+         * @return {Object} The target object gets returned.
+         * @see {@link https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Object/assign}
+         * @example
+         * // Merging objects
+         * var o1 = { a: 1 };
+         * var o2 = { b: 2 };
+         * var o3 = { c: 3 };
+         *
+         * var obj = Object.assign(o1, o2, o3);
+         * console.log(obj);
+         * // { a: 1, b: 2, c: 3 }
+         */
         Object.assign = function (target) {
             "use strict";
             // We must check against these specific cases.

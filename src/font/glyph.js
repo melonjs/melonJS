@@ -16,12 +16,18 @@
      * @constructor
      */
     me.Glyph = me.Object.extend({
+        /**
+         * @ignore
+         */
         init: function () {
             this.src = new me.Vector2d();
             this.offset = new me.Vector2d();
             this.onResetEvent();
         },
-
+        
+        /**
+         * @ignore
+         */
         onResetEvent: function () {
             this.id = 0;
             this.src.set(0, 0);
@@ -36,6 +42,9 @@
             this.fixedWidth = false;
         },
 
+        /**
+         * @ignore
+         */
         getKerning: function (ch) {
             if (this.kerning) {
                 var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
@@ -46,6 +55,9 @@
             return 0;
         },
 
+        /**
+         * @ignore
+         */
         setKerning: function (ch, value) {
             if (!this.kerning) {
                 this.kerning = {};

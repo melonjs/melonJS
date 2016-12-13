@@ -21,7 +21,7 @@ if (!Function.prototype.bind) {
      * Also optionally curries arguments for the function.
      * @memberof! external:Function#
      * @alias bind
-     * @param {Object} context the object to bind to.
+     * @param {Object} that the object to bind to.
      * @param {} [arguments...] Optional additional arguments to curry for the function.
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind|Function.bind}
      * @example

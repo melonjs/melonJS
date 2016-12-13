@@ -182,7 +182,9 @@
     /** @scope me.Color.prototype */
     {
 
-        /** @ignore */
+        /**
+         * @ignore
+         */
         init : function (r, g, b, alpha) {
 
             /**
@@ -512,7 +514,13 @@
      * @memberOf me.Color
      */
     Object.defineProperty(me.Color.prototype, "r", {
+        /**
+         * @ignore
+         */
         get : function () { return ~~(this.glArray[0] * 255); },
+        /**
+         * @ignore
+         */
         set : function (value) { this.glArray[0] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
@@ -526,7 +534,13 @@
      * @memberOf me.Color
      */
     Object.defineProperty(me.Color.prototype, "g", {
+        /**
+         * @ignore
+         */
         get : function () { return ~~(this.glArray[1] * 255); },
+        /**
+         * @ignore
+         */
         set : function (value) { this.glArray[1] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
@@ -540,7 +554,13 @@
      * @memberOf me.Color
      */
     Object.defineProperty(me.Color.prototype, "b", {
+        /**
+         * @ignore
+         */
         get : function () { return ~~(this.glArray[2] * 255); },
+        /**
+         * @ignore
+         */
         set : function (value) { this.glArray[2] = (~~value || 0).clamp(0, 255) / 255.0; },
         enumerable : true,
         configurable : true
@@ -554,7 +574,13 @@
      * @memberOf me.Color
      */
     Object.defineProperty(me.Color.prototype, "alpha", {
+        /**
+         * @ignore
+         */
         get : function () { return this.glArray[3]; },
+        /**
+         * @ignore
+         */
         set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : (+value).clamp(0, 1); },
         enumerable : true,
         configurable : true
@@ -569,6 +595,9 @@
      * @param {String} msg Error message.
      */
     me.Color.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.Color.Error";

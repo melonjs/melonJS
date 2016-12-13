@@ -6,7 +6,9 @@
 (function () {
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend({
-
+        /**
+         * @ignore
+         */
         init: function (v, w, h) {
             this._super(me.Renderable, "init", [v.x, v.y, w, h]);
             // flag to know if we need to refresh the display
@@ -19,13 +21,18 @@
             this.progress = 0;
         },
 
-        // make sure the screen is refreshed every frame
+        /**
+         * make sure the screen is refreshed every frame
+         * @ignore
+         */
         onProgressUpdate : function (progress) {
             this.progress = ~~(progress * this.width);
             this.invalidate = true;
         },
 
-        // make sure the screen is refreshed every frame
+        /**
+         * @ignore
+         */
         update : function () {
             if (this.invalidate === true) {
                 // clear the flag
@@ -37,7 +44,10 @@
             return false;
         },
 
-         // draw function
+        /**
+         * draw function
+         * @ignore
+         */
         draw : function (renderer) {
             // draw the progress bar
             renderer.setColor("black");

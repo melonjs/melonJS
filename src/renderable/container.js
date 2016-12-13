@@ -485,6 +485,9 @@
             return this.getBounds();
         },
 
+        /**
+         * @ignore
+         */
         onActivateEvent : function () {
           for (var i = this.children.length, child; i--, (child = this.children[i]);) {
               if (typeof child.onActivateEvent === "function") {
@@ -662,6 +665,9 @@
             }
         },
 
+        /**
+         * @ignore
+         */
         onDeactivateEvent : function () {
             for (var i = this.children.length, child; i--, (child = this.children[i]);) {
                 if (typeof child.onDeactivateEvent === "function") {

@@ -107,6 +107,9 @@
      * @param {String} msg Error message.
      */
     me.Line.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.Line.Error";

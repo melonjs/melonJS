@@ -580,9 +580,15 @@
      */
     Object.defineProperty(me.Sprite.prototype, "offset", {
         /* for backward compatiblity */
+        /**
+         * @ignore
+         */
         get : function () {
             return this.current.offset;
         },
+        /**
+         * @ignore
+         */
         set : function (value) {
             this.current.offset.setV(value);
         },

@@ -393,6 +393,9 @@
             this.reset(settings);
         },
 
+        /**
+         * @ignore
+         */
         onActivateEvent: function() {
             this.ancestor.addChild(this.container);
             this.container.pos.z = this.pos.z;
@@ -401,12 +404,18 @@
             }
         },
 
+        /**
+         * @ignore
+         */
         onDeactivateEvent: function() {
             if (this.ancestor.hasChild(this.container)) {
                 this.ancestor.removeChildNow(this.container);
             }
         },
 
+        /**
+         * @ignore
+         */
         destroy: function () {
             this.reset();
         },

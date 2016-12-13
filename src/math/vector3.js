@@ -476,6 +476,9 @@
      * @param {String} msg Error message.
      */
     me.Vector3d.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.Vector3d.Error";

@@ -19,7 +19,9 @@
     me.ObservableVector3d = me.Vector3d.extend({
     /** @scope me.ObservableVector3d.prototype */
 
-        /** @ignore */
+        /**
+         * @ignore
+         */
         init : function (x, y, z, settings) {
             /**
              * x value of the vector
@@ -29,10 +31,15 @@
              * @memberOf me.ObservableVector3d
              */
             Object.defineProperty(this, "x", {
+                /**
+                 * @ignore
+                 */
                 get : function () {
                     return this._x;
                 },
-
+                /**
+                 * @ignore
+                 */
                 set : function (value) {
                     this.onUpdate(value, this._y, this._z, this._x, this._y, this._z);
                     this._x = value;
@@ -47,10 +54,15 @@
              * @memberOf me.ObservableVector3d
              */
             Object.defineProperty(this, "y", {
+                /**
+                 * @ignore
+                 */
                 get : function () {
                     return this._y;
                 },
-
+                /**
+                 * @ignore
+                 */
                 set : function (value) {
                     this.onUpdate(this._x, value, this._z, this._x, this._y, this._z);
                     this._y = value;
@@ -65,10 +77,15 @@
              * @memberOf me.ObservableVector3d
              */
             Object.defineProperty(this, "z", {
+                /**
+                 * @ignore
+                 */
                 get : function () {
                     return this._z;
                 },
-
+                /**
+                 * @ignore
+                 */
                 set : function (value) {
                     this.onUpdate(this._x, this._y, value, this._x, this._y, this._z);
                     this._z = value;
@@ -503,6 +520,9 @@
      * @param {String} msg Error message.
      */
     me.ObservableVector3d.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.ObservableVector3d.Error";

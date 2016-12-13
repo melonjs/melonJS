@@ -159,9 +159,15 @@
                 src : urls,
                 volume : Howler.volume(),
                 html5 : html5 === true,
+                /**
+                 * @ignore
+                 */
                 onloaderror : function () {
                     soundLoadError.call(me.audio, sound.name, onerror_cb);
                 },
+                /**
+                 * @ignore
+                 */
                 onload : function () {
                     retry_counter = 0;
                     if (onload_cb) {

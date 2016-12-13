@@ -115,6 +115,9 @@
     * @ignore
     */
     me.WebGLRenderer.prototype.Texture.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.WebGLRenderer.Texture.Error";

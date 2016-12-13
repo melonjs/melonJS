@@ -376,7 +376,6 @@
      * // trigger a key press
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
      */
-
     api.triggerKeyEvent = function (keycode, status) {
         if (status) {
             api._keydown({}, keycode);

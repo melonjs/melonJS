@@ -136,6 +136,9 @@
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
         },
 
+        /**
+         * @ignore
+         */
         draw : function (renderer) {
             renderer.save();
 

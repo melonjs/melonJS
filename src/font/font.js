@@ -212,7 +212,6 @@
          * @param {Number} x
          * @param {Number} y
          */
-
         draw : function (renderer, text, x, y) {
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();

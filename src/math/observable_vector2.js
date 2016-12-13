@@ -28,10 +28,15 @@
              * @memberOf me.ObservableVector2d
              */
             Object.defineProperty(this, "x", {
+                /**
+                 * @ignore
+                 */
                 get : function () {
                     return this._x;
                 },
-
+                /**
+                 * @ignore
+                 */
                 set : function (value) {
                     this.onUpdate(value, this._y, this._x, this._y);
                     this._x = value;
@@ -46,10 +51,15 @@
              * @memberOf me.ObservableVector2d
              */
             Object.defineProperty(this, "y", {
+                /**
+                 * @ignore
+                 */
                 get : function () {
                     return this._y;
                 },
-
+                /**
+                 * @ignore
+                 */
                 set : function (value) {
                     this.onUpdate(this._x, value, this._x, this._y);
                     this._y = value;
@@ -428,6 +438,9 @@
      * @param {String} msg Error message.
      */
     me.ObservableVector2d.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
             this.name = "me.ObservableVector2d.Error";

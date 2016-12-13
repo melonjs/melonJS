@@ -73,7 +73,7 @@
      * Specify a function to execute when the DOM is fully loaded
      * @memberOf external:window#
      * @alias onReady
-     * @param {Function} handler A function to execute after the DOM is ready.
+     * @param {Function} fn A function to execute after the DOM is ready.
      * @example
      * // small main skeleton
      * var game = {
@@ -152,6 +152,9 @@
         });
     }
     else {
+        /**
+         * @ignore
+         */
         me.init = function () {
             me.boot();
             domReady();

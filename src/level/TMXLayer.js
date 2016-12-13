@@ -17,7 +17,10 @@
      * @param {Number} z z-index position
      */
     me.ColorLayer = me.Renderable.extend({
-        // constructor
+        /**
+         * Constructor
+         * @ignore
+         */
         init: function (name, color, z) {
             // parent constructor
             this._super(me.Renderable, "init", [0, 0, Infinity, Infinity]);
@@ -80,7 +83,6 @@
         /**
          * constructor
          * @ignore
-         * @function
          */
         init: function (x, y, settings) {
             // layer name
@@ -356,8 +358,9 @@
      * @param {Number} z z-index position
      */
     me.TMXLayer = me.Renderable.extend({
-
-        /** @ignore */
+        /**
+         * @ignore
+         */
         init: function (tilewidth, tileheight, orientation, tilesets, z) {
             // super constructor
             this._super(me.Renderable, "init", [0, 0, 0, 0]);

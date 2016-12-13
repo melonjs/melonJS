@@ -259,7 +259,6 @@
          * @param {Number} x
          * @param {Number} y
          */
-
         moveTo : function (x, y) {
             this.pos.x = x.clamp(
                 this.bounds.pos.x,

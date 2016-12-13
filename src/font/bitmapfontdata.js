@@ -6,6 +6,9 @@
  * @constructor
  */
 me.BitmapFontData = me.Object.extend({
+    /**
+     * @ignore
+     */
     init: function (data) {
         this.padTop = 0;
         this.padRight = 0;
