@@ -321,13 +321,15 @@
          * @private
          * @ignore
          * @function
+         * @param {me.Viewport} viewport viewport object
          */
-        api.draw = function () {
+        api.draw = function (viewport) {
             if (isDirty || isAlwaysDirty) {
+                viewport = viewport || api.viewport;
                 // cache the viewport rendering position, so that other object
                 // can access it later (e,g. entityContainer when drawing floating objects)
-                var translateX = api.viewport.pos.x + api.viewport.offset.x;
-                var translateY = api.viewport.pos.y + api.viewport.offset.y;
+                var translateX = viewport.pos.x + viewport.offset.x;
+                var translateY = viewport.pos.y + viewport.offset.y;
 
                 // translate the world coordinates by default to screen coordinates
                 api.world.currentTransform.translate(-translateX, -translateY);
@@ -335,15 +337,27 @@
                 // prepare renderer to draw a new frame
                 me.video.renderer.clear();
 
+                // save the current state
+                me.video.renderer.save();
+
+                // apply viewport transform if needed
+                if (!viewport.currentTransform.isIdentity()) {
+                    me.video.renderer.transform(viewport.currentTransform);
+                }
+
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
-                api.world.draw(renderer, api.viewport);
+                api.world.draw(renderer, viewport);
 
-                // translate back
+                // restore
+                me.video.renderer.restore();
+
+                // translate the world coordinates by default to screen coordinates
                 api.world.currentTransform.translate(translateX, translateY);
 
-                // draw our camera/viewport
-                api.viewport.draw(renderer);
+                // draw the viewpor/camera effects
+                viewport.draw(renderer);
+
             }
 
             isDirty = false;
