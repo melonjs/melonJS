@@ -483,21 +483,21 @@
      * @ignore
      */
     function updateCoordFromEvent(event) {
-        var local = T_VECTORS.pop();
-
         // PointerEvent or standard Mouse event
         if (!event.touches) {
-            api.globalToLocal(event.clientX, event.clientY, local);
-            local.id = event.pointerId || 1;
-            changedTouches.push(local);
+            var pointerV = T_VECTORS.pop();
+            api.globalToLocal(event.clientX, event.clientY, pointerV);
+            pointerV.id = event.pointerId || 1;
+            changedTouches.push(pointerV);
         }
         // iOS/Android like touch event
         else {
             for (var i = 0, l = event.changedTouches.length; i < l; i++) {
+                var touchV = T_VECTORS.pop();
                 var t = event.changedTouches[i];
-                api.globalToLocal(t.clientX, t.clientY, local);
-                local.id = t.identifier;
-                changedTouches.push(local);
+                api.globalToLocal(t.clientX, t.clientY, touchV);
+                touchV.id = t.identifier;
+                changedTouches.push(touchV);
             }
         }
         // if event.isPrimary is defined and false, return

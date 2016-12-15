@@ -7,7 +7,8 @@ Version History
 * Loader : added a 'crossOrigin' option to enable/allow cross-origin image loading for WebGL
 * Loader : fixed an issue where callbacks were randomly fired twice when refreshing the page (krojew)
 * Particles : fixed a (huge) performance regression with particle generation / handling
-* Pointer: Fixed bug where a device allowing both mouse & touch events would only emit touch events.
+* Pointer: fixed bug where a device allowing both mouse & touch events would only emit touch events.
+* Pointer: fixed a regression with multi-touch event detection on iOS & Android
 * TMX : added proper documentation for TMX renderer objects.
 * Viewport : added the possibility to define a global transformation to the viewport
 
