@@ -55,7 +55,7 @@ describe("Shape : me.Polygon", function () {
 
     describe("Polygon transformation", function () {
         var rect = new me.Polygon(0, 0, [
-            // draw a star
+            // draw a square
             {x: 0, y: 0},
             {x: 32, y: 0},
             {x: 32, y: 32},
@@ -68,6 +68,24 @@ describe("Shape : me.Polygon", function () {
             rect.transform((new me.Matrix2d()).scale(2.0).rotate(Math.PI/4));
             expect(Math.floor(boundingRect.width)).toEqual(90);
             expect(Math.floor(boundingRect.height)).toEqual(90);
+        });
+    });
+
+    describe("Isometric transformation", function () {
+        var shape = new me.Polygon(0, 0, [
+            // draw a square
+            new me.Vector2d(0, 0),
+            new me.Vector2d(32, 0),
+            new me.Vector2d(32, 32),
+            new me.Vector2d(0, 32)
+        ]);
+
+        it("shape should have an isometric diamond shape", function () {
+            shape.toIso();
+            // test a few points
+            expect(~~shape.points[1].y).toEqual(16);
+            expect(~~shape.points[3].x).toEqual(-32);
+            expect(~~shape.points[3].y).toEqual(16);
         });
     });
 });

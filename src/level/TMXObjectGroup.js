@@ -395,7 +395,7 @@
             // Apply isometric projection
             if (this.orientation === "isometric") {
                 for (i = 0; i < shapes.length; i++) {
-                    shapes[i].rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+                    shapes[i].toIso();
                 }
             }
 

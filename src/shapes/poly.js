@@ -95,6 +95,17 @@
         },
 
         /**
+         * apply an isometric projection to this shape
+         * @name toIso
+         * @memberOf me.Polygon
+         * @function
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        toIso : function () {
+            return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+        },
+
+        /**
          * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberOf me.Polygon
