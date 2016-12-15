@@ -325,14 +325,14 @@
                 api.world.currentTransform.translate(-translateX, -translateY);
 
                 // prepare renderer to draw a new frame
-                me.video.renderer.clear();
+                renderer.clear();
 
                 // save the current state
                 me.video.renderer.save();
 
                 // apply viewport transform if needed
                 if (!viewport.currentTransform.isIdentity()) {
-                    me.video.renderer.transform(viewport.currentTransform);
+                    renderer.transform(viewport.currentTransform);
                 }
 
                 // update all objects,
@@ -340,7 +340,7 @@
                 api.world.draw(renderer, viewport);
 
                 // restore
-                me.video.renderer.restore();
+                renderer.restore();
 
                 // translate the world coordinates by default to screen coordinates
                 api.world.currentTransform.translate(translateX, translateY);
@@ -353,7 +353,7 @@
             isDirty = false;
 
             // flush/render our frame
-            me.video.renderer.flush();
+            renderer.flush();
         };
 
         // return our object
