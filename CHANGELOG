@@ -9,6 +9,7 @@ Version History
 * Particles : fixed a (huge) performance regression with particle generation / handling
 * Pointer: Fixed bug where a device allowing both mouse & touch events would only emit touch events.
 * TMX : added proper documentation for TMX renderer objects.
+* Viewport : added the possibility to define a global transformation to the viewport
 
 4.0.0
 * Audio : updated to the latest Howler 2.0.1 version
