@@ -23,7 +23,8 @@
         /**
          * @ignore
          */
-        init : function (name, tmxObjGroup, orientation, tilesets, z) {
+        init : function (map, data, z) {
+
             /**
              * group name
              * @public
@@ -31,7 +32,7 @@
              * @name name
              * @memberOf me.TMXObjectGroup
              */
-            this.name = name;
+            this.name = data.name;
 
             /**
              * group width
@@ -40,7 +41,7 @@
              * @name width
              * @memberOf me.TMXObjectGroup
              */
-            this.width = tmxObjGroup.width;
+            this.width = data.width;
 
             /**
              * group height
@@ -49,7 +50,7 @@
              * @name height
              * @memberOf me.TMXObjectGroup
              */
-            this.height = tmxObjGroup.height;
+            this.height = data.height;
 
             /**
              * group z order
@@ -70,18 +71,19 @@
              */
             this.objects = [];
 
-            var visible = typeof(tmxObjGroup.visible) !== "undefined" ? tmxObjGroup.visible : true;
-            this.opacity = (visible === true) ? (+tmxObjGroup.opacity || 1.0).clamp(0.0, 1.0) : 0;
+            var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
+            this.opacity = (visible === true) ? (+data.opacity || 1.0).clamp(0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
-            me.TMXUtils.applyTMXProperties(this, tmxObjGroup);
+            me.TMXUtils.applyTMXProperties(this, data);
 
             // parse all objects
-            var _objects = tmxObjGroup.objects;
+            var _objects = data.objects;
             if (_objects) {
                 var self = this;
                 _objects.forEach(function (tmxObj) {
-                    self.objects.push(new me.TMXObject(tmxObj, orientation, tilesets, z));
+                    //self.objects.push(new me.TMXObject(tmxObj, map.orientation, map.tilesets, z));
+                    self.objects.push(new me.TMXObject(map, tmxObj, z));
                 });
             }
         },
@@ -129,7 +131,7 @@
         /**
          * @ignore
          */
-        init :  function (tmxObj, orientation, tilesets, z) {
+        init :  function (map, tmxObj, z) {
 
             /**
              * object point list (for Polygon and PolyLine)
@@ -238,7 +240,7 @@
              * @name orientation
              * @memberOf me.TMXObject
              */
-            this.orientation = orientation;
+            this.orientation = map.orientation;
 
             /**
              * the collision shapes defined for this object
@@ -278,7 +280,7 @@
 
             // check if the object has an associated gid
             if (typeof this.gid === "number") {
-                this.setTile(tilesets);
+                this.setTile(map.tilesets);
             }
             else {
                 if (typeof(tmxObj.ellipse) !== "undefined") {
@@ -304,6 +306,9 @@
                     }
                 }
             }
+
+            // Adjust the Position to match Tiled
+            map.getRenderer().adjustPosition(this);
 
             // set the object properties
             me.TMXUtils.applyTMXProperties(this, tmxObj);

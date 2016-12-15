@@ -205,12 +205,12 @@
          * the way Tiled places them
          * @ignore
          */
-        adjustPosition: function (obj, settings) {
-            // only adjust position if settings.tile is defined
-            if (settings.tile) {
+        adjustPosition: function (obj) {
+            // only adjust position if obj.gid is defined
+            if (typeof(obj.gid) === "number") {
                 // Tiled objects origin point is "bottom-left" in Tiled,
                 // "top-left" in melonJS)
-                obj.translate(0, -obj.height);
+                obj.y -= obj.height;
             }
         },
 
@@ -350,12 +350,16 @@
          * @ignore
          */
         adjustPosition: function (obj) {
-            // something is wrong here and not coherent with other renderers
-            var tilex = obj.pos.x / this.hTilewidth;
-            var tiley = obj.pos.y / this.tileheight;
-            var isoPos = this.tileToPixelCoords(tilex, tiley);
+            var tileX = obj.x / this.hTilewidth;
+            var tileY = obj.y / this.tileheight;
+            var isoPos = me.pool.pull("me.Vector2d");
 
-            obj.translate(isoPos.x, isoPos.y);
+            this.tileToPixelCoords(tileX, tileY, isoPos);
+
+            obj.x = isoPos.x;
+            obj.y = isoPos.y;
+
+            me.pool.push(isoPos);
         },
 
         /**
@@ -685,12 +689,12 @@
          * the way Tiled places them
          * @ignore
          */
-         adjustPosition: function (obj, settings) {
-             // only adjust position if settings.tile is defined
-             if (settings.tile) {
+        adjustPosition: function (obj) {
+            // only adjust position if obj.gid is defined
+            if (typeof(obj.gid) === "number") {
                 // Tiled objects origin point is "bottom-left" in Tiled,
                 // "top-left" in melonJS)
-                obj.translate(0, -obj.height);
+                obj.y -= obj.height;
             }
         },
 

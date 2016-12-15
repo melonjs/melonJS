@@ -138,7 +138,7 @@
      * @ignore
      */
     function readObjectGroup(map, data, z) {
-        return (new me.TMXObjectGroup(data.name, data, map.orientation, map.tilesets, z));
+        return (new me.TMXObjectGroup(map, data, z));
     }
 
 
@@ -431,9 +431,6 @@
                     if (typeof obj !== "object") {
                         continue;
                     }
-
-                    // Adjust the Position to match Tiled
-                    this.getRenderer().adjustPosition(obj, settings);
 
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {
