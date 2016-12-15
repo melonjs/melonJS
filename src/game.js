@@ -96,16 +96,6 @@
         api.sortOn = "z";
 
         /**
-         * default layer tmxRenderer
-         * @private
-         * @ignore
-         * @type {me.TMXRenderer}
-         * @name tmxRenderer
-         * @memberOf me.game
-         */
-        api.tmxRenderer = null;
-
-        /**
          * Fired when a level is fully loaded and <br>
          * and all entities instantiated. <br>
          * Additionnaly the level id will also be passed

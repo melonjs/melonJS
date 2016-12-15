@@ -81,12 +81,12 @@
         // init the layer properly
         layer.initFromJSON(data);
         // set a renderer
-        if (!me.game.tmxRenderer.canRender(layer)) {
+        if (!map.getRenderer().canRender(layer)) {
             layer.setRenderer(getNewDefaultRenderer(layer));
         }
         else {
             // use the default one
-            layer.setRenderer(me.game.tmxRenderer);
+            layer.setRenderer(map.getRenderer());
         }
         // parse the layer data
         setLayerData(layer,
@@ -245,14 +245,24 @@
             // set additional map properties (if any)
             me.TMXUtils.applyTMXProperties(this, data);
 
-            // initialize a default TMX renderer
-            if ((me.game.tmxRenderer === null) || !me.game.tmxRenderer.canRender(this)) {
-                me.game.tmxRenderer = getNewDefaultRenderer(this);
-            }
-
             // internal flag
             this.initialized = false;
 
+        },
+
+        /**
+         * Return the map default renderer
+         * @name getRenderer
+         * @memberOf me.TMXTileMap
+         * @public
+         * @function
+         * @return {me.TMXRenderer} renderer
+         */
+        getRenderer : function (renderer) {
+            if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
+                this.renderer = getNewDefaultRenderer(this);
+            }
+            return this.renderer;
         },
 
         /**
@@ -421,6 +431,9 @@
                     if (typeof obj !== "object") {
                         continue;
                     }
+
+                    // Adjust the Position to match Tiled
+                    this.getRenderer().adjustPosition(obj, settings);
 
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {

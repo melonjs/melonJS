@@ -305,9 +305,6 @@
                 }
             }
 
-            // Adjust the Position to match Tiled
-            me.game.tmxRenderer.adjustPosition(this);
-
             // set the object properties
             me.TMXUtils.applyTMXProperties(this, tmxObj);
 

@@ -48,15 +48,15 @@
          * @name me.TMXRenderer#canRender
          * @public
          * @function
-         * @param {me.TMXLayer} layer TMX Layer
+         * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
          * @return {boolean}
          */
-        canRender : function (layer) {
+        canRender : function (component) {
             return (
-                (this.cols === layer.cols) &&
-                (this.rows === layer.rows) &&
-                (this.tilewidth === layer.tilewidth) &&
-                (this.tileheight === layer.tileheight)
+                (this.cols === component.cols) &&
+                (this.rows === component.rows) &&
+                (this.tilewidth === component.tilewidth) &&
+                (this.tileheight === component.tileheight)
             );
         },
 
@@ -205,12 +205,12 @@
          * the way Tiled places them
          * @ignore
          */
-        adjustPosition: function (obj) {
-            // only adjust position if obj.gid is defined
-            if (typeof(obj.gid) === "number") {
+        adjustPosition: function (obj, settings) {
+            // only adjust position if settings.tile is defined
+            if (settings.tile) {
                 // Tiled objects origin point is "bottom-left" in Tiled,
                 // "top-left" in melonJS)
-                obj.y -= obj.height;
+                obj.translate(0, -obj.height);
             }
         },
 
@@ -350,12 +350,12 @@
          * @ignore
          */
         adjustPosition: function (obj) {
-            var tilex = obj.x / this.hTilewidth;
-            var tiley = obj.y / this.tileheight;
+            // something is wrong here and not coherent with other renderers
+            var tilex = obj.pos.x / this.hTilewidth;
+            var tiley = obj.pos.y / this.tileheight;
             var isoPos = this.tileToPixelCoords(tilex, tiley);
 
-            obj.x = isoPos.x;
-            obj.y = isoPos.y;
+            obj.translate(isoPos.x, isoPos.y);
         },
 
         /**
@@ -685,12 +685,12 @@
          * the way Tiled places them
          * @ignore
          */
-        adjustPosition: function (obj) {
-            // only adjust position if obj.gid is defined
-            if (typeof(obj.gid) === "number") {
+         adjustPosition: function (obj, settings) {
+             // only adjust position if settings.tile is defined
+             if (settings.tile) {
                 // Tiled objects origin point is "bottom-left" in Tiled,
                 // "top-left" in melonJS)
-                obj.y -= obj.height;
+                obj.translate(0, -obj.height);
             }
         },
 
