@@ -570,7 +570,7 @@
          * @function
          * @param {Number} x X coordinate (in world/pixels coordinates)
          * @param {Number} y Y coordinate (in world/pixels coordinates)
-         * @return {me.Tile} Tile Object
+         * @return {me.Tile} corresponding tile or null if outside of the map area
          * @example
          * // get the TMX Map Layer called "Front layer"
          * var layer = me.game.world.getChildByName("Front Layer")[0];
@@ -578,7 +578,16 @@
          * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
          */
         getTile : function (x, y) {
-            return this.layerData[~~this.renderer.pixelToTileX(x, y)][~~this.renderer.pixelToTileY(y, x)];
+            if (this.containsPoint(x, y)) {
+                var renderer = this.renderer;
+                var col = ~~renderer.pixelToTileX(x, y);
+                var row = ~~renderer.pixelToTileY(y, x);
+                if ((col >= 0 && col < renderer.cols) && (row >= 0 && row < renderer.rows)) {
+                    return this.layerData[col][row];
+                }
+            }
+            // return undefined if no corresponding tile
+            return null;
         },
 
         /**
