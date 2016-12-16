@@ -124,6 +124,7 @@
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {String} [options.scaleMethod="fit"] ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') screen scaling modes
+         * @param {Boolean} [options.useParentBoundingClientRect=false] use getBoundingClientRect() to get parent container dimensions
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean} false if initialization failed (canvas not supported)
@@ -148,6 +149,7 @@
 
             // sanitize potential given parameters
             settings.doubleBuffering = !!(settings.doubleBuffering);
+            settings.useParentBoundingClientRect = !!(settings.useParentBoundingClientRect);
             settings.autoScale = (settings.scale === "auto") || false;
             if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
                 settings.scaleMethod = "fit";
@@ -373,9 +375,15 @@
                 var parentNodeHeight;
                 var parentNode = me.video.renderer.getScreenCanvas().parentNode;
                 if (typeof (parentNode) !== "undefined") {
-                    // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
-                    parentNodeWidth = parentNode.width;
-                    parentNodeHeight = parentNode.height;
+                    if (settings.useParentBoundingClientRect && typeof parentNode.getBoundingClientRect === "function") {
+                        var rect = parentNode.getBoundingClientRect();
+                        parentNodeWidth = rect.width || (rect.right - rect.left);
+                        parentNodeHeight = rect.height || (rect.bottom - rect.top);
+                    } else {
+                        // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
+                        parentNodeWidth = parentNode.width;
+                        parentNodeHeight = parentNode.height;
+                    }
                 }
                 var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
