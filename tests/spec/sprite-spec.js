@@ -19,13 +19,28 @@ describe("me.Sprite", function () {
 
     it("me.Sprite addAnimation should return the correct amount of frame", function () {
         expect(sprite.addAnimation("test", [ 0, 1 ])).toEqual(2);
+        expect(sprite.addAnimation("test2", [ 0, 0, 0, 0, 0 ])).toEqual(5);
     });
 
     it("me.Sprite isCurrentAnimation allows to verify which animation is set", function () {
-        expect(sprite.addAnimation("reverse_test", [ 1, 0 ])).toEqual(2);
+        expect(sprite.addAnimation("reverse_test", [ 1, 0, 1, 0 ], 60)).toEqual(4);
+        sprite.setCurrentAnimation("test");
+        expect(sprite.isCurrentAnimation("test")).toEqual(true);
         sprite.setCurrentAnimation("reverse_test");
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
         expect(sprite.isCurrentAnimation("test")).toEqual(false);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        sprite.update(16);
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
     });
 
     it("me.Sprite bounds should be updated when the sprite is scaled", function () {

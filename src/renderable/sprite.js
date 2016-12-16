@@ -413,9 +413,13 @@
          */
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
+            // XXX this should not be overwritten
+            var name = this.current.name;
             var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
             // copy all properties of the current frame into current
             Object.assign(this.current, frame);
+            // XXX this should not be overwritten
+            this.current.name = name;
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
                 this.anchorPoint.setV(frame.anchorPoint);
