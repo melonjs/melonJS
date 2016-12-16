@@ -157,4 +157,14 @@ describe("me.Vector2d", function () {
         expect(a.angle(b)).toEqual(a.angle(c));
     });
 
+    it("convert vector to iso coordinates", function () {
+        a.set(32, 32);
+
+        a.toIso();
+        expect(a.toString()).toEqual("x:0,y:32");
+
+        a.to2d();
+        expect(a.toString()).toEqual("x:32,y:32");
+    });
+
 });

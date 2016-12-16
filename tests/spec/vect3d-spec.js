@@ -183,5 +183,14 @@ describe("me.Vector3d", function () {
         expect(a.angle(b)).toEqual(a.angle(c));
     });
 
+    it("convert vector to iso coordinates", function () {
+        a.set(32, 32, 1);
+
+        a.toIso();
+        expect(a.toString()).toEqual("x:0,y:32,z:1");
+
+        a.to2d();
+        expect(a.toString()).toEqual("x:32,y:32,z:1");
+    });
 
 });

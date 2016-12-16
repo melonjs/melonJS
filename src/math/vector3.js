@@ -155,6 +155,28 @@
         },
 
         /**
+         * Convert this vector into isometric coordinate space
+         * @name toIso
+         * @memberOf me.Vector3d
+         * @function
+         * @return {me.Vector3d} Reference to this object for method chaining
+         */
+        toIso : function (x, y) {
+            return this._set(this.x - this.y, (this.x + this.y) * 0.5, this.z);
+        },
+
+        /**
+         * Convert this vector into 2d coordinate space
+         * @name to2d
+         * @memberOf me.Vector3d
+         * @function
+         * @return {me.Vector3d} Reference to this object for method chaining
+         */
+        to2d : function (x, y) {
+            return this._set(this.y + this.x / 2, this.y - this.x / 2, this.z);
+        },
+
+        /**
          * Divide this vector values by the passed value
          * @name div
          * @memberOf me.Vector3d

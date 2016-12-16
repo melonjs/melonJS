@@ -128,6 +128,28 @@
         },
 
         /**
+         * Convert this vector into isometric coordinate space
+         * @name toIso
+         * @memberOf me.Vector2d
+         * @function
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        toIso : function (x, y) {
+            return this._set(this.x - this.y, (this.x + this.y) * 0.5);
+        },
+
+        /**
+         * Convert this vector into 2d coordinate space
+         * @name to2d
+         * @memberOf me.Vector2d
+         * @function
+         * @return {me.Vector2d} Reference to this object for method chaining
+         */
+        to2d : function (x, y) {
+            return this._set(this.y + this.x / 2, this.y - this.x / 2);
+        },
+
+        /**
          * Multiply this vector values by the passed vector
          * @name scaleV
          * @memberOf me.Vector2d
