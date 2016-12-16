@@ -9,7 +9,13 @@ Version History
 * Particles : fixed a (huge) performance regression with particle generation / handling
 * Pointer: fixed bug where a device allowing both mouse & touch events would only emit touch events.
 * Pointer: fixed a regression with multi-touch event detection on iOS & Android
-* TMX : added proper documentation for TMX renderer objects.
+* Renderable : fixed a regression in me.Sprite.isCurrentAnimation()
+* TMX : TMX maps and renderers are now fully contained in their own space, and do no pollute me.game anymore
+* TMX : exposed the TMX renderers API and related utlity functions to convert tile to/from pixel coordinates
+* TMX : improved API to manage isometric map & coordinates (e.g. vector and shape conversion)
+* TMX : added a simple isometric "tile selector" in the isometric map example
+* TMX : me.Layer.getTile() will now return `null` if there is no corresponding tile, instead of throwing an exception
+* TMX : added a getRenderer() function to me.Layer that returns the layer TMX renderer.
 * Viewport : added the possibility to define a global transformation to the viewport
 
 4.0.0
