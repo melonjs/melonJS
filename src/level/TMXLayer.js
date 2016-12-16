@@ -555,7 +555,7 @@
          * @function
          * @param {Number} x X coordinate (in world/pixels coordinates)
          * @param {Number} y Y coordinate (in world/pixels coordinates)
-         * @return {Number} TileId
+         * @return {Number} TileId or null if there is no Tile at the given position
          */
         getTileId : function (x, y) {
             var tile = this.getTile(x, y);
@@ -586,7 +586,7 @@
                     return this.layerData[col][row];
                 }
             }
-            // return undefined if no corresponding tile
+            // return null if no corresponding tile
             return null;
         },
 
