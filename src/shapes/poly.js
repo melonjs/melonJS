@@ -106,6 +106,17 @@
         },
 
         /**
+         * apply a 2d projection to this shape
+         * @name to2d
+         * @memberOf me.Polygon
+         * @function
+         * @return {me.Polygon} Reference to this object for method chaining
+         */
+        to2d : function () {
+            return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
+        },
+
+        /**
          * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
          * @name rotate
          * @memberOf me.Polygon

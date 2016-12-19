@@ -86,6 +86,12 @@ describe("Shape : me.Polygon", function () {
             expect(~~shape.points[1].y).toEqual(16);
             expect(~~shape.points[3].x).toEqual(-32);
             expect(~~shape.points[3].y).toEqual(16);
+
+            // convert it back
+            shape.to2d();
+            expect(~~shape.points[1].y).toEqual(0);
+            expect(~~shape.points[3].x).toEqual(0);
+            expect(~~shape.points[3].y).toEqual(32);
         });
     });
 });
