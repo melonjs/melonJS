@@ -191,8 +191,8 @@
         // Browser capabilities
 
         /**
-         * Browser User Agent
-         * @type Boolean
+         * the `ua` read-only property returns the user agent string for the current browser.
+         * @type String
          * @readonly
          * @name ua
          * @memberOf me.device
