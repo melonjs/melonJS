@@ -2,6 +2,7 @@ Version History
 ---------------
 4.1.0
 * Audio : updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
+* Audio : added a `me.audio.seek` function, to change or get the current position of a specific audio clip
 * Core : throw an error message when registering a non valid object in the object pool (i.e. undefined class)
 * Loader : added the possibility to configure path (baseUrl) by asset types.
 * Loader : added a 'crossOrigin' option to enable/allow cross-origin image loading for WebGL

@@ -244,6 +244,29 @@
         };
 
         /**
+         * get/set the position of playback for a sound.
+         * @name seek
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [seek]  The position to move current playback to (in seconds).
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+         * @return return the current seek position (if no extra parameters were given)
+         * @example
+         * // return the current position of the background music
+         * var current_pos = me.audio.seek("dst-gameforest");
+         * // set back the position of the background music to the beginning
+         * me.audio.seek("dst-gameforest", 0);
+         */
+        api.seek = function (sound_name, seek, instance_id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+            }
+        };
+
+        /**
          * change the playback rate of a sound.
          * @name rate
          * @memberOf me.audio
@@ -256,19 +279,11 @@
          * @example
          * // speed up the playback of the background music
          * me.audio.rate("dst-gameforest", 2.0);
-         *
          */
         api.rate = function (sound_name, rate, instance_id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                var _args = [];
-                if (typeof rate !== "undefined") {
-                    _args[_args.length] = rate;
-                }
-                if (typeof instance_id !== "undefined") {
-                    _args[_args.length] = instance_id;
-                }
-                return sound.rate.apply(sound, _args);
+                return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
             }
         };
 
