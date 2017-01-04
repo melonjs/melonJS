@@ -91,6 +91,9 @@
             // and pass the level id as parameter
             me.utils.resetGUID(levelId, level.nextobjectid);
 
+            // Tiled use 0,0 anchor coordinates
+            container.anchorPoint.set(0, 0);
+            
             // add all level elements to the target container
             level.addTo(container, flatten);
 

@@ -39,8 +39,6 @@
                 this.color = _col.parseCSS(color).toRGBA();
                 me.pool.push(_col);
             }
-
-
         },
 
         /**
@@ -48,18 +46,12 @@
          * @ignore
          */
         draw : function (renderer, rect) {
-            // set layer opacity
-            var _alpha = renderer.globalAlpha();
-            renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
             var vpos = me.game.viewport.pos;
             renderer.setColor(this.color);
             renderer.fillRect(
                 rect.left - vpos.x, rect.top - vpos.y,
                 rect.width, rect.height
             );
-            // restore context alpha value
-            renderer.setGlobalAlpha(_alpha);
             renderer.setColor("#fff");
         }
     });
@@ -319,15 +311,13 @@
                 ax = this.anchorPoint.x,
                 ay = this.anchorPoint.y,
                 x = this.pos.x,
-                y = this.pos.y,
-                alpha = renderer.globalAlpha();
+                y = this.pos.y;
 
             if (this.ratio.x === this.ratio.y === 0) {
                 x = x + ax * (bw - width);
                 y = y + ay * (bh - height);
             }
 
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
             renderer.translate(x, y);
             renderer.drawPattern(
                 this._pattern,
@@ -337,7 +327,6 @@
                 viewport.height * 2
             );
             renderer.translate(-x, -y);
-            renderer.setGlobalAlpha(alpha);
         },
 
         // called when the layer is removed from the game world or a container
@@ -658,10 +647,6 @@
          * @ignore
          */
         draw : function (renderer, rect) {
-            // set the layer alpha value
-            var alpha = renderer.globalAlpha();
-            renderer.setGlobalAlpha(alpha * this.getOpacity());
-
             // use the offscreen canvas
             if (this.preRender) {
                 var width = Math.min(rect.width, this.width);
@@ -681,9 +666,6 @@
                 // draw the layer
                 this.renderer.drawTileLayer(renderer, this, rect);
             }
-
-            // restore context to initial state
-            renderer.setGlobalAlpha(alpha);
         }
     });
 })();

@@ -161,6 +161,9 @@
                 // set as default
                 this.setCurrentAnimation("default");
             }
+
+            // enable currentTransform for me.Sprite based objects
+            this.autoTransform = true;
         },
 
         /**
@@ -536,22 +539,6 @@
 
             var offset = frame.offset;
 
-            // save context
-            renderer.save();
-
-            // sprite alpha value
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-
-            // apply the renderable transformation matrix
-            if (!this.currentTransform.isIdentity()) {
-                renderer.transform(this.currentTransform);
-            }
-
-            // translate to the defined anchor point
-            renderer.translate(
-                - ( w * this.anchorPoint.x ),
-                - ( h * this.anchorPoint.y )
-            );
 
             // remove image's TexturePacker/ShoeBox rotation
             if (frame.angle !== 0) {
@@ -569,9 +556,6 @@
                 xpos, ypos,           // dx,dy
                 w, h                  // dw,dh
             );
-
-            // restore context
-            renderer.restore();
         }
     });
 

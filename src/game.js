@@ -151,6 +151,9 @@
                 api.world.name = "rootContainer";
                 api.world._root = true;
 
+                // to mimic the previous behavior
+                api.world.anchorPoint.set(0, 0);
+
                 // initialize the collision system (the quadTree mostly)
                 me.collision.init();
 
@@ -185,6 +188,10 @@
 
             // remove all objects
             api.world.destroy();
+
+
+            // reset the anchorPoint
+            api.world.anchorPoint.set(0, 0);
 
             // reset the viewport to zero ?
             if (api.viewport) {
@@ -330,17 +337,13 @@
                 // save the current state
                 me.video.renderer.save();
 
-                // apply viewport transform if needed
-                if (!viewport.currentTransform.isIdentity()) {
-                    renderer.transform(viewport.currentTransform);
-                }
+                api.world.preDraw(renderer);
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
                 api.world.draw(renderer, viewport);
 
-                // restore
-                renderer.restore();
+                api.world.postDraw(renderer);
 
                 // translate the world coordinates by default to screen coordinates
                 api.world.currentTransform.translate(translateX, translateY);

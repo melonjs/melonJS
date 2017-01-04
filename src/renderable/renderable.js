@@ -355,6 +355,31 @@
         },
 
         /**
+         * calls by an object container before calling the draw function
+         * @ignore
+         */
+        preDraw : function (renderer) {
+
+            // save context
+            renderer.save();
+            // apply the defined alpha value
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+            // translate to the defined anchor point
+            renderer.translate(
+                - ( this.width * this.anchorPoint.x ),
+                - ( this.height * this.anchorPoint.y )
+            );
+
+            if (this.autoTransform === true) {
+                // apply the renderable transformation matrix
+                if (!this.currentTransform.isIdentity()) {
+                    renderer.transform(this.currentTransform);
+                }
+            }
+        },
+
+        /**
          * object draw
          * called by the game manager on each game loop
          * @name draw
@@ -365,6 +390,15 @@
          **/
         draw : function (/*renderer*/) {
             // empty one !
+        },
+
+        /**
+         * calls by a object container after calling the draw function
+         * @ignore
+         */
+        postDraw : function (renderer) {
+            // save context
+            renderer.restore();
         },
 
         /**

@@ -19,6 +19,8 @@
 
             // current progress
             this.progress = 0;
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -51,10 +53,10 @@
         draw : function (renderer) {
             // draw the progress bar
             renderer.setColor("black");
-            renderer.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
+            renderer.fillRect(this.pos.x, this.pos.y - this.barHeight, this.width, this.barHeight);
 
             renderer.setColor("#55aa00");
-            renderer.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
+            renderer.fillRect(this.pos.x + 2, this.pos.y - this.barHeight, this.progress, this.barHeight);
 
             renderer.setColor("white");
         }
@@ -72,7 +74,7 @@
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
 
-            context.translate(this.pos.x, this.pos.y);
+            context.translate(this.pos.x - this.width, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -99,6 +101,8 @@
             context.lineJoin = "miter";
             context.miterLimit = 4.0;
             context.stroke();
+
+            this.anchorPoint.set(0.5, 0.5);
         },
         /**
          * @ignore
@@ -119,6 +123,8 @@
             this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
+
+            this.anchorPoint.set(0, 0);
         },
         /**
          * @ignore
@@ -126,8 +132,8 @@
         draw : function (renderer) {
             // measure the logo size
             var logo1_width = this.logo1.measureText(renderer, "melon").width;
-            var xpos = (this.width - logo1_width - this.logo2.measureText(renderer, "JS").width) / 2;
-            var ypos = (this.height / 2) + (this.logo2.measureText(renderer, "melon").height);
+            var xpos = (this.width - logo1_width - this.logo2.measureText(renderer, "JS").width);
+            var ypos = (this.height) + (this.logo2.measureText(renderer, "melon").height);
 
             // draw the melonJS string
             this.logo1.draw(renderer, "melon", xpos, ypos);
@@ -154,7 +160,10 @@
 
             // progress bar
             var progressBar = new ProgressBar(
-                new me.Vector2d(),
+                new me.Vector2d(
+                    0,
+                    me.video.renderer.getHeight() / 2
+                ),
                 me.video.renderer.getWidth(),
                 me.video.renderer.getHeight()
             );
@@ -174,8 +183,8 @@
             // melonJS text & logo
             var icon = new IconLogo(
                 this.iconCanvas,
-                (me.video.renderer.getWidth() - 100) / 2,
-                (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
+                (me.video.renderer.getWidth() / 2),
+                (me.video.renderer.getHeight()) - (progressBar.barHeight) - 90
             );
             me.game.world.addChild(icon, 1);
             me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
