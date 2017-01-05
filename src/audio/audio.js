@@ -188,21 +188,21 @@
         api.play = function (sound_name, loop, onend, volume) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                var instance_id = sound.play();
+                var id = sound.play();
                 if (typeof loop === "boolean") {
                     // arg[0] can take different types in howler 2.0
-                    sound.loop(loop, instance_id);
+                    sound.loop(loop, id);
                 }
-                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), instance_id);
+                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), id);
                 if (typeof(onend) === "function") {
                     if (loop === true) {
-                        sound.on("end", onend, instance_id);
+                        sound.on("end", onend, id);
                     }
                     else {
-                        sound.once("end", onend, instance_id);
+                        sound.once("end", onend, id);
                     }
                 }
-                return instance_id;
+                return id;
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -220,10 +220,10 @@
          * @param {Number} duration Time in milliseconds to fade.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
          */
-        api.fade = function (sound_name, from, to, duration, instance_id) {
+        api.fade = function (sound_name, from, to, duration, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.fade(from, to, duration, instance_id);
+                sound.fade(from, to, duration, id);
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -245,7 +245,7 @@
          * // set back the position of the background music to the beginning
          * me.audio.seek("dst-gameforest", 0);
          */
-        api.seek = function (sound_name, seek, instance_id) {
+        api.seek = function (sound_name, seek, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
@@ -270,7 +270,7 @@
          * // speed up the playback of the background music
          * me.audio.rate("dst-gameforest", 2.0);
          */
-        api.rate = function (sound_name, rate, instance_id) {
+        api.rate = function (sound_name, rate, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
@@ -290,12 +290,12 @@
          * @example
          * me.audio.stop("cling");
          */
-        api.stop = function (sound_name, instance_id) {
+        api.stop = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.stop(instance_id);
+                sound.stop(id);
                 // remove the defined onend callback (if any defined)
-                sound.off("end", undefined, instance_id);
+                sound.off("end", undefined, id);
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -313,10 +313,10 @@
          * @example
          * me.audio.pause("cling");
          */
-        api.pause = function (sound_name, instance_id) {
+        api.pause = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.pause(instance_id);
+                sound.pause(id);
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -340,10 +340,10 @@
          * // resume
          * me.audio.resume("myClip", id);
          */
-        api.resume = function (sound_name, instance_id) {
+        api.resume = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.play(instance_id);
+                sound.play(id);
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -476,12 +476,12 @@
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
          */
-        api.mute = function (sound_name, instance_id, mute) {
+        api.mute = function (sound_name, id, mute) {
             // if not defined : true
             mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_name];
             if (sound && typeof(sound) !== "undefined") {
-                sound.mute(mute, instance_id);
+                sound.mute(mute, id);
             } else {
                 throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
@@ -496,8 +496,8 @@
          * @param {String} sound_name audio clip name
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
          */
-        api.unmute = function (sound_name, instance_id) {
-            api.mute(sound_name, instance_id, false);
+        api.unmute = function (sound_name, id) {
+            api.mute(sound_name, id, false);
         };
 
         /**
