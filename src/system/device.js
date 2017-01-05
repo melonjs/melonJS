@@ -794,6 +794,6 @@
          */
         get: function () {
                 return !Howler.noAudio;
-            }
+        }
     });
 })();
