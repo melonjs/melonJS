@@ -267,7 +267,7 @@
         };
 
         /**
-         * change the playback rate of a sound.
+         * get or set the rate of playback for a sound.
          * @name rate
          * @memberOf me.audio
          * @public
@@ -275,8 +275,10 @@
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
-         * @return current playback rate.
+         * @return return the current playback rate (if no extra parameters were given)
          * @example
+         * // get the playback rate of the background music
+         * var rate = me.audio.rate("dst-gameforest");
          * // speed up the playback of the background music
          * me.audio.rate("dst-gameforest", 2.0);
          */
