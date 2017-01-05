@@ -468,13 +468,17 @@
         };
 
         /**
-         * mute the specified sound
+         * mute or unmute the specified sound, but does not pause the playback.
          * @name mute
          * @memberOf me.audio
          * @public
          * @function
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
+         * @param {Boolean} [muted=true] True to mute and false to unmute
+         * @example
+         * // mute the background music
+         * me.audio.mute("awesome_music");
          */
         api.mute = function (sound_name, id, mute) {
             // if not defined : true
