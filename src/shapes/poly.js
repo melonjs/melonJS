@@ -36,7 +36,7 @@
 
             /**
              * The bounding rectangle for this shape
-             * @private
+             * @ignore
              * @type {me.Rect}
              * @name _bounds
              * @memberOf me.Polygon
