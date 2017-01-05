@@ -303,7 +303,7 @@
             if (sound && typeof sound !== "undefined") {
                 sound.stop(instance_id);
                 // remove the defined onend callback (if any defined)
-                sound.off("end", instance_id);
+                sound.off("end", undefined, instance_id);
             }
         };
 
