@@ -51,7 +51,7 @@
                 }
                 else {
                     // throw an exception and stop everything !
-                    throw new api.Error(errmsg);
+                    throw new me.audio.Error(errmsg);
                 }
             // else try loading again !
             }
@@ -63,24 +63,6 @@
         /*
          * PUBLIC STUFF
          */
-
-        /**
-         * Base class for Audio exception handling.
-         * @name Error
-         * @class
-         * @memberOf me.audio
-         * @constructor
-         * @param {String} msg Error message.
-         */
-        api.Error = me.Error.extend({
-            /**
-             * @ignore
-             */
-            init : function (msg) {
-                this._super(me.Error, "init", [ msg ]);
-                this.name = "me.audio.Error";
-            }
-        });
 
         /**
          * configure and initialize the audio engine<br>
@@ -106,7 +88,7 @@
          */
         api.init = function (audioFormat) {
             if (!me.initialized) {
-                throw new api.Error("me.audio.init() called before engine initialization.");
+                throw new me.audio.Error("me.audio.init() called before engine initialization.");
             }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
@@ -153,7 +135,7 @@
         api.load = function (sound, html5, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
-                throw new api.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
+                throw new me.audio.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
             }
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
@@ -221,6 +203,8 @@
                     }
                 }
                 return instance_id;
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -240,6 +224,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.fade(from, to, duration, instance_id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -263,6 +249,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -286,6 +274,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -306,6 +296,8 @@
                 sound.stop(instance_id);
                 // remove the defined onend callback (if any defined)
                 sound.off("end", undefined, instance_id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -325,6 +317,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.pause(instance_id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -350,6 +344,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
                 sound.play(instance_id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -486,6 +482,8 @@
             var sound = audioTracks[sound_name];
             if (sound && typeof(sound) !== "undefined") {
                 sound.mute(mute, instance_id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -573,4 +571,22 @@
         // return our object
         return api;
     })();
+
+    /**
+     * Base class for audio exception handling.
+     * @name Error
+     * @class
+     * @memberOf me.audio
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.audio.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.audio.Error";
+        }
+    });
 })();
