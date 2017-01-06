@@ -118,7 +118,7 @@
                     var region = settings.image.getRegion(settings.region);
                     if (region) {
                         // set the sprite offset within the texture
-                        this.current.offset.setV(region.offset);
+                        this.setFrameOffset(region.offset);
                         // set angle if defined
                         this.current.angle = region.angle;
                         settings.framewidth = settings.framewidth || region.width;
@@ -408,6 +408,20 @@
          */
         isCurrentAnimation : function (name) {
             return this.current.name === name;
+        },
+
+        /**
+         * set the frame current offset to the given one <br>
+         * Note: this won't affect the global me.Sprite.offset property
+         * @name setFrameOffset
+         * @memberOf me.Sprite
+         * @function
+         * @param {me.Vector2d} offset new offset
+         * @example
+         * mySprite.setFrameOffset(game.texture.getRegion("shadedDark13.png").offset);
+         */
+        setFrameOffset : function (offset) {
+            this.current.offset.setV(offset);
         },
 
         /**
