@@ -52,6 +52,15 @@
              */
             this.animationspeed = 100;
 
+            /**
+             * global offset for the position to draw from on the source image.
+             * @public
+             * @type me.Vector2d
+             * @name offset
+             * @memberOf me.Sprite
+             */
+            this.offset = new me.Vector2d();
+
             // hold all defined animation
             this.anim = {};
 
@@ -534,7 +543,9 @@
             var w = frame.width,
                 h = frame.height;
 
-            var offset = frame.offset;
+            // frame offset in the texture/atlas
+            var frame_offset = frame.offset;
+            var g_offset = this.offset;
 
             // save context
             renderer.save();
@@ -564,39 +575,16 @@
 
             renderer.drawImage(
                 this.image,
-                offset.x, offset.y,   // sx,sy
-                w, h,                 // sw,sh
-                xpos, ypos,           // dx,dy
-                w, h                  // dw,dh
+                g_offset.x + frame_offset.x, // sx
+                g_offset.y + frame_offset.y, // sy
+                w, h,                        // sw,sh
+                xpos, ypos,                  // dx,dy
+                w, h                         // dw,dh
             );
 
             // restore context
             renderer.restore();
         }
-    });
-
-    /**
-     * The position to draw from on the source image.
-     * @public
-     * @type {me.Vector2d}
-     * @name offset
-     * @memberOf me.Sprite
-     */
-    Object.defineProperty(me.Sprite.prototype, "offset", {
-        /* for backward compatiblity */
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.current.offset;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.current.offset.setV(value);
-        },
-        configurable : true
     });
 
     // for backward compatiblity
