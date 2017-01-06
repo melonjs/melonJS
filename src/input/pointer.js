@@ -806,10 +806,16 @@
         for (var i = 0; i < eventTypes.length; i++) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
-                handlers.callbacks[eventType].remove(callback);
-            } else {
-                while (handlers.callbacks[eventType].length > 0) {
-                    handlers.callbacks[eventType].pop();
+                if (typeof (callback) !== "undefined") {
+                    handlers.callbacks[eventType].remove(callback);
+                } else {
+                    while (handlers.callbacks[eventType].length > 0) {
+                        handlers.callbacks[eventType].pop();
+                    }
+                }
+                // free the array if empty
+                if (handlers.callbacks[eventType].length === 0) {
+                    delete handlers.callbacks[eventType];
                 }
             }
         }
