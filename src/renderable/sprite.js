@@ -52,6 +52,15 @@
              */
             this.animationspeed = 100;
 
+            /**
+             * global offset for the position to draw from on the source image.
+             * @public
+             * @type me.Vector2d
+             * @name offset
+             * @memberOf me.Sprite
+             */
+            this.offset = new me.Vector2d();
+
             // hold all defined animation
             this.anim = {};
 
@@ -109,7 +118,7 @@
                     var region = settings.image.getRegion(settings.region);
                     if (region) {
                         // set the sprite offset within the texture
-                        this.current.offset.setV(region.offset);
+                        this.setFrameOffset(region.offset);
                         // set angle if defined
                         this.current.angle = region.angle;
                         settings.framewidth = settings.framewidth || region.width;
@@ -405,6 +414,20 @@
         },
 
         /**
+         * set the frame current offset to the given one <br>
+         * Note: this won't affect the global me.Sprite.offset property
+         * @name setFrameOffset
+         * @memberOf me.Sprite
+         * @function
+         * @param {me.Vector2d} offset new offset
+         * @example
+         * mySprite.setFrameOffset(game.texture.getRegion("shadedDark13.png").offset);
+         */
+        setFrameOffset : function (offset) {
+            this.current.offset.setV(offset);
+        },
+
+        /**
          * force the current animation frame index.
          * @name setAnimationFrame
          * @memberOf me.Sprite
@@ -537,7 +560,9 @@
             var w = frame.width,
                 h = frame.height;
 
-            var offset = frame.offset;
+            // frame offset in the texture/atlas
+            var frame_offset = frame.offset;
+            var g_offset = this.offset;
 
 
             // remove image's TexturePacker/ShoeBox rotation
@@ -551,36 +576,13 @@
 
             renderer.drawImage(
                 this.image,
-                offset.x, offset.y,   // sx,sy
-                w, h,                 // sw,sh
-                xpos, ypos,           // dx,dy
-                w, h                  // dw,dh
+                g_offset.x + frame_offset.x, // sx
+                g_offset.y + frame_offset.y, // sy
+                w, h,                        // sw,sh
+                xpos, ypos,                  // dx,dy
+                w, h                         // dw,dh
             );
         }
-    });
-
-    /**
-     * The position to draw from on the source image.
-     * @public
-     * @type {me.Vector2d}
-     * @name offset
-     * @memberOf me.Sprite
-     */
-    Object.defineProperty(me.Sprite.prototype, "offset", {
-        /* for backward compatiblity */
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.current.offset;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.current.offset.setV(value);
-        },
-        configurable : true
     });
 
     // for backward compatiblity

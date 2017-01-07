@@ -93,14 +93,8 @@ game.HUD.AudioControl = me.GUI_Object.extend({
             image: game.texture,
             region : "shadedDark13.png" // ON by default
         } ]);
-
-        // offset of the two used images
-        this.offset_on = game.texture.getRegion("shadedDark13.png").offset;
-        this.offset_off = game.texture.getRegion("shadedDark15.png").offset;
-
         this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
-
         this.isMute = false;
     },
 
@@ -124,11 +118,11 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     onClick : function (/* event */) {
         if (this.isMute) {
             me.audio.unmuteAll();
-            this.offset.setV(this.offset_on);
+            this.setFrameOffset(game.texture.getRegion("shadedDark13.png").offset);
             this.isMute = false;
         } else {
             me.audio.muteAll();
-            this.offset.setV(this.offset_off);
+            this.setFrameOffset(game.texture.getRegion("shadedDark15.png").offset);
             this.isMute = true;
         }
         return false;

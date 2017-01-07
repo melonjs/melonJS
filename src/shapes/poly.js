@@ -36,7 +36,7 @@
 
             /**
              * The bounding rectangle for this shape
-             * @private
+             * @ignore
              * @type {me.Rect}
              * @name _bounds
              * @memberOf me.Polygon
@@ -177,6 +177,7 @@
          * @name recalc
          * @memberOf me.Polygon
          * @function
+         * @return {me.Polygon} Reference to this object for method chaining
          */
         recalc : function () {
             var i;
@@ -227,7 +228,7 @@
          * @memberOf me.Polygon
          * @function
          * @param {me.Vector2d} v vector offset
-         * @return {me.Polygon} this Polygon
+         * @return {me.Polygon} Reference to this object for method chaining
          */
         translateV : function (v) {
             this.pos.add(v);

@@ -87,7 +87,7 @@ you need to install build dependencies and Grunt CLI (Command Line Interface), b
 Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Command Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
 type the following :
 
-    $ npm install -g grunt-cli
+    $ [sudo] npm install -g grunt-cli
 
 Next you need to install the melonJS dependencies, by typing :
 

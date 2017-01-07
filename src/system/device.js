@@ -156,25 +156,26 @@
          */
         api._detectDevice = function () {
             // iOS Device ?
-            me.device.iOS = me.device.ua.match(/iPhone|iPad|iPod/i) || false;
+            me.device.iOS = /iPhone|iPad|iPod/i.test(me.device.ua);
             // Android Device ?
-            me.device.android = me.device.ua.match(/Android/i) || false;
-            me.device.android2 = me.device.ua.match(/Android 2/i) || false;
+            me.device.android = /Android/i.test(me.device.ua);
+            me.device.android2 = /Android 2/i.test(me.device.ua);
+            // Chrome OS ?
+            me.device.chromeOS = /CrOS/.test(me.device.ua);
             // Windows Device ?
-            me.device.wp = me.device.ua.match(/Windows Phone/i) || false;
+            me.device.wp = /Windows Phone/i.test(me.device.ua);
             // Kindle device ?
-            me.device.BlackBerry = me.device.ua.match(/BlackBerry/i) || false;
+            me.device.BlackBerry = /BlackBerry/i.test(me.device.ua);
             // Kindle device ?
-            me.device.Kindle = me.device.ua.match(/Kindle|Silk.*Mobile Safari/i) || false;
+            me.device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(me.device.ua);
 
             // Mobile platform
-            me.device.isMobile = me.device.ua.match(/Mobi/i) ||
+            me.device.isMobile = /Mobi/i.test(me.device.ua) ||
                                  me.device.iOS ||
                                  me.device.android ||
                                  me.device.wp ||
                                  me.device.BlackBerry ||
-                                 me.device.Kindle ||
-                                 me.device.iOS || false;
+                                 me.device.Kindle || false;
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
@@ -191,8 +192,8 @@
         // Browser capabilities
 
         /**
-         * Browser User Agent
-         * @type Boolean
+         * the `ua` read-only property returns the user agent string for the current browser.
+         * @type String
          * @readonly
          * @name ua
          * @memberOf me.device
@@ -328,6 +329,16 @@
          * @memberOf me.device
          */
          api.cocoon = false;
+
+         /**
+          * equals to true if the device is running on ChromeOS.
+          * @type Boolean
+          * @readonly
+          * @name chromeOS
+          * @memberOf me.device
+          */
+          api.chromeOS = false;
+
 
          /**
          * equals to true if the device is a Windows Phone platform.
@@ -783,6 +794,6 @@
          */
         get: function () {
                 return !Howler.noAudio;
-            }
+        }
     });
 })();

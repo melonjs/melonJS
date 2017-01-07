@@ -161,7 +161,7 @@
          * @function
          * @return {me.Vector3d} Reference to this object for method chaining
          */
-        toIso : function (x, y) {
+        toIso : function () {
             return this._set(this.x - this.y, (this.x + this.y) * 0.5, this.z);
         },
 
@@ -172,7 +172,7 @@
          * @function
          * @return {me.Vector3d} Reference to this object for method chaining
          */
-        to2d : function (x, y) {
+        to2d : function () {
             return this._set(this.y + this.x / 2, this.y - this.x / 2, this.z);
         },
 

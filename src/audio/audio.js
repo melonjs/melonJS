@@ -51,7 +51,7 @@
                 }
                 else {
                     // throw an exception and stop everything !
-                    throw new api.Error(errmsg);
+                    throw new me.audio.Error(errmsg);
                 }
             // else try loading again !
             }
@@ -63,24 +63,6 @@
         /*
          * PUBLIC STUFF
          */
-
-        /**
-         * Base class for Audio exception handling.
-         * @name Error
-         * @class
-         * @memberOf me.audio
-         * @constructor
-         * @param {String} msg Error message.
-         */
-        api.Error = me.Error.extend({
-            /**
-             * @ignore
-             */
-            init : function (msg) {
-                this._super(me.Error, "init", [ msg ]);
-                this.name = "me.audio.Error";
-            }
-        });
 
         /**
          * configure and initialize the audio engine<br>
@@ -106,7 +88,7 @@
          */
         api.init = function (audioFormat) {
             if (!me.initialized) {
-                throw new api.Error("me.audio.init() called before engine initialization.");
+                throw new me.audio.Error("me.audio.init() called before engine initialization.");
             }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
@@ -153,7 +135,7 @@
         api.load = function (sound, html5, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
-                throw new api.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
+                throw new me.audio.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
             }
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
@@ -206,21 +188,23 @@
         api.play = function (sound_name, loop, onend, volume) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                var instance_id = sound.play();
+                var id = sound.play();
                 if (typeof loop === "boolean") {
                     // arg[0] can take different types in howler 2.0
-                    sound.loop(loop, instance_id);
+                    sound.loop(loop, id);
                 }
-                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), instance_id);
+                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), id);
                 if (typeof(onend) === "function") {
                     if (loop === true) {
-                        sound.on("end", onend, instance_id);
+                        sound.on("end", onend, id);
                     }
                     else {
-                        sound.once("end", onend, instance_id);
+                        sound.once("end", onend, id);
                     }
                 }
-                return instance_id;
+                return id;
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -236,15 +220,42 @@
          * @param {Number} duration Time in milliseconds to fade.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
          */
-        api.fade = function (sound_name, from, to, duration, instance_id) {
+        api.fade = function (sound_name, from, to, duration, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.fade(from, to, duration, instance_id);
+                sound.fade(from, to, duration, id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
         /**
-         * change the playback rate of a sound.
+         * get/set the position of playback for a sound.
+         * @name seek
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @param {String} sound_name audio clip name - case sensitive
+         * @param {Number} [seek]  The position to move current playback to (in seconds).
+         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+         * @return return the current seek position (if no extra parameters were given)
+         * @example
+         * // return the current position of the background music
+         * var current_pos = me.audio.seek("dst-gameforest");
+         * // set back the position of the background music to the beginning
+         * me.audio.seek("dst-gameforest", 0);
+         */
+        api.seek = function (sound_name, seek, id) {
+            var sound = audioTracks[sound_name];
+            if (sound && typeof sound !== "undefined") {
+                return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+            }
+        };
+
+        /**
+         * get or set the rate of playback for a sound.
          * @name rate
          * @memberOf me.audio
          * @public
@@ -252,23 +263,19 @@
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
-         * @return current playback rate.
+         * @return return the current playback rate (if no extra parameters were given)
          * @example
+         * // get the playback rate of the background music
+         * var rate = me.audio.rate("dst-gameforest");
          * // speed up the playback of the background music
          * me.audio.rate("dst-gameforest", 2.0);
-         *
          */
-        api.rate = function (sound_name, rate, instance_id) {
+        api.rate = function (sound_name, rate, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                var _args = [];
-                if (typeof rate !== "undefined") {
-                    _args[_args.length] = rate;
-                }
-                if (typeof instance_id !== "undefined") {
-                    _args[_args.length] = instance_id;
-                }
-                return sound.rate.apply(sound, _args);
+                return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -283,12 +290,14 @@
          * @example
          * me.audio.stop("cling");
          */
-        api.stop = function (sound_name, instance_id) {
+        api.stop = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.stop(instance_id);
+                sound.stop(id);
                 // remove the defined onend callback (if any defined)
-                sound.off("end", instance_id);
+                sound.off("end", undefined, id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -304,10 +313,12 @@
          * @example
          * me.audio.pause("cling");
          */
-        api.pause = function (sound_name, instance_id) {
+        api.pause = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.pause(instance_id);
+                sound.pause(id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -329,10 +340,12 @@
          * // resume
          * me.audio.resume("myClip", id);
          */
-        api.resume = function (sound_name, instance_id) {
+        api.resume = function (sound_name, id) {
             var sound = audioTracks[sound_name];
             if (sound && typeof sound !== "undefined") {
-                sound.play(instance_id);
+                sound.play(id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -455,20 +468,26 @@
         };
 
         /**
-         * mute the specified sound
+         * mute or unmute the specified sound, but does not pause the playback.
          * @name mute
          * @memberOf me.audio
          * @public
          * @function
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
+         * @param {Boolean} [muted=true] True to mute and false to unmute
+         * @example
+         * // mute the background music
+         * me.audio.mute("awesome_music");
          */
-        api.mute = function (sound_name, instance_id, mute) {
+        api.mute = function (sound_name, id, mute) {
             // if not defined : true
             mute = (typeof(mute) === "undefined" ? true : !!mute);
             var sound = audioTracks[sound_name];
             if (sound && typeof(sound) !== "undefined") {
-                sound.mute(mute, instance_id);
+                sound.mute(mute, id);
+            } else {
+                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -481,8 +500,8 @@
          * @param {String} sound_name audio clip name
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
          */
-        api.unmute = function (sound_name, instance_id) {
-            api.mute(sound_name, instance_id, false);
+        api.unmute = function (sound_name, id) {
+            api.mute(sound_name, id, false);
         };
 
         /**
@@ -556,4 +575,22 @@
         // return our object
         return api;
     })();
+
+    /**
+     * Base class for audio exception handling.
+     * @name Error
+     * @class
+     * @memberOf me.audio
+     * @constructor
+     * @param {String} msg Error message.
+     */
+    me.audio.Error = me.Error.extend({
+        /**
+         * @ignore
+         */
+        init : function (msg) {
+            this._super(me.Error, "init", [ msg ]);
+            this.name = "me.audio.Error";
+        }
+    });
 })();

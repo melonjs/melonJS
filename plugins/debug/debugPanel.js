@@ -240,19 +240,20 @@
             // enable the FPS counter
             me.debug.displayFPS = true;
 
-            // bind the "S" and "H" keys
-            me.input.bindKey(showKey || me.input.KEY.S, "show", false, false);
-            me.input.bindKey(hideKey || me.input.KEY.H, "hide", false, false);
+            var self = this;
 
             // add some keyboard shortcuts
-            var self = this;
-            this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action) {
-                if (action === "show") {
-                    self.show();
-                } else if (action === "hide") {
-                    self.hide();
+            this.showKey = showKey || me.input.KEY.S;
+            this.hideKey = hideKey || me.input.KEY.H;
+            this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode) {
+                if (keyCode === self.showKey) {
+                    me.plugins.debugPanel.show();
+                } else if (keyCode === self.hideKey) {
+                    me.plugins.debugPanel.hide();
                 }
             });
+
+            // resize the panel if the browser is resized
             me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function (w) {
                 self.resize(w, DEBUG_HEIGHT);
             });
@@ -467,10 +468,10 @@
          */
         show : function () {
             if (!this.visible) {
-                // register a mouse event for the checkboxes
-                me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this));
                 // add the debug panel to the game world
                 me.game.world.addChild(this, Infinity);
+                // register a mouse event for the checkboxes
+                me.input.registerPointerEvent("pointerdown", this, this.onClick.bind(this));
                 // mark it as visible
                 this.visible = true;
                 // force repaint
@@ -484,10 +485,9 @@
         hide : function () {
             if (this.visible) {
                 // release the mouse event for the checkboxes
-                // me.input.releasePointerEvent("pointerdown", this);
-                this.canvas.removeEventListener("click", this.onClick.bind(this));
+                me.input.releasePointerEvent("pointerdown", this);
                 // remove the debug panel from the game world
-                me.game.world.removeChild(this);
+                me.game.world.removeChild(this, true);
                 // mark it as invisible
                 this.visible = false;
                 // force repaint
@@ -498,12 +498,7 @@
 
         /** @private */
         update : function () {
-            if (me.input.isKeyPressed("show")) {
-                this.show();
-            } else if (me.input.isKeyPressed("hide")) {
-                this.hide();
-            }
-            return true;
+            return this.visible;
         },
 
         /** @private */
