@@ -9,14 +9,10 @@
         /**
          * @ignore
          */
-        init: function (v, w, h) {
-            this._super(me.Renderable, "init", [v.x, v.y, w, h]);
+        init: function (x, y, w, h) {
+            this._super(me.Renderable, "init", [x, y, w, h]);
             // flag to know if we need to refresh the display
             this.invalidate = false;
-
-            // default progress bar height
-            this.barHeight = 4;
-
             // current progress
             this.progress = 0;
 
@@ -53,10 +49,10 @@
         draw : function (renderer) {
             // draw the progress bar
             renderer.setColor("black");
-            renderer.fillRect(this.pos.x, this.pos.y - this.barHeight, this.width, this.barHeight);
+            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.width, this.height / 2);
 
             renderer.setColor("#55aa00");
-            renderer.fillRect(this.pos.x + 2, this.pos.y - this.barHeight, this.progress, this.barHeight);
+            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.progress, this.height / 2);
 
             renderer.setColor("white");
         }
@@ -67,14 +63,14 @@
         /**
          * @ignore
          */
-        init : function (iconCanvas, x, y) {
+        init : function (x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
-            this.iconCanvas = iconCanvas;
+            this.iconCanvas = me.video.createCanvas(this.width, this.height, false);
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
 
-            context.translate(this.pos.x - this.width, this.pos.y);
+            //context.translate(this.pos.x - this.width, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -108,7 +104,7 @@
          * @ignore
          */
         draw : function (renderer) {
-            renderer.drawImage(this.iconCanvas, 0, 0);
+            renderer.drawImage(this.iconCanvas, this.pos.x, this.pos.y);
         }
     });
 
@@ -124,7 +120,7 @@
             this.logo2.bold();
             this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
 
-            this.anchorPoint.set(0, 0);
+            this.anchorPoint.set(0.0, 0.0);
         },
         /**
          * @ignore
@@ -132,7 +128,7 @@
         draw : function (renderer) {
             // measure the logo size
             var logo1_width = this.logo1.measureText(renderer, "melon").width;
-            var xpos = (this.width - logo1_width - this.logo2.measureText(renderer, "JS").width);
+            var xpos = (this.width - logo1_width / 2 - this.logo2.measureText(renderer, "JS").width / 2);
             var ypos = (this.height) + (this.logo2.measureText(renderer, "melon").height);
 
             // draw the melonJS string
@@ -160,12 +156,10 @@
 
             // progress bar
             var progressBar = new ProgressBar(
-                new me.Vector2d(
-                    0,
-                    me.video.renderer.getHeight() / 2
-                ),
+                0,
+                me.video.renderer.getHeight() / 2,
                 me.video.renderer.getWidth(),
-                me.video.renderer.getHeight()
+                8 // bar height
             );
 
             this.loaderHdlr = me.event.subscribe(
@@ -179,15 +173,14 @@
             );
 
             me.game.world.addChild(progressBar, 1);
-            this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
+
             // melonJS text & logo
             var icon = new IconLogo(
-                this.iconCanvas,
-                (me.video.renderer.getWidth() / 2),
-                (me.video.renderer.getHeight()) - (progressBar.barHeight) - 90
+                me.video.renderer.getWidth() / 2,
+                (me.video.renderer.getHeight() / 2) - (progressBar.height) - 35
             );
             me.game.world.addChild(icon, 1);
-            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
+            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth() / 2, me.video.renderer.getHeight() / 2), 1);
         },
 
         /**

@@ -793,10 +793,11 @@
          * @ignore
          */
         preDraw : function (renderer) {
-            // call the parent function
-            this._super(me.Renderable, "preDraw", arguments);
             // adjust position if required (e.g. canvas/window centering)
             renderer.translate(this.pos.x, this.pos.y);
+            
+            // call the parent function
+            this._super(me.Renderable, "preDraw", arguments);
         },
 
         /**
