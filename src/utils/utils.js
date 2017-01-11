@@ -301,6 +301,24 @@
             return GUID_base + "-" + (index || GUID_index);
         };
 
+        /**
+         * returns true if the given texture width and height are a power of two
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name isPowerOfTwo
+         * @param {Image} texture
+         * @return {boolean}
+         */
+        api.isPowerOfTwo = function (texture) {
+            var width = texture.width;
+            var height = texture.height;
+            return (
+                (width  & (width  - 1)) === 0 &&
+                (height & (height - 1)) === 0
+            );
+        };
+
         // return our object
         return api;
     })();
