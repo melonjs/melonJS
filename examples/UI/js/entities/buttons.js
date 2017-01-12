@@ -38,7 +38,7 @@ game.UI.ButtonUI = me.GUI_Object.extend({
      * function called when the object is clicked on
      */
     onClick : function (/* event */) {
-        this.offset.setV(this.clicked_region.offset);
+        this.setRegion(this.clicked_region);
         // account for the different sprite size
         this.pos.y += this.height - this.clicked_region.height ;
         this.height = this.clicked_region.height;
@@ -50,7 +50,7 @@ game.UI.ButtonUI = me.GUI_Object.extend({
      * function called when the pointer button is released
      */
     onRelease : function (/* event */) {
-        this.offset.setV(this.unclicked_region.offset);
+        this.setRegion(this.unclicked_region);
         // account for the different sprite size
         this.pos.y -= this.unclicked_region.height - this.height;
         this.height = this.unclicked_region.height;
@@ -84,8 +84,8 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
         } ]);
 
         // offset of the two used images in the texture
-        this.on_offset = texture.getRegion(on_icon).offset;
-        this.off_offset = texture.getRegion(off_icon).offset;
+        this.on_icon_region = texture.getRegion(on_icon);
+        this.off_icon_region = texture.getRegion(off_icon);
 
         this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
@@ -122,10 +122,10 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
      */
     setSelected : function (selected) {
         if (selected) {
-            this.offset.setV(this.on_offset);
+            this.setRegion(this.on_icon_region);
             this.isSelected = true;
         } else {
-            this.offset.setV(this.off_offset);
+            this.setRegion(this.off_icon_region);
             this.isSelected = false;
         }
     },
