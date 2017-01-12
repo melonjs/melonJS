@@ -359,24 +359,25 @@
          * @ignore
          */
         preDraw : function (renderer) {
+            var bounds = this.getBounds();
+            var ax = bounds.width * this.anchorPoint.x,
+                ay = bounds.height * this.anchorPoint.y;
 
             // save context
             renderer.save();
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
-            // translate to the defined anchor point
-            renderer.translate(
-                - ( this.width * this.anchorPoint.x ),
-                - ( this.height * this.anchorPoint.y )
-            );
-
-            if (this.autoTransform === true) {
+            if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
+                this.currentTransform.translate(-ax, -ay);
                 // apply the renderable transformation matrix
-                if (!this.currentTransform.isIdentity()) {
-                    renderer.transform(this.currentTransform);
-                }
+                renderer.transform(this.currentTransform);
+                this.currentTransform.translate(ax, ay);
+            } else {
+                // translate to the defined anchor point
+                renderer.translate(-ax, -ay);
             }
+
         },
 
         /**
