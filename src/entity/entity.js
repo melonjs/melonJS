@@ -147,7 +147,7 @@
             }
 
             // disable for entities
-            //this.autoTransform = false;
+            this.autoTransform = false;
 
             // tiled default coordinates are top-left
         },
@@ -275,8 +275,16 @@
          * @param {me.Rect} region to draw
          **/
         draw : function (renderer, rect) {
-            // reuse the me.Container draw loop
-            me.Container.prototype.draw.apply(this, [renderer, rect]);
+            if (this.renderable) {
+                // predraw (apply transforms)
+                this.renderable.preDraw(renderer);
+
+                // draw the object
+                this.renderable.draw(renderer, rect);
+
+                // postdraw (clean-up);
+                this.renderable.postDraw(renderer);
+            }
         },
 
         /**

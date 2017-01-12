@@ -39,6 +39,8 @@
                 this.color = _col.parseCSS(color).toRGBA();
                 me.pool.push(_col);
             }
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**

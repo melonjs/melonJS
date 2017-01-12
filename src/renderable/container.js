@@ -111,7 +111,7 @@
             this.childBounds = this.getBounds().clone();
 
             // container self apply any defined transformation
-            this.autoTransform = false;
+            this.autoTransform = true;
         },
 
 
@@ -789,24 +789,15 @@
         },
 
         /**
-         * calls by an object container before calling the draw function
-         * @ignore
-         */
-        preDraw : function (renderer) {
-            // adjust position if required (e.g. canvas/window centering)
-            renderer.translate(this.pos.x, this.pos.y);
-            
-            // call the parent function
-            this._super(me.Renderable, "preDraw", arguments);
-        },
-
-        /**
          * @ignore
          */
         draw : function (renderer, rect) {
             var isFloating = false;
 
             this.drawCount = 0;
+
+            // adjust position if required (e.g. canvas/window centering)
+            renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 isFloating = obj.floating === true;
