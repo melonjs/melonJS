@@ -140,6 +140,7 @@
 
     // legacy mouse event type
     var mouseEventList = [
+        MOUSE_WHEEL[0],
         POINTER_MOVE[2],
         POINTER_DOWN[2],
         POINTER_UP[2],
@@ -159,6 +160,7 @@
     ];
 
     var pointerEventMap = {
+        mousewheel : MOUSE_WHEEL,
         pointermove: POINTER_MOVE,
         pointerdown: POINTER_DOWN,
         pointerup: POINTER_UP,
