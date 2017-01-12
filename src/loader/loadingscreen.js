@@ -65,14 +65,17 @@
         /**
          * @ignore
          */
-        init : function (iconCanvas, x, y) {
+        init : function (x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
-            this.iconCanvas = iconCanvas;
+            this.iconCanvas = me.video.createCanvas(
+                me.utils.nextPowerOfTwo(this.width),
+                me.utils.nextPowerOfTwo(this.height),
+            false);
+
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
 
-            context.translate(this.pos.x, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -104,7 +107,7 @@
          * @ignore
          */
         draw : function (renderer) {
-            renderer.drawImage(this.iconCanvas, 0, 0);
+            renderer.drawImage(this.iconCanvas, this.pos.x, this.pos.y);
         }
     });
 
@@ -170,10 +173,8 @@
             );
 
             me.game.world.addChild(progressBar, 1);
-            this.iconCanvas = me.video.createCanvas(me.game.viewport.width, me.game.viewport.height, false);
             // melonJS text & logo
             var icon = new IconLogo(
-                this.iconCanvas,
                 (me.video.renderer.getWidth() - 100) / 2,
                 (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
             );
