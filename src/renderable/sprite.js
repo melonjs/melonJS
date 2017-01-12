@@ -117,10 +117,8 @@
                     // use a texture atlas
                     var region = settings.image.getRegion(settings.region);
                     if (region) {
-                        // set the sprite offset within the texture
-                        this.setFrameOffset(region.offset);
-                        // set angle if defined
-                        this.current.angle = region.angle;
+                        // set the sprite region within the texture
+                        this.setRegion(region);
                         settings.framewidth = settings.framewidth || region.width;
                         settings.frameheight = settings.frameheight || region.height;
                     } else {
@@ -414,17 +412,24 @@
         },
 
         /**
-         * set the frame current offset to the given one <br>
-         * Note: this won't affect the global me.Sprite.offset property
-         * @name setFrameOffset
+         * change the current texture atlas region for this sprite
+         * @see me.Texture.getRegion
+         * @name setRegion
          * @memberOf me.Sprite
          * @function
-         * @param {me.Vector2d} offset new offset
+         * @param {Object} region typically returned through me.Texture.getRegion()
          * @example
-         * mySprite.setFrameOffset(game.texture.getRegion("shadedDark13.png").offset);
+         * // change the sprite to "shadedDark13.png";
+         * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
          */
-        setFrameOffset : function (offset) {
-            this.current.offset.setV(offset);
+        setRegion : function (region) {
+            // set the sprite offset within the texture
+            this.current.offset.setV(region.offset);
+            // set angle if defined
+            this.current.angle = region.angle;
+            // update the default "current" size
+            this.current.width = region.width;
+            this.current.height = region.height;
         },
 
         /**

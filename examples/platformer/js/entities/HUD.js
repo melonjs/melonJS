@@ -118,11 +118,11 @@ game.HUD.AudioControl = me.GUI_Object.extend({
     onClick : function (/* event */) {
         if (this.isMute) {
             me.audio.unmuteAll();
-            this.setFrameOffset(game.texture.getRegion("shadedDark13.png").offset);
+            this.setRegion(game.texture.getRegion("shadedDark13.png"));
             this.isMute = false;
         } else {
             me.audio.muteAll();
-            this.setFrameOffset(game.texture.getRegion("shadedDark15.png").offset);
+            this.setRegion(game.texture.getRegion("shadedDark15.png"));
             this.isMute = true;
         }
         return false;
