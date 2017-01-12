@@ -159,7 +159,7 @@
          */
         createPattern : function (image, repeat) {
 
-            if (!me.utils.isPowerOfTwo(image)) {
+            if (!me.utils.isPowerOfTwo(image.width) || !me.utils.isPowerOfTwo(image.height)) {
                 throw new me.video.Error(
                     "Image " + image + " width and height must be a power of two number"
                 );

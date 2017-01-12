@@ -302,21 +302,36 @@
         };
 
         /**
-         * returns true if the given texture width and height are a power of two
+         * returns true if the given value is a power of two
          * @public
          * @function
          * @memberOf me.utils
          * @name isPowerOfTwo
-         * @param {Image} texture
+         * @param {Number} val
          * @return {boolean}
          */
-        api.isPowerOfTwo = function (texture) {
-            var width = texture.width;
-            var height = texture.height;
-            return (
-                (width  & (width  - 1)) === 0 &&
-                (height & (height - 1)) === 0
-            );
+        api.isPowerOfTwo = function (val) {
+            return (val & (val - 1)) === 0;
+        };
+
+        /**
+         * returns the next power of two for the given value
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name nextPowerOfTwo
+         * @param {Number} val
+         * @return {boolean}
+         */
+        api.nextPowerOfTwo = function (val) {
+            val --;
+            val |= val >> 1;
+            val |= val >> 2;
+            val |= val >> 4;
+            val |= val >> 8;
+            val |= val >> 16;
+            val ++;
+            return val;
         };
 
         // return our object
