@@ -143,7 +143,7 @@
         },
 
         /**
-         * Create a pattern with the specified repition
+         * Create a pattern with the specified repetition
          * @name createPattern
          * @memberOf me.WebGLRenderer
          * @function
@@ -158,6 +158,13 @@
          * var basic      = renderer.createPattern(image, "no-repeat");
          */
         createPattern : function (image, repeat) {
+
+            if (!me.utils.isPowerOfTwo(image.width) || !me.utils.isPowerOfTwo(image.height)) {
+                throw new me.video.Error(
+                    "Image " + image + " width and height must be a power of two number"
+                );
+            }
+
             var texture = new this.Texture(
                 this.Texture.prototype.createAtlas.apply(
                     this.Texture.prototype,

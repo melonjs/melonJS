@@ -66,11 +66,13 @@
         init : function (x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
-            this.iconCanvas = me.video.createCanvas(this.width, this.height, false);
+            this.iconCanvas = me.video.createCanvas(
+                me.utils.nextPowerOfTwo(this.width),
+                me.utils.nextPowerOfTwo(this.height),
+            false);
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
 
-            //context.translate(this.pos.x - this.width, this.pos.y);
             context.beginPath();
             context.moveTo(0.7, 48.9);
             context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
@@ -178,6 +180,7 @@
             var icon = new IconLogo(
                 me.video.renderer.getWidth() / 2,
                 (me.video.renderer.getHeight() / 2) - (progressBar.height) - 35
+
             );
             me.game.world.addChild(icon, 1);
             me.game.world.addChild(new TextLogo(me.video.renderer.getWidth() / 2, me.video.renderer.getHeight() / 2), 1);

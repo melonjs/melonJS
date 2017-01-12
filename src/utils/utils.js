@@ -301,6 +301,39 @@
             return GUID_base + "-" + (index || GUID_index);
         };
 
+        /**
+         * returns true if the given value is a power of two
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name isPowerOfTwo
+         * @param {Number} val
+         * @return {boolean}
+         */
+        api.isPowerOfTwo = function (val) {
+            return (val & (val - 1)) === 0;
+        };
+
+        /**
+         * returns the next power of two for the given value
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name nextPowerOfTwo
+         * @param {Number} val
+         * @return {boolean}
+         */
+        api.nextPowerOfTwo = function (val) {
+            val --;
+            val |= val >> 1;
+            val |= val >> 2;
+            val |= val >> 4;
+            val |= val >> 8;
+            val |= val >> 16;
+            val ++;
+            return val;
+        };
+
         // return our object
         return api;
     })();
