@@ -283,6 +283,14 @@
         },
 
         /**
+         * return a reference to the font 2d Context
+         * @ignore
+         */
+        getFontContext : function () {
+            return this.fontContext2D;
+        },
+
+        /**
          * resets the canvas transform to identity
          * @name resetTransform
          * @memberOf me.CanvasRenderer

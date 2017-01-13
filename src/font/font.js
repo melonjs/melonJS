@@ -181,7 +181,7 @@
          * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
          */
         measureText : function (renderer, text) {
-            var context = renderer.fontContext2D;
+            var context = renderer.getFontContext();
 
             // draw the text
             context.font = this.font;
@@ -219,7 +219,7 @@
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, ~~x, ~~y, false));
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
 
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
@@ -244,7 +244,7 @@
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.fontContext2D, text, ~~x, ~~y, true));
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, true));
 
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);
