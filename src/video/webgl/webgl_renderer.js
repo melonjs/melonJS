@@ -160,7 +160,8 @@
 
             if (!me.utils.isPowerOfTwo(image.width) || !me.utils.isPowerOfTwo(image.height)) {
                 throw new me.video.Error(
-                    "Image " + image + " width and height must be a power of two number"
+                    "[WebGL Renderer] " + image + " is not a POT texture " +
+                    "(" + image.width + "x" + image.height + ")"
                 );
             }
 
