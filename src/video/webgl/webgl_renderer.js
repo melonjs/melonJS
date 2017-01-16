@@ -78,7 +78,6 @@
             );
 
             this.createFillTexture(this.cache);
-            this.createFontTexture(this.cache);
 
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
@@ -118,8 +117,8 @@
          */
         createFontTexture : function (cache) {
             var image = me.video.createCanvas(
-                this.backBufferCanvas.width,
-                this.backBufferCanvas.height
+                me.utils.nextPowerOfTwo(this.backBufferCanvas.width),
+                me.utils.nextPowerOfTwo(this.backBufferCanvas.height)
             );
 
             /**
@@ -161,7 +160,8 @@
 
             if (!me.utils.isPowerOfTwo(image.width) || !me.utils.isPowerOfTwo(image.height)) {
                 throw new me.video.Error(
-                    "Image " + image + " width and height must be a power of two number"
+                    "[WebGL Renderer] " + image + " is not a POT texture " +
+                    "(" + image.width + "x" + image.height + ")"
                 );
             }
 
@@ -238,6 +238,8 @@
          * @ignore
          */
         drawFont : function (bounds) {
+            var fontContext = this.getFontContext();
+
             // Flush the compositor so we can upload a new texture
             this.compositor.flush();
 
@@ -256,7 +258,7 @@
             );
 
             // Clear font context2D
-            this.fontContext2D.clearRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+            fontContext.clearRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
         },
 
         /**
@@ -400,6 +402,20 @@
         },
 
         /**
+         * return a reference to the font 2d Context
+         * @ignore
+         */
+        getFontContext : function () {
+            if (typeof (this.fontContext2D) === "undefined" ) {
+                // warn the end user about performance impact
+                console.warn("[WebGL Renderer] WARNING : Using Standard me.Font with WebGL will severly impact performances !");
+                // create the font texture if not done yet
+                this.createFontTexture(this.cache);
+            }
+            return this.fontContext2D;
+        },
+
+        /**
          * resets the gl transform to identity
          * @name resetTransform
          * @memberOf me.WebGLRenderer
@@ -420,7 +436,9 @@
             this.cache.reset();
             this.compositor.reset();
             this.createFillTexture();
-            this.createFontTexture();
+            if (typeof (this.fontContext2D) !== "undefined" ) {
+                this.createFontTexture();
+            }
         },
 
         /**

@@ -175,6 +175,13 @@
         api.createTexture = function (gl, unit, image, filter, repeat, w, h, b) {
             repeat = repeat || "no-repeat";
 
+            if (!me.utils.isPowerOfTwo(w || image.width) || !me.utils.isPowerOfTwo(h || image.height)) {
+                console.warn(
+                    "[WebGL Renderer] " + image + " is not a POT texture " +
+                    "(" + (w || image.width) + "x" + (h || image.height) + ")"
+                );
+            }
+
             var texture = gl.createTexture(),
                 rs = (repeat.search(/^repeat(-x)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE,
                 rt = (repeat.search(/^repeat(-y)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE;

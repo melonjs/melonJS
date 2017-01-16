@@ -117,26 +117,44 @@
          */
         init : function (w, h) {
             this._super(me.Renderable, "init", [0, 0, w, h]);
-            this.logo1 = new me.Font("century gothic", 32, "white", "middle");
-            this.logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
-            this.logo2.bold();
-            this.logo1.textBaseline = this.logo2.textBaseline = "alphabetic";
+
+            // offscreen cache canvas
+            this.fontCanvas = me.video.createCanvas(128, 32);
+            this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
         },
+
+        drawFont : function (context) {
+            var logo1 = new me.Font("century gothic", 32, "white", "middle");
+            var logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
+            var logo1_width = 0;
+
+            // configure the font
+            logo2.bold();
+            logo1.textBaseline = logo2.textBaseline = "top";
+
+            // measure the logo size (using standard 2d context)
+            context.font = logo1.font;
+            context.fillStyle = logo1.fillStyle.toRGBA();
+            context.textAlign = logo1.textAlign;
+            context.textBaseline = logo1.textBaseline;
+            logo1_width = context.measureText("melon").width;
+
+            // calculate the final rendering position
+            this.pos.x = Math.round((this.width - logo1_width - context.measureText("JS").width) / 2);
+            this.pos.y = this.height / 2 + 16;
+
+            // use the private _drawFont method to directly draw on the canvas context
+            logo1._drawFont(context, "melon", 0, 0);
+            logo2._drawFont(context, "JS", logo1_width, 0);
+        },
+
         /**
          * @ignore
          */
         draw : function (renderer) {
-            // measure the logo size
-            var logo1_width = this.logo1.measureText(renderer, "melon").width;
-            var xpos = (this.width - logo1_width / 2 - this.logo2.measureText(renderer, "JS").width / 2);
-            var ypos = (this.height) + (this.logo2.measureText(renderer, "melon").height);
-
-            // draw the melonJS string
-            this.logo1.draw(renderer, "melon", xpos, ypos);
-            xpos += logo1_width;
-            this.logo2.draw(renderer, "JS", xpos, ypos);
+            renderer.drawImage(this.fontCanvas, this.pos.x, this.pos.y);
         }
 
     });
@@ -183,7 +201,7 @@
 
             );
             me.game.world.addChild(icon, 1);
-            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth() / 2, me.video.renderer.getHeight() / 2), 1);
+            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
         },
 
         /**

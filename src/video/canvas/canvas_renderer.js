@@ -53,8 +53,6 @@
                 this.backBufferContext2D = this.context;
             }
 
-            this.fontContext2D = this.backBufferContext2D;
-
             // apply the default color to the 2d context
             this.setColor(this.currentColor);
 
@@ -280,6 +278,15 @@
          */
         getContext : function () {
             return this.backBufferContext2D;
+        },
+
+        /**
+         * return a reference to the font 2d Context
+         * @ignore
+         */
+        getFontContext : function () {
+            // in canvas more we can directly use the 2d context
+            return this.getContext();
         },
 
         /**
