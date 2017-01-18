@@ -1,5 +1,7 @@
 Version History
 ---------------
+4.1.1
+
 4.1.0
 * Audio : updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
 * Audio : added a `me.audio.seek` function, to change or get the current position of a specific audio clip
