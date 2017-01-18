@@ -196,7 +196,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         abs : function () {
-            return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y, (this.z < 0) ? -this.Z : this.z);
+            return this._set((this.x < 0) ? -this.x : this.x, (this.y < 0) ? -this.y : this.y, (this.z < 0) ? -this.z : this.z);
         },
 
         /**
