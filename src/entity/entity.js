@@ -149,7 +149,8 @@
             // disable for entities
             this.autoTransform = false;
 
-            // tiled default coordinates are top-left
+            // Tiled used top-left coordinates
+            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -261,6 +262,29 @@
                 bounds.pos.add(this.ancestor._absPos);
             }
             bounds.resize(w, h);
+        },
+
+        preDraw : function (renderer) {
+            if (this.renderable) {
+                // draw the child renderable's anchorPoint at the entity's
+                // anchor point.  the entity's anchor point is a scale from
+                // body position to body width/height
+                var ax = this.anchorPoint.x * this.body.width,
+                    ay = this.anchorPoint.y * this.body.height;
+
+                var x = this.pos.x + this.body.pos.x + ax,
+                    y = this.pos.y + this.body.pos.y + ay;
+
+                renderer.save();
+
+                renderer.translate(x, y);
+            }
+        },
+
+        postDraw : function (renderer) {
+            if (this.renderable) {
+                renderer.restore();
+            }
         },
 
         /**

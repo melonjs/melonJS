@@ -260,6 +260,8 @@
 
             //patch patch patch !
             this.patchSystemFn();
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -322,14 +324,11 @@
                 // draw the sprite rectangle
                 if (me.debug.renderHitBox) {
                     var bounds = this.getBounds();
-                    var x = - (this.anchorPoint.x * this.width) - ((bounds.width - this.width) / 2);
-                    var y = - (this.anchorPoint.y * this.height) - ((bounds.height - this.height) / 2);
+                    var color  = renderer.getColor();
 
-                    renderer.save();
                     renderer.setColor("green");
-                    renderer.translate(x, y);
                     renderer.drawShape(bounds);
-                    renderer.restore();
+                    renderer.setColor(color);
                 }
             });
 
@@ -408,14 +407,14 @@
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     // draw entity current velocity
-                    var x = ~~(bounds.pos.x + (bounds.width / 2));
-                    var y = ~~(bounds.pos.y + (bounds.height / 2));
+                    var x = bounds.width / 2;
+                    var y = bounds.height / 2;
 
                     renderer.save();
                     renderer.setLineWidth(1);
 
                     renderer.setColor("blue");
-                    renderer.translate(x, y);
+                    renderer.translate(-x, -y);
                     renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
                     _this.counters.inc("velocity");
 
