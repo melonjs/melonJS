@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2016, Olivier Biot, Jason Oster, Aaron McLeod
+ * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Audio Mngt Objects
