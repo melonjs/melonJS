@@ -451,6 +451,8 @@
             Object.assign(this.current, frame);
             // XXX this should not be overwritten
             this.current.name = name;
+            this.width = frame.width;
+            this.height = frame.height;
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
                 this.anchorPoint.setV(frame.anchorPoint);

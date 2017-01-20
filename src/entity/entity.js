@@ -148,9 +148,6 @@
 
             // disable for entities
             this.autoTransform = false;
-
-            // Tiled used top-left coordinates
-            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -265,7 +262,7 @@
         },
 
         preDraw : function (renderer) {
-            if (this.renderable) {
+            if (this.renderable instanceof me.Renderable) {
                 // draw the child renderable's anchorPoint at the entity's
                 // anchor point.  the entity's anchor point is a scale from
                 // body position to body width/height
@@ -282,7 +279,7 @@
         },
 
         postDraw : function (renderer) {
-            if (this.renderable) {
+            if (this.renderable instanceof me.Renderable) {
                 renderer.restore();
             }
         },
@@ -299,7 +296,7 @@
          * @param {me.Rect} region to draw
          **/
         draw : function (renderer, rect) {
-            if (this.renderable) {
+            if (this.renderable instanceof me.Renderable) {
                 // predraw (apply transforms)
                 this.renderable.preDraw(renderer);
 
