@@ -377,13 +377,16 @@
                 // increment the bounds counter
                 _this.counters.inc("bounds");
 
+                var x, y;
+
                 // check if debug mode is enabled
                 if (me.debug.renderHitBox) {
-                    var x = this.ancestor._absPos.x + this.pos.x + this.body.pos.x,
-                        y = this.ancestor._absPos.y + this.pos.y + this.body.pos.y;
-
                     var ax = this.anchorPoint.x * this.body.width,
                         ay = this.anchorPoint.y * this.body.height;
+
+                    x = this.ancestor._absPos.x + this.pos.x + this.body.pos.x;
+                    y = this.ancestor._absPos.y + this.pos.y + this.body.pos.y;
+
 
                     renderer.save();
                     renderer.setLineWidth(1);
@@ -409,8 +412,8 @@
                     bounds.copy(this.getBounds());
                     bounds.pos.sub(this.ancestor._absPos);
                     // draw entity current velocity
-                    var x = bounds.width / 2;
-                    var y = bounds.height / 2;
+                    x = bounds.width / 2;
+                    y = bounds.height / 2;
 
                     renderer.save();
                     renderer.setLineWidth(1);
