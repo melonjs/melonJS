@@ -10,6 +10,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
         // physic-editor
         var physicEditorContainer = new me.Container(50, 50, 400, 600);
+        physicEditorContainer.anchorPoint.set(0, 0);
         physicEditorContainer.addChild(new game.Circle(75, 500, {width: 50, height: 50}), 1);
         physicEditorContainer.addChild(new game.Poly(50, 75, {width: 200, height: 200, sprite:"hamburger"}), 2);
         physicEditorContainer.addChild(new game.Poly(50, 200, {width: 200, height: 200, sprite:"hotdog"}), 3);
