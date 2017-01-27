@@ -379,27 +379,29 @@
 
                 // check if debug mode is enabled
                 if (me.debug.renderHitBox) {
+                    var x = this.ancestor._absPos.x + this.pos.x + this.body.pos.x,
+                        y = this.ancestor._absPos.y + this.pos.y + this.body.pos.y;
+
+                    var ax = this.anchorPoint.x * this.body.width,
+                        ay = this.anchorPoint.y * this.body.height;
+
                     renderer.save();
                     renderer.setLineWidth(1);
 
                     // draw the bounding rect shape
                     renderer.setColor("orange");
-                    bounds.copy(this.getBounds());
-                    bounds.pos.sub(this.ancestor._absPos);
-                    renderer.drawShape(bounds);
+                    renderer.translate(-x - ax, -y - ay);
+                    renderer.drawShape(this.getBounds());
+                    renderer.translate(x, y);
 
                     // draw all defined shapes
                     renderer.setColor("red");
-                    renderer.translate(this.pos.x, this.pos.y);
-                }
-                for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                    if (me.debug.renderHitBox) {
-                        renderer.drawShape(shape);
-                    }
-                    _this.counters.inc("shapes");
-                }
 
-                if (me.debug.renderHitBox) {
+                    for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                        renderer.drawShape(shape);
+                        _this.counters.inc("shapes");
+                    }
+
                     renderer.restore();
                 }
 
