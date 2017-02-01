@@ -37,6 +37,10 @@
 
             // cache the emitter for later use
             this._emitter = emitter;
+
+            this.autoTransform = false;
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**
