@@ -14,6 +14,7 @@ game.PlayScreen = me.ScreenObject.extend({
             init: function() {
                 this._super(me.Renderable, "init", [0, 0, 100, 200]);
                 this.font = new me.Font("arial", "24px", "white");
+                this.anchorPoint.set(0, 0);
             },
             update: function() {
                 return true;

@@ -19,6 +19,8 @@ game.PlayScreen = me.ScreenObject.extend({
                     this.refLayer.tileheight
                 ]);
 
+                this.anchorPoint.set(0, 0);
+
                 // configure it as floating
                 this.floating = true;
 

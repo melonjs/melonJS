@@ -55,6 +55,8 @@ var FontTest = me.Renderable.extend ({
     init: function() {
         this._super(me.Renderable, "init", [0, 0, me.video.renderer.getWidth(), me.video.renderer.getHeight()]);
 
+        this.anchorPoint.set(0, 0);
+
         // a default white color object
         this.color = me.pool.pull("me.Color", 255, 255, 255);
 
