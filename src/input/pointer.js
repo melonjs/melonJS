@@ -311,7 +311,7 @@
         var callback;
         if (handlers.callbacks[type]) {
             handlers.pointerId = pointerId;
-            for (var i = handlers.callbacks[type].length - 1; (callback = handlers.callbacks[type][i]); i--) {
+            for (var i = handlers.callbacks[type].length - 1; (i >= 0) && (callback = handlers.callbacks[type][i]); i--) {
                 if (callback(e) === false) {
                     // stop propagating the event if return false
                     return true;

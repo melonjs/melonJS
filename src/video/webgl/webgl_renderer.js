@@ -43,7 +43,7 @@
             /**
              * @ignore
              */
-            this.colorStack = [];
+            this._colorStack = [];
 
             /**
              * @ignore
@@ -471,10 +471,30 @@
          * @function
          */
         restore : function () {
-            var color = this.colorStack.pop();
-            me.pool.push(color);
-            this.currentColor.copy(color);
-            this.currentTransform.copy(this._matrixStack.pop());
+            // do nothing if there is no saved states
+            if (this._matrixStack.length !== 0) {
+                var color = this._colorStack.pop();
+                var matrix = this._matrixStack.pop();
+
+                // restore the previous context
+                this.currentColor.copy(color);
+                this.currentTransform.copy(matrix);
+
+                // recycle objects
+                me.pool.push(color);
+                me.pool.push(matrix);
+            }
+        },
+
+        /**
+         * saves the canvas context
+         * @name save
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        save : function () {
+            this._colorStack.push(this.currentColor.clone());
+            this._matrixStack.push(this.currentTransform.clone());
         },
 
         /**
@@ -486,17 +506,6 @@
          */
         rotate : function (angle) {
             this.currentTransform.rotate(angle);
-        },
-
-        /**
-         * save the canvas context
-         * @name save
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        save : function () {
-            this.colorStack.push(this.currentColor.clone());
-            this._matrixStack.push(this.currentTransform.clone());
         },
 
         /**

@@ -31,13 +31,8 @@
                 this.setTransform.apply(this, arguments);
             }
             else {
-                this.onResetEvent();
+                this.identity();
             }
-        },
-
-        /** @ignore */
-        onResetEvent : function() {
-            this.identity();
         },
 
         /**
@@ -369,7 +364,7 @@
          * @return {me.Matrix2d}
          */
         clone : function () {
-            return me.pool.pull("me.Matrix2d").copy(this);
+            return me.pool.pull("me.Matrix2d", this);
         },
 
         /**
