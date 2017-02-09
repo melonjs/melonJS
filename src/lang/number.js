@@ -107,8 +107,8 @@ Number.prototype.weightedRandom = function (min, max) {
  */
 Number.prototype.round = function (num, dec) {
     // if only one argument use the object value
-    num = (arguments.length < 2) ? this : num;
     var powres = Math.pow(10, dec || num || 0);
+    num = (arguments.length < 2) ? this : num;
     return (~~(0.5 + num * powres) / powres);
 };
 

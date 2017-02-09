@@ -11,11 +11,11 @@ describe("ES5/ES6 Shim", function () {
         it("contains 'question'", function () {
             expect(str.includes("question")).toEqual(true);
         });
-        
+
         it("does no contain 'nonexistent'", function () {
             expect(str.includes("nonexistent")).toEqual(false);
         });
-        
+
         it("does not contains 'To be' at index 1", function () {
             expect(str.includes("To be", 1)).toEqual(false);
         });
@@ -40,8 +40,8 @@ describe("ES5/ES6 Shim", function () {
         });
 
     });
-    
-     describe("math functions :", function () {
+
+    describe("math functions :", function () {
         it("123 is positive", function () {
             expect(Math.sign(123)).toEqual(1);
         });

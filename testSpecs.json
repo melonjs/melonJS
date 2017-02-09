@@ -1,5 +1,6 @@
 [
   "tests/spec/init.js",
+  "tests/spec/lang-spec.js",
   "tests/spec/audio-spec.js",
   "tests/spec/color-spec.js",
   "tests/spec/container-spec.js",
