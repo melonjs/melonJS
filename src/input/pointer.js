@@ -582,7 +582,7 @@
 
         // check if mapped to a key
         if (keycode) {
-            if (e.type === POINTER_DOWN[0] || e.type === POINTER_DOWN[1] || e.type === POINTER_DOWN[2] || e.type === POINTER_DOWN[3]) {
+            if (POINTER_DOWN.indexOf(e.type) !== -1) {
                 return api._keydown(e, keycode, button + 1);
             }
             else { // 'mouseup' or 'touchend'
