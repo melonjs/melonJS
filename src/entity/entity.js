@@ -37,7 +37,7 @@
             /**
              * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
              * @public
-             * @type me.Renderable
+             * @type me.Sprite
              * @name renderable
              * @memberOf me.Entity
              */
