@@ -51,6 +51,10 @@
             me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
                               (me.device.cocoon) || (me.device.pointerEvent && (me.device.maxTouchPoints > 0));
 
+            // detect wheel event support
+            // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
+            me.device.wheel = ("onwheel" in document.createElement("div"));
+
             // accelerometer detection
             me.device.hasAccelerometer = (
                 (typeof (window.DeviceMotionEvent) !== "undefined") || (
@@ -274,6 +278,15 @@
         api.touch = false;
 
         /**
+         * W3C standard wheel events
+         * @type Boolean
+         * @readonly
+         * @name wheel
+         * @memberOf me.device
+         */
+        api.wheel = false;
+
+        /**
          * equals to true if a mobile device <br>
          * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
          * @type Boolean
@@ -330,15 +343,14 @@
          */
          api.cocoon = false;
 
-         /**
-          * equals to true if the device is running on ChromeOS.
-          * @type Boolean
-          * @readonly
-          * @name chromeOS
-          * @memberOf me.device
-          */
-          api.chromeOS = false;
-
+        /**
+         * equals to true if the device is running on ChromeOS.
+         * @type Boolean
+         * @readonly
+         * @name chromeOS
+         * @memberOf me.device
+         */
+        api.chromeOS = false;
 
          /**
          * equals to true if the device is a Windows Phone platform.
