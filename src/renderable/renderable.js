@@ -37,11 +37,11 @@
              * @name currentTransform
              * @memberOf me.Renderable
              */
-             if (typeof this.currentTransform !== "undefined") {
-                 this.currentTransform.identity();
-             } else {
-                 this.currentTransform = me.pool.pull("me.Matrix2d");
-             }
+            if (typeof this.currentTransform !== "undefined") {
+                this.currentTransform.identity();
+            } else {
+                this.currentTransform = me.pool.pull("me.Matrix2d");
+            }
 
            /**
             * (G)ame (U)nique (Id)entifier" <br>

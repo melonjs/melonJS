@@ -207,7 +207,7 @@
         * @function
         * @param {me.Vector2d} vector the vector object to be transformed
         * @return {me.Vector2d} result vector object. Useful for chaining method calls.
-        **/
+        */
         multiplyVector : function (v) {
             var a = this.val,
                 x = v.x,
@@ -215,6 +215,27 @@
 
             v.x = x * a[0] + y * a[3] + a[6];
             v.y = x * a[1] + y * a[4] + a[7];
+
+            return v;
+        },
+
+        /**
+         * Transforms the given vector using the inverted current matrix.
+         * @name multiplyVector
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Vector2d} vector the vector object to be transformed
+         * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+         */
+        multiplyVectorInverse : function (v) {
+            var a = this.val,
+                x = v.x,
+                y = v.y;
+
+            var invD = 1 / ((a[0] * a[4]) + (a[3] * -a[1]));
+
+            v.x = (a[4] * invD * x) + (-a[3] * invD * y) + (((a[7] * a[3]) - (a[6] * a[4])) * invD);
+            v.y = (a[0] * invD * y) + (-a[1] * invD * x) + (((-a[7] * a[0]) + (a[6] * a[1])) * invD);
 
             return v;
         },

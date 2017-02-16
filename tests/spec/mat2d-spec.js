@@ -75,4 +75,16 @@ describe("me.Matrix2d", function () {
         expect(matA.toString() === result).toEqual(true);
     });
 
+    it("should multiply a vector properly", function () {
+        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var vecA = new me.Vector2d(3, 7);
+
+        matA.multiplyVector(vecA);
+        // multiply back with the inverted matrix
+        matA.multiplyVectorInverse(vecA);
+
+        // and we should have back the original vector values
+        expect(vecA.toString()).toEqual("x:3,y:7");
+    });
+
 });

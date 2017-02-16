@@ -132,7 +132,7 @@ with PhantomJS.
 WIP Builds
 -------------------------------------------------------------------------------
 melonJS uses Travis-CI for automated testing and build uploads. The latest build
-artifacts can be downloaded from the [melonjs-builds](http://melonjs-builds.s3.amazonaws.com/index.html?prefix=artifacts/)
+artifacts can be downloaded from the [melonjs-builds](https://melonjs-builds.s3.amazonaws.com/index.html?prefix=artifacts/)
 bucket.
 
 Questions, need help ?
