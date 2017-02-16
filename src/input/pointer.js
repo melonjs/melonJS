@@ -98,9 +98,6 @@
     // some useful flags
     var pointerInitialized = false;
 
-    // to keep track of the supported wheel event
-    var wheeltype = "mousewheel";
-
     // Track last event timestamp to prevent firing events out of order
     var lastTimeStamp = 0;
 
@@ -108,7 +105,7 @@
     var activeEventList = [];
 
     // internal constants
-    var MOUSE_WHEEL = ["mousewheel"];
+    var WHEEL = ["wheel"];
     var POINTER_MOVE = ["pointermove", "MSPointerMove", "mousemove", "touchmove"];
     var POINTER_DOWN = ["pointerdown", "MSPointerDown", "mousedown", "touchstart"];
     var POINTER_UP = ["pointerup", "MSPointerUp", "mouseup", "touchend"];
@@ -118,7 +115,7 @@
 
     // list of standard pointer event type
     var pointerEventList = [
-        MOUSE_WHEEL[0],
+        WHEEL[0],
         POINTER_MOVE[0],
         POINTER_DOWN[0],
         POINTER_UP[0],
@@ -129,7 +126,7 @@
 
     // previous MS prefixed pointer event type
     var MSPointerEventList = [
-        MOUSE_WHEEL[0],
+        WHEEL[0],
         POINTER_MOVE[1],
         POINTER_DOWN[1],
         POINTER_UP[1],
@@ -140,7 +137,7 @@
 
     // legacy mouse event type
     var mouseEventList = [
-        MOUSE_WHEEL[0],
+        WHEEL[0],
         POINTER_MOVE[2],
         POINTER_DOWN[2],
         POINTER_UP[2],
@@ -160,7 +157,8 @@
     ];
 
     var pointerEventMap = {
-        mousewheel : MOUSE_WHEEL,
+        wheel : WHEEL,
+        mousewheel : WHEEL, /* XXX: mousewheel is deprecated */
         pointermove: POINTER_MOVE,
         pointerdown: POINTER_DOWN,
         pointerup: POINTER_UP,
@@ -192,9 +190,8 @@
      * @ignore
      */
     function registerEventListener(eventList, callback) {
-        for (var x = 0; x < eventList.length; ++x) {
-            if (eventList[x] !== POINTER_MOVE[0] && eventList[x] !== POINTER_MOVE[1] &&
-                eventList[x] !== POINTER_MOVE[2] && eventList[x] !== POINTER_MOVE[3]) {
+        for (var x = 0; x < eventList.length; x++) {
+            if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
                 me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
             }
         }
@@ -233,10 +230,10 @@
 
             registerEventListener(activeEventList, onPointerEvent);
 
-            // detect wheel event support
-            // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-            wheeltype = "onwheel" in document.createElement("div") ? "wheel" : "mousewheel";
-            window.addEventListener(wheeltype, onMouseWheel, false);
+            // If W3C standard wheel events are not available, use non-standard
+            if (!me.device.wheel) {
+                window.addEventListener("mousewheel", onMouseWheel, false);
+            }
 
             // set the PointerMove/touchMove/MouseMove event
             if (typeof(api.throttlingInterval) === "undefined") {
@@ -368,7 +365,7 @@
             var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
             // add the viewport to the list of candidates
-            candidates.push( me.game.viewport );
+            candidates = candidates.concat([ me.game.viewport ]);
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
 
@@ -455,16 +452,15 @@
                             break;
 
                         default:
-                            // event inside of bounds: trigger the POINTER_DOWN or MOUSE_WHEEL callback
+                            // event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
                             if (eventInBounds) {
 
                                 // trigger the corresponding callback
-                                var type = e.type;
-                                if (type === "wheel") {
-                                    type = "mousewheel";
-                                }
-                                if (triggerEvent(handlers, type, e, e.pointerId)) {
+                                if (triggerEvent(handlers, e.type, e, e.pointerId)) {
                                     handled = true;
+                                    if (e.type === "wheel") {
+                                        api._preventDefault(e);
+                                    }
                                     break;
                                 }
                             }
@@ -524,6 +520,7 @@
 
     /**
      * mouse event management (mousewheel)
+     * XXX: mousewheel is deprecated
      * @ignore
      */
     function onMouseWheel(e) {
@@ -531,17 +528,13 @@
         if (e.target === me.video.renderer.getScreenCanvas()) {
             // create a (fake) normalized event object
             updateCoordFromEvent(e);
+            e.type = "wheel";
             e.deltaMode = 1;
-            if (wheeltype === "mousewheel") {
-                e.deltaY = - 1 / 40 * e.wheelDelta;
-                // Webkit also support wheelDeltaX
-                e.wheelDeltaX && (e.deltaX = - 1 / 40 * e.wheelDeltaX);
-            }
+            e.deltaY = - 1 / 40 * e.wheelDelta;
+            // Webkit also support wheelDeltaX
+            e.wheelDeltaX && (e.deltaX = - 1 / 40 * e.wheelDeltaX);
             // dispatch mouse event to registered object
-            if (dispatchEvent(e)) {
-                // prevent default action
-                return api._preventDefault(e);
-            }
+            return dispatchEvent(e);
         }
         return true;
     }
@@ -731,7 +724,8 @@
      *   <li><code>"pointerenter"</code></li>
      *   <li><code>"pointerleave"</code></li>
      *   <li><code>"pointercancel"</code></li>
-     *   <li><code>"mousewheel"</code></li>
+     *   <li><code>"wheel"</code></li>
+     *   <li><code>"mousewheel"</code> (Deprecated)</li>
      * </ul>
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
@@ -755,7 +749,10 @@
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
-        if (pointerEventList.indexOf(eventType) === -1) {
+        // XXX: mousewheel is deprecated
+        if (eventType === "mousewheel") {
+            console.error("`mousewheel` events are deprecated; use `wheel`")
+        } else if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
 
@@ -797,7 +794,10 @@
      * me.input.releasePointerEvent('pointerdown', this);
      */
     api.releasePointerEvent = function (eventType, region, callback) {
-        if (pointerEventList.indexOf(eventType) === -1) {
+        // XXX: mousewheel is deprecated
+        if (eventType === "mousewheel") {
+            console.error("`mousewheel` events are deprecated; use `wheel`")
+        } else if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
 
