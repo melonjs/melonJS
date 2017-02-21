@@ -325,7 +325,7 @@
 
         /**
          * update the renderable's bounding rect (private)
-         * @private
+         * @ignore
          * @name updateBoundsPos
          * @memberOf me.Renderable
          * @function
