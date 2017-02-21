@@ -366,8 +366,9 @@
                 this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
 
                 // cancel the falling an jumping flags if necessary
-                this.falling = overlap.y >= 1;
-                this.jumping = overlap.y <= -1;
+                var dir = Math.sign(this.gravity) || 1;
+                this.falling = overlap.y >= dir;
+                this.jumping = overlap.y <= -dir;
             }
         },
 
@@ -478,7 +479,7 @@
                 vel.y += this.gravity * me.timer.tick;
 
                 // check if falling / jumping
-                this.falling = (vel.y > 0);
+                this.falling = (vel.y * Math.sign(this.gravity)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
             }
 
