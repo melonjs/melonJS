@@ -1,6 +1,14 @@
 Version History
 ---------------
 4.1.1
+* Core : fixed a bug in `Number.prototype.round()`
+* Core : throw an exception when attempting to add an invalid state in `me.state.set()`
+* Core : fixed `falling` and `jumping` flags on `me.Body` when gravity is reversed
+* Geometry : fixed a bug in `me.Vector3d.abs()`
+* Geometry : added a new `me.Matrix2d.multiplyVectorInverse()` method
+* Pointer : fixed `touchstart` events
+* Pointer : replaced non-standard `mousewheel` with W3C standard `wheel` events
+* Pointer : fixed duplicate `wheel` events
 
 4.1.0
 * Audio : updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
