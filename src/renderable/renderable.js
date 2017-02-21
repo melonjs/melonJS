@@ -107,11 +107,10 @@
             this.floating = false;
 
             /**
-             * Define the object anchoring point<br>
-             * This is used when positioning, or scaling the object<br>
-             * The anchor point is a value between 0.0 and 1.0 (1.0 being the maximum size of the object) <br>
-             * (0, 0) means the top-left corner, <br>
-             * (1, 1) means the bottom-right corner, <br>
+             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+             * <img src="images/anchor_point.png"/> :<br>
+             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
              * @public
              * @type me.Vector2d
              * @default <0.5,0.5>
