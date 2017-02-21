@@ -564,6 +564,9 @@
          * me.state.set(me.state.MENU, new MenuScreen());
          */
         api.set = function (state, so) {
+            if (!(so instanceof me.ScreenObject)) {
+                throw new me.Error(so + " is not an instance of me.ScreenObject");
+            }
             _screenObject[state] = {};
             _screenObject[state].screen = so;
             _screenObject[state].transition = true;
