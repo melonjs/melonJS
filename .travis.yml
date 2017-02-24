@@ -1,0 +1,24 @@
+sudo: false
+
+language: node_js
+
+node_js:
+  - 6
+  - 7
+
+before_install:
+  - "npm install -g grunt-cli"
+
+before_script:
+  - "curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.7.8/install | bash"
+
+after_success:
+  - "./scripts/travis-upload.sh"
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/9f467aab5ea40801389a
+    on_success: change  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
+    on_start: never     # options: [always|never|change] default: always

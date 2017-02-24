@@ -1,499 +1,721 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
+(function () {
+    /**
+     * a small class to manage loading of stuff and manage resources
+     * There is no constructor function for me.input.
+     * @namespace me.loader
+     * @memberOf me
+     */
+    me.loader = (function () {
+        // hold public stuff in our singleton
+        var api = {};
 
-(function($, undefined) {
+        // contains all the images loaded
+        var imgList = {};
+        // contains all the TMX loaded
+        var tmxList = {};
+        // contains all the binary files loaded
+        var binList = {};
+        // contains all the JSON files
+        var jsonList = {};
+        // baseURL
+        var baseURL = {};
 
-	/**
-	 * a default loading screen
-	 * @memberOf me
-	 * @private
-	 * @constructor
-	 */
-	me.DefaultLoadingScreen = me.ScreenObject.extend({
-		/*---
-		
-			constructor
-			
-			---*/
-		init : function() {
-			this.parent(true);
-			// melonJS logo
-			this.logo1 = new me.Font('century gothic', 32, 'white');
-			this.logo2 = new me.Font('century gothic', 32, '#89b002');
-			this.logo2.bold();
+        // flag to check loading status
+        var resourceCount = 0;
+        var loadCount = 0;
+        var timerId = 0;
 
-			// flag to know if we need to refresh the display
-			this.invalidate = false;
+        /**
+         * check the loading status
+         * @ignore
+         */
+        function checkLoadStatus(onload) {
+            if (loadCount === resourceCount) {
+                // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
+                if (onload || api.onload) {
+                    // make sure we clear the timer
+                    clearTimeout(timerId);
+                    // trigger the onload callback
+                    // we call either the supplied callback (which takes precedence) or the global one
+                    var callback = onload || api.onload;
+                    setTimeout(function () {
+                        callback();
+                        me.event.publish(me.event.LOADER_COMPLETE);
+                    }, 300);
+                }
+                else {
+                    console.error("no load callback defined");
+                }
+            }
+            else {
+                timerId = setTimeout(function() {
+                    checkLoadStatus(onload);
+                }, 100);
+            }
+        }
 
-			// load progress in percent
-			this.loadPercent = 0;
+        /**
+         * load Images
+         * @example
+         * preloadImages([
+         *     { name : 'image1', src : 'images/image1.png'},
+         *     { name : 'image2', src : 'images/image2.png'},
+         *     { name : 'image3', src : 'images/image3.png'},
+         *     { name : 'image4', src : 'images/image4.png'}
+         * ]);
+         * @ignore
+         */
+        function preloadImage(img, onload, onerror) {
+            // create new Image object and add to list
+            imgList[img.name] = new Image();
+            imgList[img.name].onload = onload;
+            imgList[img.name].onerror = onerror;
+            if (typeof (api.crossOrigin) === "string") {
+                imgList[img.name].crossOrigin = api.crossOrigin;
+            }
+            imgList[img.name].src = img.src + api.nocache;
+        }
 
-			// setup a callback
-			me.loader.onProgress = this.onProgressUpdate.bind(this);
+        /**
+         * preload TMX files
+         * @ignore
+         */
+        function preloadTMX(tmxData, onload, onerror) {
+            function addToTMXList(data) {
+                // set the TMX content
+                tmxList[tmxData.name] = data;
 
-		},
-
-		// destroy object at end of loading
-		onDestroyEvent : function() {
-			// "nullify" all fonts
-			this.logo1 = this.logo2 = null;
-		},
-
-		// make sure the screen is refreshed every frame 
-		onProgressUpdate : function(progress) {
-			this.loadPercent = progress;
-			this.invalidate = true;
-		},
-
-		// make sure the screen is refreshed every frame 
-		update : function() {
-			if (this.invalidate === true) {
-				// clear the flag
-				this.invalidate = false;
-				// and return true
-				return true;
-			}
-			// else return false
-			return false;
-		},
-
-		/*---
-		
-			draw function
-		  ---*/
-
-		draw : function(context) {
-			
-			// measure the logo size
-			var y = context.canvas.height / 2;
-			var logo1_width = this.logo1.measureText(context, "melon").width;
-			var logo_width = logo1_width + this.logo2.measureText(context, "JS").width;
-			
-			// clear surface
-			me.video.clearSurface(context, "black");
-			
-			// draw the melonJS logo
-			this.logo1.draw(context, 'melon',
-					((context.canvas.width - logo_width) / 2),
-					(context.canvas.height + 60) / 2);
-			this.logo2.draw(context, 'JS',
-					((context.canvas.width - logo_width) / 2) + logo1_width,
-					(context.canvas.height + 60) / 2);
-			// add the height of the logo
-			y += 40;
-
-			// display a progressive loading bar
-			var width = Math.floor(this.loadPercent * context.canvas.width);
-
-			// draw the progress bar
-			context.strokeStyle = "silver";
-			context.strokeRect(0, y, context.canvas.width, 6);
-			context.fillStyle = "#89b002";
-			context.fillRect(2, y + 2, width - 4, 2);
-		}
-
-	});
-
-	/************************************************************************************/
-	/*			PRELOADER SINGLETON																			*/
-	/************************************************************************************/
-
-	/**
-	 * a small class to manage loading of stuff and manage resources
-	 * There is no constructor function for me.input.
-	 * @final
-	 * @memberOf me
-	 * @constructor Should not be called by the user.
-	 */
-
-	me.loader = (function() {
-		// hold public stuff in our singletong
-		var obj = {};
-
-		// contains all the images loaded
-		var imgList = [];
-		// contains all the xml loaded
-		var xmlList = {};
-		// contains all the xml loaded
-		var binList = {};
-		// flag to check loading status
-		var resourceCount = 0;
-		var loadCount = 0;
-		var timerId = 0;
-		// keep track of how much TMX file we are loading
-		var tmxCount = 0;
+                // add the tmx to the levelDirector
+                if (tmxData.type === "tmx") {
+                    me.levelDirector.addTMXLevel(tmxData.name);
+                }
+            }
 
 
-		/**
-		 * check the loading status
-		 * @private
-		 */
-		function checkLoadStatus() {
-			// remove tmxCount from the total resource to be loaded
-			// as we will after load each TMX into the level director
-			if (loadCount == (resourceCount - tmxCount)) {
+            //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
+            if (tmxData.data) {
+                addToTMXList(tmxData.data);
+                onload();
+                return;
+            }
 
-				// add all TMX level into the level Director
-				for ( var xmlObj in xmlList) {
-					if (xmlList[xmlObj].isTMX) {
-						// load the level into the levelDirector
-						me.levelDirector.addTMXLevel(xmlObj);
-						//progress notification
-						obj.onResourceLoaded();
-					}
-				}
+            var xmlhttp = new XMLHttpRequest();
+            // check the data format ('tmx', 'json')
+            var format = me.utils.getFileExtension(tmxData.src);
 
-				// wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-				if (obj.onload) {
-					timerId = setTimeout(obj.onload, 300);
-				} else
-					alert("no load callback defined");
-			} else {
-				timerId = setTimeout(checkLoadStatus, 100);
-			}
-		};
+            if (xmlhttp.overrideMimeType) {
+                if (format === "json") {
+                    xmlhttp.overrideMimeType("application/json");
+                }
+                else {
+                    xmlhttp.overrideMimeType("text/xml");
+                }
+            }
 
-		/**
-		 * load Images
-		 *	
-		 *	call example : 
-		 *	
-		 *	preloadImages(
-		 *				 [{name: 'image1', src: 'images/image1.png'},
-		 * 				  {name: 'image2', src: 'images/image2.png'},
-		 *				  {name: 'image3', src: 'images/image3.png'},
-		 *				  {name: 'image4', src: 'images/image4.png'}]);
-		 * @private
-		 */
-		
-		function preloadImage(img, onload, onerror) {
-			// create new Image object and add to array
-			imgList.push(img.name);
-
-			imgList[img.name] = new Image();
-			imgList[img.name].onload = onload;
-			imgList[img.name].onerror = onerror;
-			imgList[img.name].src = img.src + me.nocache;
-		};
-
-		/**
-		 * preload XML files
-		 * @private
-		 */
-		function preloadXML(xmlData, isTMX, onload, onerror) {
-			var onloadCB = onload;
-			if ($.XMLHttpRequest) {
-				// code for IE7+, Firefox, Chrome, Opera, Safari
-				var xmlhttp = new XMLHttpRequest();
-				// to ensure our document is treated as a XML file
-				if (xmlhttp.overrideMimeType)
-					xmlhttp.overrideMimeType('text/xml');
-			} else {
-				// code for IE6, IE5
-				var xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-				// I actually don't give a **** about IE5/IE6...
-			}
-			// load our XML
-			xmlhttp.open("GET", xmlData.src + me.nocache, false);
-			xmlhttp.onerror = onerror;
-			xmlhttp.onload = function(event) {
-				// set the xmldoc in the array
-				xmlList[xmlData.name] = {};
-				xmlList[xmlData.name].xml = xmlhttp.responseText;
-				xmlList[xmlData.name].isTMX = isTMX;
-				// callback
-				onloadCB();
-			};
-			// increase the resourceCount by 1
-			// allowing to add the loading of level in the 
-			// levelDirector as part of the loading progress
-			if (isTMX) {
-				// some context issue ? (why this?)
-				this.resourceCount += 1;
-				this.tmxCount += 1;
-			}
-			// send the request
-			xmlhttp.send();
-
-		};
-			
-		/**
-		 * preload Binary files
-		 * @private
-		 */
-		function preloadBinary(data, onload, onerror) {
-			var onloadCB = onload;
-			var httpReq = new XMLHttpRequest();
-
-			// load our file
-			httpReq.open("GET", data.src + me.nocache, false);
-			httpReq.responseType = "arraybuffer";
-			xmlhttp.onerror = onerror;
-			httpReq.onload = function(event){
-				var arrayBuffer = httpReq.response;
-				if (arrayBuffer) {
-					var byteArray = new Uint8Array(arrayBuffer);
-					var buffer = [];
-					binList[data.name] = new dataType();
-					for (var i = 0; i < byteArray.byteLength; i++) { 
-						buffer[i] = String.fromCharCode(byteArray[i]);
-					}
-					binList[data.name].data = buffer.join("");
-					// callback
-					onloadCB();
-				}
-			};
-			httpReq.send();
-		};
+            xmlhttp.open("GET", tmxData.src + api.nocache, true);
 
 
-		/* ---
-			
-			PUBLIC STUFF
-				
-			---										*/
+            // set the callbacks
+            xmlhttp.ontimeout = onerror;
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState === 4) {
+                    // status = 0 when file protocol is used, or cross-domain origin,
+                    // (With Chrome use "--allow-file-access-from-files --disable-web-security")
+                    if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
+                        var result = null;
 
-		/* ---
-		
-			onload callback : to be initialized
-			
-			---*/
-		/**
-		 * onload callback
-		 * @public
-		 * @type Function
-		 * @name me.loader#onload
-		 * @example
-		 *
-		 * // set a callback when everything is loaded
-		 * me.loader.onload = this.loaded.bind(this);
-		 */
-		obj.onload = undefined;
+                        // parse response
+                        switch (format) {
+                            case "xml":
+                            case "tmx":
+                            case "tsx":
+                                // ie9 does not fully implement the responseXML
+                                if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                                    if (window.DOMParser) {
+                                        // manually create the XML DOM
+                                        result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
+                                    } else {
+                                        throw new api.Error("XML file format loading not supported, use the JSON file format instead");
+                                    }
+                                }
+                                else {
+                                    result = xmlhttp.responseXML;
+                                }
+                                // converts to a JS object
+                                var data = me.TMXUtils.parse(result);
+                                switch (format) {
+                                    case "tmx":
+                                        result = data.map;
+                                        break;
 
-		/**
-		 * onProgress callback<br>
-		 * each time a resource is loaded, the loader will fire the specified function,
-		 * giving the actual progress [0 ... 1], as argument.
-		 * @public
-		 * @type Function
-		 * @name me.loader#onProgress
-		 * @example
-		 *
-		 * // set a callback for progress notification
-		 * me.loader.onProgress = this.updateProgress.bind(this);
-		 */
-		obj.onProgress = undefined;
+                                    case "tsx":
+                                        result = data.tilesets[0];
+                                        break;
+                                }
 
-		/**
-		 *	just increment the number of already loaded resources
-		 * @private
-		 */
+                                break;
 
-		obj.onResourceLoaded = function(e) {
+                            case "json":
+                                result = JSON.parse(xmlhttp.responseText);
+                                break;
 
-			// increment the loading counter
-			loadCount++;
+                            default:
+                                throw new api.Error("TMX file format " + format + "not supported !");
+                        }
 
-			// callback ?
-			if (obj.onProgress) {
-				// pass the load progress in percent, as parameter
-				obj.onProgress(obj.getLoadProgress());
-			}
-		};
-		
-		/**
-		 * on error callback for image loading 	
-		 * @private
-		 */
-		obj.onLoadingError = function(res) {
-			throw "melonJS: Failed loading resource " + res.src;
-		};
+                        //set the TMX content
+                        addToTMXList(result);
 
+                        // fire the callback
+                        onload();
+                    }
+                    else {
+                        onerror();
+                    }
+                }
+            };
+            // send the request
+            xmlhttp.send(null);
+        }
 
-		/**
-		 * set all the specified game resources to be preloaded.<br>
-		 * each resource item must contain the following fields :<br>
-		 * - name    : internal name of the resource<br>
-		 * - type    : "image", "tmx", "audio"<br>
-		 * - src     : path and file name of the resource<br>
-		 * (!) for audio :<br>
-		 * - src     : path (only) where resources are located<br>
-		 * - channel : number of channels to be created<br>
-		 * <br>
-		 * @name me.loader#preload
-		 * @public
-		 * @function
-		 * @param {Array.<string>} resources
-		 * @example
-		 * var g_resources = [ {name: "tileset-platformer",  type:"image",   src: "data/map/tileset-platformer.png"},
-		 *                     {name: "map1",                type: "tmx",    src: "data/map/map1_slopes.tmx"},
-		 *                     {name: "cling",               type: "audio",  src: "data/audio/",	channel : 2},
-		 *                     {name: "ymTrack",             type: "binary", src: "data/audio/main.ym"}
-		 *					
-		 *                    ]; 
-		 * ...
-		 *
-		 * // set all resources to be loaded
-		 * me.loader.preload(g_resources);
-		 */
-		obj.preload = function(res) {
-			// parse the resources
-			for ( var i = 0; i < res.length; i++) {
-				resourceCount += obj.load(res[i], obj.onResourceLoaded.bind(obj), obj.onLoadingError.bind(obj, res[i]));
-			};
-			// check load status
-			checkLoadStatus();
-		};
+        /**
+         * preload TMX files
+         * @ignore
+         */
+        function preloadJSON(data, onload, onerror) {
+            var xmlhttp = new XMLHttpRequest();
 
-		/**
-		 * Load a single resource (to be used if you need to load additional resource during the game)<br>
-		 * Given parmeter must contain the following fields :<br>
-		 * - name    : internal name of the resource<br>
-		 * - type    : "binary", "image", "tmx", "audio"
-		 * - src     : path and file name of the resource<br>
-		 * @name me.loader#load
-		 * @public
-		 * @function
-		 * @param {Object} resource
-		 * @param {Function} onload function to be called when the resource is loaded
-		 * @param {Function} onerror function to be called in case of error
-		 * @example
-		 * // load a image asset
-		 * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-		 */
+            if (xmlhttp.overrideMimeType) {
+                xmlhttp.overrideMimeType("application/json");
+            }
 
-		obj.load = function(res, onload, onerror) {
-			// fore lowercase for the resource name
-			res.name = res.name.toLowerCase();
-			// check ressource type
-			switch (res.type) {
-				case "binary":
-					// reuse the preloadImage fn
-					preloadBinary(res, onload, onerror);
-					return 1;
+            xmlhttp.open("GET", data.src + api.nocache, true);
 
-				case "image":
-					// reuse the preloadImage fn
-					preloadImage(res, onload, onerror);
-					return 1;
+            // set the callbacks
+            xmlhttp.ontimeout = onerror;
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState === 4) {
+                    // status = 0 when file protocol is used, or cross-domain origin,
+                    // (With Chrome use "--allow-file-access-from-files --disable-web-security")
+                    if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
+                        // get the Texture Packer Atlas content
+                        jsonList[data.name] = JSON.parse(xmlhttp.responseText);
+                        // fire the callback
+                        onload();
+                    }
+                    else {
+                        onerror();
+                    }
+                }
+            };
+            // send the request
+            xmlhttp.send(null);
+        }
 
-				case "tmx":
-					preloadXML(res, true, onload, onerror);
-					return 1;
-				
-				case "audio":
-					me.audio.setLoadCallback(onload);
-					// only load is sound is enable
-					if (me.audio.isAudioEnable()) {
-						me.audio.load(res);
-						return 1;
-					}
-					break;
+        /**
+         * preload Binary files
+         * @ignore
+         */
+        function preloadBinary(data, onload, onerror) {
+            var httpReq = new XMLHttpRequest();
 
-				default:
-					throw "melonJS: me.loader.load : unknow or invalide resource type : %s"	+ res.type;
-					break;
-			};
-			return 0;
-		};
+            // load our file
+            httpReq.open("GET", data.src + api.nocache, true);
+            httpReq.responseType = "arraybuffer";
+            httpReq.onerror = onerror;
+            httpReq.onload = function () {
+                var arrayBuffer = httpReq.response;
+                if (arrayBuffer) {
+                    var byteArray = new Uint8Array(arrayBuffer);
+                    var buffer = [];
+                    for (var i = 0; i < byteArray.byteLength; i++) {
+                        buffer[i] = String.fromCharCode(byteArray[i]);
+                    }
+                    binList[data.name] = buffer.join("");
+                    // callback
+                    onload();
+                }
+            };
+            httpReq.send();
+        }
 
+        /**
+         * to enable/disable caching
+         * @ignore
+         */
+        api.nocache = "";
 
-		/**
-		 * return the specified XML object
-		 * @name me.loader#getXML
-		 * @public
-		 * @function
-		 * @param {String} xmlfile name of the xml element ("map1");
-		 * @return {Xml} 
-		 */
-		obj.getXML = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (xmlList != null)
-				return xmlList[elt].xml;
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
+        /*
+         * PUBLIC STUFF
+         */
 
-		};
-		
-		/**
-		 * return the specified Binary object
-		 * @name me.loader#getBinary
-		 * @public
-		 * @function
-		 * @param {String} name of the binary object ("ymTrack");
-		 * @return {Object} 
-		 */
-		obj.getBinary = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (binList != null)
-				return binList[elt];
-			else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
+        /**
+         * onload callback
+         * @public
+         * @function
+         * @name onload
+         * @memberOf me.loader
+         * @example
+         * // set a callback when everything is loaded
+         * me.loader.onload = this.loaded.bind(this);
+         */
+        api.onload = undefined;
 
-		};
+        /**
+         * onProgress callback<br>
+         * each time a resource is loaded, the loader will fire the specified function,
+         * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
+         * @public
+         * @function
+         * @name onProgress
+         * @memberOf me.loader
+         * @example
+         * // set a callback for progress notification
+         * me.loader.onProgress = this.updateProgress.bind(this);
+         */
+        api.onProgress = undefined;
 
 
-		/**
-		 * return the specified Image Object
-		 * @name me.loader#getImage
-		 * @public
-		 * @function
-		 * @param {String} Image name of the Image element ("tileset-platformer");
-		 * @return {Image} 
-		 */
+        /**
+         * crossOrigin attribute to configure the CORS requests for Image data element.<br>
+         * By default (that is, when the attribute is not specified), CORS is not used at all. <br>
+         * The "anonymous" keyword means that there will be no exchange of user credentials via cookies, <br>
+         * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
+         * @public
+         * @type String
+         * @name crossOrigin
+         * @memberOf me.loader
+         * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
+         * @example
+         *  // allow for cross-origin texture loading in WebGL
+         * me.loader.crossOrigin = "anonymous";
+         *
+         * // set all ressources to be loaded
+         * me.loader.preload(game.resources, this.loaded.bind(this));
+         */
+        api.crossOrigin = undefined;
 
-		obj.getImage = function(elt) {
-			// avoid case issue
-			elt = elt.toLowerCase();
-			if (imgList[elt] != null) {
-				if (me.sys.cacheImage === true) {
-					// build a new canvas
-					var tempCanvas = me.video.createCanvasSurface(
-							imgList[elt].width, imgList[elt].height);
-					// draw the image into the canvas context
-					tempCanvas.drawImage(imgList[elt], 0, 0);
-					// return our canvas
-					return tempCanvas.canvas;
-				} else {
-					// return the corresponding Image object
-					return imgList[elt];
-				}
-			} else {
-				//console.log ("warning %s resource not yet loaded!",name);
-				return null;
-			}
+        /**
+         * Base class for Loader exception handling.
+         * @name Error
+         * @class
+         * @memberOf me.loader
+         * @constructor
+         * @param {String} msg Error message.
+         */
+        api.Error = me.Error.extend({
+            /**
+             * @ignore
+             */
+            init : function (msg) {
+                this._super(me.Error, "init", [ msg ]);
+                this.name = "me.loader.Error";
+            }
+        });
 
-		};
+        /**
+         * just increment the number of already loaded resources
+         * @ignore
+         */
+        api.onResourceLoaded = function (res) {
+            // increment the loading counter
+            loadCount++;
 
-		/**
-		 * Return the loading progress in percent
-		 * @name me.loader#getLoadProgress
-		 * @public
-		 * @function
-		 * @deprecated use callback instead
-		 * @return {Number} 
-		 */
+            // callback ?
+            var progress = api.getLoadProgress();
+            if (api.onProgress) {
+                // pass the load progress in percent, as parameter
+                api.onProgress(progress, res);
+            }
+            me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
+        };
 
-		obj.getLoadProgress = function() {
-			return loadCount / resourceCount;
-		};
+        /**
+         * on error callback for image loading
+         * @ignore
+         */
+        api.onLoadingError = function (res) {
+            throw new api.Error("Failed loading resource " + res.src);
+        };
 
-		// return our object
-		return obj;
+        /**
+         * enable the nocache mechanism
+         * @ignore
+         */
+        api.setNocache = function (enable) {
+            api.nocache = enable ? "?" + ~~(Math.random() * 10000000) : "";
+        };
 
-	})();
+        /**
+         * change the default baseURL for the given asset type.<br>
+         * (this will prepend the asset URL and must finish with a '/')
+         * @name setBaseURL
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} type  "*", "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} [url="./"] default base URL
+         * @example
+         * // change the base URL relative address
+         * me.loader.setBaseURL("audio", "data/audio/");
+         * // change the base URL absolute address for all object types
+         * me.loader.setBaseURL("*", "http://myurl.com/")
+         */
+        api.setBaseURL = function (type, url) {
+            if (type !== "*") {
+                baseURL[type] = url;
+            } else {
+                // "wildcards"
+                baseURL["audio"] = url;
+                baseURL["binary"] = url;
+                baseURL["image"] = url;
+                baseURL["json"] = url;
+                baseURL["tmx"] = url;
+                baseURL["tsx"] = url;
+            }
+        };
 
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);
+
+        /**
+         * set all the specified game resources to be preloaded.
+         * @name preload
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {Object[]} resources
+         * @param {String} resources.name internal name of the resource
+         * @param {String} resources.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resources.stream] set to true if you don't have to wait for the audio file to be fully downloaded
+         * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
+         * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
+         * @example
+         * game_resources = [
+         *   // PNG tileset
+         *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
+         *   // PNG packed texture
+         *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+         *   // TSX file
+         *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
+         *   // TMX level (XML & JSON)
+         *   {name: "map1", type: "tmx", src: "data/map/map1.json"},
+         *   {name: "map2", type: "tmx", src: "data/map/map2.tmx"},
+         *   {name: "map3", type: "tmx", format: "json", data: {"height":15,"layers":[...],"tilewidth":32,"version":1,"width":20}},
+         *   {name: "map4", type: "tmx", format: "xml", data: {xml representation of tmx}},
+         *   // audio resources
+         *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
+         *   {name: "cling",   type: "audio",  src: "data/audio/"},
+         *   // binary file
+         *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
+         *   // JSON file (used for texturePacker)
+         *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+         * ];
+         * ...
+         * // set all resources to be loaded
+         * me.loader.preload(game.resources, this.loaded.bind(this));
+         */
+        api.preload = function (res, onload, switchToLoadState) {
+            // parse the resources
+            for (var i = 0; i < res.length; i++) {
+                resourceCount += api.load(
+                    res[i],
+                    api.onResourceLoaded.bind(api, res[i]),
+                    api.onLoadingError.bind(api, res[i])
+                );
+            }
+            // set the onload callback if defined
+            if (typeof(onload) !== "undefined") {
+                api.onload = onload;
+            }
+
+            if (switchToLoadState !== false) {
+                // swith to the loading screen
+                me.state.change(me.state.LOADING);
+            }
+
+            // check load status
+            checkLoadStatus(onload);
+        };
+
+        /**
+         * Load a single resource (to be used if you need to load additional resource during the game)
+         * @name load
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {Object} resource
+         * @param {String} resource.name internal name of the resource
+         * @param {String} resource.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resource.src  path and/or file name of the resource (for audio assets only the path is required)
+         * @param {Boolean} [resource.stream] set to true if you don't have to wait for the audio file to be fully downloaded
+         * @param {Function} onload function to be called when the resource is loaded
+         * @param {Function} onerror function to be called in case of error
+         * @example
+         * // load an image asset
+         * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
+         *
+         * // start loading music
+         * me.loader.load({
+         *     name   : "bgmusic",
+         *     type   : "audio",
+         *     src    : "data/audio/"
+         * }, function () {
+         *     me.audio.play("bgmusic");
+         * });
+         */
+        api.load = function (res, onload, onerror) {
+            // transform the url if necessary
+            if (typeof (baseURL[res.type]) !== "undefined") {
+                res.src = baseURL[res.type] + res.src;
+            }
+            // check ressource type
+            switch (res.type) {
+                case "binary":
+                    // reuse the preloadImage fn
+                    preloadBinary.call(this, res, onload, onerror);
+                    return 1;
+
+                case "image":
+                    // reuse the preloadImage fn
+                    preloadImage.call(this, res, onload, onerror);
+                    return 1;
+
+                case "json":
+                    preloadJSON.call(this, res, onload, onerror);
+                    return 1;
+
+                case "tmx":
+                case "tsx":
+                    preloadTMX.call(this, res, onload, onerror);
+                    return 1;
+
+                case "audio":
+                    me.audio.load(res, !!res.stream, onload, onerror);
+                    return 1;
+
+                default:
+                    throw new api.Error("load : unknown or invalid resource type : " + res.type);
+            }
+        };
+
+        /**
+         * unload specified resource to free memory
+         * @name unload
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {Object} resource
+         * @return {Boolean} true if unloaded
+         * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+         */
+        api.unload = function (res) {
+            switch (res.type) {
+                case "binary":
+                    if (!(res.name in binList)) {
+                        return false;
+                    }
+
+                    delete binList[res.name];
+                    return true;
+
+                case "image":
+                    if (!(res.name in imgList)) {
+                        return false;
+                    }
+                    if (typeof(imgList[res.name].dispose) === "function") {
+                        // cocoonJS implements a dispose function to free
+                        // corresponding allocated texture in memory
+                        imgList[res.name].dispose();
+                    }
+                    delete imgList[res.name];
+                    return true;
+
+                case "json":
+                    if (!(res.name in jsonList)) {
+                        return false;
+                    }
+
+                    delete jsonList[res.name];
+                    return true;
+
+                case "tmx":
+                case "tsx":
+                    if (!(res.name in tmxList)) {
+                        return false;
+                    }
+
+                    delete tmxList[res.name];
+                    return true;
+
+                case "audio":
+                    return me.audio.unload(res.name);
+
+                default:
+                    throw new api.Error("unload : unknown or invalid resource type : " + res.type);
+            }
+        };
+
+        /**
+         * unload all resources to free memory
+         * @name unloadAll
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @example me.loader.unloadAll();
+         */
+        api.unloadAll = function () {
+            var name;
+
+            // unload all binary resources
+            for (name in binList) {
+                if (binList.hasOwnProperty(name)) {
+                    api.unload({
+                        "name" : name,
+                        "type" : "binary"
+                    });
+                }
+            }
+
+            // unload all image resources
+            for (name in imgList) {
+                if (imgList.hasOwnProperty(name)) {
+                    api.unload({
+                        "name" : name,
+                        "type" : "image"
+                    });
+                }
+            }
+
+            // unload all tmx resources
+            for (name in tmxList) {
+                if (tmxList.hasOwnProperty(name)) {
+                    api.unload({
+                        "name" : name,
+                        "type" : "tmx"
+                    });
+                }
+            }
+
+            // unload all in json resources
+            for (name in jsonList) {
+                if (jsonList.hasOwnProperty(name)) {
+                    api.unload({
+                        "name" : name,
+                        "type" : "json"
+                    });
+                }
+            }
+
+            // unload all audio resources
+            me.audio.unloadAll();
+        };
+
+        /**
+         * return the specified TMX/TSX object
+         * @name getTMX
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} tmx name of the tmx/tsx element ("map1");
+         * @return {XML|Object}
+         */
+        api.getTMX = function (elt) {
+            // force as string
+            elt = "" + elt;
+            if (elt in tmxList) {
+                return tmxList[elt];
+            }
+            else {
+                //console.log ("warning %s resource not yet loaded!",name);
+                return null;
+            }
+        };
+
+        /**
+         * return the specified Binary object
+         * @name getBinary
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} name of the binary object ("ymTrack");
+         * @return {Object}
+         */
+        api.getBinary = function (elt) {
+            // force as string
+            elt = "" + elt;
+            if (elt in binList) {
+                return binList[elt];
+            }
+            else {
+                //console.log ("warning %s resource not yet loaded!",name);
+                return null;
+            }
+
+        };
+
+        /**
+         * return the specified Image Object
+         * @name getImage
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} Image name of the Image element ("tileset-platformer");
+         * @return {Image}
+         */
+        api.getImage = function (elt) {
+            // force as string
+            elt = "" + elt;
+            if (elt in imgList) {
+                // return the corresponding Image object
+                return imgList[elt];
+            }
+            else {
+                //console.log ("warning %s resource not yet loaded!",name);
+                return null;
+            }
+
+        };
+
+        /**
+         * return the specified JSON Object
+         * @name getJSON
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @param {String} Name for the json file to load
+         * @return {Object}
+         */
+        api.getJSON = function (elt) {
+            // force as string
+            elt = "" + elt;
+            if (elt in jsonList) {
+                return jsonList[elt];
+            }
+            else {
+                return null;
+            }
+        };
+
+        /**
+         * Return the loading progress in percent
+         * @name getLoadProgress
+         * @memberOf me.loader
+         * @public
+         * @function
+         * @deprecated use callback instead
+         * @return {Number}
+         */
+        api.getLoadProgress = function () {
+            return loadCount / resourceCount;
+        };
+
+        // return our object
+        return api;
+    })();
+})();

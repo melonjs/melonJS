@@ -1,34 +1,45 @@
 {
-	"name": "melonJS",
-	"version": "0.9.3",
-	"description": "MelonJS Game Engine",
-
-	"homepage": "http://www.melonjs.org/",
-	"repositories": [
-		{
-			"type": "git",
-			"url": "https://github.com/obiot/melonJS"
-		}
-	],
-
-	"licenses": [
-		{
-			"type": "MIT License",
-			"url": "https://github.com/obiot/melonJS/blob/master/MIT-LICENSE"
-		}
-	],
-
-	"author": {
-		"name": "Olivier Biot",
-		"email": "contact@melonjs.org"
-	},
-
-	"engines": {
-		"node": ">0.4 <0.6"
-	},
-
-	"dependencies": {
-		"coffee-script": ">1 <2",
-		"uglify-js": "1.1.0"
-	}
+  "name": "melonJS",
+  "version": "4.1.1",
+  "description": "MelonJS Game Engine",
+  "homepage": "http://www.melonjs.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/melonjs/melonJS"
+  },
+  "bugs": {
+    "url": "https://github.com/melonjs/melonJS/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "melonJS",
+    "email": "contact@melonjs.org"
+  },
+  "engines": {
+    "node": ">= 6"
+  },
+  "main": "build/melonJS.js",
+  "dependencies": {},
+  "devDependencies": {
+    "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
+    "grunt": "^0.4.5",
+    "grunt-build-gh-pages": "^1.0.5",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-connect": "^1.0.2",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-jasmine": "^1.0.3",
+    "grunt-eslint": "^19.0.0",
+    "grunt-contrib-uglify": "^1.0.1",
+    "grunt-jsdoc": "^1.1.0",
+    "grunt-replace": "^1.0.1",
+    "grunt-shell": "^2.1.0",
+    "jasmine-core": "~2.5.2",
+    "q": "^1.4.1",
+    "shelljs": "^0.5.3"
+  },
+  "scripts": {
+    "release": "grunt release",
+    "test": "grunt test"
+  }
 }

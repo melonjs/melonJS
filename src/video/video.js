@@ -1,512 +1,494 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
-
-(function($, undefined) {
-	/**
-	 * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
-	 * There is no constructor function for me.timer
-	 * @final
-	 * @memberOf me
-	 * @constructor Should not be called by the user.
-	 */
-	me.timer = (function() {
-		// hold public stuff in our api
-		var api = {};
-
-		/*---------------------------------------------
-			
-			PRIVATE STUFF
-				
-			---------------------------------------------*/
-
-		//hold element to display fps
-		var htmlCounter = null;
-		var debug = false;
-		var framecount = 0;
-		var framedelta = 0;
-
-		/* fps count stuff */
-		var last = 0;
-		var now = 0;
-		var delta = 0;
-		var step = Math.ceil(1000 / me.sys.fps); // ROUND IT ?
-		// define some step with some margin
-		var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?
-
-		/* ---
-		
-			update the fps counter
-			
-			---*/
-		function draw(fps) {
-			htmlCounter.replaceChild(document.createTextNode("(" + fps + "/"
-					+ me.sys.fps + " fps)"), htmlCounter.firstChild);
-		}
-		;
-
-		/*---------------------------------------------
-			
-			PUBLIC STUFF
-				
-			---------------------------------------------*/
-
-		/**
-		 * last game tick value
-		 * @public
-		 * @type {Int}
-		 * @name me.timer#tick
-		 */
-		api.tick = 1.0;
-
-		/* ---
-		
-			init our time stuff
-			
-			---							*/
-		api.init = function() {
-			// check if we have a framecounter display in the HTML
-			htmlCounter = document.getElementById("framecounter");
-			debug = (htmlCounter !== null);
-
-			// reset variables to initial state
-			api.reset();
-		};
-
-		/**
-		 * reset time (e.g. usefull in case of pause)
-		 * @name me.timer#reset
-		 * @private
-		 * @function
-		 */
-		api.reset = function() {
-			// set to "now"
-			now = last = new Date().getTime();
-			// reset delta counting variables
-			framedelta = 0;
-			framecount = 0;
-
-		};
-
-		/**
-		 * return the current time
-		 * @name me.timer#getTime
-		 * @return {Date}
-		 * @function
-		 */
-		api.getTime = function() {
-			return now;
-		};
-
-		/* ---
-		
-			update game tick
-			should be called once a frame
-			
-			---                           */
-		api.update = function() {
-			last = now;
-			now = new Date().getTime();
-
-			delta = (now - last);
-
-			// only draw the FPS on in the HTML page 
-			if (debug) {
-				framecount++;
-				framedelta += delta;
-				if (framecount % 10 == 0) {
-					var lastfps = ~~((1000 * framecount) / framedelta);
-					// clamp the result and "draw" it
-					draw(lastfps.clamp(0, me.sys.fps));
-					framedelta = 0;
-					framecount = 0;
-				}
-			}
-			// get the game tick
-			api.tick = (delta > minstep && me.sys.interpolation) ? delta / step	: 1;
-		};
-
-		// return our apiect
-		return api;
-
-	})();
-	/************************************************************************************/
-
-	/**
-	 * video functions
-	 * There is no constructor function for me.video
-	 * @final
-	 * @memberOf me
-	 * @constructor Should not be called by the user.
-	 */
-	me.video = (function() {
-		// hold public stuff in our apig
-		var api = {};
-
-		// internal variables
-		var canvas = null;
-		var context2D = null;
-		var backBufferCanvas = null;
-		var backBufferContext2D = null;
-		var wrapper = null;
-
-		var double_buffering = false;
-		var game_width_zoom = 0;
-		var game_height_zoom = 0;
-
-		/*---------------------------------------------
-			
-			PUBLIC STUFF
-				
-			---------------------------------------------*/
-
-		/* ---
-		
-			init the video part
-			
-			
-			---							*/
-		/**
-		 * init the "video" part<p>
-		 * return false if initialization failed (canvas not supported)
-		 * @name me.video#init
-		 * @function
-		 * @param {String} wrapper the "div" element id to hold the canvas in the HTML file
-		 * @param {Int} width game width
-		 * @param {Int} height game height
-		 * @param {Boolean} [double_buffering] enable/disable double buffering
-		 * @param {Number} [scale] enable scaling of the canvas (note : if scale is used, double_buffering must be enabled)
-		 * @return {Boolean}
-		 * @example
-		 * // init the video with a 480x320 canvas
-		 * if (!me.video.init('jsapp', 480, 320))
-		 * {
-		 *    alert("Sorry but your browser does not support html 5 canvas !");
-		 *    return;
-		 * }
-		 */
-		api.init = function(wrapperid, game_width, game_height,
-				doublebuffering, scale) {
-			double_buffering = doublebuffering || false;
-
-			// zoom only work with the double buffering since we 
-			// actually zoom the backbuffer before rendering it
-			me.sys.scale = double_buffering === true ? scale || 1.0 : 1.0;
-
-			game_width_zoom = game_width * me.sys.scale;
-			game_height_zoom = game_height * me.sys.scale;
-
-			wrapper = document.getElementById(wrapperid);
-
-			canvas = document.createElement("canvas");
-
-			canvas.setAttribute("width", (game_width_zoom) + "px");
-			canvas.setAttribute("height", (game_height_zoom) + "px");
-			canvas.setAttribute("border", "0px solid black");
-
-			// add our canvas
-			wrapper.appendChild(canvas);
-
-			// check if WebGL feature is supported & required
-			if (me.sys.enableWebGL && window.WebGLRenderingContext) {
-				// in case the library is not loaded
-				try {
-					// try to enable WebGL
-					WebGL2D.enable(canvas);
-					context2D = canvas.getContext('webgl-2d');
-					// enable cacheImage feature, so that we use
-					// canvas and not Image for assets.
-					me.sys.cacheImage = true;
-				} catch (e) {
-					// just to be sure
-					context2D = null;
-				}
-			}
-
-			// if context2D not initialized, 
-			if (context2D == null) {
-				// make sure it's disabled
-				me.sys.enableWebGL = false;
-
-				if (!canvas.getContext)
-					return false;
-
-				context2D = canvas.getContext('2d');
-			}
-
-			// create the back buffer if we use double buffering
-			if (double_buffering) {
-				backBufferContext2D = api.createCanvasSurface(game_width,
-						game_height);
-				backBufferCanvas = backBufferContext2D.canvas;
-			} else {
-				backBufferContext2D = context2D;
-				backBufferCanvas = context2D.canvas;
-			}
-			return true;
-		};
-
-		/**
-		 * return a reference to the wrapper
-		 * @name me.video#getWrapper
-		 * @function
-		 * @return {Document}
-		 */
-		api.getWrapper = function() {
-			return wrapper;
-		};
-
-		/**
-		 * return the width of the display canvas (before scaling)
-		 * @name me.video#getWidth
-		 * @function
-		 * @return {Int}
-		 */
-		api.getWidth = function() {
-			return backBufferCanvas.width;
-
-		};
-		
-		/**
-		 * return the relative (to the page) position of the specified Canvas
-		 * @name me.video#getPos
-		 * @function
-		 * @param {Canvas} [canvas] system one if none specified
-		 * @return {me.Vector2d}
-		 */
-		api.getPos = function(c) {
-			var obj = c || canvas;
-			var offset = new me.Vector2d(obj.offsetLeft, obj.offsetTop);
-			while ( obj = obj.offsetParent ) {
-				offset.x += obj.offsetLeft;
-				offset.y += obj.offsetTop;
-			} 
-			return offset;
-		};
-
-		/**
-		 * return the height of the display canvas (before scaling)
-		 * @name me.video#getHeight
-		 * @function
-		 * @return {Int}
-		 */
-		api.getHeight = function() {
-			return backBufferCanvas.height;
-		};
-
-		/**
-		 * allocate and return a new Canvas 2D surface
-		 * @name me.video#createCanvasSurface
-		 * @function
-		 * @param {Int} width canvas width
-		 * @param {Int} height canvas height
-		 * @return {Context2D}
-		 */
-		api.createCanvasSurface = function(width, height) {
-			var privateCanvas = document.createElement("canvas");
-
-			privateCanvas.width = width || backBufferCanvas.width;
-			privateCanvas.height = height || backBufferCanvas.height;
-
-			/* !! this should be working, no ?
-			if (me.sys.enableWebGL)
-			{   
-			   WebGL2D.enable(privateCanvas);
-			   return privateCanvas.getContext('webgl-2d');
-			}
-			else
-			{ 
-			 */
-			return privateCanvas.getContext('2d');
-			//}
-		};
-
-		/**
-		 * return a reference of the display canvas
-		 * @name me.video#getScreenCanvas
-		 * @function
-		 * @return {Canvas}
-		 */
-		api.getScreenCanvas = function() {
-			//console.log(VideoMngr._canvas);
-			return canvas;
-		};
-
-		/**
-		 * return a reference to the screen framebuffer
-		 * @name me.video#getScreenFrameBuffer
-		 * @function
-		 * @return {Context2D}
-		 */
-		api.getScreenFrameBuffer = function() {
-			return backBufferContext2D;
-		};
-
-		/* ---
-		
-			Update the display size (zoom ratio change)
-			if no parameter called from the outside (select box)
-			---								*/
-
-		/**
-		 * change the display scaling factor
-		 * @name me.video#updateDisplaySize
-		 * @function
-		 * @param {Number} scale scaling value
-		 */
-		api.updateDisplaySize = function(scale) {
-			if (double_buffering) {
-				if (scale)
-					me.sys.scale = scale;
-				else
-					// to be changed by something else :)
-					me.sys.scale = document.getElementById("screen size").value;
-
-				game_width_zoom = backBufferCanvas.width * me.sys.scale;
-				game_height_zoom = backBufferCanvas.height * me.sys.scale;
-
-				canvas.width = game_width_zoom; // in pixels
-				canvas.height = game_height_zoom; // in pixels
-
-			}
-		};
-
-		/**
-		 * Clear the specified context with the given color
-		 * @name me.video#clearSurface
-		 * @function
-		 * @param {Context2D} context
-		 * @param {Color} col
-		 */
-		api.clearSurface = function(context, col) {
-			context.fillStyle = col;
-			context.fillRect(0, 0, context.canvas.width, context.canvas.height);
-		};
-
-		/**
-		 * scale & keep canvas centered<p>
-		 * usefull for zooming effect
-		 * @name me.video#scale
-		 * @function
-		 * @param {Context2D} context
-		 * @param {scale} scale
-		 */
-		api.scale = function(context, scale) {
-			context
-					.translate(
-							-(((context.canvas.width * scale) - context.canvas.width) >> 1),
-							-(((context.canvas.height * scale) - context.canvas.height) >> 1));
-
-			context.scale(scale, scale);
-
-		};
-
-		/**
-		 * enable/disable Alpha for the specified context
-		 * @name me.video#setAlpha
-		 * @function
-		 * @param {Context2D} context
-		 * @param {Boolean} enable
-		 */
-		api.setAlpha = function(context, enable) {
-			context.globalCompositeOperation = enable ? "source-over" : "copy";
-		};
-
-		/**
-		 * render the main framebuffer on screen
-		 * @name me.video#blitSurface
-		 * @function
-		 */
-		api.blitSurface = function() {
-			if (double_buffering) {
-				api.blitSurface = function() {
-					//FPS.update();
-					context2D.drawImage(backBufferCanvas, 0, 0,
-							backBufferCanvas.width, backBufferCanvas.height, 0,
-							0, game_width_zoom, game_height_zoom);
-					
-				};
-			} else {
-				// "empty" function, as we directly render stuff on "context2D"
-				api.blitSurface = function() {
-				};
-			}
-			api.blitSurface();
-		};
-
-		/**
-		 * apply the specified filter to the main canvas
-		 * and return a new canvas object with the modified output<br>
-		 * (!) Due to the internal usage of getImageData to manipulate pixels,
-		 * this function will throw a Security Exception with FF if used locally
-		 * @name me.video#applyRGBFilter
-		 * @function
-		 * @param {Object} object Canvas or Image Object on which to apply the filter
-		 * @param {String} effect "b&w", "brightness", "transparent"
-		 * @param {String} option : level [0...1] (for brightness), color to be replaced (for transparent) 
-		 * @return {Context2D} context object
-		 */
-		api.applyRGBFilter = function(object, effect, option) {
-			//create a output canvas using the given canvas or image size
-			var fcanvas = api.createCanvasSurface(object.width, object.height);
-			// get the pixels array of the give parameter
-			var imgpix = me.utils.getPixels(object);
-			// pointer to the pixels data
-			var pix = imgpix.data;
-
-			// apply selected effect
-			switch (effect) {
-			case "b&w": {
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-					var grayscale = (3 * pix[i] + 4 * pix[i + 1] + pix[i + 2]) >>> 3;
-					pix[i] = grayscale; // red
-					pix[i + 1] = grayscale; // green
-					pix[i + 2] = grayscale; // blue
-				}
-				break;
-			}
-
-			case "brightness": {
-				// make sure it's between 0.0 and 1.0
-				var brightness = Math.abs(option).clamp(0.0, 1.0);
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-
-					pix[i] *= brightness; // red
-					pix[i + 1] *= brightness; // green
-					pix[i + 2] *= brightness; // blue
-				}
-				break;
-			}
-
-			case "transparent": {
-				for ( var i = 0, n = pix.length; i < n; i += 4) {
-					if (me.utils.RGBToHex(pix[i], pix[i + 1], pix[i + 2]) === option) {
-						pix[i + 3] = 0;
-					}
-				}
-				break;
-			}
-
-			default:
-				return null;
-			}
-
-			// put our modified image back in the new filtered canvas
-			fcanvas.putImageData(imgpix, 0, 0);
-
-			// return it
-			return fcanvas;
-		};
-
-		// return our api
-		return api;
-
-	})();
-
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);
+(function () {
+    /**
+     * video functions
+     * There is no constructor function for me.video
+     * @namespace me.video
+     * @memberOf me
+     */
+    me.video = (function () {
+        // hold public stuff in our apig
+        var api = {};
+
+        // internal variables
+        var canvas = null;
+
+        var deferResizeId = 0;
+
+        var designRatio = 1;
+        var designWidth = 0;
+        var designHeight = 0;
+
+        // max display size
+        var maxWidth = Infinity;
+        var maxHeight = Infinity;
+
+        // default video settings
+        var settings = {
+            wrapper : undefined,
+            renderer : 0, // canvas
+            doubleBuffering : false,
+            autoScale : false,
+            scale : 1.0,
+            scaleMethod : "fit",
+            transparent : false,
+            antiAlias : false,
+            subPixel : false,
+            verbose : false
+        };
+
+
+        /**
+         * Auto-detect the best renderer to use
+         * @ignore
+         */
+        function autoDetectRenderer(c, width, height, options) {
+            try {
+                return new me.WebGLRenderer(c, width, height, options);
+            }
+            catch (e) {
+                return new me.CanvasRenderer(c, width, height, options);
+            }
+        }
+
+        /*
+         * PUBLIC STUFF
+         */
+
+        /**
+         * Base class for Video exception handling.
+         * @name Error
+         * @class
+         * @constructor
+         * @memberOf me.video
+         * @param {String} msg Error message.
+         */
+        api.Error = me.Error.extend({
+            /**
+             * @ignore
+             */
+            init : function (msg) {
+                this._super(me.Error, "init", [ msg ]);
+                this.name = "me.video.Error";
+            }
+        });
+
+        /**
+         * Select the HTML5 Canvas renderer
+         * @public
+         * @name CANVAS
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.CANVAS = 0;
+
+        /**
+         * Select the WebGL renderer
+         * @public
+         * @name WEBGL
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.WEBGL = 1;
+
+        /**
+         * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+         * @public
+         * @name AUTO
+         * @memberOf me.video
+         * @enum {Number}
+         */
+        api.AUTO = 2;
+
+        /**
+         * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
+         * melonJS support various scaling mode : <br>
+         *  - <i>`fit`</i> : Letterboxed; content is scaled to design aspect ratio <br>
+         *  - <i>`fill-max`</i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+         *  - <i>`flex-height`</i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+         *  - <i>`flex-width`</i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+         *  - <i>`stretch`</i> : Canvas is resized to fit; content is scaled to screen aspect ratio
+         * @name init
+         * @memberOf me.video
+         * @function
+         * @param {Number} width the width of the canvas viewport
+         * @param {Number} height the height of the canvas viewport
+         * @param {Object} [options] The optional video/renderer parameters
+         * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
+         * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
+         * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
+         * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+         * @param {String} [options.scaleMethod="fit"] ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') screen scaling modes
+         * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
+         *                                                   as opposed to the browser window dimensions
+         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
+         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+         * @return {Boolean} false if initialization failed (canvas not supported)
+         * @example
+         * // init the video with a 640x480 canvas
+         * me.video.init(640, 480, {
+         *     wrapper : "screen",
+         *     renderer : me.video.CANVAS,
+         *     scale : "auto",
+         *     scaleMethod : "fit",
+         *     doubleBuffering : true
+         * });
+         */
+        api.init = function (game_width, game_height, options) {
+            // ensure melonjs has been properly initialized
+            if (!me.initialized) {
+                throw new api.Error("me.video.init() called before engine initialization.");
+            }
+
+            // revert to default options if not defined
+            settings = Object.assign(settings, options || {});
+
+            // sanitize potential given parameters
+            settings.doubleBuffering = !!(settings.doubleBuffering);
+            settings.useParentDOMSize = !!(settings.useParentDOMSize);
+            settings.autoScale = (settings.scale === "auto") || false;
+            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
+                settings.scaleMethod = "fit";
+            }
+            settings.transparent = !!(settings.transparent);
+
+            // override renderer settings if &webgl is defined in the URL
+            if (me.game.HASH.webgl === true) {
+                settings.renderer = api.WEBGL;
+            }
+
+            // normalize scale
+            settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
+            me.sys.scale = new me.Vector2d(settings.scale, settings.scale);
+
+            // force double buffering if scaling is required
+            if (settings.autoScale || (settings.scale !== 1.0)) {
+                settings.doubleBuffering = true;
+            }
+
+            // hold the requested video size ratio
+            designRatio = game_width / game_height;
+            designWidth = game_width;
+            designHeight = game_height;
+
+            // default scaled size value
+            var game_width_zoom = game_width * me.sys.scale.x;
+            var game_height_zoom = game_height * me.sys.scale.y;
+            settings.zoomX = game_width_zoom;
+            settings.zoomY = game_height_zoom;
+
+            //add a channel for the onresize/onorientationchange event
+            window.addEventListener(
+                "resize",
+                throttle(
+                    100,
+                    false,
+                    function (event) {
+                        me.event.publish(me.event.WINDOW_ONRESIZE, [ event ]);
+                    }
+                ),
+                false
+            );
+            window.addEventListener(
+                "orientationchange",
+                function (event) {
+                    me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+                },
+                false
+            );
+
+            // register to the channel
+            me.event.subscribe(
+                me.event.WINDOW_ONRESIZE,
+                me.video.onresize.bind(me.video)
+            );
+            me.event.subscribe(
+                me.event.WINDOW_ONORIENTATION_CHANGE,
+                me.video.onresize.bind(me.video)
+            );
+
+            // create the main screen canvas
+            if (me.device.ejecta === true) {
+                // a main canvas is already automatically created by Ejecta
+                canvas = document.getElementById("canvas");
+            } else {
+                canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
+            }
+
+            // add our canvas
+            if (options.wrapper) {
+                settings.wrapper = document.getElementById(options.wrapper);
+            }
+            // if wrapperid is not defined (null)
+            if (!settings.wrapper) {
+                // add the canvas to document.body
+                settings.wrapper = document.body;
+            }
+            settings.wrapper.appendChild(canvas);
+
+            // stop here if not supported
+            if (!canvas.getContext) {
+                return false;
+            }
+
+            /**
+             * A reference to the current video renderer
+             * @public
+             * @memberOf me.video
+             * @name renderer
+             * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
+             */
+            switch (settings.renderer) {
+                case api.WEBGL:
+                    this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);
+                    break;
+                case api.AUTO:
+                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
+                    break;
+                default:
+                    this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
+                    break;
+            }
+
+            // adjust CSS style for High-DPI devices
+            var ratio = me.device.getPixelRatio();
+            if (ratio > 1) {
+                canvas.style.width = (canvas.width / ratio) + "px";
+                canvas.style.height = (canvas.height / ratio) + "px";
+            }
+
+
+            // set max the canvas max size if CSS values are defined
+            if (window.getComputedStyle) {
+                var style = window.getComputedStyle(canvas, null);
+                me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
+            }
+
+            me.game.init();
+
+            // trigger an initial resize();
+            me.video.onresize();
+
+            return true;
+        };
+
+        /**
+         * return the relative (to the page) position of the specified Canvas
+         * @name getPos
+         * @memberOf me.video
+         * @function
+         * @param {Canvas} [canvas] system one if none specified
+         * @return {me.Vector2d}
+         */
+        api.getPos = function (c) {
+            c = c || this.renderer.getScreenCanvas();
+            return (
+                c.getBoundingClientRect ?
+                c.getBoundingClientRect() : { left : 0, top : 0 }
+            );
+        };
+
+        /**
+         * set the max canvas display size (when scaling)
+         * @name setMaxSize
+         * @memberOf me.video
+         * @function
+         * @param {Number} width width
+         * @param {Number} height height
+         */
+        api.setMaxSize = function (w, h) {
+            // max display size
+            maxWidth = w || Infinity;
+            maxHeight = h || Infinity;
+            // trigger a resize
+            // defer it to ensure everything is properly intialized
+            this.onresize.defer(this);
+
+        };
+
+        /**
+         * Create and return a new Canvas
+         * @name createCanvas
+         * @memberOf me.video
+         * @function
+         * @param {Number} width width
+         * @param {Number} height height
+         * @param {Boolean} [screencanvas=false] set to true if this canvas renders directly to the screen
+         * @return {Canvas}
+         */
+        api.createCanvas = function (width, height, screencanvas) {
+            if (width === 0 || height === 0)  {
+                throw new api.Error("width or height was zero, Canvas could not be initialized !");
+            }
+
+            var _canvas = document.createElement("canvas");
+
+            if ((screencanvas === true) && (me.device.cocoon) && (me.device.android2 !== true)) {
+                // http://docs.cocoon.io/article/screencanvas/
+                _canvas.screencanvas = true;
+            }
+
+            _canvas.width = width || canvas.width;
+            _canvas.height = height || canvas.height;
+
+            return _canvas;
+        };
+
+        /**
+         * return a reference to the wrapper
+         * @name getWrapper
+         * @memberOf me.video
+         * @function
+         * @return {Document}
+         */
+        api.getWrapper = function () {
+            return settings.wrapper;
+        };
+
+        /**
+         * callback for window resize event
+         * @ignore
+         */
+        api.onresize = function () {
+            // default (no scaling)
+            var scaleX = 1, scaleY = 1;
+
+            // check for orientation information
+            if (typeof window.orientation !== "undefined") {
+                me.device.orientation = window.orientation;
+            }
+            else {
+                // is this actually not the best option since default "portrait"
+                // orientation might vary between for example an ipad and and android tab
+                me.device.orientation = (
+                    window.outerWidth > window.outerHeight ?
+                    90 : 0
+                );
+            }
+
+            if (settings.autoScale) {
+                var parentNodeWidth;
+                var parentNodeHeight;
+                var parentNode = me.video.renderer.getScreenCanvas().parentNode;
+                if (typeof (parentNode) !== "undefined") {
+                    if (settings.useParentDOMSize && typeof parentNode.getBoundingClientRect === "function") {
+                        var rect = parentNode.getBoundingClientRect();
+                        parentNodeWidth = rect.width || (rect.right - rect.left);
+                        parentNodeHeight = rect.height || (rect.bottom - rect.top);
+                    } else {
+                        // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
+                        parentNodeWidth = parentNode.width;
+                        parentNodeHeight = parentNode.height;
+                    }
+                }
+                var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
+                var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
+                var screenRatio = _max_width / _max_height;
+                var sWidth = Infinity;
+                var sHeight = Infinity;
+
+                if (
+                    (settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
+                    (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
+                    (settings.scaleMethod === "flex-width")
+                ) {
+                    // resize the display canvas to fill the parent container
+                    sWidth = Math.min(maxWidth, designHeight * screenRatio);
+                    scaleX = scaleY = _max_width / sWidth;
+                    sWidth = ~~(sWidth + 0.5);
+                    this.renderer.resize(sWidth, designHeight);
+                    me.game.viewport.resize(sWidth, designHeight);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
+                }
+                else if (
+                    (settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
+                    (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
+                    (settings.scaleMethod === "flex-height")
+                ) {
+                    // resize the display canvas to fill the parent container
+                    sHeight = Math.min(maxHeight, designWidth * (_max_height / _max_width));
+                    scaleX = scaleY = _max_height / sHeight;
+                    sHeight = ~~(sHeight + 0.5);
+                    this.renderer.resize(designWidth, sHeight);
+                    me.game.viewport.resize(designWidth, sHeight);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
+                }
+                else if (settings.scaleMethod === "flex") {
+                    // resize the display canvas to fill the parent container
+                    this.renderer.resize(_max_width, _max_height);
+                    me.game.viewport.resize(_max_width, _max_height);
+                    /*
+                     * XXX: Workaround for not updating container child-bounds
+                     * automatically (it's expensive!)
+                     */
+                    me.game.world.updateChildBounds();
+                }
+                else if (settings.scaleMethod === "stretch") {
+                    // scale the display canvas to fit with the parent container
+                    scaleX = _max_width / designWidth;
+                    scaleY = _max_height / designHeight;
+                }
+                else {
+                    // scale the display canvas to fit the parent container
+                    // make sure we maintain the original aspect ratio
+                    if (screenRatio < designRatio) {
+                        scaleX = scaleY = _max_width / designWidth;
+                    }
+                    else {
+                        scaleX = scaleY = _max_height / designHeight;
+                    }
+                }
+
+                // adjust scaling ratio based on the device pixel ratio
+                scaleX *= me.device.getPixelRatio();
+                scaleY *= me.device.getPixelRatio();
+
+                if (deferResizeId) {
+                    // cancel any previous pending resize
+                    clearTimeout(deferResizeId);
+                }
+                deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
+            }
+        };
+
+        /**
+         * Modify the "displayed" canvas size
+         * @name updateDisplaySize
+         * @memberOf me.video
+         * @function
+         * @param {Number} scaleX X scaling multiplier
+         * @param {Number} scaleY Y scaling multiplier
+         */
+        api.updateDisplaySize = function (scaleX, scaleY) {
+            // update the global scale variable
+            me.sys.scale.set(scaleX, scaleY);
+
+            // renderer resize logic
+            this.renderer.scaleCanvas(scaleX, scaleY);
+            me.game.repaint();
+
+            // make sure we have the correct relative canvas position cached
+            me.input._offset = me.video.getPos();
+
+            // clear the timeout id
+            deferResizeId = 0;
+        };
+
+        // return our api
+        return api;
+    })();
+
+})();

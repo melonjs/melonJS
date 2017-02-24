@@ -1,0 +1,23 @@
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2017 Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ *
+ * WebGL Fragment shader for line compositing
+ */
+
+precision {{= ctx.precision }} float;
+
+
+// Uniforms
+
+/**
+ * Fragment color
+ * @ignore
+ */
+uniform vec4 uColor;
+
+
+void main(void) {
+    gl_FragColor = uColor;
+}

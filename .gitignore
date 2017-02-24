@@ -1,13 +1,28 @@
-# temp files
+# Eclipse files
+.project
+.settings
+
+# Grunt files
+.grunt
+
+# Temp files
 .DS_Store
 Thumbs.db
 Desktop.ini
-
-# project specific ignore
-add-on/
-node_modules/
-build/
-docs/
+npm-debug.log
 
 # Vim swap files
 *.sw*
+
+# Sublime project and workspace
+*.sublime-project
+*.sublime-workspace
+
+# Project specific ignore
+add-on/
+bower_components/
+node_modules/
+build/*
+dist/*
+docs/*
+!.placeholder

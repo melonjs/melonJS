@@ -1,217 +1,340 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  */
- 
-(function($, undefined) {
+(function () {
+    /**
+     * Base64 decoding
+     * @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
+     * @ignore
+     */
+    var Base64 = (function () {
+        // hold public stuff in our singleton
+        var singleton = {};
 
-	/**
-	 *  Base64 decoding
-	 *  @see <a href="http://www.webtoolkit.info/">http://www.webtoolkit.info/</A>
-	 */
-	var Base64 = (function() {
+        // private property
+        var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
-		// hold public stuff in our singleton
-		var singleton = {};
+        // public method for decoding
+        singleton.decode = function (input) {
 
-		// private property
-		var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+            // make sure our input string has the right format
+            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 
-		// public method for decoding
-		singleton.decode = function(input) {
-			
-			// make sure our input string has the right format
-			input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-			
-			if (me.sys.nativeBase64) {
-				// use native decoder
-				return $.atob(input);
-			}
-			else {
-				// use cross-browser decoding
-				var output = [], chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
+            if (me.device.nativeBase64) {
+                // use native decoder
+                return window.atob(input);
+            }
+            else {
+                // use cross-browser decoding
+                var output = [], chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
 
-				while (i < input.length) {
-					enc1 = _keyStr.indexOf(input.charAt(i++));
-					enc2 = _keyStr.indexOf(input.charAt(i++));
-					enc3 = _keyStr.indexOf(input.charAt(i++));
-					enc4 = _keyStr.indexOf(input.charAt(i++));
+                while (i < input.length) {
+                    enc1 = _keyStr.indexOf(input.charAt(i++));
+                    enc2 = _keyStr.indexOf(input.charAt(i++));
+                    enc3 = _keyStr.indexOf(input.charAt(i++));
+                    enc4 = _keyStr.indexOf(input.charAt(i++));
 
-					chr1 = (enc1 << 2) | (enc2 >> 4);
-					chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-					chr3 = ((enc3 & 3) << 6) | enc4;
+                    chr1 = (enc1 << 2) | (enc2 >> 4);
+                    chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+                    chr3 = ((enc3 & 3) << 6) | enc4;
 
-					output.push(String.fromCharCode(chr1));
+                    output.push(String.fromCharCode(chr1));
 
-					if (enc3 != 64) {
-						output.push(String.fromCharCode(chr2));
-					}
-					if (enc4 != 64) {
-						output.push(String.fromCharCode(chr3));
-					}
-				}
+                    if (enc3 !== 64) {
+                        output.push(String.fromCharCode(chr2));
+                    }
+                    if (enc4 !== 64) {
+                        output.push(String.fromCharCode(chr3));
+                    }
+                }
 
-				output = output.join('');
-				return output;
-			}
-		};
+                output = output.join("");
+                return output;
+            }
+        };
 
-		return singleton;
+        // public method for encoding
+        singleton.encode = function (input) {
 
-	})();
+            // make sure our input string has the right format
+            input = input.replace(/\r\n/g, "\n");
 
-	/**
-	 * a collection of utility Function
-	 * @final
-	 * @memberOf me
-	 * @private
-	 * @constructor Should not be called by the user.
-	 */
-
-	me.utils = (function() {
-		// hold public stuff in our singletong
-		var api = {};
-
-		/*---------------------------------------------
-			
-		   PRIVATE STUFF
-				
-		 ---------------------------------------------*/
-
-		// cache rgb converted value
-		var rgbCache = {};
-		
-		// guid default value
-		var GUID_base  = "";
-		var GUID_index = 0;
+            if (me.device.nativeBase64) {
+                // use native encoder
+                return window.btoa(input);
+            }
+            else {
+                // use cross-browser encoding
+                var output = [], chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
 
 
-		/*---------------------------------------------
-			
-			PUBLIC STUFF
-				
-			---------------------------------------------*/
+                while (i < input.length) {
+                    chr1 = input.charCodeAt(i++);
+                    chr2 = input.charCodeAt(i++);
+                    chr3 = input.charCodeAt(i++);
 
-		/**
-		 * Decode a base64 encoded string into a binary string
-		 *
-		 * @param {String} input Base64 encoded data
-		 * @return {String} Binary string
-		 */
-		api.decodeBase64 = function(input) {
-			return Base64.decode(input);
-		};
+                    enc1 = chr1 >> 2;
+                    enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+                    enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+                    enc4 = chr3 & 63;
 
-		/**
-		 * Decode a base64 encoded string into a byte array
-		 *
-		 * @param {String} input Base64 encoded data
-		 * @param {Int} [bytes] number of bytes per array entry
-		 * @return {Int[]} Array of bytes
-		 */
-		api.decodeBase64AsArray = function(input, bytes) {
-			bytes = bytes || 1;
+                    if (isNaN(chr2)) {
+                        enc3 = enc4 = 64;
+                    } else if (isNaN(chr3)) {
+                        enc4 = 64;
+                    }
 
-			var dec = Base64.decode(input), ar = [], i, j, len;
+                    output.push(_keyStr.charAt(enc1));
+                    output.push(_keyStr.charAt(enc2));
+                    output.push(_keyStr.charAt(enc3));
+                    output.push(_keyStr.charAt(enc4));
+                }
 
-			for (i = 0, len = dec.length / bytes; i < len; i++) {
-				ar[i] = 0;
-				for (j = bytes - 1; j >= 0; --j) {
-					ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
-				}
-			}
-			return ar;
-		};
+                output = output.join("");
+                return output;
+            }
+        };
 
-		/**
-		 * Decode a CSV encoded array into a binary array
-		 *
-		 * @param  {String} input CSV formatted data
-		 * @param  {Int} limit row split limit
-		 * @return {Int[]} Int Array
-		 */
-		api.decodeCSV = function(input, limit) {
-			input = input.trim().split("\n");
+        return singleton;
 
-			var result = [];
-			for ( var i = 0; i < input.length; i++) {
-				entries = input[i].split(",", limit);
-				for ( var e = 0; e < entries.length; e++) {
-					result.push(+entries[e]);
-				}
-			}
-			return result;
-		};
+    })();
 
-		/* ---
-		 
-			enable the nocache mechanism
-		  
-		  ---*/
-		api.setNocache = function(enable) {
-			me.nocache = enable ? "?" + parseInt(Math.random() * 10000000) : '';
-		};
+    /**
+     * a collection of utility functions<br>
+     * there is no constructor function for me.utils
+     * @namespace me.utils
+     * @memberOf me
+     */
+    me.utils = (function () {
+        // hold public stuff in our singleton
+        var api = {};
 
-		// a Hex to RGB color function
-		api.HexToRGB = function(h, a) {
-			// remove the # if present
-			h = (h.charAt(0) == "#") ? h.substring(1, 7) : h;
-			// check if we already have the converted value cached
-			if (rgbCache[h] == null) {
-				// else add it (format : "r,g,b")
-				rgbCache[h] = parseInt(h.substring(0, 2), 16) + ","
-						+ parseInt(h.substring(2, 4), 16) + ","
-						+ parseInt(h.substring(4, 6), 16);
-			}
-			return (a ? "rgba(" : "rgb(") + rgbCache[h]
-					+ (a ? "," + a + ")" : ")");
-		};
+        /*
+         * PRIVATE STUFF
+         */
 
-		// a Hex to RGB color function
-		api.RGBToHex = function(r, g, b) {
-			return r.toHex() + g.toHex() + b.toHex();
-		};
-		
-		// return the given canvas or image pixels
-		api.getPixels = function(arg) {
-			if (arg instanceof HTMLImageElement) {
-				var c = me.video.createCanvasSurface(arg.width, arg.height);
-				c.drawImage(arg, 0, 0);
-				return c.getImageData(0, 0, arg.width, arg.height);
-			} else { 
-				// canvas !
-				return arg.getContext('2d').getImageData(0, 0, arg.width, arg.height);
-			}
-		};
-   
-		// reset the GUID Base Name
-		// the idea here being to have a unique ID
-		// per level / object
-		api.resetGUID = function(base) {
-			// also ensure it's only 8bit ASCII characters
-			GUID_base  = base.toUpperCase().toHex();
-			GUID_index = 0;
-		};
-      
-		// create and return a very simple GUID
-		// Game Unique ID
-		api.createGUID = function() {
-			return GUID_base + "-" + (GUID_index++);
-		};
-		
-		// apply friction to a force
-		api.applyFriction = function(v, f) {
-			return (v+f<0)?v+(f*me.timer.tick):(v-f>0)?v-(f*me.timer.tick):0;
-		};
+        // guid default value
+        var GUID_base  = "";
+        var GUID_index = 0;
 
-		// return our object
-		return api;
+        // regexp to deal with file name & path
+        var REMOVE_PATH = /^.*(\\|\/|\:)/;
+        var REMOVE_EXT = /\.[^\.]*$/;
 
-	})();
+        /*
+         * PUBLIC STUFF
+         */
 
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);
+        /**
+         * Decode a base64 encoded string into a binary string
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name decodeBase64
+         * @param {String} input Base64 encoded data
+         * @return {String} Binary string
+         */
+        api.decodeBase64 = function (input) {
+            return Base64.decode(input);
+        };
+
+        /**
+         * Encode binary string into a base64 string
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name encodeBase64
+         * @param {String} input Binary string
+         * @return {String} Base64 encoded data
+         */
+        api.encodeBase64 = function (input) {
+            return Base64.encode(input);
+        };
+
+        /**
+         * Decode a base64 encoded string into a byte array
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name decodeBase64AsArray
+         * @param {String} input Base64 encoded data
+         * @param {Number} [bytes] number of bytes per array entry
+         * @return {Number[]} Decoded data
+         */
+        api.decodeBase64AsArray = function (input, bytes) {
+            bytes = bytes || 1;
+
+            var dec = Base64.decode(input), i, j, len;
+            var ar = new Uint32Array(dec.length / bytes);
+
+            for (i = 0, len = dec.length / bytes; i < len; i++) {
+                ar[i] = 0;
+                for (j = bytes - 1; j >= 0; --j) {
+                    ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
+                }
+            }
+            return ar;
+        };
+
+        /**
+         * decompress zlib/gzip data (NOT IMPLEMENTED)
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name decompress
+         * @param  {Number[]} data Array of bytes
+         * @param  {String} format compressed data format ("gzip","zlib")
+         * @return {Number[]} Decompressed data
+         */
+        api.decompress = function () {
+            throw new me.Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+        };
+
+        /**
+         * Decode a CSV encoded array into a binary array
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name decodeCSV
+         * @param  {String} input CSV formatted data
+         * @return {Number[]} Decoded data
+         */
+        api.decodeCSV = function (input) {
+            var entries = input.replace("\n", "").trim().split(",");
+
+            var result = [];
+            for (var i = 0; i < entries.length; i++) {
+                result.push(+entries[i]);
+            }
+            return result;
+        };
+
+        /**
+         * return the base name of the file without path info.<br>
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name getBasename
+         * @param  {String} path path containing the filename
+         * @return {String} the base name without path information.
+         */
+        api.getBasename = function (path) {
+            return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
+        };
+
+        /**
+         * return the extension of the file in the given path <br>
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name getFileExtension
+         * @param  {String} path path containing the filename
+         * @return {String} filename extension.
+         */
+        api.getFileExtension = function (path) {
+            return path.substring(path.lastIndexOf(".") + 1, path.length);
+        };
+
+        /**
+         * Get image pixels
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name getPixels
+         * @param {Image|Canvas} image Image to read
+         * @return {ImageData} Canvas ImageData object
+         */
+        api.getPixels = function (arg) {
+            if (arg instanceof HTMLImageElement) {
+                var _context = me.CanvasRenderer.getContext2d(
+                    me.video.createCanvas(arg.width, arg.height)
+                );
+                _context.drawImage(arg, 0, 0);
+                return _context.getImageData(0, 0, arg.width, arg.height);
+            }
+            else {
+                // canvas !
+                return arg.getContext("2d").getImageData(0, 0, arg.width, arg.height);
+            }
+        };
+
+        /**
+         * Normalize a String or Image to an Image reference
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name getImage
+         * @param {Image|String} image Image name or Image reference
+         * @return {Image} Image reference
+         */
+        api.getImage = function (image) {
+            return (
+                (typeof(image) === "string") ?
+                me.loader.getImage(me.utils.getBasename(image)) :
+                image
+            );
+        };
+
+        /**
+         * reset the GUID Base Name
+         * the idea here being to have a unique ID
+         * per level / object
+         * @ignore
+         */
+        api.resetGUID = function (base, index) {
+            // also ensure it's only 8bit ASCII characters
+            GUID_base  = base.toString().toUpperCase().toHex();
+            GUID_index = index || 0;
+        };
+
+        /**
+         * create and return a very simple GUID
+         * Game Unique ID
+         * @ignore
+         */
+        api.createGUID = function (index) {
+            // to cover the case of undefined id for groups
+            GUID_index += index || 1;
+            return GUID_base + "-" + (index || GUID_index);
+        };
+
+        /**
+         * returns true if the given value is a power of two
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name isPowerOfTwo
+         * @param {Number} val
+         * @return {boolean}
+         */
+        api.isPowerOfTwo = function (val) {
+            return (val & (val - 1)) === 0;
+        };
+
+        /**
+         * returns the next power of two for the given value
+         * @public
+         * @function
+         * @memberOf me.utils
+         * @name nextPowerOfTwo
+         * @param {Number} val
+         * @return {boolean}
+         */
+        api.nextPowerOfTwo = function (val) {
+            val --;
+            val |= val >> 1;
+            val |= val >> 2;
+            val |= val >> 4;
+            val |= val >> 8;
+            val |= val >> 16;
+            val ++;
+            return val;
+        };
+
+        // return our object
+        return api;
+    })();
+})();

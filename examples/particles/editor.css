@@ -1,0 +1,182 @@
+.panel {
+  background: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  top: 0;
+  width: 400px;
+  height: 100%;
+}
+
+.panel .toggle {
+  background: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 40px;
+  cursor: pointer;
+}
+
+.panel .toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.panel .toggle svg {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  margin-top: -20px;
+  width: 40px;
+  height: 40px;
+  stroke: none;
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+#leftPanel {
+  left: 0;
+  padding-right: 40px;
+  text-align: center;
+}
+
+#leftPanel.hidden {
+  left: -400px;
+}
+
+#leftPanel .toggle {
+  right: 0;
+}
+
+.panel.hidden .toggle svg {
+  -moz-transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  -o-transform: scaleX(-1);
+  transform: scaleX(-1);
+  -ms-filter: fliph; /*IE*/
+  filter: fliph; /*IE*/
+}
+
+#rightPanel {
+  right: 0;
+  padding-left: 40px;
+}
+
+#rightPanel.hidden {
+  right: -400px;
+}
+
+.panel.slidein,.panel.slideout {
+  animation-duration: 0.5s;
+}
+
+.panel.slideout {
+  animation-direction: reverse
+}
+
+#leftPanel.slidein,#leftPanel.slideout {
+  animation-name: slideleft;
+}
+
+#rightPanel.slidein,#rightPanel.slideout {
+  animation-name: slideright;
+}
+
+@keyframes slideleft {
+  from { left: -400px; }
+  to { left: 0; }
+}
+
+@keyframes slideright {
+  from { right: -400px; }
+  to { right: 0; }
+}
+
+#rightPanel .toggle {
+  left: 0;
+}
+
+.controls {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.controls .buttons {
+  height: 50px;
+  text-align: center;
+}
+
+.controls input[type=button] {
+  float: none;
+  border: thin solid white;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 16px;
+  font-weight: bold;
+  height: 30px;
+  width: 150px;
+  cursor: pointer;
+  margin: 10px 5px;
+}
+
+.controls .category {
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: bold;
+  text-align: center;
+  clear: both;
+}
+
+.controls>div {
+  height: 25px;
+}
+
+.controls input,.controls select {
+  width: 140px;
+  float: right;
+}
+
+.controls input:hover,.controls select:hover {
+  background: rgba(255, 255, 255, 0.3)
+}
+
+.title {
+  font-weight: bold;
+}
+
+.controls select,.controls input {
+  background: none;
+  border: none;
+  border-bottom: thin dotted white;
+  color: #ffffff;
+  width: 200px;
+}
+
+.controls .slider {
+  display: inline-block;
+  width: 210px;
+  float: right;
+}
+
+.controls .slider input[type=range] {
+  border: none;
+  float: left;
+  width: 125px;
+  padding: 0;
+}
+
+.controls .slider input[type=number] {
+  width: 60px;
+}
+
+.controls label {
+  margin-left: 10px;
+}
+
+#leftPanel select {
+  border: thin solid white;
+  width: 100%;
+}
+
+.controls textarea {
+  background: none;
+  border: thin solid white;
+  color: #ffffff;
+  height: 600px;
+  width: 396px;
+  overflow: hidden;
+}

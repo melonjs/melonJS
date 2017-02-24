@@ -1,0 +1,21 @@
+; EditorConfig file format for defining coding styles
+; enabling editors to adhere to the project defined style.
+; Visit http://editorconfig.org for more details.
+
+root = true
+
+[**]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[**.{html,json,yml,css}]
+indent_style = space
+indent_size = 2
+
+[Gruntfile.js]
+indent_style = space
+indent_size = 2

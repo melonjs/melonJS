@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>melonJS - particle studio</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+  <link rel="stylesheet" type="text/css" media="screen" href="editor.css">
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+</head>
+<body>
+  <!-- Header placeholder -->
+  <div class="header">
+    <label>Particles Examples:</label>
+    <select id="emitter_type" onchange="game.changeEmitter();">
+      <option value="fire">Fire (Particle Stream)</option>
+      <option value="smoke">Smoke (Particle Stream)</option>
+      <option value="fountain">Fountain (Particle Stream)</option>
+      <option value="fireball">Fireball (Particle Stream)</option>
+      <option value="rain">Rain (Particle Stream)</option>
+      <option value="cannon">Cannon (Particle Stream Trajectory)</option>
+      <option value="radial">Explosion Radial (Particle Burst)</option>
+      <option value="directed">Explosion Directed (Particle Burst)</option>
+      <option value="waterfall">Waterfall (Particle Stream Timed)</option>
+      <option value="multiples">Multiples (Two Particle Stream)</option>
+      <option value="stop">Stop the Emitters!</option>
+    </select>
+  </div>
+  <!-- Canvas placeholder -->
+  <div id="screen"></div>
+
+  <div class="header">
+    left mouse or X + mouse move: move emitter around<br>
+    middle mouse or C + mouse move: move camera around
+  </div>
+
+  <div id="leftPanel" class="panel">
+    <div class="toggle" onclick="game.togglePanel(this);">
+      <svg><polygon points="10,20 30,5 30,35"/></svg>
+    </div>
+    <div class="controls"></div>
+  </div>
+
+  <div id="rightPanel" class="panel">
+    <div class="toggle" onclick="game.togglePanel(this);">
+      <svg><polygon points="30,20 10,5 10,35"/></svg>
+    </div>
+    <div class="controls"></div>
+  </div>
+
+  <!-- melonJS Library -->
+  <script type="text/javascript" src="../../build/melonJS.js"></script>
+
+  <!-- Plugin(s) -->
+  <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+  <script type="text/javascript" src="../../plugins/debug/particleDebugPanel.js"></script>
+
+  <!-- Game Scripts -->
+  <script type="text/javascript" src="js/game.js"></script>
+  <script type="text/javascript" src="js/resources.js"></script>
+  <script type="text/javascript" src="js/entities/entities.js"></script>
+
+  <script type="text/javascript" src="js/screens/play.js"></script>
+
+  <!-- Particle Effect Editor -->
+  <script type="text/javascript" src="js/editor/widgets.js"></script>
+  <script type="text/javascript" src="js/editor/controls.js"></script>
+
+  <!-- Bootstrap -->
+  <script type="text/javascript">
+    document.addEventListener("animationend", game.clearPanelAnimation, false);
+    window.onReady(function onReady() {
+        game.onload();
+    });
+  </script>
+</body>
+</html>

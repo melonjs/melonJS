@@ -1,267 +1,298 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2012, Olivier BIOT
+ * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
  * Font / Bitmap font
  *
  * ASCII Table
- * http://www.asciitable.com/ 
- * [ !"#$%&'()*+'-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_'abcdefghijklmnopqrstuvwxyz]
+ * http://www.asciitable.com/
+ * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
  *
  * -> first char " " 32d (0x20);
  */
+(function () {
 
-(function($, undefined) {
+    var runits = ["ex", "em", "pt", "px"];
+    var toPX = [12, 24, 0.75, 1];
 
-	/**
-	 * a generic system font object.
-	 * @class
-	 * @extends Object
-	 * @memberOf me
-	 * @constructor
-	 * @param {String} font
-	 * @param {int} size
-	 * @param {String} color
-	 * @param {String} [align="top"]
-	 */
-	me.Font = Object.extend(
-	/** @scope me.Font.prototype */
-	{
-		// alignement constants
-		ALIGN : {
-			LEFT : "left",
-			CENTER : "center",
-			RIGHT : "right"
-		},
+    /**
+     * a generic system font object.
+     * @class
+     * @extends me.Renderable
+     * @memberOf me
+     * @constructor
+     * @param {String} font a CSS font name
+     * @param {Number|String} size size, or size + suffix (px, em, pt)
+     * @param {me.Color|String} fillStyle a CSS color value
+     * @param {String} [textAlign="left"] horizontal alignment
+     */
+    me.Font = me.Renderable.extend(
+    /** @scope me.Font.prototype */ {
 
-		// font properties
-		font : null,
-		height : null,
-		color : null,
-		align : null,
+        /** @ignore */
+        init : function (font, size, fillStyle, textAlign) {
+            // private font properties
+            /** @ignore */
+            this.fontSize = new me.Vector2d();
 
-		/** @private */
-		init : function(font, size, color, align) {
+            /**
+             * defines the color used to draw the font.<br>
+             * @public
+             * @type me.Color
+             * @default black
+             * @name me.Font#fillStyle
+             */
+            this.fillStyle = new me.Color().copy(fillStyle);
 
-			// font name and type
-			this.set(font, size, color, align);
-		},
+            /**
+             * defines the color used to draw the font stroke.<br>
+             * @public
+             * @type me.Color
+             * @default black
+             * @name me.Font#strokeStyle
+             */
+            this.strokeStyle = new me.Color(0, 0, 0);
 
-		/**
-		 * make the font bold
-		 */
-		bold : function() {
-			this.font = "bold " + this.font;
-		},
+            /**
+             * sets the current line width, in pixels, when drawing stroke
+             * @public
+             * @type Number
+             * @default 1
+             * @name me.Font#lineWidth
+             */
+            this.lineWidth = 1;
 
-		/**
-		 * make the font italic
-		 */
-		italic : function() {
-			this.font = "italic " + this.font;
-		},
+            /**
+             * Set the default text alignment (or justification),<br>
+             * possible values are "left", "right", and "center".<br>
+             * @public
+             * @type String
+             * @default "left"
+             * @name me.Font#textAlign
+             */
+            this.textAlign = textAlign || "left";
 
-		/**
-		 * Change the font settings
-		 * @param {String} font
-		 * @param {int} size
-		 * @param {String} color
-		 * @param {String} [align="top"]
-		 */
-		set : function(font, size, color, align) {
-			// font name and type
-			this.font = "" + size + "px " + font;
-			this.height = size;
-			this.color = color;
-			this.align = align || "top";
-		},
+            /**
+             * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+             * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+             * @public
+             * @type String
+             * @default "top"
+             * @name me.Font#textBaseline
+             */
+            this.textBaseline = "top";
 
-		/**
-		 * FIX ME !
-		 * @private
-		 */
-		getRect : function() {
-			return new me.Rect(new Vector2d(0, 0), 0, 0);
-		},
+            /**
+             * Set the line spacing height (when displaying multi-line strings). <br>
+             * Current font height will be multiplied with this value to set the line height.
+             * @public
+             * @type Number
+             * @default 1.0
+             * @name me.Font#lineHeight
+             */
+            this.lineHeight = 1.0;
 
-		/**
-		 * measure the given test width
-		 * @param {Context} context 2D Context
-		 * @param {String} text
-		 * @return {int} width
-		 */
-		measureText : function(context, text) {
-			// draw the text
-			context.font = this.font;
-			context.fillStyle = this.color;
-			context.textBaseLine = this.align;
-			var dim = context.measureText(text);
-			dim.height = this.height;
+            // super constructor
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
-			return dim;
-		},
+            // font name and type
+            this.setFont(font, size, fillStyle, textAlign);
 
-		/**
-		 * draw a text at the specified coord
-		 * @param {Context} context 2D Context
-		 * @param {String} text
-		 * @param {int} x
-		 * @param {int} y
-		 */
-		draw : function(context, text, x, y) {
-			// draw the text
-			context.font = this.font;
-			context.fillStyle = this.color;
-			context.textBaseLine = this.align;
-			context.fillText(text, ~~x, ~~y);
-		}
-	});
+            if (!this.gid) {
+                this.gid = me.utils.createGUID();
+            }
+        },
 
-	/**
-	 * a bitpmap font object
-	 * @class
-	 * @extends me.Font
-	 * @memberOf me
-	 * @constructor
-	 * @param {String} font
-	 * @param {int/Object} size either an int value, or an object like {x:16,y:16}
-	 * @param {int} [scale="1.0"]
-	 * @param {String} [firstChar="0x20"]
+        /**
+         * make the font bold
+         * @name bold
+         * @memberOf me.Font
+         * @function
+         */
+        bold : function () {
+            this.font = "bold " + this.font;
+        },
 
-	 */
-	me.BitmapFont = me.Font.extend(
-	/** @scope me.BitmapFont.prototype */
-	{
-		// character size;
-		size : null,
-		// font scale;
-		sSize : null,
-		// first char in the ascii table
-		firstChar : 0x20,
-		
-		// #char per row
-		charCount : 0,
+        /**
+         * make the font italic
+         * @name italic
+         * @memberOf me.Font
+         * @function
+         */
+        italic : function () {
+            this.font = "italic " + this.font;
+        },
 
-		/** @private */
-		init : function(font, size, scale, firstChar) {
-			// font name and type
-			this.parent(font, null, null);
+        /**
+         * Change the font settings
+         * @name setFont
+         * @memberOf me.Font
+         * @function
+         * @param {String} font a CSS font name
+         * @param {Number|String} size size, or size + suffix (px, em, pt)
+         * @param {me.Color|String} [fillStyle] a CSS color value
+         * @param {String} [textAlign="left"] horizontal alignment
+         * @example
+         * font.setFont("Arial", 20, "white");
+         * font.setFont("Arial", "1.5em", "white");
+         */
+        setFont : function (font, size, fillStyle, textAlign) {
+            // font name and type
+            var font_names = font.split(",").map(function (value) {
+                value = value.trim();
+                return (
+                    !/(^".*"$)|(^'.*'$)/.test(value)
+                ) ? "\"" + value + "\"" : value;
+            });
 
-			// font characters size;
-			this.size = new me.Vector2d();
-			
-			// font scaled size;
-			this.sSize = new me.Vector2d();
+            if (typeof size === "number") {
+                this.fontSize.y = size;
+                size += "px";
+            } else /* string */ {
+                // extract the units and convert if necessary
+                var CSSval =  size.match(/([-+]?[\d.]*)(.*)/);
+                this.fontSize.y = parseFloat(CSSval[1]);
+                if (CSSval[2]) {
+                    this.fontSize.y *= toPX[runits.indexOf(CSSval[2])];
+                } else {
+                    // no unit define, assume px
+                    size += "px";
+                }
+            }
+            this.height = this.fontSize.y;
 
-			// first char in the ascii table
-			this.firstChar = firstChar || 0x20;
+            this.font = size + " " + font_names.join(",");
+            if (typeof(fillStyle) !== "undefined") {
+                this.fillStyle.copy(fillStyle);
+            }
+            if (textAlign) {
+                this.textAlign = textAlign;
+            }
+        },
 
-			// load the font metrics
-			this.loadFontMetrics(font, size);
+        /**
+         * measure the given text size in pixels
+         * @name measureText
+         * @memberOf me.Font
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {String} text
+         * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
+         */
+        measureText : function (renderer, text) {
+            var context = renderer.getFontContext();
 
-			// set a default alignement
-			this.align = this.ALIGN.RIGHT
-			
-			// resize if necessary
-			if (scale) { 
-				this.resize(scale);
-			}
+            // draw the text
+            context.font = this.font;
+            context.fillStyle = this.fillStyle.toRGBA();
+            context.textAlign = this.textAlign;
+            context.textBaseline = this.textBaseline;
 
-		},
+            this.height = this.width = 0;
 
-		/**
-		 * Load the font metrics
-		 * @private	
-		 */
-		loadFontMetrics : function(font, size) {
-			this.font = me.loader.getImage(font);
+            var strings = ("" + text).split("\n");
+            for (var i = 0; i < strings.length; i++) {
+                this.width = Math.max(context.measureText(strings[i].trimRight()).width, this.width);
+                this.height += this.fontSize.y * this.lineHeight;
+            }
+            return {
+                width : this.width,
+                height : this.height
+            };
+        },
 
-			// some cheap metrics
-			this.size.x = size.x || size;
-			this.size.y = size.y || this.font.height;
-			this.sSize.copy(this.size);
-			
-			// #char per row  
-			this.charCount = ~~(this.font.width / this.size.x);
-		},
+        /**
+         * draw a text at the specified coord
+         * @name draw
+         * @memberOf me.Font
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {String} text
+         * @param {Number} x
+         * @param {Number} y
+         */
+        draw : function (renderer, text, x, y) {
+            // save the previous global alpha value
+            var _alpha = renderer.globalAlpha();
 
-		/**
-		 * change the font settings
-		 * @param {String} align ("left", "center", "right")
-		 * @param {int} [scale]
-		 */
-		set : function(align, scale) {
-			this.align = align;
-			// updated scaled Size
-			if (scale) {
-				this.resize(scale);
-			}
-		},
-		
-		/**
-		 * change the font display size
-		 * @param {int} scale ratio
-		 */
-		resize : function(scale) {
-			// updated scaled Size
-			this.sSize.copy(this.size);
-			this.sSize.x *= scale;
-			this.sSize.y *= scale;
-		},
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-		/**
-		 * measure the given test width
-		 * @param {String} text
-		 * @return {int} width
-		 */
-		measureText : function(text) {
-			return {
-				width : text.length * this.sSize.x,
-				height : this.sSize.y
-			};
-		},
+            // draw the text
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
 
-		/**
-		 * draw a text at the specified coord
-		 * @param {Context} context 2D Context
-		 * @param {String} text
-		 * @param {int} x
-		 * @param {int} y
-		 */
-		draw : function(context, text, x, y) {
-			// make sure it's a String object
-			text = new String(text);
+            // restore the previous global alpha value
+            renderer.setGlobalAlpha(_alpha);
+        },
 
-			// adjust pos based on alignment
-			switch(this.align) {
-				case this.ALIGN.RIGHT:
-					x -= this.measureText(text).width;
-					break;
+        /**
+         * draw a stroke text at the specified coord, as defined <br>
+         * by the `lineWidth` and `fillStroke` properties. <br>
+         * Note : using drawStroke is not recommended for performance reasons
+         * @name drawStroke
+         * @memberOf me.Font
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
+         * @param {String} text
+         * @param {Number} x
+         * @param {Number} y
+         */
+        drawStroke : function (renderer, text, x, y) {
+            // save the previous global alpha value
+            var _alpha = renderer.globalAlpha();
 
-				case this.ALIGN.CENTER:
-					x -= this.measureText(text).width * 0.5;
-					break;
-			};
-			
-			// draw the text
-			for ( var i = 0,len = text.length; i < len; i++) {
-				// calculate the char index
-				var idx = text.charCodeAt(i) - this.firstChar;
-				// draw it
-				context.drawImage(this.font,
-						this.size.x * (idx % this.charCount), 
-						this.size.y * ~~(idx / this.charCount), 
-						this.size.x, this.size.y, 
-						~~x, ~~y, 
-						this.sSize.x, this.sSize.y);
-				x += this.sSize.x;
-			}
+            renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-		}
-	});
+            // draw the text
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, true));
 
-	/*---------------------------------------------------------*/
-	// END END END
-	/*---------------------------------------------------------*/
-})(window);
+            // restore the previous global alpha value
+            renderer.setGlobalAlpha(_alpha);
+        },
+
+        /**
+         * @ignore
+         */
+        _drawFont : function (context, text, x, y, stroke) {
+            context.font = this.font;
+            context.fillStyle = this.fillStyle.toRGBA();
+            if (stroke) {
+                context.strokeStyle = this.strokeStyle.toRGBA();
+                context.lineWidth = this.lineWidth;
+            }
+            context.textAlign = this.textAlign;
+            context.textBaseline = this.textBaseline;
+
+            var strings = ("" + text).split("\n"), string = "";
+            var dw = 0;
+            var dy = y;
+            var lineHeight = this.fontSize.y * this.lineHeight;
+            for (var i = 0; i < strings.length; i++) {
+                string = strings[i].trimRight();
+                // measure the string
+                dw = Math.max(dw, context.measureText(string).width);
+                // draw the string
+                context[stroke ? "strokeText" : "fillText"](string, x, y);
+                // add leading space
+                y += lineHeight;
+            }
+
+            // compute bounds
+            // TODO : memoize me !
+            var dx = (this.textAlign === "right" ? x - dw : (
+                this.textAlign === "center" ? x - ~~(dw / 2) : x
+            ));
+            dy = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? dy : (
+                this.textBaseline === "middle" ? dy - ~~(lineHeight / 2) : dy - lineHeight
+            );
+
+            // update the renderable bounds
+            return this.getBounds().setShape(
+                ~~dx,
+                ~~dy,
+                ~~(dw + 0.5),
+                ~~(strings.length * lineHeight + 0.5)
+            );
+        }
+    });
+})();

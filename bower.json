@@ -1,0 +1,19 @@
+{
+  "name": "melonJS",
+  "main": "build/melonJS-min.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/melonjs/melonJS.git"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "tasks",
+    "tests",
+    "AUTHORS",
+    "CHANGELOG",
+    "Gruntfile.js",
+    "*.json",
+    "*.md"
+  ]
+}

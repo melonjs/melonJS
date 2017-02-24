@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>melonJS Examples</title>
+  <style>
+* {
+  margin: 0;
+  padding: 0;
+  outline: 0;
+}
+
+body {
+  padding: 80px 100px;
+  font: 13px "Helvetica Neue", "Lucida Grande", "Arial";
+  background: #ECE9E9 -webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ECE9E9));
+  background: #ECE9E9 -moz-linear-gradient(top, #fff, #ECE9E9);
+  background-repeat: no-repeat;
+  color: #555;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 {
+  font-size: 22px;
+  color: #343434;
+}
+h1 em, h2 em {
+  padding: 0 5px;
+  font-weight: normal;
+}
+h1 {
+  font-size: 60px;
+}
+h2 {
+  margin-top: 10px;
+}
+h3 {
+  margin: 5px 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+  font-size: 18px;
+}
+h1.logo {
+  background-color: #5a0;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  font-weight: normal;
+}
+h1.logo img {
+  float: left;
+  clear: both;
+  height: 30px;
+  margin-left: 5px;
+}
+h1.logo span {
+  display: inline-block;
+  margin: 7px 0 0 2px;
+  color: #fff;
+}
+h1.docs {
+  background-color: #360;
+}
+ul li {
+  list-style: none;
+}
+ul li:hover {
+  cursor: pointer;
+  color: #2e2e2e;
+}
+ul li .path {
+  padding-left: 5px;
+  font-weight: bold;
+}
+ul li .line {
+  padding-right: 5px;
+  font-style: italic;
+}
+ul li:first-child .path {
+  padding-left: 0;
+}
+p {
+  line-height: 1.5;
+}
+a {
+  color: #555;
+  text-decoration: none;
+}
+a:hover {
+  color: #303030;
+}
+#stacktrace {
+  margin-top: 15px;
+}
+ul#files {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+ul#files li {
+  width: 30%;
+  line-height: 25px;
+  margin: 1px;
+}
+ul#files li a {
+  display: block;
+  height: 25px;
+  border: 1px solid transparent;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+ul#files li a:focus,
+ul#files li a:hover {
+  background: rgba(255,255,255,0.65);
+  border: 1px solid #ececec;
+}
+ul#files li a.highlight {
+  -webkit-transition: background .4s ease-in-out;
+  background: #ffff4f;
+  border-color: #E9DC51;
+}
+#search {
+  display: block;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 90px;
+  -webkit-transition: width ease 0.2s, opacity ease 0.4s;
+  -moz-transition: width ease 0.2s, opacity ease 0.4s;
+  -webkit-border-radius: 32px;
+  -moz-border-radius: 32px;
+  -webkit-box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.7), 0px 1px 0px rgba(255, 255, 255, 0.03);
+  -moz-box-shadow: inset 0px 0px 3px rgba(0, 0, 0, 0.25), inset 0px 1px 3px rgba(0, 0, 0, 0.7), 0px 1px 0px rgba(255, 255, 255, 0.03);
+  -webkit-font-smoothing: antialiased;
+  text-align: left;
+  font: 13px "Helvetica Neue", Arial, sans-serif;
+  padding: 4px 10px;
+  border: none;
+  background: transparent;
+  margin-bottom: 0;
+  outline: none;
+  opacity: 0.7;
+  color: #888;
+}
+#search:focus {
+  width: 120px;
+  opacity: 1.0;
+}
+
+/*views*/
+#files span {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-indent: 10px;
+}
+#files .name {
+  background-repeat: no-repeat;
+}
+#files .icon .name {
+  text-indent: 28px;
+}
+
+/*tiles*/
+.view-tiles .name {
+  width: 100%;
+  background-position: 8px 5px;
+}
+.view-tiles .size,
+.view-tiles .date {
+  display: none;
+}
+
+/*details*/
+ul#files.view-details li {
+  float: none;
+  display: block;
+  width: 90%;
+}
+ul#files.view-details li.header {
+  height: 25px;
+  background: #000;
+  color: #fff;
+  font-weight: bold;
+}
+.view-details .header {
+  border-radius: 5px;
+}
+.view-details .name {
+  width: 60%;
+  background-position: 8px 5px;
+}
+.view-details .size {
+  width: 10%;
+}
+.view-details .date {
+  width: 30%;
+}
+.view-details .size,
+.view-details .date {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  h1.logo {
+    width: 190px;
+    height: 34px;
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+    line-height: 16px;
+    padding: 0;
+  }
+  #search {
+    position: static;
+    width: 100%;
+    font-size: 2em;
+    line-height: 1.8em;
+    text-indent: 10px;
+    border: 0;
+    border-radius: 0;
+    padding: 10px 0;
+    margin: 0;
+  }
+  #search:focus {
+    width: 100%;
+    border: 0;
+    opacity: 1;
+  }
+  h1.logo {
+    height: 34px;
+    font-size: 2em;
+    padding: 15px 10px;
+    margin: 0;
+  }
+  ul#files {
+    border-top: 1px solid #cacaca;
+  }
+  ul#files li {
+    float: none;
+    width: auto !important;
+    display: block;
+    border-bottom: 1px solid #cacaca;
+    font-size: 2em;
+    line-height: 1.2em;
+    text-indent: 0;
+    margin: 0;
+  }
+  ul#files li:nth-child(odd) {
+    background: #e0e0e0;
+  }
+  ul#files li a {
+    height: auto;
+    border: 0;
+    border-radius: 0;
+    padding: 15px 10px;
+  }
+  ul#files li a:focus,
+  ul#files li a:hover {
+    border: 0;
+  }
+  #files .header,
+  #files .size,
+  #files .date {
+    display: none !important;
+  }
+  #files .name {
+    float: none;
+    display: inline-block;
+    width: 100%;
+    text-indent: 0;
+    background-position: 0 0;
+  }
+  #files .icon .name {
+    text-indent: 41px;
+  }
+}
+  </style>
+  <script>
+function $(id){
+  var el = 'string' == typeof id
+    ? document.getElementById(id)
+    : id;
+
+  el.on = function(event, fn){
+    if ('content loaded' == event) {
+      event = window.attachEvent ? "load" : "DOMContentLoaded";
+    }
+    el.addEventListener
+      ? el.addEventListener(event, fn, false)
+      : el.attachEvent("on" + event, fn);
+  };
+
+  el.all = function(selector){
+    return $(el.querySelectorAll(selector));
+  };
+
+  el.each = function(fn){
+    for (var i = 0, len = el.length; i < len; ++i) {
+      fn($(el[i]), i);
+    }
+  };
+
+  el.getClasses = function(){
+    return this.getAttribute('class').split(/\s+/);
+  };
+
+  el.addClass = function(name){
+    var classes = this.getAttribute('class');
+    el.setAttribute('class', classes
+      ? classes + ' ' + name
+      : name);
+  };
+
+  el.removeClass = function(name){
+    var classes = this.getClasses().filter(function(curr){
+      return curr != name;
+    });
+    this.setAttribute('class', classes.join(' '));
+  };
+
+  return el;
+}
+
+function search() {
+  var str = $('search').value,
+    links = $('files').all('a');
+
+  links.each(function(link){
+    var text = link.textContent;
+
+    if ('..' == text) return;
+    if (str.length && ~text.indexOf(str)) {
+      link.addClass('highlight');
+    } else {
+      link.removeClass('highlight');
+    }
+  });
+}
+
+$(window).on('content loaded', function(){
+  $('search').on('input', search);
+});
+  </script>
+</head>
+<body class="directory">
+  <input id="search" type="text" placeholder="Search" autocomplete="off">
+  <div id="docs">
+    <h1 class="logo docs"><a href="docs"><img src="media/logo.png" alt="melonJS"></img><span>melon.js API Docs</span></a></h1>
+  </div>
+  <div id="wrapper">
+    <h1 class="logo"><a href="http://melonjs.org/"><img src="media/logo.png" alt="melonJS"></img><span>melon.js Examples</span></a></h1>
+    <ul id="files" class="view-tiles">
+      <li><a href="examples/collision_test" class="" title="collision_test"><span class="name">collision_test</span></a></li>
+      <li><a href="examples/devicetest" class="" title="devicetest"><span class="name">devicetest</span></a></li>
+      <li><a href="examples/drag-and-drop" class="" title="drag-and-drop"><span class="name">drag-and-drop</span></a></li>
+      <li><a href="examples/entitypool" class="" title="entitypool"><span class="name">entitypool</span></a></li>
+      <li><a href="examples/font_test" class="" title="font_test"><span class="name">font_test</span></a></li>
+      <li><a href="examples/frame_prediction" class="" title="font_test"><span class="name">frame_prediction</span></a></li>
+      <li><a href="examples/hexagonal" class="" title="hexagonal"><span class="name">hexagonal</span></a></li>
+      <li><a href="examples/isometric_rpg" class="" title="isometric_rpg"><span class="name">isometric_rpg</span></a></li>
+      <li><a href="examples/multitouch" class="" title="multitouch"><span class="name">multitouch</span></a></li>
+      <li><a href="examples/particles" class="" title="particles"><span class="name">particles</span></a></li>
+      <li><a href="examples/platformer" class="" title="platformer"><span class="name">platformer</span></a></li>
+      <li><a href="examples/shapes" class="" title="shapes"><span class="name">shapes</span></a></li>
+      <li><a href="examples/shoebox" class="" title="shoebox"><span class="name">shoebox</span></a></li>
+      <li><a href="examples/texturepacker" class="" title="texturepacker"><span class="name">texturepacker</span></a></li>
+      <li><a href="examples/tiled_example_loader" class="" title="tiled_example_loader"><span class="name">tiled_example_loader</span></a></li>
+      <li><a href="examples/UI" class="" title="font_test"><span class="name">UI</span></a></li>
+      <li><a href="examples/whack-a-mole" class="" title="whack-a-mole"><span class="name">whack-a-mole</span></a></li>
+    </ul>
+  </div>
+</body>
+</html>

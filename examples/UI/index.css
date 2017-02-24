@@ -1,0 +1,43 @@
+body {
+  background-color: #000;
+  color: #fff;
+
+  /* Allow mouse dragging. */
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+
+  /* disable touch panning/zooming */
+  -ms-touch-action: none;
+  touch-action: none;
+
+  /* Allow canvas to hit the edges of the browser viewport. */
+  margin: 0;
+}
+
+@font-face {
+    font-family: 'kenpixel';
+        src: url('data/font/kenvector_future.woff2') format('woff2'),
+             url('data/font/kenvector_future.woff') format('woff'),
+             url('data/font/kenvector_future.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+}
+
+#screen canvas {
+  margin: auto;
+
+  /* Hide the gap for font descenders. */
+  display: block;
+
+  /* disable scaling interpolation */
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  image-rendering: pixelated;
+  -ms-interpolation-mode: nearest-neighbor;
+}

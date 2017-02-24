@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.0" orientation="orthogonal" width="10" height="19" tilewidth="101" tileheight="171">
+<map version="1.0" orientation="orthogonal" width="10" height="19" tilewidth="101" tileheight="171" backgroundcolor="#ff6600">
  <properties>
   <property name="TilesetFrom" value="www.lostgarden.com"/>
-  <property name="background_color" value="#FFCC00"/>
   <property name="levelName" value="Introduction"/>
  </properties>
  <tileset firstgid="1" name="tiles" tilewidth="101" tileheight="171">

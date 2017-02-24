@@ -1,0 +1,33 @@
+/*
+ * MelonJS Game Engine
+ * Copyright (C) 2011 - 2017 Olivier Biot, Jason Oster, Aaron McLeod
+ * http://www.melonjs.org
+ *
+ * WebGL Vertex shader for line compositing
+ */
+
+precision highp float;
+
+
+// Attributes
+
+/**
+ * Current vertex point
+ * @ignore
+ */
+attribute vec2 aVertex;
+
+
+// Uniforms
+
+/**
+ * Projection matrix
+ * @ignore
+ */
+uniform mat3 uMatrix;
+
+
+void main(void) {
+    // Transform the vertex position by the projection matrix
+    gl_Position = vec4((uMatrix * vec3(aVertex, 1)).xy, 0, 1);
+}
