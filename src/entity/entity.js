@@ -293,15 +293,16 @@
          * @param {me.Rect} region to draw
          **/
         draw : function (renderer, rect) {
-            if (this.renderable instanceof me.Renderable) {
+            var renderable = this.renderable;
+            if (renderable instanceof me.Renderable) {
                 // predraw (apply transforms)
-                this.renderable.preDraw(renderer);
+                renderable.preDraw(renderer);
 
                 // draw the object
-                this.renderable.draw(renderer, rect);
+                renderable.draw(renderer, rect);
 
                 // postdraw (clean-up);
-                this.renderable.postDraw(renderer);
+                renderable.postDraw(renderer);
             }
         },
 
