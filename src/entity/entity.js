@@ -262,25 +262,22 @@
         },
 
         preDraw : function (renderer) {
+            renderer.save();
+
+            // translate to the entity position
+            renderer.translate(
+                this.pos.x + this.body.pos.x,
+                this.pos.y + this.body.pos.y
+            );
+
             if (this.renderable instanceof me.Renderable) {
                 // draw the child renderable's anchorPoint at the entity's
                 // anchor point.  the entity's anchor point is a scale from
                 // body position to body width/height
-                var ax = this.anchorPoint.x * this.body.width,
-                    ay = this.anchorPoint.y * this.body.height;
-
-                var x = this.pos.x + this.body.pos.x + ax,
-                    y = this.pos.y + this.body.pos.y + ay;
-
-                renderer.save();
-
-                renderer.translate(x, y);
-            }
-        },
-
-        postDraw : function (renderer) {
-            if (this.renderable instanceof me.Renderable) {
-                renderer.restore();
+                renderer.translate(
+                    this.anchorPoint.x * this.body.width,
+                    this.anchorPoint.y * this.body.height
+                );
             }
         },
 
@@ -296,15 +293,16 @@
          * @param {me.Rect} region to draw
          **/
         draw : function (renderer, rect) {
-            if (this.renderable instanceof me.Renderable) {
+            var renderable = this.renderable;
+            if (renderable instanceof me.Renderable) {
                 // predraw (apply transforms)
-                this.renderable.preDraw(renderer);
+                renderable.preDraw(renderer);
 
                 // draw the object
-                this.renderable.draw(renderer, rect);
+                renderable.draw(renderer, rect);
 
                 // postdraw (clean-up);
-                this.renderable.postDraw(renderer);
+                renderable.postDraw(renderer);
             }
         },
 
