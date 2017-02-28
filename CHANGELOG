@@ -1,5 +1,8 @@
 Version History
 ---------------
+5.0.0
+* Renderable : properly apply transformation and anchor for all me.Renderable objects.
+
 4.1.1
 * Core : fixed a bug in `Number.prototype.round()`
 * Core : throw an exception when attempting to add an invalid state in `me.state.set()`
