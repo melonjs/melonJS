@@ -118,7 +118,7 @@
          * @function
          * @param {Number} width the width of the canvas viewport
          * @param {Number} height the height of the canvas viewport
-         * @param {Object} [options] The optional video/renderer parameters
+         * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
@@ -129,6 +129,8 @@
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @return {Boolean} false if initialization failed (canvas not supported)
+         * @see me.CanvasRenderer
+         * @see me.WebGLRenderer
          * @example
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
