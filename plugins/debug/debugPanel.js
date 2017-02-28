@@ -155,7 +155,7 @@
             this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
             // minimum melonJS version expected
-            this.version = "4.0.0";
+            this.version = "5.0.0";
 
             // to hold the debug options
             // clickable rect area
