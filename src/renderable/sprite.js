@@ -168,6 +168,9 @@
                 // set as default
                 this.setCurrentAnimation("default");
             }
+
+            // enable currentTransform for me.Sprite based objects
+            this.autoTransform = true;
         },
 
         /**
@@ -448,6 +451,8 @@
             Object.assign(this.current, frame);
             // XXX this should not be overwritten
             this.current.name = name;
+            this.width = frame.width;
+            this.height = frame.height;
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
                 this.anchorPoint.setV(frame.anchorPoint);
@@ -566,22 +571,6 @@
             var frame_offset = frame.offset;
             var g_offset = this.offset;
 
-            // save context
-            renderer.save();
-
-            // sprite alpha value
-            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-
-            // apply the renderable transformation matrix
-            if (!this.currentTransform.isIdentity()) {
-                renderer.transform(this.currentTransform);
-            }
-
-            // translate to the defined anchor point
-            renderer.translate(
-                - ( w * this.anchorPoint.x ),
-                - ( h * this.anchorPoint.y )
-            );
 
             // remove image's TexturePacker/ShoeBox rotation
             if (frame.angle !== 0) {
@@ -600,9 +589,6 @@
                 xpos, ypos,                  // dx,dy
                 w, h                         // dw,dh
             );
-
-            // restore context
-            renderer.restore();
         }
     });
 

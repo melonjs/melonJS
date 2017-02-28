@@ -11,6 +11,8 @@ game.UI.Container = me.Container.extend({
         // call the constructor
         this._super(me.Container, "init", [x, y, width, height]);
 
+        this.anchorPoint.set(0, 0);
+
         // persistent across level change
         this.isPersistent = true;
 

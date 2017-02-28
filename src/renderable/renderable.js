@@ -120,11 +120,11 @@
             this.anchorPoint = new me.Vector2d(0.5, 0.5);
 
             /**
-             * [EXPERIMENTAL] when enabled, an object container will automatically
-             * apply any defined transformation before calling the child draw method.
+             * When enabled, an object container will automatically apply
+             * any defined transformation before calling the child draw method.
              * @public
              * @type Boolean
-             * @default false
+             * @default true
              * @name autoTransform
              * @memberOf me.Renderable
              * @example
@@ -146,7 +146,7 @@
              *     return this._super(me.Entity, 'update', [dt]);
              * },
              */
-            this.autoTransform = false;
+            this.autoTransform = true;
 
             /**
              * Define the renderable opacity<br>
@@ -354,6 +354,32 @@
         },
 
         /**
+         * calls by an object container before calling the draw function
+         * @ignore
+         */
+        preDraw : function (renderer) {
+            var bounds = this.getBounds();
+            var ax = bounds.width * this.anchorPoint.x,
+                ay = bounds.height * this.anchorPoint.y;
+
+            // save context
+            renderer.save();
+            // apply the defined alpha value
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+            if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
+                this.currentTransform.translate(-ax, -ay);
+                // apply the renderable transformation matrix
+                renderer.transform(this.currentTransform);
+                this.currentTransform.translate(ax, ay);
+            } else {
+                // translate to the defined anchor point
+                renderer.translate(-ax, -ay);
+            }
+
+        },
+
+        /**
          * object draw
          * called by the game manager on each game loop
          * @name draw
@@ -364,6 +390,15 @@
          **/
         draw : function (/*renderer*/) {
             // empty one !
+        },
+
+        /**
+         * calls by a object container after calling the draw function
+         * @ignore
+         */
+        postDraw : function (renderer) {
+            // save context
+            renderer.restore();
         },
 
         /**

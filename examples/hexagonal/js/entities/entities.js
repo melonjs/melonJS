@@ -13,6 +13,8 @@ game.TextEntity = me.Renderable.extend({
 
         // call the constructor
         this._super(me.Renderable, "init", [x, y , width, height]);
+
+        this.anchorPoint.set(0, 0);
         this.floating = true;
 
         this.pointerDown = me.event.subscribe("pointermove", function (event) {

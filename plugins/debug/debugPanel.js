@@ -260,6 +260,8 @@
 
             //patch patch patch !
             this.patchSystemFn();
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -307,30 +309,24 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.Sprite, "draw", function (renderer) {
+            me.plugin.patch(me.Sprite, "postDraw", function (renderer) {
+                // don't do anything else if the panel is hidden
+                if (_this.visible) {
+                    // increment the sprites counter
+                    _this.counters.inc("sprites");
+
+                    // draw the sprite rectangle
+                    if (me.debug.renderHitBox) {
+                        //var bounds = ;
+                        //var color  = renderer.getColor();
+
+                        renderer.setColor("green");
+                        renderer.drawShape(this.getBounds());
+                        //renderer.setColor(color);
+                    }
+                }
                 // call the original me.Sprite.draw function
                 this._patched(renderer);
-
-                if (!_this.visible) {
-                    // don't do anything else if the panel is hidden
-                    return;
-                }
-
-                // increment the sprites counter
-                _this.counters.inc("sprites");
-
-                // draw the sprite rectangle
-                if (me.debug.renderHitBox) {
-                    var bounds = this.getBounds();
-                    var x = - (this.anchorPoint.x * this.width) - ((bounds.width - this.width) / 2);
-                    var y = - (this.anchorPoint.y * this.height) - ((bounds.height - this.height) / 2);
-
-                    renderer.save();
-                    renderer.setColor("green");
-                    renderer.translate(x, y);
-                    renderer.drawShape(bounds);
-                    renderer.restore();
-                }
             });
 
             /*
@@ -366,61 +362,67 @@
             */
 
             // patch entities.js
-            me.plugin.patch(me.Entity, "draw", function (renderer) {
-                // call the original me.Entity.draw function
-                this._patched(renderer);
+            me.plugin.patch(me.Entity, "postDraw", function (renderer) {
+                // don't do anything else if the panel is hidden
+                if (_this.visible) {
+                    // increment the bounds counter
+                    _this.counters.inc("bounds");
 
-                if (!_this.visible) {
-                    // don't do anything else if the panel is hidden
-                    return;
-                }
-
-                // increment the bounds counter
-                _this.counters.inc("bounds");
-
-                // check if debug mode is enabled
-                if (me.debug.renderHitBox) {
-                    renderer.save();
-                    renderer.setLineWidth(1);
-
-                    // draw the bounding rect shape
-                    renderer.setColor("orange");
-                    bounds.copy(this.getBounds());
-                    bounds.pos.sub(this.ancestor._absPos);
-                    renderer.drawShape(bounds);
-
-                    // draw all defined shapes
-                    renderer.setColor("red");
-                    renderer.translate(this.pos.x, this.pos.y);
-                }
-                for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                    // check if debug mode is enabled
                     if (me.debug.renderHitBox) {
-                        renderer.drawShape(shape);
+                        renderer.save();
+
+                        renderer.translate(
+                            -this.pos.x - this.body.pos.x - this.ancestor._absPos.x,
+                            -this.pos.y - this.body.pos.y - this.ancestor._absPos.y
+                        );
+
+                        if (this.renderable instanceof me.Renderable) {
+                            renderer.translate(
+                                -this.anchorPoint.x * this.body.width,
+                                -this.anchorPoint.y * this.body.height
+                            );
+                        }
+
+                        // draw the bounding rect shape
+                        renderer.setColor("orange");
+                        renderer.drawShape(this.getBounds());
+
+
+                        renderer.translate(
+                            this.pos.x +  this.ancestor._absPos.x,
+                            this.pos.y +  this.ancestor._absPos.y
+                        );
+
+                        // draw all defined shapes
+                        renderer.setColor("red");
+                        for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                            renderer.drawShape(shape);
+                            _this.counters.inc("shapes");
+                        }
+                        renderer.restore();
                     }
-                    _this.counters.inc("shapes");
+
+                    if (me.debug.renderVelocity && (this.body.vel.x || this.body.vel.y)) {
+                        bounds.copy(this.getBounds());
+                        bounds.pos.sub(this.ancestor._absPos);
+                        // draw entity current velocity
+                        var x = bounds.width / 2;
+                        var y = bounds.height / 2;
+
+                        renderer.save();
+                        renderer.setLineWidth(1);
+
+                        renderer.setColor("blue");
+                        renderer.translate(-x, -y);
+                        renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
+                        _this.counters.inc("velocity");
+
+                        renderer.restore();
+                    }
                 }
-
-                if (me.debug.renderHitBox) {
-                    renderer.restore();
-                }
-
-                if (me.debug.renderVelocity && (this.body.vel.x || this.body.vel.y)) {
-                    bounds.copy(this.getBounds());
-                    bounds.pos.sub(this.ancestor._absPos);
-                    // draw entity current velocity
-                    var x = ~~(bounds.pos.x + (bounds.width / 2));
-                    var y = ~~(bounds.pos.y + (bounds.height / 2));
-
-                    renderer.save();
-                    renderer.setLineWidth(1);
-
-                    renderer.setColor("blue");
-                    renderer.translate(x, y);
-                    renderer.strokeLine(0, 0, ~~(this.body.vel.x * (bounds.width / 2)), ~~(this.body.vel.y * (bounds.height / 2)));
-                    _this.counters.inc("velocity");
-
-                    renderer.restore();
-                }
+                // call the original me.Entity.posDraw function
+                this._patched(renderer);
             });
 
             // patch container.js

@@ -9,16 +9,14 @@
         /**
          * @ignore
          */
-        init: function (v, w, h) {
-            this._super(me.Renderable, "init", [v.x, v.y, w, h]);
+        init: function (x, y, w, h) {
+            this._super(me.Renderable, "init", [x, y, w, h]);
             // flag to know if we need to refresh the display
             this.invalidate = false;
-
-            // default progress bar height
-            this.barHeight = 4;
-
             // current progress
             this.progress = 0;
+
+            this.anchorPoint.set(0, 0);
         },
 
         /**
@@ -51,10 +49,10 @@
         draw : function (renderer) {
             // draw the progress bar
             renderer.setColor("black");
-            renderer.fillRect(0, (this.height / 2) - (this.barHeight / 2), this.width, this.barHeight);
+            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.width, this.height / 2);
 
             renderer.setColor("#55aa00");
-            renderer.fillRect(2, (this.height / 2) - (this.barHeight / 2), this.progress, this.barHeight);
+            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.progress, this.height / 2);
 
             renderer.setColor("white");
         }
@@ -72,7 +70,6 @@
                 me.utils.nextPowerOfTwo(this.width),
                 me.utils.nextPowerOfTwo(this.height),
             false);
-
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
 
@@ -102,6 +99,8 @@
             context.lineJoin = "miter";
             context.miterLimit = 4.0;
             context.stroke();
+
+            this.anchorPoint.set(0.5, 0.5);
         },
         /**
          * @ignore
@@ -122,6 +121,8 @@
             // offscreen cache canvas
             this.fontCanvas = me.video.createCanvas(128, 32);
             this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
+
+            this.anchorPoint.set(0.0, 0.0);
         },
 
         drawFont : function (context) {
@@ -175,9 +176,10 @@
 
             // progress bar
             var progressBar = new ProgressBar(
-                new me.Vector2d(),
+                0,
+                me.video.renderer.getHeight() / 2,
                 me.video.renderer.getWidth(),
-                me.video.renderer.getHeight()
+                8 // bar height
             );
 
             this.loaderHdlr = me.event.subscribe(
@@ -191,10 +193,12 @@
             );
 
             me.game.world.addChild(progressBar, 1);
+
             // melonJS text & logo
             var icon = new IconLogo(
-                (me.video.renderer.getWidth() - 100) / 2,
-                (me.video.renderer.getHeight() / 2) - (progressBar.barHeight / 2) - 90
+                me.video.renderer.getWidth() / 2,
+                (me.video.renderer.getHeight() / 2) - (progressBar.height) - 35
+
             );
             me.game.world.addChild(icon, 1);
             me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);

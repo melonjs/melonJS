@@ -94,7 +94,7 @@
         update : function (dt) {
             // move things forward independent of the current frame rate
             var skew = dt * this._deltaInv;
-
+            
             // Decrease particle life
             this.life = this.life > dt ? this.life - dt : 0;
 
@@ -139,7 +139,9 @@
         /**
          * @ignore
          */
-        draw : function (renderer) {
+        preDraw : function (renderer) {
+
+            // restore is called in postDraw
             renderer.save();
 
             // particle alpha value
@@ -147,7 +149,12 @@
 
             // translate to the defined anchor point and scale it
             renderer.transform(this.currentTransform);
+        },
 
+        /**
+         * @ignore
+         */
+        draw : function (renderer) {
             var w = this.width, h = this.height;
             renderer.drawImage(
                 this.image,
@@ -156,8 +163,6 @@
                 -w / 2, -h / 2,
                 w, h
             );
-
-            renderer.restore();
         }
     });
 

@@ -85,6 +85,9 @@
 
             // set a default deadzone
             this.setDeadzone(this.width / 6, this.height / 6);
+
+            // for backward "compatiblity" (in terms of behavior)
+            this.anchorPoint.set(0, 0);
         },
 
         // -- some private function ---

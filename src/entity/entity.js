@@ -35,13 +35,10 @@
         init : function (x, y, settings) {
 
             /**
-             * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
-             * @public
-             * @type me.Renderable
-             * @name renderable
-             * @memberOf me.Entity
+             * The array of renderable children of this entity.
+             * @ignore
              */
-            this.renderable = null;
+            this.children = [];
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -264,6 +261,26 @@
             bounds.resize(w, h);
         },
 
+        preDraw : function (renderer) {
+            renderer.save();
+
+            // translate to the entity position
+            renderer.translate(
+                this.pos.x + this.body.pos.x,
+                this.pos.y + this.body.pos.y
+            );
+
+            if (this.renderable instanceof me.Renderable) {
+                // draw the child renderable's anchorPoint at the entity's
+                // anchor point.  the entity's anchor point is a scale from
+                // body position to body width/height
+                renderer.translate(
+                    this.anchorPoint.x * this.body.width,
+                    this.anchorPoint.y * this.body.height
+                );
+            }
+        },
+
         /**
          * object draw<br>
          * not to be called by the end user<br>
@@ -273,47 +290,19 @@
          * @function
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         * @param {me.Rect} region to draw
          **/
-        draw : function (renderer) {
-            // draw the child renderable if defined
-            var child = this.renderable;
-            if (child instanceof me.Renderable) {
-                // draw the child renderable's anchorPoint at the entity's
-                // anchor point.  the entity's anchor point is a scale from
-                // body position to body width/height
-                var ax = this.anchorPoint.x * this.body.width,
-                    ay = this.anchorPoint.y * this.body.height;
+        draw : function (renderer, rect) {
+            var renderable = this.renderable;
+            if (renderable instanceof me.Renderable) {
+                // predraw (apply transforms)
+                renderable.preDraw(renderer);
 
-                var x = this.pos.x + this.body.pos.x + ax,
-                    y = this.pos.y + this.body.pos.y + ay;
+                // draw the object
+                renderable.draw(renderer, rect);
 
-                renderer.translate(x, y);
-
-                // apply the child transform, if any
-                if (child.autoTransform === true && !child.currentTransform.isIdentity()) {
-                    // calculate the anchor point
-                    var bounds = child.getBounds();
-                    var cx = bounds.width * child.anchorPoint.x;
-                    var cy = bounds.height * child.anchorPoint.y;
-
-                    renderer.save();
-
-                    // translate to the anchor point
-                    renderer.translate(cx, cy);
-                    // apply the object transformation
-                    renderer.transform(child.currentTransform);
-                    // translate back
-                    renderer.translate(-cx, -cy);
-
-                    // draw the object
-                    child.draw(renderer);
-
-                    renderer.restore();
-
-                } else {
-                    child.draw(renderer);
-                }
-                renderer.translate(-x, -y);
+                // postdraw (clean-up);
+                renderable.postDraw(renderer);
             }
         },
 
@@ -325,7 +314,7 @@
             // free some property objects
             if (this.renderable) {
                 this.renderable.destroy.apply(this.renderable, arguments);
-                this.renderable = null;
+                this.children.splice(0, 1);
             }
             this.body.destroy.apply(this.body, arguments);
             this.body = null;
@@ -360,6 +349,35 @@
         onCollision : function () {
             return false;
         }
+    });
+
+
+    /**
+     * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
+     * @public
+     * @type me.Renderable
+     * @name renderable
+     * @memberOf me.Entity
+     */
+    Object.defineProperty(me.Entity.prototype, "renderable", {
+        /* for backward compatiblity */
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.children[0];
+        },
+        /**
+         * @ignore
+         */
+        set : function (value) {
+            if (value instanceof me.Renderable) {
+                this.children[0] = value;
+            } else {
+                throw new me.Entity.Error(value + "should extend me.Renderable");
+            }
+        },
+        configurable : true
     });
 
     /**

@@ -422,6 +422,12 @@
                     // TMX object settings
                     var settings = group.objects[o];
 
+                    // Tiled used 0,0 by default
+                    if (typeof (settings.anchorPoint) === "undefined") {
+                        settings.anchorPoint = {x : 0, y : 0};
+                    }
+
+                    // pull the corresponding entity from the object pool
                     var obj = me.pool.pull(
                         settings.name || "me.Entity",
                         settings.x, settings.y,
@@ -450,6 +456,8 @@
                                 // this should not happen
                                 break;
                         }
+                        // tile object use use left-bottom coordinates
+                        //obj.anchorPoint.set(0, 1);
                     }
 
                     if (isCollisionGroup && !settings.name) {
