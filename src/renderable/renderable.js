@@ -310,8 +310,8 @@
         },
 
         /**
-         * update function
-         * called by the game manager on each game loop
+         * update function. <br>
+         * automatically called by the game manager {@link me.game}
          * @name update
          * @memberOf me.Renderable
          * @function
@@ -319,7 +319,7 @@
          * @param {Number} dt time since the last update in milliseconds.
          * @return false
          **/
-        update : function () {
+        update : function (/* dt */) {
             return false;
         },
 
@@ -354,9 +354,15 @@
         },
 
         /**
-         * calls by an object container before calling the draw function
-         * @ignore
-         */
+         * prepare the rendering context before drawing
+         * (apply defined transforms, anchor point). <br>
+         * automatically called by the game manager {@link me.game}
+         * @name preDraw
+         * @memberOf me.Renderable
+         * @function
+         * @protected
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         **/
         preDraw : function (renderer) {
             var bounds = this.getBounds();
             var ax = bounds.width * this.anchorPoint.x,
@@ -380,8 +386,8 @@
         },
 
         /**
-         * object draw
-         * called by the game manager on each game loop
+         * object draw. <br>
+         * automatically called by the game manager {@link me.game}
          * @name draw
          * @memberOf me.Renderable
          * @function
@@ -393,11 +399,16 @@
         },
 
         /**
-         * calls by a object container after calling the draw function
-         * @ignore
-         */
+         * restore the rendering context after drawing. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name postDraw
+         * @memberOf me.Renderable
+         * @function
+         * @protected
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         **/
         postDraw : function (renderer) {
-            // save context
+            // restore the context
             renderer.restore();
         },
 

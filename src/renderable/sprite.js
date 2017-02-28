@@ -483,13 +483,7 @@
         },
 
         /**
-         * update the animation<br>
-         * this is automatically called by the game manager {@link me.game}
-         * @name update
-         * @memberOf me.Sprite
-         * @function
-         * @protected
-         * @param {Number} dt time since the last update in milliseconds.
+         * @ignore
          */
         update : function (dt) {
             var result = false;
@@ -539,15 +533,8 @@
         },
 
         /**
-         * object draw<br>
-         * not to be called by the end user<br>
-         * called by the game manager on each game loop
-         * @name draw
-         * @memberOf me.Sprite
-         * @function
-         * @protected
-         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-         **/
+         * @ignore
+         */
         draw : function (renderer) {
             // do nothing if we are flickering
             if (this._flicker.isFlickering) {
