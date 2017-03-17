@@ -264,7 +264,7 @@
                 }
                 // normalize value into a [-1, 1] range value (treat 0 as positive)
                 var range = Math.sign(value) || 1;
-                if (!last[range]) {
+                if (last[range].keyCode === 0) {
                     return;
                 }
                 var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
@@ -273,9 +273,16 @@
 
                 // Edge detection
                 if (!last[range].pressed && pressed) {
+                    // Release the opposite direction, if necessary
+                    if (last[-range].pressed) {
+                        api._keyup(e, last[-range].keyCode, mapped_axis + 256);
+                        last[-range].value = 0;
+                        last[-range].pressed = false;
+                    }
+
                     api._keydown(e, last[range].keyCode, mapped_axis + 256);
                 }
-                else if ((last[range].pressed || (last[-range] && last[-range].pressed)) && !pressed) {
+                else if ((last[range].pressed || last[-range].pressed) && !pressed) {
                     range = last[range].pressed ? range : -range;
                     api._keyup(e, last[range].keyCode, mapped_axis + 256);
                 }
@@ -426,11 +433,22 @@
         } else if (button.type === "axes") {
             // normalize threshold into a value that can represent both side of the axis
             var range = (Math.sign(button.threshold) || 1);
-            // axes are defined using a double []
+            // axes are defined using two objects; one for negative and one for positive
             if (!binding[button.code]) {
                 binding[button.code] = {};
             }
-            binding[button.code][range] = mapping;
+            var axes = binding[button.code];
+            axes[range] = mapping;
+
+            // Ensure the opposite axis exists
+            if (!axes[-range]) {
+                axes[-range] = {
+                    "keyCode" : 0,
+                    "value" : 0,
+                    "pressed" : false,
+                    "threshold" : -range
+                };
+            }
         }
     };
 
