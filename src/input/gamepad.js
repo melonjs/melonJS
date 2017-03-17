@@ -375,7 +375,7 @@
      * @param {me.input.GAMEPAD.BUTTONS|Object} button id (deprecated) or definition as below
      * @param {String} button.type "buttons" or "axes"
      * @param {me.input.GAMEPAD.BUTTONS|me.input.GAMEPAD.AXES} button.code button or axis code id
-     * @param {String} [button.threshold] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
+     * @param {Number} [button.threshold] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
      * @param {me.input.KEY} keyCode
      * @example
      * // enable the keyboard
