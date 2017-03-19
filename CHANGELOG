@@ -2,6 +2,7 @@ Version History
 ---------------
 5.0.0
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
+* Input : remove deprecated argument type for `me.input.bindGamepad()`
 * Renderable : properly apply transformation and anchor for all me.Renderable objects.
 
 4.1.1
