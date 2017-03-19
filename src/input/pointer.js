@@ -158,7 +158,6 @@
 
     var pointerEventMap = {
         wheel : WHEEL,
-        mousewheel : WHEEL, /* XXX: mousewheel is deprecated */
         pointermove: POINTER_MOVE,
         pointerdown: POINTER_DOWN,
         pointerup: POINTER_UP,
@@ -725,7 +724,6 @@
      *   <li><code>"pointerleave"</code></li>
      *   <li><code>"pointercancel"</code></li>
      *   <li><code>"wheel"</code></li>
-     *   <li><code>"mousewheel"</code> (Deprecated)</li>
      * </ul>
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
      * @param {Function} callback methods to be called when the event occurs.
@@ -749,10 +747,7 @@
         // make sure the mouse/touch events are initialized
         enablePointerEvent();
 
-        // XXX: mousewheel is deprecated
-        if (eventType === "mousewheel") {
-            console.error("`mousewheel` events are deprecated; use `wheel`")
-        } else if (pointerEventList.indexOf(eventType) === -1) {
+        if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
 
@@ -794,10 +789,7 @@
      * me.input.releasePointerEvent('pointerdown', this);
      */
     api.releasePointerEvent = function (eventType, region, callback) {
-        // XXX: mousewheel is deprecated
-        if (eventType === "mousewheel") {
-            console.error("`mousewheel` events are deprecated; use `wheel`")
-        } else if (pointerEventList.indexOf(eventType) === -1) {
+        if (pointerEventList.indexOf(eventType) === -1) {
             throw new me.Error("invalid event type : " + eventType);
         }
 
