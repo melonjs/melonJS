@@ -22,6 +22,7 @@ game.PlayerEntity = me.Entity.extend({
         me.input.bindKey(me.input.KEY.RIGHT, "right");
         me.input.bindKey(me.input.KEY.X,     "jump", true);
         me.input.bindKey(me.input.KEY.UP,    "jump", true);
+        me.input.bindKey(me.input.KEY.SPACE, "jump", true);
         me.input.bindKey(me.input.KEY.DOWN,  "down");
 
         me.input.bindKey(me.input.KEY.A,     "left");
