@@ -9,7 +9,7 @@
     /**
      * An object to display a fixed or animated sprite on screen.
      * @class
-     * @extends me.Sprite
+     * @extends me.Renderable
      * @memberOf me
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
