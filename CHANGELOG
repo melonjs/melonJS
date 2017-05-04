@@ -4,7 +4,8 @@ Version History
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
 * Input : remove deprecated argument type for `me.input.bindGamepad()`
 * Input : remove deprecated `mousewheel` event
-* Renderable : properly apply transformation and anchor for all me.Renderable objects.
+* Renderable : properly apply transformation and anchor for all me.Renderable objects
+* Renderable : move flipX/flipY to me.Renderable, and remove deprecation warning
 
 4.1.1
 * Core : fixed a bug in `Number.prototype.round()`

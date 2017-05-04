@@ -214,6 +214,12 @@
             this._width = width;
             this._height = height;
 
+            // keep track of when we flip
+            this._flip = {
+                lastX : false,
+                lastY : false
+            };
+
             this.shapeType = "Rectangle";
 
             // ensure it's fully opaque by default
@@ -256,6 +262,38 @@
                 if (this.alpha !== this.alpha) {
                     this.alpha = 1.0;
                 }
+            }
+        },
+
+        /**
+         * flip the renderable on the horizontal axis, using negative transform scale
+         * @see me.Matrix2d.scaleX
+         * @name flipX
+         * @memberOf me.Renderable
+         * @function
+         * @param {Boolean} flip enable/disable flip
+         */
+        flipX : function (flip) {
+            if (flip !== this._flip.lastX) {
+                this._flip.lastX = flip;
+                // invert the scale.x value
+                this.currentTransform.scaleX(-1);
+            }
+        },
+
+        /**
+         * flip the renderable on the vertical axis, using negative transform scale
+         * @see me.Matrix2d.scaleY
+         * @name flipY
+         * @memberOf me.Renderable
+         * @function
+         * @param {Boolean} flip enable/disable flip
+         */
+        flipY : function (flip) {
+            if (flip !== this._flip.lastY) {
+                this._flip.lastY = flip;
+                // invert the scale.x value
+                this.currentTransform.scaleY(-1);
             }
         },
 

@@ -18,6 +18,8 @@
      * @param {me.video.renderer.Texture|Image|String} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
+     * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
+     * @param {Number} [settings.flipY] flip the sprite on the vertical axis
      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a standalone sprite, with anchor in the center
@@ -82,19 +84,6 @@
             // animation frame delta
             this.dt = 0;
 
-            // keep track of when we flip
-            this._flip = {
-                lastX : false,
-                lastY : false
-            };
-
-            if (typeof (settings.flipX) !== "undefined") {
-                this._flip.lastX(!!settings.flipX);
-            }
-            if (typeof (settings.flipY) !== "undefined") {
-                this._flip.lastY(!!settings.flipY);
-            }
-
             // flicker settings
             this._flicker = {
                 isFlickering : false,
@@ -152,6 +141,15 @@
                 this.current.height
             ]);
 
+            // apply flip flags if specified
+            if (typeof (settings.flipX) !== "undefined") {
+                this.flipX(!!settings.flipX);
+            }
+            if (typeof (settings.flipY) !== "undefined") {
+                this.flipY(!!settings.flipY);
+            }
+
+
             // set the default rotation angle is defined in the settings
             // * WARNING: rotating sprites decreases performance with Canvas Renderer
             if (typeof (settings.rotation) !== "undefined") {
@@ -207,38 +205,6 @@
             else if (!this._flicker.isFlickering) {
                 this._flicker.callback = callback;
                 this._flicker.isFlickering = true;
-            }
-        },
-
-        /**
-         * Flip object on horizontal axis
-         * @name flipX
-         * @memberOf me.Sprite
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipX : function (flip) {
-            if (flip !== this._flip.lastX) {
-                console.warn("Deprecated: me.Sprite.flipX");
-                this._flip.lastX = flip;
-                // invert the scale.x value
-                this.currentTransform.scaleX(-1);
-            }
-        },
-
-        /**
-         * Flip object on vertical axis
-         * @name flipY
-         * @memberOf me.Sprite
-         * @function
-         * @param {Boolean} flip enable/disable flip
-         */
-        flipY : function (flip) {
-            if (flip !== this._flip.lastY) {
-                console.warn("Deprecated: me.Sprite.flipY");
-                this._flip.lastY = flip;
-                // invert the scale.x value
-                this.currentTransform.scaleY(-1);
             }
         },
 
