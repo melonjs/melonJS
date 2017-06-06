@@ -116,6 +116,8 @@
          * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
          * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
          * @property {Boolean} [webgl=false] force the renderer to WebGL
+         * @property {Boolean} [debug=false] display the debug panel (if preloaded)
+         * @property {String} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
          * @public
          * @type {Object}
          * @name HASH

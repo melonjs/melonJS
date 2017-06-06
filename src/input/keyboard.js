@@ -294,6 +294,8 @@
         /** @memberOf me.input.KEY */
         "F12" : 123,
         /** @memberOf me.input.KEY */
+        "TILDE" : 126,
+        /** @memberOf me.input.KEY */
         "NUM_LOCK" : 144,
         /** @memberOf me.input.KEY */
         "SCROLL_LOCK" : 145,

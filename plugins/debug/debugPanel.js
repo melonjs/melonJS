@@ -7,7 +7,9 @@
  * usage : me.plugin.register.defer(this, me.debug.Panel, "debug");
  *
  * you can then use me.plugins.debug.show() or me.plugins.debug.hide()
- * to show or hide the panel, or press respectively the "S" and "H" keys.
+ * to show or hide the panel, press the "s" key.
+ * default key can be configured using the following parameters in the url :
+ * e.g. http://myURL/index.html#debugToggleKey=d
  *
  * note :
  * Heap Memory information is available under Chrome when using
@@ -150,7 +152,7 @@
 
     var DebugPanel = me.Renderable.extend({
         /** @private */
-        init : function (showKey, hideKey) {
+        init : function (debugToggle) {
             // call the super constructor
             this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
@@ -243,13 +245,10 @@
             var self = this;
 
             // add some keyboard shortcuts
-            this.showKey = showKey || me.input.KEY.S;
-            this.hideKey = hideKey || me.input.KEY.H;
+            this.debugToggle = debugToggle || me.input.KEY.S;
             this.keyHandler = me.event.subscribe(me.event.KEYDOWN, function (action, keyCode) {
-                if (keyCode === self.showKey) {
-                    me.plugins.debugPanel.show();
-                } else if (keyCode === self.hideKey) {
-                    me.plugins.debugPanel.hide();
+                if (keyCode === self.debugToggle) {
+                    me.plugins.debugPanel.toggle();
                 }
             });
 
@@ -653,8 +652,7 @@
             // hide the panel
             this.hide();
             // unbind keys event
-            me.input.unbindKey(me.input.KEY.S);
-            me.input.unbindKey(me.input.KEY.H);
+            me.input.unbindKey(this.toggleKey);
             me.event.unsubscribe(this.keyHandler);
         }
     });
@@ -670,10 +668,10 @@
     /** @scope me.debug.Panel.prototype */
     {
         /** @private */
-        init : function (showKey, hideKey) {
+        init : function (debugToggle) {
             // call the super constructor
             this._super(me.plugin.Base, "init");
-            this.panel = new DebugPanel(showKey, hideKey);
+            this.panel = new DebugPanel(debugToggle);
 
             // if "#debug" is present in the URL
             if (me.game.HASH.debug === true) {
@@ -689,12 +687,25 @@
         /** @private */
         hide : function () {
             this.panel.hide();
+        },
+
+        /** @private */
+        toggle : function () {
+            if (this.panel.visible) {
+                this.panel.hide();
+            } else {
+                this.panel.show();
+            }
         }
+
+
     });
 
     // automatically register the debug panel
     window.onReady(function () {
-        me.plugin.register.defer(this, me.debug.Panel, "debugPanel");
+        me.plugin.register.defer(this, me.debug.Panel, "debugPanel",
+            me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
+        );
     });
 
     /*---------------------------------------------------------*/
