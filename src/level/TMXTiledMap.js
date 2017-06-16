@@ -433,10 +433,6 @@
                         settings.x, settings.y,
                         settings
                     );
-                    // skip if the pull function does not return a corresponding object
-                    if (typeof obj !== "object") {
-                        continue;
-                    }
 
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {
