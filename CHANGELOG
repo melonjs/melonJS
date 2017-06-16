@@ -1,6 +1,7 @@
 Version History
 ---------------
 5.0.0
+* Audio : Howler core update (2.0.4)
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
 * Input : remove deprecated argument type for `me.input.bindGamepad()`
 * Input : remove deprecated `mousewheel` event
