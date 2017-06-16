@@ -24,14 +24,14 @@
 
             this.pos = new me.Vector2d();
 
-            // pre-allocate the vector array
-            this.points = [
-                new me.Vector2d(), new me.Vector2d(),
-                new me.Vector2d(), new me.Vector2d()
-            ];
-
             this.shapeType = "Rectangle";
-            this.setShape(x, y, w, h);
+
+            this.setShape(x, y, [
+                new me.Vector2d(0, 0), // 0, 0
+                new me.Vector2d(w, 0), // 1, 0
+                new me.Vector2d(w, h), // 1, 1
+                new me.Vector2d(0, h)  // 0, 1
+            ]);
         },
 
         /**
@@ -41,22 +41,26 @@
          * @function
          * @param {Number} x position of the Rectangle
          * @param {Number} y position of the Rectangle
-         * @param {Number} w width of the rectangle
-         * @param {Number} h height of the rectangle
+         * @param {Number|Array} w|points width of the rectangle, or an array of vector defining the rectangle
+         * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
          * @return {me.Rect} this rectangle
          */
         setShape : function (x, y, w, h) {
+            var points = w; // assume w is an array by default
 
-            this.points[0].set(0, 0); // 0, 0
-            this.points[1].set(w, 0); // 1, 0
-            this.points[2].set(w, h); // 1, 1
-            this.points[3].set(0, h); // 0, 1
+            if (arguments.length === 4) {
+                points = this.points;
+                points[0].set(0, 0); // 0, 0
+                points[1].set(w, 0); // 1, 0
+                points[2].set(w, h); // 1, 1
+                points[3].set(0, h); // 0, 1
+            }
 
-            this._super(me.Polygon, "setShape", [x, y, this.points]);
+            this._super(me.Polygon, "setShape", [x, y, points]);
 
-            // private properties to cache w & h
-            this._width = w;
-            this._height = h;
+            // private properties to cache width & height
+            this._width = this.points[2].x; // w
+            this._height = this.points[2].y; // h
 
             return this;
         },
