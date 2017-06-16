@@ -388,6 +388,7 @@
          */
         api.shouldCollide = function (a, b) {
             return (
+                a.isKinematic !== true && b.isKinematic !== true &&
                 a.body && b.body &&
                 (a.body.collisionMask & b.body.collisionType) !== 0 &&
                 (a.body.collisionType & b.body.collisionMask) !== 0

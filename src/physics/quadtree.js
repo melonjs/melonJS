@@ -181,16 +181,19 @@
     Quadtree.prototype.insertContainer = function (container) {
 
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
-            if (child instanceof me.Container && !(child instanceof me.ParticleContainer)) {
-                if (child.name !== "rootContainer") {
-                    this.insert(child);
-                }
-                // recursivly insert all childs
-                this.insertContainer(child);
-            } else {
-                // only insert object with a bounding box
-                if (typeof (child.getBounds) === "function") {
-                    this.insert(child);
+            if (child.isKinematic !== true) {
+                if (child instanceof me.Container) {
+                    if (child.name !== "rootContainer") {
+                        this.insert(child);
+                    }
+                    // recursivly insert all childs
+                    this.insertContainer(child);
+                } else {
+                    // only insert object with a bounding box
+                    // Probably redundant with `isKinematic`
+                    if (typeof (child.getBounds) === "function") {
+                        this.insert(child);
+                    }
                 }
             }
         }

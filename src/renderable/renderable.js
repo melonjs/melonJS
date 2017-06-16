@@ -31,6 +31,16 @@
             this.isRenderable = true;
 
             /**
+             * If true then collisions and input events will no more impact this renderable
+             * @public
+             * @type me.Boolean
+             * @default false
+             * @name isKinematic
+             * @memberOf me.Renderable
+             */
+            this.isKinematic = false;
+
+            /**
              * the renderable default transformation matrix
              * @public
              * @type me.Matrix2d

@@ -368,7 +368,7 @@
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
 
-                if (evtHandlers.has(candidate)) {
+                if (evtHandlers.has(candidate) && (candidate.isKinematic !== true)) {
                     var handlers = evtHandlers.get(candidate);
                     var region = handlers.region;
                     var ancestor = region.ancestor;

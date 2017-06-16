@@ -41,6 +41,8 @@
             this.autoTransform = false;
 
             this.anchorPoint.set(0, 0);
+
+            this.isKinematic = true;
         },
 
         /**
