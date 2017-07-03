@@ -241,7 +241,13 @@ module.exports = function (grunt) {
           pull : true
         }
       }
+    },
+
+    karma: {
+      unit: {
+        configFile: "karma.conf.js"
     }
+  }
   });
 
   grunt.loadNpmTasks("grunt-contrib-clean");
@@ -253,6 +259,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-uglify");
   grunt.loadNpmTasks("grunt-build-gh-pages");
   grunt.loadNpmTasks("grunt-jsdoc");
+  grunt.loadNpmTasks("grunt-karma");
   grunt.loadNpmTasks("grunt-replace");
 
   // Custom Tasks
@@ -271,6 +278,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "connect:server", "jasmine" ]);
+  grunt.registerTask("testChrome", [ "karma" ]);
   grunt.registerTask("serve", [ "connect:keepalive" ]);
   grunt.registerTask("gh-pages", [
     "test",
