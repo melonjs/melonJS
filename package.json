@@ -32,7 +32,7 @@
   "devDependencies": {
     "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
     "grunt": "^1.0.1",
-    "grunt-build-gh-pages": "^2.0.0",
+    "grunt-build-gh-pages": "^1.0.5",
     "grunt-contrib-clean": "^1.1.0",
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-connect": "^1.0.2",
