@@ -27,3 +27,4 @@ build/*
 dist/*
 docs/*
 !.placeholder
+package-lock.json
