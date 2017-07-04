@@ -1,5 +1,5 @@
 {
-  "name": "melonJS",
+  "name": "melonjs",
   "version": "5.0.0",
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
@@ -18,7 +18,16 @@
   "engines": {
     "node": ">= 6"
   },
-  "main": "build/melonJS.js",
+  "main": "build/melonjs.js",
+  "files": [
+    "build/melonjs.js",
+    "build/melonjs.min.js",
+    "plugins/",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG"
+  ],
   "dependencies": {},
   "devDependencies": {
     "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",

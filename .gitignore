@@ -1,6 +1,7 @@
 # Eclipse files
 .project
 .settings
+.idea
 
 # Grunt files
 .grunt
