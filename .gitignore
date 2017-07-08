@@ -28,3 +28,4 @@ dist/*
 docs/*
 !.placeholder
 package-lock.json
+/_SpecRunner.html
