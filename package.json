@@ -47,7 +47,10 @@
     "jasmine-core": "~2.5.2",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "2.2.0",
+    "karma-coverage": "1.1.1",
     "karma-jasmine": "^1.1.0",
+    "karma-nyan-reporter": "0.2.5",
+    "karma-html-detailed-reporter": "1.1.20",
     "q": "^1.4.1",
     "shelljs": "^0.5.3"
   },

@@ -1,4 +1,6 @@
-describe("melonJS initialization", function () {
+//melonJS initialization
+beforeAll((done) => {
+    console.log ('Initializing melonJS');
     me.sys.stopOnAudioError = false;
 
     me.boot();
@@ -9,8 +11,9 @@ describe("melonJS initialization", function () {
     }
 
     // Hide the screen
-    var scr = document.querySelector("#screen");
+    let scr = document.querySelector("#screen");
     if (scr) {
         scr.style.display = "none";
     }
+    done();
 });
