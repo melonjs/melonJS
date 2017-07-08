@@ -782,9 +782,8 @@
          */
         get: function () {
             if (me.device.hasFullscreenSupport) {
-                var el = me.agent.prefixed("fullscreenElement", document) ||
-                         document.mozFullScreenElement;
-                return (el === me.video.getWrapper());
+                return !!(me.agent.prefixed("fullscreenElement", document) ||
+                    document.mozFullScreenElement);
             } else {
                 return false;
             }

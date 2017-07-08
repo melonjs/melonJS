@@ -16,7 +16,7 @@ module.exports = function (grunt) {
     pkg : grunt.file.readJSON("package.json"),
     path : {
       main : "build/<%= pkg.name %>.js",
-      min : "build/<%= pkg.name %>-min.js"
+      min : "build/<%= pkg.name %>.min.js"
     },
 
     concat : {
@@ -222,7 +222,8 @@ module.exports = function (grunt) {
         expand : true,
         src : [
           "index.html",
-          "build/melonJS.js",
+          "build/melonjs.js",
+          "build/melonjs.min.js",
           "docs/**",
           "examples/**",
           "media/logo.png",

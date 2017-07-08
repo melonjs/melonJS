@@ -1,5 +1,5 @@
 {
-  "name": "melonJS",
+  "name": "melonjs",
   "version": "5.0.0",
   "description": "MelonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
@@ -18,7 +18,16 @@
   "engines": {
     "node": ">= 6"
   },
-  "main": "build/melonJS.js",
+  "main": "build/melonjs.js",
+  "files": [
+    "build/melonjs.js",
+    "build/melonjs.min.js",
+    "plugins/",
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG"
+  ],
   "dependencies": {},
   "devDependencies": {
     "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
@@ -29,15 +38,15 @@
     "grunt-contrib-connect": "^1.0.2",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-jasmine": "^1.1.0",
-    "grunt-eslint": "^20.0.0",
     "grunt-contrib-uglify": "^3.0.1",
+    "grunt-eslint": "^20.0.0",
     "grunt-jsdoc": "^2.1.0",
     "grunt-karma": "^2.0.0",
     "grunt-replace": "^1.0.1",
     "grunt-shell": "^2.1.0",
-    "karma-chrome-launcher": "2.2.0",
     "jasmine-core": "~2.5.2",
     "karma": "^1.7.0",
+    "karma-chrome-launcher": "2.2.0",
     "karma-jasmine": "^1.1.0",
     "q": "^1.4.1",
     "shelljs": "^0.5.3"
