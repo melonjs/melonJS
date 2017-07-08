@@ -11,15 +11,35 @@ module.exports = function(config) {
 
     basePath: '',
 
-    //test framework would be jasmine however other frameworks can be used
     frameworks: ['jasmine'],
-    //all js files needed for tests to run order matters! e.g. do not load angular mocks before angular ect...
+    //all js files needed for tests to run order matters!
     files: files,
 
-    browsers: ['Chrome'], // You may use 'ChromeCanary', 'Chromium' or any other supported browser
+    //Note that instrumented js files are very inconvenient for debugging purpose, so consider having separate launch profile without instrumentation for debugging purposes
+    preprocessors: {
+      './src/**/*.js': 'coverage',
+    },
+
+    reporters: ['nyan', 'coverage', 'htmlDetailed'],
+    htmlDetailed: {
+      dir: 'build/reports/karma',
+      splitResults: true,
+      useHostedBootstrap: true,
+      autoReload: false
+    },
+    coverageReporter: {
+      dir: 'build/reports/coverage',
+      reporters: [
+        {type: 'html', subdir: 'report-html'}
+      ]
+    },
+
+
+    browsers: ['ChromeHeadless'],
     proxies: {
       "/tests/": "/base/tests/"
-      }
-    // you can define custom flags
+      },
+
+    singleRun: true
   })
 }
