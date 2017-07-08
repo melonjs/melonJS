@@ -34,7 +34,6 @@ module.exports = function(config) {
       ]
     },
 
-    browsers: ['ChromeHeadless'],
     proxies: {
       "/tests/": "/base/tests/"
       },
