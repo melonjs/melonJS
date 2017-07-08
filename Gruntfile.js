@@ -197,7 +197,7 @@ module.exports = function (grunt) {
       src : "<%= path.main %>",
       options : {
         specs : testSpecs,
-        helpers : [ "tests/spec/helper-spec.js" ],
+        helpers : [ "tests/helper/helper-spec.js" ],
         host : "http://localhost:8001/"
       }
     },

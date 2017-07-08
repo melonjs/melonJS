@@ -1,6 +1,7 @@
 /**
  * A collection of helper functions which can be used in your tests
  */
+//ToDo Consider combining jasmine preparation path with init.js and including actual helper function via browserify require
 (function () {
     "use strict";
     beforeEach(function () {

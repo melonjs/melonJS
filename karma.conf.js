@@ -1,9 +1,9 @@
 module.exports = function(config) {
 
   var sourceFiles = require("./sourceFiles.json");
-  var testSpecs = require("./testSpecs.json");
+  var testSpecs = 'tests/spec/**/*.js';
 
-  var files = sourceFiles.concat("tests/spec/helper-spec.js").concat(testSpecs);
+  var files = sourceFiles.concat("tests/helper/helper-spec.js").concat(testSpecs);
   var files = files.concat([{pattern: 'tests/data/**/*', watched: false, included: false, served: true}]);
 
 
