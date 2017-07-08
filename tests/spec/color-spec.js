@@ -4,7 +4,7 @@ describe("me.Color", function () {
     var green_color;
     var blue_color;
     //ToDo changing this to 'beforeEach' shows that currently tests leak their state into other tests, which is not good
-    beforeAll(() => {
+    beforeAll(function () {
         red_color = new me.Color(255, 0, 0, 0.5);
         green_color = new me.Color().parseCSS("green");
         blue_color = new me.Color().parseHex("#0000FF");

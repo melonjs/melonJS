@@ -2,7 +2,7 @@ describe("me.Sprite", function () {
     var container;
     var sprite;
 
-    beforeAll(() => {
+    beforeAll(function () {
         container = new me.Container(50, 50, 150, 150);
         sprite = new me.Sprite(0, 0, {
             "framewidth" : 32,

@@ -7,13 +7,13 @@
 
    describe("Shape : me.Font", function () {
      var font;
-     beforeAll(() => {
+     beforeAll(function () {
        font = new me.Font("Arial", 8, "white");
      });
 
  */
 
-beforeAll((done) => {
+beforeAll(function (done) {
     console.log("Initializing melonJS");
     me.sys.stopOnAudioError = false;
 
@@ -25,7 +25,7 @@ beforeAll((done) => {
     }
 
     // Hide the screen
-    let scr = document.querySelector("#screen");
+    var scr = document.querySelector("#screen");
     if (scr) {
         scr.style.display = "none";
     }

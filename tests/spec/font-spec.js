@@ -2,7 +2,7 @@ describe("Shape : me.Font", function () {
 
     // define a font object
     var font;
-    beforeAll(() => {
+    beforeAll(function () {
         font = new me.Font("Arial", 8, "white");
     });
 
