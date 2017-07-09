@@ -199,7 +199,7 @@
          * @function
          * @memberOf me.utils
          * @name decodeCSV
-         * @param  {String} input CSV formatted data
+         * @param  {String} input CSV formatted data (only numbers, everything else will be converted to NaN)
          * @return {Number[]} Decoded data
          */
         api.decodeCSV = function (input) {

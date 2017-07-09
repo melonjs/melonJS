@@ -1,8 +1,11 @@
 describe("Shape : me.Font", function () {
 
     // define a font object
-    var font = new me.Font("Arial", 8, "white");
-    
+    var font;
+    beforeAll(function () {
+        font = new me.Font("Arial", 8, "white");
+    });
+
     describe("font set Size", function () {
         it("default font size is 8", function () {
             expect(font.height).toEqual(8);

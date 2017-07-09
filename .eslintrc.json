@@ -36,7 +36,8 @@
       "afterEach"             : false,
       "spyOn"                 : false,
       "xdescribe"             : false,
-      "xit"                   : false
+      "xit"                   : false,
+      "beforeAll"             : false
   },
 
   "rules": {

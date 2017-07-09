@@ -1,13 +1,19 @@
 describe("me.Sprite", function () {
-    var container = new me.Container(50, 50, 150, 150);
-    var sprite = new me.Sprite(0, 0, {
+    var container;
+    var sprite;
+
+    beforeAll(function () {
+        container = new me.Container(50, 50, 150, 150);
+        sprite = new me.Sprite(0, 0, {
             "framewidth" : 32,
             "frameheight" : 32,
             "image" : me.video.createCanvas(64, 64)
+        });
+
+        // add to a parent container
+        container.addChild(sprite);
     });
 
-    // add to a parent container
-    container.addChild(sprite);
 
     it("me.Sprite bounds return the visible part of the sprite", function () {
         var bounds = sprite.getBounds();

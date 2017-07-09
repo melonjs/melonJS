@@ -37,7 +37,6 @@
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-connect": "^1.0.2",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-jasmine": "^1.1.0",
     "grunt-contrib-uglify": "^3.0.1",
     "grunt-eslint": "^20.0.0",
     "grunt-jsdoc": "^2.1.0",
@@ -51,6 +50,7 @@
     "karma-jasmine": "^1.1.0",
     "karma-nyan-reporter": "0.2.5",
     "karma-html-detailed-reporter": "1.1.20",
+    "karma-phantomjs-launcher": "1.0.4", 
     "q": "^1.4.1",
     "shelljs": "^0.5.3"
   },

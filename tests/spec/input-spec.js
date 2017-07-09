@@ -1,7 +1,11 @@
 describe("me.input", function () {
-    var renderable = new me.Entity(0, 0, {
-        "width" : 32,
-        "height" : 32
+
+    var renderable;
+    beforeAll(function () {
+        renderable = new me.Entity(0, 0, {
+            "width" : 32,
+            "height" : 32
+        });
     });
 
     describe("Pointer Event", function () {

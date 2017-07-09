@@ -27,9 +27,15 @@ describe("me.Renderable", function () {
     });
 
     describe("getAbsoluteBounds returns the correct value", function () {
-        var rootContainer = new me.Container(0, 0, 1000, 1000);
-        var childContainer = new me.Container(100, 100, 500, 500);
-        var renderable = new me.Renderable(50, 50, 50, 50);
+
+        var rootContainer;
+        var childContainer;
+        var renderable;
+        beforeAll(function () {
+            rootContainer = new me.Container(0, 0, 1000, 1000);
+            childContainer = new me.Container(100, 100, 500, 500);
+            renderable = new me.Renderable(50, 50, 50, 50);
+        });
 
         it("create and add a child container to the root container", function () {
             rootContainer._root = true;

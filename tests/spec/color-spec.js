@@ -1,8 +1,14 @@
 describe("me.Color", function () {
 
-    var red_color = new me.Color(255, 0, 0, 0.5);
-    var green_color = new me.Color().parseCSS("green");
-    var blue_color = new me.Color().parseHex("#0000FF");
+    var red_color;
+    var green_color;
+    var blue_color;
+    //ToDo changing this to 'beforeEach' shows that currently tests leak their state into other tests, which is not good
+    beforeAll(function () {
+        red_color = new me.Color(255, 0, 0, 0.5);
+        green_color = new me.Color().parseCSS("green");
+        blue_color = new me.Color().parseHex("#0000FF");
+    });
 
     describe("parseHex Function", function () {
         // #RGB
@@ -108,8 +114,9 @@ describe("me.Color", function () {
     });
 
     describe("color clone function", function () {
-        var clone = blue_color.clone();
         it("clone color hex value is #0000FF", function () {
+            var _blue_color = new me.Color().parseHex("#0000FF");
+            var clone = _blue_color.clone();
             expect(clone.toHex()).toEqual("#0000FF");
         });
     });
