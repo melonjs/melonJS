@@ -1,11 +1,17 @@
 describe("me.input", function () {
 
     var renderable;
+    var evenType;
     beforeAll(function () {
         renderable = new me.Entity(0, 0, {
             "width" : 32,
             "height" : 32
         });
+        if (me.device.pointerEvent) {
+            evenType = "pointerdown";
+        } else {
+            evenType ="mousedown"
+        }
     });
 
     describe("Pointer Event", function () {
@@ -34,7 +40,7 @@ describe("me.input", function () {
             });
 
             // Create the event.
-            var event = new CustomEvent("mousedown");
+            var event = new CustomEvent(evenType);
 
             // configure the event
             event.pointerId = 1;
