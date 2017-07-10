@@ -6,6 +6,9 @@ node_js:
   - 6
   - 7
 
+addons:
+  chrome: stable # have Travis install chrome stable.
+  
 before_install:
   - "npm install -g grunt-cli"
 
