@@ -238,7 +238,7 @@ module.exports = function (grunt) {
     karma: {
       unit: {
         configFile: "karma.conf.js",
-        browsers: ["ChromeHeadless"] //other supported options are Chrome and ChromeHeadless
+        browsers: ["PhantomJS"] //other supported options are Chrome and ChromeHeadless
       }
     }
 
