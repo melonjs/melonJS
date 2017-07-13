@@ -83,15 +83,15 @@ describe("Shape : me.Polygon", function () {
         it("shape should have an isometric diamond shape", function () {
             shape.toIso();
             // test a few points
-            expect(~~shape.points[1].y).toEqual(16);
-            expect(~~shape.points[3].x).toEqual(-32);
-            expect(~~shape.points[3].y).toEqual(16);
+            expect(shape.points[1].y).toBeCloseTo(16, 3);
+            expect(shape.points[3].x).toBeCloseTo(-32, 3);
+            expect(shape.points[3].y).toBeCloseTo(16, 3);
 
             // convert it back
             shape.to2d();
-            expect(~~shape.points[1].y).toEqual(0);
-            expect(~~shape.points[3].x).toEqual(0);
-            expect(~~shape.points[3].y).toBeCloseTo(32);
+            expect(shape.points[1].y).toBeCloseTo(0, 3);
+            expect(shape.points[3].x).toBeCloseTo(0, 3);
+            expect(shape.points[3].y).toBeCloseTo(32, 3);
         });
     });
 });
