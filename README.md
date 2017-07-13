@@ -124,10 +124,9 @@ To run melonJS tests in node simply run the following:
 
     $ grunt test
 
-This will run the jasmine spec tests with the output displayed on the shell. This however, is not
-recommended because the tests are run by PhantomJS in this mode, and there are a
-lot of known bugs and unsupported features in the version of WebKit shipped
-with PhantomJS.
+This will run the jasmine spec tests with the output displayed on the shell. Do
+note that the latest Chrome version is required, as the test unit will run the
+Browser in a headless mode (in case of failed tests, upgrade your browser).
 
 WIP Builds
 -------------------------------------------------------------------------------
