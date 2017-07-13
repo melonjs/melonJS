@@ -43,8 +43,8 @@
             }
 
             // future proofing (MS) feature detection
-            me.device.pointerEvent = me.agent.prefixed("PointerEvent", window);
-            me.device.maxTouchPoints = me.agent.prefixed("maxTouchPoints", navigator) || 0;
+            me.device.pointerEvent = window.PointerEvent;
+            me.device.maxTouchPoints = navigator.maxTouchPoints || 0;
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities

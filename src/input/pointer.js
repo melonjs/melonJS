@@ -106,12 +106,12 @@
 
     // internal constants
     var WHEEL = ["wheel"];
-    var POINTER_MOVE = ["pointermove", "MSPointerMove", "mousemove", "touchmove"];
-    var POINTER_DOWN = ["pointerdown", "MSPointerDown", "mousedown", "touchstart"];
-    var POINTER_UP = ["pointerup", "MSPointerUp", "mouseup", "touchend"];
-    var POINTER_CANCEL = ["pointercancel", "MSPointerCancel", "mousecancel", "touchcancel"];
-    var POINTER_ENTER = ["pointerenter", "MSPointerEnter", "mouseenter", "touchenter"];
-    var POINTER_LEAVE = ["pointerleave", "MSPointerLeave", "mouseleave", "touchleave"];
+    var POINTER_MOVE = ["pointermove", "mousemove", "touchmove"];
+    var POINTER_DOWN = ["pointerdown", "mousedown", "touchstart"];
+    var POINTER_UP = ["pointerup", "mouseup", "touchend"];
+    var POINTER_CANCEL = ["pointercancel", "mousecancel", "touchcancel"];
+    var POINTER_ENTER = ["pointerenter", "mouseenter", "touchenter"];
+    var POINTER_LEAVE = ["pointerleave", "mouseleave", "touchleave"];
 
     // list of standard pointer event type
     var pointerEventList = [
@@ -122,17 +122,6 @@
         POINTER_CANCEL[0],
         POINTER_ENTER[0],
         POINTER_LEAVE[0]
-    ];
-
-    // previous MS prefixed pointer event type
-    var MSPointerEventList = [
-        WHEEL[0],
-        POINTER_MOVE[1],
-        POINTER_DOWN[1],
-        POINTER_UP[1],
-        POINTER_CANCEL[1],
-        POINTER_ENTER[1],
-        POINTER_LEAVE[1]
     ];
 
     // legacy mouse event type
@@ -197,7 +186,7 @@
     }
 
     /**
-     * enable pointer event (MSPointer/Mouse/Touch)
+     * enable pointer event (Pointer/Mouse/Touch)
      * @ignore
      */
     function enablePointerEvent() {
@@ -215,9 +204,6 @@
             // check standard
             if (window.PointerEvent) {
                 activeEventList = pointerEventList;
-            }
-            else if (window.MSPointerEvent) { // check for backward compatibility with the 'MS' prefix
-                activeEventList = MSPointerEventList;
             }
             else { // Regular Mouse events
                 activeEventList = mouseEventList;
