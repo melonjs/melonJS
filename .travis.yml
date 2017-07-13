@@ -7,12 +7,7 @@ node_js:
   - 7
 
 addons:
-  apt:
-    sources:
-      - google-chrome
-    packages:
-      - google-chrome-stable
-
+  chrome: stable # have Travis install chrome stable.
 
 before_install:
   - "export CHROME_BIN=chromium-browser"
