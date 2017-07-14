@@ -67,10 +67,17 @@ if (!String.prototype.includes) {
      * @param {number} [position=0] The position in this string at which to begin searching for the given string.
      * @return {boolean} true if contains the specified string
      */
-  String.prototype.includes = function() {
-    return String.prototype.indexOf.apply(this, arguments) !== -1;
-  };
-}
+    String.prototype.includes = function(search, start) {
+        if (typeof start !== "number") {
+            start = 0;
+        }
+        if (start + search.length > this.length) {
+            return false;
+        } else {
+            return this.indexOf(search, start) !== -1;
+        }
+    };
+};
 
 /**
  * convert the string to hex value
