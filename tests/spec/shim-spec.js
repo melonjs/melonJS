@@ -53,4 +53,23 @@ describe("ES5/ES6 Shim", function () {
         });
     });
 
+    describe("Array functions :", function () {
+        it("Array.forEach", function () {
+            // Create an array.
+            var numbers = [10, 11, 12];
+            // Call the addNumber callback function for each array element.
+            var sum = 0;
+            numbers.forEach(
+                function addNumber(value) { sum += value; }
+            );
+            expect(sum).toEqual(33);
+        });
+        it("Array.isArray", function () {
+            expect(Array.isArray([1, 2, 3])).toEqual(true);  // true
+            expect(Array.isArray({foo: 123})).toEqual(false); // false
+            expect(Array.isArray("foobar")).toEqual(false);   // false
+            expect(Array.isArray(undefined)).toEqual(false);  // false
+        });
+    });
+
 });

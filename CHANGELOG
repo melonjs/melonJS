@@ -3,6 +3,7 @@ Version History
 5.0.0
 * Audio : Howler core update (2.0.4)
 * Core : fix fullscreen detection when not set on the main canvas
+* Core : remove obsolete ES5 shim (it's 2017, update your browser!)
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
 * Input : remove deprecated argument type for `me.input.bindGamepad()`
 * Input : remove deprecated `mousewheel` event
