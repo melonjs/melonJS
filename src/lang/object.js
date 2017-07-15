@@ -12,55 +12,6 @@
 
 /* eslint-disable no-self-compare */
 
-if (!Object.defineProperty) {
-    /**
-     * simple defineProperty function definition (if not supported by the browser)<br>
-     * if defineProperty is redefined, internally use __defineGetter__/__defineSetter__ as fallback
-     * @param {Object} obj The object on which to define the property.
-     * @param {string} prop The name of the property to be defined or modified.
-     * @param {Object} desc The descriptor for the property being defined or modified.
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty|Object.defineProperty}
-     */
-    Object.defineProperty = function (obj, prop, desc) {
-        // check if Object support __defineGetter function
-        if (obj.__defineGetter__) {
-            if (desc.get) {
-                obj.__defineGetter__(prop, desc.get);
-            }
-            if (desc.set) {
-                obj.__defineSetter__(prop, desc.set);
-            }
-        } else {
-            // we should never reach this point....
-            throw new TypeError("Object.defineProperty not supported");
-        }
-    };
-}
-
-if (!Object.create) {
-    /**
-     * Prototypal Inheritance Create Helper
-     * @name create
-     * @memberOf external:Object#
-     * @function
-     * @param {Object} o
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create|Object.create}
-     * @example
-     * // declare oldObject
-     * oldObject = new Object();
-     * // make some crazy stuff with oldObject (adding functions, etc...)
-     * // ...
-     *
-     * // make newObject inherits from oldObject
-     * newObject = Object.create(oldObject);
-     */
-    Object.create = function (o) {
-        var Fn = function () {};
-        Fn.prototype = o;
-        return new Fn();
-    };
-}
-
 if (!Object.is) {
     /**
      * The Object.is() method determines whether two values are the same value.
