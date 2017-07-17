@@ -9,17 +9,6 @@ if (typeof window.performance === "undefined") {
     window.performance = {};
 }
 
-if (typeof Date.now === "undefined") {
-    /**
-     * provide a replacement for browser not
-     * supporting Date.now (JS 1.5)
-     * @ignore
-     */
-    Date.now = function () {
-        return new Date().getTime();
-    };
-}
-
 if (!window.performance.now) {
     var timeOffset = Date.now();
 
