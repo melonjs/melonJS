@@ -1,5 +1,28 @@
 describe("ES5 Features", function () {
 
+    describe("Function functions :", function () {
+
+        it("Function.bind", function () {
+            this.x = 9;
+            var module = {
+              x: 81,
+              getX: function() { return this.x; }
+            };
+
+            module.getX(); // 81
+
+            var retrieveX = module.getX;
+            retrieveX();
+            // returns 9 - The function gets invoked at the global scope
+
+            // Create a new function with 'this' bound to module
+            // New programmers might confuse the
+            // global var x with module's property x
+            var boundGetX = retrieveX.bind(module);
+            expect(boundGetX()).toEqual(81); // 81
+        });
+    });
+
     describe("Object functions :", function () {
 
         it("Object.create", function () {
