@@ -41,8 +41,12 @@
                  * @ignore
                  */
                 set : function (value) {
-                    this.onUpdate(value, this._y, this._z, this._x, this._y, this._z);
-                    this._x = value;
+                    var ret = this.onUpdate(value, this._y, this._z, this._x, this._y, this._z);
+                    if (ret && "x" in ret) {
+                        this._x = ret.x;
+                    } else {
+                        this._x = value
+                    }
                 }
             });
 
@@ -64,8 +68,12 @@
                  * @ignore
                  */
                 set : function (value) {
-                    this.onUpdate(this._x, value, this._z, this._x, this._y, this._z);
-                    this._y = value;
+                    var ret = this.onUpdate(this._x, value, this._z, this._x, this._y, this._z);
+                    if (ret && "y" in ret) {
+                        this._y = ret.y;
+                    } else {
+                        this._y = value
+                    }
                 }
             });
 
@@ -87,8 +95,13 @@
                  * @ignore
                  */
                 set : function (value) {
-                    this.onUpdate(this._x, this._y, value, this._x, this._y, this._z);
-                    this._z = value;
+                    var ret = this.onUpdate(this._x, this._y, value, this._x, this._y, this._z);
+                    if (ret && "z" in ret) {
+                        this._z = ret.z;
+                    } else {
+                        this._z = value
+                    }
+
                 }
             });
 
@@ -106,10 +119,16 @@
         /**
          * @ignore */
         _set : function (x, y, z) {
-            this.onUpdate(x, y, z, this._x, this._y, this._z);
-            this._x = x;
-            this._y = y;
-            this._z = z;
+            var ret = this.onUpdate(x, y, z, this._x, this._y, this._z);
+            if (ret && "x" in ret && "y" in ret && "z" in ret) {
+                this._x = ret.x;
+                this._y = ret.y;
+                this._z = ret.z;
+            } else {
+              this._x = x;
+              this._y = y;
+              this._z = z;
+            }
             return this;
         },
 

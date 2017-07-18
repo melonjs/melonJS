@@ -16,6 +16,14 @@ describe("me.ObservableVector3d", function () {
         _oldZ = oldZ;
     };
 
+    var callback_with_ret = function (newX, newY, oldX, oldY) {
+        return  {
+            x : 10,
+            y : 10,
+            z : 10
+        };
+    };
+
     it("should be initialized to a (0, 0, 0) 3d vector", function () {
         a = new me.ObservableVector3d(0, 0, 0, {
             onUpdate : callback.bind(this)
@@ -38,6 +46,14 @@ describe("me.ObservableVector3d", function () {
         a.set(10, 100, 20);
 
         expect(a.x + a.y + a.z).toEqual(_newX + _newY + _newZ);
+    });
+
+    it("callback returns a vector value", function () {
+        var d = new me.ObservableVector3d(0, 0, 0, {
+            onUpdate : callback_with_ret.bind(this)
+        });
+        d.set(100, 100, 100);
+        expect(d.x + d.y + d.z).toEqual(30); // 10 + 10 + 10
     });
 
     it("add a vector triggers the callback", function () {

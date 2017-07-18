@@ -14,6 +14,13 @@ describe("me.ObservableVector2d", function () {
         _oldY = oldY;
     };
 
+    var callback_with_ret = function (newX, newY, oldX, oldY) {
+        return  {
+            x : 10,
+            y : 10
+        };
+    };
+
     it("should be initialized to a (0, 0) 2d vector", function () {
         a = new me.ObservableVector2d(0, 0, {
             onUpdate : callback.bind(this)
@@ -31,6 +38,14 @@ describe("me.ObservableVector2d", function () {
     it("setting the vector triggers the callback", function () {
         a.set(10, 100);
         expect(a.x + a.y).toEqual(_newX + _newY);
+    });
+
+    it("callback returns a vector value", function () {
+        var d = new me.ObservableVector2d(0, 0, {
+            onUpdate : callback_with_ret.bind(this)
+        });
+        d.set(100, 100);
+        expect(d.x + d.y).toEqual(20); // 10 + 10
     });
 
     it("add a vector triggers the callback", function () {

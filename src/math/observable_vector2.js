@@ -38,8 +38,12 @@
                  * @ignore
                  */
                 set : function (value) {
-                    this.onUpdate(value, this._y, this._x, this._y);
-                    this._x = value;
+                    var ret = this.onUpdate(value, this._y, this._x, this._y);
+                    if (ret && "x" in ret) {
+                        this._x = ret.x;
+                    } else {
+                        this._x = value
+                    }
                 }
             });
 
@@ -61,8 +65,12 @@
                  * @ignore
                  */
                 set : function (value) {
-                    this.onUpdate(this._x, value, this._x, this._y);
-                    this._y = value;
+                    var ret = this.onUpdate(this._x, value, this._x, this._y);
+                    if (ret && "y" in ret) {
+                        this._y = ret.y;
+                    } else {
+                        this._y = value
+                    }
                 }
             });
 
@@ -78,10 +86,15 @@
 
         /** @ignore */
         _set : function (x, y) {
-            this.onUpdate(x, y, this._x, this._y);
-            this._x = x;
-            this._y = y;
-            return this;
+            var ret = this.onUpdate(x, y, this._x, this._y);
+            if (ret && "x" in ret && "y" in ret) {
+                this._x = ret.x;
+                this._y = ret.y;
+            } else {
+              this._x = x;
+              this._y = y;
+           }
+           return this;
         },
 
         /**
