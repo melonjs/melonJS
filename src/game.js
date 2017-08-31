@@ -76,7 +76,7 @@
         /**
          * when true, all objects will be added under the root world container<br>
          * when false, a `me.Container` object will be created for each
-         * corresponding `TMXObjectGroup`
+         * corresponding `TMXGroup`
          * default value : true
          * @public
          * @type {boolean}

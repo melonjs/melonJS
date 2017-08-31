@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2017, Olivier Biot, Jason Oster, Aaron McLeod
  * http://www.melonjs.org
  *
- * Tile QT +0.7.x format
+ * Tile QT 0.1.0 format
  * http://www.mapeditor.org/
  *
  */
@@ -53,26 +53,6 @@
     }
 
     /**
-     * Set tiled layer Data
-     * @ignore
-     */
-    function setLayerData(layer, data) {
-        var idx = 0;
-        // set everything
-        for (var y = 0; y < layer.rows; y++) {
-            for (var x = 0; x < layer.cols; x++) {
-                // get the value of the gid
-                var gid = data[idx++];
-                // fill the array
-                if (gid !== 0) {
-                    // add a new tile to the layer
-                    layer.setTile(x, y, gid);
-                }
-            }
-        }
-    }
-
-    /**
      * read the layer Data
      * @ignore
      */
@@ -81,21 +61,7 @@
         // init the layer properly
         layer.initFromJSON(data);
         // set a renderer
-        if (!map.getRenderer().canRender(layer)) {
-            layer.setRenderer(getNewDefaultRenderer(layer));
-        }
-        else {
-            // use the default one
-            layer.setRenderer(map.getRenderer());
-        }
-        // parse the layer data
-        setLayerData(layer,
-            me.TMXUtils.decode(
-                data.data,
-                data.encoding,
-                data.compression
-            )
-        );
+        layer.setRenderer(map.getRenderer(layer));
         return layer;
     }
 
@@ -138,9 +104,8 @@
      * @ignore
      */
     function readObjectGroup(map, data, z) {
-        return (new me.TMXObjectGroup(map, data, z));
+        return (new me.TMXGroup(map, data, z));
     }
-
 
     /**
      * a TMX Tile Map Object
@@ -256,12 +221,21 @@
          * @memberOf me.TMXTileMap
          * @public
          * @function
-         * @return {me.TMXRenderer} renderer
+         * @param {me.TMXLayer} [layer] a layer object
+         * @return {me.TMXRenderer} a TMX renderer
          */
-        getRenderer : function (renderer) {
+        getRenderer : function (layer) {
+            // first ensure a renderer is associated to this map
             if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
                 this.renderer = getNewDefaultRenderer(this);
             }
+
+            // return a renderer for the given layer (if any)
+            if ((typeof(layer) !== "undefined") && (!this.renderer.canRender(layer))) {
+                return getNewDefaultRenderer(layer);
+            }
+
+            // else return this renderer
             return this.renderer;
         },
 
@@ -332,10 +306,16 @@
                         self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
                         break;
 
+                    // get the object groups information
+                    case "group":
+                        self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                        break;
+
                     default:
                         break;
                 }
             });
+
             this.initialized = true;
         },
 
@@ -422,17 +402,25 @@
                     // TMX object settings
                     var settings = group.objects[o];
 
+                    var obj;
+
                     // Tiled used 0,0 by default
                     if (typeof (settings.anchorPoint) === "undefined") {
                         settings.anchorPoint = {x : 0, y : 0};
                     }
 
-                    // pull the corresponding entity from the object pool
-                    var obj = me.pool.pull(
-                        settings.name || "me.Entity",
-                        settings.x, settings.y,
-                        settings
-                    );
+                    // groups can contains either objects or layers
+                    if (settings instanceof me.TMXLayer) {
+                        // layers are alerady instantiated & initialized
+                        obj = settings;
+                    } else {
+                        // pull the corresponding entity from the object pool
+                        obj = me.pool.pull(
+                            settings.name || "me.Entity",
+                            settings.x, settings.y,
+                            settings
+                        );
+                    }
 
                     // check if a me.Tile object is embedded
                     if (typeof (settings.tile) === "object" && !obj.renderable) {

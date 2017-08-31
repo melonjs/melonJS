@@ -164,6 +164,7 @@
                 case "imagelayer":
                 case "layer":
                 case "objectgroup":
+                case "group":
                     var layer = api.parse(item);
                     layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
                     if (layer.image) {

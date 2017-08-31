@@ -7,6 +7,26 @@
 (function () {
 
     /**
+     * Set a tiled layer Data
+     * @ignore
+     */
+    function setLayerData(layer, data) {
+        var idx = 0;
+        // set everything
+        for (var y = 0; y < layer.rows; y++) {
+            for (var x = 0; x < layer.cols; x++) {
+                // get the value of the gid
+                var gid = data[idx++];
+                // fill the array
+                if (gid !== 0) {
+                    // add a new tile to the layer
+                    layer.setTile(x, y, gid);
+                }
+            }
+        }
+    }
+
+    /**
      * a generic Color Layer Object
      * @class
      * @extends me.Renderable
@@ -416,20 +436,20 @@
         },
 
         /** @ignore */
-        initFromJSON: function (layer) {
+        initFromJSON: function (data) {
             // additional TMX flags
-            this.name = layer.name;
-            this.cols = +layer.width;
-            this.rows = +layer.height;
+            this.name = data.name;
+            this.cols = +data.width;
+            this.rows = +data.height;
 
             // hexagonal maps only
-            this.hexsidelength = +layer.hexsidelength || undefined;
-            this.staggeraxis = layer.staggeraxis;
-            this.staggerindex = layer.staggerindex;
+            this.hexsidelength = +data.hexsidelength || undefined;
+            this.staggeraxis = data.staggeraxis;
+            this.staggerindex = data.staggerindex;
 
             // layer opacity
-            var visible = typeof(layer.visible) !== "undefined" ? +layer.visible : 1;
-            this.setOpacity(visible ? +layer.opacity : 0);
+            var visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
+            this.setOpacity(visible ? +data.opacity : 0);
 
             // layer "real" size
             if (this.orientation === "isometric") {
@@ -440,7 +460,7 @@
                 this.height = this.rows * this.tileheight;
             }
             // check if we have any user-defined properties
-            me.TMXUtils.applyTMXProperties(this, layer);
+            me.TMXUtils.applyTMXProperties(this, data);
 
             // check for the correct rendering method
             if (typeof (this.preRender) === "undefined") {
@@ -458,6 +478,15 @@
 
             //initialize the layer data array
             this.initArray(this.cols, this.rows);
+
+            // parse the layer data
+            setLayerData(this,
+                me.TMXUtils.decode(
+                    data.data,
+                    data.encoding,
+                    data.compression
+                )
+            );
         },
 
         // called when the layer is added to the game world or a container
