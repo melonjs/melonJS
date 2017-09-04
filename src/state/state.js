@@ -71,44 +71,12 @@
         }
     });
 
-    // based on the requestAnimationFrame polyfill by Erik Möller
-    (function () {
-        var lastTime = 0;
-        var frameDuration = 1000 / 60;
-        // get unprefixed rAF and cAF, if present
-        var requestAnimationFrame = me.agent.prefixed("requestAnimationFrame");
-        var cancelAnimationFrame = me.agent.prefixed("cancelAnimationFrame") ||
-                                   me.agent.prefixed("cancelRequestAnimationFrame");
-
-        if (!requestAnimationFrame || !cancelAnimationFrame) {
-            requestAnimationFrame = function (callback) {
-                var currTime = window.performance.now();
-                var timeToCall = Math.max(0, frameDuration - (currTime - lastTime));
-                var id = window.setTimeout(function () {
-                    callback(currTime + timeToCall);
-                }, timeToCall);
-                lastTime = currTime + timeToCall;
-                return id;
-            };
-
-            cancelAnimationFrame = function (id) {
-                window.clearTimeout(id);
-            };
-        }
-
-         // put back in global namespace
-        window.requestAnimationFrame = requestAnimationFrame;
-        window.cancelAnimationFrame = cancelAnimationFrame;
-    }());
-
-
     /**
      * a State Manager (state machine)<p>
      * There is no constructor function for me.state.
      * @namespace me.state
      * @memberOf me
      */
-
     me.state = (function () {
         // hold public stuff in our singleton
         var api = {};
