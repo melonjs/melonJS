@@ -41,7 +41,7 @@
              * @name width
              * @memberOf me.TMXGroup
              */
-            this.width = data.width;
+            this.width = data.width || 0;
 
             /**
              * group height
@@ -50,7 +50,7 @@
              * @name height
              * @memberOf me.TMXGroup
              */
-            this.height = data.height;
+            this.height = data.height || 0;
 
             /**
              * group z order
@@ -86,7 +86,7 @@
                     self.objects.push(new me.TMXObject(map, object, z));
                 });
             }
-            
+
             if (data.layers) {
                 var _layers = data.layers;
                 _layers.forEach(function (object) {
