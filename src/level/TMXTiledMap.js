@@ -386,6 +386,9 @@
                     // create a new container
                     targetContainer = new me.Container(0, 0, this.width, this.height);
 
+                    // tiled uses 0,0 by default
+                    targetContainer.anchorPoint.set(0, 0);
+
                     // set additional properties
                     targetContainer.name = group.name;
                     targetContainer.pos.z = group.z;
@@ -401,10 +404,10 @@
                 for (var o = 0; o < group.objects.length; o++) {
                     // TMX object settings
                     var settings = group.objects[o];
+                    // reference to the instantiated object
+                    var obj = undefined;
 
-                    var obj;
-
-                    // Tiled used 0,0 by default
+                    // Tiled uses 0,0 by default
                     if (typeof (settings.anchorPoint) === "undefined") {
                         settings.anchorPoint = {x : 0, y : 0};
                     }
@@ -413,6 +416,7 @@
                     if (settings instanceof me.TMXLayer) {
                         // layers are alerady instantiated & initialized
                         obj = settings;
+                        // z value set already
                     } else {
                         // pull the corresponding entity from the object pool
                         obj = me.pool.pull(
@@ -420,6 +424,8 @@
                             settings.x, settings.y,
                             settings
                         );
+                        // set the obj z order
+                        obj.pos.z = settings.z;
                     }
 
                     // check if a me.Tile object is embedded
@@ -448,9 +454,6 @@
                         // configure the body accordingly
                         obj.body.collisionType = me.collision.types.WORLD_SHAPE;
                     }
-
-                    // set the obj z order correspondingly to its parent container/group
-                    obj.pos.z = group.z;
 
                     //apply group opacity value to the child objects if group are merged
                     if (flatten === true) {

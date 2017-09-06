@@ -90,7 +90,7 @@
             if (data.layers) {
                 var _layers = data.layers;
                 _layers.forEach(function (object) {
-                    var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+                    var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                     // init the layer properly
                     layer.initFromJSON(object);
                     // set a renderer
