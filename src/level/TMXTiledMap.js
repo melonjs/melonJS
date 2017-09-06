@@ -405,7 +405,7 @@
                     // TMX object settings
                     var settings = group.objects[o];
                     // reference to the instantiated object
-                    var obj = undefined;
+                    var obj;
 
                     // Tiled uses 0,0 by default
                     if (typeof (settings.anchorPoint) === "undefined") {

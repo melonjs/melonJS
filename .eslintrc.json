@@ -130,7 +130,7 @@
     "no-throw-literal": 0,
     "no-trailing-spaces": 0,
     "no-undef": 2,
-    "no-undef-init": 2,
+    "no-undef-init": "error",
     "no-unexpected-multiline": 2,
     "no-unmodified-loop-condition": 2,
     "no-unneeded-ternary": [0, { "defaultAssignment": false }],
