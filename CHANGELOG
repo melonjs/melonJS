@@ -13,6 +13,7 @@ Version History
 * Renderable : move flipX/flipY to me.Renderable, and remove deprecation warning
 * Renderable : new `isKinematic` property allowing to opt-out from collision and input events
 * TMX : added support for layer grouping (Tiled 1.0.0)
+* Viewport : added a method to unfollow the current target
 
 4.1.1
 * Core : fixed a bug in `Number.prototype.round()`

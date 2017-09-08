@@ -132,10 +132,7 @@
             this.pos.y = y || 0;
 
             // reset the target
-            this.target = null;
-
-            // reset default axis value for follow
-            this.follow_axis = null;
+            this.unfollow();
 
             // reset the transformation matrix
             this.currentTransform.identity();
@@ -238,6 +235,17 @@
             );
             // force a camera update
             this.updateTarget();
+        },
+
+        /**
+         * unfollow the current target
+         * @name unfollow
+         * @memberOf me.Viewport
+         * @function
+         */
+        unfollow : function () {
+            this.target = null;
+            this.follow_axis = this.AXIS.NONE;
         },
 
         /**
