@@ -127,22 +127,22 @@
     // legacy mouse event type
     var mouseEventList = [
         WHEEL[0],
+        POINTER_MOVE[1],
+        POINTER_DOWN[1],
+        POINTER_UP[1],
+        POINTER_CANCEL[1],
+        POINTER_ENTER[1],
+        POINTER_LEAVE[1]
+    ];
+
+    // iOS style touch event type
+    var touchEventList = [
         POINTER_MOVE[2],
         POINTER_DOWN[2],
         POINTER_UP[2],
         POINTER_CANCEL[2],
         POINTER_ENTER[2],
         POINTER_LEAVE[2]
-    ];
-
-    // iOS style touch event type
-    var touchEventList = [
-        POINTER_MOVE[3],
-        POINTER_DOWN[3],
-        POINTER_UP[3],
-        POINTER_CANCEL[3],
-        POINTER_ENTER[3],
-        POINTER_LEAVE[3]
     ];
 
     var pointerEventMap = {
@@ -783,24 +783,26 @@
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
         var handlers = evtHandlers.get(region);
-        for (var i = 0; i < eventTypes.length; i++) {
-            eventType = eventTypes[i];
-            if (handlers.callbacks[eventType]) {
-                if (typeof (callback) !== "undefined") {
-                    handlers.callbacks[eventType].remove(callback);
-                } else {
-                    while (handlers.callbacks[eventType].length > 0) {
-                        handlers.callbacks[eventType].pop();
+        if (typeof (handlers) !== "undefined") {
+            for (var i = 0; i < eventTypes.length; i++) {
+                eventType = eventTypes[i];
+                if (handlers.callbacks[eventType]) {
+                    if (typeof (callback) !== "undefined") {
+                        handlers.callbacks[eventType].remove(callback);
+                    } else {
+                        while (handlers.callbacks[eventType].length > 0) {
+                            handlers.callbacks[eventType].pop();
+                        }
+                    }
+                    // free the array if empty
+                    if (handlers.callbacks[eventType].length === 0) {
+                        delete handlers.callbacks[eventType];
                     }
                 }
-                // free the array if empty
-                if (handlers.callbacks[eventType].length === 0) {
-                    delete handlers.callbacks[eventType];
-                }
             }
-        }
-        if (Object.keys(handlers.callbacks).length === 0) {
-            evtHandlers.delete(region);
+            if (Object.keys(handlers.callbacks).length === 0) {
+                evtHandlers.delete(region);
+            }
         }
     };
 
