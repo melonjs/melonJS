@@ -233,12 +233,6 @@
             this.area.renderVelocity = new me.Rect(250, 17, size, size);
             this.area.renderQuadTree = new me.Rect(410, 2,  size, size);
 
-            // some internal string/length
-            this.help_str        = "(s)how/(h)ide";
-            this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
-            this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
-            this.memoryPositionX = 325 * this.mod;
-
             // enable the FPS counter
             me.debug.displayFPS = true;
 
@@ -251,6 +245,12 @@
                     me.plugins.debugPanel.toggle();
                 }
             });
+
+            // some internal string/length
+            this.help_str        = "["+String.fromCharCode(32 + this.debugToggle)+"]show/hide";
+            this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
+            this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
+            this.memoryPositionX = 325 * this.mod;
 
             // resize the panel if the browser is resized
             me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function (w) {
