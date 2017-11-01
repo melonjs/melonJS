@@ -475,7 +475,7 @@
          * @function
          * @param {String} sound_name audio clip name - case sensitive
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
-         * @param {Boolean} [muted=true] True to mute and false to unmute
+         * @param {Boolean} [mute=true] True to mute and false to unmute
          * @example
          * // mute the background music
          * me.audio.mute("awesome_music");
@@ -524,6 +524,18 @@
          */
         api.unmuteAll = function () {
             Howler.mute(false);
+        };
+
+        /**
+         * Returns true if audio is muted globally.
+         * @name muted
+         * @memberOf me.audio
+         * @public
+         * @function
+         * @return {Boolean} true if audio is muted globally
+         */
+        api.muted = function () {
+            return Howler._muted;
         };
 
         /**
