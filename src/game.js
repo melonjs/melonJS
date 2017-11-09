@@ -336,9 +336,6 @@
                 // prepare renderer to draw a new frame
                 renderer.clear();
 
-                // save the current state
-                me.video.renderer.save();
-
                 api.world.preDraw(renderer);
 
                 // update all objects,
@@ -352,7 +349,6 @@
 
                 // draw the viewpor/camera effects
                 viewport.draw(renderer);
-
             }
 
             isDirty = false;
