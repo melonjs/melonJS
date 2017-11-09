@@ -196,6 +196,8 @@
                 ),
                 false
             );
+
+            // Screen Orientation API
             window.addEventListener(
                 "orientationchange",
                 function (event) {
@@ -203,6 +205,20 @@
                 },
                 false
             );
+            // pre-fixed implementation on mozzila
+            window.addEventListener(
+                "onmozorientationchange",
+                function (event) {
+                    me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+                },
+                false
+            );
+            if (typeof window.screen !== "undefined") {
+                // is this one required ?
+                window.screen.onorientationchange = function (event) {
+                    me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+                };
+            }
 
             // register to the channel
             me.event.subscribe(
@@ -359,19 +375,6 @@
         api.onresize = function () {
             // default (no scaling)
             var scaleX = 1, scaleY = 1;
-
-            // check for orientation information
-            if (typeof window.orientation !== "undefined") {
-                me.device.orientation = window.orientation;
-            }
-            else {
-                // is this actually not the best option since default "portrait"
-                // orientation might vary between for example an ipad and and android tab
-                me.device.orientation = (
-                    window.outerWidth > window.outerHeight ?
-                    90 : 0
-                );
-            }
 
             if (settings.autoScale) {
                 var parentNodeWidth;

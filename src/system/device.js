@@ -380,19 +380,6 @@
         api.Kindle = false;
 
         /**
-         * The device current orientation status. <br>
-         *   0 : default orientation<br>
-         *  90 : 90 degrees clockwise from default<br>
-         * -90 : 90 degrees anti-clockwise from default<br>
-         * 180 : 180 degrees from default
-         * @type Number
-         * @readonly
-         * @name orientation
-         * @memberOf me.device
-         */
-        api.orientation = 0;
-
-        /**
          * contains the g-force acceleration along the x-axis.
          * @public
          * @type Number
@@ -546,6 +533,68 @@
                 devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
             }
             return devicePixelRatio;
+        };
+
+        /**
+         * Return a string representing the orientation of the device screen.
+         * It can be portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
+         * @name getScreenOrientation
+         * @memberOf me.device
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
+         * @function
+         * @return {String} the screen orientation
+         */
+        api.getScreenOrientation = function () {
+            var PORTRAIT = "portrait-primary";
+            var LANDSCAPE = "landscape-primary";
+
+            var screen = window.screen;
+
+            // first try using "standard" values
+            if (typeof screen !== "undefined") {
+
+                var orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
+
+                if ((typeof orientation !== "undefined") && typeof (orientation.type === "string")) {
+                    // Screen Orientation API specification
+                    return orientation.type;
+                } else if (typeof orientation === "string") {
+                    // moz/ms-orientation are strings
+                    return orientation;
+                }
+            }
+
+            // check using the deprecated API
+            if (typeof window.orientation === "number") {
+                return (Math.abs(window.orientation) === 90) ? LANDSCAPE : PORTRAIT;
+            }
+
+            // fallback to window size check
+            return (window.outerWidth > window.outerHeight) ? LANDSCAPE : PORTRAIT;
+        };
+
+        /**
+         * return true if the device screen orientation is in Portrait mode
+         * @name isPortrait
+         * @memberOf me.device
+         * @function
+         * @return {Boolean}
+         */
+        api.isPortrait = function () {
+            var orientation = me.device.getScreenOrientation();
+            return (orientation === "portrait-primary" || orientation === "portrait-secondary");
+        };
+
+        /**
+         * return true if the device screen orientation is in Portrait mode
+         * @name isLandscape
+         * @memberOf me.device
+         * @function
+         * @return {Boolean}
+         */
+        api.isLandscape = function () {
+            var orientation = me.device.getScreenOrientation();
+            return (orientation === "landscape-primary" || orientation === "landscape-secondary");
         };
 
         /**
