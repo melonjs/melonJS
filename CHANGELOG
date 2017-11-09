@@ -5,6 +5,7 @@ Version History
 * Audio : added a function to check if audio is muted globally
 * Core : fix fullscreen detection when not set on the main canvas
 * Core : remove obsolete ES5 shim (it's 2017, update your browser!)
+* Core : updated orientation detection, based on the new (draft) Orientation API
 * Geometry : new specific values can be returned through the callback for Observable Vectors
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
 * Input : remove deprecated argument type for `me.input.bindGamepad()`
