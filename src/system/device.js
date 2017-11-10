@@ -537,7 +537,7 @@
 
         /**
          * Return a string representing the orientation of the device screen.
-         * It can be portrait-primary, portrait-secondary, landscape-primary, landscape-secondary
+         * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
          * @name getScreenOrientation
          * @memberOf me.device
          * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
@@ -545,15 +545,15 @@
          * @return {String} the screen orientation
          */
         api.getScreenOrientation = function () {
-            var PORTRAIT = "portrait-primary";
-            var LANDSCAPE = "landscape-primary";
+            var PORTRAIT = "portrait";
+            var LANDSCAPE = "landscape";
 
             var screen = window.screen;
 
             // first try using "standard" values
             if (typeof screen !== "undefined") {
 
-                var orientation = screen.orientation || screen.mozOrientation || screen.msOrientation;
+                var orientation = me.agent.prefixed("orientation", screen);
 
                 if ((typeof orientation !== "undefined") && typeof (orientation.type === "string")) {
                     // Screen Orientation API specification
@@ -574,6 +574,34 @@
         };
 
         /**
+         * locks the device screen into the specified orientation.<br>
+         * This method only works for installed Web apps or for Web pages in full-screen mode.
+         * @name lockOrientation
+         * @memberOf me.device
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+         * @function
+         * @return {Boolean} true if the orientation was unsuccessfully locked
+         */
+        api.lockOrientation = function (orientation) {
+            var lockOrientation = me.agent.prefixed("lockOrientation", screen);
+            return lockOrientation(orientation);
+        };
+
+        /**
+         * unlocks the device screen into the specified orientation.<br>
+         * This method only works for installed Web apps or for Web pages in full-screen mode.
+         * @name unlockOrientation
+         * @memberOf me.device
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+         * @function
+         * @return {Boolean} true if the orientation was unsuccessfully unlocked
+         */
+        api.unlockOrientation = function (orientation) {
+            var unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
+            return unlockOrientation(orientation);
+        };
+
+        /**
          * return true if the device screen orientation is in Portrait mode
          * @name isPortrait
          * @memberOf me.device
@@ -581,8 +609,7 @@
          * @return {Boolean}
          */
         api.isPortrait = function () {
-            var orientation = me.device.getScreenOrientation();
-            return (orientation === "portrait-primary" || orientation === "portrait-secondary");
+            return me.device.getScreenOrientation().includes("portrait");
         };
 
         /**
@@ -593,8 +620,7 @@
          * @return {Boolean}
          */
         api.isLandscape = function () {
-            var orientation = me.device.getScreenOrientation();
-            return (orientation === "landscape-primary" || orientation === "landscape-secondary");
+            return me.device.getScreenOrientation().includes("landscape");
         };
 
         /**
