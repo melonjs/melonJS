@@ -30,6 +30,7 @@
   "src/physics/quadtree.js",
   "src/physics/collision.js",
   "src/renderable/renderable.js",
+  "src/renderable/colorlayer.js",
   "src/renderable/sprite.js",
   "src/renderable/viewport.js",
   "src/renderable/GUI.js",

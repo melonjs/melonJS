@@ -14,6 +14,7 @@ Version History
 * Renderable : properly apply transformation and anchor for all me.Renderable objects
 * Renderable : move flipX/flipY to me.Renderable, and remove deprecation warning
 * Renderable : new `isKinematic` property allowing to opt-out from collision and input events
+* Renderable : slightly refactored me.ColorLayer to allow use of RGB cycling effects
 * TMX : added support for layer grouping (Tiled 1.0.0)
 * Viewport : added a method to unfollow the current target
 
