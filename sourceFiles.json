@@ -31,6 +31,7 @@
   "src/physics/collision.js",
   "src/renderable/renderable.js",
   "src/renderable/colorlayer.js",
+  "src/renderable/imagelayer.js",
   "src/renderable/sprite.js",
   "src/renderable/viewport.js",
   "src/renderable/GUI.js",
