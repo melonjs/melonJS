@@ -31,10 +31,9 @@
             // Particle will always update
             this.alwaysUpdate = true;
 
-            // Particle will not act as a rednerable
-            // FIXME: This is probably not needed. It's a hack that tries to
-            // workaround performance issues within container.
-            this.isRenderable = false;
+            // Prevents particle to be added to the quadTree
+            // and to respond to events
+            this.isKinematic = true;
 
             // Cache the image reference
             this.image = emitter.image;
@@ -94,7 +93,7 @@
         update : function (dt) {
             // move things forward independent of the current frame rate
             var skew = dt * this._deltaInv;
-            
+
             // Decrease particle life
             this.life = this.life > dt ? this.life - dt : 0;
 

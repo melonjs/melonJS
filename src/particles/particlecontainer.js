@@ -20,11 +20,13 @@
          * @ignore
          */
         init: function (emitter) {
-            // cache a reference to the viewport to use as our bounding box
-            this._viewport = me.game.viewport;
-
             // call the super constructor
-            this._super(me.Container, "init");
+            this._super(me.Container, "init", [
+                me.game.viewport.pos.x,
+                me.game.viewport.pos.y,
+                me.game.viewport.width,
+                me.game.viewport.height
+            ]);
 
             // don't sort the particles by z-index
             this.autoSort = false;
@@ -48,13 +50,6 @@
         /**
          * @ignore
          */
-        getBounds : function () {
-            return this._viewport;
-        },
-
-        /**
-         * @ignore
-         */
         update: function (dt) {
             // skip frames if necessary
             if (++this._updateCount > this._emitter.framesToSkip) {
@@ -73,14 +68,7 @@
             var viewport = me.game.viewport;
             for (var i = this.children.length - 1; i >= 0; --i) {
                 var particle = this.children[i];
-                particle.isRenderable = true;
-                // particle.inViewport = viewport.isVisible(particle);
-                particle.inViewport = this.floating || (
-                    particle.pos.x < viewport.pos.x + viewport.width &&
-                    viewport.pos.x < particle.pos.x + particle.width &&
-                    particle.pos.y < viewport.pos.y + viewport.height &&
-                    viewport.pos.y < particle.pos.y + particle.height
-                );
+                particle.inViewport = this.floating || viewport.isVisible(particle.getBounds());
                 if (!particle.update(dt)) {
                     this.removeChildNow(particle);
                 }
