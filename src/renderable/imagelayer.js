@@ -248,6 +248,16 @@
             }
         },
 
+       /*
+        * override the default predraw function
+        * as repeat and anchor are managed directly in the draw method
+        * @ignore
+        */
+        preDraw : function (renderer) {
+            // save the context
+            renderer.save();
+        },
+
         /**
          * draw the image layer
          * @ignore
@@ -276,7 +286,6 @@
                 viewport.width * 2,
                 viewport.height * 2
             );
-            renderer.translate(-x, -y);
         },
 
         // called when the layer is removed from the game world or a container
