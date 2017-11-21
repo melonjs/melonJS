@@ -334,6 +334,9 @@
                 e.pointerId = changedTouch.id;
             }
 
+            // in case of touch events, button is not defined
+            e.button = e.button || 0;
+
             /* Initialize the two coordinate space properties. */
             e.gameScreenX = changedTouch.x;
             e.gameScreenY = changedTouch.y;
@@ -554,8 +557,7 @@
             return api._preventDefault(e);
         }
 
-        // in case of touch event button is undefined
-        var button = e.button || 0;
+        var button = e.button;
         var keycode = api.pointer.bind[button];
 
         // check if mapped to a key

@@ -47,7 +47,7 @@
      */
     api._keydown = function (e, keyCode, mouseButton) {
 
-        keyCode = keyCode || e.keyCode || e.which;
+        keyCode = keyCode || e.keyCode || e.button;
         var action = api._KeyBinding[keyCode];
 
         // publish a message for keydown event
@@ -83,7 +83,7 @@
      * @ignore
      */
     api._keyup = function (e, keyCode, mouseButton) {
-        keyCode = keyCode || e.keyCode || e.which;
+        keyCode = keyCode || e.keyCode || e.button;
         var action = api._KeyBinding[keyCode];
 
         // publish a message for keydown event
