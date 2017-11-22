@@ -6,15 +6,17 @@ Version History
 * Core : fix fullscreen detection when not set on the main canvas
 * Core : remove obsolete ES5 shim (it's 2017, update your browser!)
 * Core : updated orientation detection, based on the new (draft) Orientation API
+* Debug : fixed debug panel toggle features, and automatically display the toggle key
 * Geometry : new specific values can be returned through the callback for Observable Vectors
 * Input : fix a bug where the gamepad axes may not trigger KEYUP events
 * Input : remove deprecated argument type for `me.input.bindGamepad()`
 * Input : remove deprecated `mousewheel` event
 * Input : remove deprecated `MS` prefixed Pointer Event
+* Input : standardize Event.button value and usage across all input models
 * Renderable : properly apply transformation and anchor for all me.Renderable objects
 * Renderable : move flipX/flipY to me.Renderable, and remove deprecation warning
 * Renderable : new `isKinematic` property allowing to opt-out from collision and input events
-* Renderable : slightly refactored me.ColorLayer to allow use of RGB cycling effects
+* Renderable : slightly refactored me.ColorLayer and exposed its me.Color property
 * TMX : added support for layer grouping (Tiled 1.0.0)
 * Viewport : added a method to unfollow the current target
 
