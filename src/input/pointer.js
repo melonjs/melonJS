@@ -105,13 +105,13 @@
     var activeEventList = [];
 
     // internal constants
-    var WHEEL = ["wheel"];
-    var POINTER_MOVE = ["pointermove", "mousemove", "touchmove"];
-    var POINTER_DOWN = ["pointerdown", "mousedown", "touchstart"];
-    var POINTER_UP = ["pointerup", "mouseup", "touchend"];
-    var POINTER_CANCEL = ["pointercancel", "mousecancel", "touchcancel"];
-    var POINTER_ENTER = ["pointerenter", "mouseenter", "touchenter"];
-    var POINTER_LEAVE = ["pointerleave", "mouseleave", "touchleave"];
+    var WHEEL           = ["wheel"];
+    var POINTER_MOVE    = ["pointermove",   "mousemove",    "touchmove"];
+    var POINTER_DOWN    = ["pointerdown",   "mousedown",    "touchstart"];
+    var POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
+    var POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
+    var POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
+    var POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
 
     // list of standard pointer event type
     var pointerEventList = [
@@ -328,11 +328,9 @@
                 lastTimeStamp = e.timeStamp;
             }
 
-            // if PointerEvent is not supported
-            if (!me.device.pointerEvent) {
-                // -> define pointerId to simulate the PointerEvent standard
-                e.pointerId = changedTouch.id;
-            }
+            // normalize pointer/touch id to the PointerEvent format
+            // (changedTouch.id equals PointerEvent.pointerId or TouchEvent.identifier)
+            e.pointerId = changedTouch.id;
 
             // in case of touch events, button is not defined
             e.button = e.button || 0;
