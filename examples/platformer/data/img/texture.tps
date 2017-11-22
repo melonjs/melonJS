@@ -2,11 +2,11 @@
 <data version="1.0">
     <struct type="Settings">
         <key>fileFormatVersion</key>
-        <int>3</int>
+        <int>4</int>
         <key>texturePackerVersion</key>
-        <string>3.9.4</string>
+        <string>4.5.0</string>
         <key>fileName</key>
-        <string>C:/Users/olivier.biot/Documents/GitHub/melonJS/examples/platformer2/data/img/texture.tps</string>
+        <string>/Users/obiot/Documents/GitHub/melonJS/examples/platformer/data/img/texture.tps</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -29,8 +29,6 @@
         </array>
         <key>allowRotation</key>
         <false/>
-        <key>premultiplyAlpha</key>
-        <false/>
         <key>shapeDebug</key>
         <false/>
         <key>dpi</key>
@@ -49,6 +47,8 @@
         <uint>32768</uint>
         <key>etc1CompressionQuality</key>
         <enum type="SettingsBase::Etc1CompressionQuality">ETC1_QUALITY_LOW_PERCEPTUAL</enum>
+        <key>etc2CompressionQuality</key>
+        <enum type="SettingsBase::Etc2CompressionQuality">ETC2_QUALITY_LOW_PERCEPTUAL</enum>
         <key>dxtCompressionMode</key>
         <enum type="SettingsBase::DxtCompressionMode">DXT_PERCEPTUAL</enum>
         <key>jxrColorFormat</key>
@@ -81,26 +81,26 @@
         <uint>101</uint>
         <key>textureSubPath</key>
         <string></string>
+        <key>atfFormats</key>
+        <string></string>
         <key>textureFormat</key>
-        <enum type="SettingsBase::TextureFormat">png</enum>
+        <enum type="SettingsBase::TextureFormat">png8</enum>
         <key>borderPadding</key>
         <uint>2</uint>
         <key>maxTextureSize</key>
         <QSize>
             <key>width</key>
-            <int>2048</int>
+            <int>256</int>
             <key>height</key>
-            <int>2048</int>
+            <int>256</int>
         </QSize>
         <key>fixedTextureSize</key>
         <QSize>
             <key>width</key>
             <int>512</int>
             <key>height</key>
-            <int>256</int>
+            <int>512</int>
         </QSize>
-        <key>reduceBorderArtifacts</key>
-        <false/>
         <key>algorithmSettings</key>
         <struct type="AlgorithmSettings">
             <key>algorithm</key>
@@ -111,12 +111,10 @@
             <enum type="AlgorithmSettings::SizeConstraints">POT</enum>
             <key>forceSquared</key>
             <false/>
-            <key>forceWordAligned</key>
-            <true/>
             <key>maxRects</key>
             <struct type="AlgorithmMaxRectsSettings">
                 <key>heuristic</key>
-                <enum type="AlgorithmMaxRectsSettings::Heuristic">Best</enum>
+                <enum type="AlgorithmMaxRectsSettings::Heuristic">ShortSideFit</enum>
             </struct>
             <key>basic</key>
             <struct type="AlgorithmBasicSettings">
@@ -124,6 +122,11 @@
                 <enum type="AlgorithmBasicSettings::SortBy">Best</enum>
                 <key>order</key>
                 <enum type="AlgorithmBasicSettings::Order">Ascending</enum>
+            </struct>
+            <key>polygon</key>
+            <struct type="AlgorithmPolygonSettings">
+                <key>alignToGrid</key>
+                <uint>1</uint>
             </struct>
         </struct>
         <key>andEngine</key>
@@ -160,19 +163,21 @@
         <key>forceIdenticalLayout</key>
         <false/>
         <key>outputFormat</key>
-        <enum type="SettingsBase::OutputFormat">INDEXED</enum>
+        <enum type="SettingsBase::OutputFormat">RGBA8888</enum>
+        <key>alphaHandling</key>
+        <enum type="SettingsBase::AlphaHandling">ClearTransparentPixels</enum>
         <key>contentProtection</key>
         <struct type="ContentProtection">
             <key>key</key>
             <string></string>
         </struct>
         <key>autoAliasEnabled</key>
-        <true/>
+        <false/>
         <key>trimSpriteNames</key>
         <false/>
         <key>prependSmartFolderName</key>
         <false/>
-        <key>cleanTransparentPixels</key>
+        <key>autodetectAnimations</key>
         <true/>
         <key>globalSpriteSettings</key>
         <struct type="SpriteSettings">
@@ -180,19 +185,170 @@
             <double>1</double>
             <key>scaleMode</key>
             <enum type="ScaleMode">Smooth</enum>
-            <key>innerPadding</key>
-            <uint>0</uint>
             <key>extrude</key>
             <uint>0</uint>
             <key>trimThreshold</key>
             <uint>1</uint>
+            <key>trimMargin</key>
+            <uint>1</uint>
             <key>trimMode</key>
             <enum type="SpriteSettings::TrimMode">Trim</enum>
+            <key>tracerTolerance</key>
+            <int>200</int>
             <key>heuristicMask</key>
             <false/>
-            <key>pivotPoint</key>
-            <enum type="SpriteSettings::PivotPoint">BottomCenter</enum>
+            <key>defaultPivotPoint</key>
+            <point_f>0.5,1</point_f>
+            <key>writePivotPoints</key>
+            <true/>
         </struct>
+        <key>individualSpriteSettings</key>
+        <map type="IndividualSpriteSettingsMap">
+            <key type="filename">assets/UI/shadedDark01.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>24,25,48,50</rect>
+                <key>scale9Paddings</key>
+                <rect>24,25,48,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/UI/shadedDark07.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>40,40,80,80</rect>
+                <key>scale9Paddings</key>
+                <rect>40,40,80,80</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/UI/shadedDark13.png</key>
+            <key type="filename">assets/UI/shadedDark15.png</key>
+            <key type="filename">assets/UI/shadedDark30.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>12,12,24,24</rect>
+                <key>scale9Paddings</key>
+                <rect>12,12,24,24</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/UI/shadedDark36.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>20,20,40,40</rect>
+                <key>scale9Paddings</key>
+                <rect>20,20,40,40</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/character/walk0001.png</key>
+            <key type="filename">assets/character/walk0002.png</key>
+            <key type="filename">assets/character/walk0003.png</key>
+            <key type="filename">assets/character/walk0004.png</key>
+            <key type="filename">assets/character/walk0005.png</key>
+            <key type="filename">assets/character/walk0006.png</key>
+            <key type="filename">assets/character/walk0007.png</key>
+            <key type="filename">assets/character/walk0008.png</key>
+            <key type="filename">assets/character/walk0009.png</key>
+            <key type="filename">assets/character/walk0010.png</key>
+            <key type="filename">assets/character/walk0011.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>19,24,38,48</rect>
+                <key>scale9Paddings</key>
+                <rect>19,24,38,48</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/collectables/coin.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>9,9,18,18</rect>
+                <key>scale9Paddings</key>
+                <rect>9,9,18,18</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/enemies/fly_dead.png</key>
+            <key type="filename">assets/enemies/fly_fly.png</key>
+            <key type="filename">assets/enemies/fly_normal.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>17,8,35,16</rect>
+                <key>scale9Paddings</key>
+                <rect>17,8,35,16</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/enemies/slime_dead.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>14,2,27,4</rect>
+                <key>scale9Paddings</key>
+                <rect>14,2,27,4</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/enemies/slime_normal.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>11,7,22,14</rect>
+                <key>scale9Paddings</key>
+                <rect>11,7,22,14</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">assets/enemies/slime_walk.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,1</point_f>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>11,7,22,13</rect>
+                <key>scale9Paddings</key>
+                <rect>11,7,22,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+        </map>
         <key>fileList</key>
         <array>
             <filename>assets/collectables</filename>
@@ -220,5 +376,7 @@
         <string></string>
         <key>normalMapSheetFileName</key>
         <filename></filename>
+        <key>exporterProperties</key>
+        <map type="ExporterProperties"/>
     </struct>
 </data>

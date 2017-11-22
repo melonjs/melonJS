@@ -1,13 +1,12 @@
-
+/**
+ * HUD namespace
+ */
+game.HUD = game.HUD || {};
 
 /**
  * a HUD container and child items
  */
-
-game.HUD = game.HUD || {};
-
-
-game.HUD.Container = me.Container.extend({
+game.HUD.UIContainer = me.Container.extend({
 
     init: function() {
         // call the constructor
