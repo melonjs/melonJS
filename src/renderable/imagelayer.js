@@ -256,6 +256,8 @@
         preDraw : function (renderer) {
             // save the context
             renderer.save();
+            // apply the defined alpha value
+            renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
         },
 
         /**
