@@ -13,6 +13,7 @@ Version History
 * Input : remove deprecated `mousewheel` event
 * Input : remove deprecated `MS` prefixed Pointer Event
 * Input : standardize Event.button value and usage across all input models
+* Input : me.input.preventDefault now correctly define the default action for pointer events
 * Renderable : properly apply transformation and anchor for all me.Renderable objects
 * Renderable : move flipX/flipY to me.Renderable, and remove deprecation warning
 * Renderable : new `isKinematic` property allowing to opt-out from collision and input events
