@@ -445,7 +445,7 @@
                                 if (triggerEvent(handlers, e.type, e, e.pointerId)) {
                                     handled = true;
                                     if (e.type === "wheel") {
-                                        api._preventDefault(e);
+                                        api._preventDefaultFn(e);
                                     }
                                     break;
                                 }
@@ -534,9 +534,9 @@
         // update position
         updateCoordFromEvent(e);
         // dispatch mouse event to registered object
-        if (dispatchEvent(e)) {
+        if (dispatchEvent(e) || api.preventDefault) {
             // prevent default action
-            return api._preventDefault(e);
+            return api._preventDefaultFn(e);
         }
         return true;
     }
@@ -550,9 +550,9 @@
         updateCoordFromEvent(e);
 
         // dispatch event to registered objects
-        if (dispatchEvent(e)) {
+        if (dispatchEvent(e) || api.preventDefault) {
             // prevent default action
-            return api._preventDefault(e);
+            return api._preventDefaultFn(e);
         }
 
         var button = e.button;

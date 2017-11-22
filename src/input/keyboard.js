@@ -67,7 +67,7 @@
             }
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return api._preventDefault(e);
+                return api._preventDefaultFn(e);
             }
             else {
                 return true;
@@ -101,7 +101,7 @@
 
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return api._preventDefault(e);
+                return api._preventDefaultFn(e);
             }
             else {
                 return true;
