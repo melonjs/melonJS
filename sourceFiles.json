@@ -57,6 +57,7 @@
   "src/input/input.js",
   "src/input/keyboard.js",
   "src/input/pointer.js",
+  "src/input/pointerevent.js",
   "src/input/gamepad.js",
   "src/utils/utils.js",
   "src/utils/color.js",

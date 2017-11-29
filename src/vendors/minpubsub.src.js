@@ -203,7 +203,7 @@
 
         /**
          * Channel Constant for pointermove events on the viewport area <br>
-         * Data passed : {Object} the Event object <br>
+         * Data passed : {me.Pointer} a Pointer object
          * @public
          * @constant
          * @type String

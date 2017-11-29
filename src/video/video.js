@@ -79,6 +79,12 @@
         });
 
         /**
+         * cache value for the offset of the canvas position within the page
+         * @ignore
+         */
+        api._canvasOffset = null;
+
+        /**
          * Select the HTML5 Canvas renderer
          * @public
          * @name CANVAS
@@ -220,6 +226,16 @@
                 };
             }
 
+            // Automatically update relative canvas position on scroll
+            window.addEventListener("scroll", throttle(100, false,
+                function (e) {
+                    // invalidate the current canvas position cache so that it
+                    // get recalculated the next time getPos is called
+                    api._canvasOffset = null;
+                    me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
+                }
+            ), false);
+
             // register to the channel
             me.event.subscribe(
                 me.event.WINDOW_ONRESIZE,
@@ -301,14 +317,18 @@
          * @memberOf me.video
          * @function
          * @param {Canvas} [canvas] system one if none specified
-         * @return {me.Vector2d}
+         * @return {DOMRect}
          */
         api.getPos = function (c) {
-            c = c || this.renderer.getScreenCanvas();
-            return (
-                c.getBoundingClientRect ?
-                c.getBoundingClientRect() : { left : 0, top : 0 }
-            );
+            if (typeof c === "undefined") {
+                if (api._canvasOffset === null) {
+                    c = this.renderer.getScreenCanvas();
+                    api._canvasOffset = c && c.getBoundingClientRect ? c.getBoundingClientRect() : { left : 0, top : 0 };
+                }
+                return api._canvasOffset;
+            } else  {
+                return c.getBoundingClientRect ? c.getBoundingClientRect() : { left : 0, top : 0 };
+            }
         };
 
         /**
@@ -485,8 +505,9 @@
             this.renderer.scaleCanvas(scaleX, scaleY);
             me.game.repaint();
 
-            // make sure we have the correct relative canvas position cached
-            me.input._offset = me.video.getPos();
+            // invalidate the current canvas position cache so that it
+            // get recalculated the next time getPos is called
+            api._canvasOffset = null;
 
             // clear the timeout id
             deferResizeId = 0;
