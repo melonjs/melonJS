@@ -16,7 +16,7 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(this.HUD);
 
         // display if debugPanel is enabled or on mobile
-        if ((me.plugins.debugPanel && me.plugins.debugPanel.panel.visible) || me.device.isMobile) {
+        if ((me.plugins.debugPanel && me.plugins.debugPanel.panel.visible) || me.device.touch) {
             if (typeof this.virtualJoypad === "undefined") {
                 this.virtualJoypad = new game.HUD.VirtualJoypad();
             }
@@ -37,7 +37,7 @@ game.PlayScreen = me.ScreenObject.extend({
 
         // remove the joypad if initially added
         if (this.virtualJoypad && me.game.world.hasChild(this.virtualJoypad)) {
-            me.game.world.removeChild();
+            me.game.world.removeChild(this.virtualJoypad);
         }
 
         // stop some music
