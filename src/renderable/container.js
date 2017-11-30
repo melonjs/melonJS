@@ -800,31 +800,34 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
-                isFloating = obj.floating === true;
+                if (obj.isRenderable) {
+                    
+                    isFloating = obj.floating === true;
 
-                if ((obj.inViewport || isFloating) && obj.isRenderable) {
+                    if ((obj.inViewport || isFloating)) {
 
-                    if (isFloating) {
-                        // translate to screen coordinates
-                        renderer.save();
-                        renderer.resetTransform();
+                        if (isFloating) {
+                            // translate to screen coordinates
+                            renderer.save();
+                            renderer.resetTransform();
+                        }
+
+                        // predraw (apply transforms)
+                        obj.preDraw(renderer);
+
+                        // draw the object
+                        obj.draw(renderer, rect);
+
+                        // postdraw (clean-up);
+                        obj.postDraw(renderer);
+
+                        // restore the previous "state"
+                        if (isFloating) {
+                            renderer.restore();
+                        }
+
+                        this.drawCount++;
                     }
-
-                    // predraw (apply transforms)
-                    obj.preDraw(renderer);
-
-                    // draw the object
-                    obj.draw(renderer, rect);
-
-                    // postdraw (clean-up);
-                    obj.postDraw(renderer);
-
-                    // restore the previous "state"
-                    if (isFloating) {
-                        renderer.restore();
-                    }
-
-                    this.drawCount++;
                 }
             }
         }
