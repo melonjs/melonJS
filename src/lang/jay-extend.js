@@ -6,6 +6,7 @@
  *  MIT License
  */
 
+/* eslint-disable no-undef */
 /**
  * Extend a class prototype with the provided mixin descriptors.
  * Designed as a faster replacement for John Resig's Simple Inheritance.
@@ -169,10 +170,8 @@
     if (typeof(window) !== "undefined") {
         window.Jay = Jay;
     }
-    /*
-     TODO : module support in melonJS
     else {
         module.exports = Jay;
     }
-    */
 })();
+/* eslint-enable no-undef */
