@@ -50,6 +50,9 @@
         var _onCompleteCallback = null;
         var _tweenTimeTracker = null;
 
+        // comply with the container contract
+        this.isRenderable = false;
+
         /**
          * @ignore
          */
@@ -82,8 +85,12 @@
             _onCompleteCallback = null;
             _tweenTimeTracker = me.timer.lastUpdate;
 
-            // reset the persistent flag to default value
+            // reset flags to default value
             this.isPersistent = false;
+            // this is not really supported
+            this.updateWhenPaused = false;
+
+
 
             // Set all starting values present on the target object
             for ( var field in object ) {
