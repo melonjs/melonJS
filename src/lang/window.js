@@ -14,16 +14,6 @@
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
      */
 
-    /**
-     * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside
-     * of this namespace.
-     * <p>You generally should not add new properties to this namespace as it may be
-     * overwritten in future versions.</p>
-     * @name me
-     * @namespace
-     */
-    window.me = window.me || {};
-
     /*
      * DOM loading stuff
      */
@@ -56,16 +46,6 @@
 
             // Remember that the DOM is ready
             isReady = true;
-
-            /*
-             * Add support for AMD (Asynchronous Module Definition) libraries
-             * such as require.js.
-             */
-            if (typeof define === "function" && define.amd) {
-                define("me", [], function () {
-                    return me;
-                });
-            }
         }
     }
 
