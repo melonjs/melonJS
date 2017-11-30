@@ -2,6 +2,7 @@
   "src/license.js",
   "src/lang/window.js",
   "src/lang/function.js",
+  "src/lang/jay-extend.js",
   "src/lang/object.js",
   "src/lang/error.js",
   "src/lang/math.js",
