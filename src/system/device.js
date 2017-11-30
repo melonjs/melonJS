@@ -26,6 +26,81 @@
             return false;
         };
 
+        /*
+         * DOM loading stuff
+         */
+        var readyBound = false, isReady = false, readyList = [];
+
+        /**
+         * called to check if the device is ready
+         * @ignore
+         */
+        api._domReady = function (fn) {
+            // Make sure that the DOM is not already loaded
+            if (!isReady) {
+                // be sure document.body is there
+                if (!document.body) {
+                    return setTimeout(me.device._domReady, 13);
+                }
+
+                // clean up loading event
+                if (document.removeEventListener) {
+                    document.removeEventListener(
+                        "DOMContentLoaded",
+                        me.device._domReady,
+                        false
+                    );
+                }
+                // remove the event on window.onload (always added in `onReady`)
+                window.removeEventListener("load", me.device._domReady, false);
+
+                // execute all callbacks
+                while (readyList.length) {
+                    readyList.shift().call(window, []);
+                }
+
+                // Remember that the DOM is ready
+                isReady = true;
+            }
+        };
+
+        /**
+         * Specify a function to execute when the Device is fully loaded and ready
+         * @memberOf external:window#
+         * @alias onReady
+         * @param {Function} fn A function to execute after the DOM is ready.
+         * @see
+         */
+        api.onReady = function (fn) {
+            // If the DOM is already ready
+            if (isReady) {
+                // Execute the function immediately
+                fn.call(window, []);
+            }
+            else {
+                // Add the function to the wait list
+                readyList.push(fn);
+
+                // attach listeners if not yet done
+                if (!readyBound) {
+                    // directly call domReady if document is already "ready"
+                    if (document.readyState === "complete") {
+                        // defer the fn call to ensure our script is fully loaded
+                        window.setTimeout(me.device._domReady, 0);
+                    }
+                    else {
+                        if (document.addEventListener) {
+                            // Use the handy event callback
+                            document.addEventListener("DOMContentLoaded", me.device._domReady, false);
+                        }
+                        // A fallback to window.onload, that will always work
+                        window.addEventListener("load", me.device._domReady, false);
+                    }
+                    readyBound = true;
+                }
+            }
+        };
+
 
         /**
          * check the device capapbilities
@@ -194,6 +269,7 @@
                                (typeof window.Cocoon !== "undefined"); // new cocoon
 
         };
+
 
         /*
          * PUBLIC Properties & Functions

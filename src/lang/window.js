@@ -14,40 +14,6 @@
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
      */
 
-    /*
-     * DOM loading stuff
-     */
-    var readyBound = false, isReady = false, readyList = [];
-
-    // Handle when the DOM is ready
-    function domReady() {
-        // Make sure that the DOM is not already loaded
-        if (!isReady) {
-            // be sure document.body is there
-            if (!document.body) {
-                return setTimeout(domReady, 13);
-            }
-
-            // clean up loading event
-            if (document.removeEventListener) {
-                document.removeEventListener(
-                    "DOMContentLoaded",
-                    domReady,
-                    false
-                );
-            }
-            // remove the event on window.onload (always added in `onReady`)
-            window.removeEventListener("load", domReady, false);
-
-            // execute all callbacks
-            while (readyList.length){
-                readyList.shift().call(window, []);
-            }
-
-            // Remember that the DOM is ready
-            isReady = true;
-        }
-    }
 
     /**
      * Specify a function to execute when the DOM is fully loaded
@@ -95,51 +61,8 @@
      * });
      */
     window.onReady = function (fn) {
-        // If the DOM is already ready
-        if (isReady) {
-            // Execute the function immediately
-            fn.call(window, []);
-        }
-        else {
-            // Add the function to the wait list
-            readyList.push(fn);
-
-            // attach listeners if not yet done
-            if (!readyBound) {
-                // directly call domReady if document is already "ready"
-                if (document.readyState === "complete") {
-                    // defer the fn call to ensure our script is fully loaded
-                    window.setTimeout(domReady, 0);
-                }
-                else {
-                    if (document.addEventListener) {
-                        // Use the handy event callback
-                        document.addEventListener("DOMContentLoaded", domReady, false);
-                    }
-                    // A fallback to window.onload, that will always work
-                    window.addEventListener("load", domReady, false);
-                }
-                readyBound = true;
-            }
-        }
+        me.device.onReady.call(this, fn);
     };
-
-    // call the library init function when ready
-    // (this should not be here?)
-    if (me.skipAutoInit !== true) {
-        window.onReady(function () {
-            me.boot();
-        });
-    }
-    else {
-        /**
-         * @ignore
-         */
-        me.init = function () {
-            me.boot();
-            domReady();
-        };
-    }
 
     if (!window.throttle) {
         /**

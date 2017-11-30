@@ -186,6 +186,13 @@
         }
     });
 
+    /**
+     * Disable melonJS auto-initialization
+     * @type {Boolean}
+     * @default false
+     * @memberOf me
+     */
+    me.skipAutoInit = false;
 
     /**
      * initial boot function
@@ -230,5 +237,20 @@
 
         me_initialized = true;
     };
+
+    // call the library init function when ready
+    if (me.skipAutoInit === false) {
+        me.device.onReady(function () {
+            me.boot();
+        });
+    } else {
+        /**
+         * @ignore
+         */
+        me.init = function () {
+            me.boot();
+            me.device._domReady();
+        };
+    }
 
 })();
