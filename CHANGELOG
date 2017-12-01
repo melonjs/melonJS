@@ -1,6 +1,7 @@
 Version History
 ---------------
 5.0.1
+* Input : fix a regression with bindPointer
 
 5.0.0
 * Audio : Howler core update (2.0.5)
