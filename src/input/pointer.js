@@ -201,9 +201,9 @@
 
             if (event.type === "wheel") {
                 this.deltaMode = 1;
-                this.deltaX = event.delta.x;
+                this.deltaX = event.deltaX;
                 this.deltaY = - 1 / 40 * event.wheelDelta;
-                this.wheelDeltaX && (this.deltaX = - 1 / 40 * this.wheelDeltaX);
+                event.wheelDeltaX && (this.deltaX = - 1 / 40 * event.wheelDeltaX);
             }
 
             // could be 0, so test if defined
