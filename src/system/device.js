@@ -65,44 +65,6 @@
         };
 
         /**
-         * Specify a function to execute when the Device is fully loaded and ready
-         * @memberOf external:window#
-         * @alias onReady
-         * @param {Function} fn A function to execute after the DOM is ready.
-         * @see
-         */
-        api.onReady = function (fn) {
-            // If the DOM is already ready
-            if (isReady) {
-                // Execute the function immediately
-                fn.call(window, []);
-            }
-            else {
-                // Add the function to the wait list
-                readyList.push(fn);
-
-                // attach listeners if not yet done
-                if (!readyBound) {
-                    // directly call domReady if document is already "ready"
-                    if (document.readyState === "complete") {
-                        // defer the fn call to ensure our script is fully loaded
-                        window.setTimeout(me.device._domReady, 0);
-                    }
-                    else {
-                        if (document.addEventListener) {
-                            // Use the handy event callback
-                            document.addEventListener("DOMContentLoaded", me.device._domReady, false);
-                        }
-                        // A fallback to window.onload, that will always work
-                        window.addEventListener("load", me.device._domReady, false);
-                    }
-                    readyBound = true;
-                }
-            }
-        };
-
-
-        /**
          * check the device capapbilities
          * @ignore
          */
@@ -534,6 +496,44 @@
          */
         api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
 
+      /**
+        * specify a function to execute when the Device is fully loaded and ready
+        * @name onReady
+        * @memberOf me.device
+        * @see window.onReady
+        * @function
+        * @param {Function} fn the function to be executed
+        */
+        api.onReady = function (fn) {
+            // If the DOM is already ready
+            if (isReady) {
+                // Execute the function immediately
+                fn.call(window, []);
+            }
+            else {
+                // Add the function to the wait list
+                readyList.push(fn);
+
+                // attach listeners if not yet done
+                if (!readyBound) {
+                    // directly call domReady if document is already "ready"
+                    if (document.readyState === "complete") {
+                        // defer the fn call to ensure our script is fully loaded
+                        window.setTimeout(me.device._domReady, 0);
+                    }
+                    else {
+                        if (document.addEventListener) {
+                            // Use the handy event callback
+                            document.addEventListener("DOMContentLoaded", me.device._domReady, false);
+                        }
+                        // A fallback to window.onload, that will always work
+                        window.addEventListener("load", me.device._domReady, false);
+                    }
+                    readyBound = true;
+                }
+            }
+        };
+
         /**
          * enable/disable swipe on WebView.
          * @name enableSwipe
@@ -912,13 +912,13 @@
          * @param {Number|Number[]} pattern pattern of vibration and pause intervals
          * @example
          * // vibrate for 1000 ms
-         * navigator.vibrate(1000);
+         * me.device.vibrate(1000);
          * // or alternatively
-         * navigator.vibrate([1000]);
+         * me.device.vibrate([1000]);
          * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
-         * navigator.vibrate([50, 100, 150]);
+         * me.device.vibrate([50, 100, 150]);
          * // cancel any existing vibrations
-         * navigator.vibrate(0);
+         * me.device.vibrate(0);
          */
         api.vibrate = function (pattern) {
             if (navigator.vibrate) {
