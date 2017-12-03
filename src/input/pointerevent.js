@@ -428,13 +428,19 @@
      */
     function onPointerEvent(e)  {
         var ret = true;
+
+        // normalize eventTypes
+        normalizeEvent(e);
+
+        // remember/use the first "primary" normalized event for pointer.bind
+        var button = normalizedEvents[0].button;
+
         // dispatch event to registered objects
-        if (dispatchEvent(normalizeEvent(e)) || api.preventDefault) {
+        if (dispatchEvent(normalizedEvents) || api.preventDefault) {
             // prevent default action
             ret = api._preventDefaultFn(e);
         }
 
-        var button = e.button;
         var keycode = api.pointer.bind[button];
 
         // check if mapped to a key
