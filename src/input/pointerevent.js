@@ -426,11 +426,12 @@
      * mouse/touch/pointer event management (start/down, end/up)
      * @ignore
      */
-    function onPointerEvent(e) {
+    function onPointerEvent(e)  {
+        var ret = true;
         // dispatch event to registered objects
         if (dispatchEvent(normalizeEvent(e)) || api.preventDefault) {
             // prevent default action
-            return api._preventDefaultFn(e);
+            ret = api._preventDefaultFn(e);
         }
 
         var button = e.button;
@@ -446,7 +447,7 @@
             }
         }
 
-        return true;
+        return ret;
     }
 
     /*
