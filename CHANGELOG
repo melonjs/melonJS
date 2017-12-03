@@ -1,5 +1,7 @@
 Version History
 ---------------
+5.0.2
+
 5.0.1
 * Input : fix a regression with bindPointer
 * Loader : fix the progressBar position when resizing the screen
