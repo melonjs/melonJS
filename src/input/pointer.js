@@ -199,6 +199,9 @@
             // translate to local coordinates
             me.input.globalToLocal(clientX, clientY, this.pos);
 
+            // true if not originally a pointer event
+            this.isNormalized = !me.device.pointerEvent || (me.device.pointerEvent && !(event instanceof window.PointerEvent));
+            
             if (event.type === "wheel") {
                 this.deltaMode = 1;
                 this.deltaX = event.deltaX;
