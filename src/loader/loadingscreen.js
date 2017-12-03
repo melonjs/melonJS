@@ -48,12 +48,13 @@
          */
         draw : function (renderer) {
             var color = renderer.getColor();
+            var height = renderer.getHeight();
             // draw the progress bar
             renderer.setColor("black");
-            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.width, this.height / 2);
+            renderer.fillRect(this.pos.x, height / 2, this.width, this.height / 2);
 
             renderer.setColor("#55aa00");
-            renderer.fillRect(this.pos.x, this.pos.y - this.height / 2, this.progress, this.height / 2);
+            renderer.fillRect(this.pos.x, height / 2, this.progress, this.height / 2);
 
             renderer.setColor(color);
         }
