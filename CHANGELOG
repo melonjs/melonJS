@@ -1,6 +1,7 @@
 Version History
 ---------------
-5.0.2
+5.1.0
+* Container : new `onChildChange` callback for when a child is added or removed
 
 5.0.1
 * Input : fix a regression with bindPointer

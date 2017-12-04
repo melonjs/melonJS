@@ -96,6 +96,17 @@
             this.autoDepth = true;
 
             /**
+             * a callback to be extended, triggered when a child is added or removed
+             * @name onChildChange
+             * @memberOf me.Container
+             * @function
+             * @param {Number} index added or removed child index
+             */
+            this.onChildChange = function (/* index */) {
+                // to be extended
+            };
+
+            /**
              * Used by the debug panel plugin
              * @ignore
              */
@@ -158,6 +169,8 @@
                 child.onActivateEvent();
             }
 
+            this.onChildChange.call(this, this.children.length - 1);
+
             return child;
         },
 
@@ -191,6 +204,8 @@
                 if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                     child.onActivateEvent();
                 }
+
+                this.onChildChange.call(this, index);
 
                 return child;
             }
@@ -546,6 +561,7 @@
                     this.children.splice(childIndex, 1);
                     child.ancestor = undefined;
                 }
+                this.onChildChange.call(this, childIndex);
             }
         },
 
@@ -801,7 +817,7 @@
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (obj.isRenderable) {
-                    
+
                     isFloating = obj.floating === true;
 
                     if ((obj.inViewport || isFloating)) {

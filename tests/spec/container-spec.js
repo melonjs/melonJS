@@ -57,5 +57,16 @@ describe("me.Container", function () {
             });
             expect(counter).toEqual(2);
         });
+        it("onChildChange callback", function () {
+            counter = 0;
+            container.onChildChange = function (index) {
+                // just count how many times this one is called
+                counter ++;
+            };
+            container.addChild(new me.Renderable(50, 50, 100, 100));
+            container.addChild(new me.Renderable(100, 100, 100, 100));
+            container.removeChildNow(container.getChildAt(0));
+            expect(counter).toEqual(3);
+        });
     });
 });
