@@ -29,7 +29,7 @@ game.resources = [
      * @example
      * { name: "example_bgm", type: "audio", src: "data/bgm/" },
      */
-    { name: "dst-gameforest",  type: "audio",  stream: true, src: "data/bgm/" },
+    { name: "dst-gameforest",  type: "audio", src: "data/bgm/" },
 
     /* Sound effects.
      * @example
