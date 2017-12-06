@@ -83,7 +83,6 @@
             context.bezierCurveTo(89.9, 15.4, 73.9, 30.2, 50.5, 41.4);
             context.bezierCurveTo(27.1, 52.5, 5.2, 55.8, 0.7, 48.9);
             context.lineTo(0.7, 48.9);
-            context.lineTo(0.7, 48.9);
             context.closePath();
             context.fillStyle = "rgb(255, 255, 255)";
             context.fill();
@@ -121,7 +120,7 @@
             this._super(me.Renderable, "init", [0, 0, w, h]);
 
             // offscreen cache canvas
-            this.fontCanvas = me.video.createCanvas(128, 32);
+            this.fontCanvas = me.video.createCanvas(256, 64);
             this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
