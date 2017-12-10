@@ -21,20 +21,27 @@ game.ShapeObject = me.Entity.extend({
         me.input.registerPointerEvent("pointerdown", this, this.onSelect.bind(this));
         me.input.registerPointerEvent("pointerup", this, this.onRelease.bind(this));
         me.input.registerPointerEvent("pointercancel", this, this.onRelease.bind(this));
-
-        // register on the global pointermove event
-        this.handler = me.event.subscribe(me.event.POINTERMOVE, this.pointerMove.bind(this));
+        me.input.registerPointerEvent("pointermove", this, this.pointerMove.bind(this));
     },
 
     /**
      * pointermove function
      */
     pointerMove: function (event) {
-        this.hover = false;
+        if (this.selected) {
+            // follow the pointer
+            me.game.world.moveUp(this);
+            this.pos.set(event.gameX, event.gameY, this.pos.z);
+            this.pos.sub(this.grabOffset);
+        }
+    },
 
-        // move event is global (relative to the viewport)
-        if (this.getBounds().containsPoint(event.gameX, event.gameY)) {
-            // calculate the final coordinates
+
+    // mouse down function
+    onSelect : function (event) {
+        if (this.selected === false) {
+            // manually calculate the relative coordinates for the body shapes
+            // since only the bounding box is used by the input event manager
             var parentPos = this.ancestor.getBounds().pos;
             var x = event.gameX - this.pos.x - parentPos.x;
             var y = event.gameY - this.pos.y - parentPos.y;
@@ -42,35 +49,17 @@ game.ShapeObject = me.Entity.extend({
             // the pointer event system will use the object bounding rect, check then with with all defined shapes
             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                 if (shape.containsPoint(x, y)) {
-                    this.hover = true;
+                    this.selected = true;
                     break;
                 }
             }
+            if (this.selected) {
+                this.grabOffset.set(event.gameX, event.gameY);
+                this.grabOffset.sub(this.pos);
+                this.selected = true;
+            }
         }
-
-        if (this.selected) {
-            // follow the pointer
-            me.game.world.moveUp(this);
-            this.pos.set(event.gameX, event.gameY, this.pos.z);
-            this.pos.sub(this.grabOffset);
-        }
-
-        if (this.hover || this.selected) {
-            return false;
-        }
-    },
-
-
-    // mouse down function
-    onSelect : function (event) {
-        if (this.hover === true) {
-            this.grabOffset.set(event.gameX, event.gameY);
-            this.grabOffset.sub(this.pos);
-            this.selected = true;
-            // don"t propagate the event furthermore
-            return false;
-        }
-        return true;
+        return this.seleted;
     },
 
     // mouse up function
@@ -84,16 +73,15 @@ game.ShapeObject = me.Entity.extend({
      * update function
      */
     update: function () {
-        return this.selected || this.hover;
+        return this.selected;
     },
 
     /**
      * draw the square
      */
     draw: function (renderer) {
-        renderer.setGlobalAlpha(this.hover ? 1.0 : 0.5);
+        renderer.setGlobalAlpha(this.selected ? 1.0 : 0.5);
         this._super(me.Entity, "draw", [renderer]);
-        renderer.setGlobalAlpha(1.0);
     }
 });
 
