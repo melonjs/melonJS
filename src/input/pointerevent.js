@@ -11,7 +11,6 @@
      * @type {Array.<Vector>}
      */
     var T_POINTERS = [];
-    for (var v = 0; v < 10; v++) { T_POINTERS.push(new me.Pointer()); }
 
     // list of registered Event handlers
     var eventHandlers = new Map();
@@ -35,6 +34,7 @@
     var POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
     var POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
     var POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
+    var POINTER_OVER    = ["pointerover",   "mouseover",    "touchover"];
     var POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
 
     // list of standard pointer event type
@@ -45,6 +45,7 @@
         POINTER_UP[0],
         POINTER_CANCEL[0],
         POINTER_ENTER[0],
+        POINTER_OVER[0],
         POINTER_LEAVE[0]
     ];
 
@@ -56,6 +57,7 @@
         POINTER_UP[1],
         POINTER_CANCEL[1],
         POINTER_ENTER[1],
+        POINTER_OVER[1],
         POINTER_LEAVE[1]
     ];
 
@@ -66,6 +68,7 @@
         POINTER_UP[2],
         POINTER_CANCEL[2],
         POINTER_ENTER[2],
+        POINTER_OVER[2],
         POINTER_LEAVE[2]
     ];
 
@@ -76,6 +79,7 @@
         pointerup: POINTER_UP,
         pointercancel: POINTER_CANCEL,
         pointerenter: POINTER_ENTER,
+        pointerover: POINTER_OVER,
         pointerleave: POINTER_LEAVE
     };
 
@@ -103,18 +107,23 @@
      */
     function enablePointerEvent() {
         if (!pointerInitialized) {
-            // check standard PointerEvent support
-            if (window.PointerEvent) {
-                activeEventList = pointerEventList;
+
+            // instantiate a pool of pointer catched
+            for (var v = 0; v < me.device.maxTouchPoints; v++) {
+                T_POINTERS.push(new me.Pointer());
             }
-            else { // Regular Mouse events
+
+            if (me.device.PointerEvent) {
+                // standard Pointer Events
+                activeEventList = pointerEventList;
+            } else {
+                // Regular Mouse events
                 activeEventList = mouseEventList;
             }
-
-            if (me.device.touch && me.device.isMobile) { //  `touch****` events for iOS/Android devices
+            if (me.device.touch && !me.device.PointerEvent) {
+                // touch event on mobile devices
                 activeEventList = activeEventList.concat(touchEventList);
             }
-
             registerEventListener(activeEventList, onPointerEvent);
 
             // If W3C standard wheel events are not available, use non-standard
@@ -157,6 +166,9 @@
                     }
                 }
             }
+            // disable all gesture by default
+            me.input.setTouchAction(me.video.renderer.getScreenCanvas());
+
             pointerInitialized = true;
         }
     }
@@ -356,18 +368,8 @@
         var pointer;
 
         // PointerEvent or standard Mouse event
-        if (!event.touches) {
-            pointer = T_POINTERS.pop();
-            pointer.setEvent(
-                event,
-                event.clientX,
-                event.clientY,
-                event.pointerId
-            );
-            normalizedEvents.push(pointer);
-        }
-        // iOS/Android like touch event
-        else {
+        if (me.device.TouchEvent && event instanceof TouchEvent) {
+            // iOS/Android Touch event
             for (var i = 0, l = event.changedTouches.length; i < l; i++) {
                 var touchEvent = event.changedTouches[i];
                 pointer = T_POINTERS.pop();
@@ -379,6 +381,16 @@
                 );
                 normalizedEvents.push(pointer);
             }
+        } else {
+            // Mouse or PointerEvent
+            pointer = T_POINTERS.pop();
+            pointer.setEvent(
+                event,
+                event.clientX,
+                event.clientY,
+                event.pointerId
+            );
+            normalizedEvents.push(pointer);
         }
         // if event.isPrimary is defined and false, return
         if (event.isPrimary === false) {
@@ -415,10 +427,10 @@
      */
     function onMoveEvent(e) {
         // dispatch mouse event to registered object
-        if (dispatchEvent(normalizeEvent(e)) || api.preventDefault) {
-            // prevent default action
-            return api._preventDefaultFn(e);
-        }
+        dispatchEvent(normalizeEvent(e));
+        // do not prevent default on moveEvent :
+        // - raise a deprectated warning in latest chrome version for touchEvent
+        // - uncessary for pointer Events
         return true;
     }
 
@@ -525,6 +537,21 @@
     };
 
     /**
+     * enable/disable all gestures on the given element.<br>
+     * by default melonJS will disable browser handling of all panning and zooming gestures.
+     * @name setTouchAction
+     * @memberOf me.input
+     * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
+     * @public
+     * @function
+     * @param {HTMLCanvasElement} element
+     * @param {String} [value="none"]
+     */
+    api.setTouchAction = function (element, value) {
+        element.style["touch-action"] = value || "none";
+    };
+
+    /**
      * Associate a pointer event to a keycode<br>
      * Left button – 0
      * Middle button – 1
@@ -593,6 +620,7 @@
      *   <li><code>"pointerdown"</code></li>
      *   <li><code>"pointerup"</code></li>
      *   <li><code>"pointerenter"</code></li>
+     *   <li><code>"pointerover"</code></li>
      *   <li><code>"pointerleave"</code></li>
      *   <li><code>"pointercancel"</code></li>
      *   <li><code>"wheel"</code></li>

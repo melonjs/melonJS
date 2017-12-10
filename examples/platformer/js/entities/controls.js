@@ -119,13 +119,13 @@ game.HUD.Joypad = me.GUI_Object.extend({
             right: false
         };
 
-        // register on the global pointermove event
-        this.handler = me.event.subscribe(me.event.POINTERMOVE, this.pointerMove.bind(this));
+        // register on the pointermove event
+        me.input.registerPointerEvent('pointermove', this, this.pointerMove.bind(this));
     },
 
     onDestroyEvent: function () {
-        // register on the global pointermove event
-        me.event.unsubscribe(this.handler);
+        // release register event event
+        me.input.releasePointerEvent("pointermove", this);
     },
 
     /**
@@ -136,7 +136,7 @@ game.HUD.Joypad = me.GUI_Object.extend({
             var x = event.gameScreenX;
             var y = event.gameScreenY;
             // pointerMove is a global on the viewport, so check for coordinates
-            if (this.getBounds().containsPoint(x, y)) {
+            if (this.getBounds().containsPoint(x + (event.width / 2), y + (event.height / 2))) {
                 // if any direction is active, update it if necessary
                 if (this.cursors.left === true || this.cursors.right === true) {
                     this.checkDirection.call(this, x, y);
@@ -145,9 +145,7 @@ game.HUD.Joypad = me.GUI_Object.extend({
                 // release keys/joypad if necessary
                 this.onRelease.call(this, event);
             }
-            return false;
         }
-        return false;
     },
 
     // update the cursors value and trigger key event

@@ -200,8 +200,8 @@
             me.input.globalToLocal(clientX, clientY, this.pos);
 
             // true if not originally a pointer event
-            this.isNormalized = !me.device.pointerEvent || (me.device.pointerEvent && !(event instanceof window.PointerEvent));
-            
+            this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));
+
             if (event.type === "wheel") {
                 this.deltaMode = 1;
                 this.deltaX = event.deltaX;
@@ -230,8 +230,8 @@
             this.gameWorldY = this.gameScreenY + viewportOffset.y;
 
             // get the pointer size
-            if (typeof(event.width) === "number") {
-                // PointerEvent
+            if (this.isNormalized === false) {
+                // native PointerEvent
                 width = event.width;
                 height = event.height;
             } else if (typeof(event.radiusX) === "number")  {

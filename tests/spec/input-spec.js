@@ -1,5 +1,4 @@
 describe("me.input", function () {
-
     var renderable;
     var evenType;
     beforeAll(function () {
@@ -7,7 +6,7 @@ describe("me.input", function () {
             "width" : 32,
             "height" : 32
         });
-        if (me.device.pointerEvent) {
+        if (me.device.PointerEvent) {
             evenType = "pointerdown";
         } else {
             evenType ="mousedown"

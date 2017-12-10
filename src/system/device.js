@@ -79,14 +79,16 @@
                 api.enableSwipe(false);
             }
 
-            // future proofing (MS) feature detection
-            me.device.pointerEvent = window.PointerEvent;
-            me.device.maxTouchPoints = navigator.maxTouchPoints || 0;
+            // Touch/Gesture Event feature detection
+            me.device.TouchEvent = !!("ontouchstart" in window);
+            me.device.PointerEvent = !!window.PointerEvent;
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
-            me.device.touch = ("createTouch" in document) || ("ontouchstart" in window) ||
-                              (me.device.cocoon) || (me.device.pointerEvent && (me.device.maxTouchPoints > 0));
+            me.device.touch = (me.device.cocoon) || me.device.TouchEvent || me.device.PointerEvent;
+
+            // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
+            me.device.maxTouchPoints = me.device.touch ? (me.device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
 
             // detect wheel event support
             // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
@@ -303,14 +305,18 @@
          */
         api.nativeBase64 = (typeof(window.atob) === "function");
 
-         /**
-         * Return the maximum number of touch contacts of current device.
+        /**
+         * Return  the maximum number of simultaneous touch contact points are supported by the current device.
          * @type Number
          * @readonly
          * @name maxTouchPoints
          * @memberOf me.device
+         * @example
+         * if (me.device.maxTouchPoints > 1) {
+         *     // device supports multi-touch
+         * }
          */
-        api.maxTouchPoints = 0;
+        api.maxTouchPoints = 1;
 
         /**
          * Touch capabilities
