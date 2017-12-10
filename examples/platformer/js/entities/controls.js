@@ -25,17 +25,33 @@ game.HUD.VirtualJoypad = me.Container.extend({
         // give a name
         this.name = "VirtualJoypad";
 
-        // add our child score object at position
-        this.addChild(new game.HUD.Joypad(
+        // instance of the virtual joypad
+        this.joypad = new game.HUD.Joypad(
             50,
             me.game.viewport.height - 200
-        ));
+        );
 
-        // add our audio control object
-        this.addChild(new game.HUD.Button(
+        // instance of the button
+        this.button = new game.HUD.Button(
             me.game.viewport.width - 150,
             me.game.viewport.height - 150
-        ));
+        )
+
+        this.addChild(this.joypad);
+        this.addChild(this.button);
+
+        // re-position the button in case of
+        // size/orientation change
+        var self = this;
+        me.event.subscribe(
+            me.event.WINDOW_ONRESIZE, function () {
+                self.button.pos.set(
+                    me.game.viewport.width - 150,
+                    me.game.viewport.height - 150,
+                    self.button.pos.z
+                )
+            }
+        );
 
     }
 });
@@ -133,10 +149,10 @@ game.HUD.Joypad = me.GUI_Object.extend({
      */
     pointerMove: function (event) {
         if (this.released === false) {
-            var x = event.gameScreenX;
-            var y = event.gameScreenY;
+            var x = event.gameScreenX + (event.width / 2);
+            var y = event.gameScreenY + (event.height / 2);
             // pointerMove is a global on the viewport, so check for coordinates
-            if (this.getBounds().containsPoint(x + (event.width / 2), y + (event.height / 2))) {
+            if (this.getBounds().containsPoint(x, y)) {
                 // if any direction is active, update it if necessary
                 if (this.cursors.left === true || this.cursors.right === true) {
                     this.checkDirection.call(this, x, y);
@@ -180,8 +196,10 @@ game.HUD.Joypad = me.GUI_Object.extend({
      * function called when the object is clicked on
      */
     onClick : function (event) {
+        var x = event.gameScreenX + (event.width / 2);
+        var y = event.gameScreenY + (event.height / 2);
         this.setOpacity(0.50);
-        this.checkDirection.call(this, event.gameScreenX, event.gameScreenY);
+        this.checkDirection.call(this, x, y);
         return false;
     },
 
