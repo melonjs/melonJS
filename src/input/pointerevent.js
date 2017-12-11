@@ -392,12 +392,14 @@
             );
             normalizedEvents.push(pointer);
         }
+
         // if event.isPrimary is defined and false, return
         if (event.isPrimary === false) {
             return normalizedEvents;
         }
 
-        // Else use the first entry to simulate mouse event
+        // else use the first entry to simulate mouse event
+        normalizedEvents[0].isPrimary = true;
         Object.assign(api.pointer, normalizedEvents[0]);
 
         return normalizedEvents;
