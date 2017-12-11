@@ -30,9 +30,11 @@
           /**
             * the originating Event Object
             * @public
-            * @type {Event}
+            * @type {PointerEvent|TouchEvent|MouseEvent}
             * @name event
-            * @see https://developer.mozilla.org/en-US/docs/Web/API/Event
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
             * @memberOf me.Pointer
             */
             this.event = undefined;
@@ -168,7 +170,7 @@
             * @type {Number}
             * @name pointerId
             * @memberOf me.Pointer
-            * @see http://msdn.microsoft.com/en-us/library/windows/apps/hh466123.aspx
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
             */
             this.pointerId = undefined;
 
