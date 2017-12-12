@@ -487,11 +487,10 @@
             // TODO memoization for one set of coords (multitouch)
             v = v || new me.Vector2d();
             v.set(x, y).add(this.pos).sub(me.game.world.pos);
-            if (this.currentTransform.isIdentity()) {
-                return v;
-            } else {
-                return this.currentTransform.multiplyVectorInverse(v);
+            if (!this.currentTransform.isIdentity()) {
+                this.currentTransform.multiplyVectorInverse(v);
             }
+            return v;
         },
 
         /**
