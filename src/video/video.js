@@ -396,6 +396,10 @@
             // default (no scaling)
             var scaleX = 1, scaleY = 1;
 
+            // invalidate the current canvas position cache so that it
+            // get recalculated the next time getPos is called
+            api._canvasOffset = null;
+
             if (settings.autoScale) {
                 var parentNodeWidth;
                 var parentNodeHeight;
@@ -504,10 +508,6 @@
             // renderer resize logic
             this.renderer.scaleCanvas(scaleX, scaleY);
             me.game.repaint();
-
-            // invalidate the current canvas position cache so that it
-            // get recalculated the next time getPos is called
-            api._canvasOffset = null;
 
             // clear the timeout id
             deferResizeId = 0;
