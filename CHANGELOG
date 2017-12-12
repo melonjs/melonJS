@@ -4,6 +4,7 @@ Version History
 * Container : new `onChildChange` callback for when a child is added or removed
 * Input : further improvements to multitouch support (compatibility on latest device/browser)
 * Input : new me.input.setTouchAction function to enable/disable gesture by default (default to "none")
+* Viewport : fix a regression where transforms were not applied anymore to the camera/viewport
 
 5.0.1
 * Input : fix a regression with bindPointer

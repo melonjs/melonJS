@@ -336,19 +336,24 @@
                 // prepare renderer to draw a new frame
                 renderer.clear();
 
+                viewport.preDraw(renderer);
+
                 api.world.preDraw(renderer);
 
                 // update all objects,
                 // specifying the viewport as the rectangle area to redraw
                 api.world.draw(renderer, viewport);
 
+                // draw the viewport/camera effects
+                viewport.draw(renderer);
+
                 api.world.postDraw(renderer);
+
+                viewport.postDraw(renderer);
 
                 // translate the world coordinates by default to screen coordinates
                 api.world.currentTransform.translate(translateX, translateY);
 
-                // draw the viewpor/camera effects
-                viewport.draw(renderer);
             }
 
             isDirty = false;
