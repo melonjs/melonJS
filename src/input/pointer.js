@@ -225,11 +225,11 @@
             this.gameScreenY = this.pos.y;
 
             // get the current screen to world offset
-            me.game.viewport.localToWorld(0, 0, viewportOffset);
+            me.game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
 
             /* Initialize the two coordinate space properties. */
-            this.gameWorldX = this.gameScreenX + viewportOffset.x;
-            this.gameWorldY = this.gameScreenY + viewportOffset.y;
+            this.gameWorldX = viewportOffset.x;
+            this.gameWorldY = viewportOffset.y;
 
             // get the pointer size
             if (this.isNormalized === false) {

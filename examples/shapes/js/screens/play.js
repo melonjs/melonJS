@@ -38,8 +38,8 @@ game.PlayScreen = me.ScreenObject.extend({
                 return true;
             },
             draw: function(renderer) {
-                var x = Math.round(me.input.pointer.pos.x);
-                var y = Math.round(me.input.pointer.pos.y);
+                var x = Math.round(me.input.pointer.gameWorldX);
+                var y = Math.round(me.input.pointer.gameWorldY);
                 this.font.draw (
                     renderer,
                     "( " + x + "," + y + " )",

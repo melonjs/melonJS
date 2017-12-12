@@ -484,8 +484,14 @@
          * @return {me.Vector2d}
          */
         localToWorld : function (x, y, v) {
+            // TODO memoization for one set of coords (multitouch)
             v = v || new me.Vector2d();
-            return (v.set(x, y)).add(this.pos).sub(me.game.world.pos);
+            v.set(x, y).add(this.pos).sub(me.game.world.pos);
+            if (this.currentTransform.isIdentity()) {
+                return v;
+            } else {
+                return this.currentTransform.multiplyVectorInverse(v);
+            }
         },
 
         /**
@@ -500,8 +506,13 @@
          * @return {me.Vector2d}
          */
         worldToLocal : function (x, y, v) {
+            // TODO memoization for one set of coords (multitouch)
             v = v || new me.Vector2d();
-            return (v.set(x, y)).sub(this.pos).add(me.game.world.pos);
+            v.set(x, y)
+            if (!this.currentTransform.isIdentity()) {
+                this.currentTransform.multiplyVector(v);
+            }
+            return v.sub(this.pos).add(me.game.world.pos);
         },
 
         /**
