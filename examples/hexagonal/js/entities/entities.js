@@ -1,12 +1,8 @@
-
-/************************************************************************************/
-/*                                                                                  */
-/*        a text entity                                                           */
-/*                                                                                  */
-/************************************************************************************/
+/**
+ *  a text entity to display mouse coords
+ */
 game.TextEntity = me.Renderable.extend({
     init: function (x, y, width, height) {
-        var self = this;
         this.text = "?,?";
         this.font_size = 20;
         this.font = new me.Font("courier", this.font_size, "white");
@@ -16,16 +12,16 @@ game.TextEntity = me.Renderable.extend({
 
         this.anchorPoint.set(0, 0);
         this.floating = true;
+    },
 
+    onActivateEvent: function () {
+        var self = this;
         this.pointerDown = me.event.subscribe("pointermove", function (event) {
             self.text = "?,?";
-            //self.text = Math.round(event.gameX) + "," + Math.round(event.gameY);
-            if (me.levelDirector.getCurrentLevelId()) {
-                var layer = me.game.world.getChildByName("Ground")[0];
-                var tile = layer.getTile(event.gameWorldX, event.gameWorldY);
-                if (tile) {
-                    self.text = tile.col + "," + tile.row;
-                }
+            var layer = me.game.world.getChildByName("Ground")[0];
+            var tile = layer.getTile(event.gameWorldX, event.gameWorldY);
+            if (tile) {
+                self.text = tile.col + "," + tile.row;
             }
         });
     },

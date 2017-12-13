@@ -5,6 +5,9 @@ game.PlayScreen = me.ScreenObject.extend({
     onResetEvent: function() {
         // load a level
         me.levelDirector.loadLevel("hexagonal-mini");
+
+        // add the Text Entity that display pointer coordinates
+        me.game.world.addChild(new game.TextEntity(0,0,100,20));
     },
 
     /**
