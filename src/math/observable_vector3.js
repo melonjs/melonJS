@@ -140,7 +140,7 @@
          * @param {Number} x x value of the vector
          * @param {Number} y y value of the vector
          * @param {Number} z z value of the vector
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         setMuted : function (x, y, z) {
             this._x = x;
@@ -155,11 +155,11 @@
          * @memberOf me.ObservableVector3d
          * @function
          * @param {function} onUpdate callback
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         setCallback : function (fn) {
             if (typeof(fn) !== "function") {
-                throw new me.ObservableVector2d.Error(
+                throw new me.ObservableVector3d.Error(
                     "invalid `onUpdate` callback"
                 );
             }
