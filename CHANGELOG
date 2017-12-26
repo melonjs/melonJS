@@ -1,7 +1,7 @@
 Version History
 ---------------
 5.1.0
-* Audio : Howler core update (2.0.6)
+* Audio : Howler core update (2.0.7)
 * Container : new `onChildChange` callback for when a child is added or removed
 * Input : further improvements to multitouch support (compatibility on latest device/browser)
 * Input : new me.input.setTouchAction function to enable/disable gesture by default (default to "none")
