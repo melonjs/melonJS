@@ -31,10 +31,6 @@
             // Particle will always update
             this.alwaysUpdate = true;
 
-            // Prevents particle to be added to the quadTree
-            // and to respond to events
-            this.isKinematic = true;
-
             // Cache the image reference
             this.image = emitter.image;
 

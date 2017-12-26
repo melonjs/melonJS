@@ -101,6 +101,9 @@
 
             // GUI items use screen coordinates
             this.floating = true;
+
+            // enable event detection
+            this.isKinematic = false;
         },
 
         /**

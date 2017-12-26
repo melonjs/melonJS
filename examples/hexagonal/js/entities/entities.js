@@ -12,6 +12,8 @@ game.TextEntity = me.Renderable.extend({
 
         this.anchorPoint.set(0, 0);
         this.floating = true;
+
+        this.isKinematic = false;
     },
 
     onActivateEvent: function () {

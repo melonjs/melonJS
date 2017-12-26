@@ -37,6 +37,8 @@ game.PlayScreen = me.ScreenObject.extend({
                 // dirty flag to enable/disable redraw
                 this.dirty = false;
 
+                this.isKinematic = false;
+
                 // subscribe to pointer and viewport move event
                 this.pointerEvent = me.event.subscribe("pointermove", this.pointerMove.bind(this));
                 this.viewportEvent = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, this.viewportMove.bind(this));

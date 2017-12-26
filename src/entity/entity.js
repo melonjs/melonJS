@@ -148,6 +148,9 @@
 
             // disable for entities
             this.autoTransform = false;
+
+            // enable collision detection
+            this.isKinematic = false;
         },
 
         /**

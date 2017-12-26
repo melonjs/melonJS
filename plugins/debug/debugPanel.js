@@ -156,6 +156,9 @@
             // call the super constructor
             this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
+            // enable collision and event detection
+            this.isKinematic = false;
+
             // minimum melonJS version expected
             this.version = "5.1.0";
 

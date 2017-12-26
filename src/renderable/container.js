@@ -123,6 +123,9 @@
 
             // container self apply any defined transformation
             this.autoTransform = true;
+
+            // enable collision and event detection
+            this.isKinematic = false;
         },
 
 

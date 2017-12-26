@@ -88,6 +88,9 @@
 
             // for backward "compatiblity" (in terms of behavior)
             this.anchorPoint.set(0, 0);
+
+            // enable event detection on the viewport
+            this.isKinematic = false;
         },
 
         // -- some private function ---
