@@ -6,6 +6,8 @@ Version History
 * Input : further improvements to multitouch support (compatibility on latest device/browser)
 * Input : new me.input.setTouchAction function to enable/disable gesture by default (default to "none")
 * Input : fix a pointer offset issue when using the browser zoom
+* Renderable : `isKinematic` is now true by default except for me.Entity, me.Container and me.GUI object
+* Renderable : anchor point and transform are now properly applied to me.Sprite Bounding Rect
 * Viewport : apply current transformation when converting given coordinates from localToWorld and WorldToLocal
 * Viewport : fix a regression where transforms were not applied anymore to the camera/viewport
 
