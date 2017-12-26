@@ -498,6 +498,42 @@
             return result;
         },
 
+
+        /**
+         * update the renderable's bounding rect (private)
+         * @ignore
+         * @name updateBoundsPos
+         * @memberOf me.Sprite
+         * @function
+         */
+        updateBoundsPos : function (newX, newY) {
+            var bounds = this.getBounds();
+            bounds.pos.set(
+                newX - (this.anchorPoint.x * bounds.width),
+                newY - (this.anchorPoint.y * bounds.height)
+            );
+            // XXX: This is called from the constructor, before it gets an ancestor
+            if (this.ancestor) {
+                bounds.pos.add(this.ancestor._absPos);
+            }
+            return bounds;
+        },
+
+        /**
+         * called when the anchor point value is changed
+         * @private
+         * @name onAnchorUpdate
+         * @memberOf me.Sprite
+         * @function
+         */
+        onAnchorUpdate : function (newX, newY) {
+            // since the callback is called before setting the new value
+            // manually update the anchor point (required for updateBoundsPos)
+            this.anchorPoint.setMuted(newX, newY);
+            // then call updateBouds
+            this.updateBoundsPos(this.pos.x, this.pos.y);
+        },
+
         /**
          * @ignore
          */

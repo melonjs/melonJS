@@ -157,7 +157,7 @@
             this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
 
             // minimum melonJS version expected
-            this.version = "5.0.0";
+            this.version = "5.1.0";
 
             // to hold the debug options
             // clickable rect area
@@ -308,24 +308,35 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.Sprite, "postDraw", function (renderer) {
+            me.plugin.patch(me.Sprite, "draw", function (renderer) {
+
+                // call the original me.Sprite.draw function
+                this._patched(renderer);
+
                 // don't do anything else if the panel is hidden
                 if (_this.visible) {
+
                     // increment the sprites counter
                     _this.counters.inc("sprites");
 
                     // draw the sprite rectangle
                     if (me.debug.renderHitBox) {
-                        //var bounds = ;
-                        //var color  = renderer.getColor();
+                        var bounds = this.getBounds();
+                        var ax = this.anchorPoint.x * bounds.width,
+                            ay = this.anchorPoint.y * bounds.height;
+
+                        renderer.save();
+
+                        // translate back as the bounds position
+                        // is already adjusted to the anchor Point
+                        renderer.translate(ax, ay);
 
                         renderer.setColor("green");
-                        renderer.drawShape(this.getBounds());
-                        //renderer.setColor(color);
+                        renderer.drawShape(bounds);
+
+                        renderer.restore();
                     }
                 }
-                // call the original me.Sprite.draw function
-                this._patched(renderer);
             });
 
             /*
@@ -387,10 +398,9 @@
                         renderer.setColor("orange");
                         renderer.drawShape(this.getBounds());
 
-
                         renderer.translate(
-                            this.pos.x +  this.ancestor._absPos.x,
-                            this.pos.y +  this.ancestor._absPos.y
+                            this.pos.x + this.ancestor._absPos.x,
+                            this.pos.y + this.ancestor._absPos.y
                         );
 
                         // draw all defined shapes
@@ -420,7 +430,7 @@
                         renderer.restore();
                     }
                 }
-                // call the original me.Entity.posDraw function
+                // call the original me.Entity.postDraw function
                 this._patched(renderer);
             });
 

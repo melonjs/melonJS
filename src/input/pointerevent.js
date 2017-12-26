@@ -252,12 +252,12 @@
             candidates = candidates.concat([ me.game.viewport ]);
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
-
                 if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
                     var handlers = eventHandlers.get(candidate);
                     var region = handlers.region;
                     var ancestor = region.ancestor;
                     var bounds = region.getBounds();
+                    var eventInBounds = false;
 
                     if (region.floating === true) {
                         pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
@@ -274,11 +274,26 @@
                         pointer.gameLocalY = pointer.gameY - parentPos.y;
                     }
 
-                    var eventInBounds =
-                        // check the shape bounding box first
-                        bounds.containsPoint(pointer.gameX, pointer.gameY) &&
-                        // then check more precisely if needed
-                        (bounds === region || region.containsPoint(pointer.gameLocalX, pointer.gameLocalY));
+                    if (region instanceof me.Sprite) {
+                        var gameX = pointer.gameX;
+                        var gameY = pointer.gameY;
+                        if (!region.currentTransform.isIdentity()) {
+                            var invV = region.currentTransform.multiplyVectorInverse(
+                                me.pool.pull("me.Vector2d", gameX, gameY)
+                            );
+                            gameX = invV.x;
+                            gameY = invV.y;
+                            me.pool.push(invV);
+                        }
+                        eventInBounds = bounds.containsPoint(gameX, gameY);
+                    } else {
+                        eventInBounds =
+                            bounds.containsPoint(pointer.gameX, pointer.gameY) &&
+                            (bounds === region ||
+                            // if the given target is another shape than me.Rect
+                            region.containsPoint(pointer.gameLocalX, pointer.gameLocalY));
+                    }
+
 
                     switch (pointer.type) {
                         case POINTER_MOVE[0]:

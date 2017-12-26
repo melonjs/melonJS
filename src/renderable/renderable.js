@@ -122,12 +122,16 @@
              * <img src="images/anchor_point.png"/> :<br>
              * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
              * @public
-             * @type me.Vector2d
+             * @type me.ObservableVector2d
              * @default <0.5,0.5>
              * @name anchorPoint
              * @memberOf me.Renderable
              */
-            this.anchorPoint = new me.Vector2d(0.5, 0.5);
+            if (this.anchorPoint instanceof me.ObservableVector2d) {
+                this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
+            } else {
+                this.anchorPoint = new me.ObservableVector2d(0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
+            }
 
             /**
              * When enabled, an object container will automatically apply
@@ -171,10 +175,10 @@
             this.alpha = 1.0;
 
             /**
-             * a reference to the Container object that contains this renderable,
+             * a reference to the parent object that contains this renderable,
              * or undefined if it has not been added to one.
              * @public
-             * @type me.Container
+             * @type me.Container|me.Entity
              * @default undefined
              * @name me.Renderable#ancestor
              */
@@ -389,11 +393,22 @@
         },
 
         /**
+         * called when the anchor point value is changed
+         * @private
+         * @name onAnchorUpdate
+         * @memberOf me.Renderable
+         * @function
+         */
+        onAnchorUpdate : function () {
+            ; // to be extended
+        },
+
+        /**
          * update the bounds
          * @private
          * @deprecated
          * @name updateBounds
-         * @memberOf me.Entity
+         * @memberOf me.Renderable
          * @function
          */
         updateBounds : function () {
