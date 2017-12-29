@@ -32,6 +32,8 @@ game.MoleEntity = me.Sprite.extend(
         this.displayTween = null;
         this.hideTween = null;
 
+        this.isKinematic = false;
+
         // register on mouse event
         me.input.registerPointerEvent("pointerdown", this, this.onMouseDown.bind(this));
 
