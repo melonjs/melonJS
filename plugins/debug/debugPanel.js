@@ -715,7 +715,7 @@
     });
 
     // automatically register the debug panel
-    window.onReady(function () {
+    me.device.onReady(function () {
         me.plugin.register.defer(this, me.debug.Panel, "debugPanel",
             me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
         );

@@ -24,7 +24,7 @@
             this._super(me.Renderable, "init", [ 0, me.video.renderer.getHeight() - 60, 200, 60 ]);
 
             // minimum melonJS version expected
-            this.version = "2.2.0";
+            this.version = "5.1.0";
 
             // to hold the debug options
             // clickable rect area
@@ -291,7 +291,7 @@
     });
 
     // automatically register the debug panel
-    window.onReady(function () {
+    me.device.onReady(function () {
         me.plugin.register.defer(this, me.debug.ParticlePanel, "particleDebugPanel");
     });
 
