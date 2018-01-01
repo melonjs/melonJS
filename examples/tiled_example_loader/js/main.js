@@ -88,6 +88,6 @@ var game = {
 
 
 //bootstrap :)
-window.onReady(function() {
+me.device.onReady(function() {
     game.onload();
 });

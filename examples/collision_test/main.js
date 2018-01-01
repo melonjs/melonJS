@@ -111,6 +111,6 @@ var Smilie = me.Entity.extend({
 });
 
 /* Bootstrap */
-window.onReady(function onReady() {
+me.device.onReady(function onReady() {
     game.onload();
 });

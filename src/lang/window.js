@@ -19,48 +19,12 @@
      * Specify a function to execute when the DOM is fully loaded
      * @memberOf external:window#
      * @alias onReady
+     * @deprecated
+     * @see me.device.onReady
      * @param {Function} fn A function to execute after the DOM is ready.
-     * @example
-     * // small main skeleton
-     * var game = {
-     *    // Initialize the game
-     *    // called by the window.onReady function
-     *    onload : function () {
-     *       // init video
-     *       if (!me.video.init('screen', 640, 480, true)) {
-     *          alert("Sorry but your browser does not support html 5 canvas.");
-     *          return;
-     *       }
-     *
-     *       // initialize the "audio"
-     *       me.audio.init("mp3,ogg");
-     *
-     *       // set callback for ressources loaded event
-     *       me.loader.onload = this.loaded.bind(this);
-     *
-     *       // set all ressources to be loaded
-     *       me.loader.preload(game.resources);
-     *
-     *       // load everything & display a loading screen
-     *       me.state.change(me.state.LOADING);
-     *    },
-     *
-     *    // callback when everything is loaded
-     *    loaded : function () {
-     *       // define stuff
-     *       // ....
-     *
-     *       // change to the menu screen
-     *       me.state.change(me.state.MENU);
-     *    }
-     * }; // game
-     *
-     * // "bootstrap"
-     * window.onReady(function () {
-     *    game.onload();
-     * });
      */
     window.onReady = function (fn) {
+        console.warn("Deprecated: window.onReady, use me.device.onReady instead");
         me.device.onReady.call(this, fn);
     };
 
