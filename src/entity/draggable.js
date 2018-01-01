@@ -101,7 +101,6 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
         dragStart: function (e) {
             if (this.dragging === false) {
                 this.dragging = true;
-                this.dragId = e.pointerId;
                 this.grabOffset.set(e.gameX, e.gameY);
                 this.grabOffset.sub(this.pos);
                 return false;
@@ -117,10 +116,8 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         dragMove: function (e) {
             if (this.dragging === true) {
-                if (this.dragId === e.pointerId) {
-                    this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
-                    this.pos.sub(this.grabOffset);
-                }
+                this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
+                this.pos.sub(this.grabOffset);
             }
         },
 
@@ -133,7 +130,6 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
          */
         dragEnd: function () {
             if (this.dragging === true) {
-                this.pointerId = undefined;
                 this.dragging = false;
                 return false;
             }

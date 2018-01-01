@@ -19,7 +19,7 @@ game.square = me.DraggableEntity.extend({
      */
     draw: function (renderer) {
         renderer.setColor(this.color);
-        renderer.fillRect(this.pos.x, this.pos.y, this.width, this.height);
+        renderer.fillRect(0, 0, this.width, this.height);
     },
     /**
      * dragStart overwrite function
