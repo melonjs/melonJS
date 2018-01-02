@@ -114,10 +114,18 @@ describe("me.Color", function () {
     });
 
     describe("color clone function", function () {
-        it("clone color hex value is #0000FF", function () {
-            var _blue_color = new me.Color().parseHex("#0000FF");
-            var clone = _blue_color.clone();
-            expect(clone.toHex()).toEqual("#0000FF");
+        it("cloned color hex value is #2060FF", function () {
+            var _color = new me.Color().parseHex("#2060FF");
+            var clone = _color.clone();
+            expect(clone.toHex()).toEqual("#2060FF");
+        });
+    });
+
+    describe("color copy function", function () {
+        it("copied color hex value is #8040FF", function () {
+            var _color = new me.Color().parseHex("#8040FF");
+            var copy = new me.Color().copy(_color);
+            expect(copy.toHex()).toEqual("#8040FF");
         });
     });
 });
