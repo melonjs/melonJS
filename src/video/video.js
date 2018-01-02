@@ -502,6 +502,11 @@
          * @param {Number} scaleY Y scaling multiplier
          */
         api.updateDisplaySize = function (scaleX, scaleY) {
+
+            // invalidate the current canvas position cache so that it
+            // get recalculated the next time getPos is called
+            api._canvasOffset = null;
+
             // update the global scale variable
             me.sys.scale.set(scaleX, scaleY);
 
