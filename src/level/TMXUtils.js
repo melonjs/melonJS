@@ -188,6 +188,11 @@
 
                 case "tile":
                     var tile = api.parse(item);
+                    if (tile.image) {
+                        tile.imagewidth = tile.image.width;
+                        tile.imageheight = tile.image.height;
+                        tile.image = tile.image.source;
+                    }
                     obj.tiles = obj.tiles || {};
                     obj.tiles[tile.id] = tile;
                     break;

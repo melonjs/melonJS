@@ -32,6 +32,9 @@
             // tile properties (collidable, etc..)
             this.TileProperties = [];
 
+            // hold reference to each tile image
+            this.imageCollection = [];
+
             this.firstgid = this.lastgid = +tileset.firstgid;
 
             // check if an external tileset is defined
@@ -96,6 +99,9 @@
                     if ("properties" in tiles[i]) {
                         this.setTileProperty(+i + this.firstgid, tiles[i].properties);
                     }
+                    if ("image" in tiles[i]) {
+                        this.imageCollection[+i + this.firstgid] = me.utils.getImage(tiles[i].image);
+                    }
                 }
             }
 
@@ -115,30 +121,36 @@
                 }
             }
 
-            this.image = me.utils.getImage(tileset.image);
-            if (!this.image) {
-                throw new me.TMXTileset.Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
-            }
+            // if not a tile image collection
+            if (this.imageCollection.length === 0) {
 
-            // create a texture atlas for the given tileset
-            this.texture = me.video.renderer.cache.get(this.image, {
-                framewidth : this.tilewidth,
-                frameheight : this.tileheight,
-                margin : this.margin,
-                spacing : this.spacing
-            });
-            this.atlas = this.texture.getAtlas();
+                // get the global tileset texture
+                this.image = me.utils.getImage(tileset.image);
 
-            // calculate the number of tiles per horizontal line
-            var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
-            var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
-            // compute the last gid value in the tileset
-            this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
-            if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
-                console.warn(
-                    "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
-                    ") does not match expected tilecount (" + tileset.tilecount + ")"
-                );
+                if (!this.image) {
+                    throw new me.TMXTileset.Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
+                }
+
+                // create a texture atlas for the given tileset
+                this.texture = me.video.renderer.cache.get(this.image, {
+                    framewidth : this.tilewidth,
+                    frameheight : this.tileheight,
+                    margin : this.margin,
+                    spacing : this.spacing
+                });
+                this.atlas = this.texture.getAtlas();
+
+                // calculate the number of tiles per horizontal line
+                var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
+                var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
+                // compute the last gid value in the tileset
+                this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
+                if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {
+                    console.warn(
+                        "Computed tilecount (" + (this.lastgid - this.firstgid + 1) +
+                        ") does not match expected tilecount (" + tileset.tilecount + ")"
+                    );
+                }
             }
         },
 
@@ -224,6 +236,7 @@
 
         // draw the x,y tile
         drawTile : function (renderer, dx, dy, tmxTile) {
+
             // check if any transformation is required
             if (tmxTile.flipped) {
                 renderer.save();
@@ -234,16 +247,26 @@
                 dx = dy = 0;
             }
 
-            var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
-
-            // draw the tile
-            renderer.drawImage(
-                this.image,
-                offset.x, offset.y,
-                this.tilewidth, this.tileheight,
-                dx, dy,
-                this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
-            );
+            if (typeof this.imageCollection[tmxTile.tileId] !== "undefined") {
+                // draw the tile
+                renderer.drawImage(
+                    this.imageCollection[tmxTile.tileId],
+                    0, 0,
+                    this.tilewidth, this.tileheight,
+                    dx, dy,
+                    this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
+                );
+            } else {
+                var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
+                // draw the tile
+                renderer.drawImage(
+                    this.image,
+                    offset.x, offset.y,
+                    this.tilewidth, this.tileheight,
+                    dx, dy,
+                    this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
+                );
+            }
 
             if (tmxTile.flipped)  {
                 // restore the context to the previous state
