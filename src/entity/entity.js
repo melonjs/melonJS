@@ -117,19 +117,16 @@
                 settings.shapes :
                 [ new me.Rect(0, 0, this.width, this.height) ]
             );
-            if (this.body) {
-                this.body.init(this, shapes);
+            if (typeof this.body !== "undefined") {
+                this.body.init(this, shapes, this.onBodyUpdate.bind(this));
             }
             else {
-                this.body = new me.Body(this, shapes);
+                this.body = new me.Body(this, shapes, this.onBodyUpdate.bind(this));
             }
-
-            // ensure the entity bounds and pos are up-to-date
-            var bounds = this.body.updateBounds();
 
             // resize the entity if required
             if (this.width === 0 && this.height === 0) {
-                this.resize(bounds.width, bounds.height);
+                this.resize(this.body.width, this.body.height);
             }
 
             // set the  collision mask if defined
@@ -239,11 +236,15 @@
          * @function
          */
         updateBoundsPos : function (x, y) {
-            var _pos = this.body.pos;
-            this._super(me.Renderable, "updateBoundsPos", [
-                x + _pos.x,
-                y + _pos.y
-            ]);
+            if (typeof this.body !== "undefined") {
+                var _pos = this.body.pos;
+                this._super(me.Renderable, "updateBoundsPos", [
+                    x + _pos.x,
+                    y + _pos.y
+                ]);
+            } else {
+                this._super(me.Renderable, "updateBoundsPos", [x, y]);
+            }
             return this.getBounds();
         },
 
@@ -254,14 +255,11 @@
          * @memberOf me.Entity
          * @function
          */
-        onBodyUpdate : function (pos, w, h) {
-            var bounds = this.getBounds();
-            bounds.pos.setV(this.pos).add(pos);
-            // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor) {
-                bounds.pos.add(this.ancestor._absPos);
-            }
-            bounds.resize(w, h);
+        onBodyUpdate : function (body) {
+            // update the entity bounds to match with the body bounds
+            this.getBounds().resize(body.width, body.height);
+            // update the bounds pos
+            this.updateBoundsPos(this.pos.x, this.pos.y);
         },
 
         preDraw : function (renderer) {

@@ -13,20 +13,25 @@
      * @extends me.Rect
      * @memberOf me
      * @constructor
-     * @param {me.Entity} entity the parent entity
+     * @param {me.Renderable} ancestor the parent object this body is attached to
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
+     * @param {Function} onBodyUpdate callback for when the body is updated (e.g. add/remove shapes)
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
     {
         /** @ignore */
-        init : function (entity, shapes) {
+        init : function (parent, shapes, onBodyUpdate) {
 
             /**
-             * reference to the parent entity
-             * @ignore
+             * a reference to the parent object that contains this bodt,
+             * or undefined if it has not been added to one.
+             * @public
+             * @type me.Renderable
+             * @default undefined
+             * @name me.Body#ancestor
              */
-            this.entity = entity;
+            this.ancestor = parent;
 
             /**
              * The collision shapes of the entity <br>
@@ -159,15 +164,20 @@
                 "init", [
                     0,
                     0,
-                    entity.width,
-                    entity.height
+                    this.ancestor.width,
+                    this.ancestor.height
                 ]
             );
+
+            if (typeof(onBodyUpdate) === "function") {
+                this.onBodyUpdate = onBodyUpdate;
+            }
 
             // parses the given shapes array and add them
             for (var s = 0; s < shapes.length; s++) {
                 this.addShape(shapes[s].clone(), true);
             }
+            this.updateBounds();
         },
 
         /**
@@ -356,7 +366,7 @@
             // FIXME: Respond proportionally to object mass
 
             // Move out of the other object shape
-            this.entity.pos.sub(overlap);
+            this.ancestor.pos.sub(overlap);
 
             // adjust velocity
             if (overlap.x !== 0) {
@@ -392,8 +402,10 @@
                 }
             }
 
-            // update the parent entity bounds
-            this.entity.onBodyUpdate(this.pos, this.width, this.height);
+            // trigger the onBodyChange
+            if (typeof this.onBodyUpdate === "function") {
+                this.onBodyUpdate(this);
+            }
 
             return this;
         },
@@ -509,7 +521,7 @@
             this.computeVelocity(this.vel);
 
             // update player entity position
-            this.entity.pos.add(this.vel);
+            this.ancestor.pos.add(this.vel);
 
             // returns true if vel is different from 0
             return (this.vel.x !== 0 || this.vel.y !== 0);
@@ -520,7 +532,8 @@
          * @ignore
          */
         destroy : function () {
-            this.entity = null;
+            this.onBodyUpdate = null;
+            this.ancestor = null;
             this.shapes = [];
         }
     });
