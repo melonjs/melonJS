@@ -9,6 +9,7 @@ Version History
 * Input : fix a pointer offset issue when using the browser zoom
 * Renderable : `isKinematic` is now true by default except for me.Entity, me.Container and me.GUI object
 * Renderable : anchor point and transform are now properly applied to me.Sprite Bounding Rect
+* TMX : add support for "Collection of Image" tilesets
 * Viewport : apply current transformation when converting given coordinates from localToWorld and WorldToLocal
 * Viewport : fix a regression where transforms were not applied anymore to the camera/viewport
 
