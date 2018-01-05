@@ -42,6 +42,13 @@
     var T_ARRAYS = [];
     for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
 
+    // a dummy entity object when using Line for raycasting
+    var dummyEntity = {
+        pos : new me.Vector2d(0, 0),
+        ancestor : {
+            _absPos : new me.Vector2d(0, 0)
+        }
+    };
 
     /**
      * Flattens the specified array of points onto a unit vector axis,
@@ -490,6 +497,83 @@
             }
             // we could return the amount of objects we collided with ?
             return collision > 0;
+        };
+
+        /**
+         * Checks for object colliding with the given line
+         * @name rayCast
+         * @memberOf me.collision
+         * @public
+         * @function
+         * @param {me.Line} line line to be tested for collision
+         * @param {Array.<me.Entity>} [result] a user defined array that will be populated with intersecting entities.
+         * @return {Array.<me.Entity>} an Array of intersecting entities
+         * @example
+         *    // define a line accross the viewport
+         *    var ray = new me.Line(
+         *        // absolute position of the line
+         *        0, 0, [
+         *        // starting point relative to the initial position
+         *        new me.Vector2d(0, 0),
+         *        // ending point
+         *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+         *    ]);
+         *
+         *    // check for collition
+         *    result = me.collision.rayCast(ray);
+         *
+         *    if (result.length > 0) {
+         *        // ...
+         *    }
+         */
+        api.rayCast = function (line, resultArray) {
+            var collision = 0;
+            var result = resultArray || [];
+
+            // retrieve a list of potential colliding objects
+            var candidates = api.quadTree.retrieve(line.getBounds());
+
+            for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+
+                // fast AABB check if both bounding boxes are overlaping
+                if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
+
+                    // go trough all defined shapes in B (if any)
+                    var bLen = objB.body.shapes.length;
+                    if ( objB.body.shapes.length === 0) {
+                        continue;
+                    }
+
+                    var shapeA = line;
+
+                    // go through all defined shapes in B
+                    var indexB = 0;
+                    do {
+                        var shapeB = objB.body.getShape(indexB);
+
+                        // full SAT collision check
+                        if (api["test" + shapeA.shapeType + shapeB.shapeType]
+                            .call(
+                                this,
+                                dummyEntity, // a reference to the object A
+                                shapeA,
+                                objB,  // a reference to the object B
+                                shapeB
+                        )) {
+                            // we touched something !
+                            result[collision] = objB;
+                            collision++;
+                        }
+                        indexB++;
+                    } while (indexB < bLen);
+                }
+            }
+
+            // cap result in case it was not empty
+            result.length = collision;
+
+            // return the list of colliding objects
+            return result;
         };
 
         /**

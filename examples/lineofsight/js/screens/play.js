@@ -1,0 +1,79 @@
+game.PlayScreen = me.ScreenObject.extend({
+    /**
+     *  action to perform on state change
+     */
+    onResetEvent: function() {
+        var rectSize = 150;
+
+        // clear the background
+        me.game.world.addChild(new me.ColorLayer("background", "black"), 0);
+
+        // add a few shapes
+        me.game.world.addChild(new game.Square(50, 50, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(50, 400, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(300, 150, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(300, 350, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(600, 200, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(600, 400, {width: rectSize, height: rectSize}), 1);
+
+        me.game.repaint();
+
+        // display the current pointer coordinates on top of the pointer arrow
+        // and some helper text at the bottom of the viewport
+        me.game.world.addChild(new (me.Renderable.extend({
+            init: function() {
+                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
+                this.font = new me.Font("Arial", 10, "#FFFFFF");
+                this.font.textAlign = "center";
+                this.fontHeight = this.font.measureText(me.video.renderer, "DUMMY").height;
+            },
+            update : function (dt) {
+                return true;
+            },
+            draw: function(renderer) {
+                var x = Math.round(me.input.pointer.gameWorldX);
+                var y = Math.round(me.input.pointer.gameWorldY);
+
+                this.font.draw (
+                    renderer,
+                    "( " + x + "," + y + " )",
+                    x,
+                    y - this.fontHeight);
+
+                this.font.draw (
+                    renderer,
+                    "drag the square to check for intersection witht the line",
+                    150,
+                    me.game.viewport.height - this.fontHeight
+                );
+            }
+        })), 10);
+
+        // basic renderable that cast a ray across the world
+        me.game.world.addChild(new (me.Renderable.extend({
+            init: function() {
+                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
+                this.line = new me.Line(0, 0, [
+                    new me.Vector2d(0, 0),
+                    new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+                ]);
+
+            },
+            update : function (dt) {
+                var result = me.collision.rayCast(this.line);
+
+                if (result.length > 0) {
+                    for (i = 0; i < result.length; i++) {
+                        // update the object isColliding flag
+                        result[i].isColliding = true;
+                    }
+                }
+                return true;
+            },
+            draw: function(renderer) {
+                renderer.setColor("red");
+                renderer.drawShape(this.line);
+            }
+        })), 10);
+    }
+});
