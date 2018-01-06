@@ -100,7 +100,11 @@
                         this.setTileProperty(+i + this.firstgid, tiles[i].properties);
                     }
                     if ("image" in tiles[i]) {
-                        this.imageCollection[+i + this.firstgid] = me.utils.getImage(tiles[i].image);
+                        var image = me.utils.getImage(tiles[i].image);
+                        if (!image) {
+                            throw new me.TMXTileset.Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
+                        }
+                        this.imageCollection[+i + this.firstgid] = image;
                     }
                 }
             }
@@ -153,6 +157,19 @@
                 }
             }
         },
+
+        /**
+         * return the tile image from a "Collection of Image" tileset
+         * @name me.TMXTileset#getTileImage
+         * @public
+         * @function
+         * @param {Number} gid
+         * @return {Image} corresponding image or undefined
+         */
+        getTileImage : function (gid) {
+            return this.imageCollection[gid];
+        },
+
 
         /**
          * set the tile properties
@@ -247,16 +264,19 @@
                 dx = dy = 0;
             }
 
-            if (typeof this.imageCollection[tmxTile.tileId] !== "undefined") {
+            // check if the tile has an associated image
+            var tileImage = this.imageCollection[tmxTile.tileId];
+            if (typeof tileImage !== "undefined") {
                 // draw the tile
                 renderer.drawImage(
-                    this.imageCollection[tmxTile.tileId],
+                    tileImage,
                     0, 0,
-                    this.tilewidth, this.tileheight,
+                    tileImage.width, tileImage.height,
                     dx, dy,
-                    this.tilewidth + renderer.uvOffset, this.tileheight + renderer.uvOffset
+                    tileImage.width, tileImage.height
                 );
             } else {
+                // use the tileset texture
                 var offset = this.atlas[this.getViewTileId(tmxTile.tileId)].offset;
                 // draw the tile
                 renderer.drawImage(
