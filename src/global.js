@@ -29,8 +29,8 @@
         }
         // CommonJS module 1.1.1 spec (`exports` cannot be a function)
         exports.me = me;
-    } else {
-        global.me = me;
     }
+    // declare me globally
+    global.me = me;
 }(this));
 /* eslint-enable no-undef */
