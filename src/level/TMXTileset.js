@@ -68,6 +68,14 @@
             this.isAnimated = false;
 
             /**
+             * true if the tileset is a "Collection of Image" Tileset
+             * @public
+             * @type Boolean
+             * @name me.TMXTileset#isCollection
+             */
+            this.isCollection = false;
+
+            /**
              * Tileset animations
              * @private
              * @type Map
@@ -109,6 +117,8 @@
                 }
             }
 
+            this.isCollection = this.imageCollection.length > 0;
+
             var offset = tileset.tileoffset;
             if (offset) {
                 this.tileoffset.x = +offset.x;
@@ -126,7 +136,7 @@
             }
 
             // if not a tile image collection
-            if (this.imageCollection.length === 0) {
+            if (this.isCollection === false) {
 
                 // get the global tileset texture
                 this.image = me.utils.getImage(tileset.image);
@@ -265,15 +275,14 @@
             }
 
             // check if the tile has an associated image
-            var tileImage = this.imageCollection[tmxTile.tileId];
-            if (typeof tileImage !== "undefined") {
+            if (this.isCollection === true) {
                 // draw the tile
                 renderer.drawImage(
-                    tileImage,
+                    this.imageCollection[tmxTile.tileId],
                     0, 0,
-                    tileImage.width, tileImage.height,
+                    tmxTile.width, tmxTile.height,
                     dx, dy,
-                    tileImage.width, tileImage.height
+                    tmxTile.width, tmxTile.height
                 );
             } else {
                 // use the tileset texture

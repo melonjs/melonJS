@@ -219,9 +219,11 @@
             // get the corresponding tileset
             var tileset = tilesets.getTilesetByGid(this.gid);
 
-            // set width and height equal to tile size
-            this.width = this.framewidth = tileset.tilewidth;
-            this.height = this.frameheight = tileset.tileheight;
+            if (tileset.isCollection === false) {
+                // set width and height equal to tile size
+                this.width = this.framewidth = tileset.tilewidth;
+                this.height = this.frameheight = tileset.tileheight;
+            }
 
             // the object corresponding tile object
             this.tile = new me.Tile(this.x, this.y, this.gid, tileset);

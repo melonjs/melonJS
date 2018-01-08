@@ -30,6 +30,21 @@
     me.Tile = me.Rect.extend({
         /** @ignore */
         init : function (x, y, gid, tileset) {
+            var width, height;
+
+            // determine the tile size
+            if (tileset.isCollection) {
+                var image = tileset.getTileImage(gid & TMX_CLEAR_BIT_MASK);
+                width = image.width;
+                height = image.height;
+            } else {
+                width = tileset.tilewidth;
+                height = tileset.tileheight;
+            }
+
+            // call the parent constructor
+            this._super(me.Rect, "init", [x * width, y * height, width, height]);
+
             /**
              * tileset
              * @public
@@ -43,9 +58,6 @@
              * @ignore
              */
             this.currentTransform = null;
-
-            // call the parent constructor
-            this._super(me.Rect, "init", [x * tileset.tilewidth, y * tileset.tileheight, tileset.tilewidth, tileset.tileheight]);
 
             // Tile col / row pos
             this.col = x;
@@ -160,7 +172,25 @@
                 renderable.setCurrentAnimation(this.tileId - tileset.firstgid);
 
             } else {
-                renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
+                if (tileset.isCollection === true) {
+                    var image = tileset.getTileImage(this.tileId);
+                    renderable = new me.Sprite(0, 0,
+                        Object.assign({
+                            image: image
+                        })//, settings)
+                    );
+                    renderable.anchorPoint.set(0, 0);
+                    renderable.scale((settings.width / this.width), (settings.height / this.height));
+                    if (typeof settings.rotation !== "undefined") {
+                        renderable.anchorPoint.set(0.5, 0.5);
+                        renderable.currentTransform.rotate(settings.rotation);
+                        renderable.currentTransform.translate(settings.width / 2, settings.height / 2);
+                        // TODO : move the rotation related code from TMXTiledMap to here (under)
+                        settings.rotation = undefined;
+                    }
+                } else {
+                    renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
+                }
             }
 
             // any H/V flipping to apply?
