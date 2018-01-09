@@ -15,7 +15,7 @@
      * @constructor
      * @param {me.Renderable} ancestor the parent object this body is attached to
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
-     * @param {Function} onBodyUpdate callback for when the body is updated (e.g. add/remove shapes)
+     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     me.Body = me.Rect.extend(
     /** @scope me.Body.prototype */
@@ -208,16 +208,18 @@
         },
 
         /**
-         * add collision shapes based on the given PhysicsEditor JSON object
+         * add collision mesh based on a given Physics Editor JSON object
          * @name addShapesFromJSON
          * @memberOf me.Body
          * @public
          * @function
-         * @param {Object} json a JSON object as exported from the PhysicsEditor tool
+         * @param {Object} json a JSON object as exported from the a Physics Editor tool
          * @param {String} id the shape identifier within the given the json object
          * @param {String} [scale=1] the desired scale of the body (physic-body-editor only)
          * @see https://www.codeandweb.com/physicseditor
          * @return {Number} the shape array length
+         * @example
+         * this.body.addShapesFromJSON(me.loader.getJSON("shapesdef1"), settings.banana);
          */
         addShapesFromJSON : function (json, id, scale) {
             var data;
