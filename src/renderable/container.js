@@ -40,9 +40,6 @@
              */
             this.pendingSort = null;
 
-            // TODO; container do not have a physic body
-            // ADD child container child one by one to the quadtree?
-
             /**
              * whether the container is the root of the scene
              * @private
@@ -754,8 +751,8 @@
                 }
             }
 
-            // reset the transformation matrix
-            this.currentTransform.identity();
+            // call the parent destroy method
+            this._super(me.Renderable, "destroy", arguments);
         },
 
         /**

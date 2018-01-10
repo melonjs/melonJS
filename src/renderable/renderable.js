@@ -31,7 +31,7 @@
             this.isRenderable = true;
 
             /**
-             * If true then collisions and input events will not impact this renderable
+             * If true then physic collision and input events will not impact this renderable
              * @public
              * @type me.Boolean
              * @default true
@@ -39,6 +39,21 @@
              * @memberOf me.Renderable
              */
             this.isKinematic = true;
+
+            /**
+             * the renderable physic body
+             * @public
+             * @type me.Body
+             * @name body
+             * @memberOf me.Renderable
+             * @example
+             * // add a physic body on this renderable
+             * myRenderable.body = new me.Body(this);
+             * myRenderable.body.setShape(new me.Rect(0, 0, width, height));
+             * // enable physic collision (off by default for basic me.Renderable)
+             * myRenderable.isKinematic = false;
+             */
+            this.body = undefined;
 
             /**
              * the renderable default transformation matrix
@@ -480,8 +495,15 @@
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.currentTransform);
-            this.currentTransform = undefined;
+            // reset currentTransform
+            this.currentTransform.identity();
+
+            // destroy the physic body if defined
+            if (typeof this.body !== "undefined") {
+                this.body.destroy.apply(this.body, arguments);
+                this.body = undefined;
+            }
+
             this.onDestroyEvent.apply(this, arguments);
         },
 

@@ -328,8 +328,6 @@
                         var ax = this.anchorPoint.x * bounds.width,
                             ay = this.anchorPoint.y * bounds.height;
 
-                        renderer.save();
-
                         // translate back as the bounds position
                         // is already adjusted to the anchor Point
                         renderer.translate(ax, ay);
@@ -337,7 +335,17 @@
                         renderer.setColor("green");
                         renderer.drawShape(bounds);
 
-                        renderer.restore();
+                        renderer.translate(-ax, -ay);
+
+                        if (this.body) {
+                            renderer.translate(this.pos.x, this.pos.y);
+                            // draw all defined shapes
+                            renderer.setColor("red");
+                            for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
+                                renderer.drawShape(shape);
+                                _this.counters.inc("shapes");
+                            }
+                        }
                     }
                 }
             });

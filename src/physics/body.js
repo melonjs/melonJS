@@ -174,10 +174,12 @@
             }
 
             // parses the given shapes array and add them
-            for (var s = 0; s < shapes.length; s++) {
-                this.addShape(shapes[s].clone(), true);
+            if (typeof shapes !== "undefined") {
+                for (var s = 0; s < shapes.length; s++) {
+                    this.addShape(shapes[s].clone(), true);
+                }
+                this.updateBounds();
             }
-            this.updateBounds();
         },
 
         /**

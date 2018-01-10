@@ -482,10 +482,10 @@
                                 response.indexShapeB = indexB;
 
                                 // execute the onCollision callback
-                                if (objA.onCollision(response, objB) !== false) {
+                                if (objA.onCollision && objA.onCollision(response, objB) !== false) {
                                     objA.body.respondToCollision.call(objA.body, response);
                                 }
-                                if (objB.onCollision(response, objA) !== false) {
+                                if (objB.onCollision && objB.onCollision(response, objA) !== false) {
                                     objB.body.respondToCollision.call(objB.body, response);
                                 }
                             }

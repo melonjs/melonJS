@@ -317,8 +317,6 @@
                 this.renderable.destroy.apply(this.renderable, arguments);
                 this.children.splice(0, 1);
             }
-            this.body.destroy.apply(this.body, arguments);
-            this.body = null;
 
             // call the parent destroy method
             this._super(me.Renderable, "destroy", arguments);
