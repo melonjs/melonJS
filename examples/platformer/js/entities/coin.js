@@ -1,17 +1,24 @@
-game.CoinEntity = me.CollectableEntity.extend({
+game.CoinEntity = me.Sprite.extend({
     /**
      * constructor
      */
     init: function (x, y, settings) {
-
         // call the super constructor
-        this._super(me.CollectableEntity, "init", [x, y , settings]);
+        this._super(me.Sprite, "init", [
+            x, y ,
+            Object.assign({
+                image: game.texture,
+                region : "coin.png"
+            }, settings)
+        ]);
 
-        // add the coin sprite as renderable
-        this.renderable = game.texture.createSpriteFromName("coin.png");
-
-        // set the renderable position to center
-        this.anchorPoint.set(0.5, 0.5);
+        // add a physic body
+        this.body = new me.Body(this);
+        this.body.addShape(new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height))
+        // set the collision type
+        this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
+        // enable physic
+        this.isKinematic = false;
     },
 
     /**
