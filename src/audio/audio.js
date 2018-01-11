@@ -65,23 +65,23 @@
          */
 
         /**
-         * configure and initialize the audio engine<br>
-         * melonJS will try to load audio files corresponding to the browser supported audio format(s)<br>
-         * below is the list of supported file extentions : <br>
-         * <i>"mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac" </i> <br>
-         * keep in mind that not all browsers can play all audio formats, and if no compatible codecs are detected, audio will be disabled.
+         * Initialize and configure the audio support.<br>
+         * melonJS supports a wide array of audio codecs that have varying browser support :
+         * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+         * For a maximum browser coverage the recommendation is to use at least two of them,
+         * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
+         * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
+         * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
+         * So if you want webm to be used before mp3, you need to put the audio format in that order.
          * @name init
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String}
-         *          [audioFormat="mp3"] audio format provided
+         * @param {String} [audioFormat="mp3"] audio format provided
          * @return {Boolean} Indicates whether audio initialization was successful
          * @example
-         * // initialize the "sound engine", giving "mp3" and "ogg" as desired audio format
-         * // i.e. on Safari, the loader will load all audio.mp3 files,
-         * // on Opera the loader will however load audio.ogg files
-         * if (!me.audio.init("mp3,ogg")) {
+         * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
+         * if (!me.audio.init("webm,mp3")) {
          *     alert("Sorry but your browser does not support html 5 audio !");
          *     return;
          * }
