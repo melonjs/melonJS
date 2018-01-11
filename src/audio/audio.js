@@ -144,6 +144,7 @@
                 src : urls,
                 volume : Howler.volume(),
                 html5 : html5 === true,
+                xhrWithCredentials : me.loader.withCredentials,
                 /**
                  * @ignore
                  */

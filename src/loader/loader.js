@@ -119,8 +119,7 @@
             }
 
             xmlhttp.open("GET", tmxData.src + api.nocache, true);
-
-
+            xmlhttp.withCredentials = me.loader.withCredentials;
             // set the callbacks
             xmlhttp.ontimeout = onerror;
             xmlhttp.onreadystatechange = function () {
@@ -196,6 +195,7 @@
             }
 
             xmlhttp.open("GET", data.src + api.nocache, true);
+            xmlhttp.withCredentials = me.loader.withCredentials;
 
             // set the callbacks
             xmlhttp.ontimeout = onerror;
@@ -227,6 +227,7 @@
 
             // load our file
             httpReq.open("GET", data.src + api.nocache, true);
+            httpReq.withCredentials = me.loader.withCredentials;
             httpReq.responseType = "arraybuffer";
             httpReq.onerror = onerror;
             httpReq.onload = function () {
@@ -281,15 +282,15 @@
          */
         api.onProgress = undefined;
 
-
         /**
-         * crossOrigin attribute to configure the CORS requests for Image data element.<br>
-         * By default (that is, when the attribute is not specified), CORS is not used at all. <br>
-         * The "anonymous" keyword means that there will be no exchange of user credentials via cookies, <br>
+         * crossOrigin attribute to configure the CORS requests for Image data element.
+         * By default (that is, when the attribute is not specified), CORS is not used at all.
+         * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
          * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
          * @public
          * @type String
          * @name crossOrigin
+         * @default undefined
          * @memberOf me.loader
          * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
          * @example
@@ -300,6 +301,24 @@
          * me.loader.preload(game.resources, this.loaded.bind(this));
          */
         api.crossOrigin = undefined;
+
+        /**
+         * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
+         * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
+         * @public
+         * @type Boolean
+         * @name withCredentials
+         * @default false
+         * @memberOf me.loader
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
+         * @example
+         *  // enable withCredentials
+         * me.loader.withCredentials = true;
+         *
+         * // set all ressources to be loaded
+         * me.loader.preload(game.resources, this.loaded.bind(this));
+         */
+        api.withCredentials = false;
 
         /**
          * Base class for Loader exception handling.
