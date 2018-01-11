@@ -115,7 +115,7 @@
             * @public
             * @type {Number}
             * @name gameScreenX
-            * @memberOf me.Pointe
+            * @memberOf me.Pointer
             */
             this.gameScreenX = undefined;
 

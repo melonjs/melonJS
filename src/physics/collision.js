@@ -215,22 +215,24 @@
         api.quadTree = null;
 
         /**
-         * The maximum number of levels that the quadtree will create. Default is 4.
+         * The maximum number of levels that the quadtree will create.
          * @name maxDepth
          * @memberOf me.collision
          * @public
-         * @type {number}
+         * @type {Number}
+         * @default 4
          * @see me.collision.quadTree
          *
          */
         api.maxDepth = 4;
 
         /**
-         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes. Default is 8.
+         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
          * @name maxChildren
          * @memberOf me.collision
          * @public
-         * @type {boolean}
+         * @type {Number}
+         * @default 8
          * @see me.collision.quadTree
          */
         api.maxChildren = 8;

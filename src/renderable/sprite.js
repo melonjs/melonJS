@@ -37,19 +37,19 @@
         init : function (x, y, settings) {
 
             /**
-             * pause and resume animation<br>
-             * default value : false;
+             * pause and resume animation
              * @public
              * @type Boolean
+             * @default false
              * @name me.Sprite#animationpause
              */
             this.animationpause = false;
 
             /**
-             * animation cycling speed (delay between frame in ms)<br>
-             * default value : 100ms;
+             * animation cycling speed (delay between frame in ms)
              * @public
              * @type Number
+             * @default 100
              * @name me.Sprite#animationspeed
              */
             this.animationspeed = 100;

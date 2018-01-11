@@ -64,7 +64,7 @@
         api.viewport = null;
 
         /**
-         * a reference to the game world <br>
+         * a reference to the game world, <br>
          * a world is a virtual environment containing all the game objects
          * @public
          * @type {me.Container}
@@ -74,22 +74,22 @@
         api.world = null;
 
         /**
-         * when true, all objects will be added under the root world container<br>
-         * when false, a `me.Container` object will be created for each
-         * corresponding `TMXGroup`
-         * default value : true
+         * when true, all objects will be added under the root world container.<br>
+         * When false, a `me.Container` object will be created for each corresponding groups
          * @public
          * @type {boolean}
+         * @default true
          * @name mergeGroup
          * @memberOf me.game
          */
         api.mergeGroup = true;
 
         /**
-         * The property of should be used when sorting entities <br>
-         * value : "x", "y", "z" (default: "z")
+         * Specify the property to be used when sorting entities.
+         * Accepted values : "x", "y", "z"
          * @public
          * @type {string}
+         * @default "z"
          * @name sortOn
          * @memberOf me.game
          */

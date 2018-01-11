@@ -33,7 +33,7 @@
             /**
              * If true then physic collision and input events will not impact this renderable
              * @public
-             * @type me.Boolean
+             * @type Boolean
              * @default true
              * @name isKinematic
              * @memberOf me.Renderable
@@ -43,7 +43,7 @@
             /**
              * the renderable physic body
              * @public
-             * @type me.Body
+             * @type {me.Body}
              * @name body
              * @memberOf me.Renderable
              * @example
