@@ -26,7 +26,7 @@
      * @name Texture
      * @constructor
      * @param {Object} atlas atlas information. See {@link me.loader.getJSON}
-     * @param {Image} [texture=atlas.meta.image] texture name
+     * @param {HTMLImageElement|HTMLCanvasElement} [source=atlas.meta.image] Image source
      * @param {Boolean} [cached=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
@@ -47,7 +47,7 @@
         /**
          * @ignore
          */
-        init : function (atlas, texture, cache) {
+        init : function (atlas, source, cache) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore
@@ -55,10 +55,11 @@
             this.format = null;
 
             /**
-             * the image texture itself (FIXME: This should be named `image`)
+             * the texture source itself
+             * @type {HTMLImageElement|HTMLCanvasElement}
              * @ignore
              */
-            this.texture = texture || null;
+            this.source = source || null;
 
             /**
              * the atlas dictionnary
@@ -75,8 +76,8 @@
                         // set the texture
                         if (typeof(texture) === "undefined") {
                             var image = atlas.meta.image;
-                            this.texture = me.utils.getImage(image);
-                            if (!this.texture) {
+                            this.source = me.utils.getImage(image);
+                            if (!this.source) {
                                 throw new me.video.renderer.Texture.Error(
                                     "Atlas texture '" + image + "' not found"
                                 );
@@ -108,9 +109,9 @@
                     if (typeof(atlas.framewidth) !== "undefined" &&
                         typeof(atlas.frameheight) !== "undefined") {
                         this.format = "Spritesheet (fixed cell size)";
-                        if (typeof(texture) !== undefined) {
+                        if (typeof(this.source) !== undefined) {
                             // overwrite if specified
-                            atlas.image = texture;
+                            atlas.image = this.source;
                         }
                         // initialize the atlas
                         this.atlas = this.parseFromSpriteSheet(atlas);
@@ -126,9 +127,9 @@
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
                 if (cache instanceof me.Renderer.TextureCache) {
-                    cache.put(this.texture, this);
+                    cache.put(this.source, this);
                 } else {
-                    me.video.renderer.cache.put(this.texture, this);
+                    me.video.renderer.cache.put(this.source, this);
                 }
             }
         },
@@ -252,10 +253,10 @@
          * @name getTexture
          * @memberOf me.CanvasRenderer.Texture
          * @function
-         * @return {Image}
+         * @return {HTMLImageElement|HTMLCanvasElement}
          */
         getTexture : function () {
-            return this.texture;
+            return this.source;
         },
 
         /**

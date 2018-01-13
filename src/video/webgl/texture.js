@@ -90,8 +90,8 @@
          * @ignore
          */
         _insertRegion : function (name, x, y, w, h) {
-            var dw = this.texture.width;
-            var dh = this.texture.height;
+            var dw = this.source.width;
+            var dh = this.source.height;
             this.atlas[name] = {
                 name    : name,
                 offset  : new me.Vector2d(x, y),
