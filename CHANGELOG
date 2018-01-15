@@ -7,9 +7,10 @@ Version History
 * Input : further improvements to multitouch support (compatibility on latest device/browser)
 * Input : new me.input.setTouchAction function to enable/disable gesture by default (default to "none")
 * Input : fix a pointer offset issue when using the browser zoom
-* Loader : new "withCredentials" setting to specify if cross-site Access-Control requests should be made using credentials 
+* Loader : new "withCredentials" setting to specify if cross-site Access-Control requests should be made using credentials
 * Physic : new me.collision.rayCast function for basic Line of Sight implementation
 * Physic : slight me.Body refactoring to allow adding a physic body to any base me.Renderable
+* Physic : new bounce property for solid bodies
 * Renderable : `isKinematic` is now true by default except for me.Entity, me.Container and me.GUI object
 * Renderable : anchor point and transform are now properly applied to me.Sprite Bounding Rect
 * TMX : add support for "Collection of Image" tilesets
