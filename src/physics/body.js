@@ -34,7 +34,7 @@
             this.ancestor = parent;
 
             /**
-             * The collision shapes of the entity <br>
+             * The collision shapes of the body <br>
              * @ignore
              * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes
@@ -63,13 +63,13 @@
              * @see me.collision.types
              * @memberOf me.Body
              * @example
-             * // set the entity body collision type
+             * // set the body collision type
              * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
              */
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
-             * entity current velocity<br>
+             * body velocity
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -82,7 +82,7 @@
             this.vel.set(0, 0);
 
             /**
-             * entity current acceleration<br>
+             * body acceleration
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -95,7 +95,7 @@
             this.accel.set(0, 0);
 
             /**
-             * entity current friction<br>
+             * body friction
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -108,7 +108,18 @@
             this.friction.set(0, 0);
 
             /**
-             * max velocity (to limit entity velocity)<br>
+             * the body bouciness level when colliding with other solid bodies :
+             * a value of 0 will not bounce, a value of 1 will fully rebound.
+             * @public
+             * @type {Number}
+             * @default 0
+             * @name bounce
+             * @memberOf me.Body
+             */
+            this.bounce = 0;
+
+            /**
+             * max velocity (to limit body velocity)
              * @public
              * @type me.Vector2d
              * @default <1000,1000>
@@ -121,7 +132,7 @@
             this.maxVel.set(1000, 1000);
 
             /**
-             * Default gravity value of the entity<br>
+             * Default gravity value for this body<br>
              * to be set to 0 for RPG, shooter, etc...<br>
              * Note: Gravity can also globally be defined through me.sys.gravity
              * @public
@@ -134,7 +145,7 @@
             this.gravity = typeof(me.sys.gravity) !== "undefined" ? me.sys.gravity : 0.98;
 
             /**
-             * falling state of the object<br>
+             * falling state of the body<br>
              * true if the object is falling<br>
              * false if the object is standing on something<br>
              * @readonly
@@ -147,8 +158,8 @@
             this.falling = false;
 
             /**
-             * jumping state of the object<br>
-             * equal true if the entity is jumping<br>
+             * jumping state of the body<br>
+             * equal true if the body is jumping<br>
              * @readonly
              * @public
              * @type Boolean
@@ -183,7 +194,7 @@
         },
 
         /**
-         * add a collision shape to this entity <br>
+         * add a collision shape to this body <br>
          * (note: me.Rect objects will be converted to me.Polygon before being added)
          * @name addShape
          * @memberOf me.Body
@@ -375,9 +386,15 @@
             // adjust velocity
             if (overlap.x !== 0) {
                 this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
+                if (this.bounce > 0) {
+                    this.vel.x *= -this.bounce;
+                }
             }
             if (overlap.y !== 0) {
                 this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
+                if (this.bounce > 0) {
+                    this.vel.y *= -this.bounce;
+                }
 
                 // cancel the falling an jumping flags if necessary
                 var dir = Math.sign(this.gravity) || 1;
@@ -415,7 +432,7 @@
         },
 
         /**
-         * set the entity default velocity<br>
+         * set the body default velocity<br>
          * note : velocity is by default limited to the same value, see
          * setMaxVelocity if needed<br>
          * @name setVelocity
@@ -434,7 +451,7 @@
         },
 
         /**
-         * cap the entity velocity to the specified value<br>
+         * cap the body velocity to the specified value<br>
          * @name setMaxVelocity
          * @memberOf me.Body
          * @function
@@ -448,7 +465,7 @@
         },
 
         /**
-         * set the entity default friction<br>
+         * set the body default friction
          * @name setFriction
          * @memberOf me.Body
          * @function
@@ -524,7 +541,7 @@
             // update the velocity
             this.computeVelocity(this.vel);
 
-            // update player entity position
+            // update the body ancestor position
             this.ancestor.pos.add(this.vel);
 
             // returns true if vel is different from 0
