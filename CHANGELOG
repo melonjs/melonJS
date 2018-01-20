@@ -1,7 +1,7 @@
 Version History
 ---------------
 5.1.0
-* Audio : Howler core update (2.0.7)
+* Audio : Howler core update (2.0.8)
 * Core : window.onReady is now marked as deprecated, and replaced by me.device.onReady
 * Container : new `onChildChange` callback for when a child is added or removed
 * Input : further improvements to multitouch support (compatibility on latest device/browser)
