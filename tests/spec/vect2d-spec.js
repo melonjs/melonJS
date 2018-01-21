@@ -142,7 +142,7 @@ describe("me.Vector2d", function () {
         b.set(-x, -y);
 
         // why is this not perfectly 180 degrees ?
-        expect(Math.round(a.angle(b).radToDeg()) ).toEqual(180);
+        expect(Math.round(me.Math.radToDeg(a.angle(b))) ).toEqual(180);
 
         b.set(4*x, -y);
         expect(a.angle(b) ).toEqual(Math.PI / 2);

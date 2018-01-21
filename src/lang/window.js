@@ -14,20 +14,6 @@
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
      */
 
-
-    /**
-     * Specify a function to execute when the DOM is fully loaded
-     * @memberOf external:window#
-     * @alias onReady
-     * @deprecated
-     * @see me.device.onReady
-     * @param {Function} fn A function to execute after the DOM is ready.
-     */
-    window.onReady = function (fn) {
-        console.warn("Deprecated: window.onReady, use me.device.onReady instead");
-        me.device.onReady.call(this, fn);
-    };
-
     if (!window.throttle) {
         /**
          * a simple throttle function

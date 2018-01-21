@@ -175,7 +175,7 @@
         api.createTexture = function (gl, unit, image, filter, repeat, w, h, b) {
             repeat = repeat || "no-repeat";
 
-            if (!me.utils.isPowerOfTwo(w || image.width) || !me.utils.isPowerOfTwo(h || image.height)) {
+            if (!me.Math.isPowerOfTwo(w || image.width) || !me.Math.isPowerOfTwo(h || image.height)) {
                 console.warn(
                     "[WebGL Renderer] " + image + " is not a POT texture " +
                     "(" + (w || image.width) + "x" + (h || image.height) + ")"

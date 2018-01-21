@@ -93,20 +93,6 @@ describe("Language extensions", function () {
             });
         });
 
-        describe("degToRad", function () {
-            it("0 should be 0", function () {
-                expect((0).degToRad()).toEqual(0);
-            });
-
-            it("180 should be Pi", function () {
-                expect((180).degToRad()).toEqual(Math.PI);
-            });
-
-            it("360 should be Pi * 2", function () {
-                expect((360).degToRad()).toEqual(Math.PI * 2);
-            });
-        });
-
         describe("String", function () {
             var untrimmed_str = " start and end with white space ";
 

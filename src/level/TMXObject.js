@@ -113,7 +113,7 @@
              * @name rotation
              * @memberOf me.TMXObject
              */
-            this.rotation = Number.prototype.degToRad(+tmxObj.rotation || 0);
+            this.rotation = me.Math.degToRad(+tmxObj.rotation || 0);
 
             /**
              * object unique identifier per level (Tiled 0.11.x+)

@@ -20,45 +20,6 @@
 me.Object = window.Jay;
 
 /* eslint-disable no-self-compare */
-if (!Object.is) {
-    /**
-     * The Object.is() method determines whether two values are the same value.
-     * @name is
-     * @memberOf external:Object#
-     * @function
-     * @param {Object} a The first value to compare
-     * @param {Object} b The second value to compare
-     * @return {Boolean}
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is|Object.is}
-     * @example
-     * // Strings are equal
-     * var s = "foo";
-     * Object.is(s, "foo"); //> true
-     *
-     * // 0 and -0 are not equal
-     * Object.is(0, -0); //>false
-     *
-     * // NaN and NaN are equal
-     * Object.is(NaN, NaN); //> true
-     *
-     * // Two object references are not equal
-     * Object.is({}, {}); //> false
-     *
-     * // Two vars referencing one object are equal
-     * var a = {}, b = a;
-     * Object.is(a, b); //> true
-     */
-    Object.is = function(a, b) {
-        // SameValue algorithm
-        if (a === b) { // Steps 1-5, 7-10
-            // Steps 6.b-6.e: +0 != -0
-            return a !== 0 || 1 / a === 1 / b;
-        } else {
-            // Step 6.a: NaN == NaN
-            return a !== a && b !== b;
-        }
-  };
-}
 
 if (!Object.assign) {
     (function () {
@@ -108,4 +69,5 @@ if (!Object.assign) {
         };
     })();
 };
+
 /* eslint-enable no-self-compare */

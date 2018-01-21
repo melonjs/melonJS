@@ -117,8 +117,8 @@
          */
         createFontTexture : function (cache) {
             var image = me.video.createCanvas(
-                me.utils.nextPowerOfTwo(this.backBufferCanvas.width),
-                me.utils.nextPowerOfTwo(this.backBufferCanvas.height)
+                me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
+                me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
             );
 
             /**
@@ -158,7 +158,7 @@
          */
         createPattern : function (image, repeat) {
 
-            if (!me.utils.isPowerOfTwo(image.width) || !me.utils.isPowerOfTwo(image.height)) {
+            if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
                 throw new me.video.Error(
                     "[WebGL Renderer] " + image + " is not a POT texture " +
                     "(" + image.width + "x" + image.height + ")"

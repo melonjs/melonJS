@@ -69,8 +69,8 @@
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
             this.iconCanvas = me.video.createCanvas(
-                me.utils.nextPowerOfTwo(this.width),
-                me.utils.nextPowerOfTwo(this.height),
+                me.Math.nextPowerOfTwo(this.width),
+                me.Math.nextPowerOfTwo(this.height),
             false);
 
             var context = me.video.renderer.getContext2d(this.iconCanvas);
