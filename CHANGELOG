@@ -1,5 +1,7 @@
 Version History
 ---------------
+6.0.0
+
 5.1.0
 * Audio : Howler core update (2.0.8)
 * Core : window.onReady is now marked as deprecated, and replaced by me.device.onReady

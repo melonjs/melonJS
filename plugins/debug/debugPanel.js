@@ -160,7 +160,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "5.1.0";
+            this.version = "6.0.0";
 
             // to hold the debug options
             // clickable rect area
