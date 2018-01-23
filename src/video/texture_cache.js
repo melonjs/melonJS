@@ -49,7 +49,7 @@
                 if (!atlas) {
                     atlas = me.video.renderer.Texture.prototype.createAtlas.apply(
                         me.video.renderer.Texture.prototype,
-                        [image.width, image.height, image.src ? me.utils.getBasename(image.src) : undefined]
+                        [image.width, image.height, image.src ? me.utils.file.getBasename(image.src) : undefined]
                     );
                 }
                 this.put(image, new me.video.renderer.Texture(atlas, image, false));

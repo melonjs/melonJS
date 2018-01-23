@@ -76,7 +76,7 @@
                         // set the texture
                         if (typeof(texture) === "undefined") {
                             var image = atlas.meta.image;
-                            this.source = me.utils.getImage(image);
+                            this.source = me.loader.getImage(image);
                             if (!this.source) {
                                 throw new me.video.renderer.Texture.Error(
                                     "Atlas texture '" + image + "' not found"

@@ -31,7 +31,7 @@
             this.name = settings.name || "me.ImageLayer";
 
             // get the corresponding image
-            this.image = me.utils.getImage(settings.image);
+            this.image = me.loader.getImage(settings.image);
 
             // XXX: Keep this check?
             if (!this.image) {

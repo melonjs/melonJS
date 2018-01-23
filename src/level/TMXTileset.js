@@ -40,10 +40,10 @@
             // check if an external tileset is defined
             if (typeof(tileset.source) !== "undefined") {
                 var src = tileset.source;
-                var ext = me.utils.getFileExtension(src);
+                var ext = me.utils.file.getExtension(src);
                 if (ext === "tsx" || ext === "json") {
                     // load the external tileset (TSX/JSON)
-                    tileset = me.loader.getTMX(me.utils.getBasename(src));
+                    tileset = me.loader.getTMX(me.utils.file.getBasename(src));
                     if (!tileset) {
                         throw new me.Error(src + " external TSX/JSON tileset not found");
                     }
@@ -108,7 +108,7 @@
                         this.setTileProperty(+i + this.firstgid, tiles[i].properties);
                     }
                     if ("image" in tiles[i]) {
-                        var image = me.utils.getImage(tiles[i].image);
+                        var image = me.loader.getImage(tiles[i].image);
                         if (!image) {
                             throw new me.TMXTileset.Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                         }
@@ -139,7 +139,7 @@
             if (this.isCollection === false) {
 
                 // get the global tileset texture
-                this.image = me.utils.getImage(tileset.image);
+                this.image = me.loader.getImage(tileset.image);
 
                 if (!this.image) {
                     throw new me.TMXTileset.Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");

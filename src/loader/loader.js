@@ -107,7 +107,7 @@
 
             var xmlhttp = new XMLHttpRequest();
             // check the data format ('tmx', 'json')
-            var format = me.utils.getFileExtension(tmxData.src);
+            var format = me.utils.file.getExtension(tmxData.src);
 
             if (xmlhttp.overrideMimeType) {
                 if (format === "json") {
@@ -684,21 +684,25 @@
          * @memberOf me.loader
          * @public
          * @function
-         * @param {String} Image name of the Image element ("tileset-platformer");
-         * @return {Image}
+         * @param {String} image name of the Image element ("tileset-platformer");
+         * @return {HTMLImageElement}
          */
-        api.getImage = function (elt) {
-            // force as string
-            elt = "" + elt;
-            if (elt in imgList) {
-                // return the corresponding Image object
-                return imgList[elt];
+        api.getImage = function (image) {
+            if ((image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement)) {
+                // if the given parameter is already an Image object
+                return image;
+            } else {
+                // force as string and extract the base name
+                image = me.utils.file.getBasename("" + image);
+                if (image in imgList) {
+                    // return the corresponding Image object
+                    return imgList[image];
+                }
+                else {
+                    //console.log ("warning %s resource not yet loaded!",name);
+                    return null;
+                }
             }
-            else {
-                //console.log ("warning %s resource not yet loaded!",name);
-                return null;
-            }
-
         };
 
         /**

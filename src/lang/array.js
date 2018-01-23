@@ -27,28 +27,6 @@ Array.prototype.remove = function (obj) {
 };
 
 /**
- * return a random array element
- * @memberof! external:Array#
- * @alias random
- * @param {array} entry array to pick a element
- * @return {any} random member of array
- */
-Array.prototype.random = function (entry) {
-    return entry[(0).random(entry.length)];
-};
-
-/**
- * return a weighted random array element, favoring the earlier entries
- * @memberof! external:Array#
- * @alias weightedRandom
- * @param {array} entry array to pick a element
- * @return {any} random member of array
- */
-Array.prototype.weightedRandom = function (entry) {
-    return entry[(0).weightedRandom(entry.length)];
-};
-
-/**
  * A fake TypedArray object to be used for the TypedArray polyfills
  * @ignore
  */
@@ -117,4 +95,5 @@ window.Uint16Array = window.Uint16Array || me.TypedArray;
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}
  */
 window.Uint32Array = window.Uint32Array || me.TypedArray;
+
 /* eslint-enable no-extend-native */

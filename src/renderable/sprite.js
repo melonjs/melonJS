@@ -117,7 +117,7 @@
                 }
             } else {
                // standard image or spritesheet
-               this.image = me.utils.getImage(settings.image);
+               this.image = me.loader.getImage(settings.image);
                settings.framewidth = settings.framewidth || this.image.width;
                settings.frameheight = settings.frameheight || this.image.height;
                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();

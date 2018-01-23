@@ -68,7 +68,7 @@
          * @return {number} corresponding angle in radians
          * @example
          * // convert a specific angle
-         * me.Math.degToRad (60); // return 1.0471...
+         * me.Math.degToRad(60); // return 1.0471...
          */
         api.degToRad = function (angle) {
             return angle * DEG_TO_RAD;
@@ -84,10 +84,81 @@
          * @return {number} corresponding angle in degrees
          * @example
          * // convert a specific angle
-         * me.Math.radToDeg (1.0471975511965976); // return 60
+         * me.Math.radToDeg(1.0471975511965976); // return 60
          */
         api.radToDeg = function (radians) {
             return radians * RAD_TO_DEG;
+        };
+
+
+        /**
+         * return a random integer between min (included) and max (excluded)
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name random
+         * @param {number} min minimum value.
+         * @param {number} max maximum value.
+         * @return {number} random value
+         * @example
+         * // Print a random number; one of 5, 6, 7, 8, 9
+         * console.log(me.Math.random(5, 10) );
+         */
+        api.random = function (min, max) {
+            return (~~(Math.random() * (max - min)) + min);
+        };
+
+        /**
+         * return a random float between min, max (exclusive)
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name randomFloat
+         * @param {number} min minimum value.
+         * @param {number} max maximum value.
+         * @return {number} random value
+         * @example
+         * // Print a random number; one of 5, 6, 7, 8, 9
+         * console.log(me.Math.randomFloat(5, 10) );
+         */
+        api.randomFloat = function (min, max) {
+            return (Math.random() * (max - min)) + min;
+        };
+
+        /**
+         * return a weighted random between min, max (exclusive)
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name weightedRandom
+         * @param {number} min minimum value.
+         * @param {number} max maximum value.
+         * @return {number} random value
+         * @example
+         * // Print a random number; one of 5, 6, 7, 8, 9
+         * console.log(me.Math.weightedRandom(5, 10) );
+         */
+        api.weightedRandom = function (min, max) {
+            return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
+        };
+
+        /**
+         * round a value to the specified number of digit
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name weightedRandom
+         * @param {number} num value to be rounded.
+         * @param {number} [dec=0] number of decimal digit to be rounded to.
+         * @return {number} rounded value
+         * @example
+         * // round a specific value to 2 digits
+         * me.Math.round(10.33333, 2); // return 10.33
+         */
+        api.round = function (num, dec) {
+            // if only one argument use the object value
+            var powres = Math.pow(10, dec || 0);
+            return (~~(0.5 + num * powres) / powres);
         };
 
         // return our object

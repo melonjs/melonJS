@@ -12,4 +12,56 @@ describe("me.Math", function () {
             expect(me.Math.degToRad(360)).toEqual(Math.PI * 2);
         });
     });
+
+    describe("random", function () {
+        var a = me.Math.random(1, 10);
+
+        it("should be >= 1", function () {
+            expect(a).not.toBeLessThan(1);
+        });
+
+        it("should be < 10", function () {
+            expect(a).toBeLessThan(10);
+        });
+
+        it("should be a whole number", function () {
+            expect(Math.floor(a)).toEqual(a);
+        });
+    });
+
+    describe("randomFloat", function () {
+        var a = me.Math.randomFloat(1, 10);
+
+        it("should be >= 1", function () {
+            expect(a).not.toBeLessThan(1);
+        });
+
+        it("should be < 10", function () {
+            expect(a).toBeLessThan(10);
+        });
+    });
+
+    describe("weightedRandom", function () {
+        var a = me.Math.weightedRandom(1, 10);
+
+        it("should be >= 1", function () {
+            expect(a).not.toBeLessThan(1);
+        });
+
+        it("should be < 10", function () {
+            expect(a).toBeLessThan(10);
+        });
+
+        it("should be a whole number", function () {
+            expect(Math.floor(a)).toEqual(a);
+        });
+    });
+
+    describe("round", function () {
+        var a = me.Math.round(Math.PI, 4);
+
+        it("Pi should be 3.1416", function () {
+            expect(a).toEqual(3.1416);
+        });
+    });
 });

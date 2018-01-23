@@ -48,8 +48,8 @@ var Smilie = me.Entity.extend({
             me.Entity,
             "init",
             [
-                (-15).random(1024),
-                (-15).random(768),
+                me.Math.random(-15, 1024),
+                me.Math.random(-15, 768),
                 {
                     width : 16,
                     height : 16,
@@ -60,7 +60,7 @@ var Smilie = me.Entity.extend({
 
         // disable gravity and add a random velocity
         this.body.gravity = 0;
-        this.body.vel.set((-4).randomFloat(4), (-4).randomFloat(4));
+        this.body.vel.set(me.Math.randomFloat(-4, 4), me.Math.randomFloat(-4, 4));
 
         this.alwaysUpdate = true;
 
@@ -100,10 +100,10 @@ var Smilie = me.Entity.extend({
 
         this.pos.sub(response.overlapN);
         if (response.overlapN.x !== 0) {
-            this.body.vel.x = (-4).randomFloat(4) * -Math.sign(this.body.vel.x);
+            this.body.vel.x = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.x);
         }
         if (response.overlapN.y !== 0) {
-            this.body.vel.y = (-4).randomFloat(4) * -Math.sign(this.body.vel.y);
+            this.body.vel.y = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.y);
         }
 
         return false;
