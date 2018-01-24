@@ -281,6 +281,10 @@
                 me.input._updateGamepads();
 
                 accumulator += me.timer.getDelta();
+                if(accumulator < 0)
+                {
+                    accumulator = 0.0;
+                }
                 accumulator = Math.min(accumulator, accumulatorMax);
 
                 updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
