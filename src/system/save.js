@@ -53,7 +53,13 @@
             _init: function () {
                 // Load previous data if local Storage is supported
                 if (me.device.localStorage === true) {
-                    var keys = JSON.parse(localStorage.getItem("me.save")) || [];
+                    var me_save_content = localStorage.getItem("me.save");
+                    var keys = [];
+                    if(me_save_content !== "")
+                    {
+                        keys = JSON.parse(me_save_content) || [];
+                    }
+                    
                     keys.forEach(function (key) {
                         data[key] = JSON.parse(localStorage.getItem("me.save." + key));
                     });
