@@ -73,13 +73,20 @@
          */
         function preloadImage(img, onload, onerror) {
             // create new Image object and add to list
-            imgList[img.name] = new Image();
+            
+            if (me.device.isWxSmallGame) {
+                imgList[img.name] = me.device.WxSmallGame.createImage();
+            } else {
+                imgList[img.name] = new Image();
+            }
+            
             imgList[img.name].onload = onload;
             imgList[img.name].onerror = onerror;
             if (typeof (api.crossOrigin) === "string") {
                 imgList[img.name].crossOrigin = api.crossOrigin;
             }
             imgList[img.name].src = img.src + api.nocache;
+            console.log("imgList[img.name].src", img.name, imgList[img.name].src);
         }
 
         /**
@@ -688,7 +695,9 @@
          * @return {HTMLImageElement}
          */
         api.getImage = function (image) {
-            if ((image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement)) {
+            // TODO: maybe a better method to compare image value type.
+            // (image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement) not work on WxSmallGame playform
+            if ( typeof(image) !== "string") {
                 // if the given parameter is already an Image object
                 return image;
             } else {
@@ -699,7 +708,7 @@
                     return imgList[image];
                 }
                 else {
-                    //console.log ("warning %s resource not yet loaded!",name);
+                    // console.log("warning %s resource not yet loaded!", image);
                     return null;
                 }
             }

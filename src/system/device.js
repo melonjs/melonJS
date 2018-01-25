@@ -4,6 +4,10 @@
  * http://www.melonjs.org
  *
  */
+
+/*global wx*/
+/*eslint no-undef: "error"*/
+
 (function () {
     /**
      * A singleton object representing the device capabilities and specific events
@@ -225,6 +229,15 @@
                                  me.device.wp ||
                                  me.device.BlackBerry ||
                                  me.device.Kindle || false;
+
+            // Wechat small game platform
+            me.device.isWxSmallGame = (typeof wx !== "undefined");
+
+            if (me.device.isWxSmallGame)
+            {
+                me.device.WxSmallGame = wx;
+            }
+
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
@@ -428,6 +441,24 @@
          * @memberOf me.device
          */
         api.Kindle = false;
+
+        /**
+         * equals to true if the device is running under wechat small game platform.
+         * @type Boolean
+         * @readonly
+         * @name isWxSmallGame
+         * @memberOf me.device
+         */
+        api.isWxSmallGame = false;
+
+        /**
+         * return wechat small game platform wx object.
+         * @type Boolean
+         * @readonly
+         * @name WxSmallGame
+         * @memberOf me.device
+         */
+        api.WxSmallGame = {};
 
         /**
          * contains the g-force acceleration along the x-axis.
