@@ -26,7 +26,12 @@
         var swipeEnabled = true;
         var disableSwipeFn = function (e) {
             e.preventDefault();
-            window.scroll(0, 0);
+            if (!me.device.isWxSmallGame)
+            {
+                // There is not DOM in WxSmallGame runtime.
+                window.scroll(0, 0);
+            }
+            
             return false;
         };
 
