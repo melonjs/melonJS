@@ -281,7 +281,7 @@
                 me.input._updateGamepads();
 
                 accumulator += me.timer.getDelta();
-                if(accumulator < 0)
+                if (accumulator < 0)
                 {
                     accumulator = 0.0;
                 }

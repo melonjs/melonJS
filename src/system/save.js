@@ -55,7 +55,7 @@
                 if (me.device.localStorage === true) {
                     var me_save_content = localStorage.getItem("me.save");
                     var keys = [];
-                    if(me_save_content !== "")
+                    if (me_save_content !== "")
                     {
                         keys = JSON.parse(me_save_content) || [];
                     }
