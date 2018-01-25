@@ -35,8 +35,8 @@ var game = {
 
         // load the texture atlas file
         game.texture = new me.video.renderer.Texture(
-            me.loader.getJSON("texture"),
-            me.loader.getImage("texture")
+            me.loader.getJSON("cityscene"),
+            me.loader.getImage("cityscene")
         );
 
         me.state.set(me.state.PLAY, new game.PlayScreen());
