@@ -458,12 +458,12 @@
 
         /**
          * return wechat small game platform wx object.
-         * @type Boolean
+         * @type undefined
          * @readonly
          * @name WxSmallGame
          * @memberOf me.device
          */
-        api.WxSmallGame = {};
+        api.WxSmallGame = undefined;
 
         /**
          * contains the g-force acceleration along the x-axis.
