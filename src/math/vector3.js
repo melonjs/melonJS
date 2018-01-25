@@ -209,7 +209,7 @@
          * @return {me.Vector3d} new me.Vector3d
          */
         clamp : function (low, high) {
-            return new me.Vector3d(this.x.clamp(low, high), this.y.clamp(low, high), this.z.clamp(low, high));
+            return new me.Vector3d(me.Math.clamp(this.x, low, high), me.Math.clamp(this.y, low, high), me.Math.clamp(this.z, low, high));
         },
 
         /**
@@ -222,7 +222,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         clampSelf : function (low, high) {
-            return this._set(this.x.clamp(low, high), this.y.clamp(low, high), this.z.clamp(low, high));
+            return this._set(me.Math.clamp(this.x, low, high), me.Math.clamp(this.y, low, high), me.Math.clamp(this.z, low, high));
         },
 
         /**
@@ -438,7 +438,7 @@
          * @return {Number} angle in radians
          */
         angle : function (v) {
-            return Math.acos((this.dotProduct(v) / (this.length() * v.length())).clamp(-1, 1));
+            return Math.acos(me.Math.clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
         },
 
         /**

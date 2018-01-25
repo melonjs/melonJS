@@ -72,7 +72,7 @@
             this.objects = [];
 
             var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
-            this.opacity = (visible === true) ? (+data.opacity || 1.0).clamp(0.0, 1.0) : 0;
+            this.opacity = (visible === true) ? me.Math.clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, data);

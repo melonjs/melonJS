@@ -90,6 +90,20 @@
             return radians * RAD_TO_DEG;
         };
 
+        /**
+         * clamp the given value
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name clamp
+         * @param {number} val the value to clamp
+         * @param {number} low lower limit
+         * @param {number} high higher limit
+         * @return {number} clamped value
+         */
+        api.clamp = function (val, low, high) {
+            return val < low ? low : val > high ? high : +val;
+        };
 
         /**
          * return a random integer between min (included) and max (excluded)

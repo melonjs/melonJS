@@ -286,7 +286,7 @@
          */
         setOpacity : function (alpha) {
             if (typeof (alpha) === "number") {
-                this.alpha = alpha.clamp(0.0, 1.0);
+                this.alpha = me.Math.clamp(alpha, 0.0, 1.0);
                 // Set to 1 if alpha is NaN
                 if (isNaN(this.alpha)) {
                     this.alpha = 1.0;

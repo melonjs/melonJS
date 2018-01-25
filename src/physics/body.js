@@ -523,10 +523,10 @@
 
             // cap velocity
             if (vel.y !== 0) {
-                vel.y = vel.y.clamp(-this.maxVel.y, this.maxVel.y);
+                vel.y = me.Math.clamp(vel.y, -this.maxVel.y, this.maxVel.y);
             }
             if (vel.x !== 0) {
-                vel.x = vel.x.clamp(-this.maxVel.x, this.maxVel.x);
+                vel.x = me.Math.clamp(vel.x, -this.maxVel.x, this.maxVel.x);
             }
         },
 

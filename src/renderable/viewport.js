@@ -277,11 +277,13 @@
          * @param {Number} y
          */
         moveTo : function (x, y) {
-            this.pos.x = x.clamp(
+            this.pos.x = me.Math.clamp(
+                x,
                 this.bounds.pos.x,
                 this.bounds.width - this.width
             );
-            this.pos.y = y.clamp(
+            this.pos.y = me.Math.clamp(
+                y,
                 this.bounds.pos.y,
                 this.bounds.height - this.height
             );

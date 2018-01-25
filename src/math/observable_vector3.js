@@ -257,9 +257,9 @@
          */
         clamp : function (low, high) {
             return new me.ObservableVector3d(
-                this._x.clamp(low, high),
-                this._y.clamp(low, high),
-                this._z.clamp(low, high),
+                me.Math.clamp(this._x, low, high),
+                me.Math.clamp(this._y, low, high),
+                me.Math.clamp(this._z, low, high),
                 {onUpdate: this.onUpdate}
             );
         },
@@ -275,9 +275,9 @@
          */
         clampSelf : function (low, high) {
             return this._set(
-                this._x.clamp(low, high),
-                this._y.clamp(low, high),
-                this._z.clamp(low, high)
+                me.Math.clamp(this._x, low, high),
+                me.Math.clamp(this._y, low, high),
+                me.Math.clamp(this._z, low, high)
             );
         },
 

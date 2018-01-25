@@ -6,7 +6,6 @@
   "src/lang/jay-extend.js",
   "src/lang/object.js",
   "src/lang/error.js",
-  "src/lang/number.js",
   "src/lang/string.js",
   "src/lang/array.js",
   "src/vendors/es6-collections.js",

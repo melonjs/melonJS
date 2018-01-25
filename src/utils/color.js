@@ -4,6 +4,12 @@
  * http://www.melonjs.org
  */
 (function () {
+
+    // convert a give color component to it hexadecimal value
+    var toHex = function (component) {
+        return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
+    };
+
     var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
     var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
     var hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
@@ -262,9 +268,9 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         add : function (color) {
-            this.glArray[0] = (this.glArray[0] + color.glArray[0]).clamp(0, 1);
-            this.glArray[1] = (this.glArray[1] + color.glArray[1]).clamp(0, 1);
-            this.glArray[2] = (this.glArray[2] + color.glArray[2]).clamp(0, 1);
+            this.glArray[0] = me.Math.clamp(this.glArray[0] + color.glArray[0], 0, 1);
+            this.glArray[1] = me.Math.clamp(this.glArray[1] + color.glArray[1], 0, 1);
+            this.glArray[2] = me.Math.clamp(this.glArray[2] + color.glArray[2], 0, 1);
             this.glArray[3] = (this.glArray[3] + color.glArray[3]) / 2;
 
             return this;
@@ -279,7 +285,7 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         darken : function (scale) {
-            scale = scale.clamp(0, 1);
+            scale = me.Math.clamp(scale, 0, 1);
             this.glArray[0] *= scale;
             this.glArray[1] *= scale;
             this.glArray[2] *= scale;
@@ -296,10 +302,10 @@
          * @return {me.Color} Reference to this object for method chaining
          */
         lighten : function (scale) {
-            scale = scale.clamp(0, 1);
-            this.glArray[0] = (this.glArray[0] + (1 - this.glArray[0]) * scale).clamp(0, 1);
-            this.glArray[1] = (this.glArray[1] + (1 - this.glArray[1]) * scale).clamp(0, 1);
-            this.glArray[2] = (this.glArray[2] + (1 - this.glArray[2]) * scale).clamp(0, 1);
+            scale = me.Math.clamp(scale, 0, 1);
+            this.glArray[0] = me.Math.clamp(this.glArray[0] + (1 - this.glArray[0]) * scale, 0, 1);
+            this.glArray[1] = me.Math.clamp(this.glArray[1] + (1 - this.glArray[1]) * scale, 0, 1);
+            this.glArray[2] = me.Math.clamp(this.glArray[2] + (1 - this.glArray[2]) * scale, 0, 1);
 
             return this;
         },
@@ -395,7 +401,7 @@
                     parseInt(match[1], 16),
                     parseInt(match[2], 16),
                     parseInt(match[3], 16),
-                    (parseInt(match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
+                    (me.Math.clamp(parseInt(match[4], 16), 0, 255) / 255.0).toFixed(1)
                 );
             }
 
@@ -414,7 +420,7 @@
                     parseInt(match[1] + match[1], 16),
                     parseInt(match[2] + match[2], 16),
                     parseInt(match[3] + match[3], 16),
-                    (parseInt(match[4] + match[4], 16).clamp(0, 255) / 255.0).toFixed(1)
+                    (me.Math.clamp(parseInt(match[4] + match[4], 16), 0, 255) / 255.0).toFixed(1)
                 );
             }
 
@@ -451,7 +457,7 @@
             // TODO : Memoize this function by caching its result until any of
             // the r,g,b,a values are changed
 
-            return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex();
+            return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b);
         },
 
         /**
@@ -521,7 +527,7 @@
         /**
          * @ignore
          */
-        set : function (value) { this.glArray[0] = (~~value || 0).clamp(0, 255) / 255.0; },
+        set : function (value) { this.glArray[0] = me.Math.clamp(~~value || 0, 0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -541,7 +547,7 @@
         /**
          * @ignore
          */
-        set : function (value) { this.glArray[1] = (~~value || 0).clamp(0, 255) / 255.0; },
+        set : function (value) { this.glArray[1] = me.Math.clamp(~~value || 0, 0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -561,7 +567,7 @@
         /**
          * @ignore
          */
-        set : function (value) { this.glArray[2] = (~~value || 0).clamp(0, 255) / 255.0; },
+        set : function (value) { this.glArray[2] = me.Math.clamp(~~value || 0, 0, 255) / 255.0; },
         enumerable : true,
         configurable : true
     });
@@ -581,7 +587,7 @@
         /**
          * @ignore
          */
-        set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : (+value).clamp(0, 1); },
+        set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : me.Math.clamp(+value, 0, 255); },
         enumerable : true,
         configurable : true
     });

@@ -235,7 +235,7 @@
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                this.fps = (~~((1000 * framecount) / framedelta)).clamp(0, me.sys.fps);
+                this.fps = me.Math.clamp(~~((1000 * framecount) / framedelta), 0, me.sys.fps);
                 framedelta = 0;
                 framecount = 0;
             }

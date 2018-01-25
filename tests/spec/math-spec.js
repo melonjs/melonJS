@@ -13,6 +13,20 @@ describe("me.Math", function () {
         });
     });
 
+    describe("clamp", function () {
+        it("should clamp low", function () {
+            expect(me.Math.clamp(-30, 1, 10)).toEqual(1);
+        });
+
+        it("should clamp high", function () {
+            expect(me.Math.clamp(30, 1, 10)).toEqual(10);
+        });
+
+        it("should not clamp", function () {
+            expect(me.Math.clamp(Math.PI, 1, 10)).toEqual(Math.PI);
+        });
+    })
+
     describe("random", function () {
         var a = me.Math.random(1, 10);
 

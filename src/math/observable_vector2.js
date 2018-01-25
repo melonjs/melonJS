@@ -212,7 +212,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         clamp : function (low, high) {
-            return new me.ObservableVector2d(this.x.clamp(low, high), this.y.clamp(low, high), {onUpdate: this.onUpdate});
+            return new me.ObservableVector2d(me.Math.clamp(this.x, low, high), me.Math.clamp(this.y, low, high), {onUpdate: this.onUpdate});
         },
 
         /**
@@ -225,7 +225,7 @@
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
         clampSelf : function (low, high) {
-            return this._set(this._x.clamp(low, high), this._y.clamp(low, high));
+            return this._set(me.Math.clamp(this._x, low, high), me.Math.clamp(this._y, low, high));
         },
 
         /**
