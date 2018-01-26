@@ -54,6 +54,10 @@ describe("me.Color", function () {
             expect(red_color.toHex()).toEqual("#FF0000");
         });
 
+        it("red_color RGBA hex value is #FF0000FF", function () {
+            expect(red_color.toHex8()).toEqual("#FF00007F");
+        });
+
         it("red_color rgba value is rgba(255,0,0,0.5)", function () {
             expect(red_color.toRGBA()).toEqual("rgba(255,0,0,0.5)");
         });

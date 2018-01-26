@@ -471,7 +471,7 @@
             // TODO : Memoize this function by caching its result until any of
             // the r,g,b,a values are changed
 
-            return "#" + this.r.toHex() + this.g.toHex() + this.b.toHex() + this.alpha.toHex();
+            return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(this.alpha * 255);
         },
 
         /**
