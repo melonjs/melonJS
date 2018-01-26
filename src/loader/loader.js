@@ -695,9 +695,11 @@
          * @return {HTMLImageElement}
          */
         api.getImage = function (image) {
-            // TODO: maybe a better method to compare image value type.
-            // (image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement) not work on WxSmallGame playform
-            if ( typeof(image) !== "string") {
+            if ((image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement)) {
+                // if the given parameter is already an Image object
+                return image;
+            }
+            else if ( me.device.WeChat && typeof(image) !== "string") {
                 // if the given parameter is already an Image object
                 return image;
             } else {
