@@ -234,12 +234,6 @@
 
             // Wechat small game platform
             me.device.isWxSmallGame = (typeof wx !== "undefined");
-
-            if (me.device.isWxSmallGame)
-            {
-                me.device.WxSmallGame = wx;
-            }
-
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
@@ -452,15 +446,6 @@
          * @memberOf me.device
          */
         api.isWxSmallGame = false;
-
-        /**
-         * return wechat small game platform wx object.
-         * @type undefined
-         * @readonly
-         * @name WxSmallGame
-         * @memberOf me.device
-         */
-        api.WxSmallGame = undefined;
 
         /**
          * contains the g-force acceleration along the x-axis.

@@ -75,7 +75,7 @@
             // create new Image object and add to list
             
             if (me.device.isWxSmallGame) {
-                imgList[img.name] = me.device.WxSmallGame.createImage();
+                imgList[img.name] = wx.createImage();
             } else {
                 imgList[img.name] = new Image();
             }

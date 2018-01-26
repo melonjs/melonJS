@@ -366,7 +366,7 @@
 
             var _canvas;
             if (me.device.isWxSmallGame) {
-                _canvas = me.device.WxSmallGame.createCanvas(); // canvas object in WxSmallGame platform is different from other HTML5 canvas in browser.
+                _canvas = wx.createCanvas(); // canvas object in WxSmallGame platform is different from other HTML5 canvas in browser.
             }
             else {
                 _canvas = document.createElement("canvas");
