@@ -6,6 +6,8 @@
 
   "globals": {
       // Custom Globals
+      // Wechat game
+      "wx"                    : false,
 
       // Non-standard
       "Windows"               : false,

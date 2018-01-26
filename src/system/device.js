@@ -4,6 +4,7 @@
  * http://www.melonjs.org
  *
  */
+
 (function () {
     /**
      * A singleton object representing the device capabilities and specific events
@@ -225,6 +226,9 @@
                                  me.device.wp ||
                                  me.device.BlackBerry ||
                                  me.device.Kindle || false;
+
+            // Wechat small game platform
+            me.device.WeChat = (typeof wx !== "undefined");
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
@@ -428,6 +432,15 @@
          * @memberOf me.device
          */
         api.Kindle = false;
+
+        /**
+         * equals to true if the device is running under wechat small game platform.
+         * @type Boolean
+         * @readonly
+         * @name WeChat
+         * @memberOf me.device
+         */
+        api.WeChat = false;
 
         /**
          * contains the g-force acceleration along the x-axis.

@@ -364,7 +364,13 @@
                 throw new api.Error("width or height was zero, Canvas could not be initialized !");
             }
 
-            var _canvas = document.createElement("canvas");
+            var _canvas;
+            if (me.device.WeChat) {
+                _canvas = wx.createCanvas(); // canvas object in WxSmallGame platform is different from other HTML5 canvas in browser.
+            }
+            else {
+                _canvas = document.createElement("canvas");
+            }
 
             if ((screencanvas === true) && (me.device.cocoon) && (me.device.android2 !== true)) {
                 // http://docs.cocoon.io/article/screencanvas/

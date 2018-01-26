@@ -73,13 +73,20 @@
          */
         function preloadImage(img, onload, onerror) {
             // create new Image object and add to list
-            imgList[img.name] = new Image();
+            
+            if (me.device.WeChat) {
+                imgList[img.name] = wx.createImage();
+            } else {
+                imgList[img.name] = new Image();
+            }
+            
             imgList[img.name].onload = onload;
             imgList[img.name].onerror = onerror;
             if (typeof (api.crossOrigin) === "string") {
                 imgList[img.name].crossOrigin = api.crossOrigin;
             }
             imgList[img.name].src = img.src + api.nocache;
+            console.log("imgList[img.name].src", img.name, imgList[img.name].src);
         }
 
         /**
@@ -691,6 +698,10 @@
             if ((image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement)) {
                 // if the given parameter is already an Image object
                 return image;
+            }
+            else if ( me.device.WeChat && typeof(image) !== "string") {
+                // if the given parameter is already an Image object
+                return image;
             } else {
                 // force as string and extract the base name
                 image = me.utils.file.getBasename("" + image);
@@ -699,7 +710,7 @@
                     return imgList[image];
                 }
                 else {
-                    //console.log ("warning %s resource not yet loaded!",name);
+                    // console.log("warning %s resource not yet loaded!", image);
                     return null;
                 }
             }
