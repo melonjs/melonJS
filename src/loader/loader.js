@@ -74,7 +74,7 @@
         function preloadImage(img, onload, onerror) {
             // create new Image object and add to list
             
-            if (me.device.isWxSmallGame) {
+            if (me.device.WeChat) {
                 imgList[img.name] = wx.createImage();
             } else {
                 imgList[img.name] = new Image();

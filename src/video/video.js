@@ -365,7 +365,7 @@
             }
 
             var _canvas;
-            if (me.device.isWxSmallGame) {
+            if (me.device.WeChat) {
                 _canvas = wx.createCanvas(); // canvas object in WxSmallGame platform is different from other HTML5 canvas in browser.
             }
             else {

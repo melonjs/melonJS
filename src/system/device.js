@@ -228,7 +228,7 @@
                                  me.device.Kindle || false;
 
             // Wechat small game platform
-            me.device.isWxSmallGame = (typeof wx !== "undefined");
+            me.device.WeChat = (typeof wx !== "undefined");
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
@@ -437,10 +437,10 @@
          * equals to true if the device is running under wechat small game platform.
          * @type Boolean
          * @readonly
-         * @name isWxSmallGame
+         * @name WeChat
          * @memberOf me.device
          */
-        api.isWxSmallGame = false;
+        api.WeChat = false;
 
         /**
          * contains the g-force acceleration along the x-axis.
