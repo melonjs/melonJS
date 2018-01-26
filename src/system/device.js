@@ -5,9 +5,6 @@
  *
  */
 
-/*global wx*/
-/*eslint no-undef: "error"*/
-
 (function () {
     /**
      * A singleton object representing the device capabilities and specific events
