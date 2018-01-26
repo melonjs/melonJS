@@ -61,6 +61,7 @@
   "src/input/gamepad.js",
   "src/utils/utils.js",
   "src/utils/file.js",
+  "src/utils/function.js",
   "src/utils/array.js",
   "src/utils/color.js",
   "src/system/save.js",

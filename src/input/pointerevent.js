@@ -156,7 +156,7 @@
                     if (activeEventList.indexOf(events[i]) !== -1) {
                         me.video.renderer.getScreenCanvas().addEventListener(
                             events[i],
-                            throttle(
+                            me.utils.function.throttle(
                                 api.throttlingInterval,
                                 false,
                                 onMoveEvent

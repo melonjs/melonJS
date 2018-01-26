@@ -14,40 +14,6 @@
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
      */
 
-    if (!window.throttle) {
-        /**
-         * a simple throttle function
-         * use same fct signature as the one in prototype
-         * in case it's already defined before
-         * @ignore
-         */
-        window.throttle = function (delay, no_trailing, callback) {
-            var last = window.performance.now(), deferTimer;
-            // `no_trailing` defaults to false.
-            if (typeof no_trailing !== "boolean") {
-                no_trailing = false;
-            }
-            return function () {
-                var now = window.performance.now();
-                var elasped = now - last;
-                var args = arguments;
-                if (elasped < delay) {
-                    if (no_trailing === false) {
-                        // hold on to it
-                        clearTimeout(deferTimer);
-                        deferTimer = setTimeout(function () {
-                            last = now;
-                            return callback.apply(null, args);
-                        }, elasped);
-                    }
-                }
-                else {
-                    last = now;
-                    return callback.apply(null, args);
-                }
-            };
-        };
-    }
 
     if (typeof console === "undefined") {
         /**

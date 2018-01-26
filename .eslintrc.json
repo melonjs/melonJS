@@ -13,7 +13,6 @@
 
       // melonJS
       "me"                    : false,
-      "throttle"              : false,
       "__QUAD_VERTEX__"       : false,
       "__QUAD_FRAGMENT__"     : false,
       "__LINE_VERTEX__"       : false,

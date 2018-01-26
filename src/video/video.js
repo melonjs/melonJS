@@ -193,7 +193,7 @@
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
                 "resize",
-                throttle(
+                me.utils.function.throttle(
                     100,
                     false,
                     function (event) {
@@ -227,7 +227,7 @@
             }
 
             // Automatically update relative canvas position on scroll
-            window.addEventListener("scroll", throttle(100, false,
+            window.addEventListener("scroll", me.utils.function.throttle(100, false,
                 function (e) {
                     // invalidate the current canvas position cache so that it
                     // get recalculated the next time getPos is called
