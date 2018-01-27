@@ -4,16 +4,9 @@
  * http://www.melonjs.org
  */
 
-/* eslint-disable space-before-blocks, no-global-assign, no-native-reassign */
+/* eslint-disable no-global-assign, no-native-reassign */
 
 (function () {
-
-    /**
-     * The built in window Object
-     * @external window
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Window.window|window}
-     */
-
 
     if (typeof console === "undefined") {
         /**
@@ -21,7 +14,7 @@
          * in case the browser does not support it
          * @ignore
          */
-        console = { // jshint ignore:line
+        console = {
             log : function () {},
             info : function () {},
             error : function () {
@@ -74,4 +67,4 @@
     }());
 
 })();
-/* eslint-enable space-before-blocks, no-global-assign, no-native-reassign */
+/* eslint-enable no-global-assign, no-native-reassign */

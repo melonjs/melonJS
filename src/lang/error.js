@@ -5,12 +5,6 @@
  */
 
 /**
- * The built in Error object.
- * @external Error
- * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error|Error}
- */
-
-/**
  * melonJS base class for exception handling.
  * @name Error
  * @memberOf me
