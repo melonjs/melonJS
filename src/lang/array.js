@@ -10,21 +10,6 @@
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array|Array}
  */
 
-/* eslint-disable no-extend-native */
-
-/**
- * Remove the specified object from the Array<br>
- * @memberof! external:Array#
- * @alias remove
- * @param {Object} object to be removed
- */
-Array.prototype.remove = function (obj) {
-    var i = Array.prototype.indexOf.call(this, obj);
-    if (i !== -1) {
-        Array.prototype.splice.call(this, i, 1);
-    }
-    return this;
-};
 
 /**
  * A fake TypedArray object to be used for the TypedArray polyfills
@@ -95,5 +80,3 @@ window.Uint16Array = window.Uint16Array || me.TypedArray;
  * @see {@link https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Uint32Array|Uint32Array}
  */
 window.Uint32Array = window.Uint32Array || me.TypedArray;
-
-/* eslint-enable no-extend-native */

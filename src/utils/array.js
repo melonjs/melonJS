@@ -16,12 +16,31 @@
         var api = {};
 
         /**
+         * Remove the specified object from the given Array
+         * @public
+         * @function
+         * @memberOf me.utils.array
+         * @name remove
+         * @param {Array} arr array from which to remove an object
+         * @param {Object} object to be removed
+         * @return {Array} the modified Array
+         */
+        api.remove = function (arr, obj) {
+            var i = Array.prototype.indexOf.call(arr, obj);
+            if (i !== -1) {
+                Array.prototype.splice.call(arr, i, 1);
+            }
+            return arr;
+        };
+
+
+        /**
          * return a random array element
          * @public
          * @function
          * @memberOf me.utils.array
          * @name random
-         * @param {array} arr array to pick a element
+         * @param {Array} arr array to pick a element
          * @return {any} random member of array
          * @example
          * // Select a random array element
@@ -38,7 +57,7 @@
          * @function
          * @memberOf me.utils.array
          * @name weightedRandom
-         * @param {array} arr array to pick a element
+         * @param {Array} arr array to pick a element
          * @return {any} random member of array
          */
         api.weightedRandom = function (arr) {

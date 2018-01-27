@@ -323,7 +323,7 @@
          * @return {Number} the shape array length
          */
         removeShape : function (shape) {
-            this.shapes.remove(shape);
+            me.utils.array.remove(this.shapes, shape);
 
             // update the body bounds to take in account the removed shape
             this.updateBounds();

@@ -306,7 +306,7 @@
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = this.nodes[index].remove(item);
+                found = me.utils.array.remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -317,7 +317,7 @@
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                this.objects.remove(item);
+                me.utils.array.remove(this.objects, item);
                 found = true;
             }
         }

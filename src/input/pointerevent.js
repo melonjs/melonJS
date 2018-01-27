@@ -719,7 +719,7 @@
                 eventType = eventTypes[i];
                 if (handlers.callbacks[eventType]) {
                     if (typeof (callback) !== "undefined") {
-                        handlers.callbacks[eventType].remove(callback);
+                        me.utils.array.remove(handlers.callbacks[eventType], callback);
                     } else {
                         while (handlers.callbacks[eventType].length > 0) {
                             handlers.callbacks[eventType].pop();
