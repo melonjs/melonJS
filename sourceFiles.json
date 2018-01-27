@@ -6,8 +6,6 @@
   "src/lang/object.js",
   "src/lang/error.js",
   "src/lang/array.js",
-  "src/vendors/es6-collections.js",
-  "src/vendors/es6-promise.js",
   "src/system/agent.js",
   "src/system/device.js",
   "src/game.js",
