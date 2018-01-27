@@ -187,7 +187,7 @@
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
         api.clearTimeout = function (timeoutID) {
-            clearTimer.defer(this, timeoutID);
+            me.utils.function.defer(clearTimer, this, timeoutID);
         };
 
         /**
@@ -198,7 +198,7 @@
          * @param {Number} intervalID ID of the interval to be cleared
          */
         api.clearInterval = function (intervalID) {
-            clearTimer.defer(this, intervalID);
+            me.utils.function.defer(clearTimer, this, intervalID);
         };
 
         /**

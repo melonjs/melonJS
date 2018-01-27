@@ -157,9 +157,9 @@
                         me.video.renderer.getScreenCanvas().addEventListener(
                             events[i],
                             me.utils.function.throttle(
+                                onMoveEvent,
                                 api.throttlingInterval,
-                                false,
-                                onMoveEvent
+                                false
                             ),
                             false
                         );

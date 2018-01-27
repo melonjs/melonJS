@@ -522,7 +522,7 @@
          */
         removeChild : function (child, keepalive) {
             if (this.hasChild(child)) {
-                deferredRemove.defer(this, child, keepalive);
+                me.utils.function.defer(deferredRemove, this, child, keepalive);
             }
             else {
                 throw new me.Container.Error("Child is not mine.");
@@ -670,14 +670,14 @@
                     }
                 }
                 /** @ignore */
-                this.pendingSort = function (self) {
+                this.pendingSort = me.utils.function.defer(function (self) {
                     // sort everything in this container
                     self.children.sort(self["_sort" + self.sortOn.toUpperCase()]);
                     // clear the defer id
                     self.pendingSort = null;
                     // make sure we redraw everything
                     me.game.repaint();
-                }.defer(this, this);
+                }, this, this);
             }
         },
 

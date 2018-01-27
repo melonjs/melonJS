@@ -622,7 +622,7 @@
                     _fade.color,
                     _fade.duration,
                     function () {
-                        _switchState.defer(this, state);
+                        me.utils.function.defer(_switchState, this, state);
                     }
                 );
 
@@ -631,7 +631,7 @@
             else {
                 // wait for the last frame to be
                 // "finished" before switching
-                _switchState.defer(this, state);
+                me.utils.function.defer(_switchState, this, state);
             }
         };
 

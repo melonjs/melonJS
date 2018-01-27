@@ -228,7 +228,7 @@
                     // some silly side effects
                     me.state.stop();
 
-                    safeLoadLevel.defer(this, levelId, options, true);
+                    me.utils.function.defer(safeLoadLevel, this, levelId, options, true);
                 }
                 else {
                     safeLoadLevel(levelId, options);

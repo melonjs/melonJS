@@ -4,7 +4,7 @@
  * http://www.melonjs.org
  *
  * a simple debug panel plugin
- * usage : me.plugin.register.defer(this, me.debug.Panel, "debug");
+ * usage : me.utils.function.defer(me.plugin.register, this, me.debug.Panel, "debug");
  *
  * you can then use me.plugins.debug.show() or me.plugins.debug.hide()
  * to show or hide the panel, press the "s" key.
@@ -724,7 +724,7 @@
 
     // automatically register the debug panel
     me.device.onReady(function () {
-        me.plugin.register.defer(this, me.debug.Panel, "debugPanel",
+        me.utils.function.defer(me.plugin.register, this, me.debug.Panel, "debugPanel",
             me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
         );
     });

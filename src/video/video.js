@@ -194,13 +194,10 @@
             window.addEventListener(
                 "resize",
                 me.utils.function.throttle(
-                    100,
-                    false,
                     function (event) {
                         me.event.publish(me.event.WINDOW_ONRESIZE, [ event ]);
-                    }
-                ),
-                false
+                    }, 100
+                ), false
             );
 
             // Screen Orientation API
@@ -227,13 +224,13 @@
             }
 
             // Automatically update relative canvas position on scroll
-            window.addEventListener("scroll", me.utils.function.throttle(100, false,
+            window.addEventListener("scroll", me.utils.function.throttle(
                 function (e) {
                     // invalidate the current canvas position cache so that it
                     // get recalculated the next time getPos is called
                     api._canvasOffset = null;
                     me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
-                }
+                }, 100
             ), false);
 
             // register to the channel
@@ -345,7 +342,7 @@
             maxHeight = h || Infinity;
             // trigger a resize
             // defer it to ensure everything is properly intialized
-            this.onresize.defer(this);
+            me.utils.function.defer(me.video.onresize, me.video);
 
         };
 
@@ -489,7 +486,7 @@
                     // cancel any previous pending resize
                     clearTimeout(deferResizeId);
                 }
-                deferResizeId = me.video.updateDisplaySize.defer(this, scaleX, scaleY);
+                deferResizeId = me.utils.function.defer(me.video.updateDisplaySize, this, scaleX, scaleY);
             }
         };
 
