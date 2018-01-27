@@ -7,7 +7,7 @@
 (function (api) {
 
     /**
-     * a collection of file utility functions
+     * a collection of utility functions
      * @namespace me.utils.function
      * @memberOf me
      */

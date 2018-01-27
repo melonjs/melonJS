@@ -154,7 +154,7 @@
             this.pos.set(x, y, this.pos.z); // TODO : z ?
             for (var i = 0; i < strings.length; i++) {
                 x = lX;
-                var string = strings[i].trimRight();
+                var string = me.utils.string.trimRight(strings[i]);
                 // adjust x pos based on alignment value
                 var stringWidth = measureTextWidth(this, string);
                 switch (this.textAlign) {

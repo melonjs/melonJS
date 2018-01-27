@@ -8,8 +8,7 @@
 
 
     /**
-     * a collection of utility functions<br>
-     * there is no constructor function for me.utils
+     * a collection of utility functions
      * @namespace me.utils
      * @memberOf me
      */
@@ -24,7 +23,7 @@
         // guid default value
         var GUID_base  = "";
         var GUID_index = 0;
-        
+
         /*
          * PUBLIC STUFF
          */
@@ -60,7 +59,7 @@
          */
         api.resetGUID = function (base, index) {
             // also ensure it's only 8bit ASCII characters
-            GUID_base  = base.toString().toUpperCase().toHex();
+            GUID_base  = me.utils.string.toHex(base.toString().toUpperCase());
             GUID_index = index || 0;
         };
 

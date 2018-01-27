@@ -70,11 +70,11 @@
 
                 default :
                     // try to parse it anyway
-                    if (!value || value.isBoolean()) {
+                    if (!value || me.utils.string.isBoolean(value)) {
                         // if value not defined or boolean
                         value = value ? (value === "true") : true;
                     }
-                    else if (value.isNumeric()) {
+                    else if (me.utils.string.isNumeric(value)) {
                         // check if numeric
                         value = Number(value);
                     }

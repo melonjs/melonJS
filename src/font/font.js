@@ -193,7 +193,7 @@
 
             var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
-                this.width = Math.max(context.measureText(strings[i].trimRight()).width, this.width);
+                this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
                 this.height += this.fontSize.y * this.lineHeight;
             }
             return {
@@ -268,7 +268,7 @@
             var dy = y;
             var lineHeight = this.fontSize.y * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                string = strings[i].trimRight();
+                string = me.utils.string.trimRight(strings[i]);
                 // measure the string
                 dw = Math.max(dw, context.measureText(string).width);
                 // draw the string
