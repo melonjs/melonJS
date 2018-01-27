@@ -5,7 +5,6 @@
   "src/lang/jay-extend.js",
   "src/lang/object.js",
   "src/lang/error.js",
-  "src/lang/array.js",
   "src/system/agent.js",
   "src/system/device.js",
   "src/game.js",
