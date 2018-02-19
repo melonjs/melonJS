@@ -61,7 +61,7 @@
              * @name offset
              * @memberOf me.Sprite
              */
-            // this.offset = new me.Vector2d();
+            this.offset = new me.Vector2d();
 
             // hold all defined animation
             this.anim = {};
@@ -584,7 +584,7 @@
 
             // frame offset in the texture/atlas
             var frame_offset = frame.offset;
-            var g_offset = new me.Vector2d()
+            var g_offset = this.offset
 
             // remove image's TexturePacker/ShoeBox rotation
             if (frame.angle !== 0) {
