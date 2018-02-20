@@ -38,8 +38,9 @@ describe("me.Container", function () {
             // update the child bounds
             container.updateChildBounds();
             var bounds = container.childBounds;
-            expect(bounds.pos.x).toEqual(50);
-            expect(bounds.pos.y).toEqual(50);
+
+            expect(bounds.pos.x).toEqual(0);
+            expect(bounds.pos.y).toEqual(0);
             expect(bounds.width).toEqual(150);
             expect(bounds.height).toEqual(150);
         });

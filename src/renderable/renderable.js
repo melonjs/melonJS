@@ -399,7 +399,11 @@
          */
         updateBoundsPos : function (newX, newY) {
             var bounds = this.getBounds();
-            bounds.pos.set(newX, newY, bounds.pos.z);
+            
+            bounds.pos.set(
+                newX - (this.anchorPoint.x * bounds.width),
+                newY - (this.anchorPoint.y * bounds.height)
+            );
             // XXX: This is called from the constructor, before it gets an ancestor
             if (this.ancestor) {
                 bounds.pos.add(this.ancestor._absPos);
@@ -414,8 +418,12 @@
          * @memberOf me.Renderable
          * @function
          */
-        onAnchorUpdate : function () {
-            ; // to be extended
+        onAnchorUpdate : function (newX, newY) {
+            // since the callback is called before setting the new value
+            // manually update the anchor point (required for updateBoundsPos)
+            this.anchorPoint.setMuted(newX, newY);
+            // then call updateBouds
+            this.updateBoundsPos(this.pos.x, this.pos.y);
         },
 
         /**

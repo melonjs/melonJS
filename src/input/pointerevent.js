@@ -274,7 +274,7 @@
                         pointer.gameLocalY = pointer.gameY - parentPos.y;
                     }
 
-                    if (region instanceof me.Sprite) {
+                    if (region instanceof me.Renderable) {
                         var gameX = pointer.gameX;
                         var gameY = pointer.gameY;
                         if (!region.currentTransform.isIdentity()) {

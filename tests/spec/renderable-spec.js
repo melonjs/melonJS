@@ -6,13 +6,25 @@ describe("me.Renderable", function () {
         });
 
         it("setting x position changes x bounds", function () {
+
+            var xAnchor = renderable.anchorPoint.x;
+            var bounds = renderable.getBounds();
+
             renderable.pos.x = 10;
-            expect(renderable.getBounds().pos.x).toEqual(10);
+            var expectX = renderable.pos.x - (xAnchor * bounds.width)
+
+            expect(renderable.getBounds().pos.x).toEqual(expectX);
         });
 
         it("setting y position changes y bounds", function () {
+
+            var yAnchor = renderable.anchorPoint.y;
+            var bounds = renderable.getBounds();
+
             renderable.pos.y = 120;
-            expect(renderable.getBounds().pos.y).toEqual(120);
+            var expectY = renderable.pos.y - (yAnchor * bounds.height)
+
+            expect(renderable.getBounds().pos.y).toEqual(expectY);
         });
 
         it("resizing the renderable changes its bounds width", function () {
@@ -20,10 +32,23 @@ describe("me.Renderable", function () {
             expect(renderable.getBounds().width).toEqual(20);
         });
 
-        it("resizing the renderable changes its bounds height", function () {
-            renderable.resize(20, 20);
-            expect(renderable.getBounds().height).toEqual(20);
+        it("bounds should be updated when renderable is scaled", function () {
+            var bounds = renderable.getBounds();
+            // scale the sprite
+            renderable.scale(2.0); // w & h -> 64, 64
+            expect(bounds.width).toEqual(200);
+            expect(bounds.height).toEqual(200);
+
+            renderable.scale(1.0); // back to original size
+            expect(bounds.width).toEqual(100);
+            expect(bounds.height).toEqual(100);
         });
+
+        it("resizing the renderable changes its bounds height", function () {
+            renderable.resize(20, 30);
+            expect(renderable.getBounds().height).toEqual(30);
+        });
+
     });
 
     describe("getAbsoluteBounds returns the correct value", function () {
@@ -44,21 +69,44 @@ describe("me.Renderable", function () {
         });
 
         it("renderable should have a correct absolute position once added", function () {
+
             childContainer.addChild(renderable);
-            expect(renderable.getBounds().pos.x).toEqual(150);
-            expect(renderable.getBounds().pos.y).toEqual(150);
+
+            var bounds = renderable.getBounds();
+            var xAnchor = renderable.anchorPoint.x;
+            var expectX = childContainer.pos.x + (renderable.pos.x - (xAnchor * bounds.width))
+
+            expect(renderable.getBounds().pos.x).toEqual(expectX);
         });
 
         it("changing the renderable position, change the absolute pos", function () {
+            
+            var yAnchor = renderable.anchorPoint.y;
+            var xAnchor = renderable.anchorPoint.x;
+
+            var bounds = renderable.getBounds();
+
             renderable.pos.set(200, 100, 0);
-            expect(renderable.getBounds().pos.x).toEqual(300);
-            expect(renderable.getBounds().pos.y).toEqual(200);
+            var expectX = childContainer.pos.x + renderable.pos.x - (xAnchor * bounds.width)
+            var expectY = childContainer.pos.y + renderable.pos.y - (yAnchor * bounds.width)
+
+            expect(renderable.getBounds().pos.x).toEqual(expectX);
+            expect(renderable.getBounds().pos.y).toEqual(expectY);
         });
 
         it("changing the parent container position, also change the renderable absolute pos", function () {
             childContainer.pos.set(200, 200, 0);
-            expect(renderable.getBounds().pos.x).toEqual(400);
-            expect(renderable.getBounds().pos.y).toEqual(300);
+
+            var bounds = renderable.getBounds();
+
+            var xAnchor = renderable.anchorPoint.x;
+            var yAnchor = renderable.anchorPoint.y;
+
+            var expectX = childContainer.pos.x + (renderable.pos.x - (xAnchor * bounds.width))
+            var expectY = childContainer.pos.y + (renderable.pos.y - (yAnchor * bounds.width))
+
+            expect(renderable.getBounds().pos.x).toEqual(expectX);
+            expect(renderable.getBounds().pos.y).toEqual(expectY);
         });
     });
 });
