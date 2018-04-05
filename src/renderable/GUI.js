@@ -118,7 +118,7 @@
                 }
                 return true;
             }
-            return false;
+            return me.Sprite.prototype.update.apply(this, [ dt ]);
         },
 
         /**
