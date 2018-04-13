@@ -110,7 +110,7 @@
          * return true if the object has been clicked
          * @ignore
          */
-        update : function () {
+        update : function (dt) {
             if (this.updated) {
                 // clear the flag
                 if (!this.released) {
