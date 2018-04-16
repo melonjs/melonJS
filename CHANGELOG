@@ -1,8 +1,9 @@
 Version History
 ---------------
 5.1.1
+* Audio : Howler core update (2.0.9) should also fix HTML5 Audio issue with FB Instant Games
 * Renderable : fix onComplete not called on single frame animation (@Adrian)
-* Renderable : fix animation not running with GUI_Object
+* Renderable : fix animation when using GUI_Object(s)
 
 5.1.0
 * Audio : Howler core update (2.0.8)
