@@ -110,7 +110,10 @@
          * return true if the object has been clicked
          * @ignore
          */
-        update : function () {
+        update : function (dt) {
+            // call the parent constructor
+            var updated = this._super(me.Sprite, "update", [ dt ]);
+            // check if the button was updated
             if (this.updated) {
                 // clear the flag
                 if (!this.released) {
@@ -118,7 +121,8 @@
                 }
                 return true;
             }
-            return false;
+            // else only return true/false based on the parent function
+            return updated;
         },
 
         /**

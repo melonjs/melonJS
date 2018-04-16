@@ -2,6 +2,7 @@ Version History
 ---------------
 5.1.1
 * Renderable : fix onComplete not called on single frame animation (@Adrian)
+* Renderable : fix animation not running with GUI_Object
 
 5.1.0
 * Audio : Howler core update (2.0.8)
