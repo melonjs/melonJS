@@ -74,7 +74,7 @@
                     if (atlas.meta.app.includes("texturepacker")) {
                         this.format = "texturepacker";
                         // set the texture
-                        if (typeof(texture) === "undefined") {
+                        if (typeof(source) === "undefined") {
                             var image = atlas.meta.image;
                             this.source = me.utils.getImage(image);
                             if (!this.source) {
