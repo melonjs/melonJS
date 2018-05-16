@@ -234,10 +234,12 @@
         };
 
         /**
-         * allows the tween to bounce back to their original value when finished
+         * Allows the tween to bounce back to their original value when finished.
+         * To be used together with repeat to create endless loops.
          * @name me.Tween#yoyo
          * @public
          * @function
+         * @see me.Tween#repeat
          * @param {Boolean} yoyo
          */
         this.yoyo = function( yoyo ) {
