@@ -69,20 +69,17 @@
             // a flag to reset animation
             this.resetAnim = null;
 
-            // name of current frame
-            this.currentAnimName = null;
-
             // current frame information
             // (reusing current, any better/cleaner place?)
-            // this.current = {
-            //     //current frame texture offset
-            //     offset : new me.Vector2d(),
-            //     // current frame size
-            //     width : 0,
-            //     height : 0,
-            //     // Source rotation angle for pre-rotating the source image
-            //     angle : 0
-            // };
+            this.current = {
+                //current frame texture offset
+                offset : new me.Vector2d(),
+                // current frame size
+                width : 0,
+                height : 0,
+                // Source rotation angle for pre-rotating the source image
+                angle : 0
+            };
 
             // animation frame delta
             this.dt = 0;
@@ -97,7 +94,7 @@
 
             // Used by the game engine to adjust visibility as the
             // sprite moves in and out of the viewport
-            // this.isSprite = true;
+            this.isSprite = true;
 
             // set the proper image/texture to use
             if (settings.image instanceof me.CanvasRenderer.prototype.Texture) {
@@ -126,10 +123,10 @@
                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
             }
             // update the default "current" size
-            // this.current.width = settings.framewidth;
-            // this.current.height = settings.frameheight;
-            // store/reset the current atlas information if specified
+            this.current.width = settings.framewidth;
+            this.current.height = settings.frameheight;
 
+            // store/reset the current atlas information if specified
             if (typeof(settings.atlas) !== "undefined") {
                 this.textureAtlas = settings.atlas;
                 this.atlasIndices = settings.atlasIndices;
@@ -140,8 +137,8 @@
             // call the super constructor
             this._super(me.Renderable, "init", [
                 x, y,
-                settings.framewidth,
-                settings.frameheight
+                this.current.width,
+                this.current.height
             ]);
 
             // apply flip flags if specified
@@ -247,11 +244,7 @@
                 name : name,
                 frames : [],
                 idx : 0,
-                length : 0,
-                width : 0,
-                height : 0,
-                angle : 0,
-                offset : new me.Vector2d()
+                length : 0
             };
 
             // # of frames
@@ -355,12 +348,11 @@
          **/
         setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
             if (this.anim[name]) {
-                this.currentAnimName = name;
+                this.current = this.anim[name];
                 this.resetAnim = resetAnim || null;
-                this.setAnimationFrame(this.anim[name].idx);
+                this.setAnimationFrame(this.current.idx);
                 // XXX this should not be overwritten
-                // this.current = this.anim[name];
-                // this.current.name = name;
+                this.current.name = name;
                 if (!_preserve_dt) {
                     this.dt = 0;
                 }
@@ -382,8 +374,7 @@
          * }
          */
         isCurrentAnimation : function (name) {
-            return this.currentAnimName === name;
-            // return this.current.name === name;
+            return this.current.name === name;
         },
 
         /**
@@ -398,23 +389,13 @@
          * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
          */
         setRegion : function (region) {
-            // // set the sprite offset within the texture
-            // this.current.offset.setV(region.offset);
-            // // set angle if defined
-            // this.current.angle = region.angle;
-            // // update the default "current" size
-            // this.current.width = region.width;
-            // this.current.height = region.height;
-
-
-
-            var elem = this.anim[this.currentAnimName];
-
-            elem.offset.setV(region.offset)
-            elem.angle = region.angle
-            elem.width = region.width
-            elem.height = region.height
-            
+            // set the sprite offset within the texture
+            this.current.offset.setV(region.offset);
+            // set angle if defined
+            this.current.angle = region.angle;
+            // update the default "current" size
+            this.current.width = region.width;
+            this.current.height = region.height;
         },
 
         /**
@@ -428,16 +409,14 @@
          * this.setAnimationFrame();
          */
         setAnimationFrame : function (idx) {
-
-            var current = this.anim[this.currentAnimName]
-            current.idx = (idx || 0) % current.length;
+            this.current.idx = (idx || 0) % this.current.length;
             // XXX this should not be overwritten
-
-            var frame = this.getAnimationFrameObjectByIndex(current.idx);
+            var name = this.current.name;
+            var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
             // copy all properties of the current frame into current
-            Object.assign(current, frame);
+            Object.assign(this.current, frame);
             // XXX this should not be overwritten
-            // this.current.name = name;
+            this.current.name = name;
             this.width = frame.width;
             this.height = frame.height;
             // set global anchortPoint if defined
@@ -454,7 +433,7 @@
          * @return {Number} current animation frame index
          */
         getCurrentAnimationFrame : function () {
-            return this.anim[this.currentAnimName].idx;
+            return this.current.idx;
         },
 
         /**
@@ -466,7 +445,7 @@
          * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
          */
         getAnimationFrameObjectByIndex : function (id) {
-            return this.anim[this.currentAnimName].frames[id];
+            return this.current.frames[id];
         },
 
         /**
@@ -475,21 +454,18 @@
         update : function (dt) {
             var result = false;
             // Update animation if necessary
-
-            var current = this.currentAnimName ? this.anim[this.currentAnimName]: null;
-
-            if (!this.animationpause && current && current.length > 0) {
-                var duration = this.getAnimationFrameObjectByIndex(current.idx).delay;
+            if (!this.animationpause && this.current && this.current.length > 0) {
+                var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 this.dt += dt;
                 while (this.dt >= duration) {
                     result = true;
                     this.dt -= duration;
 
-                    var nextFrame = (current.length > 1? current.idx+1: current.idx);
+                    var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
                     this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
-                    if (current.idx === 0 && this.resetAnim)  {
+                    if (this.current.idx === 0 && this.resetAnim)  {
                         // If string, change to the corresponding animation
                         if (typeof this.resetAnim === "string") {
                             this.setCurrentAnimation(this.resetAnim, null, true);
@@ -497,7 +473,7 @@
                         // Otherwise is must be callable
                         else if (this.resetAnim() === false) {
                             // Reset to last frame
-                            this.setAnimationFrame(current.length - 1);
+                            this.setAnimationFrame(this.current.length - 1);
 
                             // Bail early without skipping any more frames.
                             this.dt %= duration;
@@ -505,7 +481,7 @@
                         }
                     }
                     // Get next frame duration
-                    duration = this.getAnimationFrameObjectByIndex(current.idx).delay;
+                    duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 }
             }
 
@@ -573,7 +549,7 @@
             }
 
             // the frame to draw
-            var frame = this.anim[this.currentAnimName]
+            var frame = this.current;
 
             // cache the current position and size
             var xpos = this.pos.x,
@@ -584,7 +560,8 @@
 
             // frame offset in the texture/atlas
             var frame_offset = frame.offset;
-            var g_offset = this.offset
+            var g_offset = this.offset;
+
 
             // remove image's TexturePacker/ShoeBox rotation
             if (frame.angle !== 0) {
