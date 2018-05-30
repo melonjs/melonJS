@@ -35,24 +35,28 @@
             this.image = emitter.image;
 
             // Set the start particle Angle and Speed as defined in emitter
-            var angle = emitter.angle + ((emitter.angleVariation > 0) ? ((0).randomFloat(2) - 1) * emitter.angleVariation : 0);
-            var speed = emitter.speed + ((emitter.speedVariation > 0) ? ((0).randomFloat(2) - 1) * emitter.speedVariation : 0);
+            var angle = emitter.angle + ((emitter.angleVariation > 0) ? (me.Math.randomFloat(0, 2) - 1) * emitter.angleVariation : 0);
+            var speed = emitter.speed + ((emitter.speedVariation > 0) ? (me.Math.randomFloat(0, 2) - 1) * emitter.speedVariation : 0);
 
             // Set the start particle Velocity
             this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
 
             // Set the start particle Time of Life as defined in emitter
-            this.life = emitter.minLife.randomFloat(emitter.maxLife);
+            this.life = me.Math.randomFloat(emitter.minLife, emitter.maxLife);
             this.startLife = this.life;
 
             // Set the start and end particle Scale as defined in emitter
             // clamp the values as minimum and maximum scales range
-            this.startScale = emitter.minStartScale.randomFloat(
+            this.startScale = me.Math.clamp(
+                me.Math.randomFloat(emitter.minStartScale, emitter.maxStartScale),
+                emitter.minStartScale,
                 emitter.maxStartScale
-            ).clamp(emitter.minStartScale, emitter.maxStartScale);
-            this.endScale = emitter.minEndScale.randomFloat(
+            );
+            this.endScale = me.Math.clamp(
+                me.Math.randomFloat(emitter.minEndScale, emitter.maxEndScale),
+                emitter.minEndScale,
                 emitter.maxEndScale
-            ).clamp(emitter.minEndScale, emitter.maxEndScale);
+            );
 
             // Set the particle Gravity and Wind (horizontal gravity) as defined in emitter
             this.gravity = emitter.gravity;
@@ -73,7 +77,7 @@
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory
             if (!emitter.followTrajectory) {
-                this.angle = emitter.minRotation.randomFloat(emitter.maxRotation);
+                this.angle = me.Math.randomFloat(emitter.minRotation, emitter.maxRotation);
             }
         },
 

@@ -440,7 +440,7 @@
          * @return {Number}
          */
         getRandomPointX: function () {
-            return this.pos.x + (0).randomFloat(this.width);
+            return this.pos.x + me.Math.randomFloat(0, this.width);
         },
 
         /**
@@ -451,7 +451,7 @@
          * @return {Number}
          */
         getRandomPointY: function () {
-            return this.pos.y + (0).randomFloat(this.height);
+            return this.pos.y + me.Math.randomFloat(0, this.height);
         },
 
         /**

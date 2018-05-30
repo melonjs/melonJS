@@ -199,7 +199,7 @@ game.MoleManager = me.Entity.extend(
         if ((this.timer) >= 500) {
 
             for (var i = 0; i < 9; i += 3) {
-                var hole = (0).random(3) + i ;
+                var hole = me.Math.random(0, 3) + i;
                 if (!this.moles[hole].isOut && !this.moles[hole].isVisible) {
                     this.moles[hole].display();
                 }
