@@ -1,6 +1,13 @@
 Version History
 ---------------
 6.0.0
+* Core : Removed unnecessary ES6 polyfill (based on melonJS 5.x minimum browser version)
+* Core : API update to sandbox all previous language extension under the `me` namespace
+* Color : fix the me.Color.toHex8() function
+* Audio : latest Howler core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
+* Renderable : fix onComplete not called on single frame animation (@Adrian)
+* Renderable : fix animation not cycling when using GUI_Object(s)
+* Renderable : fix a regression when using Texture Packer
 
 5.1.0
 * Audio : Howler core update (2.0.8)

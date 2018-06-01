@@ -508,8 +508,8 @@
          * @public
          * @function
          * @param {me.Line} line line to be tested for collision
-         * @param {Array.<me.Entity>} [result] a user defined array that will be populated with intersecting entities.
-         * @return {Array.<me.Entity>} an Array of intersecting entities
+         * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+         * @return {Array.<me.Renderable>} an array of intersecting physic objects
          * @example
          *    // define a line accross the viewport
          *    var ray = new me.Line(

@@ -454,13 +454,15 @@
         update : function (dt) {
             var result = false;
             // Update animation if necessary
-            if (!this.animationpause && this.current && this.current.length > 1) {
+            if (!this.animationpause && this.current && this.current.length > 0) {
                 var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 this.dt += dt;
                 while (this.dt >= duration) {
                     result = true;
                     this.dt -= duration;
-                    this.setAnimationFrame(this.current.idx + 1);
+
+                    var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
+                    this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
                     if (this.current.idx === 0 && this.resetAnim)  {

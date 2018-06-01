@@ -1,6 +1,7 @@
 describe("me.Sprite", function () {
     var container;
     var sprite;
+    var setCurrentAnimationCallback = {}
 
     beforeAll(function () {
         container = new me.Container(50, 50, 150, 150);
@@ -10,6 +11,9 @@ describe("me.Sprite", function () {
             "image" : me.video.createCanvas(64, 64),
             "anchorPoint" : {x:0, y:0}
         });
+
+        setCurrentAnimationCallback["callback"] = function () {}
+        spyOn(setCurrentAnimationCallback, "callback");
 
         // add to a parent container
         container.addChild(sprite);
@@ -81,4 +85,25 @@ describe("me.Sprite", function () {
         expect(bounds.pos.x).toEqual(sprite.ancestor._absPos.x + sprite.pos.x - (1 * bounds.width));
         expect(bounds.pos.y).toEqual(sprite.ancestor._absPos.y + sprite.pos.y - (1 * bounds.height));
     });
-});
+
+    it("me.Sprite onComplete of setCurrentAnimation shall be called when sprite array of addAnimation is > 0", function () {
+
+        var randomSpriteLength = Math.floor(Math.random() * Math.floor(100))
+        var spriteArr =[];
+
+        for (var i = -1; i < randomSpriteLength; i++) {
+            spriteArr.push(1 + i);
+        }
+
+        sprite.addAnimation("sample", spriteArr, 10)
+        sprite.setCurrentAnimation("sample", function () {
+            setCurrentAnimationCallback.callback();
+            expect(setCurrentAnimationCallback.callback).toHaveBeenCalled();
+        })
+
+        for (var j = -1; j < randomSpriteLength; j++) {
+            sprite.update(16);
+        }
+    });
+
+});  

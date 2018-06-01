@@ -33,7 +33,7 @@ game.PlayScreen = me.ScreenObject.extend({
         var viewport = me.game.viewport;
         var mousepos = me.input.pointer.pos;
         var lastX = mousepos.x, lastY = mousepos.y;
-        me.event.subscribe(me.event.MOUSEMOVE, function() {
+        me.event.subscribe(me.event.POINTERMOVE, function() {
             if (me.input.isKeyPressed("moveEmitter")) {
                 var pos;
                 for ( var emitters = emitterList.emitters, i = emitters.length, obj; i--, (obj = emitters[i]);) {

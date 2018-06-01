@@ -19,7 +19,7 @@
          * Executes a function as soon as the interpreter is idle (stack empty).
          * @public
          * @function
-         * @memberOf me.utils.function.defer
+         * @memberOf me.utils.function
          * @name defer
          * @param {Function} fn The function to be deferred.
          * @param {Object} scope The execution scope of the deferred function.
@@ -30,7 +30,7 @@
          * @example
          * // execute myFunc() when the stack is empty,
          * // with the current context and 'myArgument' as parameter
-         * myFunc.defer(fn, this, 'myArgument');
+         * me.utils.function.defer(fn, this, 'myArgument');
          */
         api.defer = function (fn, scope) {
             var args = Array.prototype.slice.call(arguments, 1);
@@ -42,7 +42,7 @@
          * once during a given window of time
          * @public
          * @function
-         * @memberOf me.utils.function.throttle
+         * @memberOf me.utils.function
          * @name throttle
          * @param {Function} fn the function to be throttled.
          * @param {Number} delay The delay in ms
