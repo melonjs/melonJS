@@ -13,7 +13,7 @@
      * @extends me.Renderer
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
      * @param {Number} width The width of the canvas without scaling
      * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
@@ -274,7 +274,7 @@
          * @name getContext
          * @memberOf me.CanvasRenderer
          * @function
-         * @return {Context2d}
+         * @return {CanvasRenderingContext2D}
          */
         getContext : function () {
             return this.backBufferContext2D;

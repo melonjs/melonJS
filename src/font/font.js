@@ -218,8 +218,14 @@
 
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
+            // save the previous context
+            renderer.save();
+
             // draw the text
             renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+
+            // restore previous context
+            renderer.restore();
 
             // restore the previous global alpha value
             renderer.setGlobalAlpha(_alpha);

@@ -527,17 +527,6 @@
         },
 
         /**
-         * Set the line width
-         * @name lineWidth
-         * @memberOf me.WebGLRenderer.Compositor
-         * @function
-         * @param {Number} width Line width
-         */
-        lineWidth : function (width) {
-            this.gl.lineWidth(width);
-        },
-
-        /**
          * Clear the frame buffer, flushes the composite operations and calls
          * gl.clear()
          * @name clear

@@ -20,8 +20,8 @@
          * @ignore
          */
         init: function () {
-            this.src = new me.Vector2d();
-            this.offset = new me.Vector2d();
+            this.src = me.pool.pull("me.Vector2d", 0, 0);
+            this.offset = me.pool.pull("me.Vector2d", 0, 0);
             this.onResetEvent();
         },
 

@@ -13,12 +13,12 @@
      * @extends me.Object
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
      * @param {Number} width The width of the canvas without scaling
      * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
-     * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {Boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
@@ -135,7 +135,7 @@
          * @name getCanvas
          * @memberOf me.Renderer
          * @function
-         * @return {Canvas}
+         * @return {HTMLCanvasElement}
          */
         getCanvas : function () {
             return this.backBufferCanvas;
@@ -146,7 +146,7 @@
          * @name getScreenCanvas
          * @memberOf me.Renderer
          * @function
-         * @return {Canvas}
+         * @return {HTMLCanvasElement}
          */
         getScreenCanvas : function () {
             return this.canvas;
@@ -170,7 +170,7 @@
          * @name getContext2d
          * @memberOf me.Renderer
          * @function
-         * @param {Canvas} canvas
+         * @param {HTMLCanvasElement} canvas
          * @param {Boolean} [opaque=false] True to disable transparency
          * @return {Context2d}
          */
@@ -266,8 +266,7 @@
         },
 
         /**
-         * enable/disable image smoothing (scaling interpolation) for the specified 2d Context<br>
-         * (!) this might not be supported by all browsers <br>
+         * enable/disable image smoothing (scaling interpolation) for the given context
          * @name setAntiAlias
          * @memberOf me.Renderer
          * @function
@@ -275,19 +274,24 @@
          * @param {Boolean} [enable=false]
          */
         setAntiAlias : function (context, enable) {
+            var canvas = context.canvas;
+
             if (typeof(context) !== "undefined") {
-                // enable/disable antialis on the given context
+                // enable/disable antialis on the given Context2d object
                 me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
             }
 
-            // disable antialias CSS scaling on the main canvas
-            var cssStyle = context.canvas.style["image-rendering"];
-            if (enable === false && (cssStyle === "" || cssStyle === "auto")) {
-                // if a specific value is set through CSS or equal to the standard "auto" one
-                context.canvas.style["image-rendering"] = "pixelated";
-            } else if (enable === true && cssStyle === "pixelated") {
-                // if set to the standard "pixelated"
-                context.canvas.style["image-rendering"] = "auto";
+            // set antialias CSS property on the main canvas
+            if (enable !== true) {
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+                canvas.style["image-rendering"] = "pixelated";
+                canvas.style["image-rendering"] = "crisp-edges";
+                canvas.style["image-rendering"] = "-moz-crisp-edges";
+                canvas.style["image-rendering"] = "-o-crisp-edges";
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast";
+                canvas.style.msInterpolationMode = "nearest-neighbor";
+            } else {
+                canvas.style["image-rendering"] = "auto";
             }
         },
 

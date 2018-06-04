@@ -121,6 +121,7 @@ var FontTest = me.Renderable.extend ({
 
         // Draw the baseline
         me.video.renderer.setColor("red");
+        me.video.renderer.setLineWidth(3);
         me.video.renderer.strokeLine(
             0, baseline + 0.5,
             me.video.renderer.getWidth(), baseline + 0.5

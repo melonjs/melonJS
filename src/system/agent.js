@@ -65,6 +65,7 @@
          * @param {String} name Property name
          * @param {Mixed} value Property value
          * @param {Object} [obj=window] Object or element reference to access
+         * @return true if one of the vendor-prefixed property was found
          * @memberOf me.agent
          */
         api.setPrefixed = function (name, value, obj) {

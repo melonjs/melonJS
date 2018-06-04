@@ -12,7 +12,7 @@
      * @namespace me.WebGLRenderer
      * @memberOf me
      * @constructor
-     * @param {Canvas} canvas The html canvas tag to draw to on screen.
+     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
      * @param {Number} width The width of the canvas without scaling
      * @param {Number} height The height of the canvas without scaling
      * @param {Object} [options] The renderer parameters
@@ -346,11 +346,11 @@
         },
 
         /**
-         * return a reference to the screen canvas corresponding WebGL Context<br>
+         * return a reference to the screen canvas corresponding WebGL Context
          * @name getScreenContext
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {WebGLContext}
+         * @return {WebGLRenderingContext}
          */
         getScreenContext : function () {
             return this.gl;
@@ -363,7 +363,7 @@
          * @function
          * @param {Canvas} canvas
          * @param {Boolean} [opaque=false] Use true to disable transparency
-         * @return {WebGLContext}
+         * @return {WebGLRenderingContext}
          */
         getContextGL : function (c, opaque) {
             if (typeof c === "undefined" || c === null) {
@@ -395,7 +395,7 @@
          * @name getContext
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {WebGLContext}
+         * @return {WebGLRenderingContext}
          */
         getContext : function () {
             return this.gl;
@@ -561,7 +561,7 @@
          * @param {Number} width Line width
          */
         setLineWidth : function (width) {
-            this.compositor.lineWidth(width);
+            this.getScreenContext().lineWidth(width);
         },
 
         /**
