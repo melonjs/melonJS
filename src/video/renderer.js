@@ -19,6 +19,7 @@
      * @param {Object} [options] The renderer parameters
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {Boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
@@ -38,6 +39,7 @@
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
+            this.failIfMajorPerformanceCaveat = !!(options.failIfMajorPerformanceCaveat);
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
 

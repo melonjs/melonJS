@@ -5,11 +5,12 @@ Version History
 * Core : API update to sandbox all previous language extension under the `me` namespace
 * Color : fix the me.Color.toHex8() function
 * Audio : latest Howler core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
-* Font : fix a regression where drawing a web font was was not restoring the renderer context properly
-* Renderable : fix onComplete not called on single frame animation (@Adrian)
+* Font : fix a regression where drawing a web font was not restoring the renderer context properly
+* Renderable : fix onComplete not being called for single animation frame (@Adrian)
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer
-* Renderers : use prefixed properties when image smoothing on non standard browsers
+* Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
+* WebGLRenderer : enable `failIfMajorPerformanceCaveat` by default when attempting to create a GL Context
 
 5.1.0
 * Audio : Howler core update (2.0.8)

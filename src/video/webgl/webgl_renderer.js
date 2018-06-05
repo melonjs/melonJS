@@ -18,6 +18,7 @@
      * @param {Object} [options] The renderer parameters
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
@@ -381,6 +382,7 @@
 
             var attr = {
                 antialias : this.antiAlias,
+                failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat,
                 alpha : !opaque
             };
             return (
