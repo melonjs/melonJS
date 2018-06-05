@@ -31,7 +31,7 @@
   "dependencies": {},
   "devDependencies": {
     "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
-    "grunt": "^1.0.1",
+    "grunt": "^1.0.3",
     "grunt-build-gh-pages": "^1.0.5",
     "grunt-contrib-clean": "^1.1.0",
     "grunt-contrib-concat": "^1.0.1",
@@ -44,14 +44,14 @@
     "grunt-replace": "^1.0.1",
     "grunt-shell": "^2.1.0",
     "jasmine-core": "~2.5.2",
-    "karma": "^1.7.0",
+    "karma": "^2.0.0",
     "karma-chrome-launcher": "2.2.0",
-    "karma-coverage": "1.1.1",
-    "karma-html-detailed-reporter": "1.1.20",
+    "karma-coverage": "^1.1.2",
+    "karma-html-detailed-reporter": "^1.1.21",
     "karma-jasmine": "^1.1.1",
     "karma-nyan-reporter": "0.2.5",
     "q": "^1.4.1",
-    "shelljs": "^0.5.3"
+    "shelljs": "^0.8.2"
   },
   "scripts": {
     "release": "grunt release",
