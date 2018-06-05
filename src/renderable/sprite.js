@@ -92,10 +92,6 @@
                 state : false
             };
 
-            // Used by the game engine to adjust visibility as the
-            // sprite moves in and out of the viewport
-            this.isSprite = true;
-
             // set the proper image/texture to use
             if (settings.image instanceof me.CanvasRenderer.prototype.Texture) {
                 // use the texture from the texture Atlas
