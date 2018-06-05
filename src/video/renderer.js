@@ -60,66 +60,6 @@
         /**
          * @ignore
          */
-        applyRGBFilter : function (object, effect, option) {
-            //create a output canvas using the given canvas or image size
-            var _context = this.getContext2d(me.video.createCanvas(object.width, object.height, false));
-            // get the pixels array of the give parameter
-            var imgpix = me.utils.getPixels(object);
-            // pointer to the pixels data
-            var pix = imgpix.data;
-
-            // apply selected effect
-            var i, n;
-            switch (effect) {
-                case "b&w":
-                    for (i = 0, n = pix.length; i < n; i += 4) {
-                        var grayscale = (3 * pix[i] + 4 * pix[i + 1] + pix[i + 2]) >>> 3;
-                        pix[i] = grayscale; // red
-                        pix[i + 1] = grayscale; // green
-                        pix[i + 2] = grayscale; // blue
-                    }
-                    break;
-
-                case "brightness":
-                    // make sure it's between 0.0 and 1.0
-                    var brightness = Math.abs(option).clamp(0.0, 1.0);
-                    for (i = 0, n = pix.length; i < n; i += 4) {
-
-                        pix[i] *= brightness; // red
-                        pix[i + 1] *= brightness; // green
-                        pix[i + 2] *= brightness; // blue
-                    }
-                    break;
-
-                case "transparent":
-                    var refColor = me.pool.pull("me.Color").parseCSS(option);
-                    var pixel = me.pool.pull("me.Color");
-                    for (i = 0, n = pix.length; i < n; i += 4) {
-                        pixel.setColor(pix[i], pix[i + 1], pix[i + 2]);
-                        if (pixel.equals(refColor)) {
-                            pix[i + 3] = 0;
-                        }
-                    }
-                    me.pool.push(refColor);
-                    me.pool.push(pixel);
-
-                    break;
-
-
-                default:
-                    return null;
-            }
-
-            // put our modified image back in the new filtered canvas
-            _context.putImageData(imgpix, 0, 0);
-
-            // return it
-            return _context;
-        },
-
-        /**
-         * @ignore
-         */
         clear : function () {},
 
         /**
