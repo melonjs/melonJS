@@ -39,7 +39,7 @@
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
-            this.failIfMajorPerformanceCaveat = !!(options.failIfMajorPerformanceCaveat);
+            this.failIfMajorPerformanceCaveat = typeof options.failIfMajorPerformanceCaveat === "undefined" ? true : !!(options.failIfMajorPerformanceCaveat);
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
 
