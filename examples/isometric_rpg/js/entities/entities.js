@@ -9,9 +9,6 @@ game.PlayerEntity = me.Entity.extend({
         // call the constructor
         this._super(me.Entity, "init", [x, y , settings]);
 
-        // disable gravity
-        this.body.gravity = 0;
-
         // walking & jumping speed
         this.body.setVelocity(2.5, 2.5);
         this.body.setFriction(0.4,0.4);

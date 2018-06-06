@@ -59,9 +59,9 @@
         scale : null, //initialized by me.video.init
 
         /**
-         * Global gravity settings <br>
-         * will override entities init value if defined<br>
-         * @type {Number|undefined}
+         * Global y axis gravity settings.
+         * (will override body gravity value if defined)
+         * @type {Number}
          * @default undefined
          * @memberOf me.sys
          */

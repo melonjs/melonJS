@@ -28,7 +28,7 @@ game.PathEnemyEntity = me.Entity.extend({
         this.pos.x  = x + width - settings.framewidth;
 
         // apply gravity setting if specified
-        this.body.gravity = settings.gravity || me.sys.gravity;
+        this.body.gravity.y = settings.gravity || me.sys.gravity;
 
         this.walkLeft = false;
 

@@ -119,6 +119,16 @@
             this.bounce = 0;
 
             /**
+             * the body mass
+             * @public
+             * @type {Number}
+             * @default 1
+             * @name mass
+             * @memberOf me.Body
+             */
+            this.mass = 1;
+
+            /**
              * max velocity (to limit body velocity)
              * @public
              * @type me.Vector2d
@@ -132,17 +142,23 @@
             this.maxVel.set(1000, 1000);
 
             /**
-             * Default gravity value for this body<br>
-             * to be set to 0 for RPG, shooter, etc...<br>
-             * Note: Gravity can also globally be defined through me.sys.gravity
+             * Default gravity value for this body.
+             * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
+             * Note: y axis gravity can also globally be defined through me.sys.gravity
              * @public
              * @see me.sys.gravity
-             * @type Number
-             * @default 0.98
+             * @type me.Vector2d
+             * @default <0,0.98>
+             * @default
              * @name gravity
              * @memberOf me.Body
              */
-            this.gravity = typeof(me.sys.gravity) !== "undefined" ? me.sys.gravity : 0.98;
+            if (typeof(this.gravity) === "undefined") {
+                this.gravity = new me.Vector2d();
+            }
+            this.gravity.set(
+                0, typeof(me.sys.gravity) === "number" ? me.sys.gravity : 0.98
+            );
 
             /**
              * falling state of the body<br>
@@ -397,7 +413,7 @@
                 }
 
                 // cancel the falling an jumping flags if necessary
-                var dir = Math.sign(this.gravity) || 1;
+                var dir = Math.sign(this.gravity.y) || 1;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -506,13 +522,14 @@
          */
         computeVelocity : function (vel) {
 
-            // apply gravity (if any)
-            if (this.gravity) {
-                // apply a constant gravity (if not on a ladder)
-                vel.y += this.gravity * me.timer.tick;
-
+            // apply gravity if defined
+            if (this.gravity.y) {
+                vel.x += this.gravity.x * this.mass * me.timer.tick;
+            }
+            if (this.gravity.y) {
+                vel.y += this.gravity.y * this.mass * me.timer.tick;
                 // check if falling / jumping
-                this.falling = (vel.y * Math.sign(this.gravity)) > 0;
+                this.falling = (vel.y * Math.sign(this.gravity.y)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
             }
 
@@ -528,6 +545,7 @@
             if (vel.x !== 0) {
                 vel.x = me.Math.clamp(vel.x, -this.maxVel.x, this.maxVel.x);
             }
+
         },
 
         /**
