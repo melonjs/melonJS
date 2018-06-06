@@ -32,8 +32,9 @@ game.PathEnemyEntity = me.Entity.extend({
 
         this.walkLeft = false;
 
-        // walking & jumping speed
-        this.body.setVelocity(settings.velX || 1, settings.velY || 6);
+        // body walking & flying speed
+        this.body.force.set(settings.velX || 1, settings.velY || 0);
+        this.body.setMaxVelocity(settings.velX || 1, settings.velY || 0);
 
         // set a "enemyObject" type
         this.body.collisionType = me.collision.types.ENEMY_OBJECT;
@@ -53,11 +54,11 @@ game.PathEnemyEntity = me.Entity.extend({
 
         if (this.alive)    {
             if (this.walkLeft && this.pos.x <= this.startX) {
-                this.body.vel.x = this.body.accel.x * me.timer.tick;
+                this.body.force.x = Math.abs(this.body.force.x);
                 this.walkLeft = false;
                 this.renderable.flipX(true);
             } else if (!this.walkLeft && this.pos.x >= this.endX) {
-                this.body.vel.x = -this.body.accel.x * me.timer.tick;
+                this.body.force.x = -Math.abs(this.body.force.x);
                 this.walkLeft = true;
                 this.renderable.flipX(false);
             }

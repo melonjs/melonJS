@@ -87,12 +87,48 @@
              * @type me.Vector2d
              * @default <0,0>
              * @name accel
+             * @deprecated
+             * @see me.Body.force
              * @memberOf me.Body
              */
             if (typeof(this.accel) === "undefined") {
                 this.accel = new me.Vector2d();
             }
             this.accel.set(0, 0);
+
+            /**
+             * body force or acceleration (automatically) applied to the body.
+             * when defining a force, user should also define a max velocity
+             * @public
+             * @type me.Vector2d
+             * @default <0,0>
+             * @name force
+             * @see me.Body.setMaxVelocity
+             * @memberOf me.Body
+             * @example
+             * init: function () {
+             *    // define a default maximum acceleration, initial force and friction
+             *    this.body.force.set(0, 0);
+             *    this.body.friction.set(0.4, 0);
+             *    this.body.setMaxVelocity(3, 15);
+             * },
+             *
+             * // apply a postive or negative force when pressing left of right key
+             * update : function (dt) {
+             *     if (me.input.isKeyPressed("left"))    {
+             *          this.body.force.x = -this.body.maxVel.x;
+             *      } else if (me.input.isKeyPressed("right")) {
+             *         this.body.force.x = this.body.maxVel.x;
+             *     } else {
+             *         this.body.force.x = 0;
+             *     }
+             * }
+             */
+            if (typeof(this.force) === "undefined") {
+                this.force = new me.Vector2d();
+            }
+            this.force.set(0, 0);
+
 
             /**
              * body friction
@@ -132,14 +168,15 @@
              * max velocity (to limit body velocity)
              * @public
              * @type me.Vector2d
-             * @default <1000,1000>
+             * @default <490,490>
              * @name maxVel
              * @memberOf me.Body
              */
             if (typeof(this.maxVel) === "undefined") {
                 this.maxVel = new me.Vector2d();
             }
-            this.maxVel.set(1000, 1000);
+            // cap by default to half the default gravity force
+            this.maxVel.set(490, 490);
 
             /**
              * Default gravity value for this body.
@@ -457,6 +494,8 @@
          * @param {Number} x velocity on x axis
          * @param {Number} y velocity on y axis
          * @protected
+         * @deprecated
+         * @see me.Body.force
          */
         setVelocity : function (x, y) {
             this.accel.x = x !== 0 ? x : this.accel.x;
@@ -522,6 +561,19 @@
          */
         computeVelocity : function (vel) {
 
+            // apply fore if defined
+            if (this.force.x) {
+                vel.x += this.force.x * me.timer.tick;
+            }
+            if (this.force.y) {
+                vel.y += this.force.y * me.timer.tick;
+            }
+
+            // apply friction
+            if (this.friction.x || this.friction.y) {
+                this.applyFriction(vel);
+            }
+
             // apply gravity if defined
             if (this.gravity.y) {
                 vel.x += this.gravity.x * this.mass * me.timer.tick;
@@ -531,11 +583,6 @@
                 // check if falling / jumping
                 this.falling = (vel.y * Math.sign(this.gravity.y)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
-            }
-
-            // apply friction
-            if (this.friction.x || this.friction.y) {
-                this.applyFriction(vel);
             }
 
             // cap velocity

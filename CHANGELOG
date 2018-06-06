@@ -8,6 +8,8 @@ Version History
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
 * Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis
 * Physic : new mass property for solid bodies
+* Physic : new force property allowing to automatically apply an force or acceleration to a solid body
+* Physic : me.Body.accel and me.Body.setVelocity are now deprecated and to be replaced by me.Body.force
 * Renderable : fix onComplete not being called for single animation frame (@Adrian)
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer

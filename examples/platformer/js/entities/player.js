@@ -7,8 +7,8 @@ game.PlayerEntity = me.Entity.extend({
         this.alwaysUpdate = true;
 
         // walking & jumping speed
-        this.body.setVelocity(3, 15);
-        this.body.setFriction(0.4,0);
+        this.body.setMaxVelocity(3, 15);
+        this.body.setFriction(0.4, 0);
 
         this.dying = false;
 
@@ -68,29 +68,35 @@ game.PlayerEntity = me.Entity.extend({
     update : function (dt) {
 
         if (me.input.isKeyPressed("left"))    {
-            this.body.vel.x -= this.body.accel.x * me.timer.tick;
+            this.body.force.x = -this.body.maxVel.x;
             this.renderable.flipX(true);
         } else if (me.input.isKeyPressed("right")) {
-            this.body.vel.x += this.body.accel.x * me.timer.tick;
+            this.body.force.x = this.body.maxVel.x;
             this.renderable.flipX(false);
+        } else {
+            this.body.force.x = 0;
         }
 
         if (me.input.isKeyPressed("jump")) {
             this.body.jumping = true;
-
             if (this.multipleJump <= 2) {
                 // easy "math" for double jump
-                this.body.vel.y -= (this.body.maxVel.y * this.multipleJump++) * me.timer.tick;
+                this.body.force.y = -this.body.maxVel.y * this.multipleJump++;
                 me.audio.play("jump", false);
             }
         }
-        else if (!this.body.falling && !this.body.jumping) {
-            // reset the multipleJump flag if on the ground
-            this.multipleJump = 1;
-        }
-        else if (this.body.falling && this.multipleJump < 2) {
-            // reset the multipleJump flag if falling
-            this.multipleJump = 2;
+        else {
+
+            this.body.force.y = 0;
+
+            if (!this.body.falling && !this.body.jumping) {
+                // reset the multipleJump flag if on the ground
+                this.multipleJump = 1;
+            }
+            else if (this.body.falling && this.multipleJump < 2) {
+                // reset the multipleJump flag if falling
+                this.multipleJump = 2;
+            }
         }
 
         // apply physics to the body (this moves the entity)
