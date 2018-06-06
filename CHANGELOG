@@ -6,6 +6,8 @@ Version History
 * Color : fix the me.Color.toHex8() function
 * Audio : latest Howler core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
+* Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis
+* Physic : new mass property for solid bodies
 * Renderable : fix onComplete not being called for single animation frame (@Adrian)
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer
