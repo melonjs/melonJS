@@ -59,7 +59,7 @@ and currently features :
 Using melonJS
 -------------------------------------------------------------------------------
 
-* [API Documentation](http://melonjs.github.io/melonJS/docs/)
+* [API Documentation](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
 * [Examples](http://melonjs.github.io/melonJS/)
 
 For your first time using melonJS, follow these tutorials :
