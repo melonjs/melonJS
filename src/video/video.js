@@ -134,6 +134,7 @@
          *                                                   as opposed to the browser window dimensions
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+         * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
          * @return {Boolean} false if initialization failed (canvas not supported)
          * @see me.CanvasRenderer
          * @see me.WebGLRenderer
@@ -305,6 +306,23 @@
             // trigger an initial resize();
             me.video.onresize();
 
+            if (options.consoleHeader !== false) {
+                var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL";
+                var audioType = Howler.usingWebAudio ? "Web Audio" : "HTML5 Audio";
+                // output video information in the console
+                console.log(me.mod + " " + me.version + " | http://melonjs.org" );
+                console.log(
+                    renderType + " | " +
+                    audioType + " | " +
+                    "pixel ratio " + me.device.getPixelRatio() + " | " +
+                    (me.device.isMobile ? "mobile" : "desktop") + " | " +
+                    me.device.getScreenOrientation() + " | " +
+                    me.device.language
+                );
+                console.log( "resolution: " + "requested " + game_width + "x" + game_height +
+                    ", got " + me.game.viewport.width + "x" + me.game.viewport.height
+                );
+            }
             return true;
         };
 
