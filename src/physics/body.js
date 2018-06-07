@@ -274,7 +274,8 @@
         },
 
         /**
-         * add collision mesh based on a given Physics Editor JSON object
+         * add collision mesh based on a given Physics Editor JSON object.
+         * (this will also apply any physic properties defined in the given JSON file)
          * @name addShapesFromJSON
          * @memberOf me.Body
          * @public
@@ -300,13 +301,20 @@
                     throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
-                // go through all shapes and add them to the body
-                for (var i = 0; i < data.length; i++) {
-                    var points = [];
-                    for (var s = 0; s < data[i].shape.length; s += 2) {
-                        points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
+                if (data.length) {
+                    // go through all shapes and add them to the body
+                    for (var i = 0; i < data.length; i++) {
+                        var points = [];
+                        for (var s = 0; s < data[i].shape.length; s += 2) {
+                            points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
+                        }
+                        this.addShape(new me.Polygon(0, 0, points), true);
                     }
-                    this.addShape(new me.Polygon(0, 0, points), true);
+                    // apply density, friction and bounce properties from the first shape
+                    // Note : how to manage different mass or friction for all different shapes?
+                    this.mass = data[0].density || 0;
+                    this.friction.set(data[0].friction || 0, data[0].friction || 0);
+                    this.bounce = data[0].bounce || 0;
                 }
             } else {
                 // Physic Body Editor Format (http://www.aurelienribon.com/blog/projects/physics-body-editor/)

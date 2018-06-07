@@ -10,6 +10,7 @@ Version History
 * Physic : new mass property for solid bodies
 * Physic : new me.Body.force property allowing to automatically apply a force or acceleration to a solid body
 * Physic : me.Body.accel and me.Body.setVelocity are now deprecated and to be replaced by me.Body.force
+* Physic : automatically apply any defined physic properties when importing a physic editor JSON file
 * Renderable : fix onComplete not being called for single animation frame (@Adrian)
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer
