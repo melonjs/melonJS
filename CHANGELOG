@@ -3,6 +3,7 @@ Version History
 6.0.0
 * Core : Removed unnecessary ES6 polyfill (based on melonJS 5.x minimum browser version)
 * Core : API update to sandbox all previous language extension under the `me` namespace
+* Core : added console debug information (melonJS version & basic device capabilities)
 * Color : fix the me.Color.toHex8() function
 * Audio : latest Howler core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
