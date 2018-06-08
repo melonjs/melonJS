@@ -253,6 +253,11 @@
             now = time;
             delta = (now - last);
 
+            // fix for negative timestamp returned by wechat or chrome on startup
+            if (delta < 0) {
+                delta = 0;
+            }
+
             // get the game tick
             api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
 
