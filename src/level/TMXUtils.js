@@ -10,28 +10,6 @@
 (function () {
 
     /**
-     * Base64 encode/decode helpers
-     * @ignore
-     */
-    var Base64 = (function () {
-        // hold public stuff in our singleton
-        var singleton = {};
-
-        // public method for decoding
-        singleton.decode = function (input) {
-            return window.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-        };
-
-        // public method for encoding
-        singleton.encode = function (input) {
-            // make sure our input string has the right format
-            return window.btoa(input.replace(/\r\n/g, "\n"));
-        };
-
-        return singleton;
-    })();
-
-    /**
      * a collection of TMX utility Function
      * @final
      * @memberOf me
@@ -183,7 +161,8 @@
         api.decodeBase64AsArray = function (input, bytes) {
             bytes = bytes || 1;
 
-            var dec = Base64.decode(input), i, j, len;
+            var i, j, len;
+            var dec = window.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
             var ar = new Uint32Array(dec.length / bytes);
 
             for (i = 0, len = dec.length / bytes; i < len; i++) {
