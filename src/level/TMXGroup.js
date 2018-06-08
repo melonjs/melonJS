@@ -89,10 +89,8 @@
 
             if (data.layers) {
                 var _layers = data.layers;
-                _layers.forEach(function (object) {
-                    var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
-                    // init the layer properly
-                    layer.initFromJSON(object);
+                _layers.forEach(function (data) {
+                    var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                     // set a renderer
                     layer.setRenderer(map.getRenderer(layer));
                     // resize container accordingly

@@ -7,11 +7,28 @@
 (function () {
 
     /**
+     * Create required arrays for the given layer object
+     * @ignore
+     */
+    function initArray(layer) {
+        // initialize the array
+        layer.layerData = [];
+        for (var x = 0; x < layer.cols; x++) {
+            layer.layerData[x] = [];
+            for (var y = 0; y < layer.rows; y++) {
+                layer.layerData[x][y] = null;
+            }
+        }
+    }
+
+    /**
      * Set a tiled layer Data
      * @ignore
      */
     function setLayerData(layer, data) {
         var idx = 0;
+        // initialize the array
+        initArray(layer);
         // set everything
         for (var y = 0; y < layer.rows; y++) {
             for (var x = 0; x < layer.cols; x++) {
@@ -43,7 +60,7 @@
         /**
          * @ignore
          */
-        init: function (tilewidth, tileheight, orientation, tilesets, z) {
+        init: function (data, tilewidth, tileheight, orientation, tilesets, z) {
             // super constructor
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
@@ -98,10 +115,7 @@
 
             // tiled default coordinates are top-left
             this.anchorPoint.set(0, 0);
-        },
 
-        /** @ignore */
-        initFromJSON: function (data) {
             // additional TMX flags
             this.name = data.name;
             this.cols = +data.width;
@@ -124,6 +138,7 @@
                 this.width = this.cols * this.tilewidth;
                 this.height = this.rows * this.tileheight;
             }
+
             // check if we have any user-defined properties
             me.TMXUtils.applyTMXProperties(this, data);
 
@@ -141,10 +156,7 @@
                 );
             }
 
-            //initialize the layer data array
-            this.initArray(this.cols, this.rows);
-
-            // parse the layer data
+            // initialize and set the layer data
             setLayerData(this,
                 me.TMXUtils.decode(
                     data.data,
@@ -154,13 +166,9 @@
             );
         },
 
+
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
-
-            // (re)initialize the layer data array
-            /*if (this.layerData === undefined) {
-                this.initArray(this.cols, this.rows);
-            }*/
 
             if (this.animatedTilesets === undefined) {
                 this.animatedTilesets = [];
@@ -217,20 +225,6 @@
             return this.renderer;
         },
 
-        /**
-         * Create all required arrays
-         * @ignore
-         */
-        initArray : function (w, h) {
-            // initialize the array
-            this.layerData = [];
-            for (var x = 0; x < w; x++) {
-                this.layerData[x] = [];
-                for (var y = 0; y < h; y++) {
-                    this.layerData[x][y] = null;
-                }
-            }
-        },
 
         /**
          * Return the TileId of the Tile at the specified position

@@ -57,9 +57,7 @@
      * @ignore
      */
     function readLayer(map, data, z) {
-        var layer = new me.TMXLayer(map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
-        // init the layer properly
-        layer.initFromJSON(data);
+        var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
         // set a renderer
         layer.setRenderer(map.getRenderer(layer));
         return layer;
