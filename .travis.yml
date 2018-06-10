@@ -13,7 +13,7 @@ before_install:
   - "export CHROME_BIN=chromium-browser"
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
-  - "npm install -g grunt-cli"
+  - "travis_wait npm install -g grunt-cli"
 
 before_script:
   - "curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.7.8/install | bash"
